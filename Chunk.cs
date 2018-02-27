@@ -12,42 +12,34 @@ public struct ChunkPos {
 public class Chunk : MonoBehaviour {
 	readonly Vector3 CENTER_POS = new Vector3(8,8,8);
 	Block[,,] blocks;
-	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
-	float cullingTimer =0, cullingUpdateTime = 0.04f;
 	public byte prevBitmask = 63;
 	int[,] surfaceBlocks;
 	List<GameObject> structures;
 	public int lifePower = 0;
-	public const float LIFEPOWER_TICK = 1;float lifepower_timer = 0;
+	public const float LIFEPOWER_TICK = 0.1f;float lifepower_timer = 0;
 	List<Block> dirt_for_grassland, grassland_blocks;
-	public const int MAX_LIFEPOWER_TRANSFER = 16, CHUNK_SIZE = 16;
+	public const int MAX_LIFEPOWER_TRANSFER = 8, CHUNK_SIZE = 16;
 
 	void Awake() {
 		dirt_for_grassland = new List<Block>();
 		grassland_blocks = new List<Block>();
+		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
 	}
 
-	void Start() {
-		CullingUpdate();
-		prevCamPos = Camera.main.transform.position;
-		prevCamRot = Camera.main.transform.rotation;
-	}
+	void Start() {CullingUpdate(Camera.main.transform);}
+
+	public void CameraUpdate(Transform t) {
+		CullingUpdate(t);
+	} 
 
 	void Update() {
-		if (prevCamPos != Camera.main.transform.position || prevCamRot != Camera.main.transform.rotation) {
-			cameraHasMoved = true;
-			prevCamPos = Camera.main.transform.position;
-			prevCamRot = Camera.main.transform.rotation;
-		}
-		if (cullingTimer > 0) cullingTimer-= Time.deltaTime;
-		if (cullingTimer <= 0 && cameraHasMoved) CullingUpdate(); 
-
 		if (lifepower_timer > 0) {
-		lifepower_timer -= Time.deltaTime;
+			lifepower_timer -= Time.deltaTime  * GameMaster.gameSpeed;
 		if (lifepower_timer <= 0) {
 				if (lifePower > 0) {
-					if (dirt_for_grassland.Count == 0 || lifePower == 0) {lifepower_timer = 0;}
-					else {
+					if (Random.value > 0.5f || grassland_blocks.Count == 0)
+					{ // creating new grassland
+					if (dirt_for_grassland.Count != 0) {
 						Block b = null;
 						while (b == null && dirt_for_grassland.Count > 0) {
 							int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
@@ -57,20 +49,53 @@ public class Chunk : MonoBehaviour {
 								Grassland gl = b.body.AddComponent<Grassland>();
 								{
 									int x = b.pos.x; int z = b.pos.z;
-									if (x+1 < CHUNK_SIZE) {Block n = GetBlock(x+1, surfaceBlocks[x+1,z], z); if (n != null && n.f_id == Block.DIRT_ID && n.body.GetComponent<Grassland>() == null && !dirt_for_grassland.Contains(n)) dirt_for_grassland.Add(n);}
-									if (x-1 >= 0) {Block n = GetBlock(x-1, surfaceBlocks[x-1,z], z); if (n != null && n.f_id == Block.DIRT_ID && n.body.GetComponent<Grassland>() == null && !dirt_for_grassland.Contains(n)) dirt_for_grassland.Add(n);}
-									if (z+1 < CHUNK_SIZE) {Block n = GetBlock(x, surfaceBlocks[x,z+1], z+1); if (n != null && n.f_id == Block.DIRT_ID && n.body.GetComponent<Grassland>() == null && !dirt_for_grassland.Contains(n)) dirt_for_grassland.Add(n);}
-									if (z-1 >= 0) {Block n = GetBlock(x, surfaceBlocks[x,z-1], z-1); if (n != null && n.f_id == Block.DIRT_ID && n.body.GetComponent<Grassland>() == null && !dirt_for_grassland.Contains(n)) dirt_for_grassland.Add(n);}
+									List<ChunkPos> candidats = new List<ChunkPos>();
+									bool rightSide = false, leftSide = false;
+									if (x + 1 < CHUNK_SIZE) {candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1,z] ,z));rightSide = true;}
+									if (x - 1 >= 0) {candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1,z], z));leftSide = true;}
+									if (z + 1 < CHUNK_SIZE) {
+										candidats.Add(new ChunkPos(x, surfaceBlocks[x, z+1], z+1));
+										if (rightSide) candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1, z+1], z+1));
+										if (leftSide) candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1, z+1], z+1));
+									}
+									if (z - 1 >= 0) {
+										candidats.Add(new ChunkPos(x, surfaceBlocks[x, z-1], z-1));
+										if (rightSide) candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1, z-1], z-1));
+										if (leftSide) candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1, z-1], z-1));
+									}
+									foreach (ChunkPos p in candidats) {
+										Block n = GetBlock(p.x, p.y, p.z);
+										if (n == null) continue;
+										if (n.f_id == Block.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.body.GetComponent<Grassland>() == null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
+									}
 								}
 								gl.SetBlock(b);
 								if (lifePower > MAX_LIFEPOWER_TRANSFER) {gl.AddLifepower(MAX_LIFEPOWER_TRANSFER); lifePower -= MAX_LIFEPOWER_TRANSFER;}
 								else {gl.AddLifepower(lifePower); lifePower = 0;}
 								grassland_blocks.Add(b);
-								lifepower_timer = LIFEPOWER_TICK;
 							}
 							dirt_for_grassland.RemoveAt(pos);
 						}
 					}
+				}
+					else {//adding energy to existing life tiles
+						if (grassland_blocks.Count != 0) {
+							Block b = null;
+							while (b== null && grassland_blocks.Count >0) {
+								int pos = (int)(Random.value * (grassland_blocks.Count - 1));
+								b = grassland_blocks[pos];
+								if (b != null) {
+									Grassland gl = b.body.GetComponent<Grassland>();
+									if (gl == null) {grassland_blocks.RemoveAt(pos); continue;}
+									float count = MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
+									if (lifePower < count)  count = lifePower;
+									gl.AddLifepower(count);
+									lifePower -= (int)(count);
+								}
+							}
+						}
+					}
+					if (dirt_for_grassland.Count != 0 || grassland_blocks.Count != 0) lifepower_timer = LIFEPOWER_TICK;
 				}
 				else { // LifePower decreases
 					if (grassland_blocks.Count == 0) lifepower_timer = 0;
@@ -100,10 +125,26 @@ public class Chunk : MonoBehaviour {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 				int y = surfaceBlocks[x,z];
 				if (blocks[x,y,z].f_id == Block.GRASS_ID || (blocks[x,y,z].f_id == Block.DIRT_ID && blocks[x,y,z].body.GetComponent<Grassland>())) {
-					if (x+1 < CHUNK_SIZE) {Block n = GetBlock(x+1,surfaceBlocks[x+1,z],z); if (n != null && n.f_id==Block.DIRT_ID && !markedBlocks.Contains(n.pos) &&n.body.GetComponent<Grassland>() == null ) {dirt_for_grassland.Add(n); markedBlocks.Add(n.pos); continue;}}
-					if (x-1 >= 0) {Block n = GetBlock(x-1,surfaceBlocks[x-1,z],z); if (n != null && n.f_id==Block.DIRT_ID &&!markedBlocks.Contains(n.pos) &&n.body.GetComponent<Grassland>() == null ) {dirt_for_grassland.Add(n); markedBlocks.Add(n.pos); continue;}}
-					if (z+1 < CHUNK_SIZE) {Block n = GetBlock(x,surfaceBlocks[x,z+1],z+1); if (n != null && n.f_id==Block.DIRT_ID &&!markedBlocks.Contains(n.pos) &&n.body.GetComponent<Grassland>() == null ) {dirt_for_grassland.Add(n); markedBlocks.Add(n.pos); continue;}}
-					if (z-1 >= 0) {Block n = GetBlock(x,surfaceBlocks[x,z-1],z - 1); if (n != null && n.f_id==Block.DIRT_ID &&!markedBlocks.Contains(n.pos) &&n.body.GetComponent<Grassland>() == null ) {dirt_for_grassland.Add(n); markedBlocks.Add(n.pos); continue;}}
+					
+					List<ChunkPos> candidats = new List<ChunkPos>();
+					bool rightSide = false, leftSide = false;
+					if (x + 1 < CHUNK_SIZE) {candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1,z] ,z));rightSide = true;}
+					if (x - 1 >= 0) {candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1,z], z));leftSide = true;}
+					if (z + 1 < CHUNK_SIZE) {
+						candidats.Add(new ChunkPos(x, surfaceBlocks[x, z+1], z+1));
+						if (rightSide) candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1, z+1], z+1));
+						if (leftSide) candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1, z+1], z+1));
+					}
+					if (z - 1 >= 0) {
+						candidats.Add(new ChunkPos(x, surfaceBlocks[x, z-1], z-1));
+						if (rightSide) candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1, z-1], z-1));
+						if (leftSide) candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1, z-1], z-1));
+					}
+					foreach (ChunkPos p in candidats) {
+							Block b = GetBlock(p.x, p.y, p.z);
+						if (b == null) continue;
+						if (b.f_id == Block.DIRT_ID && !markedBlocks.Contains(p) &&b.body.GetComponent<Grassland>() == null && Mathf.Abs(y - p.y) < 2) {dirt_for_grassland.Add(b); markedBlocks.Add(p);}
+					}
 				}
 			}
 		}
@@ -118,7 +159,7 @@ public class Chunk : MonoBehaviour {
 					if (blocks[x,y,z] == null || blocks[x,y,z] == Block.BlockedByStructure) continue;
 					else {
 						surfaceBlocks[x,z] = y;		
-						blocks[x,y,z].onSurface = true;
+						blocks[x,y,z].SetSurfaceStatus(true);
 						break;
 					}
 				}
@@ -147,9 +188,7 @@ public class Chunk : MonoBehaviour {
 
 	public void ReplaceBlock(int x, int y, int z, int newId) {
 		if (blocks[x,y,z] != null) {
-			Block b = blocks[x,y,z].Replace(newId);
-			blocks[x,y,z] = null;
-			blocks[x,y,z] = b;
+			blocks[x,y,z].Replace(newId);
 		}
 		else {
 			blocks[x,y,z] = new Block(newId);
@@ -231,9 +270,10 @@ public class Chunk : MonoBehaviour {
 	}
 		
 
-	void CullingUpdate() {
+	void CullingUpdate(Transform campoint) {
+		if (campoint == null) campoint = Camera.main.transform;
 		byte camSector = 0;
-		Vector3 cpos = transform.InverseTransformPoint(Camera.main.transform.position);
+		Vector3 cpos = transform.InverseTransformPoint(campoint.position);
 		Vector3 v = Vector3.one * (-1);
 		int size = blocks.GetLength(0);
 		if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0;} 
@@ -241,7 +281,7 @@ public class Chunk : MonoBehaviour {
 		if (cpos.z > 0) {if (cpos.z > size) v.z = 1; else v.z = 0;}
 		//print (v);
 		if (v != Vector3.zero) {
-			Vector3 cdir = transform.InverseTransformDirection(Camera.main.transform.forward);
+			Vector3 cdir = transform.InverseTransformDirection(campoint.forward);
 			//easy-culling
 			float av = Vector3.Angle(CENTER_POS - cpos, cdir);				
 				byte renderBitmask = 63;
@@ -257,10 +297,9 @@ public class Chunk : MonoBehaviour {
 		}
 		else {
 			//camera in chunk
-			Transform camPoint = Camera.main.transform;
 			foreach (Block b in blocks) {
 				if (b == null || !b.IsVisible()) continue;
-				Vector3 icpos = camPoint.InverseTransformPoint(b.body.transform.position);
+				Vector3 icpos = campoint.InverseTransformPoint(b.body.transform.position);
 				Vector3 vn = Vector3.one * (-1);
 				if (icpos.x > 0) { if (icpos.x > size) vn.x = 1; else vn.x = 0;} 
 				if (icpos.y > 0) {if (icpos.y > size) vn.y = 1; else vn.y = 0;}
@@ -272,8 +311,6 @@ public class Chunk : MonoBehaviour {
 				b.SetRenderBitmask(renderBitmask);
 			}
 		}
-		cullingTimer = cullingUpdateTime;
-		cameraHasMoved = false;
 	}
 
 	public void AddLifePower (int count) {lifePower += count; if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;}

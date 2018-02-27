@@ -22,19 +22,28 @@ public class Constructor : MonoBehaviour {
 	void ConstructChunk() {
 		int size = Chunk.CHUNK_SIZE;
 		int[,,] dat = new int[size, size ,size ];
+		float radius = size * Mathf.Sqrt(2);
 		for (int x =0; x< size ; x++) {
 			for (int z= 0; z< size ; z++)
 			{
 				float cs = size ;
-				int height = (int)(size * Mathf.PerlinNoise(x/cs + seed,z/cs + seed));
-				if (height < 2) height = 2;
-				if (Random.value < TERRAIN_ROUGHNESS) { height += (int)(Random.value * TERRAIN_ROUGHNESS * height);}
-				if (height >= size  ) height = size  - 1;
-				int y = height;
-				if (Random.value < 0.95f) dat[x,y,z] = Block.DIRT_ID; else dat[x,y,z] = Block.STONE_ID; y--;
-				if (Random.value > 0.8f) dat[x,y,z] = Block.DIRT_ID; else dat[ x,y,z] = Block.STONE_ID; y --;
-				for (; y > 0; y--) {
-					dat[x,y,z] = Block.STONE_ID;
+				float perlin = Mathf.PerlinNoise(x/cs * (10 * TERRAIN_ROUGHNESS), z/cs * (10 * TERRAIN_ROUGHNESS));
+				//perlin += pc; if (perlin > 1) perlin = 1;
+				int height = (int)(size/2 * perlin);
+				if (height < 2) height = 2; else	if (height > size/2  ) height = size/2 ;
+				int y = 0;
+				for (; y < height; y++) {
+					dat[x,y + size/2,z] = Block.STONE_ID;
+				}
+				if (Random.value > 0.8f) dat[x,height+size/2-2,z] = Block.DIRT_ID; 
+				if (Random.value < 0.95f) dat[x,height+size/2-1,z] = Block.DIRT_ID; 
+				//down part
+				float pc = (1 - Mathf.Sqrt((x - size/2) * (x-size/2) + (z - size/2) * (z - size/2)) / radius);
+				pc *= pc * pc;
+				height = (int)(pc * size/2  + size/2 * perlin);
+				if (height < 0) height = 1; else if (height > size/2) height = size/2;
+				for (y = 0; y <= height; y++) {
+					dat[x,size/2  - y,z] = Block.STONE_ID;
 				}
 			}
 		}
