@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class Plant2D : Plant {
 	public LineRenderer body;
+	public const float MAXIMUM_LIFEPOWER = 50;
 	float startSize = 0.05f;
 
 	void Awake () {
 		cellPosition = PixelPosByte.Empty;
 		lifepower = 1;
-		maxLifepower = 50;
+		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.1f;
 		full = false;
 	}

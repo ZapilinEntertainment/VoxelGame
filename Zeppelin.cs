@@ -5,7 +5,7 @@ using UnityEngine;
 public class Zeppelin : Transport {
 	Block landingPlace;
 	bool landing = false, anchored = false;
-	public Transform anchor;
+	public Transform anchor, leftScrew,rightScrew;
 	public LineRenderer anchorChain;
 	float anchorSpeed = 0, flySpeed = 1, landingSpeed = 10;
 	Vector3 centralPoint = new Vector3(8,8,8), anchorStartPos = Vector3.zero;
@@ -17,6 +17,8 @@ public class Zeppelin : Transport {
 		Vector3 v = centralPoint - transform.position; v.y = 0;
 		transform.forward = v;
 		anchorStartPos = transform.InverseTransformPoint(anchor.transform.position);
+		leftScrew.Rotate(0, Random.value * 360, 0);
+		rightScrew.Rotate(0, Random.value * 360, 0);
 	}
 
 	void Update() {
@@ -60,6 +62,8 @@ public class Zeppelin : Transport {
 		}
 		anchorChain.SetPosition(0, transform.TransformPoint(anchorStartPos));
 		anchorChain.SetPosition(1, anchor.transform.position);
+		leftScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
+		rightScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
 	}
 
 	public void SetLandingPlace(Block block) {

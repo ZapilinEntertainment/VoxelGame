@@ -22,7 +22,7 @@ public class Block {
 	public int daytimeUpdatePosition = -1;
 	public ChunkPos pos {get; private set;}
 	public BlockSurface upSurface{get;private set;}
-	public Grassland grassland;
+	public Grassland grassland {get;private set;}
 
 	public Block Clone() {
 		Block b = new Block(f_id);
@@ -63,6 +63,18 @@ public class Block {
 		f_id = id;
 		onSurface = false;
 }
+
+	public Grassland AddGrassland() {
+		if (grassland != null) return grassland;
+		if (upSurface == null) {
+			if ( !onSurface ) return null;
+			else CreateFace(4);
+		}
+		grassland = upSurface.gameObject.AddComponent<Grassland>();
+		grassland.SetBlock(this);
+		return grassland;
+	}
+
 	public void Replace( int newId) {
 		f_id = newId;
 		if (upSurface != null) {
@@ -196,11 +208,13 @@ public class Block {
 		pos = p;
 		body.transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		body.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		body.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
 	public void SetPos(int a, int b, int c) {
 		pos = new ChunkPos(a,b,c);
 		body.transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		body.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		body.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
 
 	public static Material GetMaterialById(int id) {

@@ -9,7 +9,7 @@ public class BlockSurface : MonoBehaviour {
 	public Block myBlock {get;private set;}
 	public MeshRenderer surfaceRenderer {get;private set;}
 	Content[,] map;
-	public byte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
+	public sbyte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
 
 	void Awake() 
 	{
@@ -27,7 +27,13 @@ public class BlockSurface : MonoBehaviour {
 	}
 
 	public void ClearCell(PixelPosByte cellPos, Content c) {
-		if (map[cellPos.x, cellPos.y] == c) map[cellPos.x, cellPos.y] = Content.Empty;
+		if (cellsStatus == 0) return;
+		if (map[cellPos.x, cellPos.y] == c) {
+			map[cellPos.x, cellPos.y] = Content.Empty;
+			bool isEmpty = true;
+			foreach (Content con in map) { if (con != Content.Empty) {isEmpty = false; break;}}
+			if (isEmpty) cellsStatus = 0; else cellsStatus = -1;
+		}
 	}
 
 	/// <summary>
@@ -42,25 +48,46 @@ public class BlockSurface : MonoBehaviour {
 			byte x = (byte)(Random.value * (INNER_RESOLUTION - 1));
 			byte y = (byte)(Random.value * (INNER_RESOLUTION - 1));
 			cell = new PixelPosByte(x, y);
+			cellsStatus = -1;
 		}
+		else {
+			List<PixelPosByte> freeCells = new List<PixelPosByte>();
+			for (byte i = 0; i< INNER_RESOLUTION; i++) {
+				for (byte j = 0; j < INNER_RESOLUTION; j++) {
+					if (map[i,j] == Content.Empty) freeCells.Add(new PixelPosByte(i,j));
+				}
+			}
+			int pos = (int)(Random.value * (freeCells.Count - 1));
+			cell =  freeCells[pos];
+			if (freeCells.Count == 1) cellsStatus = 0; else cellsStatus = -1;
+		}
+		map[cell.x, cell.y] = content;
+		return cell;
+	}
+
+	public List<PixelPosByte> PutInMultipleCells (int count, Content content) { 
+		List<PixelPosByte> positions = new List<PixelPosByte>();
+		if (cellsStatus == 1) return positions;
+
 		List<PixelPosByte> freeCells = new List<PixelPosByte>();
 		for (byte i = 0; i< INNER_RESOLUTION; i++) {
 			for (byte j = 0; j < INNER_RESOLUTION; j++) {
 				if (map[i,j] == Content.Empty) freeCells.Add(new PixelPosByte(i,j));
 			}
 		}
-		if (freeCells.Count == 0) {cellsStatus = 1; return PixelPosByte.Empty;}
-		else {
-			if (freeCells.Count ==map.Length) cellsStatus = 0;
-			int pos = (int)(Random.value * (freeCells.Count - 1));
-			cell =  freeCells[pos];
-		}
 
-		if (cell != PixelPosByte.Empty) {
-			map[cell.x, cell.y] = content;
-			return cell;
+		if (freeCells.Count == count) {cellsStatus = 0; return freeCells;}
+		else {
+			cellsStatus = -1;
+			int i = 0;
+			while ( i < freeCells.Count && i < count) {
+				int pos = (int)(Random.value * (freeCells.Count - 1));
+				if (freeCells[pos] == null) {freeCells.RemoveAt(pos); continue;}
+				positions.Add(freeCells[pos]); i++; 
+				map[freeCells[pos].x, freeCells[pos].y] = content;
+			}
+			return positions;
 		}
-		else return PixelPosByte.Empty;
 	}
 
 	public void SetBasement(Block b, MeshRenderer planeRenderer) 

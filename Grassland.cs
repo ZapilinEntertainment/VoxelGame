@@ -133,6 +133,75 @@ public class Grassland : MonoBehaviour {
 		return lifeTransfer;
 	}
 
+	/// <summary>
+	/// Use this only on pre-gen
+	/// </summary>
+	public void AddLifepowerAndCalculate(int count) {
+		if (plants.Count != 0) return;
+
+		if (count > 2 * LIFEPOWER_TO_PREPARE) {
+			float freeEnergy = count - 2 * LIFEPOWER_TO_PREPARE;
+			int plants_count = MAX_LIFEFORMS_COUNT;
+			if (freeEnergy < MAX_LIFEFORMS_COUNT)  plants_count = (int)(freeEnergy - MAX_LIFEFORMS_COUNT); 
+			List<PixelPosByte> positions = myBlock.upSurface.PutInMultipleCells(plants_count, Content.Plant);
+			float[] lifepowers = new float[plants_count];
+			float total = 0;
+			for (int i =0; i< plants_count; i++) {
+				lifepowers[i] = Random.value;
+				total += lifepowers[i];
+			}
+			float lifePiece = count; lifePiece /= total;
+
+			for (int i =0; i< plants_count; i++) {
+				float energy = lifepowers[i] * lifePiece;
+				if (energy >  Plant2D.MAXIMUM_LIFEPOWER) {
+					Tree t = Instantiate(PoolMaster.current.tree_pref).GetComponent<Tree>();	t.gameObject.SetActive(true);
+					int pos = (int) (Random.value * (positions.Count - 1));
+					t.SetPosition(positions[pos], myBlock);
+					t.AddLifepower((int)energy);
+					positions.RemoveAt(pos);
+					plants.Add(t);
+				}
+				else {
+					Plant2D pl = Instantiate(PoolMaster.current.grass_pref).GetComponent<Plant2D>(); pl.gameObject.SetActive(true);
+					int pos = (int) (Random.value * (positions.Count - 1));
+					pl.SetPosition(positions[pos], myBlock);
+					pl.AddLifepower((int)energy);
+					positions.RemoveAt(pos);
+					plants.Add(pl);
+				}
+			}
+			lifepower = 2 * LIFEPOWER_TO_PREPARE;
+		}
+		else {
+			lifepower = count;
+			progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
+			byte stage = 0; level = 1;
+			if (progress > 0.5f) {if (progress == 1) {stage = 3;level = 2;} else stage = 2;}
+			else { if (progress > 0.25f) stage = 1;}
+			if (stage != prevStage) {
+				switch (stage) {
+				case 0: 						
+					myBlock.upSurface.surfaceRenderer.material = Block.dirt_material;
+					break;
+				case 1:
+					int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
+					myBlock.upSurface.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
+					break;
+				case 2:
+					int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
+					myBlock.upSurface.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
+					break;
+				case 3:
+					myBlock.upSurface.surfaceRenderer.material = Block.grass_material;
+					break;
+				}
+				prevStage = stage;
+			}
+		}
+		if (lifepower != 0 && lifeTimer == 0 ) lifeTimer = Chunk.LIFEPOWER_TICK;
+	}
+
 	public void SetBlock(Block b) {myBlock = b;}
 
 	public void Annihilation() {

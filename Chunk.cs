@@ -16,10 +16,11 @@ public class Chunk : MonoBehaviour {
 	int[,] surfaceBlocks;
 	List<GameObject> structures;
 	public int lifePower = 0;
-	public const float LIFEPOWER_TICK = 0.1f;float lifepower_timer = 0;
+	public const float LIFEPOWER_TICK = 0.3f; float lifepower_timer = 0;
 	List<Block> dirt_for_grassland;
 	List<Grassland> grassland_blocks;
-	public const int MAX_LIFEPOWER_TRANSFER = 4, CHUNK_SIZE = 16;
+	public const int MAX_LIFEPOWER_TRANSFER = 4;
+	public const byte CHUNK_SIZE = 16;
 	public static int energy_take_speed = 10;
 
 	void Awake() {
@@ -77,9 +78,7 @@ public class Chunk : MonoBehaviour {
 											if (n.f_id == Block.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland == null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
 									}
 								}
-									if (b.upSurface == null) b.SetSurfaceStatus(true);
-									b.grassland = b.upSurface.gameObject.AddComponent<Grassland>();
-									b.grassland.SetBlock(b);
+									b.AddGrassland();
 									int lifeTransfer = (int)(MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
 									if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
 									else {b.grassland.AddLifepower(lifePower); lifePower = 0;}
@@ -128,6 +127,114 @@ public class Chunk : MonoBehaviour {
 				}
 				lifepower_timer = LIFEPOWER_TICK;
 		}
+		}
+	}
+
+	public void GenerateNature (PixelPosByte lifeSourcePos, int lifeVolume) {
+		byte px = lifeSourcePos.x, py = lifeSourcePos.y;
+		float [,] lifepowers = new float[CHUNK_SIZE, CHUNK_SIZE];
+		lifepowers[px, py] = 1;
+		float power = 1;
+		bool leftSide = false, rightSide = false, upSide = false, downSide = false;
+		if (px > 0) {
+			leftSide = true;
+			for (int i = px - 1; i >= 0; i--) {
+				byte delta = (byte)Mathf.Abs(surfaceBlocks[i + 1,py] - surfaceBlocks[i, py]);
+				lifepowers[i,py] = power * (1 - (delta / 8f) * (delta / 8f));
+				power = lifepowers[i, py] * 0.9f;
+			}
+		}
+		power = 1;
+		if (px < CHUNK_SIZE - 1) {
+			rightSide = true;
+			for (int i = px + 1; i < CHUNK_SIZE; i++) {
+				byte delta = (byte)Mathf.Abs(surfaceBlocks[i - 1,py] - surfaceBlocks[i, py]);
+				lifepowers[i,py] = power * (1 - (delta / 8f) * (delta / 8f));
+				power = lifepowers[i, py] * 0.9f;
+			}
+		}
+		power = 1;
+		if (py > 0) {
+			downSide = true;
+			for (int i = py - 1; i >= 0; i--) {
+				byte delta = (byte)Mathf.Abs(surfaceBlocks[px, i+1] - surfaceBlocks[px,i]);
+				lifepowers[px,i] = power * (1 - (delta / 8f) * (delta / 8f));
+				power = lifepowers[px, i] * 0.9f;
+			}
+		}
+		power = 1;
+		if (px < CHUNK_SIZE - 1) {
+			upSide= true;
+			for (int i = py + 1; i < CHUNK_SIZE; i++) {
+				byte delta = (byte)Mathf.Abs(surfaceBlocks[px, i -1] - surfaceBlocks[px, i]);
+				lifepowers[px, i] = power * (1 - (delta / 8f) * (delta / 8f));
+				power = lifepowers[px, i] * 0.9f;
+			}
+		}
+
+		// горизонтальная обработка
+		if (leftSide) {
+			for (int i = 0; i< CHUNK_SIZE; i++) {
+				if (i == py) continue;
+				power= lifepowers[i, px];
+				for (int j = px - 1; j >= 0; j--) {
+					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j+1] - surfaceBlocks[i,j]);
+					lifepowers[i,j] = power  * (1 - (delta / 8f) * (delta / 8f));
+					power = lifepowers[i,j] * 0.9f;
+				}
+			}
+		}
+		if (rightSide) {
+			for (int i = 0; i< CHUNK_SIZE; i++) {
+				if (i == py) continue;
+				power= lifepowers[i, px];
+				for (int j = px +1; j < CHUNK_SIZE; j++) {
+					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j] - surfaceBlocks[i,j-1]);
+					lifepowers[i,j] = power  * (1 - (delta / 8f) * (delta / 8f));
+					power = lifepowers[i,j] * 0.9f;
+				}
+			}
+		}
+		// вертикальная обработка + усреднение
+		for (int i = 0; i < CHUNK_SIZE; i++) {
+			if (i == px) continue;
+			if (upSide) {
+				power = lifepowers [i,py];
+				for (int j = py + 1; j < CHUNK_SIZE; j++) {
+					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j] - surfaceBlocks[i,j-1]);
+					lifepowers[i,j] = (power  * (1 - (delta / 8f) * (delta / 8f)) + lifepowers[i,j] ) / 2f;
+					power = lifepowers[i,j] * 0.9f;
+				}
+			}
+			if (downSide) {
+				power = lifepowers [i,py];
+				for (int j = py - 1; j >=0; j--) {
+					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j] - surfaceBlocks[i,j+1]);
+					lifepowers[i,j] = (power  * (1 - (delta / 8f) * (delta / 8f)) + lifepowers[i,j]) / 2f;
+					power = lifepowers[i,j] * 0.9f;
+				}
+			}
+		}
+
+		float total = 0;
+		List<Block> afl = new List<Block>();
+		for (int i =0; i< CHUNK_SIZE; i++) {
+			for (int j = 0; j< CHUNK_SIZE; j++) {
+				Block b = blocks[i, surfaceBlocks[i,j],j];
+				if (b == null) continue;
+				if (b.f_id == Block.DIRT_ID || b.f_id == Block.GRASS_ID) { // Acceptable for life
+					total += lifepowers[i,j];
+					afl.Add(b);
+				}
+			}
+		}
+		float lifePiece = lifeVolume / total;
+		foreach (Block b in afl) {
+			Grassland gl = null;
+			if (b.grassland == null) {gl = b.AddGrassland();}
+			else gl = b.grassland;
+			b.grassland.AddLifepowerAndCalculate((int)(lifepowers[b.pos.x, b.pos.z] * lifePiece));
+			grassland_blocks.Add(b.grassland);
 		}
 	}
 

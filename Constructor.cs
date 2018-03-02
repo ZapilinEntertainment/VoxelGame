@@ -57,10 +57,14 @@ public class Constructor : MonoBehaviour {
 
 	void NatureCreation(Chunk chunk) {
 		int[,] surface = chunk.GetSurface();
-		int x = (int)(Random.value * (Chunk.CHUNK_SIZE-2)) + 1;
-		int z = (int)(Random.value * (Chunk.CHUNK_SIZE-2)) + 1;
+		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
+		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
+		x = 7;z=7;
 		Block b = chunk.GetBlock(x,surface[x,z],z);
 		chunk.ReplaceBlock(x,surface[x,z], z, Block.GRASS_ID);
+		chunk.SpreadBlocks(x,z, Block.GRASS_ID);
+		chunk.GenerateNature(new PixelPosByte(x,z), 500000);
+
 		GameObject pref;
 		if (Random.value > 0.5f) pref = Resources.Load<GameObject>("Structures/Tree of Life") ; else pref = Resources.Load<GameObject>("Structures/LifeStone");
 		GameObject g = Instantiate(pref) as GameObject;
@@ -70,7 +74,8 @@ public class Constructor : MonoBehaviour {
 		g.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 		Structure str = g.GetComponent<Structure>();
 		str.SetBasement(b);
-		chunk.SpreadBlocks(x,z, Block.GRASS_ID);
+
+
 	}
 
 }

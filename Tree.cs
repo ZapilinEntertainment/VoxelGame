@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class Tree : Plant {
 	public Transform crone, trunk;
+	public const int MAXIMUM_LIFEPOWER = 1000;
 	float croneState = 1;
 
 	void Awake() {
 		cellPosition = PixelPosByte.Empty;
 		full = false;
 		lifepower = 1;
-		maxLifepower = 1000;
+		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.4f + Random.value * 0.1f;
 	}
 		
