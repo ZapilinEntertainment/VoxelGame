@@ -7,7 +7,7 @@ public class Block {
 	static readonly GameObject quad_pref;
 	public static readonly Material dirt_material, grass_material, stone_material, default_material;
 	public static readonly Texture2D dirt_texture;
-	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3;
+	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3, BLOCKED_BY_STRUCTURE_ID = 4;
 	public const float QUAD_SIZE = 1;
 	public static Block BlockedByStructure;
 
@@ -21,6 +21,8 @@ public class Block {
 	public bool onSurface {get;private set;}
 	public int daytimeUpdatePosition = -1;
 	public ChunkPos pos {get; private set;}
+	public BlockSurface upSurface{get;private set;}
+	public Grassland grassland;
 
 	public Block Clone() {
 		Block b = new Block(f_id);
@@ -63,16 +65,16 @@ public class Block {
 }
 	public void Replace( int newId) {
 		f_id = newId;
+		if (upSurface != null) {
+			if (grassland != null) grassland.Annihilation();
+			upSurface.Annihilation();
+		}
 		if (faces != null) {
-			for (int i =0; i< 6; i++) {
-				if (faces[i] != null) {
-					faces[i].material =  GetMaterialById(newId);
+				for (int i =0; i< 6; i++) {
+					if (faces[i] != null) {
+						faces[i].material =  GetMaterialById(newId);
+					}
 				}
-			}
-			if (faces[4] != null) {
-				Grassland gl = faces[4].GetComponent<Grassland>(); if (gl != null) gl.Annihilation();
-				BlockSurface bs = faces[4].GetComponent<BlockSurface>(); if (bs!=null) bs.Annihilation();
-			}
 		}
 	}
 
@@ -120,45 +122,72 @@ public class Block {
 		faces[i] =g.GetComponent <MeshRenderer>();
 		g.transform.parent = body.transform;
 		switch (i) {
-		case 0: faces[i].name = "north_plane"; faces[i].transform.localRotation = Quaternion.Euler(0, 180, 0); faces[i].transform.localPosition = new Vector3(0, 0, 0.5f); break;
-		case 1: faces[i].transform.localRotation = Quaternion.Euler(0, 270, 0); faces[i].name = "east_plane"; faces[i].transform.localPosition = new Vector3(0.5f, 0, 0); break;
-		case 2: faces[i].name = "south_plane"; faces[i].transform.localPosition = new Vector3(0, 0, -0.5f); break;
-		case 3: faces[i].transform.localRotation = Quaternion.Euler(0, 90, 0);faces[i].name = "west_plane"; faces[i].transform.localPosition = new Vector3(-0.5f, 0, 0); break;
+		case 0: faces[i].name = "north_plane"; faces[i].transform.localRotation = Quaternion.Euler(0, 180, 0); faces[i].transform.localPosition = new Vector3(0, 0, Block.QUAD_SIZE/2f); break;
+		case 1: faces[i].transform.localRotation = Quaternion.Euler(0, 270, 0); faces[i].name = "east_plane"; faces[i].transform.localPosition = new Vector3(Block.QUAD_SIZE/2f, 0, 0); break;
+		case 2: faces[i].name = "south_plane"; faces[i].transform.localPosition = new Vector3(0, 0, -Block.QUAD_SIZE/2f); break;
+		case 3: faces[i].transform.localRotation = Quaternion.Euler(0, 90, 0);faces[i].name = "west_plane"; faces[i].transform.localPosition = new Vector3(-Block.QUAD_SIZE/2f, 0, 0); break;
 		case 4: 
+			if (onSurface) {
+				if (upSurface != null) GameObject.Destroy(upSurface.gameObject);
+				GameObject sob = new GameObject("surfaceObjectsBasement");
+				sob.transform.parent = body.transform;
+				sob.transform.localPosition = new Vector3(0, Block.QUAD_SIZE/2f, 0); 
+				faces[i].transform.parent = sob.transform;
+				faces[i].transform.localPosition = Vector3.zero;
+				upSurface =  sob.AddComponent<BlockSurface>();
+				upSurface.SetBasement(this, faces[i]);
+			}
+			else {
+				faces[i].transform.localPosition = new Vector3(0, Block.QUAD_SIZE/2f, 0); 
+				faces[i].transform.parent = body.transform;
+			}
 			faces[i].transform.localRotation = Quaternion.Euler(90, 0, 0);
 			faces[i].name = "upper_plane"; 
-			faces[i].transform.localPosition = new Vector3(0, 0.5f, 0); break;
-			if (onSurface) {
-				BlockSurface bs =  faces[i].gameObject.AddComponent<BlockSurface>();
-				bs.SetBasement(this, faces[4]);
-			}
+			break;
 		case 5: 
 			faces[i].transform.localRotation = Quaternion.Euler(-90, 0, 0); 
 			faces[i].name = "bottom_plane"; 
-			faces[i].transform.localPosition = new Vector3(0, -0.5f, 0); 
+			faces[i].transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
 			GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
 			break;
 		}
 		faces[i].material = GetMaterialById(f_id);
 		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
 		faces[i].enabled = true;
 	}
 		
-	public MeshRenderer GetSurfacePlane() {	if (faces != null && faces[4] != null) return faces[4]; else return null;}
+	public BlockSurface GetSurface() {
+		if ( !onSurface ) return null;
+		if (upSurface == null) SetSurfaceStatus(true);
+		return upSurface;
+	}
 	public void SetChunk(Chunk c) {myChunk = c;}
 	public bool IsTransparent() {return isTransparent;}
 	public bool IsVisible() {return isVisible;}
 	public void SetSurfaceStatus( bool x) {
 		onSurface = x; 
-		if (onSurface) {
-			if (faces == null) faces = new MeshRenderer[6];
-			if (faces[4] == null) CreateFace(4);
-			else {
-				if (faces[4].GetComponent<BlockSurface>() == null)  
-				{
-					BlockSurface bs =  faces[4].gameObject.AddComponent<BlockSurface>();
-					bs.SetBasement(this, faces[4]);
+		if (x) {
+				if (faces == null) faces = new MeshRenderer[6];
+				if (faces[4] == null) CreateFace(4);
+				else {
+					if (upSurface == null)  
+						{
+							GameObject sob = new GameObject("surfaceObjectsBasement");
+							sob.transform.parent = body.transform;
+							sob.transform.localPosition = new Vector3(0, 0.5f, 0); 
+							faces[4].transform.parent = sob.transform;
+							faces[4].transform.localRotation = Quaternion.Euler(90, 0, 0);
+							faces[4].transform.localPosition = Vector3.zero;
+							upSurface =  sob.AddComponent<BlockSurface>();
+							upSurface.SetBasement(this, faces[4]);
+						}
 				}
+		}
+		else {
+			if (upSurface != null) {
+				if (faces != null && faces[4] != null) faces[4].transform.parent = body.transform;
+				GameObject.Destroy(upSurface.gameObject);
 			}
 		}
 		}

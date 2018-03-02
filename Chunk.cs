@@ -17,16 +17,20 @@ public class Chunk : MonoBehaviour {
 	List<GameObject> structures;
 	public int lifePower = 0;
 	public const float LIFEPOWER_TICK = 0.1f;float lifepower_timer = 0;
-	List<Block> dirt_for_grassland, grassland_blocks;
-	public const int MAX_LIFEPOWER_TRANSFER = 8, CHUNK_SIZE = 16;
+	List<Block> dirt_for_grassland;
+	List<Grassland> grassland_blocks;
+	public const int MAX_LIFEPOWER_TRANSFER = 4, CHUNK_SIZE = 16;
+	public static int energy_take_speed = 10;
 
 	void Awake() {
 		dirt_for_grassland = new List<Block>();
-		grassland_blocks = new List<Block>();
+		grassland_blocks = new List<Grassland>();
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
 	}
 
-	void Start() {CullingUpdate(Camera.main.transform);}
+	void Start() {
+		if (Camera.main != null) CullingUpdate(Camera.main.transform);
+	}
 
 	public void CameraUpdate(Transform t) {
 		CullingUpdate(t);
@@ -40,13 +44,17 @@ public class Chunk : MonoBehaviour {
 					if (Random.value > 0.5f || grassland_blocks.Count == 0)
 					{ // creating new grassland
 					if (dirt_for_grassland.Count != 0) {
+							int spos = 0; 
+							while (spos < dirt_for_grassland.Count) {
+								if (dirt_for_grassland[spos].grassland != null || !dirt_for_grassland[spos].onSurface) dirt_for_grassland.RemoveAt(spos);
+								else spos++;
+							}
+
 						Block b = null;
 						while (b == null && dirt_for_grassland.Count > 0) {
 							int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
 							b = dirt_for_grassland[pos];
-							if (b.body.GetComponent<Grassland>() || !b.onSurface) {dirt_for_grassland.RemoveAt(pos);continue;}
 							if (b != null) {
-								Grassland gl = b.body.AddComponent<Grassland>();
 								{
 									int x = b.pos.x; int z = b.pos.z;
 									List<ChunkPos> candidats = new List<ChunkPos>();
@@ -66,13 +74,16 @@ public class Chunk : MonoBehaviour {
 									foreach (ChunkPos p in candidats) {
 										Block n = GetBlock(p.x, p.y, p.z);
 										if (n == null) continue;
-										if (n.f_id == Block.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.body.GetComponent<Grassland>() == null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
+											if (n.f_id == Block.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland == null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
 									}
 								}
-								gl.SetBlock(b);
-								if (lifePower > MAX_LIFEPOWER_TRANSFER) {gl.AddLifepower(MAX_LIFEPOWER_TRANSFER); lifePower -= MAX_LIFEPOWER_TRANSFER;}
-								else {gl.AddLifepower(lifePower); lifePower = 0;}
-								grassland_blocks.Add(b);
+									if (b.upSurface == null) b.SetSurfaceStatus(true);
+									b.grassland = b.upSurface.gameObject.AddComponent<Grassland>();
+									b.grassland.SetBlock(b);
+									int lifeTransfer = (int)(MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+									if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
+									else {b.grassland.AddLifepower(lifePower); lifePower = 0;}
+									grassland_blocks.Add(b.grassland);
 							}
 							dirt_for_grassland.RemoveAt(pos);
 						}
@@ -80,39 +91,42 @@ public class Chunk : MonoBehaviour {
 				}
 					else {//adding energy to existing life tiles
 						if (grassland_blocks.Count != 0) {
-							Block b = null;
-							while (b== null && grassland_blocks.Count >0) {
+							Grassland gl = null;
+							while (gl== null && grassland_blocks.Count >0) {
 								int pos = (int)(Random.value * (grassland_blocks.Count - 1));
-								b = grassland_blocks[pos];
-								if (b != null) {
-									Grassland gl = b.body.GetComponent<Grassland>();
-									if (gl == null) {grassland_blocks.RemoveAt(pos); continue;}
-									float count = MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
+								gl = grassland_blocks[pos];
+								if (gl != null) {
+									int  count = (int)(Mathf.Pow(MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient, gl.level));
 									if (lifePower < count)  count = lifePower;
 									gl.AddLifepower(count);
-									lifePower -= (int)(count);
+									lifePower -= count;
 								}
-							}
+								else {grassland_blocks.RemoveAt(pos);continue;}
 						}
+					}
 					}
 					if (dirt_for_grassland.Count != 0 || grassland_blocks.Count != 0) lifepower_timer = LIFEPOWER_TICK;
 				}
 				else { // LifePower decreases
+					//print (grassland_blocks.Count);
 					if (grassland_blocks.Count == 0) lifepower_timer = 0;
 					else {
 						Grassland gl = null;
-						while (gl == null && grassland_blocks.Count > 0) {
-							int pos = (int)(Random.value * (grassland_blocks.Count - 1));
-							gl = grassland_blocks[pos].body.GetComponent<Grassland>();
+						int pos = 0;
+						while (pos < grassland_blocks.Count && lifePower <= 0) {
+							gl = grassland_blocks[pos];
 							if (gl != null) {
-								if (gl.lifepower > MAX_LIFEPOWER_TRANSFER) {lifePower += MAX_LIFEPOWER_TRANSFER; gl.TakeLifepower(MAX_LIFEPOWER_TRANSFER);}
-								else {lifePower += (int)gl.lifepower; gl.TakeLifepower((int)gl.lifepower);}
+								if (gl.lifepower <= 0 ) gl.Annihilation();
+								else lifePower += gl.TakeLifepower(energy_take_speed * gl.level);
+								pos++;
 							}
-							grassland_blocks.RemoveAt(pos);
+							else {
+								grassland_blocks.RemoveAt(pos); 
+							}
 						}
-						if (lifePower < 0) lifepower_timer = LIFEPOWER_TICK;
 					}
 				}
+				lifepower_timer = LIFEPOWER_TICK;
 		}
 		}
 	}
@@ -124,11 +138,10 @@ public class Chunk : MonoBehaviour {
 		for (int x = 0; x < CHUNK_SIZE; x++) {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 				int y = surfaceBlocks[x,z];
-				if (blocks[x,y,z].f_id == Block.GRASS_ID || (blocks[x,y,z].f_id == Block.DIRT_ID && blocks[x,y,z].body.GetComponent<Grassland>())) {
-					
+				if ((blocks[x,y,z].f_id == Block.GRASS_ID || (blocks[x,y,z].f_id == Block.DIRT_ID) && blocks[x,y,z].grassland == null)) {					
 					List<ChunkPos> candidats = new List<ChunkPos>();
 					bool rightSide = false, leftSide = false;
-					if (x + 1 < CHUNK_SIZE) {candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1,z] ,z));rightSide = true;}
+					if (x + 1 < CHUNK_SIZE) {rightSide = true;candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1,z] ,z));	}
 					if (x - 1 >= 0) {candidats.Add(new ChunkPos(x-1, surfaceBlocks[x-1,z], z));leftSide = true;}
 					if (z + 1 < CHUNK_SIZE) {
 						candidats.Add(new ChunkPos(x, surfaceBlocks[x, z+1], z+1));
@@ -143,7 +156,7 @@ public class Chunk : MonoBehaviour {
 					foreach (ChunkPos p in candidats) {
 							Block b = GetBlock(p.x, p.y, p.z);
 						if (b == null) continue;
-						if (b.f_id == Block.DIRT_ID && !markedBlocks.Contains(p) &&b.body.GetComponent<Grassland>() == null && Mathf.Abs(y - p.y) < 2) {dirt_for_grassland.Add(b); markedBlocks.Add(p);}
+						if (b.f_id == Block.DIRT_ID && !markedBlocks.Contains(p) &&b.grassland == null && Mathf.Abs(y - p.y) < 2) {dirt_for_grassland.Add(b); markedBlocks.Add(p);}
 					}
 				}
 			}
@@ -176,12 +189,12 @@ public class Chunk : MonoBehaviour {
 		if (str == null) return false;
 		bool appliable = true;
 		for (int i =0; i< str.height; i++) {
-			if (blocks[x,y,z + i] != null)  {appliable = false;break;}
+			if (blocks[x,y + i,z] != null)  {appliable = false;break;}
 		}
 		if (appliable == false) return false;
 		for (int i =0; i< str.height; i++) {
-			blocks[x,y,z+i].Destroy();
-			blocks[x,y,z+i] = Block.BlockedByStructure;
+			if (blocks[x, y+i,z] == null) 	blocks[x,y + i,z] = Block.BlockedByStructure;
+			else ReplaceBlock(x, y+i, z, Block.BLOCKED_BY_STRUCTURE_ID);
 		}
 		return true;
 	}
@@ -314,6 +327,14 @@ public class Chunk : MonoBehaviour {
 	}
 
 	public void AddLifePower (int count) {lifePower += count; if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;}
+	public int TakeLifePower (int count) {
+		if (count < 0) return 0;
+		int lifeTransfer = count;
+		if (lifeTransfer > lifePower) {if (lifePower >= 0) lifeTransfer = lifePower; else lifeTransfer = 0;}
+		lifePower -= lifeTransfer;
+		if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;
+		return lifeTransfer;
+	}
 	public int[,] GetSurface() {return surfaceBlocks;}
 
 	public void SpreadBlocks (int xpos, int zpos, int newId) {
@@ -365,4 +386,6 @@ public class Chunk : MonoBehaviour {
 		}
 		RecalculateSurface();
 	}
+
+
 }

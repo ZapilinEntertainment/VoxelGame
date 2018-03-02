@@ -5,11 +5,15 @@ using UnityEngine;
 public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
 	public Material[] grassland_ready_25, grassland_ready_50;
+	public Material dryingLeaves_material, leaves_material;
 	public GameObject tree_pref, grass_pref;
 
 	void Awake() {
 		if (current != null && current != this) Destroy(current); 
 		current = this;
+
+		dryingLeaves_material = Resources.Load<Material>("Materials/DryingLeaves");
+		leaves_material = Resources.Load<Material>("Materials/Leaves");
 
 		tree_pref = Resources.Load<GameObject>("Lifeforms/Tree");tree_pref.SetActive(false);
 		grass_pref = Resources.Load<GameObject>("Lifeforms/Grass"); grass_pref.SetActive(false);

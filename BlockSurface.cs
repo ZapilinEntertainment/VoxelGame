@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Content {Empty, Plant}
+public enum Content {Empty, Plant, HarvestableResources}
 
 public class BlockSurface : MonoBehaviour {
 	public const int INNER_RESOLUTION = 16;
@@ -18,6 +18,16 @@ public class BlockSurface : MonoBehaviour {
 			for (int j = 0; j< INNER_RESOLUTION; j++) map[i,j] = Content.Empty;
 		}
 		cellsStatus = 0;
+	}
+
+	public static Vector3 GetLocalPosition(PixelPosByte cellPos) {
+		float res = BlockSurface.INNER_RESOLUTION;
+		float a = cellPos.x, b = cellPos.y;
+		return( new Vector3((a/res- 0.5f) * Block.QUAD_SIZE + Block.QUAD_SIZE/ res /2f, 0, (b/res - 0.5f)* Block.QUAD_SIZE + Block.QUAD_SIZE / res / 2f));
+	}
+
+	public void ClearCell(PixelPosByte cellPos, Content c) {
+		if (map[cellPos.x, cellPos.y] == c) map[cellPos.x, cellPos.y] = Content.Empty;
 	}
 
 	/// <summary>
@@ -59,6 +69,8 @@ public class BlockSurface : MonoBehaviour {
 		surfaceRenderer = planeRenderer;
 	}
 
-	public void Annihilation() {}
+	public void Annihilation() {
+		Destroy(gameObject);
+	}
 
 }
