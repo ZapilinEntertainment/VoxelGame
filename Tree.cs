@@ -8,11 +8,12 @@ public class Tree : Plant {
 	float croneState = 1;
 
 	void Awake() {
-		cellPosition = PixelPosByte.Empty;
 		full = false;
 		lifepower = 1;
 		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.4f + Random.value * 0.1f;
+		hp = maxHp;
+		innerPosition = SurfaceRect.Empty;
 	}
 		
 	public virtual int TakeLifepower(int life) {
@@ -46,15 +47,15 @@ public class Tree : Plant {
 	}
 
 	public override void Annihilate() {
-		basement.grassland.AddLifepower((int)lifepower);
-		basement.upSurface.ClearCell(cellPosition, Content.Plant);
-
-		GameObject g = Instantiate(Resources.Load<GameObject>("Lifeforms/DeadTree")) as GameObject;
-		g.transform.localScale = transform.localScale;
-		HarvestableResource hr = g.GetComponent<HarvestableResource>();
-		hr.SetResources(ResourceType.Lumber, (int)(100 * trunk.transform.localScale.y), ResourceType.Nothing, 0);
-		hr.SetPosition(cellPosition, basement);
-
-		Destroy(gameObject);
+		if (basement != null) {
+			basement.grassland.AddLifepower((int)lifepower);
+			GameObject g = Instantiate(Resources.Load<GameObject>("Lifeforms/DeadTree")) as GameObject;
+			g.transform.localScale = transform.localScale;
+			HarvestableResource hr = g.GetComponent<HarvestableResource>();
+			hr.SetResources(ResourceType.Lumber, (int)(100 * trunk.transform.localScale.y), ResourceType.Nothing, 0);
+			basement.ReplaceStructure(new SurfaceRect(innerPosition.x, innerPosition.z, innerPosition.x_size, innerPosition.z_size, Content.HarvestableResources, g));
+			basement = null;
+		}
+		else Destroy(gameObject);
 	}
 }

@@ -33,17 +33,17 @@ public class Constructor : MonoBehaviour {
 				if (height < 2) height = 2; else	if (height > size/2  ) height = size/2 ;
 				int y = 0;
 				for (; y < height; y++) {
-					dat[x,y + size/2,z] = Block.STONE_ID;
+					dat[x,y + size/2,z] = PoolMaster.STONE_ID;
 				}
-				if (Random.value > 0.8f) dat[x,height+size/2-2,z] = Block.DIRT_ID; 
-				if (Random.value < 0.95f) dat[x,height+size/2-1,z] = Block.DIRT_ID; 
+				if (Random.value > 0.8f) dat[x,height+size/2-2,z] = PoolMaster.DIRT_ID; 
+				if (Random.value < 0.95f) dat[x,height+size/2-1,z] = PoolMaster.DIRT_ID; 
 				//down part
 				float pc = (1 - Mathf.Sqrt((x - size/2) * (x-size/2) + (z - size/2) * (z - size/2)) / radius);
 				pc *= pc * pc;
 				height = (int)(pc * size/2  + size/2 * perlin);
 				if (height < 0) height = 1; else if (height > size/2) height = size/2;
 				for (y = 0; y <= height; y++) {
-					dat[x,size/2  - y,z] = Block.STONE_ID;
+					dat[x,size/2  - y,z] = PoolMaster.STONE_ID;
 				}
 			}
 		}
@@ -52,30 +52,22 @@ public class Constructor : MonoBehaviour {
 		GameMaster.realMaster.mainChunk = c;
 		c.SetChunk(dat);
 		NatureCreation(c);
-
 	}
 
 	void NatureCreation(Chunk chunk) {
-		int[,] surface = chunk.GetSurface();
+		SurfaceBlock[,] surface = chunk.GetSurface();
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		x = 7;z=7;
-		Block b = chunk.GetBlock(x,surface[x,z],z);
-		chunk.ReplaceBlock(x,surface[x,z], z, Block.GRASS_ID);
-		chunk.SpreadBlocks(x,z, Block.GRASS_ID);
+		surface[x,z].Replace(PoolMaster.GRASS_ID);
+		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), 500000);
 
 		GameObject pref;
 		if (Random.value > 0.5f) pref = Resources.Load<GameObject>("Structures/Tree of Life") ; else pref = Resources.Load<GameObject>("Structures/LifeStone");
-		GameObject g = Instantiate(pref) as GameObject;
-		chunk.AddStructure(g,x,surface[x,z], z);
-		g.transform.parent = chunk.transform;
-		g.transform.localPosition = new Vector3(x,surface[x,z], z);
-		g.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
-		Structure str = g.GetComponent<Structure>();
-		str.SetBasement(b);
-
-
+		MultiblockStructure ms = Instantiate(pref).GetComponent<MultiblockStructure>();
+		SurfaceBlock sb = chunk.GetSurfaceBlock(x,z);
+		ms.SetBasement(sb, PixelPosByte.zero);
 	}
 
 }

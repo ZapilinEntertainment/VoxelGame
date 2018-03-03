@@ -3,17 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Structure : MonoBehaviour {
-	protected Block basement;
-	public PixelPosByte configuration;
-	public bool fullScale {get;protected set;}
-	protected float hp = 1, maxHp = 1;
-	public int height = 1;
-	int [,,] innerBlocks;
+	protected SurfaceBlock basement; 
+	public bool isMainStructure = false;
+	public byte xsize_to_set = 1, zsize_to_set =1;
+	public SurfaceRect innerPosition {get;protected set;}
+	public float hp {get; protected set;}
+	public float maxHp = 1;
 
+	void Awake() {
+		hp = maxHp;
+		innerPosition = SurfaceRect.Empty;
+	}
 
-	virtual public void SetBasement(Block b) {
+	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
-		configuration = new PixelPosByte(1,1);
-		fullScale = false;
+		Content myContent = Content.Structure; if (isMainStructure) myContent = Content.MainStructure;
+		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set ,zsize_to_set, myContent, gameObject);
+		b.AddStructure(innerPosition);
+	}
+
+	protected void OnDestroy() {
+		if (basement != null) {
+			basement.RemoveStructure(innerPosition);
+		}
 	}
 }

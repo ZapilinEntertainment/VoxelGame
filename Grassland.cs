@@ -5,9 +5,17 @@ using UnityEngine;
 public struct PixelPosByte {
 	public byte x, y;
 	public bool exists;
-	public static PixelPosByte Empty;
+	public static PixelPosByte Empty, zero;
 	public PixelPosByte (byte xpos, byte ypos) {x = xpos; y = ypos; exists = true;}
-	static PixelPosByte() {Empty = new PixelPosByte(0,0); Empty.exists = false;}
+	public PixelPosByte (int xpos, int ypos) {
+		if (xpos < 0) xpos = 0; if (ypos < 0) ypos = 0;
+		x = (byte)xpos; y = (byte)ypos;
+		exists = true;
+	}
+	static PixelPosByte() {
+		Empty = new PixelPosByte(0,0); Empty.exists = false;
+		zero = new PixelPosByte(0,0); // but exists
+	}
 
 	public static bool operator ==(PixelPosByte lhs, PixelPosByte rhs) {return lhs.Equals(rhs);}
 	public static bool operator !=(PixelPosByte lhs, PixelPosByte rhs) {return !(lhs.Equals(rhs));}
@@ -17,7 +25,7 @@ public class Grassland : MonoBehaviour {
 	public const int MAX_LIFEFORMS_COUNT= 8;
 	public const float LIFEPOWER_TO_PREPARE = 16;
 
-	public Block myBlock {get;private set;}
+	public SurfaceBlock myBlock {get;private set;}
 	float fertility = 1, progress = 0, lifeTimer = 0;
 	public float lifepower;
 	List<Plant> plants;
@@ -43,18 +51,18 @@ public class Grassland : MonoBehaviour {
 				if (stage != prevStage) {
 					switch (stage) {
 					case 0: 						
-						myBlock.upSurface.surfaceRenderer.material = Block.dirt_material;
+						myBlock.surfaceRenderer.material = PoolMaster.dirt_material;
 						break;
 					case 1:
 						int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-						myBlock.upSurface.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
+						myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
 						break;
 					case 2:
 						int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-						myBlock.upSurface.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
+						myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
 						break;
 					case 3:
-						myBlock.upSurface.surfaceRenderer.material = Block.grass_material;
+						myBlock.surfaceRenderer.material = PoolMaster.grass_material;
 						break;
 					}
 					prevStage = stage;
@@ -71,13 +79,13 @@ public class Grassland : MonoBehaviour {
 					}
 						if (plants.Count < MAX_LIFEFORMS_COUNT) {
 							level = 3;
-								PixelPosByte ppos = myBlock.upSurface.PutInCell(Content.Plant);
-								if (ppos != PixelPosByte.Empty) {
-									Plant p = (Instantiate(PoolMaster.current.grass_pref) as GameObject).GetComponent<Plant>(); lifepower-=1;
-									p.gameObject.SetActive(true);
-									p.GetComponent<Plant2D>().SetPosition(ppos, myBlock);
-									plants.Add(p);
-								}
+							PixelPosByte ppos = myBlock.GetRandomCell();
+							if (ppos != PixelPosByte.Empty) {
+								Plant p = (Instantiate(PoolMaster.current.grass_pref) as GameObject).GetComponent<Plant>(); lifepower-=1;
+								p.gameObject.SetActive(true);
+								p.SetBasement(myBlock, ppos);
+								plants.Add(p);
+							}
 								//else print("no empty cells!");
 						}
 						else {
@@ -115,9 +123,8 @@ public class Grassland : MonoBehaviour {
 	void ReplaceGrassToTree(int pos) {
 		Tree t = (Instantiate(PoolMaster.current.tree_pref) as GameObject).GetComponent<Tree>();
 		t.gameObject.SetActive(true);
-		t.SetPosition(plants[pos].cellPosition, myBlock);
+		myBlock.ReplaceStructure( new SurfaceRect (plants[pos].innerPosition.x, plants[pos].innerPosition.z, plants[pos].innerPosition.x_size, plants[pos].innerPosition.z_size, Content.Plant, t.gameObject));
 		t.AddLifepower( (int)plants[pos].lifepower);
-		Destroy(plants[pos].gameObject);
 		plants[pos] = t;
 	}
 
@@ -143,7 +150,7 @@ public class Grassland : MonoBehaviour {
 			float freeEnergy = count - 2 * LIFEPOWER_TO_PREPARE;
 			int plants_count = MAX_LIFEFORMS_COUNT;
 			if (freeEnergy < MAX_LIFEFORMS_COUNT)  plants_count = (int)(freeEnergy - MAX_LIFEFORMS_COUNT); 
-			List<PixelPosByte> positions = myBlock.upSurface.PutInMultipleCells(plants_count, Content.Plant);
+			List<PixelPosByte> positions = myBlock.GetRandomCells(plants_count);
 			float[] lifepowers = new float[plants_count];
 			float total = 0;
 			for (int i =0; i< plants_count; i++) {
@@ -157,7 +164,7 @@ public class Grassland : MonoBehaviour {
 				if (energy >  Plant2D.MAXIMUM_LIFEPOWER) {
 					Tree t = Instantiate(PoolMaster.current.tree_pref).GetComponent<Tree>();	t.gameObject.SetActive(true);
 					int pos = (int) (Random.value * (positions.Count - 1));
-					t.SetPosition(positions[pos], myBlock);
+					t.SetBasement(myBlock, positions[pos]);
 					t.AddLifepower((int)energy);
 					positions.RemoveAt(pos);
 					plants.Add(t);
@@ -165,7 +172,7 @@ public class Grassland : MonoBehaviour {
 				else {
 					Plant2D pl = Instantiate(PoolMaster.current.grass_pref).GetComponent<Plant2D>(); pl.gameObject.SetActive(true);
 					int pos = (int) (Random.value * (positions.Count - 1));
-					pl.SetPosition(positions[pos], myBlock);
+					pl.SetBasement(myBlock, positions[pos]);
 					pl.AddLifepower((int)energy);
 					positions.RemoveAt(pos);
 					plants.Add(pl);
@@ -182,18 +189,18 @@ public class Grassland : MonoBehaviour {
 			if (stage != prevStage) {
 				switch (stage) {
 				case 0: 						
-					myBlock.upSurface.surfaceRenderer.material = Block.dirt_material;
+					myBlock.surfaceRenderer.material = PoolMaster.dirt_material;
 					break;
 				case 1:
 					int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-					myBlock.upSurface.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
+					myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
 					break;
 				case 2:
 					int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-					myBlock.upSurface.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
+					myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
 					break;
 				case 3:
-					myBlock.upSurface.surfaceRenderer.material = Block.grass_material;
+					myBlock.surfaceRenderer.material = PoolMaster.grass_material;
 					break;
 				}
 				prevStage = stage;
@@ -202,7 +209,7 @@ public class Grassland : MonoBehaviour {
 		if (lifepower != 0 && lifeTimer == 0 ) lifeTimer = Chunk.LIFEPOWER_TICK;
 	}
 
-	public void SetBlock(Block b) {myBlock = b;}
+	public void SetBlock(SurfaceBlock b) {myBlock = b;}
 
 	public void Annihilation() {
 		for (int i =0; i< plants.Count; i++) {
@@ -210,7 +217,7 @@ public class Grassland : MonoBehaviour {
 			else plants.RemoveAt(i);
 		}
 		myBlock.myChunk.AddLifePower((int)lifepower);
-		myBlock.upSurface.surfaceRenderer.material = Block.dirt_material;
+		myBlock.surfaceRenderer.material = PoolMaster.dirt_material;
 		Destroy(this);
 	}
 }

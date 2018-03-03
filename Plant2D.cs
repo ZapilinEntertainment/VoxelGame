@@ -8,19 +8,12 @@ public class Plant2D : Plant {
 	float startSize = 0.05f;
 
 	void Awake () {
-		cellPosition = PixelPosByte.Empty;
 		lifepower = 1;
 		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.1f;
 		full = false;
-	}
-
-	public override void SetPosition(PixelPosByte cellPos, Block block) {
-		cellPosition = cellPos;
-		basement = block;
-		transform.parent = block.upSurface.transform;
-		body.SetPosition(0,block.upSurface.transform.TransformPoint( BlockSurface.GetLocalPosition(cellPos) ));
-		body.SetPosition(1, body.GetPosition(0) + Vector3.up * startSize);
+		hp = maxHp;
+		innerPosition = SurfaceRect.Empty;
 	}
 
 	override public  void AddLifepower(int life) {

@@ -79,18 +79,6 @@ public class GameMaster : MonoBehaviour {
 		if (g != null) cameraUpdateBroadcast.Add(g);
 	}
 
-	public void AddBlockToDaytimeUpdateList(Block b) {
-		if (b == null) return;
-		daytimeUpdates_blocks.Add(b);
-		b.daytimeUpdatePosition = daytimeUpdates_blocks.Count - 1;
-	}
-
-	public void RemoveBlockFromDaytimeUpdateList (int index) {
-		if (daytimeUpdates_blocks[index] == null) return;
-		daytimeUpdates_blocks[index].daytimeUpdatePosition = -1;
-		daytimeUpdates_blocks[index] = daytimeUpdates_blocks[daytimeUpdates_blocks.Count - 1];
-		daytimeUpdates_blocks.RemoveAt(daytimeUpdates_blocks.Count - 1);
-	}
 
 	public static void Save2DMatrix (float[,] arr, string fileName ) {
 		// Не совсем правильный вывод, поправить

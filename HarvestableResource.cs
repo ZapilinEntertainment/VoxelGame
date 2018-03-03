@@ -21,15 +21,14 @@ public struct ResourceType {
 	}
 }
 
-public class HarvestableResource : MonoBehaviour {
+public class HarvestableResource : Structure {
 	public ResourceType mainResource {get;protected set;}
 	public ResourceType secondaryResource {get;protected set;}
 	public int count1 {get;protected set;}
 	public int count2 {get;protected set;}
 	public float hp {get;protected set;}
-	public float maxHp = 1, decaySpeed = 0.01f;
-	public PixelPosByte cellPos;
-	public BlockSurface basement;
+	public float decaySpeed = 0.01f;
+
 
 	void Awake() {
 		mainResource = ResourceType.Nothing; 
@@ -39,21 +38,10 @@ public class HarvestableResource : MonoBehaviour {
 	}
 
 	void Update() {
-		hp -= Time.deltaTime * GameMaster.gameSpeed * decaySpeed;
-		if (hp <= 0) Annihilate();
-	}
-
-	public void SetPosition(PixelPosByte f_cellPos, Block block) {
-		if (block == null ) return;
-		cellPos = f_cellPos;
-		transform.parent = block.upSurface.transform;
-		transform.localPosition = BlockSurface.GetLocalPosition(cellPos);
-		hp = maxHp;
-	}
-
-	void Annihilate() {
-		if (basement != null) basement.ClearCell(cellPos, Content.HarvestableResources);
-		Destroy(gameObject);
+		if (innerPosition.Equals(SurfaceRect.Empty) == false) {
+			hp -= Time.deltaTime * GameMaster.gameSpeed * decaySpeed;
+			if (hp <= 0) Destroy(gameObject);
+		}
 	}
 
 	public void SetResources(ResourceType main, int f_count1, ResourceType secondary,  int f_count2) {
@@ -62,4 +50,5 @@ public class HarvestableResource : MonoBehaviour {
 		count1 = f_count1;
 		count2 = f_count2;
 	}
+
 }
