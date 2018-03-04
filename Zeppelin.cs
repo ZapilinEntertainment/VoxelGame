@@ -9,6 +9,8 @@ public class Zeppelin : Transport {
 	public LineRenderer anchorChain;
 	float anchorSpeed = 0, flySpeed = 1, landingSpeed = 1;
 	Vector3 centralPoint = new Vector3(8,8,8), anchorStartPos = Vector3.zero;
+	public AudioSource propeller_as, anchorChain_as;
+	public AudioClip anchorLanded_ac;
 
 	void Start() {
 		centralPoint = Vector3.one * Chunk.CHUNK_SIZE/2f;
@@ -29,7 +31,11 @@ public class Zeppelin : Transport {
 				Vector3 v = centralPoint - transform.position; v.y = 0;
 				transform.forward = Quaternion.AngleAxis(90, Vector3.up) * v;
 				transform.Translate(Vector3.forward * flySpeed * Time.deltaTime * GameMaster.gameSpeed,Space.Self);
-				if (anchor.transform.localPosition != anchorStartPos) { anchor.transform.localPosition = Vector3.MoveTowards(anchor.transform.localPosition, anchorStartPos, 2 * Time.deltaTime * GameMaster.gameSpeed); }
+				if (anchor.transform.localPosition != anchorStartPos) { 
+					anchor.transform.localPosition = Vector3.MoveTowards(anchor.transform.localPosition, anchorStartPos, 2 * Time.deltaTime * GameMaster.gameSpeed); 
+					anchorChain_as.enabled = true;
+				}
+				else anchorChain_as.enabled = false;
 				if (transform.position.y < Chunk.CHUNK_SIZE) transform.Translate(Vector3.up * landingSpeed/2f * Time.deltaTime * GameMaster.gameSpeed);
 				leftScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
 				rightScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
@@ -39,15 +45,24 @@ public class Zeppelin : Transport {
 				if (Vector3.Distance(transform.position, stopPoint) > 0.01f) {
 					transform.position = Vector3.MoveTowards(transform.position, stopPoint, flySpeed * Time.deltaTime);
 					transform.forward = stopPoint - transform.position;
+					leftScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
+					rightScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
 				}
 				else {
 					if ( !anchored ) {
+						anchorChain_as.enabled = true;
 						anchorSpeed += 9.8f * Time.deltaTime;
 						float speed = anchorSpeed * Time.deltaTime * GameMaster.gameSpeed;
 						RaycastHit rh;
 						if (Physics.Raycast(transform.position, Vector3.down, out rh, Chunk.CHUNK_SIZE * 2)) {
 							float delta = (anchor.transform.position - rh.point).y;
-							if (delta <= speed) {anchored = true; anchor.transform.position = rh.point + Vector3.up * 0.01f;} 
+							if (delta <= speed) {
+								anchored = true; 
+								AudioSource.PlayClipAtPoint(anchorLanded_ac, anchor.transform.position);
+								anchorChain_as.enabled = false;
+								anchor.transform.position = rh.point + Vector3.up * 0.01f;
+								propeller_as.enabled = false;
+							} 
 							else anchor.Translate(Vector3.down * speed);
 						}
 						else {landingPlace = null; landing = false;}
@@ -60,9 +75,9 @@ public class Zeppelin : Transport {
 							if (delta <= speed) { // zeppelin landed
 								landed = true;
 								anchor.gameObject.SetActive(false);
-								anchorChain.enabled = false;
+								anchorChain_as.enabled = false;
 								GameObject hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
-								SurfaceRect sr = new SurfaceRect(4,0,2,16,Content.MainStructure, hq);
+								SurfaceRect sr = new SurfaceRect(4,0,8,16,Content.MainStructure, hq);
 								landingPlace.AddStructure(sr);
 							} 
 							else transform.Translate (Vector3.down * speed);

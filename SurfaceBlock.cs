@@ -68,7 +68,26 @@ public class SurfaceBlock : Block {
 		}
 	}
 
-	public void AddStructure(SurfaceRect sr) {
+	public void AddStructure(SurfaceRect sr) { // with autoreplacing
+		if (cellsStatus != 0) { 
+			int i =0;
+			while (i < surfaceObjects.Count) {
+				SurfaceRect a = surfaceObjects[i];
+				int leftX = -1, rightX = -1;
+				if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
+				if (a.x + a.x_size > sr.x + sr.x_size) rightX = sr.x + sr.x_size; else rightX = a.x + a.x_size;
+				if (leftX >= rightX) {i++;continue;}
+				int topZ = -1, downZ = -1;
+				if (a.z > sr.z) downZ = a.z; else downZ = sr.z;
+				if (a.z + a.z_size > sr.z + sr.z_size) topZ = sr.z + sr.z_size; else topZ = a.z + a.z_size;
+				if (topZ <= downZ) {i++;continue;}
+				else {
+					a.myGameObject.GetComponent<Structure>().UnsetBasement();
+					Destroy(a.myGameObject);
+					surfaceObjects.RemoveAt(i);
+				}
+			}
+		}
 		surfaceObjects.Add(sr);
 		sr.myGameObject.transform.parent = transform;
 		sr.myGameObject.transform.localPosition = GetLocalPosition(sr);
@@ -86,6 +105,7 @@ public class SurfaceBlock : Block {
 			}
 		}
 	}
+
 
 	public Grassland AddGrassland() {
 		if (grassland == null)  {
@@ -115,8 +135,9 @@ public class SurfaceBlock : Block {
 		
 	public static Vector3 GetLocalPosition(SurfaceRect sr) {
 		float res = INNER_RESOLUTION;
-		float a = sr.x, b = sr.z;
-		return( new Vector3(((a - sr.x_size/2f)/res- 0.5f) * Block.QUAD_SIZE * 0.9f, -Block.QUAD_SIZE/2f, ((b - sr.z_size/2f)/res - 0.5f)* Block.QUAD_SIZE * 0.9f));
+		float xpos = sr.x + sr.x_size/2f ;
+		float zpos = sr.z + sr.z_size/2f;
+		return( new Vector3((xpos / res - 0.5f) * Block.QUAD_SIZE * 0.9f, -Block.QUAD_SIZE/2f, (zpos / res - 0.5f)* Block.QUAD_SIZE * 0.9f));
 	}
 
 
@@ -179,20 +200,20 @@ public class SurfaceBlock : Block {
 		bool[,] map = GetBooleanMap();
 		List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
 		if (Random.value > 0.5f) { // поиск снизу
-			for (int i = zsize - 1; i< INNER_RESOLUTION; i++) {
+			for (int i = INNER_RESOLUTION - xsize; i >= 0; i--) {
 				byte width = 0;
-				for (int j = width; j < INNER_RESOLUTION; j++)
+				for (int j =  INNER_RESOLUTION; j >= 0; j--)
 				{
 					if (map[i,j] == false) width++; else width = 0;
 					if (width >= xsize) {
 						bool appliable = true;
-						for (byte a = 0; a < xsize; a++) {
+						for (byte a = 1; a < xsize; a++) {
 							for (byte b = 0; b < zsize; b++) {
-								if (map[i - b, j - a] == true) {appliable = false; break;}
+								if (map[i + a, j - b] == true) {appliable = false; break;}
 							}
 							if ( !appliable) break;
 						}
-						if ( appliable ) {acceptablePositions.Add(new PixelPosByte(i, j - xsize - 1)); width--;}
+						if ( appliable ) {acceptablePositions.Add(new PixelPosByte(i, j)); width--;}
 						if (acceptablePositions.Count >= maxVariants) break;
 					}
 				}
@@ -200,19 +221,19 @@ public class SurfaceBlock : Block {
 			}
 		}
 		else { // поиск сверху
-			for (byte i = INNER_RESOLUTION - 1; i >= zsize-1; i--) {
+			for (int i = xsize - 1; i < INNER_RESOLUTION; i++) {
 				byte width = 0;
-				for (byte j = width; j < INNER_RESOLUTION; j++) {
+				for (int j = 0; j <INNER_RESOLUTION; j++) {
 					if (map[i,j] == false) width++; else width = 0;
 					if (width >= xsize) {
 						bool appliable = true;
-						for (byte a = 1; a < zsize; a++) {
-							for (byte b = 0; b < xsize; b++) {
-								if ( map[i + a, j - b] == true ) {appliable = false; break;}
+						for (byte a = 1; a < xsize; a++) {
+							for (byte b = 0; b < zsize; b++) {
+								if ( map[i - a, j - b] == true ) {appliable = false; break;}
 							}
 							if ( appliable == false) break;
 						}
-						if ( appliable ) {acceptablePositions.Add(new PixelPosByte(i, j - xsize - 1)); width--;}
+						if ( appliable ) {acceptablePositions.Add(new PixelPosByte(i - xsize + 1, j - zsize + 1)); width--;}
 						if (acceptablePositions.Count >= maxVariants) break;
 					}
 				}

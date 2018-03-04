@@ -16,10 +16,15 @@ public class Structure : MonoBehaviour {
 	}
 
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
 		basement = b;
 		Content myContent = Content.Structure; if (isMainStructure) myContent = Content.MainStructure;
 		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set ,zsize_to_set, myContent, gameObject);
 		b.AddStructure(innerPosition);
+	}
+
+	public void UnsetBasement() {
+		basement = null;
 	}
 
 	protected void OnDestroy() {
