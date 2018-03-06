@@ -45,7 +45,7 @@ public class SurfaceBlock : Block {
 		if (surfaceObjects.Count != 0) {
 			foreach (SurfaceRect sr in surfaceObjects) {
 				for (int i =0; i< sr.x_size; i++) {
-					for (int j =0; j<sr.z_size; j++) {
+					for (int j =0; j < sr.z_size; j++) {
 						map[sr.x + i, sr.z + j] = true;
 					}
 				}
@@ -137,7 +137,15 @@ public class SurfaceBlock : Block {
 		float res = INNER_RESOLUTION;
 		float xpos = sr.x + sr.x_size/2f ;
 		float zpos = sr.z + sr.z_size/2f;
-		return( new Vector3((xpos / res - 0.5f) * Block.QUAD_SIZE * 0.9f, -Block.QUAD_SIZE/2f, (zpos / res - 0.5f)* Block.QUAD_SIZE * 0.9f));
+		return( new Vector3((xpos / res - 0.5f) * Block.QUAD_SIZE , -Block.QUAD_SIZE/2f, (zpos / res - 0.5f)* Block.QUAD_SIZE));
+	}
+	public PixelPosByte WorldToLocalPosition(Vector3 pos) {
+		float xdelta = pos.x - gameObject.transform.position.x; xdelta /= Block.QUAD_SIZE;
+		float zdelta = pos.z - gameObject.transform.position.z; zdelta /= Block.QUAD_SIZE;
+		if (Mathf.Abs(xdelta) > 0.5f|| Mathf.Abs(zdelta) > 0.5f) return PixelPosByte.Empty;
+		else {
+			return new PixelPosByte((byte)((xdelta + 0.5f) * INNER_RESOLUTION), (byte)(zdelta  + 0.5f) * INNER_RESOLUTION);
+		}
 	}
 
 
@@ -197,48 +205,33 @@ public class SurfaceBlock : Block {
 
 	List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants) {
 		if (maxVariants > INNER_RESOLUTION * INNER_RESOLUTION) maxVariants = INNER_RESOLUTION * INNER_RESOLUTION;
+		if (xsize > INNER_RESOLUTION || zsize > INNER_RESOLUTION || xsize <=0 || zsize <= 0) return null;
 		bool[,] map = GetBooleanMap();
 		List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
-		if (Random.value > 0.5f) { // поиск снизу
-			for (int i = INNER_RESOLUTION - xsize; i >= 0; i--) {
-				byte width = 0;
-				for (int j =  INNER_RESOLUTION; j >= 0; j--)
-				{
-					if (map[i,j] == false) width++; else width = 0;
-					if (width >= xsize) {
-						bool appliable = true;
-						for (byte a = 1; a < xsize; a++) {
-							for (byte b = 0; b < zsize; b++) {
-								if (map[i + a, j - b] == true) {appliable = false; break;}
-							}
-							if ( !appliable) break;
+		for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++) {
+			int width = 0;
+			for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++) {
+				if (map[xpos, zpos] == true) width = 0; else width++;
+				if (width >= zsize) {
+					bool appliable = true;
+					for (int xdelta = 1; xdelta < xsize; xdelta++) {
+						for (int zdelta = 0; zdelta < zsize; zdelta++) {
+							if (map[xpos + xdelta, zpos + zdelta] == true) {appliable = false; break;}
 						}
-						if ( appliable ) {acceptablePositions.Add(new PixelPosByte(i, j)); width--;}
+						if (appliable == false) break;
+					}
+					if (appliable) {
+						acceptablePositions.Add( new PixelPosByte(xpos, zpos)); width = 0;
+						for (int xdelta = 1; xdelta < xsize; xdelta++) {
+							for (int zdelta = 0; zdelta < zsize; zdelta++) {
+								map[xpos + xdelta, zpos + zdelta] = true;
+							}
+						}
 						if (acceptablePositions.Count >= maxVariants) break;
 					}
 				}
-				if (acceptablePositions.Count >= maxVariants) break;
 			}
-		}
-		else { // поиск сверху
-			for (int i = xsize - 1; i < INNER_RESOLUTION; i++) {
-				byte width = 0;
-				for (int j = 0; j <INNER_RESOLUTION; j++) {
-					if (map[i,j] == false) width++; else width = 0;
-					if (width >= xsize) {
-						bool appliable = true;
-						for (byte a = 1; a < xsize; a++) {
-							for (byte b = 0; b < zsize; b++) {
-								if ( map[i - a, j - b] == true ) {appliable = false; break;}
-							}
-							if ( appliable == false) break;
-						}
-						if ( appliable ) {acceptablePositions.Add(new PixelPosByte(i - xsize + 1, j - zsize + 1)); width--;}
-						if (acceptablePositions.Count >= maxVariants) break;
-					}
-				}
-				if (acceptablePositions.Count >= maxVariants) break;
-			}
+			if (acceptablePositions.Count >= maxVariants) break;
 		}
 		return acceptablePositions;
 	}
@@ -259,6 +252,8 @@ public class SurfaceBlock : Block {
 		if (cellsStatus == 0) return;
 		for (int i = 0; i< surfaceObjects.Count; i++) {
 			if (surfaceObjects[i].x == sr.x && surfaceObjects[i].z == sr.z && surfaceObjects[i].x_size == sr.x_size && surfaceObjects[i].z_size == sr.z_size   ) {
+				sr.myGameObject.transform.parent = transform;
+				sr.myGameObject.transform.localPosition = surfaceObjects[i].myGameObject.transform.localPosition;
 				Destroy(surfaceObjects[i].myGameObject);
 				surfaceObjects[i] = sr;
 			}

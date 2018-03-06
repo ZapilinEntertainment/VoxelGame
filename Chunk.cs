@@ -28,6 +28,7 @@ public class Chunk : MonoBehaviour {
 	public static int energy_take_speed = 10;
 
 	void Awake() {
+		Navigator.SetChunk(this);
 		dirt_for_grassland = new List<SurfaceBlock>();
 		grassland_blocks = new List<Grassland>();
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
@@ -110,7 +111,7 @@ public class Chunk : MonoBehaviour {
 					}
 					if (dirt_for_grassland.Count != 0 || grassland_blocks.Count != 0) lifepower_timer = LIFEPOWER_TICK;
 				}
-				else { // LifePower decreases
+				if (lifePower < -100) { // LifePower decreases
 					//print (grassland_blocks.Count);
 					if (grassland_blocks.Count == 0) lifepower_timer = 0;
 					else {

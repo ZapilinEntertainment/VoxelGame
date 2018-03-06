@@ -11,6 +11,7 @@ public class PoolMaster : MonoBehaviour {
 	public static Material dirt_material, grass_material, stone_material, default_material, lr_red_material, lr_green_material;
 	public static Texture2D dirt_texture;
 	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3;
+	Human[] population; const int MAX_POPULATION = 256; int lastActiveHuman = -1;
 
 	void Awake() {
 		if (current != null && current != this) Destroy(current); 
@@ -51,6 +52,47 @@ public class PoolMaster : MonoBehaviour {
 		grassland_ready_50[2].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_2"));
 		grassland_ready_50[3] = new Material(dirt_material); grassland_ready_50[3].name ="grassland_50_3";
 		grassland_ready_50[3].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_3"));
+	}
+
+	public void StartPopulation(int x, Vector3 pos) {
+		population = new Human[MAX_POPULATION];
+		Human humanPref = Instantiate(Resources.Load<GameObject>("Prefs/Human")).GetComponent<Human>();
+		int i = 0;
+		population[i++] = humanPref;
+		humanPref.transform.position = pos + Vector3.forward * Block.QUAD_SIZE / 2f * 0.9f;
+		humanPref.FindHome();
+		for (; i< x; i++) {
+			population[i] = Instantiate(humanPref) as Human;
+			population[i].transform.position = pos + Quaternion.AngleAxis(360f / (i + 1), Vector3.up) * Vector3.forward * Block.QUAD_SIZE / 2f * 0.9f;
+			population[i].FindHome();
+		}
+		lastActiveHuman = x;
+	}
+	public Human GetNewHuman() {
+		if (lastActiveHuman == MAX_POPULATION) return null;
+		else {
+			Human h = population[lastActiveHuman];
+			if (h == null) {
+				h = Instantiate(Resources.Load<GameObject>("Human")).GetComponent<Human>();
+			}
+			h.gameObject.SetActive(true);
+			lastActiveHuman ++;
+			return h;
+		}
+	}
+	public void DisableHuman(Human h) {
+		int i = 0;
+		while (i < MAX_POPULATION) {
+			if ( !population[i].Equals(h) )  continue;
+				if (i != lastActiveHuman) {
+					Human a = population[lastActiveHuman];
+					population[lastActiveHuman] = h;
+					population[i] = a;
+				}
+			h.gameObject.SetActive(false);
+			lastActiveHuman--;
+			break;
+		}
 	}
 
 	public static Material GetMaterialById(int id) {

@@ -26,4 +26,13 @@ public class Plant2D : Plant {
 			body.startWidth = height * maxTall + startSize;
 		}
 	}
+
+	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		basement = b;
+		Content myContent = Content.Structure; if (isMainStructure) myContent = Content.MainStructure;
+		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set,zsize_to_set, myContent, gameObject);
+		b.AddStructure(innerPosition);
+		body.SetPosition(0, transform.position);
+		body.SetPosition(1,transform.position + Vector3.up * startSize);
+	}
 }

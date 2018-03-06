@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Zeppelin : Transport {
-	SurfaceBlock landingPlace;
+	SurfaceBlock landingPlace, s_place1, s_place2;
 	bool landing = false, anchored = false, landed = false;
 	public Transform anchor, leftScrew,rightScrew, body;
 	public LineRenderer anchorChain;
@@ -76,9 +76,17 @@ public class Zeppelin : Transport {
 								landed = true;
 								anchor.gameObject.SetActive(false);
 								anchorChain_as.enabled = false;
+
 								GameObject hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
-								SurfaceRect sr = new SurfaceRect(4,0,8,16,Content.MainStructure, hq);
+								SurfaceRect sr = new SurfaceRect(4,1,8,14,Content.MainStructure, hq);
 								landingPlace.AddStructure(sr);
+
+								Chunk c = landingPlace.myChunk;
+
+								GameObject storage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0"));
+								sr = new SurfaceRect(1,1, 14,14, Content.MainStructure,storage);
+								s_place1.AddStructure(sr);
+								PoolMaster.current.StartPopulation(10, s_place2.transform.position + Vector3.down * Block.QUAD_SIZE/2f);
 							} 
 							else transform.Translate (Vector3.down * speed);
 						}
@@ -99,8 +107,10 @@ public class Zeppelin : Transport {
 		}
 	}
 
-	public void SetLandingPlace(SurfaceBlock block) {
+	public void SetLandingPlace(SurfaceBlock block, SurfaceBlock block2, SurfaceBlock block3) {
 		landingPlace = block;
+		s_place1 = block2;
+		s_place2 = block3;
 		landing = true;
 	} 
 }

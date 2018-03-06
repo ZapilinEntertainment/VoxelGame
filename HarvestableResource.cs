@@ -2,25 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct ResourceType {
-	public float mass , toughness;
-	public bool isBuildingMaterial, isFood;
-	public static ResourceType Nothing, Lumber, Stone;
-
-	public ResourceType(float f_mass, float f_toughness, bool useAsBuildingMaterial, bool useAsFood ) {
-		mass = f_mass;
-		toughness = f_toughness;
-		isBuildingMaterial = useAsBuildingMaterial;
-		isFood = useAsFood;
-	}
-
-	static ResourceType() {
-		Nothing = new ResourceType(0, 0, false,false);
-		Lumber = new ResourceType(0.5f, 5, true, false);
-		Stone = new ResourceType(2.5f, 30, true, false);
-	}
-}
-
 public class HarvestableResource : Structure {
 	public ResourceType mainResource {get;protected set;}
 	public ResourceType secondaryResource {get;protected set;}

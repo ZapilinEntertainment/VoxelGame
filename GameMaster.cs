@@ -13,13 +13,19 @@ public class GameMaster : MonoBehaviour {
 	List<GameObject> cameraUpdateBroadcast;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
-	bool loadingScreen = false, fontSize_set = false;
+	bool fontSize_set = false;
 	int camCullingMask = 1;
 	public Chunk mainChunk;
 	static string path;
 
-	public const int LIFEPOWER_SPREAD_SPEED = 10, START_LIFEPOWER = 100000;
+	public const int LIFEPOWER_SPREAD_SPEED = 10, START_LIFEPOWER = 100000, CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
+
+	float t;
+	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
+	const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
+	const float DAY_LONG = 60;
+	public List<Component> everydayUpdateList, everyYearUpdateList;
 
 	public GameMaster () {
 		if (realMaster != null) realMaster = null;
@@ -32,6 +38,9 @@ public class GameMaster : MonoBehaviour {
 		gameSpeed = 1;
 		cameraUpdateBroadcast = new List<GameObject>();
 		path = Application.dataPath;
+
+		everydayUpdateList = new List<Component>();
+		everyYearUpdateList = new List<Component>();
 	}
 
 	void Start() {
@@ -41,20 +50,49 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	void Update() {
-		if (loadingScreen) {
-			if (mainChunk != null) {
-				if (mainChunk.lifePower <= 0) {
-					mainChunk.lifePower = START_LIFEPOWER;
-					loadingScreen = false;
-					gameSpeed = 1; lifeGrowCoefficient = 1;
-					Camera.main.cullingMask = camCullingMask;
-					mainChunk.CameraUpdate(camTransform);
+		if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
+		t += Time.deltaTime * gameSpeed;
+		if (t >= DAY_LONG) {
+			day += (uint)(t / DAY_LONG);
+			t = t % DAY_LONG;
+			if (day >= DAYS_IN_WEEK) {
+				week += day / DAYS_IN_WEEK;
+				day = day % DAYS_IN_WEEK;
+				if (week >= WEEKS_IN_MONTH) {
+					month += week / WEEKS_IN_MONTH;
+					week = week % WEEKS_IN_MONTH;
+					if (month > MONTHS_IN_YEAR) {
+						year += month / MONTHS_IN_YEAR;
+						month = month % MONTHS_IN_YEAR;
+						if (year > 1000) {
+							millenium += year / 1000;
+							year = year % 1000;
+						}
+					}
 				}
 			}
-			return;
+			if (everydayUpdateList.Count > 0) {
+				int i =0;
+				while (i < everydayUpdateList.Count) {
+					if (everydayUpdateList[i] == null) {everydayUpdateList.RemoveAt(i); continue;}
+					else {
+						everydayUpdateList[i].SendMessage("EverydayUpdate", SendMessageOptions.DontRequireReceiver);
+						i++;
+					}
+				}
+			}
+			if (everyYearUpdateList.Count > 0) {
+				int i = 0;
+				while (i < everyYearUpdateList.Count) {
+					if (everyYearUpdateList[i] == null) {everyYearUpdateList.RemoveAt(i); continue;}
+					else {
+						everyYearUpdateList[i].SendMessage("EveryYearUpdate", SendMessageOptions.DontRequireReceiver);
+						i++;
+					}
+				}
+			}
 		}
 
-		if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
 
 		if (camTransform != null) {
 			if (prevCamPos != camTransform.position || prevCamRot != Camera.main.transform.rotation) {
@@ -100,16 +138,28 @@ public class GameMaster : MonoBehaviour {
 			}
 		}	
 	}
+	public static void Save2DMatrix (bool[,] arr, string fileName ) {
+		// Не совсем правильный вывод, поправить
+		using (StreamWriter sw = File.CreateText(path + '/' + fileName+".txt")) 
+		{
+			for (int i = arr.GetLength(1) - 1; i >= 0; i--) {
+				string s = "";
+				for (int j = 0; j< arr.GetLength(0); j++) {
+					if (arr[i,j] == true) s+=" 1"; else s+=" 0";
+					}
+				sw.WriteLine(s);
+				}
+			}
+		}	
 
 	void OnGUI() {
 		if (!fontSize_set) {
-			GUI.skin.GetStyle("Label").fontSize = 50;
+			GUI.skin.GetStyle("Label").fontSize = 27;
 			fontSize_set = true;
 		}
-		if (loadingScreen) {
-			float f = mainChunk.lifePower;
-			f /= (float)START_LIFEPOWER;
-			GUI.Label(new Rect(Screen.width/2 - 200, Screen.height/2 - 100, 400, 200),((int) (f * 100)).ToString() + '%');
-		}
+		GUI.Label(new Rect(Screen.width - 128, 0, 128,32), "day "+day.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 32, 128,32), "week "+week.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 64, 128,32), "month "+month.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 96, 128,32), "year "+year.ToString());
 	}
 }

@@ -7,7 +7,7 @@ public class UI : MonoBehaviour {
 	bool drawLine =false, drawOneCell = false, landingBlocked = true;
 	public Transport startTransport;
 	public LineRenderer lineDrawer;
-	SurfaceBlock blockToLanding = null;
+	SurfaceBlock blockToLanding = null, add_block1, add_block2;
 	GameObject landingX;
 	public static UI current;
 	Rect landButtonRect;
@@ -44,26 +44,51 @@ public class UI : MonoBehaviour {
 						bool found = false, fit1 = false, fit2 = false;
 						SurfaceBlock b = c.GetSurfaceBlock(x, z+2); fit1 = (b != null && b.pos.y == y && b.mainStructure == null); 
 						SurfaceBlock b2 = c.GetSurfaceBlock(x,z+1); fit2 = (b2 != null && b2.pos.y == y && b2.mainStructure == null); 
-						if ( (fit1 & fit2) == true) {found = true; lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE * 2.5f); blockToLanding = b2;}
+						if ( (fit1 & fit2) == true) {
+							found = true; 
+							lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE * 2.5f); 
+							blockToLanding = b2; add_block1 = b; add_block2 = contactedBlock;
+						}
 						else {
-							b = c.GetSurfaceBlock(x,z-1); fit1 = (b != null && b.pos.y == y && b.mainStructure == null); 
-							if ( (fit2 & fit1) == true) {found = true; lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE * 1.5f);blockToLanding = contactedBlock;}
+							b = c.GetSurfaceBlock(x,z-1); 
+							fit1 = (b != null && b.pos.y == y && b.mainStructure == null); 
+							if ( (fit2 & fit1) == true) {
+								found = true; 
+								lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE * 1.5f);
+								blockToLanding = contactedBlock; add_block1 = b; add_block2 = b2;
+							}
 							else {
 								b2 = c.GetSurfaceBlock(x,z-2); fit2 = (b2 != null && b2.pos.y == y && b2.mainStructure == null); 
-								if ( (fit1 & fit2) == true) {found = true; lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2f);blockToLanding = b;}
+								if ( (fit1 & fit2) == true) {
+									found = true; 
+									lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2f);
+									blockToLanding = b;	add_block1 = contactedBlock; add_block2 = b2;
+								}
 							}
 						}
 						if (found == false) {
 							b = c.GetSurfaceBlock(x-2, z); fit1 = (b != null && b.pos.y == y && b.mainStructure == null); 
 							b2 = c.GetSurfaceBlock(x-1,z); fit2 = (b2 != null && b2.pos.y == y && b2.mainStructure == null); 
 
-							if ( (fit1 & fit2) == true) {found = true; lineStartPos = new Vector3(x - Block.QUAD_SIZE * 2.5f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2); blockToLanding = b2;}
+							if ( (fit1 & fit2) == true) {
+								found = true; 
+								lineStartPos = new Vector3(x - Block.QUAD_SIZE * 2.5f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2); 
+								blockToLanding = b2; add_block1 = b; add_block2 = contactedBlock;
+							}
 							else {
 								b = c.GetSurfaceBlock(x+1,z); fit1 = (b != null && b.pos.y == y && b.mainStructure == null); 
-								if ( (fit2 & fit1) == true) {found = true; lineStartPos = new Vector3(x - Block.QUAD_SIZE * 1.5f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2f); blockToLanding = contactedBlock;}
+								if ( (fit2 & fit1) == true) {
+									found = true; 
+									lineStartPos = new Vector3(x - Block.QUAD_SIZE * 1.5f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2f); 
+									blockToLanding = contactedBlock; add_block1 = b; add_block2 = b2;
+								}
 								else {
 									b2 = c.GetSurfaceBlock(x+2,z); fit2 = (b2 != null && b2.pos.y == y && b2.mainStructure == null); 
-									if ( (fit2 & fit1) == true) {found = true; lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2f); blockToLanding = b;}
+									if ( (fit2 & fit1) == true) {
+										found = true; 
+										lineStartPos = new Vector3(x - Block.QUAD_SIZE/2f, y -Block.QUAD_SIZE/2f + 0.05f, z + Block.QUAD_SIZE/2f);
+										blockToLanding = b; add_block1 = b2; add_block2 = contactedBlock;
+									}
 								}
 							}
 							if (found) {drawHorizontally = true;}
@@ -131,7 +156,7 @@ public class UI : MonoBehaviour {
 				sc_pos.y = Screen.height - sc_pos.y;
 				landButtonRect = new Rect(sc_pos.x, sc_pos.y, 256,64);
 				if (GUI.Button(landButtonRect, "Land")) {
-					startTransport.GetComponent<Zeppelin>().SetLandingPlace(blockToLanding);
+					startTransport.GetComponent<Zeppelin>().SetLandingPlace(blockToLanding, add_block1, add_block2);
 					landing = false;
 					lineDrawer.enabled = false;
 					landPointSet = true;
