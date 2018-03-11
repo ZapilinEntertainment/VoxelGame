@@ -6,31 +6,52 @@ public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
 	public Material[] grassland_ready_25, grassland_ready_50;
 	public Material dryingLeaves_material, leaves_material;
-	public GameObject tree_pref, grass_pref;
+	public GameObject tree_pref, grass_pref, deadTree_pref;
 	public static GameObject quad_pref {get;private set;}
-	public static Material dirt_material, grass_material, stone_material, default_material, lr_red_material, lr_green_material;
-	public static Texture2D dirt_texture;
-	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3;
+	public static Material dirt_material, grass_material, stone_material, lumber_material,
+		default_material, lr_red_material, lr_green_material,
+	metalC_material, metalM_material, metalE_material, metalN_material, metalP_material, metalS_material, mineralF_material, mineralL_material,
+	elasticMass_material;
+	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
+
+	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3, LUMBER_ID = 4, METAL_C_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
+	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, ELASTIC_MASS_ID = 13;	
+
 	Human[] population; const int MAX_POPULATION = 256; int lastActiveHuman = -1;
 
 	void Awake() {
 		if (current != null && current != this) Destroy(current); 
 		current = this;
 
+		metalC_material = Resources.Load<Material>("Material/MetalC");
+		metalM_material = Resources.Load<Material>("Material/MetalM");
+		metalE_material = Resources.Load<Material>("Material/MetalE");
+		metalN_material = Resources.Load<Material>("Material/MetalN");
+		metalP_material = Resources.Load<Material>("Material/MetalP");
+		metalS_material = Resources.Load<Material>("Material/MetalS");
+		mineralF_material = Resources.Load<Material>("Material/MineralF");
+		mineralL_material = Resources.Load<Material>("Material/MineralL");
+		elasticMass_material = Resources.Load<Material>("Material/Plastic");
+
+		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
+		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
+		plane_excavated_075 = Resources.Load<Mesh>("Meshes/Plane_excavated_075");
+
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
 		quad_pref = GameObject.CreatePrimitive(PrimitiveType.Quad);
 		quad_pref.GetComponent<MeshRenderer>().enabled =false;
+		lumber_material = Resources.Load<Material>("Materials/Lumber");
 		dirt_material = Resources.Load<Material>("Materials/Dirt");
 		grass_material = Resources.Load<Material>("Materials/Grass");
 		stone_material = Resources.Load<Material>("Materials/Stone");
 		default_material = Resources.Load<Material>("Materials/Default");
-		dirt_texture = Resources.Load<Texture2D>("Textures/Dirt_tx");
 
 		dryingLeaves_material = Resources.Load<Material>("Materials/DryingLeaves");
 		leaves_material = Resources.Load<Material>("Materials/Leaves");
 
+		deadTree_pref = Resources.Load<GameObject>("Lifeforms/DeadTree");deadTree_pref.SetActive(false);
 		tree_pref = Resources.Load<GameObject>("Lifeforms/Tree");tree_pref.SetActive(false);
 		grass_pref = Resources.Load<GameObject>("Lifeforms/Grass"); grass_pref.SetActive(false);
 

@@ -5,7 +5,6 @@ using UnityEngine;
 public class Tree : Plant {
 	public Transform crone, trunk;
 	public const int MAXIMUM_LIFEPOWER = 1000;
-	float croneState = 1;
 
 	void Awake() {
 		full = false;
@@ -15,16 +14,12 @@ public class Tree : Plant {
 		hp = maxHp;
 		innerPosition = SurfaceRect.Empty;
 	}
+
 		
 	public virtual int TakeLifepower(int life) {
 		float lifeTransfer = life;
 		if (life > lifepower) {if (lifepower >= 0) lifeTransfer = lifepower; else lifeTransfer = 0;}
 		lifepower -= lifeTransfer;
-		if (croneState > 0.5f) {
-			croneState -= life/maxLifepower/2f;
-			crone.transform.localScale = Vector3.one * croneState;
-			if (croneState <= 0.5f) crone.GetComponent<MeshRenderer>().material = PoolMaster.current.dryingLeaves_material;
-		}
 		if (lifepower < maxLifepower) full = false;
 		return (int)lifeTransfer;
 	}
@@ -33,17 +28,9 @@ public class Tree : Plant {
 		if (full) return;
 		lifepower += life;
 		float height = lifepower / maxLifepower ;
-		if (height >= 1) { full = true; croneState = 1; crone.transform.localScale = Vector3.one;}
-		else {
-			transform.localScale = Vector3.one * height * maxTall;
-			if (croneState < 1) {
-				float prevCroneState = croneState;
-				croneState += life / maxLifepower / 2f; 
-				if (croneState > 0.7f && prevCroneState < 0.7f) crone.GetComponent<MeshRenderer>().material = PoolMaster.current.leaves_material;
-				if (croneState > 1) croneState = 1;
-				crone.transform.localScale = croneState * Vector3.one;
-				} 
-		}
+		maxHp = height * maxTall * 1000; hp = maxHp;
+		if (height >= 1) { full = true; }
+		else {transform.localScale = Vector3.one * height * maxTall;	}
 	}
 
 	public override void Annihilate() {
@@ -52,7 +39,7 @@ public class Tree : Plant {
 			GameObject g = Instantiate(Resources.Load<GameObject>("Lifeforms/DeadTree")) as GameObject;
 			g.transform.localScale = transform.localScale;
 			HarvestableResource hr = g.GetComponent<HarvestableResource>();
-			hr.SetResources(ResourceType.Lumber, (int)(100 * trunk.transform.localScale.y), ResourceType.Nothing, 0);
+			hr.SetResources(ResourceType.Lumber, (int)(100 * trunk.transform.localScale.y));
 			basement.ReplaceStructure(new SurfaceRect(innerPosition.x, innerPosition.z, innerPosition.x_size, innerPosition.z_size, Content.HarvestableResources, g));
 			basement = null;
 		}

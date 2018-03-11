@@ -21,8 +21,8 @@ public class Zeppelin : Transport {
 		anchorStartPos = transform.InverseTransformPoint(anchor.transform.position);
 		leftScrew.Rotate(0, Random.value * 360, 0);
 		rightScrew.Rotate(0, Random.value * 360, 0);
-		UI.current.startTransport = this;
-		UI.current.landing = true;
+		LandingUI.current.startTransport = this;
+		LandingUI.current.landing = true;
 	}
 
 	void Update() {

@@ -5,10 +5,35 @@ using UnityEngine;
 public class CubeBlock : Block{
 	MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public byte visibilityMask {get;private set;}
-	byte renderMask = 0;
+	bool natural = true;
+	public bool digWorks = false;
+	byte renderMask = 0, excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
+	public int volume {get;private set;}
+	public static readonly int maxVolume;
+
+	static CubeBlock() {
+		maxVolume = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
+	}
 
 	void Awake() {
 		visibilityMask = 0; 
+	}
+
+	public int PourIn (int blocksCount) {
+		if (volume == maxVolume) return blocksCount;
+		if (blocksCount > (maxVolume - volume)) {
+			blocksCount = maxVolume - volume;
+		}
+		volume += blocksCount;
+		CheckExcavatingStatus();
+		return blocksCount;
+	}
+
+	public int Dig(int blocksCount, bool show) {
+		if (blocksCount > volume) blocksCount = volume;
+		volume -= blocksCount;
+		if (show) CheckExcavatingStatus();
+		return blocksCount;
 	}
 
 	public override void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) {
@@ -64,6 +89,8 @@ public class CubeBlock : Block{
 		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
 
+
+
 	void CreateFace(int i) {
 		if (faces == null) faces =new MeshRenderer[6];
 		else {if (faces[i] != null) return;}
@@ -93,4 +120,39 @@ public class CubeBlock : Block{
 		faces[i].enabled = true;
 	}
 
+	void CheckExcavatingStatus() {
+		float pc = volume;
+		pc /= maxVolume;
+		if (pc > 0.5f) {				
+			if (pc > 0.75f) {
+				if (excavatingStatus != 3) {
+					excavatingStatus = 3; 
+					if (faces[4] == null) CreateFace(4);
+					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
+				}
+			}
+			else {
+				if (excavatingStatus != 2) {
+					excavatingStatus = 2;
+					if (faces[4] == null) CreateFace(4);
+					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
+				}
+			}
+		}
+		else {
+			if ( volume == 0) myChunk.DeleteBlock(this);
+			else {
+				if (pc > 0.25f) {
+					if (excavatingStatus != 1) {
+						excavatingStatus = 1;
+						if (faces[4] == null) CreateFace(4);
+						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
+					}
+				}
+			}
+		}
+	}
+
+	public void MarkAsArtificial() {natural = false;}
+	public bool IsNatural() {return natural;}
 }

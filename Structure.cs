@@ -28,7 +28,7 @@ public class Structure : MonoBehaviour {
 		basement = null;
 	}
 
-	protected void OnDestroy() {
+	protected virtual void OnDestroy() {
 		if (basement != null) {
 			basement.RemoveStructure(innerPosition);
 		}

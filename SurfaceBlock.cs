@@ -20,8 +20,10 @@ public class SurfaceBlock : Block {
 	public const byte INNER_RESOLUTION = 16;
 	public MeshRenderer surfaceRenderer {get;private set;}
 	public Grassland grassland{get;private set;}
-	List<SurfaceRect> surfaceObjects;
+	public List<SurfaceRect> surfaceObjects{get;private set;}
 	public sbyte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
+	public CubeBlock basement;
+	public bool cleanWorks = false;
 
 	void Awake() 
 	{
@@ -37,18 +39,32 @@ public class SurfaceBlock : Block {
 		surfaceObjects = new List<SurfaceRect>();
 	}
 
+	public bool CanBeCleared() {
+		bool a = true;
+		foreach (SurfaceRect sr in surfaceObjects) {
+			if (sr.myGameObject.GetComponent<Building>()) {
+				a = false; break;
+			}
+		}
+		return a;
+	}
+
 	bool[,] GetBooleanMap() {
 		bool[,] map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
 		for (int i =0; i < map.GetLength(0); i++) {
 			for (int j =0; j< map.GetLength(1); j++) map[i,j] = false;
 		}
 		if (surfaceObjects.Count != 0) {
-			foreach (SurfaceRect sr in surfaceObjects) {
+			int a = 0;
+			while (a < surfaceObjects.Count) {
+				SurfaceRect sr = surfaceObjects[a];
+				if (sr.myGameObject == null) {surfaceObjects.RemoveAt(a); continue;}
 				for (int i =0; i< sr.x_size; i++) {
 					for (int j =0; j < sr.z_size; j++) {
 						map[sr.x + i, sr.z + j] = true;
 					}
 				}
+				a++;
 			}
 		}
 		return map;
@@ -105,7 +121,6 @@ public class SurfaceBlock : Block {
 			}
 		}
 	}
-
 
 	public Grassland AddGrassland() {
 		if (grassland == null)  {
@@ -256,6 +271,7 @@ public class SurfaceBlock : Block {
 				sr.myGameObject.transform.localPosition = surfaceObjects[i].myGameObject.transform.localPosition;
 				Destroy(surfaceObjects[i].myGameObject);
 				surfaceObjects[i] = sr;
+				sr.myGameObject.SetActive(true);
 			}
 		}
 	}

@@ -319,20 +319,21 @@ public class Chunk : MonoBehaviour {
 
 		for (int x = 0; x< size; x++) {
 			for (int z =0; z< size; z++) {
-				bool surfaceFound = false;
+				byte surfaceFound = 2;
 				for (int y = size - 1; y >= 0; y--) {
 					if (newData[x,y,z] != 0) {
-						if ( !surfaceFound ) {
+						if ( surfaceFound == 2 ) {
 							SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
 							sb.BlockSet(this, new ChunkPos(x,y,z), newData[x,y,z]);
 							surfaceBlocks[x,z] = sb;
-							surfaceFound = true;
+							surfaceFound --;
 							blocks[x,y,z] = sb;
 						}
 						else {
 							CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
 							cb.BlockSet(this, new ChunkPos(x,y,z), newData[x,y,z]);
 							blocks[x,y,z] = cb;
+							if (surfaceFound == 1) {blocks[x,y+1,z].GetComponent<SurfaceBlock>().basement = cb; surfaceFound = 0; }
 						}
 					}
 				}
@@ -491,5 +492,9 @@ public class Chunk : MonoBehaviour {
 		if (b != null) {Destroy(blocks[x,y,z].gameObject);}
 		blocks[x,y,z] = new Block();
 		blocks[x,y,z].ShapelessBlockSet(this, new ChunkPos(x,y,z), s);
+	}
+
+	public void DeleteBlock(Block b) {
+		
 	}
 }

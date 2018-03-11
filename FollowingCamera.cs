@@ -5,14 +5,17 @@ using UnityEngine;
 public class FollowingCamera : MonoBehaviour {
 	const float START_RT_SMOOTH_COEFFICIENT = 0.1f;
 	const float START_ZM_SMOOTH_COEFFICIENT = 0.1f;
+	const float START_MV_SMOOTH_COEFFICIENT = 0.12f;
 
 	public Transform cam;
 	public float rotationSpeed = 65;
 	public float zoomSpeed = 50;
 	float rotationSmoothCoefficient = START_RT_SMOOTH_COEFFICIENT;
-	float rotationSmoothAcceleration = START_ZM_SMOOTH_COEFFICIENT;
-	float zoomSmoothCoefficient = 0.1f;
-	float zoomSmoothAcceleration = 0.1f;
+	float rotationSmoothAcceleration = 0.05f;
+	float zoomSmoothCoefficient = START_ZM_SMOOTH_COEFFICIENT;
+	float zoomSmoothAcceleration = 0.05f;
+	float moveSmoothCoefficient = START_MV_SMOOTH_COEFFICIENT;
+	float moveSmoothAcceleration= 0.04f;
 	public Vector3 deltaLimits = new Vector3 (0.1f, 0.1f, 0.1f);
 	public Vector3 camPoint = new Vector3(0,5,-5);
 
@@ -24,9 +27,25 @@ public class FollowingCamera : MonoBehaviour {
 	void LateUpdate () {
 		if (cam == null ) return;
 		Vector3 mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-		if (mv != Vector3.zero) transform.Translate(mv * 30 * Time.deltaTime,Space.Self);
-		if (Input.GetKey(KeyCode.Space)) transform.Translate(Vector3.up * 15 * Time.deltaTime, Space.World);
-		if (Input.GetKey(KeyCode.LeftControl)) transform.Translate(Vector3.down * 15 * Time.deltaTime , Space.World);
+		bool mv_cf_counted = false;
+		if (mv != Vector3.zero) {
+			//transform.Translate(mv * 30 * moveSmoothCoefficient * Time.deltaTime,Space.Self);
+			transform.Translate(mv * 30 * Time.deltaTime,Space.Self);
+			moveSmoothCoefficient += moveSmoothAcceleration;
+			mv_cf_counted = true;
+		}
+		else moveSmoothCoefficient = START_MV_SMOOTH_COEFFICIENT;
+		if (Input.GetKey(KeyCode.Space)) {
+			//transform.Translate(Vector3.up * 15 * moveSmoothCoefficient * Time.deltaTime, Space.World);
+			transform.Translate(Vector3.up * 15 * Time.deltaTime, Space.World);
+			if ( !mv_cf_counted ) {moveSmoothCoefficient += moveSmoothAcceleration;mv_cf_counted = true;}
+		}
+		if (Input.GetKey(KeyCode.LeftControl)) {
+			//transform.Translate(Vector3.down * 15 * moveSmoothCoefficient * Time.deltaTime , Space.World);
+			transform.Translate(Vector3.down * 15  * Time.deltaTime , Space.World);
+			if ( !mv_cf_counted ) moveSmoothCoefficient += moveSmoothAcceleration;
+		}
+		if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
 
 		float delta = 0;
 		if (Input.GetMouseButton(2)) {
