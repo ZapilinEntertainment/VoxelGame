@@ -4,6 +4,7 @@ using UnityEngine;
 using System.IO;
 
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
+public enum GameStart {Nothing, Zeppelin, Headquarters}
 
 public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
@@ -14,17 +15,19 @@ public class GameMaster : MonoBehaviour {
 	List<GameObject> cameraUpdateBroadcast;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
-	bool fontSize_set = false;
 	int camCullingMask = 1;
-	public Chunk mainChunk; public static ColonyController colonyController;
+	public Chunk mainChunk; public static ColonyController colonyController; 
+	public  LineRenderer systemDrawLR;
 	static string path;
 
-	public const int LIFEPOWER_SPREAD_SPEED = 10, START_LIFEPOWER = 100000, CRITICAL_DEPTH = - 200;
+	public const int START_LIFEPOWER = 100000, START_WORKERS = 10;
+	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
 	public static float labourEfficiency {get;private set;}
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f;
 
 	public static Difficulty difficulty {get;private set;}
+	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 
 	public static float metalC_abundance = 0.01f, metalM_abundance = 0.005f, metalE_abundance = 0.003f, 
@@ -43,6 +46,10 @@ public class GameMaster : MonoBehaviour {
 
 	public static float sunlightIntensity {get; private set;}
 	public Light sun;
+
+	bool fontSize_set = false;
+	public static float guiPiece {get;private set;}
+	public GUISkin mainGUISkin {get;private set;}
 
 	public GameMaster () {
 		if (realMaster != null) realMaster = null;
@@ -76,7 +83,28 @@ public class GameMaster : MonoBehaviour {
 		case Difficulty.Torture: LUCK_COEFFICIENT = 0.01f;break;
 		}
 
-		Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
+		switch (startGameWith) {
+		case GameStart.Zeppelin :
+			LandingUI lui = gameObject.AddComponent<LandingUI>();
+			lui.lineDrawer = systemDrawLR;
+			Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin")); 
+			break;
+		case GameStart.Headquarters : 
+			int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
+			int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
+
+			GameObject hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
+			SurfaceRect sr = new SurfaceRect(4,1,8,14,Content.MainStructure, hq);
+			mainChunk.GetSurfaceBlock(xpos,zpos).AddStructure(sr);
+			colonyController.AddWorkers(START_WORKERS);
+			if (xpos > 0) xpos --; else xpos++;
+			GameObject storage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0"));
+			sr = new SurfaceRect(1,1, 14,14, Content.MainStructure,storage);
+			mainChunk.GetSurfaceBlock(xpos,zpos).AddStructure(sr);
+			UI ui = gameObject.AddComponent<UI>();
+			ui.lineDrawer = systemDrawLR;
+			break;
+		}
 	}
 
 	void Update() {
@@ -161,8 +189,11 @@ public class GameMaster : MonoBehaviour {
 			windVector = Random.onUnitSphere * (maxWindPower * Random.value);
 			windTimer = windChangeTime * (1 + Random.value -0.5f);
 			if (windUpdateList.Count != 0) {
-				foreach (Component c in windUpdateList) {
-					c.SendMessage("WindUpdate",SendMessageOptions.DontRequireReceiver);
+				int i = 0;
+				while (i < windUpdateList.Count) {
+					Component c = windUpdateList[i];
+					if (c == null) {windUpdateList.RemoveAt(i); continue;}
+					else	{c.SendMessage("WindUpdate", windVector,SendMessageOptions.DontRequireReceiver); i++;}
 				}
 			}
 		}
@@ -214,7 +245,12 @@ public class GameMaster : MonoBehaviour {
 
 	void OnGUI() {
 		if (!fontSize_set) {
-			GUI.skin.GetStyle("Label").fontSize = 27;
+			guiPiece = Screen.height / 24f;
+			GUI.skin.GetStyle("Label").fontSize = (int)guiPiece;
+			//testmode
+			mainGUISkin = GUI.skin;
+			//
+			GUI.skin = mainGUISkin;
 			fontSize_set = true;
 		}
 		GUI.Label(new Rect(Screen.width - 128, 0, 128,32), "day "+day.ToString());

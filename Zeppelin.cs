@@ -80,6 +80,7 @@ public class Zeppelin : Transport {
 								GameObject hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
 								SurfaceRect sr = new SurfaceRect(4,1,8,14,Content.MainStructure, hq);
 								landingPlace.AddStructure(sr);
+								GameMaster.colonyController.AddWorkers(GameMaster.START_WORKERS);
 
 								Chunk c = landingPlace.myChunk;
 

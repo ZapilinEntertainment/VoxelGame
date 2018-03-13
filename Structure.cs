@@ -7,7 +7,7 @@ public class Structure : MonoBehaviour {
 	public bool isMainStructure = false;
 	public byte xsize_to_set = 1, zsize_to_set =1;
 	public SurfaceRect innerPosition {get;protected set;}
-	public float hp {get; protected set;}
+	public float hp = 1;
 	public float maxHp = 1;
 
 	void Awake() {

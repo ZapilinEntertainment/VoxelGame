@@ -57,6 +57,10 @@ public class Building : Structure {
 		
 	}
 
+	public void AddWorkers (int x) {
+		if (x > 0) workersCount += x;
+	}
+
 	void StartBuilding() {
 		currentWorkflow = 0;
 	}

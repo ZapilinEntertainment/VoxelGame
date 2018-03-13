@@ -5,24 +5,26 @@ using UnityEngine;
 public class CubeBlock : Block{
 	MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public byte visibilityMask {get;private set;}
-	bool natural = true;
-	public bool digWorks = false;
+	public float naturalFossils = 0;
+	public byte digStatus = 0;
 	byte renderMask = 0, excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
 	public int volume {get;private set;}
-	public static readonly int maxVolume;
+	public static readonly int MAX_VOLUME;
 
 	static CubeBlock() {
-		maxVolume = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
+		MAX_VOLUME = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
 	}
 
 	void Awake() {
 		visibilityMask = 0; 
+		naturalFossils = MAX_VOLUME;
+		digStatus = 0;
 	}
 
 	public int PourIn (int blocksCount) {
-		if (volume == maxVolume) return blocksCount;
-		if (blocksCount > (maxVolume - volume)) {
-			blocksCount = maxVolume - volume;
+		if (volume == MAX_VOLUME) return blocksCount;
+		if (blocksCount > (MAX_VOLUME - volume)) {
+			blocksCount = MAX_VOLUME - volume;
 		}
 		volume += blocksCount;
 		CheckExcavatingStatus();
@@ -36,24 +38,26 @@ public class CubeBlock : Block{
 		return blocksCount;
 	}
 
-	public override void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) {
+	public override void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration) {
 		isTransparent = false;
 		myChunk = f_chunk; transform.parent = f_chunk.transform;
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = f_material_id;
 		type = BlockType.Cube;
+		if (naturalGeneration) {naturalFossils = MAX_VOLUME;} else naturalFossils = 0;
 
 		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
 
-	public override void Replace( int newId) {
+	public override void Replace( int newId, bool generatorReplacement) {
 		material_id = newId;
 		if (faces != null) {
 			for (int i =0; i< 6; i++) {
 				if (faces[i] != null) {faces[i].material =  PoolMaster.GetMaterialById(newId);	}
 			}
 		}
+		if (generatorReplacement) naturalFossils = MAX_VOLUME; else naturalFossils = 0;
 	}
 
 	public void SetRenderBitmask(byte x) {
@@ -122,7 +126,7 @@ public class CubeBlock : Block{
 
 	void CheckExcavatingStatus() {
 		float pc = volume;
-		pc /= maxVolume;
+		pc /= MAX_VOLUME;
 		if (pc > 0.5f) {				
 			if (pc > 0.75f) {
 				if (excavatingStatus != 3) {
@@ -140,7 +144,7 @@ public class CubeBlock : Block{
 			}
 		}
 		else {
-			if ( volume == 0) myChunk.DeleteBlock(this);
+			if ( volume == 0) myChunk.DeleteBlock(pos);
 			else {
 				if (pc > 0.25f) {
 					if (excavatingStatus != 1) {
@@ -153,6 +157,4 @@ public class CubeBlock : Block{
 		}
 	}
 
-	public void MarkAsArtificial() {natural = false;}
-	public bool IsNatural() {return natural;}
 }

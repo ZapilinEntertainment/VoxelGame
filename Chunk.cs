@@ -135,6 +135,39 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
+	public void DeleteBlock(ChunkPos pos) {
+		// в сиквеле стоит пересмотреть всю иерархию классов ><
+		Block b = blocks[pos.x, pos.y,pos.z];
+		int x = pos.x, y = pos.y, z = pos.z;
+		switch (b.type) {
+		case BlockType.Cube : 
+			CubeBlock cb = b.GetComponent<CubeBlock>();
+			if (y < CHUNK_SIZE - 1) {
+				if (blocks[x, y + 1, z] != null) {
+					if (blocks[x, y + 1, z].type == BlockType.Surface) DeleteBlock(new ChunkPos(x, y + 1, z));
+				}
+			}
+			Destroy(cb.gameObject);
+			blocks[pos.x, pos.y, pos.z] = null;
+			cb = GetBlock(x+1,y,z).GetComponent<CubeBlock>(); if (cb != null) {cb.ChangeVisibilityMask(3,true);}
+			cb = GetBlock(x-1,y,z).GetComponent<CubeBlock>(); if (cb != null) {cb.ChangeVisibilityMask(1,true);}
+			cb = GetBlock(x,y + 1,z).GetComponent<CubeBlock>(); if (cb != null) {cb.ChangeVisibilityMask(5,true);}
+			cb = GetBlock(x,y-1,z).GetComponent<CubeBlock>(); if (cb != null) {cb.ChangeVisibilityMask(4,true);}
+			cb = GetBlock(x,y,z+1).GetComponent<CubeBlock>(); if (cb != null) {cb.ChangeVisibilityMask(2,true);}
+			cb = GetBlock(x,y,z-1).GetComponent<CubeBlock>(); if (cb != null) {cb.ChangeVisibilityMask(0,true);}
+			break;
+		case BlockType.Shapeless: 
+			Destroy(blocks[pos.x,pos.y,pos.z].gameObject);
+			blocks[pos.x, pos.y, pos.z] = null;
+			break;
+		case BlockType.Surface: 
+			Destroy(blocks[pos.x,pos.y,pos.z].gameObject);
+			blocks[pos.x, pos.y, pos.z] = null;
+			CubeBlock cb2 = GetBlock(x,y-1,z).GetComponent<CubeBlock>(); if (cb2 != null) {cb2.ChangeVisibilityMask(4,true);}
+			break;
+		}
+	}
+
 	public void GenerateNature (PixelPosByte lifeSourcePos, int lifeVolume) {
 		byte px = lifeSourcePos.x, py = lifeSourcePos.y;
 		float [,] lifepowers = new float[CHUNK_SIZE, CHUNK_SIZE];
@@ -300,14 +333,6 @@ public class Chunk : MonoBehaviour {
 		bx = GetBlock(i,j,k+1); if (bx != null &&!bx.isTransparent && bx.type == BlockType.Cube) vmask &= 62;
 		bx = GetBlock(i,j,k-1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 59;
 		return vmask;
-	}
-	public void ChangeBlockVisibilityOnReplacement (int x, int y, int z, bool value) {
-		CubeBlock b = GetBlock(x+1,y,z).GetComponent<CubeBlock>(); if (b != null) {b.ChangeVisibilityMask(3,value);}
-		b = GetBlock(x-1,y,z).GetComponent<CubeBlock>(); if (b != null) {b.ChangeVisibilityMask(1,value);}
-		b = GetBlock(x,y + 1,z).GetComponent<CubeBlock>(); if (b != null) {b.ChangeVisibilityMask(5,value);}
-		b = GetBlock(x,y-1,z).GetComponent<CubeBlock>(); if (b != null) {b.ChangeVisibilityMask(4,value);}
-		b = GetBlock(x,y,z+1).GetComponent<CubeBlock>(); if (b != null) {b.ChangeVisibilityMask(2,value);}
-		b = GetBlock(x,y,z-1).GetComponent<CubeBlock>(); if (b != null) {b.ChangeVisibilityMask(0,value);}
 	}
 
 	public void SetChunk(int[,,] newData) {
@@ -492,9 +517,5 @@ public class Chunk : MonoBehaviour {
 		if (b != null) {Destroy(blocks[x,y,z].gameObject);}
 		blocks[x,y,z] = new Block();
 		blocks[x,y,z].ShapelessBlockSet(this, new ChunkPos(x,y,z), s);
-	}
-
-	public void DeleteBlock(Block b) {
-		
 	}
 }

@@ -11,16 +11,22 @@ public struct ResourceContainer {
 	}
 }
 
-public class Storage : Structure {
+public class Storage{
 	float volume = 0, maxVolume;
 	List<ResourceContainer> containers;
+	public bool showStorage = false;
+	public Rect storageRect;
 
 	void Awake() {
-		maxVolume = SurfaceBlock.INNER_RESOLUTION *SurfaceBlock.INNER_RESOLUTION *SurfaceBlock.INNER_RESOLUTION ;
+		maxVolume = 0;
 		containers = new List<ResourceContainer>();
-		isMainStructure = true;
-		xsize_to_set = SurfaceBlock.INNER_RESOLUTION;
-		zsize_to_set = SurfaceBlock.INNER_RESOLUTION;
+	}
+
+	public void AddVolume(float x) {
+		if (x > 0) maxVolume += x;
+	}
+	public void ContractVolume(float x) {
+		maxVolume -= x; if (maxVolume < 0) maxVolume = 0;
 	}
 
 	public float AddResources(ResourceType rtype, float count) {
@@ -68,5 +74,19 @@ public class Storage : Structure {
 			}
 		}
 		return count;
+	}
+
+	void OnGUI () {
+		if (showStorage) {
+			if (containers.Count != 0 ) {
+				Rect r_name = new Rect (storageRect.x, storageRect.y, storageRect.width * 0.75f, GameMaster.guiPiece);
+				Rect r_count = new Rect(storageRect.x + r_name.width, storageRect.y, storageRect.width * 0.25f, r_name.height);
+
+				foreach (ResourceContainer rc in containers) {
+					GUI.Label(r_name, rc.type.name); GUI.Label(r_count, ((int)rc.volume).ToString());
+					r_name.y += r_name.height; r_count.y += r_name.height;
+				}
+			}
+		}
 	}
 }

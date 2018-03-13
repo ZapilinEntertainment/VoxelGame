@@ -24,6 +24,7 @@ public class SurfaceBlock : Block {
 	public sbyte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
 	public CubeBlock basement;
 	public bool cleanWorks = false;
+	public bool containBuildings {get;private set;}
 
 	void Awake() 
 	{
@@ -37,6 +38,7 @@ public class SurfaceBlock : Block {
 		material_id = 0;
 		surfaceRenderer.enabled = true;
 		surfaceObjects = new List<SurfaceRect>();
+		containBuildings = false;
 	}
 
 	public bool CanBeCleared() {
@@ -59,6 +61,9 @@ public class SurfaceBlock : Block {
 			while (a < surfaceObjects.Count) {
 				SurfaceRect sr = surfaceObjects[a];
 				if (sr.myGameObject == null) {surfaceObjects.RemoveAt(a); continue;}
+				else {
+					if (sr.myGameObject.GetComponent<Building>()) {containBuildings = true;}
+				}
 				for (int i =0; i< sr.x_size; i++) {
 					for (int j =0; j < sr.z_size; j++) {
 						map[sr.x + i, sr.z + j] = true;
@@ -264,11 +269,12 @@ public class SurfaceBlock : Block {
 	}
 
 	public void ReplaceStructure(SurfaceRect sr) {
-		if (cellsStatus == 0) return;
+		if (cellsStatus == 0 || sr.myGameObject == null) return;
 		for (int i = 0; i< surfaceObjects.Count; i++) {
 			if (surfaceObjects[i].x == sr.x && surfaceObjects[i].z == sr.z && surfaceObjects[i].x_size == sr.x_size && surfaceObjects[i].z_size == sr.z_size   ) {
 				sr.myGameObject.transform.parent = transform;
 				sr.myGameObject.transform.localPosition = surfaceObjects[i].myGameObject.transform.localPosition;
+				if (sr.myGameObject.GetComponent<Building>() != null) containBuildings = true;
 				Destroy(surfaceObjects[i].myGameObject);
 				surfaceObjects[i] = sr;
 				sr.myGameObject.SetActive(true);

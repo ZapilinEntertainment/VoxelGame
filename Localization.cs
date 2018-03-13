@@ -9,7 +9,8 @@ public static class Localization {
 	rtype_dirt_name, rtype_dirt_descr, rtype_food_name, rtype_food_descr, rtype_metalC_ore_name, rtype_metalC_descr, rtype_metalM_ore_name, rtype_metalM_descr,
 	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
 	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_elasticMass_descr;
-	public static string ui_build, ui_dig, ui_pourIn, ui_clear;
+	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_cancel_clearing, ui_cancel_digging, ui_cancel_pouring, ui_clear_and_dig,
+	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain;
 
 	static Localization() {
 		ChangeLanguage(Language.English);
@@ -44,10 +45,21 @@ public static class Localization {
 			rtype_mineralL_descr = "Used to create elastic mass";
 			rtype_elasticMass_descr = "Easy-forming by special influence relatively tough material, used for building and manufacturing";
 
-			ui_build = "Build"; ui_clear = "Clear"; ui_dig = "Dig"; ui_pourIn = "Pour in";
+			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
+			ui_storage_name = "Storage"; 
+			ui_cancel_clearing = "Cancel clearing"; ui_cancel_digging = "Stop digging"; ui_cancel_pouring = "Stop pouring";
+			ui_clear_and_dig = "Clear and dig"; ui_accept_destruction_on_clearing = "Destruct all buildings up there?";
+			ui_accept = "Yes"; ui_decline = "No";
+			ui_choose_block_action = "Choose block action";
+			ui_toPlain = "Plain ground";
 			break;
 		case  Language.Russian: 
-			
+			ui_storage_name = "Склад";
+			ui_accept_destruction_on_clearing = "Снести все здания на поверхности?";
+			ui_choose_block_action = "Выберите действие с блоком";
+			ui_dig_block = "Выкопать блок";
+			ui_pourIn = "Засыпать блок";
+			ui_toPlain = "Разровнять";
 			break;	
 		}
 	}
