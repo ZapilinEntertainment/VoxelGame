@@ -77,17 +77,20 @@ public class Zeppelin : Transport {
 								anchor.gameObject.SetActive(false);
 								anchorChain_as.enabled = false;
 
-								GameObject hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
-								SurfaceRect sr = new SurfaceRect(4,1,8,14,Content.MainStructure, hq);
-								landingPlace.AddStructure(sr);
-								GameMaster.colonyController.AddWorkers(GameMaster.START_WORKERS);
+								GameMaster.colonyController = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
+
+								Structure hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
+								hq.SetBasement(landingPlace, new PixelPosByte(4,1));
+
+								landingPlace.MakeIndestructible(true);
+								landingPlace.basement.MakeIndestructible(true);
+								GameMaster.mainChunk.SetAccessPoint(landingPlace.pos);
+								GameMaster.colonyController.AddWorkers(GameMaster.START_WORKERS_COUNT);
 
 								Chunk c = landingPlace.myChunk;
 
-								GameObject storage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0"));
-								sr = new SurfaceRect(1,1, 14,14, Content.MainStructure,storage);
-								s_place1.AddStructure(sr);
-								PoolMaster.current.StartPopulation(10, s_place2.transform.position + Vector3.down * Block.QUAD_SIZE/2f);
+								Structure storage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<Structure>();
+								storage.SetBasement(s_place1, PixelPosByte.one);
 							} 
 							else transform.Translate (Vector3.down * speed);
 						}

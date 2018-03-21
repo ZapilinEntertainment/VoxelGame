@@ -49,7 +49,7 @@ public class Constructor : MonoBehaviour {
 		}
 		GameObject g = new GameObject("chunk");
 		c = g.AddComponent<Chunk>();
-		GameMaster.realMaster.mainChunk = c;
+		GameMaster.mainChunk = c;
 		c.SetChunk(dat);
 		NatureCreation(c);
 	}
@@ -59,7 +59,7 @@ public class Constructor : MonoBehaviour {
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		x = 7;z=7;
-		surface[x,z].Replace(PoolMaster.GRASS_ID);
+		surface[x,z].ReplaceMaterial(PoolMaster.GRASS_ID);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), 500000);
 

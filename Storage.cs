@@ -11,13 +11,13 @@ public struct ResourceContainer {
 	}
 }
 
-public class Storage{
-	float volume = 0, maxVolume;
+public class Storage : MonoBehaviour {
+	public float volume = 0, maxVolume;
 	List<ResourceContainer> containers;
 	public bool showStorage = false;
-	public Rect storageRect;
 
 	void Awake() {
+		volume = 0;
 		maxVolume = 0;
 		containers = new List<ResourceContainer>();
 	}
@@ -59,7 +59,7 @@ public class Storage{
 		if (volume == 0) return 0;
 		int i = 0;
 		while ( i < containers.Count && count > 0) {
-			if (containers[i].type != rtype) continue;
+			if (containers[i].type != rtype) {i++;continue;}
 			if (containers[i].volume < count) {
 				volume -= containers[i].volume;
 				count -= containers[i].volume;
@@ -78,15 +78,20 @@ public class Storage{
 
 	void OnGUI () {
 		if (showStorage) {
+			GUI.skin = GameMaster.mainGUISkin;
+			float k = GameMaster.guiPiece;
+			Rect r =new Rect(Screen.width - 8 *k, UI.current.upPanelHeight,4*k, k * 0.75f * (containers.Count+1));
+			UI.current.serviceBoxRect = r;
+			Rect r_name = new Rect (r.x, r.y, r.width * 0.7f, k*0.75f);
+			Rect r_count = new Rect(r.x + r_name.width * 0.5f, r.y, r.width * 0.5f, r_name.height);
 			if (containers.Count != 0 ) {
-				Rect r_name = new Rect (storageRect.x, storageRect.y, storageRect.width * 0.75f, GameMaster.guiPiece);
-				Rect r_count = new Rect(storageRect.x + r_name.width, storageRect.y, storageRect.width * 0.25f, r_name.height);
-
 				foreach (ResourceContainer rc in containers) {
-					GUI.Label(r_name, rc.type.name); GUI.Label(r_count, ((int)rc.volume).ToString());
+					GUI.Label(r_name, rc.type.name); 
+					GUI.Label(r_count, ((int)rc.volume).ToString(), GameMaster.mainGUISkin.customStyles[0]);
 					r_name.y += r_name.height; r_count.y += r_name.height;
 				}
 			}
+			GUI.Label(r_name, "Total:"); GUI.Label(r_count, ((int)volume).ToString() + " / " + ((int)maxVolume).ToString(), GameMaster.mainGUISkin.customStyles[0]);
 		}
 	}
 }

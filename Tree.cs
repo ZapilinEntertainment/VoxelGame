@@ -12,7 +12,9 @@ public class Tree : Plant {
 		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.4f + Random.value * 0.1f;
 		hp = maxHp;
-		innerPosition = SurfaceRect.Empty;
+		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
+		isArtificial = markAsArtificial;
+		type = setType;
 	}
 
 		
@@ -40,9 +42,22 @@ public class Tree : Plant {
 			g.transform.localScale = transform.localScale;
 			HarvestableResource hr = g.GetComponent<HarvestableResource>();
 			hr.SetResources(ResourceType.Lumber, (int)(100 * trunk.transform.localScale.y));
-			basement.ReplaceStructure(new SurfaceRect(innerPosition.x, innerPosition.z, innerPosition.x_size, innerPosition.z_size, Content.HarvestableResources, g));
-			basement = null;
+			basement.ReplaceStructure(new SurfaceObject(innerPosition, hr));
+			basement = null; // чтобы не менялась карта застройки
 		}
 		else Destroy(gameObject);
+	}
+
+	public void Chop() {
+		if (basement != null) {
+			basement.grassland.AddLifepower((int)lifepower);
+			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+		}
+		gameObject.AddComponent<FallingTree>();
+		Destroy(this);
+	}
+
+	public float CalculateLumberCount() {
+		return SurfaceBlock.INNER_RESOLUTION * transform.localScale.y * transform.localScale.x * transform.localScale.z * 200;
 	}
 }

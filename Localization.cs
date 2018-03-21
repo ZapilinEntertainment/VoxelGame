@@ -10,7 +10,9 @@ public static class Localization {
 	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
 	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_elasticMass_descr;
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_cancel_clearing, ui_cancel_digging, ui_cancel_pouring, ui_clear_and_dig,
-	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain;
+	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering;
+	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
+	public static string info_housing, info_population;
 
 	static Localization() {
 		ChangeLanguage(Language.English);
@@ -26,7 +28,7 @@ public static class Localization {
 			rtype_food_name = "Food";
 			rtype_food_descr = "Organic fuel for your citizens";
 			rtype_lumber_name = "Wood";
-			rtype_lumber_name = "Used for building and decorating";
+			rtype_lumber_descr = "Different elastic wood, growing only in Last Sector Dominion. Used for building and decorating";
 			rtype_stone_name = "Stone";
 			rtype_stone_descr = "Nature material used in construction";
 			rtype_metalC_ore_name = "Metal C (ore)";
@@ -51,7 +53,12 @@ public static class Localization {
 			ui_clear_and_dig = "Clear and dig"; ui_accept_destruction_on_clearing = "Destruct all buildings up there?";
 			ui_accept = "Yes"; ui_decline = "No";
 			ui_choose_block_action = "Choose block action";
-			ui_toPlain = "Plain ground";
+			ui_toPlain = "Plain ground"; 
+			ui_toGather = "Gather resources"; ui_cancelGathering = "Stop gathering";
+
+			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
+			info_housing = "Housing";
+			info_population = "Population";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -60,6 +67,11 @@ public static class Localization {
 			ui_dig_block = "Выкопать блок";
 			ui_pourIn = "Засыпать блок";
 			ui_toPlain = "Разровнять";
+			ui_toGather = "Собрать ресурсы"; ui_cancelGathering = "Остановить сбор ресурсов";
+			menu_colonyInfo = "Состояние";
+			info_housing = "Свободное жильё";
+			info_population = "Население";
+			menu_gameMenuButton = "Меню"; menu_cancel = "Отмена";
 			break;	
 		}
 	}

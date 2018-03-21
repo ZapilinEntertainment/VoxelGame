@@ -13,7 +13,9 @@ public class Plant2D : Plant {
 		maxTall = 0.1f;
 		full = false;
 		hp = maxHp;
-		innerPosition = SurfaceRect.Empty;
+		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
+		isArtificial = markAsArtificial;
+		type = setType;
 	}
 
 	override public  void AddLifepower(int life) {
@@ -28,10 +30,10 @@ public class Plant2D : Plant {
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
 		basement = b;
-		Content myContent = Content.Structure; if (isMainStructure) myContent = Content.MainStructure;
-		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set,zsize_to_set, myContent, gameObject);
-		b.AddStructure(innerPosition);
+		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
+		b.AddStructure(new SurfaceObject(innerPosition, this));
 		body.SetPosition(0, transform.position);
 		body.SetPosition(1,transform.position + Vector3.up * startSize);
 	}

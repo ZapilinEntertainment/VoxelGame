@@ -5,6 +5,7 @@ using System.IO;
 
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
+public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining}
 
 public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
@@ -16,23 +17,27 @@ public class GameMaster : MonoBehaviour {
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	int camCullingMask = 1;
-	public Chunk mainChunk; public static ColonyController colonyController; 
+	public static Chunk mainChunk; 
+	public static ColonyController colonyController; 
+	public static GeologyModule geologyModule;
 	public  LineRenderer systemDrawLR;
 	static string path;
 
-	public const int START_LIFEPOWER = 100000, START_WORKERS = 10;
+	public const int START_LIFEPOWER = 100000;
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
-	public static float labourEfficiency {get;private set;}
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f;
 
 	public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 
-	public static float metalC_abundance = 0.01f, metalM_abundance = 0.005f, metalE_abundance = 0.003f, 
-	metalN_abundance = 0.0001f, metalP_abundance = 0.02f, metalS_abundance = 0.0045f,
-	mineralF_abundance = 0.02f, mineralL_abundance = 0.02f; // sum must be less than one!
+	public const int START_WORKERS_COUNT = 10;
+	static float diggingSpeed = 0.1f, pouringSpeed = 0.1f, manufacturingSpeed = 0.1f, 
+	clearingSpeed = 1, gatheringSpeed = 0.1f, miningSpeed = 0.05f;
+	public static float labourEfficiency {get;private set;}
+	public const float LABOUR_TICK = 1;
+
 
 	float t;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
@@ -49,7 +54,7 @@ public class GameMaster : MonoBehaviour {
 
 	bool fontSize_set = false;
 	public static float guiPiece {get;private set;}
-	public GUISkin mainGUISkin {get;private set;}
+	public static GUISkin mainGUISkin {get;private set;}
 
 	public GameMaster () {
 		if (realMaster != null) realMaster = null;
@@ -67,8 +72,8 @@ public class GameMaster : MonoBehaviour {
 
 		labourEfficiency =1;
 		lifeGrowCoefficient = 1;
-
 		//Localization.ChangeLanguage(Language.English);
+		geologyModule = gameObject.AddComponent<GeologyModule>();
 	}
 
 	void Start() {
@@ -93,16 +98,23 @@ public class GameMaster : MonoBehaviour {
 			int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 			int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 
-			GameObject hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
-			SurfaceRect sr = new SurfaceRect(4,1,8,14,Content.MainStructure, hq);
-			mainChunk.GetSurfaceBlock(xpos,zpos).AddStructure(sr);
-			colonyController.AddWorkers(START_WORKERS);
+			colonyController = gameObject.AddComponent<ColonyController>();
+			Structure s = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
+			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
+			s.SetBasement(b, new PixelPosByte(4,1));
+			b.MakeIndestructible(true);
+			b.basement.MakeIndestructible(true);
+			mainChunk.SetAccessPoint(b.pos);
+
+			colonyController.AddWorkers(START_WORKERS_COUNT);
+
 			if (xpos > 0) xpos --; else xpos++;
-			GameObject storage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0"));
-			sr = new SurfaceRect(1,1, 14,14, Content.MainStructure,storage);
-			mainChunk.GetSurfaceBlock(xpos,zpos).AddStructure(sr);
+			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
+			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
+
 			UI ui = gameObject.AddComponent<UI>();
 			ui.lineDrawer = systemDrawLR;
+			//ui.lineDrawer.gameObject.layer = 5;
 			break;
 		}
 	}
@@ -124,6 +136,7 @@ public class GameMaster : MonoBehaviour {
 					else cameraUpdateBroadcast[c].SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
 					c--;
 				}
+				cameraHasMoved = false;
 				cameraTimer = cameraUpdateTime;
 			}
 		}
@@ -184,10 +197,11 @@ public class GameMaster : MonoBehaviour {
 		//eo day update
 		}
 
-		windTimer -= t;
+		windTimer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (windTimer <= 0) {
 			windVector = Random.onUnitSphere * (maxWindPower * Random.value);
-			windTimer = windChangeTime * (1 + Random.value -0.5f);
+			windVector += Vector3.down * windVector.y;
+			windTimer = windChangeTime + Random.value * windChangeTime;
 			if (windUpdateList.Count != 0) {
 				int i = 0;
 				while (i < windUpdateList.Count) {
@@ -238,24 +252,46 @@ public class GameMaster : MonoBehaviour {
 			}
 		}	
 
-	public static float CalculateWorkflow(int workersCount) {
+	public static float CalculateWorkflow(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
-		return (workersCount * labourEfficiency * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2));
+		float workflow = workersCount * labourEfficiency * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
+		switch (type) {
+		case WorkType.Digging: workflow *= diggingSpeed;break;
+		case WorkType.Manufacturing: workflow *= manufacturingSpeed;break;
+		case WorkType.Nothing: workflow = 0; break;
+		case WorkType.Pouring: workflow *= pouringSpeed;break;
+		case WorkType.Clearing: workflow *= clearingSpeed;break;
+		case WorkType.Gathering : workflow *= gatheringSpeed;break;
+		case WorkType.Mining: workflow *= miningSpeed;break;
+		}
+		return workflow;
 	}
 
 	void OnGUI() {
 		if (!fontSize_set) {
 			guiPiece = Screen.height / 24f;
-			GUI.skin.GetStyle("Label").fontSize = (int)guiPiece;
+			mainGUISkin = Resources.Load<GUISkin>("MainSkin");
+			mainGUISkin.GetStyle("Label").fontSize = (int)(guiPiece/2f);
+			mainGUISkin.GetStyle("Button").fontSize = (int)(guiPiece/2f);
+			GUIStyle rightOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
+			rightOrientedLabel.alignment = TextAnchor.UpperRight;
+			GUIStyleState withoutImageStyle = new GUIStyleState();
+			withoutImageStyle.background = null;
+			GUIStyle borderlessButton = new GUIStyle(mainGUISkin.GetStyle("Button"));
+			borderlessButton.normal = withoutImageStyle;
+			borderlessButton.onHover = withoutImageStyle;
+			GUIStyle borderlessLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
+			borderlessLabel.normal = withoutImageStyle;
+			borderlessLabel.onHover = withoutImageStyle;
+			mainGUISkin.customStyles = new GUIStyle[3] {rightOrientedLabel, borderlessButton, borderlessLabel};
 			//testmode
-			mainGUISkin = GUI.skin;
 			//
 			GUI.skin = mainGUISkin;
 			fontSize_set = true;
 		}
-		GUI.Label(new Rect(Screen.width - 128, 0, 128,32), "day "+day.ToString());
-		GUI.Label(new Rect(Screen.width - 128, 32, 128,32), "week "+week.ToString());
-		GUI.Label(new Rect(Screen.width - 128, 64, 128,32), "month "+month.ToString());
-		GUI.Label(new Rect(Screen.width - 128, 96, 128,32), "year "+year.ToString());
+		//GUI.Label(new Rect(Screen.width - 128, 0, 128,32), "day "+day.ToString());
+		//GUI.Label(new Rect(Screen.width - 128, 32, 128,32), "week "+week.ToString());
+		//GUI.Label(new Rect(Screen.width - 128, 64, 128,32), "month "+month.ToString());
+		//GUI.Label(new Rect(Screen.width - 128, 96, 128,32), "year "+year.ToString());
 	}
 }

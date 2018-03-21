@@ -5,7 +5,7 @@ using UnityEngine;
 public struct PixelPosByte {
 	public byte x, y;
 	public bool exists;
-	public static PixelPosByte Empty, zero;
+	public static PixelPosByte Empty, zero, one;
 	public PixelPosByte (byte xpos, byte ypos) {x = xpos; y = ypos; exists = true;}
 	public PixelPosByte (int xpos, int ypos) {
 		if (xpos < 0) xpos = 0; if (ypos < 0) ypos = 0;
@@ -15,6 +15,7 @@ public struct PixelPosByte {
 	static PixelPosByte() {
 		Empty = new PixelPosByte(0,0); Empty.exists = false;
 		zero = new PixelPosByte(0,0); // but exists
+		one = new PixelPosByte(1,1);
 	}
 
 	public static bool operator ==(PixelPosByte lhs, PixelPosByte rhs) {return lhs.Equals(rhs);}
@@ -26,7 +27,7 @@ public class Grassland : MonoBehaviour {
 	public const float LIFEPOWER_TO_PREPARE = 16;
 
 	public SurfaceBlock myBlock {get;private set;}
-	float fertility = 1, progress = 0, lifeTimer = 0;
+	float progress = 0, lifeTimer = 0;
 	public float lifepower;
 	List<Plant> plants;
 	byte prevStage = 0;
@@ -91,15 +92,15 @@ public class Grassland : MonoBehaviour {
 						else {
 						if (allFilled_check == false) {
 							level = 4;
-							int lifeDelta = (int) (Mathf.Pow(Chunk.MAX_LIFEPOWER_TRANSFER * fertility * GameMaster.lifeGrowCoefficient * GameMaster.gameSpeed, level));
-							if (lifeDelta > lifepower) { lifeDelta = (int)lifepower;}
+							float lifeDelta = Mathf.Pow(Chunk.MAX_LIFEPOWER_TRANSFER * myBlock.fertility * GameMaster.lifeGrowCoefficient * GameMaster.gameSpeed, level);
+							if (lifepower - lifeDelta < LIFEPOWER_TO_PREPARE * 2) { lifeDelta = lifepower - LIFEPOWER_TO_PREPARE * 2;}
 							int pos = (int)(Random.value * (plants.Count - 1));
-							if (lifeDelta > plants[pos].maxLifepower - plants[pos].lifepower) lifeDelta = (int)(plants[pos].maxLifepower - plants[pos].lifepower);
+							if (lifeDelta > plants[pos].maxLifepower - plants[pos].lifepower) lifeDelta = plants[pos].maxLifepower - plants[pos].lifepower;
 							if ( plants[pos].full ) {
 								if (plants[pos].GetComponent<Plant2D>() != null ) ReplaceGrassToTree(pos);
 							}
 							else {
-								plants[pos].AddLifepower(lifeDelta); lifepower -= lifeDelta;
+								plants[pos].AddLifepower((int)lifeDelta); lifepower -= lifeDelta;
 							}			
 						}
 						}
@@ -123,9 +124,11 @@ public class Grassland : MonoBehaviour {
 	void ReplaceGrassToTree(int pos) {
 		Tree t = (Instantiate(PoolMaster.current.tree_pref) as GameObject).GetComponent<Tree>();
 		t.gameObject.SetActive(true);
-		myBlock.ReplaceStructure( new SurfaceRect (plants[pos].innerPosition.x, plants[pos].innerPosition.z, plants[pos].innerPosition.x_size, plants[pos].innerPosition.z_size, Content.Plant, t.gameObject));
-		t.AddLifepower( (int)plants[pos].lifepower);
-		plants[pos] = t;
+		if (myBlock.ReplaceStructure(new SurfaceObject(plants[pos].innerPosition, t))) {
+			t.AddLifepower( (int)plants[pos].lifepower);
+			plants[pos] = t;
+		}
+		else Destroy(t.gameObject);
 	}
 
 	public void AddLifepower(int count) {

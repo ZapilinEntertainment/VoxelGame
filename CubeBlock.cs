@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CubeBlock : Block{
-	MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
+	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public byte visibilityMask {get;private set;}
 	public float naturalFossils = 0;
-	public byte digStatus = 0;
+	public sbyte digStatus = 0;
 	byte renderMask = 0, excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
-	public int volume {get;private set;}
+	public int volume ;
 	public static readonly int MAX_VOLUME;
+	public bool career{get;private set;}
 
 	static CubeBlock() {
 		MAX_VOLUME = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
@@ -19,6 +20,8 @@ public class CubeBlock : Block{
 		visibilityMask = 0; 
 		naturalFossils = MAX_VOLUME;
 		digStatus = 0;
+		isTransparent = false;
+		volume = MAX_VOLUME; career = false;
 	}
 
 	public int PourIn (int blocksCount) {
@@ -38,26 +41,26 @@ public class CubeBlock : Block{
 		return blocksCount;
 	}
 
-	public override void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration) {
-		isTransparent = false;
+	public void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration) {
 		myChunk = f_chunk; transform.parent = f_chunk.transform;
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = f_material_id;
-		type = BlockType.Cube;
+		type = BlockType.Cube; isTransparent = false;
 		if (naturalGeneration) {naturalFossils = MAX_VOLUME;} else naturalFossils = 0;
 
 		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
 
-	public override void Replace( int newId, bool generatorReplacement) {
+	public override void ReplaceMaterial(int newId) {
 		material_id = newId;
+		Material m = PoolMaster.GetMaterialById(material_id);
 		if (faces != null) {
-			for (int i =0; i< 6; i++) {
-				if (faces[i] != null) {faces[i].material =  PoolMaster.GetMaterialById(newId);	}
+			foreach (MeshRenderer mr in faces) {
+				if (mr == null) continue;
+				else mr.material = m;
 			}
 		}
-		if (generatorReplacement) naturalFossils = MAX_VOLUME; else naturalFossils = 0;
 	}
 
 	public void SetRenderBitmask(byte x) {
@@ -133,6 +136,7 @@ public class CubeBlock : Block{
 					excavatingStatus = 3; 
 					if (faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
+					career = true;
 				}
 			}
 			else {
@@ -140,6 +144,7 @@ public class CubeBlock : Block{
 					excavatingStatus = 2;
 					if (faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
+					career = true;
 				}
 			}
 		}
@@ -151,6 +156,19 @@ public class CubeBlock : Block{
 						excavatingStatus = 1;
 						if (faces[4] == null) CreateFace(4);
 						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
+						career = true;
+					}
+				}
+				else {
+					if (excavatingStatus != 0) {
+						excavatingStatus = 0; 
+						career = false;
+						if (faces[4] == null) CreateFace(4);
+						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
+						Block b = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
+						if (b == null && pos.y +1 < Chunk.CHUNK_SIZE) {
+							myChunk.AddBlock(new ChunkPos(pos.x, pos.y+1, pos.z), BlockType.Surface,material_id);
+						} 
 					}
 				}
 			}

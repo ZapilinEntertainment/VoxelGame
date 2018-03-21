@@ -9,29 +9,29 @@ public class PoolMaster : MonoBehaviour {
 	public GameObject tree_pref, grass_pref, deadTree_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static Material dirt_material, grass_material, stone_material, lumber_material,
-		default_material, lr_red_material, lr_green_material,
-	metalC_material, metalM_material, metalE_material, metalN_material, metalP_material, metalS_material, mineralF_material, mineralL_material,
-	elasticMass_material;
+		default_material, lr_red_material, lr_green_material, 
+		metalC_material, metalM_material, metalE_material, metalN_material, metalP_material, metalS_material, mineralF_material, mineralL_material,
+		elasticMass_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 
 	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3, LUMBER_ID = 4, METAL_C_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
 	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, ELASTIC_MASS_ID = 13;	
 
-	Human[] population; const int MAX_POPULATION = 256; int lastActiveHuman = -1;
+	const int MAX_POPULATION = 256; int lastActiveHuman = -1;
 
 	void Awake() {
 		if (current != null && current != this) Destroy(current); 
 		current = this;
 
-		metalC_material = Resources.Load<Material>("Material/MetalC");
-		metalM_material = Resources.Load<Material>("Material/MetalM");
-		metalE_material = Resources.Load<Material>("Material/MetalE");
-		metalN_material = Resources.Load<Material>("Material/MetalN");
-		metalP_material = Resources.Load<Material>("Material/MetalP");
-		metalS_material = Resources.Load<Material>("Material/MetalS");
-		mineralF_material = Resources.Load<Material>("Material/MineralF");
-		mineralL_material = Resources.Load<Material>("Material/MineralL");
-		elasticMass_material = Resources.Load<Material>("Material/Plastic");
+		metalC_material = Resources.Load<Material>("Materials/MetalC");
+		metalM_material = Resources.Load<Material>("Materials/MetalM");
+		metalE_material = Resources.Load<Material>("Materials/MetalE");
+		metalN_material = Resources.Load<Material>("Materials/MetalN");
+		metalP_material = Resources.Load<Material>("Materials/MetalP");
+		metalS_material = Resources.Load<Material>("Materials/MetalS");
+		mineralF_material = Resources.Load<Material>("Materials/MineralF");
+		mineralL_material = Resources.Load<Material>("Materials/MineralL");
+		elasticMass_material = Resources.Load<Material>("Materials/Plastic");
 
 		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
@@ -75,46 +75,6 @@ public class PoolMaster : MonoBehaviour {
 		grassland_ready_50[3].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_3"));
 	}
 
-	public void StartPopulation(int x, Vector3 pos) {
-		population = new Human[MAX_POPULATION];
-		Human humanPref = Instantiate(Resources.Load<GameObject>("Prefs/Human")).GetComponent<Human>();
-		int i = 0;
-		population[i++] = humanPref;
-		humanPref.transform.position = pos + Vector3.forward * Block.QUAD_SIZE / 2f * 0.9f;
-		humanPref.FindHome();
-		for (; i< x; i++) {
-			population[i] = Instantiate(humanPref) as Human;
-			population[i].transform.position = pos + Quaternion.AngleAxis(360f / (i + 1), Vector3.up) * Vector3.forward * Block.QUAD_SIZE / 2f * 0.9f;
-			population[i].FindHome();
-		}
-		lastActiveHuman = x;
-	}
-	public Human GetNewHuman() {
-		if (lastActiveHuman == MAX_POPULATION) return null;
-		else {
-			Human h = population[lastActiveHuman];
-			if (h == null) {
-				h = Instantiate(Resources.Load<GameObject>("Human")).GetComponent<Human>();
-			}
-			h.gameObject.SetActive(true);
-			lastActiveHuman ++;
-			return h;
-		}
-	}
-	public void DisableHuman(Human h) {
-		int i = 0;
-		while (i < MAX_POPULATION) {
-			if ( !population[i].Equals(h) )  continue;
-				if (i != lastActiveHuman) {
-					Human a = population[lastActiveHuman];
-					population[lastActiveHuman] = h;
-					population[i] = a;
-				}
-			h.gameObject.SetActive(false);
-			lastActiveHuman--;
-			break;
-		}
-	}
 
 	public static Material GetMaterialById(int id) {
 		switch (id) {

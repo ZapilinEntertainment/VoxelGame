@@ -3,72 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure {
-	public float workflow_to_build = 60,  currentWorkflow = 0, workflow_to_result = 30;
-	public bool completed {get; protected set;}
-	public int maxWorkers = 8;
-	public byte level {get;protected set;}
-	ResourceContainer[] containingResources;
-	int[] resourcesCost, resourcesContain;
-	public int workersCount {get; protected set;}
-	const float WORKFLOW_GAIN = 1;
-	ColonyController colonyController;
+	public byte level = 0;
+	public MeshRenderer myRenderer;
+	public List<ResourceContainer> resourcesContain;
+	public float energySurplus = 0, energyCapacity = 0;
+	public string buildingName = "building";
 
 	void Awake() {
 		hp = maxHp;
-		innerPosition = SurfaceRect.Empty;
-		workersCount = 0;
-		completed = false;
-		if (containingResources.Length != 0) {
-			resourcesCost = new int[containingResources.Length];
-			resourcesContain = new int[containingResources.Length];
-			float pc = currentWorkflow / workflow_to_build;
-			if (pc == 1) completed = true;
-			for (int i =0; i < resourcesContain.Length; i++) {
-				resourcesContain[i] = (int)( resourcesCost[i] * pc);
-			}
-		}
+		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
+		isArtificial = markAsArtificial;
+		type = setType;
+		if (energyCapacity != 0) GameMaster.colonyController.totalEnergyCapacity += energyCapacity;
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || colonyController == null) return;
-		if (workersCount > 0) {
-			float workflow = GameMaster.CalculateWorkflow(workersCount);
-			if (GameMaster.LUCK_COEFFICIENT > 0) {if (Random.value > 0.5f) workflow += workflow * GameMaster.LUCK_COEFFICIENT;}
-			else {if (Random.value < 0.1f) {workflow += workflow * GameMaster.LUCK_COEFFICIENT;}}
-			currentWorkflow += workflow;
-			if (completed) {
-				if (currentWorkflow > workflow_to_result) {
-					Result();
-					currentWorkflow -= workflow_to_result;
-				}
-			}
-			else {
-				float pc = currentWorkflow / workflow_to_build;
-				if (pc == 1) {completed = true; currentWorkflow = 0;}
-				if (pc < 0) pc = 0;
-				for (int i =0; i < resourcesContain.Length; i++) {
-					resourcesContain[i] = (int)( resourcesCost[i] * pc);
-				}
-			}
-		}
+	public virtual void SetBasement(SurfaceBlock b, PixelPosByte pos, List<ResourceContainer> f_resourcesContain) {
+		if (b == null) return;
+		basement = b;
+		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
+		b.AddStructure(new SurfaceObject(innerPosition, this));
+		resourcesContain = f_resourcesContain;
 	}
 
-	void Result() {
-		
-	}
 
-	public void AddWorkers (int x) {
-		if (x > 0) workersCount += x;
-	}
-
-	void StartBuilding() {
-		currentWorkflow = 0;
-	}
-
-	protected override void OnDestroy() {
+	public override void OnDestroy() {
 		if (basement != null) {
-			basement.RemoveStructure(innerPosition);
+			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			basement.artificialStructures --;
 		}
-		if (workersCount != 0) GameMaster.colonyController.AddWorkers(workersCount);
+		if (energyCapacity != 0) GameMaster.colonyController.totalEnergyCapacity -= energyCapacity;
 	}
 }

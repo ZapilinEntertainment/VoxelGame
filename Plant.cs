@@ -14,14 +14,16 @@ public class Plant : Structure {
 		full = false;
 		maxTall = 0.15f + Random.value * 0.05f;
 		hp = maxHp;
-		innerPosition = SurfaceRect.Empty;
+		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
+		isArtificial = markAsArtificial;
+		type = setType;
 	}
 		
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
 		basement = b;
-		Content myContent = Content.Structure; if (isMainStructure) myContent = Content.MainStructure;
-		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set,zsize_to_set, myContent, gameObject);
-		b.AddStructure(innerPosition);
+		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
+		b.AddStructure(new SurfaceObject(innerPosition, this));
 		transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 	}
 

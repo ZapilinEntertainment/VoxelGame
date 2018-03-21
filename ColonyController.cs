@@ -11,21 +11,25 @@ public class ColonyController : MonoBehaviour {
 	public float workEfficiency_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
-	List<Building> alwaysAvailableBuildings;
-	public List<Building> workBuildings;
+	public List<Building> buildings_level_1{get;private set;}
+	public Mine[] minePrefs {get;private set;}
+	public List<WorkBuilding> workBuildings;
 	public List<DigSite> digSites;
 	public List<CleanSite> cleanSites;
+	public List<GatherSite>gatherSites;
 	public int freeWorkers{get;private set;}
 	public int housing{get;private set;}
 	float workersAppointTimer = 0;
 	const float APPOINT_TICK = 2;
-	public float digPriority = 0.4f, clearPriority = 0.4f, buildingsPriority = 0.2f;
+	public float digPriority = 0.2f, clearPriority = 0.2f, buildingsPriority = 0.2f,gatherPriority = 0.4f;
+	public bool showColonyInfo = false;
+	public byte housingLevel = 0;
+	public float totalEnergyCapacity = 0;
 
-	bool showStorage = false;
 
 	void Awake() {
 		GameMaster.colonyController = this;
-		if (storage == null) storage = new Storage();
+		if (storage == null) storage = gameObject.AddComponent<Storage>();
 		GameMaster.realMaster.everydayUpdateList.Add(this);
 		GameMaster.realMaster.everyYearUpdateList.Add(this);
 		gears_coefficient = 1;
@@ -33,7 +37,13 @@ public class ColonyController : MonoBehaviour {
 		happiness_coefficient = 1;
 		health_coefficient = 1;
 
-		workBuildings = new List<Building>(); digSites = new List<DigSite>(); cleanSites = new List<CleanSite>();
+		workBuildings = new List<WorkBuilding>(); digSites = new List<DigSite>(); cleanSites = new List<CleanSite>(); gatherSites = new List<GatherSite>();
+		buildings_level_1 = new List<Building>();
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
+		buildings_level_1[0].gameObject.SetActive(false);
+		minePrefs = new Mine[6];
+		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
+		minePrefs[1].gameObject.SetActive(false);
 	}
 
 	void Update() {
@@ -57,6 +67,14 @@ public class ColonyController : MonoBehaviour {
 							else {clearWorkersDemand += (CleanSite.MAX_WORKERS - cleanSites[i].workersCount);i++;}
 						}
 					}
+				int gatherersDemand = 0;
+				if (gatherSites.Count > 0) {
+					int i = 0;
+					while (i < gatherSites.Count) {
+						if (gatherSites[i] == null) {gatherSites.RemoveAt(i); continue;}
+						else {gatherersDemand += (GatherSite.MAX_WORKERS - gatherSites[i].workersCount); i++;}
+					}
+				}
 				int workersDemand = 0;
 				if (workBuildings.Count > 0) {
 					int i = 0;
@@ -65,11 +83,14 @@ public class ColonyController : MonoBehaviour {
 						else {workersDemand += (workBuildings[i].maxWorkers - workBuildings[i].workersCount); i++;}
 					}
 				}
-				float totalDemands = digWorkersDemand * digPriority + clearWorkersDemand * clearPriority + workersDemand * buildingsPriority;
+
+				float totalDemands = digWorkersDemand * digPriority + clearWorkersDemand * clearPriority + workersDemand * buildingsPriority + gatherersDemand * gatherPriority;
 				int workersForDigging = (int)(freeWorkers * digWorkersDemand * digPriority / totalDemands);
 				freeWorkers -= workersForDigging;
 				int workersForClearing = (int)(freeWorkers * clearWorkersDemand * clearPriority / totalDemands);
 				freeWorkers -= workersForClearing;
+				int workersForGathering = (int)(freeWorkers * gatherersDemand * gatherPriority / totalDemands);
+				freeWorkers -= workersForGathering;
 
 				if (workersForDigging > 0) {
 					int i = 0;
@@ -89,7 +110,16 @@ public class ColonyController : MonoBehaviour {
 						else {cleanSites[i].AddWorkers(workersForClearing); workersForClearing = 0; break;}
 					}
 				}
-				freeWorkers += workersForDigging + workersForClearing;
+				if (workersForGathering > 0) {
+					int i = 0;
+					while (workersForGathering > 0 && i < gatherSites.Count) {
+						int delta = GatherSite.MAX_WORKERS - gatherSites[i].workersCount;
+						if (delta <= 0) {i++; continue;}
+						if (delta < workersForGathering) {gatherSites[i].AddWorkers(delta); workersForGathering -= delta; i++; }
+						else {gatherSites[i].AddWorkers(workersForGathering); workersForGathering= 0; break;}
+					}
+				}
+				freeWorkers += workersForDigging + workersForClearing + workersForGathering;
 				if (freeWorkers > 0) {
 					int i = 0;
 					while (freeWorkers > 0 && i < workBuildings.Count) {
@@ -125,12 +155,16 @@ public class ColonyController : MonoBehaviour {
 		GameMaster.realMaster.everydayUpdateList.Remove(this);
 	}
 
+
 	void OnGUI () {
 		float k = GameMaster.guiPiece;
-		int sw = Screen.width;
-		if (GUI.Button(new Rect(sw - 4 * k, 0, 4 * k , k), Localization.ui_storage_name)) { 
-			storage.storageRect = new Rect(sw - 4*k, 0, 4*k, k);
-			storage.showStorage = !storage.showStorage;
+		if (showColonyInfo) {
+			Rect r = new Rect(Screen.width - 12 *k, UI.current.upPanelHeight, 4*k, k);
+			UI.current.serviceBoxRect = r;
+			Rect leftPart = new Rect(r.x, r.y, r.width * 0.75f, k);
+			Rect rightPart = new Rect(r.x + r.width/2f, r.y,r.width/2, leftPart.height);
+			int population = freeWorkers;
+			GUI.Label(leftPart, Localization.info_population); GUI.Label(rightPart, population.ToString() + " / " + housing.ToString(), GameMaster.mainGUISkin.customStyles[0]);
 		}
 	}
 }

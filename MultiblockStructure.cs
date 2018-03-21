@@ -11,10 +11,10 @@ public class MultiblockStructure : Structure {
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
 		basement = b;
-		Content myContent = Content.Structure; if (isMainStructure) myContent = Content.MainStructure;
-		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set,zsize_to_set, myContent, gameObject);
-		b.AddStructure(innerPosition);
+		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
+		b.AddStructure(new SurfaceObject(innerPosition, this));
 		Chunk myChunk = basement.myChunk;
 		for (byte i = 1; i < height; i++) {
 			myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + i), b.pos.z, this);
