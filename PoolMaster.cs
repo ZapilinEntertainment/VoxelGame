@@ -10,11 +10,11 @@ public class PoolMaster : MonoBehaviour {
 	public static GameObject quad_pref {get;private set;}
 	public static Material dirt_material, grass_material, stone_material, lumber_material,
 		default_material, lr_red_material, lr_green_material, 
-		metalC_material, metalM_material, metalE_material, metalN_material, metalP_material, metalS_material, mineralF_material, mineralL_material,
+		metalK_material, metalM_material, metalE_material, metalN_material, metalP_material, metalS_material, mineralF_material, mineralL_material,
 		elasticMass_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 
-	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3, LUMBER_ID = 4, METAL_C_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
+	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3, LUMBER_ID = 4, METAL_K_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
 	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, ELASTIC_MASS_ID = 13;	
 
 	const int MAX_POPULATION = 256; int lastActiveHuman = -1;
@@ -23,7 +23,7 @@ public class PoolMaster : MonoBehaviour {
 		if (current != null && current != this) Destroy(current); 
 		current = this;
 
-		metalC_material = Resources.Load<Material>("Materials/MetalC");
+		metalK_material = Resources.Load<Material>("Materials/MetalK");
 		metalM_material = Resources.Load<Material>("Materials/MetalM");
 		metalE_material = Resources.Load<Material>("Materials/MetalE");
 		metalN_material = Resources.Load<Material>("Materials/MetalN");

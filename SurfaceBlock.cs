@@ -218,19 +218,13 @@ public class SurfaceBlock : Block {
 	}
 
 	public PixelPosByte GetRandomPosition(byte xsize, byte zsize) {
-		if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION) return PixelPosByte.Empty;
-		int maxVariants= 10;
+		if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION || xsize < 1 || zsize < 1) return PixelPosByte.Empty;
 		if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
-		List<PixelPosByte> acceptablePositions = GetAcceptablePositions(xsize,zsize, maxVariants);
-		if (acceptablePositions.Count > 0) {
-			int ppos = (int)(Random.value * (acceptablePositions.Count - 1));
-			return acceptablePositions[ppos];
-		}
-		else return PixelPosByte.Empty;
+		return GetAcceptablePosition(xsize, zsize);
 	}
 	public List<PixelPosByte> GetRandomPositions (byte xsize, byte zsize, int count) {
-		if (cellsStatus == 1) return new List<PixelPosByte>();
-		List<PixelPosByte> acceptablePositions = GetAcceptablePositions(xsize,zsize, 2 * count);
+		if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION || xsize < 1 || zsize < 1) return new List<PixelPosByte>();
+		List<PixelPosByte> acceptablePositions = GetAcceptablePositions(xsize,zsize, count);
 		if (acceptablePositions.Count <= count) return acceptablePositions;
 		else {
 			List<PixelPosByte> positions = new List<PixelPosByte>();
@@ -245,6 +239,35 @@ public class SurfaceBlock : Block {
 			}
 			return positions;
 		}
+	}
+
+	PixelPosByte GetAcceptablePosition (byte xsize, byte zsize) {
+		bool[,] map = GetBooleanMap();
+		List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
+		for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++) {
+			int width = 0;
+			for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++) {
+				if (map[xpos, zpos] == true) width = 0; else width++;
+				if (width >= zsize) {
+					bool appliable = true;
+					for (int xdelta = 1; xdelta < xsize; xdelta++) {
+						for (int zdelta = 0; zdelta < zsize; zdelta++) {
+							if (map[xpos + xdelta, zpos + zdelta] == true) {appliable = false; break;}
+						}
+						if (appliable == false) break;
+					}
+					if (appliable) {
+						acceptablePositions.Add( new PixelPosByte(xpos, zpos)); width = 0;
+						for (int xdelta = 1; xdelta < xsize; xdelta++) {
+							for (int zdelta = 0; zdelta < zsize; zdelta++) {
+								map[xpos + xdelta, zpos + zdelta] = true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return acceptablePositions[(int)(Random.value * (acceptablePositions.Count - 1))];
 	}
 
 	List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants) {
@@ -271,11 +294,13 @@ public class SurfaceBlock : Block {
 								map[xpos + xdelta, zpos + zdelta] = true;
 							}
 						}
-						if (acceptablePositions.Count >= maxVariants) break;
 					}
 				}
 			}
-			if (acceptablePositions.Count >= maxVariants) break;
+		}
+		while (acceptablePositions.Count > maxVariants) {
+			int i = (int)(Random.value * (acceptablePositions.Count - 1));
+			acceptablePositions.RemoveAt(i);
 		}
 		return acceptablePositions;
 	}
@@ -285,9 +310,12 @@ public class SurfaceBlock : Block {
 		List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();
 		for (byte i = 0; i< INNER_RESOLUTION; i++) {
 			for (byte j =0; j < INNER_RESOLUTION; j++) {
-				if (map[i,j] == false) {acceptableVariants.Add(new PixelPosByte(i,j)); if (acceptableVariants.Count >= count) break;}
-			}
-			if (acceptableVariants.Count >= count) break;
+				if (map[i,j] == false) {acceptableVariants.Add(new PixelPosByte(i,j)); }
+			}	
+		}
+		while (acceptableVariants.Count > count) {
+			int i = (int)(Random.value * (acceptableVariants.Count - 1));
+			acceptableVariants.RemoveAt(i);
 		}
 		return acceptableVariants;
 	}
@@ -320,7 +348,7 @@ public class SurfaceBlock : Block {
 			int minX = -1, maxX = -1, minZ = -1, maxZ = -1;
 			if (sa.x > suro.rect.x) minX = sa.x; else minX = suro.rect.x;
 			if (sa.x + sa.x_size < suro.rect.x + suro.rect.x_size) maxX = sa.x+sa.x_size; else maxX = suro.rect.x + suro.rect.x_size;
-			if (minX >= maxZ) continue;
+			if (minX >= maxX) continue;
 			if (sa.z > suro.rect.z) minZ = sa.z; else minZ = suro.rect.z;
 			if (sa.z + sa.z_size < suro.rect.z + suro.rect.z_size ) maxZ = sa.z + sa.z_size; else maxZ = suro.rect.z + suro.rect.z_size;
 			if (minZ >= maxZ) continue;

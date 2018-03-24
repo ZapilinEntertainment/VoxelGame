@@ -7,6 +7,7 @@ public class Mine : WorkBuilding {
 	public float criticalVolume = 0.5f;
 	public bool horizontal = true;
 	bool workFinished = false;
+	public byte oriented = 6; // 6 - all 
 
 	void Awake() {
 		buildingName = "Mine lv."+level.ToString();
@@ -25,8 +26,6 @@ public class Mine : WorkBuilding {
 		if (pc > criticalVolume) {
 			if (workersCount > 0) {
 				workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Mining);
-				labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
-				if (labourTimer <= 0) {LabourResult(); labourTimer = GameMaster.LABOUR_TICK;}
 			}
 		}
 		else {

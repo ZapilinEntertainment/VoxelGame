@@ -8,14 +8,11 @@ public class Plant2D : Plant {
 	float startSize = 0.05f;
 
 	void Awake () {
+		PrepareStructure();
 		lifepower = 1;
 		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.1f;
 		full = false;
-		hp = maxHp;
-		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
-		isArtificial = markAsArtificial;
-		type = setType;
 	}
 
 	override public  void AddLifepower(int life) {
@@ -31,9 +28,7 @@ public class Plant2D : Plant {
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
-		basement = b;
-		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
-		b.AddStructure(new SurfaceObject(innerPosition, this));
+		SetStructureData(b,pos);
 		body.SetPosition(0, transform.position);
 		body.SetPosition(1,transform.position + Vector3.up * startSize);
 	}

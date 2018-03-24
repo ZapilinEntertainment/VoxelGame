@@ -85,7 +85,7 @@ public class Zeppelin : Transport {
 								landingPlace.MakeIndestructible(true);
 								landingPlace.basement.MakeIndestructible(true);
 								GameMaster.mainChunk.SetAccessPoint(landingPlace.pos);
-								GameMaster.colonyController.AddWorkers(GameMaster.START_WORKERS_COUNT);
+								GameMaster.colonyController.AddCitizens(GameMaster.START_WORKERS_COUNT);
 
 								Chunk c = landingPlace.myChunk;
 

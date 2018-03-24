@@ -35,7 +35,6 @@ public class GameMaster : MonoBehaviour {
 	public const int START_WORKERS_COUNT = 10;
 	static float diggingSpeed = 0.1f, pouringSpeed = 0.1f, manufacturingSpeed = 0.1f, 
 	clearingSpeed = 1, gatheringSpeed = 0.1f, miningSpeed = 0.05f;
-	public static float labourEfficiency {get;private set;}
 	public const float LABOUR_TICK = 1;
 
 
@@ -70,7 +69,6 @@ public class GameMaster : MonoBehaviour {
 		everyYearUpdateList = new List<Component>();
 		windUpdateList = new List<Component>();
 
-		labourEfficiency =1;
 		lifeGrowCoefficient = 1;
 		//Localization.ChangeLanguage(Language.English);
 		geologyModule = gameObject.AddComponent<GeologyModule>();
@@ -106,7 +104,7 @@ public class GameMaster : MonoBehaviour {
 			b.basement.MakeIndestructible(true);
 			mainChunk.SetAccessPoint(b.pos);
 
-			colonyController.AddWorkers(START_WORKERS_COUNT);
+			colonyController.AddCitizens(START_WORKERS_COUNT);
 
 			if (xpos > 0) xpos --; else xpos++;
 			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
@@ -254,7 +252,7 @@ public class GameMaster : MonoBehaviour {
 
 	public static float CalculateWorkflow(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
-		float workflow = workersCount * labourEfficiency * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
+		float workflow = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
 		switch (type) {
 		case WorkType.Digging: workflow *= diggingSpeed;break;
 		case WorkType.Manufacturing: workflow *= manufacturingSpeed;break;

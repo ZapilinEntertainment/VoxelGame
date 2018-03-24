@@ -19,6 +19,10 @@ public class Structure : MonoBehaviour {
 	public float maxHp = 1;
 
 	void Awake() {
+		PrepareStructure();
+	}
+
+	protected void PrepareStructure() {
 		hp = maxHp;
 		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
 		isArtificial = markAsArtificial;
@@ -27,17 +31,20 @@ public class Structure : MonoBehaviour {
 
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
+		SetStructureData(b,pos);
+	}
+	protected void SetStructureData(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
 		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
 		b.AddStructure(new SurfaceObject(innerPosition, this));
-	}
+	} 
 
 	public void UnsetBasement() {
 		basement = null;
 		innerPosition = new SurfaceRect(0,0,xsize_to_set,zsize_to_set);
 	}
 
-	public virtual void OnDestroy() {
+	void OnDestroy() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
 		}

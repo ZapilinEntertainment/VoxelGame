@@ -3,31 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GeologyModule : MonoBehaviour {
-	public readonly float metalC_abundance, metalM_abundance, metalE_abundance, 
+	public readonly float metalK_abundance, metalM_abundance, metalE_abundance, 
 	metalN_abundance, metalP_abundance, metalS_abundance,
 	mineralF_abundance, mineralL_abundance; // sum must be less than one!
 
 	public GeologyModule() {
-		metalC_abundance = 0.01f;
+		metalK_abundance = 0.01f;
 		metalM_abundance = 0.005f; metalE_abundance = 0.003f;
 		metalN_abundance = 0.0001f; metalP_abundance = 0.02f; metalS_abundance = 0.0045f;
 		mineralF_abundance = 0.02f; mineralL_abundance = 0.02f; // sum must be less than one!
 	}
 
 	public void SpreadMinerals(SurfaceBlock surface) {
-		int maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
+		int maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION / 2;
 		GameObject boulderPref = Resources.Load<GameObject>("Structures/Boulder");
 		List<Structure> allBoulders = new List<Structure>();
 
 		int bouldersCount = 0;
-		if (Random.value < metalC_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalC_abundance * Random.value);
+		if (Random.value < metalK_abundance * 10) {
+			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalK_abundance * Random.value);
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalC_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalK_material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_C, 1+ Random.value * 100 * metalC_abundance);
+					hr.SetResources(ResourceType.metal_K, 1+ Random.value * 100 * metalK_abundance);
 					allBoulders.Add(hr);
 				}
 			}
@@ -120,6 +120,23 @@ public class GeologyModule : MonoBehaviour {
 		if (allBoulders.Count > 0) {
 			surface.AddMultipleCellObjects(allBoulders);
 		}
+		maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION - surface.surfaceObjects.Count;
+		if (maxObjectsCount > 0) {
+			int count = 0;
+			if (surface.material_id == PoolMaster.STONE_ID) count = (int)(maxObjectsCount * (0.05f + Random.value * 0.05f)); else count = (int)(Random.value * 0.08f);
+			List<PixelPosByte> points = surface.GetRandomPositions(2,2,count);
+			if (points.Count > 0) {
+				foreach (PixelPosByte p in points) {
+					GameObject g = Instantiate(boulderPref);
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.stone_material;
+					g.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
+					HarvestableResource hr = g.GetComponent<HarvestableResource>();
+					hr.SetResources(ResourceType.Stone, 4 + Random.value * 10);
+					hr.SetBasement(surface, p);
+					hr.transform.localRotation = Quaternion.Euler(0, Random.value * 360,0);
+				}
+			}
+		}
 	}
 
 	public void CalculateOutput(float production, CubeBlock workObject, Storage storage) {
@@ -128,9 +145,9 @@ public class GeologyModule : MonoBehaviour {
 			float m = 0;
 			switch (workObject.material_id) {
 			case PoolMaster.STONE_ID :
-				if (metalC_abundance >= v) {
-					m= metalC_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_C, m); production -= m;
+				if (metalK_abundance >= v) {
+					m= metalK_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
+					storage.AddResources(ResourceType.metal_K, m); production -= m;
 				}
 				if (metalM_abundance >= v) {
 					m= metalM_abundance * production * (Random.value +1 + GameMaster.LUCK_COEFFICIENT);
@@ -165,9 +182,9 @@ public class GeologyModule : MonoBehaviour {
 				}
 				break;
 			case PoolMaster.DIRT_ID:
-				if (metalC_abundance >= v) {
-					m= metalC_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					GameMaster.colonyController.storage.AddResources(ResourceType.metal_C, m); production -= m;
+				if (metalK_abundance >= v) {
+					m= metalK_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
+					GameMaster.colonyController.storage.AddResources(ResourceType.metal_K, m); production -= m;
 				}
 				if (metalP_abundance >= v) {
 					m= metalP_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);

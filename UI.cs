@@ -6,18 +6,23 @@ public enum UIMode {View, SurfaceBlockPanel, CubeBlockPanel, StructurePanel}
 public class UI : MonoBehaviour {
 	public LineRenderer lineDrawer;
 	public static UI current;
+
+	UIMode mode; int argument = 0, serviceRectArgument = 0;
 	Rect chosenObjectRect_real = new Rect(0,0,1,1), chosenObjectRect_planned = new Rect(0,0,1,1), staticRect = Rect.zero;
 	bool staticRectActive = false;
 	public Rect serviceBoxRect = Rect.zero;
-	PixelPosByte bufferedPosition;
-	UIMode mode; int argument = 0, serviceRectArgument = 0;
+	PixelPosByte bufferedPosition; int bufferedArgument = -1;
 	SurfaceBlock chosenSurfaceBlock;
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
 	Structure chosenStructure;
 	Vector2 mousePos;
 	GameObject quadSelector;
 	public float upPanelHeight, leftPanelWidth;
-	Texture  cellSelectionFrame_tx, grid16_tx, greenSquare_tx, orangeSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx;
+	Texture  cellSelectionFrame_tx, grid16_tx, greenSquare_tx, orangeSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
+		citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx;
+
+	List<Factory> smelteriesList; bool hasSmelteries = false;
+	List<Factory> unspecializedFactories; bool hasUnspecializedFactories = false;
 
 	void Awake() {
 		current = this;
@@ -34,6 +39,9 @@ public class UI : MonoBehaviour {
 		whiteSquare_tx = Resources.Load<Texture>("Textures/whiteSquare");
 		whiteSpecial_tx = Resources.Load<Texture>("Textures/whiteSpecialSquare");
 		yellowSquare_tx = Resources.Load<Texture>("Textures/yellowSquare");
+		citizen_icon_tx = Resources.Load<Texture>("Textures/citizen_icon");
+		energy_icon_tx = Resources.Load<Texture>("Textures/energy_icon");
+		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
 	}
 	void Update() {
 		mousePos = Input.mousePosition;
@@ -209,7 +217,7 @@ public class UI : MonoBehaviour {
 				if (chosenSurfaceBlock.map == null) chosenSurfaceBlock.GetBooleanMap();
 				break;
 			case 5: //accept destruction on construction site
-				staticRect = new Rect(Screen.width /2f - 2*k, Screen.height - k, 4*k, k);
+				staticRect = new Rect(Screen.width /2f - 4*k, Screen.height/2f - 2*k, 8*k, 4*k);
 				break;
 			}
 			break;
@@ -243,6 +251,19 @@ public class UI : MonoBehaviour {
 		if (chosenCubeBlock == null && mode == UIMode.CubeBlockPanel) DropFocus();
 
 		float k = GameMaster.guiPiece;
+
+		//upLeft
+		ColonyController cc = GameMaster.colonyController;
+		if (cc != null) {
+			GUI.DrawTexture(new Rect(0,0, k,k), citizen_icon_tx, ScaleMode.StretchToFill);	
+			GUI.Label(new Rect(k,0, 4*k,k), cc.freeWorkers.ToString() + " / " + cc.citizenCount.ToString() + " / "+ cc.totalLivespace.ToString());
+			GUI.DrawTexture(new Rect(5*k, 0, k, k), energy_icon_tx, ScaleMode.StretchToFill);
+			string energySurplusString = ((int)cc.energySurplus).ToString(); if (cc.energySurplus > 0) energySurplusString = '+' + energySurplusString;
+			GUI.Label( new Rect ( 6 * k, 0, 4 * k, k) , ((int)cc.energyStored).ToString() + " / " + ((int)cc.totalEnergyCapacity).ToString() + " ( " + energySurplusString + " )" );
+			GUI.DrawTexture ( new Rect ( 10 * k, 0, k, k), energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
+			GUI.Label ( new Rect ( 11 * k, 0, k, k ), ((int)cc.energyCrystalsCount).ToString() ) ;
+		}
+			// </upLeft>
 		Rect ur = new Rect(Screen.width - 4 *k, 0, 4 *k, upPanelHeight);
 		if (GUI.Button(ur, Localization.menu_gameMenuButton) ) {
 			if (serviceRectArgument != 1) {
@@ -367,32 +388,29 @@ public class UI : MonoBehaviour {
 					}
 					GUI.DrawTexture(new Rect(staticRect.x + so.rect.x * p, staticRect.y + staticRect.height -  (so.rect.z+ so.rect.z_size) * p , p * so.rect.x_size, p * so.rect.z_size), t, ScaleMode.StretchToFill);
 				}
+
 				SurfaceRect surpos = chosenStructure.innerPosition;
-				for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
-					for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
-						if ( chosenSurfaceBlock.map[i,j] == false ) {
-							if (GUI.Button(new Rect(staticRect.x + i * p, staticRect.y + staticRect.height - (j+1) *p, p, p), GUIContent.none, GameMaster.mainGUISkin.customStyles[1])) {								
-								surpos.x = i; surpos.z = j;
-								if ( !chosenSurfaceBlock.IsAnyBuildingInArea(new SurfaceRect()) ) {
-									Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
-									s.gameObject.SetActive(true);
-									s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
-								}
-								else {
-									bufferedPosition = new PixelPosByte(surpos.x, surpos.z); ChangeArgument(5);
+					for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
+						for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
+							if ( i <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.x_size && j <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.z_size) {
+								if (GUI.Button(new Rect(staticRect.x + i * p, staticRect.y + staticRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {								
+									surpos.x = i; surpos.z = j;
+									if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
+											Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
+											s.gameObject.SetActive(true);
+											s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
+										}
+										else {
+											bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
+											bufferedArgument = 4;
+											ChangeArgument(5);
+										}
 								}
 							}
 						}
 					}
-				}
-				if (mousePos.x >= staticRect.x && mousePos.y >= staticRect.y && mousePos.x <= staticRect.x + staticRect.width && mousePos.y <= staticRect.y + staticRect.height )
-				{
-					byte fposX = (byte)(Mathf.Floor((mousePos.x - staticRect.x) / p));
-					byte fposY = (byte)(Mathf.Floor((mousePos.y - staticRect.y) / p));
-					fposY -= chosenStructure.innerPosition.z_size ; fposY++;
-					GUILayout.Label(fposX.ToString() + ' ' + fposY.ToString());
-					GUI.DrawTexture(new Rect(staticRect.x + fposX * p, staticRect.y + fposY * p , chosenStructure.innerPosition.x_size * p , chosenStructure.innerPosition.z_size * p ), yellowSquare_tx, ScaleMode.StretchToFill);
-				}
+				
+		
 				goto case 3;
 			case 3: // выбрать доступные для строительства домики
 				Rect r3 = serviceBoxRect; r3.height = k;
@@ -405,19 +423,66 @@ public class UI : MonoBehaviour {
 				break;
 			case 5: // подтверждение на снос при строительстве
 				GUI.Box(staticRect, Localization.ui_accept_destruction_on_clearing);
+				staticRectActive = true;
 				Rect r5 = new Rect(staticRect.x, staticRect.y + staticRect.height /2f, staticRect.width/2f, staticRect.height/2f);
 				if (GUI.Button (r5, Localization.ui_accept)) {
 					if ( bufferedPosition != PixelPosByte.Empty ) {
 						Structure s = Instantiate(chosenStructure);
+						s.gameObject.SetActive(true);
 						s.SetBasement(chosenSurfaceBlock, bufferedPosition);
 						bufferedPosition = PixelPosByte.Empty;
-						ChangeArgument(4);
+						ChangeArgument(bufferedArgument);
 					}
 				} r5.x += r5.width;
 				if (GUI.Button (r5, Localization.ui_decline)) {
 					bufferedPosition = PixelPosByte.Empty;
-					ChangeArgument(4);
+					ChangeArgument(bufferedArgument);
 				}
+				break;
+			case 6: // размещение шахт
+				Mine m = chosenStructure.GetComponent<Mine>();
+				float p6 = staticRect.width / SurfaceBlock.INNER_RESOLUTION;
+				if (m != null) {
+					int width = 0;
+					bool[] line = new bool[SurfaceBlock.INNER_RESOLUTION];
+					switch (m.oriented) {
+					case 0: // north, z+
+						width = SurfaceBlock.INNER_RESOLUTION - m.innerPosition.z_size;
+						for (int i = 0; i < SurfaceBlock.INNER_RESOLUTION; i++) {
+							line[i] = chosenSurfaceBlock.map [i, width];
+						}
+						break;
+					case 1: // east, x+
+						width = SurfaceBlock.INNER_RESOLUTION - m.innerPosition.x_size;
+						for (int i = SurfaceBlock.INNER_RESOLUTION - 1; i >=0; i--) {
+							line[i] = chosenSurfaceBlock.map [width, i];
+						}
+						break;
+					case 2:  // south, z-
+						width = m.innerPosition.x_size - 1;
+						for (int i = 0; i < SurfaceBlock.INNER_RESOLUTION; i++) {
+							line[i] = chosenSurfaceBlock.map [i, width];
+						}
+						break;
+					case 3: // west, x-
+						width = m.innerPosition.x_size - 1 ;
+						for (int i = 0; i < SurfaceBlock.INNER_RESOLUTION; i++) {
+							line[i] = chosenSurfaceBlock.map [width, i];
+						}
+						break;
+					}
+					Rect r6 = staticRect; r6.width /= (float)SurfaceBlock.INNER_RESOLUTION;
+					for (int i = 0; i < SurfaceBlock.INNER_RESOLUTION; i++) {
+						if (GUI.Button(r6, yellowSquare_tx)) {
+							if (line[i] == true) {
+								// ????
+							}
+						}
+						r6.x += p6;
+					}
+				}
+				break;
+			case 7: // размещение причалов
 				break;
 			}
 			break;
@@ -457,6 +522,40 @@ public class UI : MonoBehaviour {
 				if (GUI.Button(r, Localization.menu_cancel)) DropFocus();
 				break;
 			}
+			break;
+		}
+	}
+
+	public void AddFactoryToList (Factory f) {
+		switch (f.specialization) {
+		case FactorySpecialization.Smeltery:
+			if ( !hasSmelteries ) {smelteriesList = new List<Factory>(); hasSmelteries = true;}
+			smelteriesList.Add(f);
+			break;
+			default:
+			if (!hasUnspecializedFactories) {unspecializedFactories = new List<Factory>(); hasUnspecializedFactories = true;}
+			unspecializedFactories.Add(f);
+			break;
+		}
+	}
+
+	public void RemoveFromFactoriesList (Factory f) {
+		switch (f.specialization) {
+		case FactorySpecialization.Unspecialized:
+			if (hasUnspecializedFactories) {
+				for ( int i = 0; i < unspecializedFactories.Count; i++) {
+					if (unspecializedFactories[i] == f ) { unspecializedFactories.RemoveAt(i); break; }
+				}
+				if (unspecializedFactories.Count == 0) { unspecializedFactories = null; hasUnspecializedFactories = false; }
+			}
+			break;
+		case FactorySpecialization.Smeltery:
+			if ( hasSmelteries ) {
+				for ( int i = 0; i < smelteriesList.Count; i++) {
+					if (smelteriesList[i] == f ) { smelteriesList.RemoveAt(i); break; }
+				}
+				if (smelteriesList.Count == 0) { smelteriesList = null; hasSmelteries = false; }
+				}
 			break;
 		}
 	}

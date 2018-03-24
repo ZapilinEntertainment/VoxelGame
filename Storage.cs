@@ -2,78 +2,85 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct ResourceContainer {
-	public ResourceType type;
-	public float volume;
-
-	public ResourceContainer(ResourceType f_type, float f_volume) {
-		type= f_type; volume = f_volume;
-	}
-}
-
 public class Storage : MonoBehaviour {
-	public float volume = 0, maxVolume;
+	public float totalVolume = 0, maxVolume;
 	List<ResourceContainer> containers;
+	List<StorageHouse> warehouses;
 	public bool showStorage = false;
 
 	void Awake() {
-		volume = 0;
+		totalVolume = 0;
 		maxVolume = 0;
 		containers = new List<ResourceContainer>();
+		warehouses = new List<StorageHouse>();
 	}
 
-	public void AddVolume(float x) {
-		if (x > 0) maxVolume += x;
+	public void AddWarehouse(StorageHouse sh) {
+		if (sh == null) return;
+		warehouses.Add(sh);
+		RecalculateStorageVolume();
 	}
-	public void ContractVolume(float x) {
-		maxVolume -= x; if (maxVolume < 0) maxVolume = 0;
+	public void RemoveWarehouse(StorageHouse sh) {
+		if (sh == null) return;
+		int i = 0;
+		while ( i < warehouses.Count) {
+			if (warehouses[i] == sh) {warehouses.RemoveAt(i); break;}
+			else i ++;
+		}
+		RecalculateStorageVolume();
+	}
+	public void RecalculateStorageVolume() {
+		totalVolume = 0;
+		if (warehouses.Count == 0) return;
+		int i = 0;
+		while ( i < warehouses.Count ) {
+			if ( warehouses[i] == null) {warehouses.RemoveAt(i); continue;}
+			else {
+				if (warehouses[i].isActive)	totalVolume += warehouses[i].volume;
+				i++;
+			}
+		}
 	}
 
 	public float AddResources(ResourceType rtype, float count) {
-		if (volume == maxVolume) return 0;
-		float freeSpace = maxVolume - volume;
+		if (totalVolume == maxVolume) return 0;
+		float freeSpace = maxVolume - totalVolume;
 		bool myTypeFound = false;
 		int i =0;
 		for (; i < containers.Count; i++) {
 			if (containers[i].type != rtype)  continue;
 			else myTypeFound = true;
 			if (count > freeSpace) {
-				containers[i] = new ResourceContainer(rtype, containers[i].volume + freeSpace);
+				containers[i].Add(freeSpace);
 				count -= freeSpace;
-				volume = maxVolume;
+				totalVolume = maxVolume;
 			}
 			else {
-				containers[i] = new ResourceContainer(rtype, containers[i].volume + count);
-				volume += count;
+				containers[i].Add(count);
+				totalVolume += count;
 				count = 0;
 			}
 		}
 		if ( !myTypeFound ) {
-			if (count > freeSpace) {containers.Add(new ResourceContainer(rtype, freeSpace));volume = maxVolume; count -= freeSpace;}
-			else {containers.Add(new ResourceContainer(rtype, count)); volume+= count; count = 0;}
+			if (count > freeSpace) {containers.Add(new ResourceContainer(rtype, freeSpace));totalVolume = maxVolume; count -= freeSpace;}
+			else {containers.Add(new ResourceContainer(rtype, count)); totalVolume+= count; count = 0;}
 		}
 		return count;
 	}
 
 	public float GetResources(ResourceType rtype, float count) {
-		if (volume == 0) return 0;
+		if (totalVolume == 0) return 0;
 		int i = 0;
-		while ( i < containers.Count && count > 0) {
+		float gainedCount = 0;
+		while ( i < containers.Count) {
+			if (containers[i].volume == 0) {containers.RemoveAt(i); continue;}
 			if (containers[i].type != rtype) {i++;continue;}
-			if (containers[i].volume < count) {
-				volume -= containers[i].volume;
-				count -= containers[i].volume;
-				containers.RemoveAt(i);
-				continue;
-			}
-			else {
-				containers[i] = new ResourceContainer(rtype, containers[i].volume - count);
-				volume -= count;
-				count = 0;
-				break;
-			}
+			gainedCount = containers[i].Get(count);
+			totalVolume -= gainedCount;
+			if (containers[i].volume == 0) containers.RemoveAt(i);
+			break;
 		}
-		return count;
+		return gainedCount;
 	}
 
 	void OnGUI () {
@@ -91,7 +98,7 @@ public class Storage : MonoBehaviour {
 					r_name.y += r_name.height; r_count.y += r_name.height;
 				}
 			}
-			GUI.Label(r_name, "Total:"); GUI.Label(r_count, ((int)volume).ToString() + " / " + ((int)maxVolume).ToString(), GameMaster.mainGUISkin.customStyles[0]);
+			GUI.Label(r_name, "Total:"); GUI.Label(r_count, ((int)totalVolume).ToString() + " / " + ((int)maxVolume).ToString(), GameMaster.mainGUISkin.customStyles[0]);
 		}
 	}
 }

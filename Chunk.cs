@@ -31,7 +31,6 @@ public class Chunk : MonoBehaviour {
 	List<GameObject> borderLines; int linesIndex = 0; bool bordersEnabled = false; Transform borderlinesParent;
 
 	void Awake() {
-		Navigator.SetChunk(this);
 		dirt_for_grassland = new List<SurfaceBlock>();
 		grassland_blocks = new List<Grassland>();
 

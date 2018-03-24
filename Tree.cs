@@ -7,14 +7,11 @@ public class Tree : Plant {
 	public const int MAXIMUM_LIFEPOWER = 1000;
 
 	void Awake() {
+		PrepareStructure();
 		full = false;
 		lifepower = 1;
 		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.4f + Random.value * 0.1f;
-		hp = maxHp;
-		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
-		isArtificial = markAsArtificial;
-		type = setType;
 	}
 
 		

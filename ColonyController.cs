@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ColonyController : MonoBehaviour {
-	public int citizenCount {get; private set;}
 	float foodCount = 0;
 	const float FOOD_CONSUMPTION = 1;
 	public Storage storage; HeadQuarters hq;
 	public float gears_coefficient {get; private set;}
-	public float workEfficiency_coefficient {get;private set;}
+	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
 	public List<Building> buildings_level_1{get;private set;}
@@ -17,14 +16,22 @@ public class ColonyController : MonoBehaviour {
 	public List<DigSite> digSites;
 	public List<CleanSite> cleanSites;
 	public List<GatherSite>gatherSites;
-	public int freeWorkers{get;private set;}
-	public int housing{get;private set;}
 	float workersAppointTimer = 0;
 	const float APPOINT_TICK = 2;
 	public float digPriority = 0.2f, clearPriority = 0.2f, buildingsPriority = 0.2f,gatherPriority = 0.4f;
 	public bool showColonyInfo = false;
-	public byte housingLevel = 0;
-	public float totalEnergyCapacity = 0;
+
+	public float energyStored {get;private set;}
+	public float energySurplus {get;private set;}
+	public float totalEnergyCapacity {get;private set;}
+	public float energyCrystalsCount {get;private set;}
+	List<Building> powerGrid;
+
+	public int freeWorkers{get;private set;}
+	public int citizenCount {get; private set;}
+	public int totalLivespace{get;private set;}
+	public float birthrate {get; private set;}
+	List<House> houses;
 
 
 	void Awake() {
@@ -33,7 +40,7 @@ public class ColonyController : MonoBehaviour {
 		GameMaster.realMaster.everydayUpdateList.Add(this);
 		GameMaster.realMaster.everyYearUpdateList.Add(this);
 		gears_coefficient = 1;
-		workEfficiency_coefficient = 1;
+		labourEfficientcy_coefficient = 1;
 		happiness_coefficient = 1;
 		health_coefficient = 1;
 
@@ -44,10 +51,19 @@ public class ColonyController : MonoBehaviour {
 		minePrefs = new Mine[6];
 		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
 		minePrefs[1].gameObject.SetActive(false);
+		houses = new List<House>();
+		powerGrid = new List<Building>();
 	}
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
+
+		energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
+		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+		else {
+			if (energyStored < 0) energyStored = 0;
+		}
+
 		workersAppointTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (workersAppointTimer <= 0) {
 				if (freeWorkers > 0) {
@@ -133,15 +149,75 @@ public class ColonyController : MonoBehaviour {
 		}
 	}
 
-	public void AddHousing(int x) {
-		if (x > 0) housing += x;
+	public void AddHousing(House h) {
+		if (h== null) return;
+		houses.Add(h);
+		RecalculateHousing();
 	}
-	public void DescreaseHousing(int x) {
-		housing -= x; if (housing < 0) housing = 0;
+	public void DeleteHousing(House h) {
+		int i = 0;
+		while (i < houses.Count)  {
+			if ( houses[i] == h) {
+				RecalculateHousing();
+				break;
+			}
+			else i++;
+		}
+	}
+	public void RecalculateHousing() {
+		totalLivespace = 0; birthrate = 0;
+		if (houses.Count == 0) return;
+		int i = 0;
+		while (i <houses.Count) {
+			if (houses[i] == null) {houses.RemoveAt(i); continue;}
+			if ( houses[i].isActive) {
+				totalLivespace += houses[i].housing;
+				birthrate += houses[i].birthrate;
+			}
+			i++;
+		}
+	}
+	public void AddToPowerGrid(Building b) {
+		if (b == null) return;
+		powerGrid.Add(b);
+		RecalculatePowerGrid();
+	}
+	public void DisconnectFromPowerGrid(Building b) {
+		if (b == null ) return;
+		int i = 0;
+		while (i < powerGrid.Count)  {
+			if ( powerGrid[i] == b) {
+				RecalculatePowerGrid();
+				break;
+			}
+			else i++;
+		}
+	}
+	public void RecalculatePowerGrid() {
+		energySurplus = 0; totalEnergyCapacity = 0;
+		if (powerGrid.Count == 0) return;
+		int i =0; 
+		while ( i < powerGrid.Count ) {
+			if (powerGrid[i] == null) {powerGrid.RemoveAt(i); continue;}
+			if (powerGrid[i].isActive) {
+				energySurplus += powerGrid[i].energySurplus;
+				totalEnergyCapacity += powerGrid[i].energyCapacity;
+			}
+			i++;
+		}
+	}
+
+	public void AddCitizens(int x) {
+		citizenCount += x;
+		freeWorkers += x;
 	}
 	public void AddWorkers(int x) {
 		if (x <= 0) return;
 		freeWorkers += x;
+	}
+	public bool GetWorker() {
+		if (freeWorkers > 0) {freeWorkers--; return true;}
+		else return false;
 	}
 
 	void EverydayUpdate() {
@@ -163,8 +239,7 @@ public class ColonyController : MonoBehaviour {
 			UI.current.serviceBoxRect = r;
 			Rect leftPart = new Rect(r.x, r.y, r.width * 0.75f, k);
 			Rect rightPart = new Rect(r.x + r.width/2f, r.y,r.width/2, leftPart.height);
-			int population = freeWorkers;
-			GUI.Label(leftPart, Localization.info_population); GUI.Label(rightPart, population.ToString() + " / " + housing.ToString(), GameMaster.mainGUISkin.customStyles[0]);
+
 		}
 	}
 }

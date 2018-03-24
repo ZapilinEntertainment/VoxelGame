@@ -3,34 +3,55 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure {
+	public bool isActive {get;protected set;}
 	public byte level = 0;
-	public MeshRenderer myRenderer;
 	public List<ResourceContainer> resourcesContain;
 	public float energySurplus = 0, energyCapacity = 0;
+	protected bool connectedToPowerGrid = false;
 	public string buildingName = "building";
 
 	void Awake() {
-		hp = maxHp;
-		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
-		isArtificial = markAsArtificial;
-		type = setType;
-		if (energyCapacity != 0) GameMaster.colonyController.totalEnergyCapacity += energyCapacity;
+		PrepareBuilding();
+	}
+	protected void PrepareBuilding() {
+		PrepareStructure();
+		isActive = false;
+		buildingName += Localization.info_level + ' ' + level.ToString();
 	}
 
-	public virtual void SetBasement(SurfaceBlock b, PixelPosByte pos, List<ResourceContainer> f_resourcesContain) {
+	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
-		basement = b;
-		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
-		b.AddStructure(new SurfaceObject(innerPosition, this));
-		resourcesContain = f_resourcesContain;
+		SetBuildingData(b, pos);
+	}
+
+	protected void SetBuildingData(SurfaceBlock b, PixelPosByte pos) {
+		SetStructureData(b,pos);
+		isActive = true;
+		if (energySurplus != 0 || energyCapacity != 0) {
+			GameMaster.colonyController.AddToPowerGrid(this);
+			connectedToPowerGrid = true;
+		}
+	}
+
+	virtual public void SetActivationStatus(bool x) {
+		if (x == isActive) return;
+		ChangeBuildingActivity(x);
+	}
+	protected void ChangeBuildingActivity (bool x) {
+		isActive = x;
+		if (connectedToPowerGrid) GameMaster.colonyController.RecalculatePowerGrid();
 	}
 
 
-	public override void OnDestroy() {
+	protected void PrepareBuildingForDestruction() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
 			basement.artificialStructures --;
 		}
-		if (energyCapacity != 0) GameMaster.colonyController.totalEnergyCapacity -= energyCapacity;
+		if (connectedToPowerGrid) GameMaster.colonyController.DisconnectFromPowerGrid(this);
+	}
+
+	void OnDestroy() {
+		PrepareBuildingForDestruction();
 	}
 }
