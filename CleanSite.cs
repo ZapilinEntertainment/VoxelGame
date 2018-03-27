@@ -2,16 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CleanSite : MonoBehaviour {
-	public const int MAX_WORKERS = 32;
-	public int workersCount {get;private set;}
-	float workflow;
-	SurfaceBlock workObject;
-	GameObject sign;
-	float labourTimer = 0;
+public class CleanSite : Worksite {
 	bool diggingMission = false;
-
-	void Awake() {workersCount = 0;}
+	SurfaceBlock workObject;
+	const int START_WORKERS_COUNT = 10;
 
 	void Update () {
 		if (GameMaster.gameSpeed == 0) return;
@@ -31,16 +25,16 @@ public class CleanSite : MonoBehaviour {
 		if (workersCount  > 0) {
 			workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Clearing);
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (labourTimer <= 0) {
-				LabourResult();
+			if ( labourTimer <= 0 ) {
+				if (workflow >= 1) LabourResult();
 				labourTimer = GameMaster.LABOUR_TICK;
 			}
 		}
 	}
 
 	void LabourResult() {
-		if (workflow > 0) {
-			Structure s = workObject.surfaceObjects[0].structure;
+		Structure s = workObject.surfaceObjects[0].structure;
+		if (s == null) {workObject.RequestAnnihilationAtIndex(0);return;}
 			Plant p = s.GetComponent<Plant>();
 			if (p != null) {
 				Plant2D p2d = s.GetComponent<Plant2D>();
@@ -67,29 +61,17 @@ public class CleanSite : MonoBehaviour {
 					}
 				}
 			}
-			Destroy(workObject.surfaceObjects[0].structure.gameObject);
-		}
+		Destroy(workObject.surfaceObjects[0].structure.gameObject);
 	}
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
 		workObject = block;
-		workObject.cleanWorks = true;
 		if (block.grassland != null) {Destroy(block.grassland);}
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")) as GameObject;
-		sign.transform.parent = workObject.transform;
-		sign.transform.localPosition = Vector3.down * Block.QUAD_SIZE/2f;
-		GameMaster.colonyController.cleanSites.Add(this);
+		sign.transform.position = workObject.transform.position;
+		sign.GetComponent<WorksiteSign>().Set(this);
 		diggingMission = f_diggingMission;
+		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 	}
-
-	public void AddWorkers (int x) {
-		if (x > 0) workersCount += x;
-	}
-
-	void OnDestroy() {
-		GameMaster.colonyController.AddWorkers(workersCount);
-		if (sign != null) Destroy(sign);
-		if (workObject != null) workObject.cleanWorks = false;
-	}
-		
+			
 }

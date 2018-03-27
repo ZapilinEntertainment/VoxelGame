@@ -30,13 +30,13 @@ public class Storage : MonoBehaviour {
 		RecalculateStorageVolume();
 	}
 	public void RecalculateStorageVolume() {
-		totalVolume = 0;
+		maxVolume = 0;
 		if (warehouses.Count == 0) return;
 		int i = 0;
 		while ( i < warehouses.Count ) {
 			if ( warehouses[i] == null) {warehouses.RemoveAt(i); continue;}
 			else {
-				if (warehouses[i].isActive)	totalVolume += warehouses[i].volume;
+				if (warehouses[i].isActive)	maxVolume += warehouses[i].volume;
 				i++;
 			}
 		}
@@ -67,6 +67,32 @@ public class Storage : MonoBehaviour {
 		}
 		return count;
 	}
+	/// <summary>
+	/// Attention: container will be destroyed after resources transfer!
+	/// </summary>
+	/// <param name="rc">Rc.</param>
+	public void AddResources(ResourceContainer rc) {
+		if (totalVolume == maxVolume) return;
+		float freeSpace = maxVolume - totalVolume;
+		bool myTypeFound = false;
+		int i =0;
+		for (; i < containers.Count; i++) {
+			if (containers[i].type != rc.type)  continue;
+			else myTypeFound = true;
+			if (rc.volume > freeSpace) {
+				containers[i].Add(freeSpace);
+				totalVolume = maxVolume;
+			}
+			else {
+				containers[i].Add(rc.volume);
+				totalVolume += rc.volume;
+			}
+		}
+		if ( !myTypeFound ) {
+			if (rc.volume > freeSpace) {containers.Add(new ResourceContainer(rc.type, freeSpace));totalVolume = maxVolume;}
+			else {containers.Add(new ResourceContainer(rc.type, rc.volume)); totalVolume+= rc.volume;}
+		}
+	}
 
 	public float GetResources(ResourceType rtype, float count) {
 		if (totalVolume == 0) return 0;
@@ -87,7 +113,7 @@ public class Storage : MonoBehaviour {
 		if (showStorage) {
 			GUI.skin = GameMaster.mainGUISkin;
 			float k = GameMaster.guiPiece;
-			Rect r =new Rect(Screen.width - 8 *k, UI.current.upPanelHeight,4*k, k * 0.75f * (containers.Count+1));
+			Rect r =new Rect(Screen.width - 8 *k, UI.current.upPanelHeight, 8*k , k * 0.75f * (containers.Count+1));
 			UI.current.serviceBoxRect = r;
 			Rect r_name = new Rect (r.x, r.y, r.width * 0.7f, k*0.75f);
 			Rect r_count = new Rect(r.x + r_name.width * 0.5f, r.y, r.width * 0.5f, r_name.height);

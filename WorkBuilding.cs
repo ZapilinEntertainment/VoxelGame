@@ -17,7 +17,7 @@ public abstract class WorkBuilding : Building {
 	}
 
 	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive) return;
+		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
 		if (workersCount > 0) {
 			workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Manufacturing);
 			if (workflow >= workflowToProcess) {
@@ -31,8 +31,18 @@ public abstract class WorkBuilding : Building {
 
 	}
 
-	public void AddWorkers (int x) {
-		if (x > 0) workersCount += x;
+	public int AddWorkers (int x) {
+		if (workersCount == maxWorkers) return 0;
+		else {
+			if (x > maxWorkers - workersCount) {
+				x -= (maxWorkers - workersCount);
+				workersCount = maxWorkers;
+			}
+			else {
+				workersCount += x;
+			}
+			return x;
+		}
 	}
 
 	protected void PrepareWorkbuildingForDestruction() {

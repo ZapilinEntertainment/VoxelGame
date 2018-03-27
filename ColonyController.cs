@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum WorkersDestination {ForWorksite, ForWorkBuilding}
+
 public class ColonyController : MonoBehaviour {
 	float foodCount = 0;
 	const float FOOD_CONSUMPTION = 1;
@@ -12,13 +14,6 @@ public class ColonyController : MonoBehaviour {
 	public float health_coefficient{get;private set;}
 	public List<Building> buildings_level_1{get;private set;}
 	public Mine[] minePrefs {get;private set;}
-	public List<WorkBuilding> workBuildings;
-	public List<DigSite> digSites;
-	public List<CleanSite> cleanSites;
-	public List<GatherSite>gatherSites;
-	float workersAppointTimer = 0;
-	const float APPOINT_TICK = 2;
-	public float digPriority = 0.2f, clearPriority = 0.2f, buildingsPriority = 0.2f,gatherPriority = 0.4f;
 	public bool showColonyInfo = false;
 
 	public float energyStored {get;private set;}
@@ -44,10 +39,16 @@ public class ColonyController : MonoBehaviour {
 		happiness_coefficient = 1;
 		health_coefficient = 1;
 
-		workBuildings = new List<WorkBuilding>(); digSites = new List<DigSite>(); cleanSites = new List<CleanSite>(); gatherSites = new List<GatherSite>();
 		buildings_level_1 = new List<Building>();
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
 		buildings_level_1[0].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Smeltery_level_1")) );
+		buildings_level_1[1].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/WindGenerator_level_1")) );
+		buildings_level_1[2].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_1")) );
+		buildings_level_1[3].gameObject.SetActive(false);
+
 		minePrefs = new Mine[6];
 		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
 		minePrefs[1].gameObject.SetActive(false);
@@ -61,91 +62,22 @@ public class ColonyController : MonoBehaviour {
 		energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
 		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 		else {
-			if (energyStored < 0) energyStored = 0;
-		}
-
-		workersAppointTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (workersAppointTimer <= 0) {
-				if (freeWorkers > 0) {
-					int digWorkersDemand = 0; 
-					if (digSites.Count > 0) {
-						int i =0;
-						while (i < digSites.Count) {
-							if (digSites[i] == null) {digSites.RemoveAt(i);continue;}
-							else {digWorkersDemand += (DigSite.MAX_WORKERS - digSites[i].workersCount); i++;}
+			if (energyStored < 0) { // отключение потребителей энергии до выравнивания
+				energyStored = 0;
+				int i = powerGrid.Count - 1;
+				float energySurplusCurrent = energySurplus;
+				while ( i >= 0 && energySurplus < 0) {
+					if (powerGrid[i].energySurplus < 0) {
+						powerGrid[i].SetEnergySupply(false);
+						energySurplusCurrent -= powerGrid[i].energySurplus;
+						if (energySurplusCurrent >= 0) {
+							RecalculatePowerGrid();
+							break;
 						}
 					}
-					int clearWorkersDemand = 0; 
-					if (cleanSites.Count > 0) {
-						int i = 0;
-						while (i < cleanSites.Count) {
-							if (cleanSites[i] == null) {cleanSites.RemoveAt(i);continue;}
-							else {clearWorkersDemand += (CleanSite.MAX_WORKERS - cleanSites[i].workersCount);i++;}
-						}
-					}
-				int gatherersDemand = 0;
-				if (gatherSites.Count > 0) {
-					int i = 0;
-					while (i < gatherSites.Count) {
-						if (gatherSites[i] == null) {gatherSites.RemoveAt(i); continue;}
-						else {gatherersDemand += (GatherSite.MAX_WORKERS - gatherSites[i].workersCount); i++;}
-					}
+					i--;
 				}
-				int workersDemand = 0;
-				if (workBuildings.Count > 0) {
-					int i = 0;
-					while (i < workBuildings.Count) {
-						if (workBuildings[i] == null) {workBuildings.RemoveAt(i); continue;}
-						else {workersDemand += (workBuildings[i].maxWorkers - workBuildings[i].workersCount); i++;}
-					}
-				}
-
-				float totalDemands = digWorkersDemand * digPriority + clearWorkersDemand * clearPriority + workersDemand * buildingsPriority + gatherersDemand * gatherPriority;
-				int workersForDigging = (int)(freeWorkers * digWorkersDemand * digPriority / totalDemands);
-				freeWorkers -= workersForDigging;
-				int workersForClearing = (int)(freeWorkers * clearWorkersDemand * clearPriority / totalDemands);
-				freeWorkers -= workersForClearing;
-				int workersForGathering = (int)(freeWorkers * gatherersDemand * gatherPriority / totalDemands);
-				freeWorkers -= workersForGathering;
-
-				if (workersForDigging > 0) {
-					int i = 0;
-					while (workersForDigging > 0 && i < digSites.Count) {
-						int delta = DigSite.MAX_WORKERS - digSites[i].workersCount;
-						if (delta <= 0) {i++; continue;}
-						if (delta < workersForDigging) {digSites[i].AddWorkers(delta); workersForDigging -= delta; i++; }
-						else {digSites[i].AddWorkers(workersForDigging); workersForDigging = 0; break;}
-					}
-				}
-				if (workersForClearing > 0) {
-					int i = 0;
-					while (workersForClearing > 0 && i < cleanSites.Count) {
-						int delta = CleanSite.MAX_WORKERS - cleanSites[i].workersCount;
-						if (delta <= 0) {i++; continue;}
-						if (delta < workersForClearing) {cleanSites[i].AddWorkers(delta); workersForClearing -= delta; i++; }
-						else {cleanSites[i].AddWorkers(workersForClearing); workersForClearing = 0; break;}
-					}
-				}
-				if (workersForGathering > 0) {
-					int i = 0;
-					while (workersForGathering > 0 && i < gatherSites.Count) {
-						int delta = GatherSite.MAX_WORKERS - gatherSites[i].workersCount;
-						if (delta <= 0) {i++; continue;}
-						if (delta < workersForGathering) {gatherSites[i].AddWorkers(delta); workersForGathering -= delta; i++; }
-						else {gatherSites[i].AddWorkers(workersForGathering); workersForGathering= 0; break;}
-					}
-				}
-				freeWorkers += workersForDigging + workersForClearing + workersForGathering;
-				if (freeWorkers > 0) {
-					int i = 0;
-					while (freeWorkers > 0 && i < workBuildings.Count) {
-						int delta = workBuildings[i].maxWorkers - workBuildings[i].workersCount;
-						if (delta < freeWorkers) {workBuildings[i].AddWorkers(delta); freeWorkers -= delta; i++; }
-						else {workBuildings[i].AddWorkers(freeWorkers); freeWorkers = 0; break;}
-					}
-				}
-				}
-			workersAppointTimer = APPOINT_TICK;
+			}
 		}
 	}
 
@@ -180,6 +112,7 @@ public class ColonyController : MonoBehaviour {
 	public void AddToPowerGrid(Building b) {
 		if (b == null) return;
 		powerGrid.Add(b);
+		if (b.energySurplus > 0) b.SetEnergySupply(true);
 		RecalculatePowerGrid();
 	}
 	public void DisconnectFromPowerGrid(Building b) {
@@ -187,6 +120,7 @@ public class ColonyController : MonoBehaviour {
 		int i = 0;
 		while (i < powerGrid.Count)  {
 			if ( powerGrid[i] == b) {
+				powerGrid.RemoveAt(i);
 				RecalculatePowerGrid();
 				break;
 			}
@@ -200,8 +134,24 @@ public class ColonyController : MonoBehaviour {
 		while ( i < powerGrid.Count ) {
 			if (powerGrid[i] == null) {powerGrid.RemoveAt(i); continue;}
 			if (powerGrid[i].isActive) {
-				energySurplus += powerGrid[i].energySurplus;
-				totalEnergyCapacity += powerGrid[i].energyCapacity;
+				if ( powerGrid[i].energySupplied ) {
+					energySurplus += powerGrid[i].energySurplus;
+					totalEnergyCapacity += powerGrid[i].energyCapacity;
+				}
+				else {
+					if ( powerGrid[i].energySurplus >= 0) { // just in case
+						powerGrid[i].SetEnergySupply(true);
+						energySurplus += powerGrid[i].energySurplus;
+						totalEnergyCapacity += powerGrid[i].energyCapacity;
+					} 
+					else {
+						if (totalEnergyCapacity >= Mathf.Abs(powerGrid[i].energySurplus)) {
+							powerGrid[i].SetEnergySupply(true);
+							energySurplus += powerGrid[i].energySurplus;
+							totalEnergyCapacity += powerGrid[i].energyCapacity;
+						}
+					}
+				}
 			}
 			i++;
 		}
@@ -212,12 +162,23 @@ public class ColonyController : MonoBehaviour {
 		freeWorkers += x;
 	}
 	public void AddWorkers(int x) {
-		if (x <= 0) return;
 		freeWorkers += x;
 	}
-	public bool GetWorker() {
-		if (freeWorkers > 0) {freeWorkers--; return true;}
-		else return false;
+	public void SendWorkers( int x, Component destination,  WorkersDestination destinationCode ) {
+		if (freeWorkers == 0) return;
+		if (x > freeWorkers) x = freeWorkers;
+		switch (destinationCode) {
+		case WorkersDestination.ForWorksite:
+			Worksite ws = destination as Worksite;
+			if (ws == null) return;
+			else 	freeWorkers -= ws.AddWorkers(x);
+			break;
+		case WorkersDestination.ForWorkBuilding:
+			WorkBuilding wb = destination as WorkBuilding;
+			if (wb == null) return;
+			else freeWorkers -= wb.AddWorkers(x);
+			break;
+		}
 	}
 
 	void EverydayUpdate() {
@@ -239,7 +200,6 @@ public class ColonyController : MonoBehaviour {
 			UI.current.serviceBoxRect = r;
 			Rect leftPart = new Rect(r.x, r.y, r.width * 0.75f, k);
 			Rect rightPart = new Rect(r.x + r.width/2f, r.y,r.width/2, leftPart.height);
-
 		}
 	}
 }

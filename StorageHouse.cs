@@ -12,9 +12,7 @@ public class StorageHouse : Building {
 	}
 
 	override public void SetActivationStatus(bool x) {
-		if (x == isActive) return;
-		ChangeBuildingActivity(x);
-		//поменять статус хранилища
+		isActive = x;
 	}
 
 	void OnDestroy() {

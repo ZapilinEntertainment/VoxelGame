@@ -1,20 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public enum UIMode {View, SurfaceBlockPanel, CubeBlockPanel, StructurePanel}
+public enum UIMode {View, SurfaceBlockPanel, CubeBlockPanel, StructurePanel, WorksitePanel}
 
 public class UI : MonoBehaviour {
 	public LineRenderer lineDrawer;
 	public static UI current;
 
 	UIMode mode; int argument = 0, serviceRectArgument = 0;
-	Rect chosenObjectRect_real = new Rect(0,0,1,1), chosenObjectRect_planned = new Rect(0,0,1,1), staticRect = Rect.zero;
-	bool staticRectActive = false;
-	public Rect serviceBoxRect = Rect.zero;
+	public Rect chosenObjectRect_real = Rect.zero, chosenObjectRect_planned = Rect.zero, staticRect = Rect.zero, 
+	objectInfo_rect = Rect.zero, serviceBoxRect = Rect.zero;
+	bool staticRectActive = false, infoRectActive = false;
 	PixelPosByte bufferedPosition; int bufferedArgument = -1;
 	SurfaceBlock chosenSurfaceBlock;
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
 	Structure chosenStructure;
+	Worksite chosenWorksite;
 	Vector2 mousePos;
 	GameObject quadSelector;
 	public float upPanelHeight, leftPanelWidth;
@@ -50,6 +51,8 @@ public class UI : MonoBehaviour {
 			if (serviceRectArgument == -1) serviceBoxRect = Rect.zero;
 			RaycastHit rh;
 			if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out rh)) {
+				DropFocus();
+				if (rh.collider.transform.parent != null) {
 				Block b = rh.collider.transform.parent.GetComponent<Block>();
 				if (b != null) {
 					Vector2 cursorPos = Camera.main.WorldToScreenPoint(b.transform.position);
@@ -64,11 +67,9 @@ public class UI : MonoBehaviour {
 							lineDrawer.SetPositions(new Vector3[5]{new Vector3(x - d, y, z+d), new Vector3(x+d,y,z+d), new Vector3(x+d,y,z-d), new Vector3(x - d, y, z-d), new Vector3(x-d, y,z+d)});
 							lineDrawer.material = PoolMaster.lr_green_material;
 							lineDrawer.enabled = true;
-							chosenCubeBlock = null; chosenStructure = null;
-						quadSelector.SetActive(false);
+						GameMaster.realMaster.SetLookPoint (chosenSurfaceBlock.transform.position + Vector3.down * Block.QUAD_SIZE /2f);
 					}
 					else {
-						lineDrawer.enabled = false;
 						chosenCubeBlock = b.GetComponent<CubeBlock>();
 							for (byte i =0; i< 6; i++) {
 								if (chosenCubeBlock.faces[i] == null) continue;
@@ -104,22 +105,33 @@ public class UI : MonoBehaviour {
 									break;
 								}
 								quadSelector.SetActive(true);
-								chosenStructure = null; chosenSurfaceBlock = null;
-							}
-						
+							GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
+							}					
 					}
 				}
 				else {
 					Structure s = rh.collider.GetComponent<Structure>();
 					if (s != null) {
+						chosenStructure = s;
 						Vector2 cursorPos = Camera.main.WorldToScreenPoint(b.transform.position);
 						chosenObjectRect_planned.x = cursorPos.x;
 						chosenObjectRect_planned.y =  Screen.height - cursorPos.y;
 						mode = UIMode.StructurePanel;
-						chosenCubeBlock = null; chosenSurfaceBlock = null;
+						GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
+						ChangeArgument(1);
 					}
 				}
 				CameraUpdate(Camera.main.transform);
+				}
+				else {
+					WorksiteSign ws = rh.collider.GetComponent<WorksiteSign>();
+					if (ws != null) {
+						chosenWorksite = ws.worksite;
+						ws.showOnGUI = true;
+						mode = UIMode.WorksitePanel;
+						ChangeArgument(1);
+					}
+				}
 			}
 			else DropFocus();
 		}
@@ -181,9 +193,11 @@ public class UI : MonoBehaviour {
 		quadSelector.SetActive(false);
 		chosenObjectRect_planned.width = 0;
 		chosenObjectRect_planned.height = 0;
-		chosenCubeBlock = null; chosenStructure = null; chosenSurfaceBlock = null;
+		chosenCubeBlock = null; chosenStructure = null; chosenSurfaceBlock = null; 
+		if (chosenWorksite != null) {chosenWorksite.HideGUI();chosenWorksite = null;}
 		if (serviceRectArgument == -1) serviceBoxRect = Rect.zero;
-		staticRect = Rect.zero;
+		staticRect = Rect.zero; staticRectActive = false;
+		infoRectActive = false; objectInfo_rect = Rect.zero;
 	}
 
 	void ChangeArgument(int f_argument) {
@@ -209,8 +223,8 @@ public class UI : MonoBehaviour {
 				serviceBoxRect = new Rect(Screen.width - 4 *k, upPanelHeight, 4 *k, k * (GameMaster.colonyController.buildings_level_1.Count + 1));
 				if (serviceRectArgument != 0) {GameMaster.colonyController.showColonyInfo = false; GameMaster.colonyController.storage.showStorage = false;}
 				serviceRectArgument = -1;
-				break;
-			case 4: // build list and build grid
+
+				// build list and build grid
 				float p = Screen.width/2f / SurfaceBlock.INNER_RESOLUTION;
 				float side = p * SurfaceBlock.INNER_RESOLUTION;
 				staticRect = new Rect(Screen.width / 2f -  side/2f, Screen.height/2f - side/2f, side, side);
@@ -232,6 +246,11 @@ public class UI : MonoBehaviour {
 			break;
 		case UIMode.StructurePanel:
 			break;
+		case UIMode.WorksitePanel:
+			Vector2 signPos = Camera.main.WorldToScreenPoint(chosenWorksite.transform.position);
+			signPos.y = Screen.height - signPos.y;
+			chosenObjectRect_planned = new Rect(signPos.x - 2 *k, signPos.y - 2 *k, 4 *k, 5*k);
+			break;
 		}
 	}
 
@@ -246,14 +265,13 @@ public class UI : MonoBehaviour {
 			chosenObjectRect_real.x = Mathf.MoveTowards(chosenObjectRect_planned.x, chosenObjectRect_planned.x, 20);
 			chosenObjectRect_real.y = Mathf.MoveTowards(chosenObjectRect_planned.y, chosenObjectRect_planned.y, 20);
 		}
-		if (chosenObjectRect_real.width != 0 && chosenObjectRect_real.height != 0) GUI.Box(chosenObjectRect_real, GUIContent.none);
 		if (chosenSurfaceBlock == null && mode == UIMode.SurfaceBlockPanel) DropFocus();
 		if (chosenCubeBlock == null && mode == UIMode.CubeBlockPanel) DropFocus();
 
 		float k = GameMaster.guiPiece;
 
-		//upLeft
-		ColonyController cc = GameMaster.colonyController;
+		//upLeft infopanel
+		ColonyController cc = GameMaster.colonyController; 
 		if (cc != null) {
 			GUI.DrawTexture(new Rect(0,0, k,k), citizen_icon_tx, ScaleMode.StretchToFill);	
 			GUI.Label(new Rect(k,0, 4*k,k), cc.freeWorkers.ToString() + " / " + cc.citizenCount.ToString() + " / "+ cc.totalLivespace.ToString());
@@ -262,8 +280,8 @@ public class UI : MonoBehaviour {
 			GUI.Label( new Rect ( 6 * k, 0, 4 * k, k) , ((int)cc.energyStored).ToString() + " / " + ((int)cc.totalEnergyCapacity).ToString() + " ( " + energySurplusString + " )" );
 			GUI.DrawTexture ( new Rect ( 10 * k, 0, k, k), energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
 			GUI.Label ( new Rect ( 11 * k, 0, k, k ), ((int)cc.energyCrystalsCount).ToString() ) ;
-		}
-			// </upLeft>
+		} 
+		//upRight infopanel
 		Rect ur = new Rect(Screen.width - 4 *k, 0, 4 *k, upPanelHeight);
 		if (GUI.Button(ur, Localization.menu_gameMenuButton) ) {
 			if (serviceRectArgument != 1) {
@@ -281,7 +299,7 @@ public class UI : MonoBehaviour {
 		ur.x -= ur.width;
 		if (GUI.Button(ur, Localization.ui_storage_name)) {
 			if (serviceRectArgument != 2 ) {
-				serviceBoxRect = new Rect(ur.x, upPanelHeight, ur.width,  4 * k);
+				serviceBoxRect = new Rect(ur.x, upPanelHeight, ur.width * 2,  4 * k);
 				serviceRectArgument = 2;
 				GameMaster.colonyController.storage.showStorage = true;
 				GameMaster.colonyController.showColonyInfo = false;
@@ -307,6 +325,8 @@ public class UI : MonoBehaviour {
 			}
 		}
 		if (serviceRectArgument != 0) GUI.Box(serviceBoxRect, GUIContent.none);
+
+		// -------------SWITCHING      UI     MODES : 
 		switch (mode) {
 		case UIMode.View:
 			switch (argument) {
@@ -318,7 +338,10 @@ public class UI : MonoBehaviour {
 				break;
 			}
 			break;
+
 		case UIMode.SurfaceBlockPanel:
+			#region surfaceBlockPanel
+			if (chosenObjectRect_real.width != 0 && chosenObjectRect_real.height != 0) GUI.Box(chosenObjectRect_real, GUIContent.none);
 			switch (argument) {
 			case 1:
 				//BUILDING BUTTON
@@ -334,7 +357,9 @@ public class UI : MonoBehaviour {
 						gs.Set(chosenSurfaceBlock);
 					}
 				}
-				else {if (GUI.Button(r, Localization.ui_cancelGathering)) Destroy(gs);} 
+				else {
+					if (GUI.Button(r, Localization.ui_cancelGathering)) Destroy(gs);
+				} 
 				r.y += r.height;
 				//DIG BUTTON
 				if (chosenSurfaceBlock.indestructible == false) {
@@ -347,11 +372,6 @@ public class UI : MonoBehaviour {
 								cs = chosenSurfaceBlock.gameObject.AddComponent<CleanSite>();
 								cs.Set(chosenSurfaceBlock, true);
 							}
-						}
-					}
-					else {
-						if (GUI.Button(r, Localization.ui_cancel_digging)) {
-							Destroy(cs);
 						}
 					}
 				}
@@ -373,11 +393,39 @@ public class UI : MonoBehaviour {
 				r2.x += r2.width;
 				if (GUI.Button(r2 , Localization.ui_decline)) ChangeArgument(1);
 				break;
-			case 4: // сетка размещения, без break
-				GUI.Box(staticRect, GUIContent.none);
+			case 3: // выбрать доступные для строительства домики
+				Rect r3 = serviceBoxRect; r3.height = k;
+				if (GUI.Button(r3, Localization.menu_cancel)) {
+					ChangeArgument(1); 
+					serviceRectArgument = 0;
+					chosenStructure = null;
+				}
+				r3.y += r3.height;
+				foreach (Building bd in GameMaster.colonyController.buildings_level_1) {
+					if (GUI.Button(r3, bd.structureName)) {
+						chosenStructure = bd; 
+						if (chosenStructure.type != StructureType.MainStructure) {	ChangeArgument(4); }
+						else {
+							PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
+							if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
+								Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
+								s.gameObject.SetActive(true);
+								s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
+								chosenStructure = null;
+							}
+							else {
+								bufferedPosition = mainStructurePosition; 
+								bufferedArgument = 3;
+								ChangeArgument(5);
+							}
+						}
+					}
+					r3.y += r3.height;
+				}
+
+				if (chosenStructure == null) GUI.DrawTexture(staticRect, grid16_tx, ScaleMode.StretchToFill);
 				staticRectActive = true;
 				float p = staticRect.width / SurfaceBlock.INNER_RESOLUTION;
-				GUI.DrawTexture(staticRect, grid16_tx, ScaleMode.StretchToFill);
 				foreach (SurfaceObject so in chosenSurfaceBlock.surfaceObjects) {
 					Texture t = cellSelectionFrame_tx;
 					switch (so.structure.type) {
@@ -388,38 +436,32 @@ public class UI : MonoBehaviour {
 					}
 					GUI.DrawTexture(new Rect(staticRect.x + so.rect.x * p, staticRect.y + staticRect.height -  (so.rect.z+ so.rect.z_size) * p , p * so.rect.x_size, p * so.rect.z_size), t, ScaleMode.StretchToFill);
 				}
-
+					
+				break;
+			case 4:
+				GUI.DrawTexture(staticRect, grid16_tx, ScaleMode.StretchToFill);
+				p = staticRect.width / SurfaceBlock.INNER_RESOLUTION;
 				SurfaceRect surpos = chosenStructure.innerPosition;
-					for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
-						for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
-							if ( i <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.x_size && j <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.z_size) {
-								if (GUI.Button(new Rect(staticRect.x + i * p, staticRect.y + staticRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {								
-									surpos.x = i; surpos.z = j;
-									if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
-											Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
-											s.gameObject.SetActive(true);
-											s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
-										}
-										else {
-											bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
-											bufferedArgument = 4;
-											ChangeArgument(5);
-										}
+				for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
+					for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
+						if ( i <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.x_size && j <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.z_size) {
+							if (GUI.Button(new Rect(staticRect.x + i * p, staticRect.y + staticRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {								
+								surpos.x = i; surpos.z = j;
+								if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
+									Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
+									s.gameObject.SetActive(true);
+									s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
+								}
+								else {
+									bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
+									bufferedArgument = 3;
+									ChangeArgument(5);
 								}
 							}
 						}
 					}
-				
-		
-				goto case 3;
-			case 3: // выбрать доступные для строительства домики
-				Rect r3 = serviceBoxRect; r3.height = k;
-				if (GUI.Button(r3, Localization.menu_cancel)) {ChangeArgument(1); serviceRectArgument = 0;}
-				r3.y += r3.height;
-				foreach (Building bd in GameMaster.colonyController.buildings_level_1) {
-					if (GUI.Button(r3, bd.buildingName)) {chosenStructure = bd; ChangeArgument(4);}
-					r3.y += r3.height;
 				}
+				goto case 3;
 				break;
 			case 5: // подтверждение на снос при строительстве
 				GUI.Box(staticRect, Localization.ui_accept_destruction_on_clearing);
@@ -430,6 +472,7 @@ public class UI : MonoBehaviour {
 						Structure s = Instantiate(chosenStructure);
 						s.gameObject.SetActive(true);
 						s.SetBasement(chosenSurfaceBlock, bufferedPosition);
+						chosenStructure = null;
 						bufferedPosition = PixelPosByte.Empty;
 						ChangeArgument(bufferedArgument);
 					}
@@ -486,41 +529,58 @@ public class UI : MonoBehaviour {
 				break;
 			}
 			break;
+			#endregion
 		case UIMode.CubeBlockPanel:
+			#region cubeBlockPanel
+			if (chosenObjectRect_real.width != 0 && chosenObjectRect_real.height != 0) GUI.Box(chosenObjectRect_real, GUIContent.none);
 			switch (argument) {
-			case 1:
-				//Копать
+			case 1:				
 				Rect r = chosenObjectRect_real;
-				if (chosenCubeBlock.career) r.height /= 3f; else r.height /= 2f;
+				byte actionsCount = 1;
+				bool digButton = false, pourInButton = false;
 				DigSite ds = chosenCubeBlock.GetComponent<DigSite>();
-				switch (chosenCubeBlock.digStatus) {
-				case -1:
-					if (GUI.Button(r, Localization.ui_cancel_digging)) Destroy(ds); r.y += r.height;
+				Block sb = chosenCubeBlock.myChunk.GetBlock(chosenCubeBlock.pos.x, chosenCubeBlock.pos.y + 1, chosenCubeBlock.pos.z);
+				if (ds == null && chosenCubeBlock.indestructible == false && ( sb == null || (sb != null && sb.type != BlockType.Surface) )) {
+					actionsCount++;
+					digButton = true;
 					if (chosenCubeBlock.career) {
-						if (GUI.Button(r, Localization.ui_pourIn)) {ds.dig = false;} r.y += r.height;
-						}
-					break;
-				case 0:
-					if (GUI.Button(r, Localization.ui_dig_block)) {
-						ds = chosenCubeBlock.gameObject.AddComponent<DigSite>();
-						ds.Set(chosenCubeBlock, true);
-					} r.y += r.height;
-					if (chosenCubeBlock.career) {
-						if (GUI.Button(r, Localization.ui_pourIn)) {
-							ds = chosenCubeBlock.gameObject.AddComponent<DigSite>();
-							ds.Set(chosenCubeBlock, false);
-						} r.y += r.height;
+						actionsCount++;
+						pourInButton = true;
 					}
-					break;
-				case 1:
-					if (GUI.Button(r, Localization.ui_dig_block)) ds.dig = true;
-					r.y += r.height;
-					if (GUI.Button(r, Localization.ui_cancel_pouring)) Destroy(ds);
-					r.y += r.height;
-					break;
+					chosenObjectRect_planned.height = actionsCount * k;
+					 r.height /= (float)actionsCount;
+					if (digButton) {
+						if (GUI.Button (r, Localization.ui_dig_block)) { chosenCubeBlock.gameObject.AddComponent<DigSite>().Set(chosenCubeBlock, true); }
+						r.y += r.height;
+					}
+					if (pourInButton) {
+						if (GUI.Button (r, Localization.ui_pourIn)) { chosenCubeBlock.gameObject.AddComponent<DigSite>().Set(chosenCubeBlock, false); }
+						r.y += r.height;
+					}
 				}
 				if (GUI.Button(r, Localization.menu_cancel)) DropFocus();
 				break;
+			}
+			#endregion
+			break;
+		case UIMode.WorksitePanel:
+			// on worksite.cs.OnGUI
+			break;
+		case UIMode.StructurePanel:
+			Building b = chosenStructure as Building;
+			GUI.Box(chosenObjectRect_real, GUIContent.none);
+			Rect rs1 = chosenObjectRect_real; 
+			if ( b != null) {
+				rs1.height /= 5;
+				if (GUI.Button(new Rect(rs1.x + rs1.width - k, rs1.y, k, k), "Destroy")) {b.Demolish();}
+				rs1.y += rs1.height;
+				GUI.Label(rs1, chosenStructure.structureName + ' ' + Localization.info_level + b.level.ToString()); rs1.y += rs1.height;
+				bool act = GUI.Toggle(rs1, b.isActive, Localization.ui_activeSelf);
+				if (act != b.isActive) b.SetActivationStatus(act);
+				Factory f = chosenStructure as Factory;
+				if ( f != null ) {
+					// изображения ресурсов!
+				}
 			}
 			break;
 		}

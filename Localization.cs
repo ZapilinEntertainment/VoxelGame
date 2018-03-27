@@ -9,8 +9,9 @@ public static class Localization {
 	rtype_dirt_name, rtype_dirt_descr, rtype_food_name, rtype_food_descr, rtype_metalK_ore_name, rtype_metalK_descr, rtype_metalM_ore_name, rtype_metalM_descr,
 	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
 	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_elasticMass_descr;
-	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_cancel_clearing, ui_cancel_digging, ui_cancel_pouring, ui_clear_and_dig,
-	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering;
+	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
+	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
+	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
 	public static string info_housing, info_population, info_level;
 
@@ -49,17 +50,20 @@ public static class Localization {
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
-			ui_cancel_clearing = "Cancel clearing"; ui_cancel_digging = "Stop digging"; ui_cancel_pouring = "Stop pouring";
-			ui_clear_and_dig = "Clear and dig"; ui_accept_destruction_on_clearing = "Destruct all buildings up there?";
+			ui_stopWork = "Stop works";
 			ui_accept = "Yes"; ui_decline = "No";
 			ui_choose_block_action = "Choose block action";
-			ui_toPlain = "Plain ground"; 
+			ui_toPlain = "Plain ground"; ui_workers = "Workers : ";
 			ui_toGather = "Gather resources"; ui_cancelGathering = "Stop gathering";
+			ui_dig_in_progress = "Digging in progress"; ui_clean_in_progress = "Clearing in progress"; 
+			ui_gather_in_progress = "Gathering in progress"; ui_pouring_in_progress = "Pouring in progress";
+			ui_accept_destruction_on_clearing = "Demolish all buildings in zone?";
+			ui_activeSelf = "Active";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			info_housing = "Housing";
 			info_population = "Population";
-			info_level = "lvl.";
+			info_level = " lvl.";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -67,11 +71,15 @@ public static class Localization {
 			ui_choose_block_action = "Выберите действие с блоком";
 			ui_dig_block = "Выкопать блок";
 			ui_pourIn = "Засыпать блок";
-			ui_toPlain = "Разровнять";
+			ui_toPlain = "Разровнять"; ui_workers = "Рабочие : ";
 			ui_toGather = "Собрать ресурсы"; ui_cancelGathering = "Остановить сбор ресурсов";
+			ui_dig_in_progress = "Идет извлечение грунта"; ui_clean_in_progress = "Идет очистка"; 
+			ui_gather_in_progress = "Идет сбор"; ui_pouring_in_progress = "Идет засыпка";
+			ui_stopWork = "Остановить работы"; ui_activeSelf = "Работает";
+
 			menu_colonyInfo = "Состояние";
 			info_housing = "Свободное жильё";
-			info_population = "Население"; info_level = "ур.";
+			info_population = "Население"; info_level = " ур.";
 			menu_gameMenuButton = "Меню"; menu_cancel = "Отмена";
 			break;	
 		}

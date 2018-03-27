@@ -6,13 +6,15 @@ using System.IO;
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining}
+public enum GUIStyles {RightOrientedLabel, BorderlessButton, BorderlessLabel, CenterOrientedLabel}
 
 public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
 	public float newGameSpeed = 1;
 
-	public Transform camTransform;
+	public Transform camTransform, camBasis;
+	Vector3 camLookPoint; bool moveCamToLookPoint = false;
 	List<GameObject> cameraUpdateBroadcast;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
@@ -26,7 +28,7 @@ public class GameMaster : MonoBehaviour {
 	public const int START_LIFEPOWER = 100000;
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
-	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f;
+	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10;
 
 	public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
@@ -35,13 +37,11 @@ public class GameMaster : MonoBehaviour {
 	public const int START_WORKERS_COUNT = 10;
 	static float diggingSpeed = 0.1f, pouringSpeed = 0.1f, manufacturingSpeed = 0.1f, 
 	clearingSpeed = 1, gatheringSpeed = 0.1f, miningSpeed = 0.05f;
-	public const float LABOUR_TICK = 1;
 
 
 	float t;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
 	const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
-	const float DAY_LONG = 60;
 	public List<Component> everydayUpdateList, everyYearUpdateList;
 
 	public List <Component> windUpdateList;
@@ -211,6 +211,14 @@ public class GameMaster : MonoBehaviour {
 		}
 	}
 
+	void LateUpdate() {
+		if (moveCamToLookPoint) {
+			float prevY = camBasis.transform.position.y, y = transform.position.y;
+			camBasis.position = Vector3.MoveTowards(camBasis.position, camLookPoint, CAM_LOOK_SPEED * Time.deltaTime);
+			if (Vector3.Distance(camBasis.position, camLookPoint) == 0) moveCamToLookPoint = false;
+		}
+	}
+
 	public void AddToCameraUpdateBroadcast(GameObject g) {
 		if (g != null) cameraUpdateBroadcast.Add(g);
 	}
@@ -265,14 +273,25 @@ public class GameMaster : MonoBehaviour {
 		return workflow;
 	}
 
+	public void SetLookPoint(Vector3 point) {
+		camLookPoint = point;
+		// if doubletap moveCamToLookPoint = true;
+	}
+
 	void OnGUI() {
 		if (!fontSize_set) {
 			guiPiece = Screen.height / 24f;
 			mainGUISkin = Resources.Load<GUISkin>("MainSkin");
 			mainGUISkin.GetStyle("Label").fontSize = (int)(guiPiece/2f);
 			mainGUISkin.GetStyle("Button").fontSize = (int)(guiPiece/2f);
+
 			GUIStyle rightOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			rightOrientedLabel.alignment = TextAnchor.UpperRight;
+			rightOrientedLabel.normal.textColor = Color.white;
+			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
+			centerOrientedLabel.alignment = TextAnchor.UpperCenter;
+			centerOrientedLabel.normal.textColor = Color.white;
+
 			GUIStyleState withoutImageStyle = new GUIStyleState();
 			withoutImageStyle.background = null;
 			GUIStyle borderlessButton = new GUIStyle(mainGUISkin.GetStyle("Button"));
@@ -281,7 +300,7 @@ public class GameMaster : MonoBehaviour {
 			GUIStyle borderlessLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			borderlessLabel.normal = withoutImageStyle;
 			borderlessLabel.onHover = withoutImageStyle;
-			mainGUISkin.customStyles = new GUIStyle[3] {rightOrientedLabel, borderlessButton, borderlessLabel};
+			mainGUISkin.customStyles = new GUIStyle[4] {rightOrientedLabel, borderlessButton, borderlessLabel, centerOrientedLabel};
 			//testmode
 			//
 			GUI.skin = mainGUISkin;

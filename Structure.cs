@@ -17,6 +17,7 @@ public class Structure : MonoBehaviour {
 	public StructureType type {get;protected set;}
 	public float hp = 1;
 	public float maxHp = 1;
+	public string structureName = "structure";
 
 	void Awake() {
 		PrepareStructure();
@@ -43,7 +44,7 @@ public class Structure : MonoBehaviour {
 		basement = null;
 		innerPosition = new SurfaceRect(0,0,xsize_to_set,zsize_to_set);
 	}
-
+		
 	void OnDestroy() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));

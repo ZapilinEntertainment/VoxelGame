@@ -6,11 +6,10 @@ public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public byte visibilityMask {get;private set;}
 	public float naturalFossils = 0;
-	public sbyte digStatus = 0;
 	byte renderMask = 0, excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
 	public int volume ;
 	public static readonly int MAX_VOLUME;
-	public bool career{get;private set;}
+	public bool career{get;private set;} // изменена ли верхняя поверхность на котлован?
 
 	static CubeBlock() {
 		MAX_VOLUME = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
@@ -19,7 +18,6 @@ public class CubeBlock : Block{
 	void Awake() {
 		visibilityMask = 0; 
 		naturalFossils = MAX_VOLUME;
-		digStatus = 0;
 		isTransparent = false;
 		volume = MAX_VOLUME; career = false;
 	}

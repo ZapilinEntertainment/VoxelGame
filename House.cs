@@ -14,7 +14,7 @@ public class House : Building {
 
 	override public void SetActivationStatus(bool x) {
 		if (isActive == x) return;
-		ChangeBuildingActivity(x);
+		isActive = x;
 		GameMaster.colonyController.RecalculateHousing();
 	}
 

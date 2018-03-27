@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GatherSite : MonoBehaviour {
-
-	public int workersCount {get;private set;}
-	public float workflow, labourTimer = 0;
-	SurfaceBlock workObject;
-	GameObject sign;
+public class GatherSite : Worksite {
 	float destructionTimer;
-	public const int MAX_WORKERS  = 32;
+	SurfaceBlock workObject;
+	const int START_WORKERS_COUNT = 5;
 
 	void Awake() {
 		workersCount = 0;
@@ -24,7 +20,10 @@ public class GatherSite : MonoBehaviour {
 		if (workersCount  > 0) {
 			workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Gathering);
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (labourTimer <= 0) {LabourResult();labourTimer = GameMaster.LABOUR_TICK;}
+			if ( labourTimer <= 0 ) {
+				if (workflow >= 1) LabourResult();
+				labourTimer = GameMaster.LABOUR_TICK;
+			}
 		}
 			
 		destructionTimer -= Time.deltaTime * GameMaster.gameSpeed; 
@@ -32,7 +31,6 @@ public class GatherSite : MonoBehaviour {
 	}
 
 	void LabourResult() {
-		if (workflow > 0) {
 			int i = 0;
 			bool resourcesFound = false;
 			while (i < workObject.surfaceObjects.Count) {
@@ -69,24 +67,14 @@ public class GatherSite : MonoBehaviour {
 				}
 			}
 			if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
-		}
 	}
 
-	public void AddWorkers (int x) {
-		if (x > 0) workersCount += x;
-	}
 
 	public void Set(SurfaceBlock block) {
 		workObject = block;
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/GatherSign")) as GameObject;
-		sign.transform.parent = workObject.transform;
-		sign.transform.localPosition = Vector3.down * Block.QUAD_SIZE/2f;
-		GameMaster.colonyController.gatherSites.Add(this);
+		sign.transform.position = workObject.transform.position + Vector3.down /2f * Block.QUAD_SIZE;
+		sign.GetComponent<WorksiteSign>().Set(this);
+		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 	}
-
-	void OnDestroy() {
-		GameMaster.colonyController.AddWorkers(workersCount);
-		if (sign != null) Destroy(sign);
-	}
-
 }

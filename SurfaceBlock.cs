@@ -34,7 +34,6 @@ public class SurfaceBlock : Block {
 	public List<SurfaceObject> surfaceObjects{get;private set;}
 	public sbyte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
 	public CubeBlock basement; 
-	public bool cleanWorks = false;
 	public int artificialStructures = 0;
 	public float fertility = 1, habitability = 0;
 	public bool[,] map {get; private set;}

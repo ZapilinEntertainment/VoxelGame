@@ -6,12 +6,17 @@ public class WindGenerator : Building {
 	public Transform head, screw;
 	Vector3 windDirection;
 	bool rotateHead = false, rotateScrew = true;
-	const float HEAD_ROTATE_SPEED = 10, SCREW_ROTATE_SPEED = 10;
+	const float HEAD_ROTATE_SPEED = 10, SCREW_ROTATE_SPEED = 20;
 	float maxSurplus;
 
 	void Awake() {
 		PrepareBuilding();
 		maxSurplus = energySurplus;
+	}
+
+	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
+		SetBuildingData(b, pos);
 		GameMaster.realMaster.windUpdateList.Add(this);
 		WindUpdate(GameMaster.realMaster.windVector);
 	}
@@ -20,11 +25,11 @@ public class WindGenerator : Building {
 		if (GameMaster.gameSpeed == 0) return;
 		float t = Time.deltaTime * GameMaster.gameSpeed;
 		if ( rotateHead ) {
-			transform.forward = Vector3.MoveTowards(transform.forward, windDirection, HEAD_ROTATE_SPEED * t);
-			if (transform.forward == windDirection.normalized) rotateHead = false;
+			head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDirection, HEAD_ROTATE_SPEED * t);
+			if (head.transform.forward == windDirection.normalized) rotateHead = false;
 		}
 		if (rotateScrew) {
-			screw.transform.Rotate( Vector3.right * windDirection.magnitude * SCREW_ROTATE_SPEED * t);
+			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * t);
 		}
 	}
 

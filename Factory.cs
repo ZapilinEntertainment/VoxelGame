@@ -23,12 +23,16 @@ public class Factory : WorkBuilding {
 		factoryType = FactoryType.Simple;
 		storage = GameMaster.colonyController.storage;
 		workflowToProcess = ResourceType.CalculateWorkflowToProcess(inputResource, outputResource);
+	}
+
+	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
+		SetBuildingData(b, pos);
 		UI.current.AddFactoryToList(this);
 	}
 
-
 	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive) return;
+		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
 		if (outputResourcesBuffer >= BUFFER_LIMIT) {
 			outputResourcesBuffer -= storage.AddResources(outputResource, outputResourcesBuffer);
 		}

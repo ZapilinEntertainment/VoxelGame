@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Entity : MonoBehaviour {
-	protected float lifepower = 1, speed = 1, hp , maxhp = 1,stamina = 10, restTime = 60, age, maxAge = 10;
+	protected float lifepower = 1, speed = 1, hp , maxhp = 1, restTime = 60, age, maxAge = 10;
+	public float stamina = 10;
 	GameObject home;
 
 	void Awake() {
