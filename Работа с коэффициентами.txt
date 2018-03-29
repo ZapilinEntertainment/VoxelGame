@@ -3,6 +3,7 @@ GameMaster:
 	gears_annual_degrade
 	life_decay_speed
 	luck_coefficient
+	demolitionLossesPercent
 Colony Controller
 	gears_coefficient
 	labourEfficientcy_coefficient

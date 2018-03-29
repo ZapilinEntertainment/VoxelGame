@@ -28,6 +28,7 @@ public class GameMaster : MonoBehaviour {
 	public const int START_LIFEPOWER = 100000;
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
+	public static float demolitionLossesPercent {get;private set;}
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10;
 
 	public static Difficulty difficulty {get;private set;}
@@ -79,11 +80,11 @@ public class GameMaster : MonoBehaviour {
 		prevCamPos = camTransform.position * (-1);
 
 		switch (difficulty) {
-		case Difficulty.Utopia: LUCK_COEFFICIENT = 1;	break;
-		case Difficulty.Easy: LUCK_COEFFICIENT = 0.7f;break;
-		case Difficulty.Normal: LUCK_COEFFICIENT = 0.5f; break;
-		case Difficulty.Hard: LUCK_COEFFICIENT = 0.1f;break;
-		case Difficulty.Torture: LUCK_COEFFICIENT = 0.01f;break;
+		case Difficulty.Utopia: LUCK_COEFFICIENT = 1;	demolitionLossesPercent = 0; break;
+		case Difficulty.Easy: LUCK_COEFFICIENT = 0.7f; demolitionLossesPercent = 0.2f;  break;
+		case Difficulty.Normal: LUCK_COEFFICIENT = 0.5f; demolitionLossesPercent = 0.4f;  break;
+		case Difficulty.Hard: LUCK_COEFFICIENT = 0.1f; demolitionLossesPercent = 0.7f; break;
+		case Difficulty.Torture: LUCK_COEFFICIENT = 0.01f; demolitionLossesPercent = 1; break;
 		}
 
 		switch (startGameWith) {

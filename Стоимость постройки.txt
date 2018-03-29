@@ -1,0 +1,5 @@
+EnergyCapacitor - metalM:2;metalE:4;metalN:2;
+House - metalK:1;elasticMass:4;
+Mine - metalK:4;elasticMass:1;metalM:1;
+Smeltery - metalK:8;metalM:8;elasticMass:4;
+WindGenerator - metalK:1;metalM:2;metalE:1;

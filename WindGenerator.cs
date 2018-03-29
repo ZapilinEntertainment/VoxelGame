@@ -46,7 +46,7 @@ public class WindGenerator : Building {
 		else {
 			if (rotateScrew == false) {
 				rotateScrew = true; 
-				energySurplus = maxSurplus;
+				energySurplus = maxSurplus * direction.magnitude / GameMaster.realMaster.maxWindPower;
 				if (connectedToPowerGrid) GameMaster.colonyController.RecalculatePowerGrid();
 			}
 			if (transform.forward != windDirection) rotateHead = true; else rotateHead = false;

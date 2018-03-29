@@ -10,8 +10,8 @@ public class UI : MonoBehaviour {
 	UIMode mode; int argument = 0, serviceRectArgument = 0;
 	public Rect chosenObjectRect_real = Rect.zero, chosenObjectRect_planned = Rect.zero, staticRect = Rect.zero, 
 	objectInfo_rect = Rect.zero, serviceBoxRect = Rect.zero;
-	bool staticRectActive = false, infoRectActive = false;
-	PixelPosByte bufferedPosition; int bufferedArgument = -1;
+	bool staticRectActive = false, infoRectActive = false, showBuildingCreateInfo = false;
+	PixelPosByte bufferedPosition; int bufferedArgument = -1, chosenBuildingIndex = 0;
 	SurfaceBlock chosenSurfaceBlock;
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
 	Structure chosenStructure;
@@ -20,7 +20,7 @@ public class UI : MonoBehaviour {
 	GameObject quadSelector;
 	public float upPanelHeight, leftPanelWidth;
 	Texture  cellSelectionFrame_tx, grid16_tx, greenSquare_tx, orangeSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
-		citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx;
+	citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx, energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
 	List<Factory> unspecializedFactories; bool hasUnspecializedFactories = false;
@@ -43,6 +43,9 @@ public class UI : MonoBehaviour {
 		citizen_icon_tx = Resources.Load<Texture>("Textures/citizen_icon");
 		energy_icon_tx = Resources.Load<Texture>("Textures/energy_icon");
 		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
+		energyLightning_icon_tx = Resources.Load<Texture>("Textures/energyLightning_icon");
+		buildingQuad_icon_tx = Resources.Load<Texture>("Textures/buildingQuad_icon");
+		demolishButton_tx = Resources.Load<Texture>("Textures/button_demolish");
 	}
 	void Update() {
 		mousePos = Input.mousePosition;
@@ -52,86 +55,86 @@ public class UI : MonoBehaviour {
 			RaycastHit rh;
 			if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out rh)) {
 				DropFocus();
-				if (rh.collider.transform.parent != null) {
-				Block b = rh.collider.transform.parent.GetComponent<Block>();
-				if (b != null) {
-					Vector2 cursorPos = Camera.main.WorldToScreenPoint(b.transform.position);
+				Structure s = rh.collider.GetComponent<Structure>();
+				if (s != null) {
+					chosenStructure = s;
+					Vector2 cursorPos = Camera.main.WorldToScreenPoint(s.transform.position);
 					chosenObjectRect_planned.x = cursorPos.x;
 					chosenObjectRect_planned.y =  Screen.height - cursorPos.y;
-					float x ,y,z,d = Block.QUAD_SIZE/2f;
-					if ( b.type == BlockType.Surface ) {
-							mode = UIMode.SurfaceBlockPanel;
-							ChangeArgument(1);
-							chosenSurfaceBlock = b.GetComponent<SurfaceBlock>();
-							x= chosenSurfaceBlock.transform.position.x; y = chosenSurfaceBlock.transform.position.y - d + 0.01f;  z = chosenSurfaceBlock.transform.position.z;
-							lineDrawer.SetPositions(new Vector3[5]{new Vector3(x - d, y, z+d), new Vector3(x+d,y,z+d), new Vector3(x+d,y,z-d), new Vector3(x - d, y, z-d), new Vector3(x-d, y,z+d)});
-							lineDrawer.material = PoolMaster.lr_green_material;
-							lineDrawer.enabled = true;
-						GameMaster.realMaster.SetLookPoint (chosenSurfaceBlock.transform.position + Vector3.down * Block.QUAD_SIZE /2f);
-					}
-					else {
-						chosenCubeBlock = b.GetComponent<CubeBlock>();
-							for (byte i =0; i< 6; i++) {
-								if (chosenCubeBlock.faces[i] == null) continue;
-								if (chosenCubeBlock.faces[i].GetComponent<Collider>() == rh.collider ) {faceIndex = i;break;}
+					mode = UIMode.StructurePanel;
+					GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
+					ChangeArgument(1);
+				}
+				else { // not a structure
+					if (rh.collider.transform.parent != null) {
+						Block b = rh.collider.transform.parent.GetComponent<Block>();
+						if (b != null) {
+							Vector2 cursorPos = Camera.main.WorldToScreenPoint(b.transform.position);
+							chosenObjectRect_planned.x = cursorPos.x;
+							chosenObjectRect_planned.y =  Screen.height - cursorPos.y;
+							float x ,y,z,d = Block.QUAD_SIZE/2f;
+							if ( b.type == BlockType.Surface ) {
+									mode = UIMode.SurfaceBlockPanel;
+									ChangeArgument(1);
+									chosenSurfaceBlock = b.GetComponent<SurfaceBlock>();
+									x= chosenSurfaceBlock.transform.position.x; y = chosenSurfaceBlock.transform.position.y - d + 0.01f;  z = chosenSurfaceBlock.transform.position.z;
+									lineDrawer.SetPositions(new Vector3[5]{new Vector3(x - d, y, z+d), new Vector3(x+d,y,z+d), new Vector3(x+d,y,z-d), new Vector3(x - d, y, z-d), new Vector3(x-d, y,z+d)});
+									lineDrawer.material = PoolMaster.lr_green_material;
+									lineDrawer.enabled = true;
+								GameMaster.realMaster.SetLookPoint (chosenSurfaceBlock.transform.position + Vector3.down * Block.QUAD_SIZE /2f);
 							}
-							if (faceIndex != 10) {
-								mode = UIMode.CubeBlockPanel;
-								ChangeArgument(1);
-								switch (faceIndex) {
-								case 0: 
-									quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.forward * (Block.QUAD_SIZE/2f + 0.01f);
-									quadSelector.transform.rotation = Quaternion.Euler(90,0,0);
-									break;
-								case 1:
-									quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.right * (Block.QUAD_SIZE/2f + 0.01f);
-									quadSelector.transform.rotation = Quaternion.Euler(0,0,-90);
-									break;
-								case 2:
-									quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.back * (Block.QUAD_SIZE/2f + 0.01f);
-									quadSelector.transform.rotation = Quaternion.Euler(-90,0,0);
-									break;
-								case 3:
-									quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.left * (Block.QUAD_SIZE/2f + 0.01f);
-									quadSelector.transform.rotation = Quaternion.Euler(0,0,90);
-									break;
-								case 4:
-									quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.up * (Block.QUAD_SIZE/2f + 0.01f);
-									quadSelector.transform.rotation = Quaternion.Euler(0,0,0);
-									break;
-								case 5:
-									quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.down * (Block.QUAD_SIZE/2f + 0.01f);
-									quadSelector.transform.rotation = Quaternion.Euler(0,0,180);
-									break;
-								}
-								quadSelector.SetActive(true);
-							GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
-							}					
+							else {
+								chosenCubeBlock = b.GetComponent<CubeBlock>();
+									for (byte i =0; i< 6; i++) {
+										if (chosenCubeBlock.faces[i] == null) continue;
+										if (chosenCubeBlock.faces[i].GetComponent<Collider>() == rh.collider ) {faceIndex = i;break;}
+									}
+									if (faceIndex != 10) {
+										mode = UIMode.CubeBlockPanel;
+										ChangeArgument(1);
+										switch (faceIndex) {
+										case 0: 
+											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.forward * (Block.QUAD_SIZE/2f + 0.01f);
+											quadSelector.transform.rotation = Quaternion.Euler(90,0,0);
+											break;
+										case 1:
+											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.right * (Block.QUAD_SIZE/2f + 0.01f);
+											quadSelector.transform.rotation = Quaternion.Euler(0,0,-90);
+											break;
+										case 2:
+											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.back * (Block.QUAD_SIZE/2f + 0.01f);
+											quadSelector.transform.rotation = Quaternion.Euler(-90,0,0);
+											break;
+										case 3:
+											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.left * (Block.QUAD_SIZE/2f + 0.01f);
+											quadSelector.transform.rotation = Quaternion.Euler(0,0,90);
+											break;
+										case 4:
+											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.up * (Block.QUAD_SIZE/2f + 0.01f);
+											quadSelector.transform.rotation = Quaternion.Euler(0,0,0);
+											break;
+										case 5:
+											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.down * (Block.QUAD_SIZE/2f + 0.01f);
+											quadSelector.transform.rotation = Quaternion.Euler(0,0,180);
+											break;
+										}
+										quadSelector.SetActive(true);
+									GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
+									}					
+							}
+						}
+						CameraUpdate(Camera.main.transform);
 					}
-				}
-				else {
-					Structure s = rh.collider.GetComponent<Structure>();
-					if (s != null) {
-						chosenStructure = s;
-						Vector2 cursorPos = Camera.main.WorldToScreenPoint(b.transform.position);
-						chosenObjectRect_planned.x = cursorPos.x;
-						chosenObjectRect_planned.y =  Screen.height - cursorPos.y;
-						mode = UIMode.StructurePanel;
-						GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
-						ChangeArgument(1);
+					else { // no transfrom parent
+						WorksiteSign ws = rh.collider.GetComponent<WorksiteSign>();
+						if (ws != null) {
+							chosenWorksite = ws.worksite;
+							ws.showOnGUI = true;
+							mode = UIMode.WorksitePanel;
+							ChangeArgument(1);
+						}
 					}
-				}
-				CameraUpdate(Camera.main.transform);
-				}
-				else {
-					WorksiteSign ws = rh.collider.GetComponent<WorksiteSign>();
-					if (ws != null) {
-						chosenWorksite = ws.worksite;
-						ws.showOnGUI = true;
-						mode = UIMode.WorksitePanel;
-						ChangeArgument(1);
-					}
-				}
+			}				
 			}
 			else DropFocus();
 		}
@@ -198,6 +201,7 @@ public class UI : MonoBehaviour {
 		if (serviceRectArgument == -1) serviceBoxRect = Rect.zero;
 		staticRect = Rect.zero; staticRectActive = false;
 		infoRectActive = false; objectInfo_rect = Rect.zero;
+		showBuildingCreateInfo = false;
 	}
 
 	void ChangeArgument(int f_argument) {
@@ -220,7 +224,7 @@ public class UI : MonoBehaviour {
 			case 3: // choose building 
 				chosenObjectRect_planned.width = 0;
 				chosenObjectRect_planned.width = 0;
-				serviceBoxRect = new Rect(Screen.width - 4 *k, upPanelHeight, 4 *k, k * (GameMaster.colonyController.buildings_level_1.Count + 1));
+				serviceBoxRect = new Rect(Screen.width - 8 *k, upPanelHeight, 8 *k, k * (GameMaster.colonyController.buildings_level_1.Count + 1));
 				if (serviceRectArgument != 0) {GameMaster.colonyController.showColonyInfo = false; GameMaster.colonyController.storage.showStorage = false;}
 				serviceRectArgument = -1;
 
@@ -229,6 +233,8 @@ public class UI : MonoBehaviour {
 				float side = p * SurfaceBlock.INNER_RESOLUTION;
 				staticRect = new Rect(Screen.width / 2f -  side/2f, Screen.height/2f - side/2f, side, side);
 				if (chosenSurfaceBlock.map == null) chosenSurfaceBlock.GetBooleanMap();
+				showBuildingCreateInfo = false;
+				chosenStructure = null;
 				break;
 			case 5: //accept destruction on construction site
 				staticRect = new Rect(Screen.width /2f - 4*k, Screen.height/2f - 2*k, 8*k, 4*k);
@@ -245,6 +251,13 @@ public class UI : MonoBehaviour {
 			}
 			break;
 		case UIMode.StructurePanel:
+			switch (argument) {
+			case 1:
+				chosenObjectRect_planned.width = 4 *k;
+				if (chosenStructure as Factory == null)	chosenObjectRect_planned.height = 3*k;
+				else chosenObjectRect_planned.height = 4*k;
+				break;
+			}
 			break;
 		case UIMode.WorksitePanel:
 			Vector2 signPos = Camera.main.WorldToScreenPoint(chosenWorksite.transform.position);
@@ -297,20 +310,7 @@ public class UI : MonoBehaviour {
 			}
 		}
 		ur.x -= ur.width;
-		if (GUI.Button(ur, Localization.ui_storage_name)) {
-			if (serviceRectArgument != 2 ) {
-				serviceBoxRect = new Rect(ur.x, upPanelHeight, ur.width * 2,  4 * k);
-				serviceRectArgument = 2;
-				GameMaster.colonyController.storage.showStorage = true;
-				GameMaster.colonyController.showColonyInfo = false;
-			}
-			else {
-				serviceRectArgument = 0;
-				GameMaster.colonyController.storage.showStorage = false;
-				serviceBoxRect = Rect.zero;
-			}
-		}
-		ur.x -= ur.width;
+
 		if (GUI.Button(ur, Localization.menu_colonyInfo)) {
 			if (serviceRectArgument != 3) {
 			serviceBoxRect = new Rect(ur.x, upPanelHeight, ur.width,  4 * k);
@@ -324,6 +324,21 @@ public class UI : MonoBehaviour {
 				GameMaster.colonyController.showColonyInfo = false;
 			}
 		}
+		ur.x -= ur.width;
+		if (GUI.Button(ur, Localization.ui_storage_name)) {
+			if (serviceRectArgument != 2 ) {
+				serviceBoxRect = new Rect(ur.x, upPanelHeight, ur.width * 2,  4 * k);
+				serviceRectArgument = 2;
+				GameMaster.colonyController.storage.showStorage = true;
+				GameMaster.colonyController.showColonyInfo = false;
+			}
+			else {
+				serviceRectArgument = 0;
+				GameMaster.colonyController.storage.showStorage = false;
+				serviceBoxRect = Rect.zero;
+			}
+		}
+
 		if (serviceRectArgument != 0) GUI.Box(serviceBoxRect, GUIContent.none);
 
 		// -------------SWITCHING      UI     MODES : 
@@ -399,31 +414,73 @@ public class UI : MonoBehaviour {
 					ChangeArgument(1); 
 					serviceRectArgument = 0;
 					chosenStructure = null;
+					showBuildingCreateInfo = false;
 				}
 				r3.y += r3.height;
+				int buildingIndex = 0;
 				foreach (Building bd in GameMaster.colonyController.buildings_level_1) {
 					if (GUI.Button(r3, bd.structureName)) {
-						chosenStructure = bd; 
-						if (chosenStructure.type != StructureType.MainStructure) {	ChangeArgument(4); }
-						else {
-							PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
-							if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
-								Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
-								s.gameObject.SetActive(true);
-								s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
-								chosenStructure = null;
-							}
-							else {
-								bufferedPosition = mainStructurePosition; 
-								bufferedArgument = 3;
-								ChangeArgument(5);
+						if (chosenStructure != bd ) {
+							chosenStructure = bd; 
+							chosenBuildingIndex = buildingIndex;
+							showBuildingCreateInfo = true;
+							serviceBoxRect.height += r3.height * ((chosenStructure as Building).resourcesContain.Count + 1);
+							if (chosenStructure.type != StructureType.MainStructure) {	ChangeArgument(4);break;}
+						}
+						else { // уже выбрано
+							chosenStructure = null;
+							showBuildingCreateInfo = false;
+							ChangeArgument(3);
+							break;
+						}
+					}
+					// отрисовка информации о выбранном здании
+					Rect r3x = r3;	
+					if (chosenBuildingIndex == buildingIndex && showBuildingCreateInfo)
+					{
+						r3x.y += r3x.height;
+						Building chosenBuilding = chosenStructure as Building ;
+						GUI.DrawTexture(new Rect(r3x.x, r3x.y, r3x.height, r3x.height) , energyLightning_icon_tx, ScaleMode.StretchToFill);
+						float ens =  chosenBuilding.energySurplus;
+						string enSurplusString = ens.ToString();
+						if (ens > 0) enSurplusString = '+' + enSurplusString;
+						GUI.Label( new Rect(r3x.x +r3x.height, r3x.y, r3x.width / 2f - r3x.height, r3x.height) , enSurplusString);
+						GUI.DrawTexture( new Rect(r3x.x + r3x.width / 2f, r3x.y, r3x.height, r3x.height) , buildingQuad_icon_tx, ScaleMode.StretchToFill);
+						GUI.Label( new Rect(r3x.x + r3x.width / 2f + r3x.height, r3x.y, r3x.width/2f - r3x.height, r3x.height) , chosenStructure.innerPosition.x_size.ToString() + " x " + chosenStructure.innerPosition.z_size.ToString());
+						r3x.y += r3x.height;
+
+						foreach (ResourceContainer rc in chosenBuilding.resourcesContain) {
+							GUI.Label(new Rect(r3x.x, r3x.y, r3x.width * 0.75f, r3x.height), rc.type.name);
+							float wx = r3x.width * 0.875f; if (wx > r3x.height) wx = r3x.height;
+							GUI.DrawTexture( new Rect (r3x.x + r3x.width * 0.75f, r3x.y, wx, wx), rc.type.icon, ScaleMode.ScaleToFit );
+							GUI.Label( new Rect(r3x.x + r3x.width * 0.875f, r3x.y, wx,wx), rc.volume.ToString());
+							r3x.y += r3x.height;
+						}
+						//для крупных структур:
+						if (chosenStructure.type == StructureType.MainStructure) {
+							if (GUI.Button ( new Rect(r3x.x + r3x.width/4f, r3x.y, r3x.width / 2f, r3x.height), Localization.ui_build )) {
+								PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
+								if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
+									Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
+									s.gameObject.SetActive(true);
+									s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
+									ChangeArgument(3); 
+									break;
+								}
+								else {
+									bufferedPosition = mainStructurePosition; 
+									bufferedArgument = 3;
+									ChangeArgument(5);
+									break;
+								}
 							}
 						}
 					}
-					r3.y += r3.height;
+					r3.y = r3x.yMax;
+					buildingIndex++;
 				}
-
-				if (chosenStructure == null) GUI.DrawTexture(staticRect, grid16_tx, ScaleMode.StretchToFill);
+				// сетка для размещения постройки
+				if (chosenStructure == null || argument == 3) GUI.DrawTexture(staticRect, grid16_tx, ScaleMode.StretchToFill); // чтобы не дублировать при вызове через case 4
 				staticRectActive = true;
 				float p = staticRect.width / SurfaceBlock.INNER_RESOLUTION;
 				foreach (SurfaceObject so in chosenSurfaceBlock.surfaceObjects) {
@@ -456,6 +513,7 @@ public class UI : MonoBehaviour {
 									bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
 									bufferedArgument = 3;
 									ChangeArgument(5);
+									break;
 								}
 							}
 						}
@@ -572,7 +630,7 @@ public class UI : MonoBehaviour {
 			Rect rs1 = chosenObjectRect_real; 
 			if ( b != null) {
 				rs1.height /= 5;
-				if (GUI.Button(new Rect(rs1.x + rs1.width - k, rs1.y, k, k), "Destroy")) {b.Demolish();}
+				if (GUI.Button(new Rect(rs1.x + rs1.width - k, rs1.y, k, k), demolishButton_tx)) {b.Demolish();}
 				rs1.y += rs1.height;
 				GUI.Label(rs1, chosenStructure.structureName + ' ' + Localization.info_level + b.level.ToString()); rs1.y += rs1.height;
 				bool act = GUI.Toggle(rs1, b.isActive, Localization.ui_activeSelf);

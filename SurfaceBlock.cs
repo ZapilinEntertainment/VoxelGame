@@ -107,9 +107,8 @@ public class SurfaceBlock : Block {
 				if (a.z + a.z_size > sr.z + sr.z_size) topZ = sr.z + sr.z_size; else topZ = a.z + a.z_size;
 				if (topZ <= downZ) {i++;continue;}
 				else {
-					surfaceObjects[i].structure.UnsetBasement();
 					Destroy(surfaceObjects[i].structure.gameObject);
-					surfaceObjects.RemoveAt(i);
+					i++;
 				}
 			}
 		}
