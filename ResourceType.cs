@@ -11,7 +11,7 @@ public class ResourceType {
 		public static readonly ResourceType Nothing, Lumber, Stone, Dirt,Food, 
 		metal_K_ore, metal_M_ore, metal_E_ore, metal_N_ore, metal_P_ore, metal_S_ore, 
 		metal_K, metal_M, metal_E, metal_N, metal_P, metal_S,
-	mineral_F, mineral_L, ElasticMass;
+	mineral_F, mineral_L, ElasticMass, Concrete;
 
 	public ResourceType(string f_name, float f_mass, float f_toughness, Material m, Texture f_icon, string f_descr) {
 		name = f_name;	
@@ -47,6 +47,7 @@ public class ResourceType {
 		mineral_L = new ResourceType("Mineral L",1, 2, PoolMaster.mineralL_material, Resources.Load<Texture>("Textures/resource_mineralL"), Localization.rtype_mineralL_descr);
 
 		ElasticMass = new ResourceType("Elastic Mass", 0.5f, 10, PoolMaster.elasticMass_material, Resources.Load<Texture>("Textures/resource_elasticMass"), Localization.rtype_elasticMass_descr);
+		Concrete = new ResourceType(Localization.rtype_concrete_name, 3, 38, PoolMaster.concrete_material, Resources.Load<Texture>("Textures/resource_concrete"), Localization.rtype_concrete_descr);
 		}
 
 		public static bool operator ==(ResourceType lhs, ResourceType rhs) {return lhs.Equals(rhs);}
@@ -71,14 +72,7 @@ public class ResourceType {
 		}
 	}
 
-	public static float CalculateWorkflowToProcess(ResourceType Input, ResourceType Output) {
-		float worktime = 1;
-		if (Input == ResourceType.Lumber) {
-			if (Output == ResourceType.ElasticMass) worktime = 30;
-		}
-		return worktime;
-	}
-	}
+}
 
 
 

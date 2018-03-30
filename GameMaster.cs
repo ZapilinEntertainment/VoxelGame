@@ -36,8 +36,8 @@ public class GameMaster : MonoBehaviour {
 	public static float LUCK_COEFFICIENT {get;private set;}
 
 	public const int START_WORKERS_COUNT = 10;
-	static float diggingSpeed = 0.1f, pouringSpeed = 0.1f, manufacturingSpeed = 0.1f, 
-	clearingSpeed = 1, gatheringSpeed = 0.1f, miningSpeed = 0.05f;
+	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
+	clearingSpeed = 10, gatheringSpeed = 5f, miningSpeed = 0.5f;
 
 
 	float t;
@@ -259,19 +259,19 @@ public class GameMaster : MonoBehaviour {
 			}
 		}	
 
-	public static float CalculateWorkflow(int workersCount, WorkType type) {
+	public static float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
-		float workflow = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
+		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
 		switch (type) {
-		case WorkType.Digging: workflow *= diggingSpeed;break;
-		case WorkType.Manufacturing: workflow *= manufacturingSpeed;break;
-		case WorkType.Nothing: workflow = 0; break;
-		case WorkType.Pouring: workflow *= pouringSpeed;break;
-		case WorkType.Clearing: workflow *= clearingSpeed;break;
-		case WorkType.Gathering : workflow *= gatheringSpeed;break;
-		case WorkType.Mining: workflow *= miningSpeed;break;
+		case WorkType.Digging: workspeed  *= diggingSpeed;break;
+		case WorkType.Manufacturing: workspeed  *= manufacturingSpeed;break;
+		case WorkType.Nothing: workspeed  = 0; break;
+		case WorkType.Pouring: workspeed  *= pouringSpeed;break;
+		case WorkType.Clearing: workspeed  *= clearingSpeed;break;
+		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
+		case WorkType.Mining: workspeed  *= miningSpeed;break;
 		}
-		return workflow;
+		return workspeed ;
 	}
 
 	public void SetLookPoint(Vector3 point) {

@@ -18,7 +18,7 @@ public class GatherSite : Worksite {
 			Destroy(this);
 		}
 		if (workersCount  > 0) {
-			workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Gathering);
+			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if ( labourTimer <= 0 ) {
 				if (workflow >= 1) LabourResult();
@@ -69,7 +69,9 @@ public class GatherSite : Worksite {
 			if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
 	}
 
-
+	protected override void RecalculateWorkspeed() {
+		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Gathering);
+	}
 	public void Set(SurfaceBlock block) {
 		workObject = block;
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/GatherSign")) as GameObject;

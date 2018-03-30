@@ -76,13 +76,12 @@ public class Building : Structure {
 
 	virtual public void SetActivationStatus(bool x) {
 		isActive = x;
+		if (connectedToPowerGrid) {
+			GameMaster.colonyController.RecalculatePowerGrid();
+		}
 	}
 	public void SetEnergySupply(bool x) {
 		energySupplied = x;
-	}
-
-	public void DisconnectFromPowerGrid() {
-		
 	}
 
 	protected void PrepareBuildingForDestruction() {

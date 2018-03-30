@@ -40,7 +40,11 @@ public class SurfaceBlock : Block {
 
 	void Awake() 
 	{
-		cellsStatus = 0;
+		cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
+		for (int i =0; i < map.GetLength(0); i++) {
+			for (int j =0; j< map.GetLength(1); j++) map[i,j] = false;
+		}
+
 		GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
 		surfaceRenderer =g.GetComponent <MeshRenderer>();
 		g.transform.parent = transform;
@@ -76,7 +80,7 @@ public class SurfaceBlock : Block {
 			return map;
 	}
 	void CellsStatusUpdate() {
-		bool[,] map = GetBooleanMap();
+		map = GetBooleanMap();
 		bool empty = true, full = true; 
 		bool emptyCheckFailed = false, fullCheckFailed = false;
 		foreach (bool b in map) {
@@ -304,7 +308,6 @@ public class SurfaceBlock : Block {
 	}
 
 	List<PixelPosByte> GetAcceptablePositions(int count) {
-		bool[,] map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
 		List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();
 		for (byte i = 0; i< INNER_RESOLUTION; i++) {
 			for (byte j =0; j < INNER_RESOLUTION; j++) {

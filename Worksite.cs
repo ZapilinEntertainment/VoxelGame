@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Worksite : MonoBehaviour {
+public abstract class Worksite : MonoBehaviour {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
-	protected float workflow, labourTimer;
+	protected float workflow, labourTimer, workSpeed;
 	public GameObject sign{get; protected set;}
 
 	void Awake () {
@@ -23,6 +23,7 @@ public class Worksite : MonoBehaviour {
 			else {
 				workersCount += x;
 			}
+			RecalculateWorkspeed();
 			return x;
 		}
 	}
@@ -35,7 +36,9 @@ public class Worksite : MonoBehaviour {
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		GameMaster.colonyController.AddWorkers(x);
+		RecalculateWorkspeed();
 	}
+	protected abstract void RecalculateWorkspeed() ;
 
 	void OnDestroy() {
 		GameMaster.colonyController.AddWorkers(workersCount);

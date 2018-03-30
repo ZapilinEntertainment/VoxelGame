@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class WorkBuilding : Building {
-	public float workflow = 0, workflowToProcess = 1;
+	public float workflow {get;protected set;} 
+	protected float workSpeed = 0;
+	public float workflowToProcess {get; protected set;}
 	public int maxWorkers = 8;
 	public int workersCount {get; protected set;}
 	const float WORKFLOW_GAIN = 1;
@@ -14,12 +16,13 @@ public abstract class WorkBuilding : Building {
 	protected void PrepareWorkbuilding() {
 		PrepareBuilding();
 		workersCount = 0;
+		workflow = 0;
 	}
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
 		if (workersCount > 0) {
-			workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Manufacturing);
+			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			if (workflow >= workflowToProcess) {
 				LabourResult();
 				workflow -= workflowToProcess;
@@ -41,8 +44,19 @@ public abstract class WorkBuilding : Building {
 			else {
 				workersCount += x;
 			}
+			RecalculateWorkspeed();
 			return x;
 		}
+	}
+
+	public void FreeWorkers(int x) {
+		if (x > workersCount) x = workersCount;
+		workersCount -= x;
+		GameMaster.colonyController.AddWorkers(x);
+		RecalculateWorkspeed();
+	}
+	protected void RecalculateWorkspeed() {
+		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
 	}
 
 	protected void PrepareWorkbuildingForDestruction() {

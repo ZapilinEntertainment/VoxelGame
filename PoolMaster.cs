@@ -11,7 +11,7 @@ public class PoolMaster : MonoBehaviour {
 	public static Material dirt_material, grass_material, stone_material, lumber_material,
 		default_material, lr_red_material, lr_green_material, 
 		metalK_material, metalM_material, metalE_material, metalN_material, metalP_material, metalS_material, mineralF_material, mineralL_material,
-		elasticMass_material;
+	elasticMass_material, concrete_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 
 	public const int STONE_ID = 1, DIRT_ID = 2, GRASS_ID = 3, LUMBER_ID = 4, METAL_K_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
@@ -32,6 +32,7 @@ public class PoolMaster : MonoBehaviour {
 		mineralF_material = Resources.Load<Material>("Materials/MineralF");
 		mineralL_material = Resources.Load<Material>("Materials/MineralL");
 		elasticMass_material = Resources.Load<Material>("Materials/Plastic");
+		concrete_material = Resources.Load<Material>("Materials/Concrete");
 
 		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");

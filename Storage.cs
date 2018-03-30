@@ -41,7 +41,12 @@ public class Storage : MonoBehaviour {
 			}
 		}
 	}
-
+	/// <summary>
+	/// returns the residual of sended value
+	/// </summary>
+	/// <returns>The resources.</returns>
+	/// <param name="rtype">Rtype.</param>
+	/// <param name="count">Count.</param>
 	public float AddResources(ResourceType rtype, float count) {
 		if (totalVolume == maxVolume) return 0;
 		float freeSpace = maxVolume - totalVolume;

@@ -10,7 +10,7 @@ public class UI : MonoBehaviour {
 	UIMode mode; int argument = 0, serviceRectArgument = 0;
 	public Rect chosenObjectRect_real = Rect.zero, chosenObjectRect_planned = Rect.zero, staticRect = Rect.zero, 
 	objectInfo_rect = Rect.zero, serviceBoxRect = Rect.zero;
-	bool staticRectActive = false, infoRectActive = false, showBuildingCreateInfo = false;
+	bool staticRectActive = false, infoRectActive = false, showBuildingCreateInfo = false, showRecipesList = false;
 	PixelPosByte bufferedPosition; int bufferedArgument = -1, chosenBuildingIndex = 0;
 	SurfaceBlock chosenSurfaceBlock;
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
@@ -20,7 +20,7 @@ public class UI : MonoBehaviour {
 	GameObject quadSelector;
 	public float upPanelHeight, leftPanelWidth;
 	Texture  cellSelectionFrame_tx, grid16_tx, greenSquare_tx, orangeSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
-	citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx, energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
+	citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx, energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx, rightArrow_tx;
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
 	List<Factory> unspecializedFactories; bool hasUnspecializedFactories = false;
@@ -46,6 +46,7 @@ public class UI : MonoBehaviour {
 		energyLightning_icon_tx = Resources.Load<Texture>("Textures/energyLightning_icon");
 		buildingQuad_icon_tx = Resources.Load<Texture>("Textures/buildingQuad_icon");
 		demolishButton_tx = Resources.Load<Texture>("Textures/button_demolish");
+		rightArrow_tx = Resources.Load<Texture>("Textures/gui_arrowRight");
 	}
 	void Update() {
 		mousePos = Input.mousePosition;
@@ -201,7 +202,7 @@ public class UI : MonoBehaviour {
 		if (serviceRectArgument == -1) serviceBoxRect = Rect.zero;
 		staticRect = Rect.zero; staticRectActive = false;
 		infoRectActive = false; objectInfo_rect = Rect.zero;
-		showBuildingCreateInfo = false;
+		showBuildingCreateInfo = false; showRecipesList = false;
 	}
 
 	void ChangeArgument(int f_argument) {
@@ -233,7 +234,7 @@ public class UI : MonoBehaviour {
 				float side = p * SurfaceBlock.INNER_RESOLUTION;
 				staticRect = new Rect(Screen.width / 2f -  side/2f, Screen.height/2f - side/2f, side, side);
 				if (chosenSurfaceBlock.map == null) chosenSurfaceBlock.GetBooleanMap();
-				showBuildingCreateInfo = false;
+				showBuildingCreateInfo = false; 
 				chosenStructure = null;
 				break;
 			case 5: //accept destruction on construction site
@@ -253,9 +254,12 @@ public class UI : MonoBehaviour {
 		case UIMode.StructurePanel:
 			switch (argument) {
 			case 1:
-				chosenObjectRect_planned.width = 4 *k;
-				if (chosenStructure as Factory == null)	chosenObjectRect_planned.height = 3*k;
-				else chosenObjectRect_planned.height = 4*k;
+				showRecipesList = false;
+				chosenObjectRect_planned.width = 8 * k;
+				chosenObjectRect_planned.height =  3 *k;
+				if (chosenStructure is Factory) {
+					chosenObjectRect_planned.height += 4 *k; 
+				}
 				break;
 			}
 			break;
@@ -629,15 +633,64 @@ public class UI : MonoBehaviour {
 			GUI.Box(chosenObjectRect_real, GUIContent.none);
 			Rect rs1 = chosenObjectRect_real; 
 			if ( b != null) {
-				rs1.height /= 5;
-				if (GUI.Button(new Rect(rs1.x + rs1.width - k, rs1.y, k, k), demolishButton_tx)) {b.Demolish();}
+				rs1.height = k;
+				if (GUI.Button(new Rect(rs1.xMax - k, rs1.y, k, k), demolishButton_tx)) {b.Demolish();}
+				GUI.Label(rs1, chosenStructure.structureName + " (" + Localization.info_level + b.level.ToString() + ") "); 
 				rs1.y += rs1.height;
-				GUI.Label(rs1, chosenStructure.structureName + ' ' + Localization.info_level + b.level.ToString()); rs1.y += rs1.height;
-				bool act = GUI.Toggle(rs1, b.isActive, Localization.ui_activeSelf);
+
+				bool act = GUI.Toggle(new Rect(rs1.x, rs1.y, rs1.width / 2f, rs1.height), b.isActive, Localization.ui_activeSelf); 
 				if (act != b.isActive) b.SetActivationStatus(act);
+				GUI.DrawTexture( new Rect (rs1.x + rs1.width/2f, rs1.y, rs1.height, rs1.height), energyLightning_icon_tx, ScaleMode.StretchToFill);
+				if (b.isActive && b.energySupplied) {
+					string surplusString = b.energySurplus.ToString();
+					if (b.energySurplus > 0) surplusString = '+' + surplusString;
+					GUI.Label( new Rect(rs1.x + rs1.width/2f + rs1.height, rs1.y, rs1.width/2f - rs1.height, rs1.height),  surplusString );
+				}
+				else GUI.Label( new Rect(rs1.x + rs1.width/2f + rs1.height, rs1.y, rs1.width/2f - rs1.height, rs1.height),  "offline" );
+				rs1.y += rs1.height;
+				WorkBuilding wb = b as WorkBuilding;
+				if (wb != null) {
+					GUI.Label (new Rect(rs1.x, rs1.y, rs1.height, rs1.height), "0" );
+					int wcount = (int)GUI.HorizontalSlider(new Rect(rs1.x + rs1.height, rs1.y, rs1.width - 2 * rs1.height, rs1.height), wb.workersCount, 0, wb.maxWorkers);
+					GUI.Label( new Rect (rs1.xMax - rs1.height, rs1.y, rs1.height, rs1.height), wb.maxWorkers.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.RightOrientedLabel] );
+					GUI.Label( new Rect (rs1.x + rs1.width /2f - rs1.height/4f, rs1.y, rs1.height/2f, rs1.height/2f), wb.workersCount.ToString() );
+					if (wcount != wb.workersCount) {
+						if (wcount > wb.workersCount) GameMaster.colonyController.SendWorkers(wcount - wb.workersCount, wb, WorkersDestination.ForWorkBuilding);
+						else wb.FreeWorkers(wb.workersCount - wcount);
+					}
+					rs1.y += rs1.height; 
+				}
+
 				Factory f = chosenStructure as Factory;
-				if ( f != null ) {
-					// изображения ресурсов!
+				if ( f != null ) {					
+					if (showRecipesList) {
+						switch (f.specialization) {
+						case FactorySpecialization.Smeltery:
+							GUI.Box(new Rect(rs1.x, rs1.y, rs1.width, rs1.height * Recipe.smelteryRecipes.Length), GUIContent.none);
+							foreach ( Recipe r in Recipe.smelteryRecipes ) {
+								if (GUI.Button(rs1, r.input.name + " -> " + r.output.name)) {
+									f.SetRecipe(r);
+									ChangeArgument(1);
+								}
+								rs1.y += rs1.height;
+							}
+							break;
+						}
+					}
+					else {
+						if (GUI.Button(rs1, f.recipe.input.name + " -> " + f.recipe.output.name)) {
+								showRecipesList = true;
+								chosenObjectRect_planned.height += f.GetAppliableRecipesCount() * rs1.height;
+						}
+						rs1.y += rs1.height;
+					}
+					GUI.DrawTexture( new Rect(rs1.x, rs1.y, rs1.height * 2, rs1.height * 2), f.recipe.input.icon, ScaleMode.StretchToFill );
+					GUI.DrawTexture( new Rect(rs1.x + rs1.width / 3f, rs1.y, rs1.height* 2, rs1.height* 2), rightArrow_tx, ScaleMode.StretchToFill );
+					GUI.DrawTexture( new Rect (rs1.xMax - rs1.height * 2, rs1.y, rs1.height* 2, rs1.height* 2), f.recipe.output.icon, ScaleMode.StretchToFill );
+					rs1.y += rs1.height * 2 ;
+					GUI.Label( new Rect(rs1.x, rs1.y, rs1.height, rs1.height), f.recipe.inputValue.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel] );
+					GUI.Label( new Rect(rs1.xMax - rs1.height, rs1.y, rs1.height, rs1.height), f.recipe.outputValue.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel] );
+					if (f.recipe != Recipe.NoRecipe) GUI.Label ( new Rect(rs1.x + rs1.width / 3f, rs1.y, rs1.height * 2f, rs1.height), ((int)(f.workflow / f.recipe.workflowToResult * 100f)).ToString() + '%');
 				}
 			}
 			break;

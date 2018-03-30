@@ -24,7 +24,7 @@ public class Mine : WorkBuilding {
 		float pc = workObject.volume/CubeBlock.MAX_VOLUME;
 		if (pc > criticalVolume) {
 			if (workersCount > 0) {
-				workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Mining);
+				workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
 			}
 		}
 		else {

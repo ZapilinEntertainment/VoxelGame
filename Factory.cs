@@ -5,11 +5,9 @@ using UnityEngine;
 public enum FactoryType {Simple, Advanced, Recycler}
 public enum FactorySpecialization {Unspecialized, Smeltery}
 
+
 public class Factory : WorkBuilding {
-	public ResourceType inputResource {get; protected set;}
-	public float inputCount{get;protected set;}
-	public ResourceType outputResource {get; protected set;}
-	public float outputCount {get;protected set;}
+	public Recipe recipe {get; protected set;}
 	public FactoryType factoryType {get;protected set;}
 	public FactorySpecialization specialization;
 	protected Storage storage;
@@ -18,11 +16,9 @@ public class Factory : WorkBuilding {
 
 	void Awake () {
 		PrepareWorkbuilding();
-		inputResource = ResourceType.Nothing; outputResource = ResourceType.Nothing;
-		inputCount = 0; outputCount = 0;
 		factoryType = FactoryType.Simple;
 		storage = GameMaster.colonyController.storage;
-		workflowToProcess = ResourceType.CalculateWorkflowToProcess(inputResource, outputResource);
+		recipe = Recipe.NoRecipe;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -33,26 +29,56 @@ public class Factory : WorkBuilding {
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-		if (outputResourcesBuffer >= BUFFER_LIMIT) {
-			outputResourcesBuffer -= storage.AddResources(outputResource, outputResourcesBuffer);
-		}
-		else {
-			if (workersCount > 0) {
-				workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Manufacturing);
+		if (outputResourcesBuffer <= BUFFER_LIMIT) {
+			if (workersCount > 0 && recipe != Recipe.NoRecipe) {
+				workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
 				if (workflow >= workflowToProcess ) {
 					LabourResult();
 					workflow -= workflowToProcess;
 				}
 			}
 		}
+		if (outputResourcesBuffer > 0) {
+			outputResourcesBuffer =  storage.AddResources(recipe.output, outputResourcesBuffer); 
+		}
 	}
 
 	override protected void LabourResult() {
-		float input = storage.GetResources(inputResource, inputCount);
-		inputResourcesBuffer += input;
-		if (inputResourcesBuffer >= inputCount) {
-			inputResourcesBuffer -= inputCount;
-			outputResourcesBuffer += outputCount;
+		if (inputResourcesBuffer < recipe.inputValue) {
+			float input = storage.GetResources(recipe.input, recipe.inputValue - inputResourcesBuffer);
+			inputResourcesBuffer += input;
+		}
+		if (inputResourcesBuffer >= recipe.inputValue) {
+			inputResourcesBuffer -= recipe.inputValue;
+			outputResourcesBuffer += recipe.outputValue;
+		}
+	}
+
+	public void SetRecipe( Recipe r ) {
+		if (r == recipe) return;
+		if (recipe != Recipe.NoRecipe) {
+			if (inputResourcesBuffer > 0) storage.AddResources(recipe.input, recipe.inputValue);
+			if (outputResourcesBuffer > 0) storage.AddResources(recipe.output, recipe.outputValue);
+			}
+		inputResourcesBuffer = 0; outputResourcesBuffer = 0;
+		recipe = r;
+		workflowToProcess = r.workflowToResult;
+	}
+
+	public int GetAppliableRecipesCount() {
+		if (recipe == Recipe.NoRecipe) return 0;
+		else {
+			switch (specialization) {
+			case FactorySpecialization.Smeltery:
+				return Recipe.smelteryRecipes.Length;
+				break;
+			case FactorySpecialization.Unspecialized:
+				return 0;
+				break;
+				default:
+				return 0;
+				break;
+			}
 		}
 	}
 		

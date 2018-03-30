@@ -23,7 +23,7 @@ public class CleanSite : Worksite {
 			return;
 		}
 		if (workersCount  > 0) {
-			workflow += GameMaster.CalculateWorkflow(workersCount, WorkType.Clearing);
+			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if ( labourTimer <= 0 ) {
 				if (workflow >= 1) LabourResult();
@@ -62,6 +62,10 @@ public class CleanSite : Worksite {
 				}
 			}
 		Destroy(workObject.surfaceObjects[0].structure.gameObject);
+	}
+
+	protected override void RecalculateWorkspeed() {
+		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Clearing);
 	}
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
