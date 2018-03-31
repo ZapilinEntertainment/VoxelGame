@@ -90,6 +90,7 @@ public class ColonyController : MonoBehaviour {
 		int i = 0;
 		while (i < houses.Count)  {
 			if ( houses[i] == h) {
+				houses.RemoveAt(i);
 				RecalculateHousing();
 				break;
 			}

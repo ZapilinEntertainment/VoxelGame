@@ -90,7 +90,7 @@ public class Chunk : MonoBehaviour {
 									foreach (ChunkPos p in candidats) {
 											SurfaceBlock n = GetBlock(p.x, p.y, p.z).GetComponent<SurfaceBlock>();
 											if (n == null ) continue;
-											if (n.material_id == PoolMaster.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland== null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
+											if (n.material_id == ResourceType.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland== null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
 									}
 								}
 									b.AddGrassland();
@@ -369,7 +369,7 @@ public class Chunk : MonoBehaviour {
 			for (int j = 0; j< CHUNK_SIZE; j++) {
 				SurfaceBlock b = surfaceBlocks[i,j];
 				if (b == null) continue;
-				if (b.material_id == PoolMaster.DIRT_ID || b.material_id == PoolMaster.GRASS_ID) { // Acceptable for life
+				if (b.material_id == ResourceType.DIRT_ID) { // Acceptable for life
 					total += lifepowers[i,j];
 					afl.Add(b);
 				}
@@ -393,7 +393,7 @@ public class Chunk : MonoBehaviour {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 				SurfaceBlock sb = surfaceBlocks[x,z];
 				if (sb == null) continue;
-				if ((sb.material_id == PoolMaster.DIRT_ID || (sb.material_id == PoolMaster.GRASS_ID) && sb.grassland == null)) {					
+				if (sb.material_id == ResourceType.DIRT_ID && sb.grassland == null) {					
 					List<ChunkPos> candidats = new List<ChunkPos>();
 					bool rightSide = false, leftSide = false;
 					if (x + 1 < CHUNK_SIZE) {rightSide = true;candidats.Add(new ChunkPos(x+1, surfaceBlocks[x+1,z].pos.y ,z));	}
@@ -411,7 +411,7 @@ public class Chunk : MonoBehaviour {
 					foreach (ChunkPos p in candidats) {
 						SurfaceBlock b = GetBlock(p.x, p.y, p.z).GetComponent<SurfaceBlock>();
 						if (b == null) continue;
-						if (b.material_id == PoolMaster.DIRT_ID && !markedBlocks.Contains(p) &&b.grassland == null && Mathf.Abs(sb.pos.y - p.y) < 2) {dirt_for_grassland.Add(b); markedBlocks.Add(p);}
+						if (b.material_id == ResourceType.DIRT_ID && !markedBlocks.Contains(p) &&b.grassland == null && Mathf.Abs(sb.pos.y - p.y) < 2) {dirt_for_grassland.Add(b); markedBlocks.Add(p);}
 					}
 				}
 			}

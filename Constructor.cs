@@ -33,17 +33,17 @@ public class Constructor : MonoBehaviour {
 				if (height < 2) height = 2; else	if (height > size/2  ) height = size/2 ;
 				int y = 0;
 				for (; y < height; y++) {
-					dat[x,y + size/2,z] = PoolMaster.STONE_ID;
+					dat[x,y + size/2,z] = ResourceType.STONE_ID;
 				}
-				if (Random.value > 0.8f) dat[x,height+size/2-2,z] = PoolMaster.DIRT_ID; 
-				if (Random.value < 0.95f) dat[x,height+size/2-1,z] = PoolMaster.DIRT_ID; 
+				if (Random.value > 0.8f) dat[x,height+size/2-2,z] = ResourceType.DIRT_ID; 
+				if (Random.value < 0.95f) dat[x,height+size/2-1,z] = ResourceType.DIRT_ID; 
 				//down part
 				float pc = (1 - Mathf.Sqrt((x - size/2) * (x-size/2) + (z - size/2) * (z - size/2)) / radius);
 				pc *= pc * pc;
 				height = (int)(pc * size/2  + size/2 * perlin);
 				if (height < 0) height = 1; else if (height > size/2) height = size/2;
 				for (y = 0; y <= height; y++) {
-					dat[x,size/2  - y,z] = PoolMaster.STONE_ID;
+					dat[x,size/2  - y,z] = ResourceType.STONE_ID;
 				}
 			}
 		}
@@ -59,7 +59,7 @@ public class Constructor : MonoBehaviour {
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		x = 7;z=7;
-		surface[x,z].ReplaceMaterial(PoolMaster.GRASS_ID);
+		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), 500000);
 

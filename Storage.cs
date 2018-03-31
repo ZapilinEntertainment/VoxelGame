@@ -4,14 +4,22 @@ using UnityEngine;
 
 public class Storage : MonoBehaviour {
 	public float totalVolume = 0, maxVolume;
-	List<ResourceContainer> containers;
+	List<ResourceContainer> customResources;
 	List<StorageHouse> warehouses;
 	public bool showStorage = false;
+	public float[] standartResources;
+	bool[] resourceInStock;
+	int acceptableStandartTypesCount = 0;
 
 	void Awake() {
 		totalVolume = 0;
 		maxVolume = 0;
-		containers = new List<ResourceContainer>();
+		standartResources = new float[ResourceType.resourceTypesArray.Length];
+		resourceInStock = new bool[standartResources.Length];
+		for (int i = 0; i < standartResources.Length; i++) {
+			standartResources[i] = 0;
+			resourceInStock[i] = false;
+		}
 		warehouses = new List<StorageHouse>();
 	}
 
@@ -48,85 +56,152 @@ public class Storage : MonoBehaviour {
 	/// <param name="rtype">Rtype.</param>
 	/// <param name="count">Count.</param>
 	public float AddResources(ResourceType rtype, float count) {
-		if (totalVolume == maxVolume) return 0;
-		float freeSpace = maxVolume - totalVolume;
-		bool myTypeFound = false;
-		int i =0;
-		for (; i < containers.Count; i++) {
-			if (containers[i].type != rtype)  continue;
-			else myTypeFound = true;
-			if (count > freeSpace) {
-				containers[i].Add(freeSpace);
-				count -= freeSpace;
-				totalVolume = maxVolume;
+		if (totalVolume == maxVolume || count == 0) return 0;
+		float loadedCount = count;
+		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - totalVolume;
+		if (rtype.ID < 0 || rtype.ID >= standartResources.Length) { // custom resources
+			if (customResources == null) {
+				customResources = new List<ResourceContainer>();
+				customResources.Add(new ResourceContainer (rtype, loadedCount));
 			}
 			else {
-				containers[i].Add(count);
-				totalVolume += count;
-				count = 0;
+				bool myTypeFound = false;
+				for (int i = 0 ; i < customResources.Count; i++ ) {
+					if (customResources[i].type == rtype) {
+						myTypeFound = true;
+						customResources[i].Add(loadedCount);
+					}
+				}
+				if ( !myTypeFound ) {
+					customResources.Add( new ResourceContainer(rtype, loadedCount) );
+				}
 			}
 		}
-		if ( !myTypeFound ) {
-			if (count > freeSpace) {containers.Add(new ResourceContainer(rtype, freeSpace));totalVolume = maxVolume; count -= freeSpace;}
-			else {containers.Add(new ResourceContainer(rtype, count)); totalVolume+= count; count = 0;}
+		else { //standart resources
+			standartResources[rtype.ID] += loadedCount;
+			if (resourceInStock[rtype.ID] == false ) {resourceInStock[rtype.ID] = true;acceptableStandartTypesCount++;}
 		}
-		return count;
+		totalVolume += loadedCount;
+		return (count - loadedCount);
 	}
 	/// <summary>
 	/// Attention: container will be destroyed after resources transfer!
 	/// </summary>
 	/// <param name="rc">Rc.</param>
 	public void AddResources(ResourceContainer rc) {
-		if (totalVolume == maxVolume) return;
-		float freeSpace = maxVolume - totalVolume;
-		bool myTypeFound = false;
-		int i =0;
-		for (; i < containers.Count; i++) {
-			if (containers[i].type != rc.type)  continue;
-			else myTypeFound = true;
-			if (rc.volume > freeSpace) {
-				containers[i].Add(freeSpace);
-				totalVolume = maxVolume;
-			}
-			else {
-				containers[i].Add(rc.volume);
-				totalVolume += rc.volume;
-			}
-		}
-		if ( !myTypeFound ) {
-			if (rc.volume > freeSpace) {containers.Add(new ResourceContainer(rc.type, freeSpace));totalVolume = maxVolume;}
-			else {containers.Add(new ResourceContainer(rc.type, rc.volume)); totalVolume+= rc.volume;}
-		}
+		AddResources(rc.type, rc.volume);
 	}
 
 	public float GetResources(ResourceType rtype, float count) {
 		if (totalVolume == 0) return 0;
-		int i = 0;
 		float gainedCount = 0;
-		while ( i < containers.Count) {
-			if (containers[i].volume == 0) {containers.RemoveAt(i); continue;}
-			if (containers[i].type != rtype) {i++;continue;}
-			gainedCount = containers[i].Get(count);
-			totalVolume -= gainedCount;
-			if (containers[i].volume == 0) containers.RemoveAt(i);
-			break;
+		if (rtype.ID < 0 || rtype.ID > standartResources.Length) { // custom resource
+			if ( customResources != null )  {
+				for (int i = 0; i < customResources.Count; i++) {
+					if (customResources[i].type == rtype) {
+						gainedCount = customResources[i].Get(count);
+						if (customResources[i].volume == 0) {
+							customResources.RemoveAt(i);
+							if (customResources.Count == 0) customResources = null;
+						}
+						break;
+					}
+				}
+			}
+		}
+		else { //standart resource
+			if (standartResources[rtype.ID] >= count) {
+				gainedCount = count;
+				standartResources[rtype.ID] -= count;
+			}
+			else {
+				gainedCount = standartResources[rtype.ID];
+				standartResources[rtype.ID] = 0;
+				if (resourceInStock[rtype.ID] == true) {resourceInStock[rtype.ID] = false; acceptableStandartTypesCount--; }
+			}
 		}
 		return gainedCount;
+	}
+
+	public bool CheckBuildPossibilityAndCollectIfPossible (Building b) {
+		if (b.resourcesContain == null || b.resourcesContain.Count == 0) return true;
+
+		List<int> customResourcesIndexes = new List<int>();
+		foreach (ResourceContainer rc in b.resourcesContain ) {
+			if (rc.type.ID < 0 || rc.type.ID > standartResources.Length) { // custom resources
+				if (customResources == null) return false;
+				else {
+					bool resourceFound = false;
+					for ( int i = 0; i < customResources.Count; i++) {
+						if (customResources[i].type == rc.type) {
+							if (customResources[i].volume >= rc.volume) {
+								customResourcesIndexes.Add(i);
+							}
+							else return false;
+						}
+					}
+					if ( !resourceFound ) return false;
+				}
+			}
+			else { // standart resources
+				if (standartResources[rc.type.ID] < rc.volume ) return false;
+			}
+		}
+		// getting resources:
+		int j = 0;
+		foreach (ResourceContainer rc in b.resourcesContain ) {
+			if (rc.type.ID < 0 || rc.type.ID > standartResources.Length) { // custom resource
+				customResources[customResourcesIndexes[j]].Get(rc.volume);
+				if (customResources[customResourcesIndexes[j]].volume == 0 ) {
+					customResources.RemoveAt(customResourcesIndexes[j]);
+					if (customResources.Count == 0) customResources = null;
+				}
+				j++;
+			}
+			else {
+				standartResources[rc.type.ID] -= rc.volume;
+				if (standartResources[rc.type.ID] == 0) {
+					if (resourceInStock[rc.type.ID] == true) {
+						resourceInStock[rc.type.ID] = false; acceptableStandartTypesCount--;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	void OnGUI () {
 		if (showStorage) {
 			GUI.skin = GameMaster.mainGUISkin;
 			float k = GameMaster.guiPiece;
-			Rect r =new Rect(Screen.width - 8 *k, UI.current.upPanelHeight, 8*k , k * 0.75f * (containers.Count+1));
+			int positionsCount = acceptableStandartTypesCount + 1;
+			if (customResources != null) positionsCount += customResources.Count;
+			Rect r =new Rect(Screen.width - 8 *k, UI.current.upPanelHeight, 8*k , k * 0.75f * positionsCount);
 			UI.current.serviceBoxRect = r;
-			Rect r_name = new Rect (r.x, r.y, r.width * 0.7f, k*0.75f);
+			Rect r_image = new Rect(r.x, r.y, k *0.75f, k*0.75f);
+			Rect r_name = new Rect (r_image.x + r_image.width, r.y, r.width * 0.7f, r_image.height);
 			Rect r_count = new Rect(r.x + r_name.width * 0.5f, r.y, r.width * 0.5f, r_name.height);
-			if (containers.Count != 0 ) {
-				foreach (ResourceContainer rc in containers) {
-					GUI.Label(r_name, rc.type.name); 
-					GUI.Label(r_count, ((int)rc.volume).ToString(), GameMaster.mainGUISkin.customStyles[0]);
-					r_name.y += r_name.height; r_count.y += r_name.height;
+			int i = 0;
+			if (acceptableStandartTypesCount != 0) {				
+				for (; i < standartResources.Length; i++) {
+					if (standartResources[i] > 0.01f) {
+						ResourceType rt =  ResourceType.resourceTypesArray[i];
+						GUI.DrawTexture(r_image, rt.icon, ScaleMode.ScaleToFit); r_image.y += r_image.height;
+						GUI.Label(r_name, rt.name); r_name.y += r_image.height;
+						GUI.Label(r_count, ((int)(standartResources[i] * 100) / 100f).ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.RightOrientedLabel]);
+						r_count.y += r_image.height;
+					}
+				}
+			}
+			if (customResources != null) {
+				i = 0;
+				for (; i < customResources.Count; i++) {
+					if (customResources[i].volume > 0.01f) {
+						GUI.DrawTexture(r_image, customResources[i].type.icon, ScaleMode.ScaleToFit); r_image.y += r_image.height;
+						GUI.Label(r_name, customResources[i].type.name); r_name.y += r_image.height;
+						GUI.Label(r_count, ((int)(customResources[i].volume * 100) / 100f).ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.RightOrientedLabel]);
+						r_count.y += r_image.height;
+					}
 				}
 			}
 			GUI.Label(r_name, "Total:"); GUI.Label(r_count, ((int)totalVolume).ToString() + " / " + ((int)maxVolume).ToString(), GameMaster.mainGUISkin.customStyles[0]);

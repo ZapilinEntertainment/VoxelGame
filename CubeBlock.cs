@@ -52,7 +52,7 @@ public class CubeBlock : Block{
 
 	public override void ReplaceMaterial(int newId) {
 		material_id = newId;
-		Material m = PoolMaster.GetMaterialById(material_id);
+		Material m = ResourceType.GetMaterialById(material_id);
 		if (faces != null) {
 			foreach (MeshRenderer mr in faces) {
 				if (mr == null) continue;
@@ -119,7 +119,7 @@ public class CubeBlock : Block{
 			GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
 			break;
 		}
-		faces[i].material = PoolMaster.GetMaterialById(material_id);
+		faces[i].material = ResourceType.GetMaterialById(material_id);
 		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
 		faces[i].enabled = true;

@@ -73,6 +73,7 @@ public class GameMaster : MonoBehaviour {
 		lifeGrowCoefficient = 1;
 		//Localization.ChangeLanguage(Language.English);
 		geologyModule = gameObject.AddComponent<GeologyModule>();
+		difficulty = Difficulty.Normal;
 	}
 
 	void Start() {

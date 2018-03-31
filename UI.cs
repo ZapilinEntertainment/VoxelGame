@@ -507,6 +507,7 @@ public class UI : MonoBehaviour {
 					for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
 						if ( i <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.x_size && j <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.z_size) {
 							if (GUI.Button(new Rect(staticRect.x + i * p, staticRect.y + staticRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {								
+
 								surpos.x = i; surpos.z = j;
 								if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
 									Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
@@ -519,6 +520,7 @@ public class UI : MonoBehaviour {
 									ChangeArgument(5);
 									break;
 								}
+
 							}
 						}
 					}

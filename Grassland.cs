@@ -52,7 +52,7 @@ public class Grassland : MonoBehaviour {
 				if (stage != prevStage) {
 					switch (stage) {
 					case 0: 						
-						myBlock.surfaceRenderer.material = PoolMaster.dirt_material;
+						myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
 						break;
 					case 1:
 						int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
@@ -192,7 +192,7 @@ public class Grassland : MonoBehaviour {
 			if (stage != prevStage) {
 				switch (stage) {
 				case 0: 						
-					myBlock.surfaceRenderer.material = PoolMaster.dirt_material;
+					myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
 					break;
 				case 1:
 					int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
@@ -220,7 +220,7 @@ public class Grassland : MonoBehaviour {
 			else plants.RemoveAt(i);
 		}
 		myBlock.myChunk.AddLifePower((int)lifepower);
-		myBlock.surfaceRenderer.material = PoolMaster.dirt_material;
+		myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
 		Destroy(this);
 	}
 }

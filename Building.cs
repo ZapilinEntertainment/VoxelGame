@@ -6,7 +6,7 @@ public class Building : Structure {
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
 	public byte level = 0;
-	public List<ResourceContainer> resourcesContain;
+	public List<ResourceContainer> resourcesContain {get;protected set;}
 	public string resourcesContainSet = "";
 	public float energySurplus = 0, energyCapacity = 0;
 	protected bool connectedToPowerGrid = false; // подключение, контролирующееся игроком
@@ -18,7 +18,7 @@ public class Building : Structure {
 		PrepareStructure();
 		isActive = false;
 		energySupplied = false;
-		if (resourcesContainSet.Length != 0) {
+		if (resourcesContainSet != null) {
 			resourcesContain = new List<ResourceContainer>();
 			int x0 = 0;
 			int x = resourcesContainSet.IndexOf(':', 0);
@@ -57,8 +57,8 @@ public class Building : Structure {
 				y = resourcesContainSet.IndexOf(';', y+1);
 			}
 		}
-		resourcesContainSet = null;
 	}
+
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
@@ -72,7 +72,9 @@ public class Building : Structure {
 			GameMaster.colonyController.AddToPowerGrid(this);
 			connectedToPowerGrid = true;
 		}
+		resourcesContainSet = null;
 	}
+
 
 	virtual public void SetActivationStatus(bool x) {
 		isActive = x;

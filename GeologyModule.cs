@@ -25,7 +25,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalK_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = ResourceType.metal_K.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_K, 1+ Random.value * 100 * metalK_abundance);
 					allBoulders.Add(hr);
@@ -37,7 +37,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalM_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_M.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_M, 1+ Random.value * 100 * metalM_abundance);
 					allBoulders.Add(hr);
@@ -49,7 +49,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalE_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_E.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_E, 1+ Random.value * 100 * metalE_abundance);
 					allBoulders.Add(hr);
@@ -61,7 +61,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalN_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_N.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_N, 1+ Random.value * 100 * metalN_abundance);
 					allBoulders.Add(hr);
@@ -73,7 +73,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalP_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_P.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_P, 1+ Random.value * 100 * metalP_abundance);
 					allBoulders.Add(hr);
@@ -85,7 +85,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.metalS_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_S.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_S, 1+ Random.value * 100 * metalS_abundance);
 					allBoulders.Add(hr);
@@ -98,7 +98,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.mineralF_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.mineral_F.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_S, 1+ Random.value * 100 * mineralF_abundance);
 					allBoulders.Add(hr);
@@ -110,7 +110,7 @@ public class GeologyModule : MonoBehaviour {
 			if (bouldersCount != 0) {						
 				for (int i = 0; i< bouldersCount; i++) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.mineralL_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.mineral_L.material;
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.metal_S, 1+ Random.value * 100 * mineralL_abundance);
 					allBoulders.Add(hr);
@@ -123,12 +123,12 @@ public class GeologyModule : MonoBehaviour {
 		maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION - surface.surfaceObjects.Count;
 		if (maxObjectsCount > 0) {
 			int count = 0;
-			if (surface.material_id == PoolMaster.STONE_ID) count = (int)(maxObjectsCount * (0.05f + Random.value * 0.05f)); else count = (int)(Random.value * 0.08f);
+			if (surface.material_id == ResourceType.STONE_ID) count = (int)(maxObjectsCount * (0.05f + Random.value * 0.05f)); else count = (int)(Random.value * 0.08f);
 			List<PixelPosByte> points = surface.GetRandomPositions(2,2,count);
 			if (points.Count > 0) {
 				foreach (PixelPosByte p in points) {
 					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = PoolMaster.stone_material;
+					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.Stone.material;
 					g.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
 					HarvestableResource hr = g.GetComponent<HarvestableResource>();
 					hr.SetResources(ResourceType.Stone, 4 + Random.value * 10);
@@ -144,7 +144,7 @@ public class GeologyModule : MonoBehaviour {
 			float v = Random.value - GameMaster.LUCK_COEFFICIENT; 
 			float m = 0;
 			switch (workObject.material_id) {
-			case PoolMaster.STONE_ID :
+			case ResourceType.STONE_ID :
 				if (metalK_abundance >= v) {
 					m= metalK_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResources(ResourceType.metal_K, m); production -= m;
@@ -181,7 +181,7 @@ public class GeologyModule : MonoBehaviour {
 					GameMaster.colonyController.storage.AddResources(ResourceType.Stone, production); 
 				}
 				break;
-			case PoolMaster.DIRT_ID:
+			case ResourceType.DIRT_ID:
 				if (metalK_abundance >= v) {
 					m= metalK_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					GameMaster.colonyController.storage.AddResources(ResourceType.metal_K, m); production -= m;
@@ -199,13 +199,13 @@ public class GeologyModule : MonoBehaviour {
 				}
 				break;
 			default:
-				GameMaster.colonyController.storage.AddResources(ResourceType.GetResourceTypeByMaterialId(workObject.material_id), production); 
+				GameMaster.colonyController.storage.AddResources(ResourceType.GetResourceTypeById(workObject.material_id), production); 
 				break;
 			}
 			workObject.naturalFossils -= production;
 		}
 		else { // no fossils
-			GameMaster.colonyController.storage.AddResources(ResourceType.GetResourceTypeByMaterialId(workObject.material_id), production); 
+			GameMaster.colonyController.storage.AddResources(ResourceType.GetResourceTypeById(workObject.material_id), production); 
 		}
 	}
 }

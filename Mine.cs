@@ -10,9 +10,7 @@ public class Mine : WorkBuilding {
 	public byte oriented = 6; // 6 - all 
 
 	void Awake() {
-		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
-		isArtificial = markAsArtificial;
-		type = setType;
+		PrepareWorkbuilding();
 	}
 
 	void Update() {

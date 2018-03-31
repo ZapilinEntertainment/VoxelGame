@@ -161,8 +161,8 @@ public class SurfaceBlock : Block {
 
 	public override void ReplaceMaterial( int newId) {
 		material_id = newId;
-		surfaceRenderer.material =  PoolMaster.GetMaterialById(newId);
-		if (grassland != null && !(newId == PoolMaster.DIRT_ID ||newId == PoolMaster.GRASS_ID) ) grassland.Annihilation();
+		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
+		if (grassland != null) grassland.Annihilation();
 	}
 
 	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, CubeBlock f_basement) {
@@ -172,7 +172,7 @@ public class SurfaceBlock : Block {
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = f_material_id;
-		surfaceRenderer.material = PoolMaster.GetMaterialById(material_id);
+		surfaceRenderer.material = ResourceType.GetMaterialById(material_id);
 		type = BlockType.Surface; isTransparent = false;
 		basement = f_basement;
 		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
