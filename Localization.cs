@@ -8,7 +8,8 @@ public static class Localization {
 	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
 	rtype_dirt_name, rtype_dirt_descr, rtype_food_name, rtype_food_descr, rtype_metalK_ore_name, rtype_metalK_descr, rtype_metalM_ore_name, rtype_metalM_descr,
 	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
-	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_elasticMass_descr, rtype_concrete_name, rtype_concrete_descr;
+	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_elasticMass_descr, rtype_concrete_name, rtype_concrete_descr,
+	rtype_fertileSoil_name, rtype_fertileSoil_descr;
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf;
@@ -26,7 +27,7 @@ public static class Localization {
 			rtype_nothing_descr = "You shouldn't see this, it's a bug(";
 			rtype_dirt_name = "Dirt";
 			rtype_dirt_descr = "Organic cover of floating islands.";
-			rtype_food_name = "Supplies";
+			rtype_food_name = "Food";
 			rtype_food_descr = "Organic fuel for your citizens.";
 			rtype_lumber_name = "Wood";
 			rtype_lumber_descr = "Different elastic wood, growing only in Last Sector Dominion. Used for building and decorating.";
@@ -48,6 +49,7 @@ public static class Localization {
 			rtype_mineralL_descr = "Used to create elastic mass.";
 			rtype_elasticMass_descr = "Easy-forming by special influence relatively tough material, used for building and manufacturing";
 			rtype_concrete_name = "L-Concrete"; rtype_concrete_descr = "Comfortable and easy-forming building material.";
+			rtype_fertileSoil_name = "Fertile Soil"; rtype_fertileSoil_descr = "Soil, appliable for growing edibles.";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 

@@ -24,10 +24,10 @@ public struct PixelPosByte {
 
 public class Grassland : MonoBehaviour {
 	public const int MAX_LIFEFORMS_COUNT= 8;
-	public const float LIFEPOWER_TO_PREPARE = 16;
+	public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 30;
 
 	public SurfaceBlock myBlock {get;private set;}
-	float progress = 0, lifeTimer = 0;
+	float progress = 0, lifeTimer = 0, newLifeCreationTimer = 0;
 	public float lifepower;
 	List<Plant> plants;
 	byte prevStage = 0;
@@ -70,40 +70,44 @@ public class Grassland : MonoBehaviour {
 				}
 
 				if (lifepower > 2 * LIFEPOWER_TO_PREPARE) {
-					int i = 0; bool allFilled_check = true;
-					while (i < plants.Count) {
-						if (plants[i] == null) plants.RemoveAt(i);
-						else {
-							if (plants[i].full == false) allFilled_check = false;
-							i++;
-						}
-					}
-						if (plants.Count < MAX_LIFEFORMS_COUNT) {
-							level = 3;
-							PixelPosByte ppos = myBlock.GetRandomCell();
-							if (ppos != PixelPosByte.Empty) {
-								Plant p = (Instantiate(PoolMaster.current.grass_pref) as GameObject).GetComponent<Plant>(); lifepower-=1;
-								p.gameObject.SetActive(true);
-								p.SetBasement(myBlock, ppos);
-								plants.Add(p);
+					newLifeCreationTimer -= Time.deltaTime * GameMaster.gameSpeed * GameMaster.lifeGrowCoefficient;
+						int i = 0; bool allFilled_check = true;
+						while (i < plants.Count) {
+							if (plants[i] == null ) plants.RemoveAt(i);
+							else {
+								if (plants[i].full == false) allFilled_check = false;
+								i++;
 							}
-								//else print("no empty cells!");
 						}
-						else {
+					if (plants.Count >= MAX_LIFEFORMS_COUNT || Random.value > 0.5f ) {
 						if (allFilled_check == false) {
 							level = 4;
-							float lifeDelta = Mathf.Pow(Chunk.MAX_LIFEPOWER_TRANSFER * myBlock.fertility * GameMaster.lifeGrowCoefficient * GameMaster.gameSpeed, level);
+							float lifeDelta = Mathf.Pow(Chunk.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient * GameMaster.gameSpeed, level);
 							if (lifepower - lifeDelta < LIFEPOWER_TO_PREPARE * 2) { lifeDelta = lifepower - LIFEPOWER_TO_PREPARE * 2;}
 							int pos = (int)(Random.value * (plants.Count - 1));
 							if (lifeDelta > plants[pos].maxLifepower - plants[pos].lifepower) lifeDelta = plants[pos].maxLifepower - plants[pos].lifepower;
-							if ( plants[pos].full ) {
+							if ( plants[pos].full && plants[pos].growth >= 1 ) {
 								if (plants[pos].GetComponent<Plant2D>() != null ) ReplaceGrassToTree(pos);
 							}
 							else {
 								plants[pos].AddLifepower((int)lifeDelta); lifepower -= lifeDelta;
 							}			
 						}
+					}	
+						else {
+						level = 3;
+						if ( newLifeCreationTimer <= 0) {
+							PixelPosByte ppos = myBlock.GetRandomCell();
+							if (ppos != PixelPosByte.Empty) {
+								Plant p = PoolMaster.current.GetGrass().GetComponent<Plant>(); lifepower-=1;
+								p.gameObject.SetActive(true);
+								p.SetBasement(myBlock, ppos);
+								plants.Add(p);
+							}
+							//else print("no empty cells!");
+							newLifeCreationTimer = LIFE_CREATION_TIMER;
 						}
+					}
 				}
 				else { // lifepower falls down
 					if (plants != null && lifepower <= 0) {
@@ -122,13 +126,16 @@ public class Grassland : MonoBehaviour {
 	}
 
 	void ReplaceGrassToTree(int pos) {
-		Tree t = (Instantiate(PoolMaster.current.tree_pref) as GameObject).GetComponent<Tree>();
-		t.gameObject.SetActive(true);
+		Tree t = PoolMaster.current.GetTree().GetComponent<Tree>();
 		if (myBlock.ReplaceStructure(new SurfaceObject(plants[pos].innerPosition, t))) {
-			t.AddLifepower( (int)plants[pos].lifepower);
+			t.SetLifepower( plants[pos].lifepower);
 			plants[pos] = t;
+			t.gameObject.SetActive(true);
 		}
-		else Destroy(t.gameObject);
+		else {
+			print ("replacing with tree failed : grassland");
+			Destroy(t.gameObject);
+		}
 	}
 
 	public void AddLifepower(int count) {
@@ -165,22 +172,25 @@ public class Grassland : MonoBehaviour {
 			for (int i =0; i< plants_count; i++) {
 				float energy = lifepowers[i] * lifePiece;
 				if (energy >  Plant2D.MAXIMUM_LIFEPOWER) {
-					Tree t = Instantiate(PoolMaster.current.tree_pref).GetComponent<Tree>();	t.gameObject.SetActive(true);
+					GameObject g = PoolMaster.current.GetTree();
+					Tree t = g.GetComponent<Tree>();	t.gameObject.SetActive(true);
 					int pos = (int) (Random.value * (positions.Count - 1));
-					t.SetBasement(myBlock, positions[pos]);
-					t.AddLifepower((int)energy);
+					t.SetBasement(myBlock, positions[pos]); // DETECTED FAILURE!
+					t.SetLifepower(energy);
 					positions.RemoveAt(pos);
 					plants.Add(t);
 				}
 				else {
-					Plant2D pl = Instantiate(PoolMaster.current.grass_pref).GetComponent<Plant2D>(); pl.gameObject.SetActive(true);
+					GameObject g = PoolMaster.current.GetGrass();
+					Plant2D pl =g.GetComponent<Plant2D>(); pl.gameObject.SetActive(true);
 					int pos = (int) (Random.value * (positions.Count - 1));
 					pl.SetBasement(myBlock, positions[pos]);
-					pl.AddLifepower((int)energy);
+					pl.SetLifepower(energy);
 					positions.RemoveAt(pos);
 					plants.Add(pl);
 				}
-			}
+				}
+
 			lifepower = 2 * LIFEPOWER_TO_PREPARE;
 		}
 		else {

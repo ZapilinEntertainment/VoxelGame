@@ -4,8 +4,10 @@ GameMaster:
 	life_decay_speed
 	luck_coefficient
 	demolitionLossesPercent
+	lifepowerLossesPercent
 Colony Controller
 	gears_coefficient
 	labourEfficientcy_coefficient
 	happiness_coefficient
 	health_coefficient
+	birthrateCoefficient

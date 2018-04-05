@@ -565,6 +565,12 @@ public class Chunk : MonoBehaviour {
 		if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;
 		return (int)lifeTransfer;
 	}
+	public int TakeLifePowerWithForce (int count) {
+		if (count < 0) return 0;
+		lifePower -= count;
+		if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;
+		return count;
+	}
 
 	public SurfaceBlock[,] GetSurface() {return surfaceBlocks;}
 	public SurfaceBlock GetSurfaceBlock(byte x, byte z) {
@@ -636,6 +642,10 @@ public class Chunk : MonoBehaviour {
 
 	public void SetAccessPoint(ChunkPos pos) {
 		accessPoint = pos;
+	}
+
+	void OnGUI () {
+		GUI.Label(new Rect(0, 32, 64,32), lifePower.ToString());
 	}
 
 

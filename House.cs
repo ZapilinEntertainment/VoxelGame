@@ -4,13 +4,11 @@ using UnityEngine;
 
 public class House : Building {
 	public int housing = 2;
-	public float birthrate = 0.01f;
 
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
 		SetBuildingData(b,pos);
 		GameMaster.colonyController.AddHousing(this);
-		print (resourcesContain.Count.ToString() + ' ' +name);
 	}
 
 	override public void SetActivationStatus(bool x) {

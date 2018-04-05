@@ -5,10 +5,11 @@ using UnityEngine;
 public abstract class WorkBuilding : Building {
 	public float workflow {get;protected set;} 
 	protected float workSpeed = 0;
-	public float workflowToProcess {get; protected set;}
+	public float workflowToProcess{get; protected set;}
 	public int maxWorkers = 8;
 	public int workersCount {get; protected set;}
 	const float WORKFLOW_GAIN = 1;
+	public float workflowToProcess_setValue = 1;
 
 	void Awake() {
 		PrepareWorkbuilding();
@@ -17,6 +18,7 @@ public abstract class WorkBuilding : Building {
 		PrepareBuilding();
 		workersCount = 0;
 		workflow = 0;
+		workflowToProcess = workflowToProcess_setValue;
 	}
 
 	void Update() {
@@ -55,7 +57,7 @@ public abstract class WorkBuilding : Building {
 		GameMaster.colonyController.AddWorkers(x);
 		RecalculateWorkspeed();
 	}
-	protected void RecalculateWorkspeed() {
+	virtual protected void RecalculateWorkspeed() {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
 	}
 

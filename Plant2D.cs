@@ -5,7 +5,6 @@ using UnityEngine;
 public class Plant2D : Plant {
 	public LineRenderer body;
 	public const float MAXIMUM_LIFEPOWER = 50;
-	float startSize = 0.05f;
 
 	void Awake () {
 		PrepareStructure();
@@ -15,15 +14,25 @@ public class Plant2D : Plant {
 		full = false;
 	}
 
-	override public  void AddLifepower(int life) {
-		if (full || life < 0) return;
-		lifepower += life;
-		float height = lifepower / maxLifepower ;
-		if (height >= 1) {full = true; }
-		else {
-			body.SetPosition(1, body.GetPosition(0) + Vector3.up * (height * maxTall+ startSize));
-			body.startWidth = height * maxTall + startSize;
+
+	void Update() {
+		if (full || GameMaster.gameSpeed == 0) return;
+		float theoreticalGrowth = lifepower / maxLifepower;
+		if (theoreticalGrowth != growth) {
+			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
+			if (growth >= 1) full = true; 
+			body.SetPosition(1, body.GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
+			body.startWidth = growth * maxTall + startSize;
 		}
+		}
+
+
+	override public void SetLifepower (float p) {
+		lifepower = p;
+		if (lifepower >= maxLifepower) full = true; else full =false;
+		growth = lifepower/ maxLifepower;
+		body.SetPosition(1, body.GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
+		body.startWidth = growth * maxTall + startSize;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -31,5 +40,13 @@ public class Plant2D : Plant {
 		SetStructureData(b,pos);
 		body.SetPosition(0, transform.position);
 		body.SetPosition(1,transform.position + Vector3.up * startSize);
+	}
+
+	override public void Annihilate() {
+		if (basement != null) {
+			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+			basement =null;
+		}
+		PoolMaster.current.ReturnGrassToPool(this);
 	}
 }

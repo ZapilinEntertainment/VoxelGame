@@ -5,13 +5,12 @@ using System.IO;
 
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
-public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining}
-public enum GUIStyles {RightOrientedLabel, BorderlessButton, BorderlessLabel, CenterOrientedLabel}
+public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming}
+public enum GUIStyles {RightOrientedLabel, BorderlessButton, BorderlessLabel, CenterOrientedLabel, SystemAlert}
 
 public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
-	public float newGameSpeed = 1;
 
 	public Transform camTransform, camBasis;
 	Vector3 camLookPoint; bool moveCamToLookPoint = false;
@@ -29,7 +28,9 @@ public class GameMaster : MonoBehaviour {
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
 	public static float demolitionLossesPercent {get;private set;}
-	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10;
+	public static float lifepowerLossesPercent{get;private set;}
+	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
+	START_BIRTHRATE_COEFFICIENT = 0.001f;
 
 	public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
@@ -56,6 +57,11 @@ public class GameMaster : MonoBehaviour {
 	public static float guiPiece {get;private set;}
 	public static GUISkin mainGUISkin {get;private set;}
 
+	// FOR TESTING
+	public float newGameSpeed = 1;
+	public bool weNeedNoResources = false;
+	//---------
+
 	public GameMaster () {
 		if (realMaster != null) realMaster = null;
 		realMaster = this;
@@ -74,6 +80,7 @@ public class GameMaster : MonoBehaviour {
 		//Localization.ChangeLanguage(Language.English);
 		geologyModule = gameObject.AddComponent<GeologyModule>();
 		difficulty = Difficulty.Normal;
+		guiPiece = Screen.height / 24f;
 	}
 
 	void Start() {
@@ -81,11 +88,31 @@ public class GameMaster : MonoBehaviour {
 		prevCamPos = camTransform.position * (-1);
 
 		switch (difficulty) {
-		case Difficulty.Utopia: LUCK_COEFFICIENT = 1;	demolitionLossesPercent = 0; break;
-		case Difficulty.Easy: LUCK_COEFFICIENT = 0.7f; demolitionLossesPercent = 0.2f;  break;
-		case Difficulty.Normal: LUCK_COEFFICIENT = 0.5f; demolitionLossesPercent = 0.4f;  break;
-		case Difficulty.Hard: LUCK_COEFFICIENT = 0.1f; demolitionLossesPercent = 0.7f; break;
-		case Difficulty.Torture: LUCK_COEFFICIENT = 0.01f; demolitionLossesPercent = 1; break;
+		case Difficulty.Utopia: 
+			LUCK_COEFFICIENT = 1;	
+			demolitionLossesPercent = 0; 
+			lifepowerLossesPercent = 0;
+			break;
+		case Difficulty.Easy: 
+			LUCK_COEFFICIENT = 0.7f; 
+			demolitionLossesPercent = 0.2f;  
+			lifepowerLossesPercent = 0.1f;
+			break;
+		case Difficulty.Normal: 
+			LUCK_COEFFICIENT = 0.5f; 
+			demolitionLossesPercent = 0.4f;  
+			lifepowerLossesPercent = 0.3f;
+			break;
+		case Difficulty.Hard: 
+			LUCK_COEFFICIENT = 0.1f; 
+			demolitionLossesPercent = 0.7f; 
+			lifepowerLossesPercent = 0.5f;
+			break;
+		case Difficulty.Torture: 
+			LUCK_COEFFICIENT = 0.01f; 
+			demolitionLossesPercent = 1; 
+			lifepowerLossesPercent = 0.85f;
+			break;
 		}
 
 		switch (startGameWith) {
@@ -213,6 +240,7 @@ public class GameMaster : MonoBehaviour {
 		}
 	}
 
+
 	void LateUpdate() {
 		if (moveCamToLookPoint) {
 			float prevY = camBasis.transform.position.y, y = transform.position.y;
@@ -271,6 +299,7 @@ public class GameMaster : MonoBehaviour {
 		case WorkType.Clearing: workspeed  *= clearingSpeed;break;
 		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
 		case WorkType.Mining: workspeed  *= miningSpeed;break;
+		case WorkType.Farming : workspeed *= GameMaster.lifeGrowCoefficient;break;
 		}
 		return workspeed ;
 	}
@@ -282,7 +311,6 @@ public class GameMaster : MonoBehaviour {
 
 	void OnGUI() {
 		if (!fontSize_set) {
-			guiPiece = Screen.height / 24f;
 			mainGUISkin = Resources.Load<GUISkin>("MainSkin");
 			mainGUISkin.GetStyle("Label").fontSize = (int)(guiPiece/2f);
 			mainGUISkin.GetStyle("Button").fontSize = (int)(guiPiece/2f);
@@ -302,15 +330,20 @@ public class GameMaster : MonoBehaviour {
 			GUIStyle borderlessLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			borderlessLabel.normal = withoutImageStyle;
 			borderlessLabel.onHover = withoutImageStyle;
-			mainGUISkin.customStyles = new GUIStyle[4] {rightOrientedLabel, borderlessButton, borderlessLabel, centerOrientedLabel};
+			GUIStyle systemAlert = new GUIStyle(mainGUISkin.GetStyle("Label"));
+			systemAlert.normal = withoutImageStyle;
+			systemAlert.normal.textColor = Color.red;
+			systemAlert.fontSize = (int)guiPiece;
+			systemAlert.alignment = TextAnchor.MiddleCenter;
+			mainGUISkin.customStyles = new GUIStyle[5] {rightOrientedLabel, borderlessButton, borderlessLabel, centerOrientedLabel, systemAlert};
 			//testmode
 			//
 			GUI.skin = mainGUISkin;
 			fontSize_set = true;
 		}
-		//GUI.Label(new Rect(Screen.width - 128, 0, 128,32), "day "+day.ToString());
-		//GUI.Label(new Rect(Screen.width - 128, 32, 128,32), "week "+week.ToString());
-		//GUI.Label(new Rect(Screen.width - 128, 64, 128,32), "month "+month.ToString());
-		//GUI.Label(new Rect(Screen.width - 128, 96, 128,32), "year "+year.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 32, 128,32), "day "+day.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 64, 128,32), "week "+week.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 96, 128,32), "month "+month.ToString());
+		GUI.Label(new Rect(Screen.width - 128, 128, 128,32), "year "+year.ToString());
 	}
 }

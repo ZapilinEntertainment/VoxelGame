@@ -24,10 +24,13 @@ public class ColonyController : MonoBehaviour {
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
+	public float birthrateCoefficient{get;private set;}
+	public int deathCredit{get;private set;}
+	float peopleSurplus = 0;
 	public int totalLivespace{get;private set;}
-	public float birthrate {get; private set;}
 	List<House> houses;
-
+	Rect myRect;
+	float starvationTimer, starvationTime = 600;
 
 	void Awake() {
 		GameMaster.colonyController = this;
@@ -38,6 +41,7 @@ public class ColonyController : MonoBehaviour {
 		labourEfficientcy_coefficient = 1;
 		happiness_coefficient = 1;
 		health_coefficient = 1;
+		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
 
 		buildings_level_1 = new List<Building>();
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
@@ -48,6 +52,10 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_1[2].gameObject.SetActive(false);
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_1")) );
 		buildings_level_1[3].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_1")) );
+		buildings_level_1[4].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_1")) );
+		buildings_level_1[5].gameObject.SetActive(false);
 
 		minePrefs = new Mine[6];
 		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
@@ -59,25 +67,64 @@ public class ColonyController : MonoBehaviour {
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
 
+		// ENERGY CONSUMPTION
 		energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
 		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 		else {
 			if (energyStored < 0) { // отключение потребителей энергии до выравнивания
 				energyStored = 0;
 				int i = powerGrid.Count - 1;
-				float energySurplusCurrent = energySurplus;
 				while ( i >= 0 && energySurplus < 0) {
-					if (powerGrid[i].energySurplus < 0) {
-						powerGrid[i].SetEnergySupply(false);
-						energySurplusCurrent -= powerGrid[i].energySurplus;
-						if (energySurplusCurrent >= 0) {
-							RecalculatePowerGrid();
-							break;
-						}
-					}
+					ElementPowerSwitch(i, false);
 					i--;
 				}
 			}
+		}
+		//   FOOD   CONSUMPTION
+		float fc = FOOD_CONSUMPTION * citizenCount;
+		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
+			storage.standartResources[ResourceType.FOOD_ID] = 0;
+			if (starvationTimer <= 0) starvationTimer = starvationTime;
+		}
+		else {
+			storage.standartResources[ResourceType.FOOD_ID] -= fc;
+			if (starvationTimer > 0) starvationTimer = 0;
+		}
+
+		if (starvationTimer > 0) {
+			starvationTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			float pc = starvationTimer / starvationTime;
+			if (pc < 0.5f) {
+				pc /= 2f;
+				KillCitizens((int)(citizenCount * pc));
+			}
+		}
+
+		//  BIRTHRATE
+		if (birthrateCoefficient != 0) {
+			if (birthrateCoefficient > 0) {
+				peopleSurplus += birthrateCoefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
+				if (peopleSurplus > 1) {AddCitizens(1); peopleSurplus -= 1;}
+			}
+			else {
+				peopleSurplus += birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
+				if (peopleSurplus < - 1) {
+					KillCitizens(1); peopleSurplus += 1;
+				}
+			}
+		}
+	}
+
+	void ElementPowerSwitch( int index, bool energySupply) {
+		if ( !powerGrid[index].isActive || powerGrid[index].energySupplied == energySupply) return;
+		powerGrid[index].SetEnergySupply(energySupply);
+		if (energySupply) {
+			energySurplus += powerGrid[index].energySurplus;
+			totalEnergyCapacity += powerGrid[index].energyCapacity;
+		}
+		else {
+			energySurplus -= powerGrid[index].energySurplus;
+			totalEnergyCapacity -= powerGrid[index].energyCapacity;
 		}
 	}
 
@@ -98,14 +145,13 @@ public class ColonyController : MonoBehaviour {
 		}
 	}
 	public void RecalculateHousing() {
-		totalLivespace = 0; birthrate = 0;
+		totalLivespace = 0;
 		if (houses.Count == 0) return;
 		int i = 0;
 		while (i <houses.Count) {
 			if (houses[i] == null) {houses.RemoveAt(i); continue;}
 			if ( houses[i].isActive) {
 				totalLivespace += houses[i].housing;
-				birthrate += houses[i].birthrate;
 			}
 			i++;
 		}
@@ -113,16 +159,15 @@ public class ColonyController : MonoBehaviour {
 	public void AddToPowerGrid(Building b) {
 		if (b == null) return;
 		powerGrid.Add(b);
-		if (b.energySurplus > 0) b.SetEnergySupply(true);
-		RecalculatePowerGrid();
+		ElementPowerSwitch(powerGrid.Count - 1, true);
 	}
 	public void DisconnectFromPowerGrid(Building b) {
 		if (b == null ) return;
 		int i = 0;
 		while (i < powerGrid.Count)  {
 			if ( powerGrid[i] == b) {
+				ElementPowerSwitch(i, false);
 				powerGrid.RemoveAt(i);
-				RecalculatePowerGrid();
 				break;
 			}
 			else i++;
@@ -133,25 +178,17 @@ public class ColonyController : MonoBehaviour {
 		if (powerGrid.Count == 0) return;
 		int i =0; 
 		while ( i < powerGrid.Count ) {
-			if (powerGrid[i] == null) {powerGrid.RemoveAt(i); continue;}
 			if (powerGrid[i].isActive) {
 				if ( powerGrid[i].energySupplied ) {
 					energySurplus += powerGrid[i].energySurplus;
 					totalEnergyCapacity += powerGrid[i].energyCapacity;
 				}
 				else {
-					if ( powerGrid[i].energySurplus >= 0) { // just in case
-						powerGrid[i].SetEnergySupply(true);
+					if ( powerGrid[i].energySurplus >= 0 || (powerGrid[i].energySurplus < 0 && energyStored >= Mathf.Abs(powerGrid[i].energySurplus))) { 
+						powerGrid[i].SetEnergySupply(true); 
 						energySurplus += powerGrid[i].energySurplus;
 						totalEnergyCapacity += powerGrid[i].energyCapacity;
 					} 
-					else {
-						if (totalEnergyCapacity >= Mathf.Abs(powerGrid[i].energySurplus)) {
-							powerGrid[i].SetEnergySupply(true);
-							energySurplus += powerGrid[i].energySurplus;
-							totalEnergyCapacity += powerGrid[i].energyCapacity;
-						}
-					}
 				}
 			}
 			i++;
@@ -161,6 +198,13 @@ public class ColonyController : MonoBehaviour {
 	public void AddCitizens(int x) {
 		citizenCount += x;
 		freeWorkers += x;
+	}
+	public void KillCitizens(int x) {
+		if (freeWorkers < x) {			
+			deathCredit += x - freeWorkers;
+			freeWorkers = 0;
+		}
+		else freeWorkers -= x;
 	}
 	public void AddWorkers(int x) {
 		freeWorkers += x;
@@ -197,10 +241,11 @@ public class ColonyController : MonoBehaviour {
 	void OnGUI () {
 		float k = GameMaster.guiPiece;
 		if (showColonyInfo) {
-			Rect r = new Rect(Screen.width - 12 *k, UI.current.upPanelHeight, 4*k, k);
-			UI.current.serviceBoxRect = r;
-			Rect leftPart = new Rect(r.x, r.y, r.width * 0.75f, k);
-			Rect rightPart = new Rect(r.x + r.width/2f, r.y,r.width/2, leftPart.height);
+			if (UI.current.serviceBoxRect != Rect.zero) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelHeight, 8*k, k);
+			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelHeight, 8*k, k);
+			GUI.Box(myRect, GUIContent.none);
+			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
+			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);
 		}
 	}
 }

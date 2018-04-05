@@ -34,11 +34,12 @@ public class CleanSite : Worksite {
 
 	void LabourResult() {
 		Structure s = workObject.surfaceObjects[0].structure;
+		bool alreadyDestroyed = false;
 		if (s == null) {workObject.RequestAnnihilationAtIndex(0);return;}
 			Plant p = s.GetComponent<Plant>();
 			if (p != null) {
 				Plant2D p2d = s.GetComponent<Plant2D>();
-				if (p2d != null) {workflow --;}
+				if (p2d != null) { workflow --;}
 				else {
 					Tree t = s.GetComponent<Tree>();
 					if (t != null) {
@@ -47,6 +48,8 @@ public class CleanSite : Worksite {
 						workflow -= lumberDelta;
 					}
 				}
+			p.Annihilate();
+			alreadyDestroyed = true;
 			}
 			else {
 				HarvestableResource hr = s.GetComponent<HarvestableResource>();
@@ -61,7 +64,7 @@ public class CleanSite : Worksite {
 					}
 				}
 			}
-		Destroy(workObject.surfaceObjects[0].structure.gameObject);
+		if (!alreadyDestroyed) Destroy(workObject.surfaceObjects[0].structure.gameObject);
 	}
 
 	protected override void RecalculateWorkspeed() {
