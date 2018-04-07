@@ -27,8 +27,7 @@ public class WorksiteSign : MonoBehaviour {
 		if (showOnGUI == false) return;
 		float k = GameMaster.guiPiece;
 
-		Rect r = UI.current.chosenObjectRect_real;
-		GUI.Box(r, GUIContent.none);
+		Rect r = UI.current.rightPanelBox;
 		r.height /= 5f;
 		GUI.Label (r, actionLabel, GameMaster.mainGUISkin.customStyles[3]); 
 		r.y += r.height + k/2f; r.height = 1.5f * k; 

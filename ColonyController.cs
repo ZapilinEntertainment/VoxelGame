@@ -56,6 +56,8 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_1[4].gameObject.SetActive(false);
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_1")) );
 		buildings_level_1[5].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Mine_level_1")) );
+		buildings_level_1[6].gameObject.SetActive(false);
 
 		minePrefs = new Mine[6];
 		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
@@ -72,6 +74,7 @@ public class ColonyController : MonoBehaviour {
 		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 		else {
 			if (energyStored < 0) { // отключение потребителей энергии до выравнивания
+				GameMaster.realMaster.AddAnnouncement(Localization.announcement_powerFailure);
 				energyStored = 0;
 				int i = powerGrid.Count - 1;
 				while ( i >= 0 && energySurplus < 0) {
@@ -94,7 +97,11 @@ public class ColonyController : MonoBehaviour {
 		if (birthrateCoefficient != 0) {
 			if (birthrateCoefficient > 0) {
 				peopleSurplus += birthrateCoefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
-				if (peopleSurplus > 1) {AddCitizens(1); peopleSurplus -= 1;}
+				if (peopleSurplus > 1) {
+					int newborns = (int) peopleSurplus;
+					AddCitizens(newborns); 
+					peopleSurplus -= newborns;
+				}
 			}
 			else {
 				peopleSurplus += birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
@@ -222,7 +229,10 @@ public class ColonyController : MonoBehaviour {
 		float fc = FOOD_CONSUMPTION * citizenCount;
 		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
 			storage.standartResources[ResourceType.FOOD_ID] = 0;
-			if (starvationTimer <= 0) starvationTimer = starvationTime;
+			if (starvationTimer <= 0) {
+				starvationTimer = starvationTime;
+				GameMaster.realMaster.AddAnnouncement(Localization.announcement_starvation);
+			}
 		}
 		else {
 			storage.standartResources[ResourceType.FOOD_ID] -= fc;
@@ -241,8 +251,8 @@ public class ColonyController : MonoBehaviour {
 	void OnGUI () {
 		float k = GameMaster.guiPiece;
 		if (showColonyInfo) {
-			if (UI.current.serviceBoxRect != Rect.zero) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelHeight, 8*k, k);
-			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelHeight, 8*k, k);
+			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, k);
+			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, k);
 			GUI.Box(myRect, GUIContent.none);
 			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
 			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);

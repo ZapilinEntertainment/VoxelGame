@@ -13,7 +13,10 @@ public class GameMaster : MonoBehaviour {
 	public static float gameSpeed  {get; private set;}
 
 	public Transform camTransform, camBasis;
-	Vector3 camLookPoint; bool moveCamToLookPoint = false;
+	Vector3 camLookPoint; 
+	bool moveCamToLookPoint = false;
+	const float CAM_STANDART_DISTANCE = 3;
+
 	List<GameObject> cameraUpdateBroadcast;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
@@ -38,7 +41,7 @@ public class GameMaster : MonoBehaviour {
 
 	public const int START_WORKERS_COUNT = 10;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 10, gatheringSpeed = 5f, miningSpeed = 0.5f;
+	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f;
 
 
 	float t;
@@ -56,7 +59,12 @@ public class GameMaster : MonoBehaviour {
 	bool fontSize_set = false;
 	public static float guiPiece {get;private set;}
 	public static GUISkin mainGUISkin {get;private set;}
+
 	public string startResources_string;
+
+	List<string> gameAnnouncements_string; 
+	const byte ANNOUNCEMENT_LOG_LENGTH = 10;
+	float announcementTimer; const float ANNOUNCEMENT_CLEAR_TIME = 10f;
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
@@ -76,6 +84,7 @@ public class GameMaster : MonoBehaviour {
 		everydayUpdateList = new List<Component>();
 		everyYearUpdateList = new List<Component>();
 		windUpdateList = new List<Component>();
+		gameAnnouncements_string = new List<string>();
 
 		lifeGrowCoefficient = 1;
 		//Localization.ChangeLanguage(Language.English);
@@ -240,6 +249,16 @@ public class GameMaster : MonoBehaviour {
 				}
 			}
 		}
+		//   GAME   ANNOUNCEMENTS
+		if (announcementTimer > 0 ) {
+			announcementTimer -= Time.deltaTime * gameSpeed;
+			if (announcementTimer <= 0) {
+				if (gameAnnouncements_string.Count > 0) {
+					gameAnnouncements_string.RemoveAt(0);
+					if (gameAnnouncements_string.Count > 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
+				}
+			}
+		}
 	}
 
 
@@ -308,7 +327,15 @@ public class GameMaster : MonoBehaviour {
 
 	public void SetLookPoint(Vector3 point) {
 		camLookPoint = point;
-		// if doubletap moveCamToLookPoint = true;
+		if (Vector3.Distance(point, camBasis.transform.position) > CAM_STANDART_DISTANCE) moveCamToLookPoint = true;
+	}
+
+	public void AddAnnouncement(string s) {
+		if (gameAnnouncements_string.Count >= ANNOUNCEMENT_LOG_LENGTH) {
+			gameAnnouncements_string.RemoveAt(0);
+		}
+		gameAnnouncements_string.Add(s);
+		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 	}
 
 	void OnGUI() {
@@ -343,11 +370,22 @@ public class GameMaster : MonoBehaviour {
 			GUI.skin = mainGUISkin;
 			fontSize_set = true;
 		}
+		GUI.skin = mainGUISkin;
 
 		int sh = Screen.height;
 		if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
 		if (GUI.Button(new Rect(guiPiece, sh - guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
 		if (GUI.Button(new Rect(2 * guiPiece, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
-		GUI.Label(new Rect(0, sh - 2 * guiPiece, 6 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
+		GUI.Label(new Rect(0, sh - 2 * guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
+
+		if (gameAnnouncements_string.Count > 0) {
+			Rect anr = new Rect(0, sh - 2 * guiPiece - gameAnnouncements_string.Count * guiPiece * 0.75f, 10 * guiPiece, 0.75f * guiPiece);
+			GUI.color = Color.black;
+			foreach (string announcement in gameAnnouncements_string) {
+				GUI.Label(anr, announcement);
+				anr.y += anr.height;
+			}
+			GUI.color = Color.white;
+		}
 	}
 }
