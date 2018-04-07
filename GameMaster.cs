@@ -56,6 +56,7 @@ public class GameMaster : MonoBehaviour {
 	bool fontSize_set = false;
 	public static float guiPiece {get;private set;}
 	public static GUISkin mainGUISkin {get;private set;}
+	public string startResources_string;
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
@@ -138,6 +139,7 @@ public class GameMaster : MonoBehaviour {
 			if (xpos > 0) xpos --; else xpos++;
 			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
 			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
+			if ( startResources_string != null ) colonyController.storage.AddResources(ResourceType.DecodeResourcesString(startResources_string));
 
 			UI ui = gameObject.AddComponent<UI>();
 			ui.lineDrawer = systemDrawLR;
@@ -341,9 +343,11 @@ public class GameMaster : MonoBehaviour {
 			GUI.skin = mainGUISkin;
 			fontSize_set = true;
 		}
-		GUI.Label(new Rect(Screen.width - 128, 32, 128,32), "day "+day.ToString());
-		GUI.Label(new Rect(Screen.width - 128, 64, 128,32), "week "+week.ToString());
-		GUI.Label(new Rect(Screen.width - 128, 96, 128,32), "month "+month.ToString());
-		GUI.Label(new Rect(Screen.width - 128, 128, 128,32), "year "+year.ToString());
+
+		int sh = Screen.height;
+		if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
+		if (GUI.Button(new Rect(guiPiece, sh - guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
+		if (GUI.Button(new Rect(2 * guiPiece, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
+		GUI.Label(new Rect(0, sh - 2 * guiPiece, 6 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
 	}
 }

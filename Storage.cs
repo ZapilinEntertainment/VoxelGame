@@ -10,6 +10,7 @@ public class Storage : MonoBehaviour {
 	public float[] standartResources;
 	bool[] resourceInStock;
 	int acceptableStandartTypesCount = 0;
+	Rect myRect;
 
 	void Awake() {
 		totalVolume = 0;
@@ -91,6 +92,41 @@ public class Storage : MonoBehaviour {
 	public void AddResources(ResourceContainer rc) {
 		AddResources(rc.type, rc.volume);
 	}
+	public void AddResources(List<ResourceContainer> resourcesList) {
+		float freeSpace = maxVolume - totalVolume;
+		if (freeSpace == 0) return;
+		int idsCount = ResourceType.resourceTypesArray.Length;
+		int i =0;
+		while ( i < resourcesList.Count && freeSpace > 0) {
+			float appliableVolume = resourcesList[i].volume;
+			int id = resourcesList[i].type.ID;
+			if (appliableVolume > freeSpace) appliableVolume = freeSpace;
+			if (id > 0 && id < idsCount) {
+				standartResources[id] += appliableVolume;
+				if (resourceInStock[id] == false) {resourceInStock[id] = true; acceptableStandartTypesCount++;}
+				freeSpace -= appliableVolume;
+			}
+			else {
+				if (customResources != null) {
+					bool found = false;
+					foreach (ResourceContainer customRc in customResources) {
+						if (customRc.type.ID == id) {
+							found = true;
+							customRc.Add (appliableVolume);
+							freeSpace -= appliableVolume;
+							break;
+						}
+						if ( !found ) {
+							customResources.Add(customRc);
+							freeSpace -= appliableVolume;
+						} 
+					}
+				}
+			}
+			i++;
+		}
+		totalVolume = maxVolume - freeSpace;
+	}
 
 	public float GetResources(ResourceType rtype, float count) {
 		if (totalVolume == 0) return 0;
@@ -124,6 +160,9 @@ public class Storage : MonoBehaviour {
 	}
 
 	public bool CheckBuildPossibilityAndCollectIfPossible (Building b) {
+		//TEST ZONE
+		if (GameMaster.realMaster.weNeedNoResources) return true;
+		//-----
 		if (b.resourcesContain == null || b.resourcesContain.Count == 0) return true;
 
 		List<int> customResourcesIndexes = new List<int>();
@@ -176,11 +215,14 @@ public class Storage : MonoBehaviour {
 			float k = GameMaster.guiPiece;
 			int positionsCount = acceptableStandartTypesCount + 1;
 			if (customResources != null) positionsCount += customResources.Count;
-			Rect r =new Rect(Screen.width - 8 *k, UI.current.upPanelHeight, 8*k , k * 0.75f * positionsCount);
-			UI.current.serviceBoxRect = r;
-			Rect r_image = new Rect(r.x, r.y, k *0.75f, k*0.75f);
-			Rect r_name = new Rect (r_image.x + r_image.width, r.y, r.width * 0.7f, r_image.height);
-			Rect r_count = new Rect(r.x + r_name.width * 0.5f, r.y, r.width * 0.5f, r_name.height);
+
+			if (UI.current.serviceBoxRect != Rect.zero) myRect =new Rect(Screen.width - 16 *k, UI.current.upPanelHeight, 8*k , k * 0.75f * positionsCount);
+			else myRect =new Rect(Screen.width - 12 *k, UI.current.upPanelHeight, 8*k , k * 0.75f * positionsCount);
+
+			GUI.Box(myRect, GUIContent.none);
+			Rect r_image = new Rect(myRect.x, myRect.y, k *0.75f, k*0.75f);
+			Rect r_name = new Rect (r_image.x + r_image.width, myRect.y, myRect.width * 0.7f, r_image.height);
+			Rect r_count = new Rect(myRect.x + r_name.width * 0.5f, myRect.y, myRect.width * 0.5f, r_name.height);
 			int i = 0;
 			if (acceptableStandartTypesCount != 0) {				
 				for (; i < standartResources.Length; i++) {

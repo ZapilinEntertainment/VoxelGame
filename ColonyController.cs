@@ -80,23 +80,13 @@ public class ColonyController : MonoBehaviour {
 				}
 			}
 		}
-		//   FOOD   CONSUMPTION
-		float fc = FOOD_CONSUMPTION * citizenCount;
-		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
-			storage.standartResources[ResourceType.FOOD_ID] = 0;
-			if (starvationTimer <= 0) starvationTimer = starvationTime;
-		}
-		else {
-			storage.standartResources[ResourceType.FOOD_ID] -= fc;
-			if (starvationTimer > 0) starvationTimer = 0;
-		}
-
+		//   Starvation mechanics
 		if (starvationTimer > 0) {
 			starvationTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			float pc = starvationTimer / starvationTime;
 			if (pc < 0.5f) {
 				pc /= 2f;
-				KillCitizens((int)(citizenCount * pc));
+				KillCitizens((int)(citizenCount * (1 - pc)));
 			}
 		}
 
@@ -114,6 +104,7 @@ public class ColonyController : MonoBehaviour {
 			}
 		}
 	}
+
 
 	void ElementPowerSwitch( int index, bool energySupply) {
 		if ( !powerGrid[index].isActive || powerGrid[index].energySupplied == energySupply) return;
@@ -227,7 +218,16 @@ public class ColonyController : MonoBehaviour {
 	}
 
 	void EverydayUpdate() {
-		if (citizenCount > 0) foodCount -= FOOD_CONSUMPTION * citizenCount;
+		//   FOOD  CONSUMPTION
+		float fc = FOOD_CONSUMPTION * citizenCount;
+		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
+			storage.standartResources[ResourceType.FOOD_ID] = 0;
+			if (starvationTimer <= 0) starvationTimer = starvationTime;
+		}
+		else {
+			storage.standartResources[ResourceType.FOOD_ID] -= fc;
+			if (starvationTimer > 0) starvationTimer = 0;
+		}
 	}
 	void EveryYearUpdate() {
 		gears_coefficient -= GameMaster.GEARS_ANNUAL_DEGRADE;
