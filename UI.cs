@@ -13,7 +13,6 @@ public class UI : MonoBehaviour {
 	byte argument;
 	public Rect rightPanelBox, upPanelBox, acceptBox,systemInfoRect, buildingGridRect;
 	string systemInfoString; float systemInfoTimer = 0;
-	bool showRecipesList = false;
 	public bool  showBuildingCreateInfo {get; private set;}
 	PixelPosByte bufferedPosition; int chosenBuildingIndex = 0;
 	SurfaceBlock chosenSurfaceBlock;
@@ -24,10 +23,13 @@ public class UI : MonoBehaviour {
 	GameObject quadSelector;
 
 	Texture  cellSelectionFrame_tx, grid16_tx, greenSquare_tx, orangeSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
-	citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx, energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx, rightArrow_tx;
+	citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx, energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
+	public Texture rightArrow_tx{get;private set;}
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
 	List<Factory> unspecializedFactories; bool hasUnspecializedFactories = false;
+	public const int GUIDEPTH_UI_MAIN = 10, GUIDEPTH_WORKSITE_WINDOW = 9;
+
 
 	void Awake() {
 		current = this;
@@ -76,6 +78,7 @@ public class UI : MonoBehaviour {
 				Structure s = rh.collider.GetComponent<Structure>();
 				if (s != null) {
 					chosenStructure = s;
+					chosenStructure.showOnGUI = true;
 					Vector2 cursorPos = Camera.main.WorldToScreenPoint(s.transform.position);
 					mode = UIMode.StructurePanel;
 					GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
@@ -157,7 +160,7 @@ public class UI : MonoBehaviour {
 
 
 	bool cursorIntersectGUI(Vector2 point) {
-		if ( point.y <= upPanelBox.y || point.x  <= leftPanelWidth) return true;
+		if ( point.y <= upPanelBox.height || point.x  <= leftPanelWidth) return true;
 		if (mode != UIMode.View) {
 			if (point.x >= rightPanelBox.x) return true;
 			if (showBuildingCreateInfo) return true;
@@ -168,9 +171,11 @@ public class UI : MonoBehaviour {
 	public void DropFocus() {
 		lineDrawer.enabled = false;
 		quadSelector.SetActive(false);
-		chosenCubeBlock = null; chosenStructure = null; chosenSurfaceBlock = null; 
-		if (chosenWorksite != null) {chosenWorksite.HideGUI();chosenWorksite = null;}
-		showBuildingCreateInfo = false; showRecipesList = false;
+		chosenCubeBlock = null; 
+		if (chosenStructure != null) {chosenStructure.showOnGUI = false;chosenStructure = null; }
+		chosenSurfaceBlock = null; 
+		if (chosenWorksite != null) {chosenWorksite.HideGUI(); chosenWorksite = null;}
+		showBuildingCreateInfo = false;
 		argument = 0;
 	}
 
@@ -199,9 +204,9 @@ public class UI : MonoBehaviour {
 			GUI.Label(new Rect(k,0, 4*k,k), cc.freeWorkers.ToString() + " / " + cc.citizenCount.ToString() + " / "+ cc.totalLivespace.ToString());
 			GUI.DrawTexture(new Rect(5*k, 0, k, k), energy_icon_tx, ScaleMode.StretchToFill);
 			string energySurplusString = ((int)cc.energySurplus).ToString(); if (cc.energySurplus > 0) energySurplusString = '+' + energySurplusString;
-			GUI.Label( new Rect ( 6 * k, 0, 4 * k, k) , ((int)cc.energyStored).ToString() + " / " + ((int)cc.totalEnergyCapacity).ToString() + " ( " + energySurplusString + " )" );
-			GUI.DrawTexture ( new Rect ( 10 * k, 0, k, k), energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
-			GUI.Label ( new Rect ( 11 * k, 0, k, k ), ((int)cc.energyCrystalsCount).ToString() ) ;
+			GUI.Label( new Rect ( 6 * k, 0, 5 * k, k) , ((int)cc.energyStored).ToString() + " / " + ((int)cc.totalEnergyCapacity).ToString() + " ( " + energySurplusString + " )" );
+			GUI.DrawTexture ( new Rect ( 11 * k, 0, k, k), energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
+			GUI.Label ( new Rect ( 12 * k, 0, k, k ), ((int)cc.energyCrystalsCount).ToString() ) ;
 		} 
 		//upRight infopanel
 		Rect ur = new Rect(Screen.width - 4 *k, 0, 4 *k, upPanelBox.height);
@@ -229,6 +234,8 @@ public class UI : MonoBehaviour {
 
 		//  RIGHT  PANEL : 
 		if (mode != UIMode.View) {
+			int guiDepth = GUI.depth;
+			GUI.depth = GUIDEPTH_UI_MAIN;
 			GUI.Box(rightPanelBox, GUIContent.none);
 			Rect rr = new Rect(rightPanelBox.x, rightPanelBox.y, rightPanelBox.width, k);
 			if (GUI.Button(rr, "Close Panel")) SwitchUIMode(UIMode.View); // СДЕЛАТЬ  ШТОРКОЙ
@@ -363,15 +370,15 @@ public class UI : MonoBehaviour {
 					// сетка для размещения постройки
 					if (argument != 4) GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); // чтобы не дублировалось
 					float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
-					foreach (SurfaceObject so in chosenSurfaceBlock.surfaceObjects) {
+					foreach (Structure so in chosenSurfaceBlock.surfaceObjects) {
 						Texture t = cellSelectionFrame_tx;
-						switch (so.structure.type) {
+						switch (so.type) {
 						case StructureType.HarvestableResources: t = orangeSquare_tx;break;
 						case StructureType.MainStructure: t = whiteSpecial_tx;break;
 						case StructureType.Plant: t = greenSquare_tx;break;
 						case StructureType.Structure : t = whiteSquare_tx;break;
 						}
-						GUI.DrawTexture(new Rect(buildingGridRect.x + so.rect.x * p, buildingGridRect.y + buildingGridRect.height -  (so.rect.z+ so.rect.z_size) * p , p * so.rect.x_size, p * so.rect.z_size), t, ScaleMode.StretchToFill);
+						GUI.DrawTexture(new Rect(buildingGridRect.x + so.innerPosition.x * p, buildingGridRect.y + buildingGridRect.height -  (so.innerPosition.z+ so.innerPosition.z_size) * p , p * so.innerPosition.x_size, p * so.innerPosition.z_size), t, ScaleMode.StretchToFill);
 					}
 						
 					break;
@@ -451,7 +458,12 @@ public class UI : MonoBehaviour {
 				rr.y += rr.height;
 				Building b = chosenStructure as Building;
 				if ( b != null) {
-					if (GUI.Button(new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), demolishButton_tx)) {b.Demolish();}
+					if (GUI.Button(new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), demolishButton_tx)) {
+						mode = UIMode.View;
+						b.Demolish();
+						DropFocus();
+						return;
+					}
 					rr.y += rr.height;
 					GUI.Label(rr, chosenStructure.structureName + " (" + Localization.info_level + b.level.ToString() + ") "); 
 					rr.y += rr.height;
@@ -478,38 +490,8 @@ public class UI : MonoBehaviour {
 						}
 						rr.y += rr.height;
 					}
-
-					Factory f = chosenStructure as Factory;
-					if ( f != null ) {					
-						if (showRecipesList) {
-							switch (f.specialization) {
-							case FactorySpecialization.Smeltery:
-								GUI.Box(new Rect(rr.x, rr.y, rr.width, rr.height * Recipe.smelteryRecipes.Length), GUIContent.none);
-								foreach ( Recipe r in Recipe.smelteryRecipes ) {
-									if (GUI.Button(rr, r.input.name + " -> " + r.output.name)) {
-										f.SetRecipe(r);
-										argument = 1;
-									}
-									rr.y += rr.height;
-								}
-								break;
-							}
-						}
-						else {
-							if (GUI.Button(rr, f.recipe.input.name + " -> " + f.recipe.output.name)) {
-									showRecipesList = true;
-							}
-							rr.y += rr.height;
-						}
-						GUI.DrawTexture( new Rect(rr.x, rr.y, rr.height * 2, rr.height * 2), f.recipe.input.icon, ScaleMode.StretchToFill );
-						GUI.DrawTexture( new Rect(rr.x + rr.width / 3f, rr.y, rr.height* 2, rr.height* 2), rightArrow_tx, ScaleMode.StretchToFill );
-						GUI.DrawTexture( new Rect (rr.xMax - rr.height * 2, rr.y, rr.height* 2, rr.height* 2), f.recipe.output.icon, ScaleMode.StretchToFill );
-						rr.y += rr.height * 2;
-						GUI.Label( new Rect(rr.x, rr.y, rr.height, rr.height), ((int)f.inputResourcesBuffer).ToString() + '/' + f.recipe.inputValue.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel] );
-						GUI.Label( new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), f.recipe.outputValue.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel] );
-						if (f.recipe != Recipe.NoRecipe) GUI.Label ( new Rect(rr.x + rr.width / 3f, rr.y, rr.height * 2f, rr.height), ((int)(f.workflow / f.recipe.workflowToResult * 100f)).ToString() + '%');
-					}
 				}
+				chosenStructure.gui_ypos = rr.y;
 				break;
 			}
 	}

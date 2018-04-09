@@ -31,7 +31,7 @@ public class SurfaceBlock : Block {
 	public const byte INNER_RESOLUTION = 16;
 	public MeshRenderer surfaceRenderer {get;private set;}
 	public Grassland grassland{get;private set;}
-	public List<SurfaceObject> surfaceObjects{get;private set;}
+	public List<Structure> surfaceObjects{get;private set;}
 	public sbyte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
 	public CubeBlock basement; 
 	public int artificialStructures = 0;
@@ -52,7 +52,7 @@ public class SurfaceBlock : Block {
 		g.name = "upper_plane"; 
 		material_id = 0;
 		surfaceRenderer.enabled = true;
-		surfaceObjects = new List<SurfaceObject>();
+		surfaceObjects = new List<Structure>();
 		artificialStructures = 0;
 		isTransparent = false;
 	}
@@ -66,8 +66,8 @@ public class SurfaceBlock : Block {
 			if (surfaceObjects.Count != 0) {
 				int a = 0;
 				while (a < surfaceObjects.Count) {
-				if ( surfaceObjects[a].structure == null || !surfaceObjects[a].structure.gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
-				SurfaceRect sr = surfaceObjects[a].rect;					
+				if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
+				SurfaceRect sr = surfaceObjects[a].innerPosition;					
 					for (int i =0; i< sr.x_size; i++) {
 						for (int j =0; j < sr.z_size; j++) {
 							map[sr.x + i, sr.z + j] = true;
@@ -93,14 +93,14 @@ public class SurfaceBlock : Block {
 		}
 	}
 
-	public void AddStructure(SurfaceObject so) { // with autoreplacing
-		if (so.structure == null) return;
+	public void AddStructure(Structure s) { // with autoreplacing
+		if (s == null) return;
 		if (cellsStatus != 0) { 
-			SurfaceRect sr = so.rect;
+			SurfaceRect sr = s.innerPosition;
 			int i =0;
 			while (i < surfaceObjects.Count) {
-				if ( !surfaceObjects[i].structure == null ) {surfaceObjects.RemoveAt(i); continue;}
-				SurfaceRect a = surfaceObjects[i].rect;
+				if ( !surfaceObjects[i] == null ) {surfaceObjects.RemoveAt(i); continue;}
+				SurfaceRect a = surfaceObjects[i].innerPosition;
 				int leftX = -1, rightX = -1;
 				if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
 				if (a.x + a.x_size > sr.x + sr.x_size) rightX = sr.x + sr.x_size; else rightX = a.x + a.x_size;
@@ -110,21 +110,39 @@ public class SurfaceBlock : Block {
 				if (a.z + a.z_size > sr.z + sr.z_size) topZ = sr.z + sr.z_size; else topZ = a.z + a.z_size;
 				if (topZ <= downZ) {i++;continue;}
 				else {
-					if (surfaceObjects[i].structure is Plant) (surfaceObjects[i].structure as Plant).Annihilate();
-					else Destroy(surfaceObjects[i].structure.gameObject);
+					surfaceObjects[i].Annihilate( true );
 					i++;
 				}
 			}
 		}
-		surfaceObjects.Add(so);
-		so.structure.transform.parent = transform;
-		so.structure.transform.localPosition = GetLocalPosition(so.rect);
-		if (so.structure.isArtificial) artificialStructures++;
+		surfaceObjects.Add(s);
+		s.transform.parent = transform;
+		s.transform.localPosition = GetLocalPosition(s.innerPosition);
+		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
-	public void AddStructure(Structure s, PixelPosByte pos) { 
+	public void AddCellStructure(Structure s, PixelPosByte pos) { 
 		if (s == null) return;
-		surfaceObjects.Add(new SurfaceObject(new SurfaceRect(pos.x, pos.y,1,1), s));
+		if (map[pos.x, pos.y] == true) {
+			int i = 0;
+			while ( i < surfaceObjects.Count ) {
+				if ( surfaceObjects[i] == null) {surfaceObjects.RemoveAt(i); continue;}
+				SurfaceRect sr = surfaceObjects[i].innerPosition;
+				if (sr.x <= pos.x && sr.z <= pos.y && sr.x + sr.x_size >= pos.x && sr.z+ sr.z_size >= pos.y) {
+					if ( surfaceObjects[i].undestructible || (surfaceObjects[i].type == StructureType.MainStructure && s.type != StructureType.MainStructure))
+					{	
+						s.Annihilate( true);
+						return;
+					}
+					else {
+						surfaceObjects[i].Annihilate( true );
+						break; 
+					}
+				}
+				i++;
+			}
+		}
+		surfaceObjects.Add(s);
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1, 1));
 		if (s.isArtificial) artificialStructures++;
@@ -139,9 +157,7 @@ public class SurfaceBlock : Block {
 		List<PixelPosByte> pos = GetRandomCells(cellObjects.Count);
 		for (int i = 0; i < cellObjects.Count; i++) {
 			if (cellObjects[i] == null) continue;
-			SurfaceObject so = new SurfaceObject(new SurfaceRect(pos[i].x, pos[i].y, 1,1), cellObjects[i]);
 			cellObjects[i].SetBasement(this, pos[i]);
-			surfaceObjects.Add(so);
 		}
 		CellsStatusUpdate();
 	}
@@ -151,7 +167,6 @@ public class SurfaceBlock : Block {
 			if (cellObjects[i] == null) continue;
 			SurfaceObject so = new SurfaceObject(new SurfaceRect(pos[i].x, pos[i].y, 1,1), cellObjects[i]);
 			cellObjects[i].SetBasement(this, pos[i]);
-			surfaceObjects.Add(so);
 		}
 		CellsStatusUpdate();
 	}
@@ -185,7 +200,10 @@ public class SurfaceBlock : Block {
 	public override void ReplaceMaterial( int newId) {
 		material_id = newId;
 		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
-		if (grassland != null) grassland.Annihilation();
+		if (grassland != null) {
+			grassland.Annihilation();
+			CellsStatusUpdate();
+		}
 	}
 
 	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, CubeBlock f_basement) {
@@ -344,39 +362,20 @@ public class SurfaceBlock : Block {
 		return acceptableVariants;
 	}
 
-	public bool ReplaceStructure(SurfaceObject so) {
-		if (cellsStatus == 0 || so.structure == null) return false;
-		bool found = false;
-		int i = 0;
-		while (i < surfaceObjects.Count) {
-			if (surfaceObjects[i].rect == so.rect) {
-				if (surfaceObjects[i].structure != null) surfaceObjects[i].structure.Annihilate();
-					so.structure.gameObject.SetActive(true);
-					so.structure.SetBasement(this, new PixelPosByte(so.rect.x, so.rect.z));
-					return true;
-			}
-			else {
-				if (surfaceObjects[i].structure == null) {
-					surfaceObjects.RemoveAt(i);
-					continue;
-				}
-			}
-			i++;
-		}
-		return found;
-	}
 
 	public bool IsAnyBuildingInArea(SurfaceRect sa) {
 		if (surfaceObjects == null || surfaceObjects.Count == 0) return false;
 		bool found = false;
-		foreach (SurfaceObject suro in surfaceObjects) {
-			if ( !suro.structure.isArtificial ) continue;
+		foreach (Structure suro in surfaceObjects) {
+			if ( !suro.isArtificial ) continue;
 			int minX = -1, maxX = -1, minZ = -1, maxZ = -1;
-			if (sa.x > suro.rect.x) minX = sa.x; else minX = suro.rect.x;
-			if (sa.x + sa.x_size < suro.rect.x + suro.rect.x_size) maxX = sa.x+sa.x_size; else maxX = suro.rect.x + suro.rect.x_size;
+			if (sa.x > suro.innerPosition.x) minX = sa.x; else minX = suro.innerPosition.x;
+			if (sa.x + sa.x_size < suro.innerPosition.x + suro.innerPosition.x_size) maxX = sa.x+sa.x_size; 
+			else maxX = suro.innerPosition.x + suro.innerPosition.x_size;
 			if (minX >= maxX) continue;
-			if (sa.z > suro.rect.z) minZ = sa.z; else minZ = suro.rect.z;
-			if (sa.z + sa.z_size < suro.rect.z + suro.rect.z_size ) maxZ = sa.z + sa.z_size; else maxZ = suro.rect.z + suro.rect.z_size;
+			if (sa.z > suro.innerPosition.z) minZ = sa.z; else minZ = suro.innerPosition.z;
+			if (sa.z + sa.z_size < suro.innerPosition.z + suro.innerPosition.z_size ) maxZ = sa.z + sa.z_size; 
+			else maxZ = suro.innerPosition.z + suro.innerPosition.z_size;
 			if (minZ >= maxZ) continue;
 			else {found = true; break;}
 		}
@@ -386,10 +385,11 @@ public class SurfaceBlock : Block {
 	public void RequestAnnihilationAtIndex(int index) {
 		if (index < 0 || index >= surfaceObjects.Count) return;
 		else {
-			if (surfaceObjects[index].structure == null ) {
+			if (surfaceObjects[index] == null ) {
 				surfaceObjects.RemoveAt(index);
 				CellsStatusUpdate();
 			}
 		}
 	}
+		
 }

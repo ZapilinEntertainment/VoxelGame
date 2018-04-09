@@ -7,6 +7,7 @@ public class Constructor : MonoBehaviour {
 	public float TERRAIN_ROUGHNESS = 0.3f;
 	Chunk c;
 	public float seed = 1.1f;
+	public int lifepowerToGeneration = 50000;
 
 	// Use this for initialization
 	void Awake () {
@@ -61,7 +62,7 @@ public class Constructor : MonoBehaviour {
 		x = 7;z=7;
 		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
-		chunk.GenerateNature(new PixelPosByte(x,z), 500000);
+		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);
 
 		GameObject pref;
 		if (Random.value > 0.5f) pref = Resources.Load<GameObject>("Structures/Tree of Life") ; else pref = Resources.Load<GameObject>("Structures/LifeStone");

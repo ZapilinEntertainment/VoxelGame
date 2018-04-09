@@ -6,7 +6,7 @@ public abstract class Worksite : MonoBehaviour {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
 	protected float workflow, labourTimer, workSpeed;
-	public GameObject sign{get; protected set;}
+	public WorksiteSign sign{get; protected set;}
 
 	void Awake () {
 		labourTimer = 0; workflow = 0;
@@ -29,7 +29,7 @@ public abstract class Worksite : MonoBehaviour {
 	}
 
 	public void HideGUI() {
-		sign.GetComponent<WorksiteSign>().showOnGUI = false;
+		sign.showOnGUI = false;
 	}
 
 	public void FreeWorkers(int x) {
@@ -42,6 +42,6 @@ public abstract class Worksite : MonoBehaviour {
 
 	void OnDestroy() {
 		GameMaster.colonyController.AddWorkers(workersCount);
-		if (sign != null) Destroy(sign);
+		if (sign != null) Destroy(sign.gameObject);
 	}
 }

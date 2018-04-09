@@ -20,10 +20,9 @@ public class Chunk : MonoBehaviour {
 	SurfaceBlock[,] surfaceBlocks;
 	List<GameObject> structures;
 	public float lifePower = 0, lifeSurplus = 0;
-	public const float LIFEPOWER_TICK = 0.3f; float lifepower_timer = 0;
+	 float lifepower_timer = 0;
 	List<SurfaceBlock> dirt_for_grassland;
 	List<Grassland> grassland_blocks;
-	public const int MAX_LIFEPOWER_TRANSFER = 16;
 	public const byte CHUNK_SIZE = 16;
 	public static int energy_take_speed = 10;
 	public ChunkPos accessPoint{get;private set;}
@@ -94,7 +93,7 @@ public class Chunk : MonoBehaviour {
 									}
 								}
 									b.AddGrassland();
-									int lifeTransfer = (int)(MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+									int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
 									if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
 									else {b.grassland.AddLifepower((int)lifePower); lifePower = 0;}
 									grassland_blocks.Add(b.grassland);
@@ -110,7 +109,7 @@ public class Chunk : MonoBehaviour {
 								int pos = (int)(Random.value * (grassland_blocks.Count - 1));
 								gl = grassland_blocks[pos];
 								if (gl != null) {
-									int  count = (int)(Mathf.Pow(MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient, gl.level));
+									int  count = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
 									if (lifePower < count)  count = (int)lifePower;
 									gl.AddLifepower(count);
 									lifePower -= count;
@@ -119,7 +118,7 @@ public class Chunk : MonoBehaviour {
 						}
 					}
 					}
-					if (dirt_for_grassland.Count != 0 || grassland_blocks.Count != 0) lifepower_timer = LIFEPOWER_TICK;
+					if (dirt_for_grassland.Count != 0 || grassland_blocks.Count != 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
 				}
 				if (lifePower < -100) { // LifePower decreases
 					//print (grassland_blocks.Count);
@@ -131,7 +130,7 @@ public class Chunk : MonoBehaviour {
 							gl = grassland_blocks[pos];
 							if (gl != null) {
 								if (gl.lifepower <= 0 ) gl.Annihilation();
-								else lifePower += gl.TakeLifepower(energy_take_speed * gl.level);
+								else lifePower += gl.TakeLifepower(energy_take_speed);
 								pos++;
 							}
 							else {
@@ -140,7 +139,7 @@ public class Chunk : MonoBehaviour {
 						}
 					}
 				}
-				lifepower_timer = LIFEPOWER_TICK;
+				lifepower_timer = GameMaster.LIFEPOWER_TICK;
 		}
 		}
 	}
@@ -556,19 +555,19 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
-	public void AddLifePower (int count) {lifePower += count; if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;}
+	public void AddLifePower (int count) {lifePower += count; if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;}
 	public int TakeLifePower (int count) {
 		if (count < 0) return 0;
 		float lifeTransfer = count;
 		if (lifeTransfer > lifePower) {if (lifePower >= 0) lifeTransfer = lifePower; else lifeTransfer = 0;}
 		lifePower -= lifeTransfer;
-		if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;
+		if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
 		return (int)lifeTransfer;
 	}
 	public int TakeLifePowerWithForce (int count) {
 		if (count < 0) return 0;
 		lifePower -= count;
-		if (lifepower_timer == 0) lifepower_timer = LIFEPOWER_TICK;
+		if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
 		return count;
 	}
 

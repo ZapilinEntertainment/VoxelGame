@@ -14,7 +14,7 @@ public class Plant : Structure {
 	[SerializeField]
 	protected float growSpeed = 0.1f;
 	public float growth{get;protected set;}
-	public PlantType plantType;
+	public PlantType plantType{get;protected set;}
 
 	void Awake() {
 		PrepareStructure();
@@ -23,6 +23,7 @@ public class Plant : Structure {
 		full = false;
 		maxTall = 0.15f + Random.value * 0.05f;
 		growth = 0;
+		type = StructureType.Plant;
 	}
 
 	void Update() {
@@ -38,18 +39,29 @@ public class Plant : Structure {
 		transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 	}
 
-	public virtual void AddLifepower(int life) {
+	public virtual void AddLifepower(float life) {
 		if (full) return;
-		lifepower += life;
+		lifepower += (int)life;
 		if (lifepower >= maxLifepower) {full = true; growth = lifepower/ maxLifepower;}
 	}
+	public virtual void AddLifepowerAndCalculate(float life) {
+		AddLifepower((int)life);
+	}
 		
-	public virtual float TakeLifepower(int life) {
+	public virtual int TakeLifepower(float life) {
 		float lifeTransfer = life;
 		if (life > lifepower) {if (lifepower >= 0) lifeTransfer = lifepower; else lifeTransfer = 0;}
 		lifepower -= lifeTransfer;
-		if (lifepower < maxLifepower) full = false;
+		if (lifepower < maxLifepower) {
+			full = false;
+			if (lifepower <= 0) Dry();
+		}
 		return (int)lifeTransfer;
+	}
+
+
+	virtual protected void Dry() {
+		Annihilate( false );
 	}
 
 	virtual public void SetLifepower(float p) {
@@ -58,8 +70,10 @@ public class Plant : Structure {
 		if (lifepower < maxLifepower) full = false; else full = true;
 	}
 
-	public override void Annihilate() {
-		basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+	public override void Annihilate( bool forced ) {
+		if (basement != null && !forced ) {
+			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+		}
 		basement =null;
 		Destroy(gameObject);
 	}

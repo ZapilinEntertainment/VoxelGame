@@ -6,6 +6,9 @@ public class Spriter : MonoBehaviour {
 	void Awake() {
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
 	}
+	void Start() {
+		CameraUpdate(Camera.main.transform);
+	}
 
 	public void CameraUpdate(Transform t) {
 		Vector3 dir = t.position - transform.position;

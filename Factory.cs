@@ -12,13 +12,16 @@ public class Factory : WorkBuilding {
 	public FactorySpecialization specialization;
 	protected Storage storage;
 	protected const float BUFFER_LIMIT = 10;
-	protected float inputResourcesBuffer = 0, outputResourcesBuffer = 0;
+	public float inputResourcesBuffer  {get; protected set;}
+	protected float outputResourcesBuffer = 0;
+	bool gui_showRecipesList = false;
 
 	void Awake () {
 		PrepareWorkbuilding();
 		factoryType = FactoryType.Simple;
 		storage = GameMaster.colonyController.storage;
 		recipe = Recipe.NoRecipe;
+		inputResourcesBuffer = 0;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -82,6 +85,38 @@ public class Factory : WorkBuilding {
 		}
 	}
 		
+	void OnGUI() {
+		if ( !showOnGUI ) return;
+		Rect rr = UI.current.rightPanelBox;
+		rr.y = gui_ypos; rr.height = GameMaster.guiPiece;
+		if (gui_showRecipesList) {
+			switch (specialization) {
+			case FactorySpecialization.Smeltery:
+				GUI.Box(new Rect(rr.x, rr.y, rr.width, rr.height * Recipe.smelteryRecipes.Length), GUIContent.none);
+				foreach ( Recipe r in Recipe.smelteryRecipes ) {
+					if (GUI.Button(rr, r.input.name + " -> " + r.output.name)) {
+						SetRecipe(r);
+					}
+					rr.y += rr.height;
+				}
+				break;
+			}
+		}
+		else {
+			if (GUI.Button(rr, recipe.input.name + " -> " + recipe.output.name)) {
+				gui_showRecipesList = true;
+			}
+			rr.y += rr.height;
+		}
+		GUI.DrawTexture( new Rect(rr.x, rr.y, rr.height * 2, rr.height * 2), recipe.input.icon, ScaleMode.StretchToFill );
+		GUI.DrawTexture( new Rect(rr.x + rr.width / 3f, rr.y, rr.height* 2, rr.height* 2), UI.current.rightArrow_tx, ScaleMode.StretchToFill );
+		GUI.DrawTexture( new Rect (rr.xMax - rr.height * 2, rr.y, rr.height* 2, rr.height* 2), recipe.output.icon, ScaleMode.StretchToFill );
+		rr.y += rr.height * 2;
+		GUI.Label( new Rect(rr.x, rr.y, rr.height, rr.height), ((int)inputResourcesBuffer).ToString() + '/' + recipe.inputValue.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel] );
+		GUI.Label( new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), recipe.outputValue.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel] );
+		if (recipe != Recipe.NoRecipe) GUI.Label ( new Rect(rr.x + rr.width / 3f, rr.y, rr.height * 2f, rr.height), ((int)(workflow / recipe.workflowToResult * 100f)).ToString() + '%');
+	}
+
 	void OnDestroy() {
 		PrepareWorkbuildingForDestruction();
 		UI.current.RemoveFromFactoriesList(this);

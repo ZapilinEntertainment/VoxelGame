@@ -16,7 +16,10 @@ public class FallingTree : MonoBehaviour {
 		else {
 			transform.Translate(Vector3.down *0.01f* Time.deltaTime * GameMaster.gameSpeed, Space.World);
 			timer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (timer <= 0) PoolMaster.current.ReturnTreeToPool(gameObject);
+			if (timer <= 0) {
+				PoolMaster.current.ReturnTreeToPool(gameObject);
+				Destroy(this);
+			}
 		}
 	}
 }

@@ -15,6 +15,8 @@ public static class Localization {
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
 	public static string info_housing, info_population, info_level;
+	public static string announcement_powerFailure, announcement_starvation;
+	public static string objects_left, extracted, work_has_stopped;
 
 	static Localization() {
 		ChangeLanguage(Language.English);
@@ -30,7 +32,7 @@ public static class Localization {
 			rtype_food_name = "Food";
 			rtype_food_descr = "Organic fuel for your citizens.";
 			rtype_lumber_name = "Wood";
-			rtype_lumber_descr = "Different elastic wood, growing only in Last Sector Dominion. Used for building and decorating.";
+			rtype_lumber_descr = "Different elastic wood, growing only in Last Sector Dominion. Used for building and sometimes decorating.";
 			rtype_stone_name = "Stone";
 			rtype_stone_descr = "Nature material used in construction. Processing into L-Concrete.";
 			rtype_metalK_ore_name = "Metal K (ore)";
@@ -67,6 +69,13 @@ public static class Localization {
 			info_housing = "Housing";
 			info_population = "Population";
 			info_level = " lvl.";
+
+			announcement_powerFailure = "Power Failure";
+			announcement_starvation = "People are starving!";
+
+			objects_left = "objects left";
+			extracted = "extracted";
+			work_has_stopped = "Work has stopped";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -84,6 +93,13 @@ public static class Localization {
 			info_housing = "Свободное жильё";
 			info_population = "Население"; info_level = " ур.";
 			menu_gameMenuButton = "Меню"; menu_cancel = "Отмена";
+
+			announcement_powerFailure = "Энергоснабжение нарушено!";
+			announcement_starvation = "Закончилась провизия!";
+
+			objects_left = "осталось";
+			extracted = "извлечено";
+			work_has_stopped = "Работы остановлены";
 			break;	
 		}
 	}

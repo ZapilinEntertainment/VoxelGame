@@ -6,7 +6,7 @@ public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
 	public Material[] grassland_ready_25, grassland_ready_50;
 	public Material dryingLeaves_material, leaves_material;
-	GameObject tree_pref, grass_pref, deadTree_pref;
+	GameObject tree_pref, sapling_pref, deadTree_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static Material	default_material, lr_red_material, lr_green_material, grass_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
@@ -39,7 +39,7 @@ public class PoolMaster : MonoBehaviour {
 		deadTree_pref = Resources.Load<GameObject>("Lifeforms/DeadTree");deadTree_pref.SetActive(false);
 		tree_pref = Resources.Load<GameObject>("Lifeforms/Tree");tree_pref.SetActive(false);
 		treesPool = new List<GameObject>();
-		grass_pref = Resources.Load<GameObject>("Lifeforms/Grass"); grass_pref.SetActive(false);
+		sapling_pref = Resources.Load<GameObject>("Lifeforms/TreeSapling"); sapling_pref.SetActive(false);
 		grassPool = new List<GameObject>();
 
 		Material dirtMaterial = ResourceType.GetMaterialById(ResourceType.DIRT_ID);
@@ -87,7 +87,7 @@ public class PoolMaster : MonoBehaviour {
 		treesPoolCount = treesPool.Count; grassPoolCount = grassPoolCount;
 	}
 
-	public GameObject GetTree() {
+	public Tree GetTree() {
 		GameObject tree = null;
 		if (treesPool.Count == 0)	tree = Instantiate(tree_pref);
 		else {
@@ -96,7 +96,7 @@ public class PoolMaster : MonoBehaviour {
 			treesPool.RemoveAt(0);
 			if (tree.GetComponent<Tree>() == null) tree.AddComponent<Tree>();
 		}
-		return tree;
+		return tree.GetComponent<Tree>();
 	}
 	public void ReturnTreeToPool(Tree t) {
 		if (t == null) return;
@@ -104,22 +104,30 @@ public class PoolMaster : MonoBehaviour {
 		t.hp = t.maxHp;
 		t.SetLifepower(0);
 		t.transform.parent = transform;
+		if (t.GetComponent<FallingTree>() != null) {
+			Destroy(t.GetComponent<FallingTree>());
+			t.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
+		}
 		t.gameObject.SetActive(false);
 		treesPool.Add(t.gameObject);
 	}
 	public void ReturnTreeToPool(GameObject g) {
 		if ( g == null) return;
+		if (g.GetComponent<FallingTree>() != null) {
+			Destroy(g.GetComponent<FallingTree>());
+			g.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
+		}
 		treeClearTimer = clearTime;
 		g.transform.parent = null;
 		g.SetActive(false);
 		treesPool.Add(g);
 	}
-	public GameObject GetGrass() {
+	public TreeSapling GetSapling() {
 		GameObject grass = null;
-		if (grassPool.Count == 0) grass = Instantiate(grass_pref);
+		if (grassPool.Count == 0) grass = Instantiate(sapling_pref);
 		else {
 			if (grassPool[0] == null) {
-				grass = Instantiate(grass_pref);
+				grass = Instantiate(sapling_pref);
 			}
 			else {
 				grass = grassPool[0];			
@@ -127,9 +135,9 @@ public class PoolMaster : MonoBehaviour {
 			}
 			grassPool.RemoveAt(0);
 		}
-		return grass;
+		return grass.GetComponent<TreeSapling>();
 	}
-	public void ReturnGrassToPool(Plant2D grass) {
+	public void ReturnGrassToPool(TreeSapling grass) {
 		if (grass == null) return;
 		if (grass.basement != null) grass.UnsetBasement();
 		grass.hp = grass.maxHp;

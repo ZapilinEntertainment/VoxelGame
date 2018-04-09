@@ -18,6 +18,8 @@ public class CleanSite : Worksite {
 			if (diggingMission) {
 				DigSite ds =  workObject.basement.gameObject.AddComponent<DigSite>();
 				ds.Set(workObject.basement, true);
+				ds.AddWorkers(workersCount);
+				workersCount = 0;
 			}
 			Destroy(this);
 			return;
@@ -33,23 +35,23 @@ public class CleanSite : Worksite {
 	}
 
 	void LabourResult() {
-		Structure s = workObject.surfaceObjects[0].structure;
-		bool alreadyDestroyed = false;
+		Structure s = workObject.surfaceObjects[0];
 		if (s == null) {workObject.RequestAnnihilationAtIndex(0);return;}
 			Plant p = s.GetComponent<Plant>();
 			if (p != null) {
-				Plant2D p2d = s.GetComponent<Plant2D>();
-				if (p2d != null) { workflow --;}
-				else {
+			if (p is Tree) {
 					Tree t = s.GetComponent<Tree>();
 					if (t != null) {
 						float lumberDelta= t.CalculateLumberCount(); 
 						GameMaster.colonyController.storage.AddResources(ResourceType.Lumber, lumberDelta * 0.9f);
+						t.Chop();
 						workflow -= lumberDelta;
 					}
 				}
-			p.Annihilate();
-			alreadyDestroyed = true;
+			else {
+				p.Annihilate( false );
+				workflow--;
+			}
 			}
 			else {
 				HarvestableResource hr = s.GetComponent<HarvestableResource>();
@@ -64,7 +66,8 @@ public class CleanSite : Worksite {
 					}
 				}
 			}
-		if (!alreadyDestroyed) Destroy(workObject.surfaceObjects[0].structure.gameObject);
+		workObject.surfaceObjects[0].Annihilate( false );
+		sign.actionLabel = Localization.ui_clean_in_progress + " ( " + workObject.surfaceObjects.Count.ToString() + Localization.objects_left +')' ;
 	}
 
 	protected override void RecalculateWorkspeed() {
@@ -74,9 +77,9 @@ public class CleanSite : Worksite {
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
 		workObject = block;
 		if (block.grassland != null) {Destroy(block.grassland);}
-		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")) as GameObject;
+		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.transform.position = workObject.transform.position;
-		sign.GetComponent<WorksiteSign>().Set(this);
+		sign.Set(this);
 		diggingMission = f_diggingMission;
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 	}

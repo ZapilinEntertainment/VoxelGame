@@ -33,13 +33,13 @@ public class GameMaster : MonoBehaviour {
 	public static float demolitionLossesPercent {get;private set;}
 	public static float lifepowerLossesPercent{get;private set;}
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
-	START_BIRTHRATE_COEFFICIENT = 0.001f;
+	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1;
 
 	public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 
-	public const int START_WORKERS_COUNT = 10;
+	public const int START_WORKERS_COUNT = 10, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f;
 
@@ -373,10 +373,10 @@ public class GameMaster : MonoBehaviour {
 		GUI.skin = mainGUISkin;
 
 		int sh = Screen.height;
-		if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
-		if (GUI.Button(new Rect(guiPiece, sh - guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
-		if (GUI.Button(new Rect(2 * guiPiece, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
-		GUI.Label(new Rect(0, sh - 2 * guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
+		if (GUI.Button(new Rect(0, sh - 3 *guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
+		if (GUI.Button(new Rect(0, sh - 2 *guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
+		if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
+		GUI.Label(new Rect(guiPiece, sh - guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
 
 		if (gameAnnouncements_string.Count > 0) {
 			Rect anr = new Rect(0, sh - 2 * guiPiece - gameAnnouncements_string.Count * guiPiece * 0.75f, 10 * guiPiece, 0.75f * guiPiece);

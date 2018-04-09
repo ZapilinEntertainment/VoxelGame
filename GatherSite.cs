@@ -34,8 +34,8 @@ public class GatherSite : Worksite {
 			int i = 0;
 			bool resourcesFound = false;
 			while (i < workObject.surfaceObjects.Count) {
-				if (workObject.surfaceObjects[i].structure == null) { workObject.RequestAnnihilationAtIndex(i); continue;}
-				Tree t = workObject.surfaceObjects[i].structure.GetComponent<Tree>();
+				if (workObject.surfaceObjects[i]== null) { workObject.RequestAnnihilationAtIndex(i); continue;}
+				Tree t = workObject.surfaceObjects[i].GetComponent<Tree>();
 				if ( t != null) {
 					resourcesFound = true;
 					if (t.hp < workflow) {
@@ -48,7 +48,7 @@ public class GatherSite : Worksite {
 					else {i++; continue;}
 				}
 				else {
-					HarvestableResource hr = workObject.surfaceObjects[i].structure.GetComponent<HarvestableResource>();
+					HarvestableResource hr = workObject.surfaceObjects[i].GetComponent<HarvestableResource>();
 					if (hr == null) {i++; continue;}
 					else {
 						resourcesFound = true;
@@ -74,9 +74,10 @@ public class GatherSite : Worksite {
 	}
 	public void Set(SurfaceBlock block) {
 		workObject = block;
-		sign = Instantiate(Resources.Load<GameObject> ("Prefs/GatherSign")) as GameObject;
+		sign = Instantiate(Resources.Load<GameObject> ("Prefs/GatherSign")).GetComponent<WorksiteSign>();
 		sign.transform.position = workObject.transform.position + Vector3.down /2f * Block.QUAD_SIZE;
-		sign.GetComponent<WorksiteSign>().Set(this);
+		sign.Set(this);
+		sign.actionLabel = Localization.ui_gather_in_progress;
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 	}
 }

@@ -126,50 +126,48 @@ public class CubeBlock : Block{
 	}
 
 	void CheckExcavatingStatus() {
-		float pc = volume;
-		pc /= MAX_VOLUME;
+		if ( volume == 0) {myChunk.DeleteBlock(pos);return;}
+		float pc = (float)volume/ (float)MAX_VOLUME;
 		if (pc > 0.5f) {				
-			if (pc > 0.75f) {
-				if (excavatingStatus != 3) {
-					excavatingStatus = 3; 
+			if (pc > 0.75f) {				
+				if (excavatingStatus != 0) {
+					excavatingStatus = 0; 
+					career = false;
 					if (faces[4] == null) CreateFace(4);
-					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
-					career = true;
+					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
+					Block b = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
+					if (b == null && pos.y +1 < Chunk.CHUNK_SIZE) {
+						myChunk.AddBlock(new ChunkPos(pos.x, pos.y+1, pos.z), BlockType.Surface,material_id);
+					} 
 				}
 			}
 			else {
-				if (excavatingStatus != 2) {
-					excavatingStatus = 2;
+				if (excavatingStatus != 1) {
+					excavatingStatus = 1;
 					if (faces[4] == null) CreateFace(4);
-					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
+					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
 					career = true;
 				}
 			}
 		}
-		else {
-			if ( volume == 0) myChunk.DeleteBlock(pos);
-			else {
+		else { // выкопано больше половины
 				if (pc > 0.25f) {
-					if (excavatingStatus != 1) {
-						excavatingStatus = 1;
+				if (excavatingStatus != 2) {
+					excavatingStatus = 2;
+					if (faces[4] == null) CreateFace(4);
+					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_05;
+					career = true;
+				}
+				}
+				else {
+					if (excavatingStatus != 3) {
+						excavatingStatus = 3; 
 						if (faces[4] == null) CreateFace(4);
-						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
+						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
 						career = true;
 					}
 				}
-				else {
-					if (excavatingStatus != 0) {
-						excavatingStatus = 0; 
-						career = false;
-						if (faces[4] == null) CreateFace(4);
-						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
-						Block b = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
-						if (b == null && pos.y +1 < Chunk.CHUNK_SIZE) {
-							myChunk.AddBlock(new ChunkPos(pos.x, pos.y+1, pos.z), BlockType.Surface,material_id);
-						} 
-					}
-				}
-			}
+			
 		}
 	}
 

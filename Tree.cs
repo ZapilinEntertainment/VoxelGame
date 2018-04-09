@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Tree : Plant {
-	public Transform crone, trunk;
 	public const int MAXIMUM_LIFEPOWER = 1000;
 
 	void Awake() {
@@ -13,6 +12,8 @@ public class Tree : Plant {
 		maxLifepower = MAXIMUM_LIFEPOWER;
 		maxTall = 0.4f + Random.value * 0.1f;
 		maxHp = maxTall * 1000;
+		type = StructureType.Plant;
+		plantType = PlantType.Tree;
 	}
 
 
@@ -27,40 +28,35 @@ public class Tree : Plant {
 			transform.localScale = Vector3.one * (growth * maxTall + startSize);	
 		}
 	}	
-
+	override public void AddLifepowerAndCalculate( float lifepower ) {
+		AddLifepower((int)lifepower);
+		growth = lifepower / MAXIMUM_LIFEPOWER;
+		hp = growth * maxHp;
+		transform.localScale = Vector3.one * (growth * maxTall + startSize);	
+		if (growth >= 1) full = true;
+	}
 	override public void SetLifepower (float p) {
 		lifepower = p;
-		if (lifepower >= maxLifepower) full = true; else full =false;
 		if (maxLifepower == 0) maxLifepower = MAXIMUM_LIFEPOWER;
+		if (lifepower >= maxLifepower) full = true; else full =false;
 		growth = lifepower/ maxLifepower;
 		transform.localScale = Vector3.one * (growth * maxTall + startSize);	
 	}
-
-	public virtual int TakeLifepower(int life) {
-		float lifeTransfer = life;
-		if (life > lifepower) {if (lifepower >= 0) lifeTransfer = lifepower; else lifeTransfer = 0;}
-		lifepower -= lifeTransfer;
-		if (lifepower < maxLifepower) {
-			full = false;
-			if (lifepower <= 0) Dry();
-		}
-		return (int)lifeTransfer;
-	}
-
-	public override void Annihilate() {
-		if (basement != null) {
+		
+	public override void Annihilate( bool forced ) {
+		if (basement != null && !forced) {
 			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
-			basement =null;
 		}
+		basement =null;
 		PoolMaster.current.ReturnTreeToPool(this);
 	}
 
-	public void Dry() { 
+	override protected void Dry() { 
 		GameObject g = Instantiate(Resources.Load<GameObject>("Lifeforms/DeadTree")) as GameObject;
 		g.transform.localScale = transform.localScale;
 		HarvestableResource hr = g.GetComponent<HarvestableResource>();
-		hr.SetResources(ResourceType.Lumber, (int)(100 * trunk.transform.localScale.y));
-		basement.ReplaceStructure(new SurfaceObject(innerPosition, hr));
+		hr.SetResources(ResourceType.Lumber, (int)(100 * transform.localScale.y));
+		hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
 	}
 
 	public void Chop() {
@@ -73,6 +69,6 @@ public class Tree : Plant {
 	}
 
 	public float CalculateLumberCount() {
-		return SurfaceBlock.INNER_RESOLUTION * transform.localScale.y * transform.localScale.x * transform.localScale.z * 200;
+		return SurfaceBlock.INNER_RESOLUTION * transform.localScale.y * transform.localScale.x * transform.localScale.z * 100;
 	}
 }
