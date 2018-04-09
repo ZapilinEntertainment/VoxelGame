@@ -36,11 +36,11 @@ public class Mine : WorkBuilding {
 			production = workObject.Dig(x, true);
 			GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
 			int percent = (int)((1 - (float)workObject.volume / (float) CubeBlock.MAX_VOLUME) * 100);
-			if (workObject.volume <= criticalVolume) {
+			if ((float)workObject.volume/(float)CubeBlock.MAX_VOLUME <= criticalVolume) {
 				workFinished = true;
 				actionLabel = percent.ToString() + "% " + Localization.extracted + ". " + Localization.work_has_stopped;
 			}
-			else actionLabel = percent.ToString() + "% " + Localization.extracted + " / (" + ((int)(criticalVolume*100)).ToString() + "%)"; 
+			else actionLabel = percent.ToString() + "% " + Localization.extracted + " / (" + ((int)((1-criticalVolume)*100)).ToString() + "%)"; 
 			workflow -= production;	
 		}
 	}
@@ -51,6 +51,7 @@ public class Mine : WorkBuilding {
 
 	void OnGUI() {
 		if ( !showOnGUI ) return;
+		GUI.skin = GameMaster.mainGUISkin;
 		Rect r = UI.current.rightPanelBox; r.y = gui_ypos; r.height = GameMaster.guiPiece;
 		GUI.Label(r, actionLabel);
 	}
