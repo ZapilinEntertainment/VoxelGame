@@ -22,6 +22,11 @@ public class ColonyController : MonoBehaviour {
 	public float energyCrystalsCount {get;private set;}
 	List<Building> powerGrid;
 
+	public List<Dock> docks{get;private set;}
+	public float shipArrivingTimer = 0;
+	byte docksLevel = 0;
+	const float SHIP_ARRIVING_TIME = 10; // for max difficulty
+
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
 	public float birthrateCoefficient{get;private set;}
@@ -58,12 +63,15 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_1[5].gameObject.SetActive(false);
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Mine_level_1")) );
 		buildings_level_1[6].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Dock_level_1")) );
+		buildings_level_1[7].gameObject.SetActive(false);
 
 		minePrefs = new Mine[6];
 		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
 		minePrefs[1].gameObject.SetActive(false);
 		houses = new List<House>();
 		powerGrid = new List<Building>();
+		docks = new List<Dock>();
 	}
 
 	void Update() {
@@ -108,6 +116,64 @@ public class ColonyController : MonoBehaviour {
 				if (peopleSurplus < - 1) {
 					KillCitizens(1); peopleSurplus += 1;
 				}
+			}
+		}
+
+		//   SHIPS ARRIVING
+		if (shipArrivingTimer > 0) {
+			shipArrivingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			if (shipArrivingTimer <= 0 && docks.Count != 0) {
+				List<int>freeDocks = new List<int>();
+				int i = docks.Count - 1;
+				while ( i >= 0) {
+					if (docks[i] == null) {docks.RemoveAt(i); i--; continue;}
+					if ( docks[i].maintainingShip == false ) freeDocks.Add(i);
+					i--;
+				}
+				if (freeDocks.Count > 0) {
+					i = (int)(Random.value * (freeDocks.Count - 1));
+					bool  sendImmigrants = false, sendGoods = false;
+					if (Dock.immigrantsMonthLimit > 0  && Dock.immigrationEnabled ) {
+						if (Random.value < 0.3f ||totalLivespace > citizenCount) sendImmigrants = true;
+					}
+					int transitionsCount = 0;
+					for (int x = 0; x < Dock.isForSale.Length; x++) {
+						if (Dock.isForSale[x] != null) transitionsCount++;
+					}
+					if (transitionsCount > 0) sendGoods = true;
+					ShipType stype = ShipType.Cargo;
+					if (sendImmigrants) {
+						if (sendGoods) {
+							if (Random.value > 0.55f ) stype = ShipType.Passenger;
+						}
+						else {
+							if (Random.value < 0.05f) stype = ShipType.Private;
+							else stype = ShipType.Passenger;
+						}
+					}
+					else {
+						if (sendGoods) {
+							if (Random.value <= GameMaster.warProximity) stype = ShipType.Military;
+							else stype = ShipType.Cargo;
+						}
+						else {
+							if (Random.value > 0.5f) {
+								if (Random.value > 0.1f) stype = ShipType.Passenger;
+								else stype = ShipType.Private;
+							}
+							else {
+								if (Random.value > GameMaster.warProximity) stype = ShipType.Cargo;
+								else stype = ShipType.Military;
+							}
+						}
+					}
+					Ship s = PoolMaster.current.GetShip(docks[i].level, stype);
+					if (s!= null) {
+						s.SetDestination(docks[i]);
+					}
+					else print ("error:no ship given");
+				}
+				shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient;
 			}
 		}
 	}
@@ -243,10 +309,29 @@ public class ColonyController : MonoBehaviour {
 		gears_coefficient -= GameMaster.GEARS_ANNUAL_DEGRADE;
 	}
 
+	public void AddDock( Dock d ) {
+		if ( d == null ) return;
+		docks.Add(d);
+		if (d.level > docksLevel) docksLevel = d.level;
+		if (docks.Count == 1) { // first dock
+			shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
+		}
+		else shipArrivingTimer /= 2f;
+	}
+
+	public void AddEnergyCrystals(float v) {
+		if (v <=0) return;
+		energyCrystalsCount += v;
+	}
+	public float GetEnergyCrystals(float v) {
+		if (v > energyCrystalsCount) v = energyCrystalsCount;
+		else energyCrystalsCount -= v;
+		return v;
+	}
+
 	void OnDestroy() {
 		GameMaster.realMaster.everydayUpdateList.Remove(this);
 	}
-
 
 	void OnGUI () {
 		float k = GameMaster.guiPiece;

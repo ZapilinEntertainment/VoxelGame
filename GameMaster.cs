@@ -6,7 +6,6 @@ using System.IO;
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming}
-public enum GUIStyles {RightOrientedLabel, BorderlessButton, BorderlessLabel, CenterOrientedLabel, SystemAlert}
 
 public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
@@ -32,12 +31,15 @@ public class GameMaster : MonoBehaviour {
 	public static float lifeGrowCoefficient {get;private set;}
 	public static float demolitionLossesPercent {get;private set;}
 	public static float lifepowerLossesPercent{get;private set;}
+	public static float tradeVesselsTrafficCoefficient{get;private set;}
+	public static float warProximity{get;private set;}
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
 	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1;
 
 	public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
+	public static float sellPriceCoefficient = 0.75f;
 
 	public const int START_WORKERS_COUNT = 10, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
@@ -47,7 +49,7 @@ public class GameMaster : MonoBehaviour {
 	float t;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
 	const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
-	public List<Component> everydayUpdateList, everyYearUpdateList;
+	public List<Component> everydayUpdateList, everyYearUpdateList, everyMonthUpdateList;
 
 	public List <Component> windUpdateList;
 	public Vector3 windVector {get; private set;}
@@ -83,6 +85,7 @@ public class GameMaster : MonoBehaviour {
 
 		everydayUpdateList = new List<Component>();
 		everyYearUpdateList = new List<Component>();
+		everyMonthUpdateList = new List<Component>();
 		windUpdateList = new List<Component>();
 		gameAnnouncements_string = new List<string>();
 
@@ -91,6 +94,7 @@ public class GameMaster : MonoBehaviour {
 		geologyModule = gameObject.AddComponent<GeologyModule>();
 		difficulty = Difficulty.Normal;
 		guiPiece = Screen.height / 24f;
+		warProximity = 0.01f;
 	}
 
 	void Start() {
@@ -102,26 +106,36 @@ public class GameMaster : MonoBehaviour {
 			LUCK_COEFFICIENT = 1;	
 			demolitionLossesPercent = 0; 
 			lifepowerLossesPercent = 0;
+			sellPriceCoefficient = 1;
+			tradeVesselsTrafficCoefficient = 0.2f;
 			break;
 		case Difficulty.Easy: 
 			LUCK_COEFFICIENT = 0.7f; 
 			demolitionLossesPercent = 0.2f;  
 			lifepowerLossesPercent = 0.1f;
+			sellPriceCoefficient = 0.9f;
+			tradeVesselsTrafficCoefficient = 0.4f;
 			break;
 		case Difficulty.Normal: 
 			LUCK_COEFFICIENT = 0.5f; 
 			demolitionLossesPercent = 0.4f;  
 			lifepowerLossesPercent = 0.3f;
+			sellPriceCoefficient = 0.75f;
+			tradeVesselsTrafficCoefficient = 0.5f;
 			break;
 		case Difficulty.Hard: 
 			LUCK_COEFFICIENT = 0.1f; 
 			demolitionLossesPercent = 0.7f; 
 			lifepowerLossesPercent = 0.5f;
+			sellPriceCoefficient = 0.5f;
+			tradeVesselsTrafficCoefficient = 0.75f;
 			break;
 		case Difficulty.Torture: 
 			LUCK_COEFFICIENT = 0.01f; 
 			demolitionLossesPercent = 1; 
 			lifepowerLossesPercent = 0.85f;
+			sellPriceCoefficient = 0.33f;
+			tradeVesselsTrafficCoefficient = 1;
 			break;
 		}
 
@@ -215,6 +229,17 @@ public class GameMaster : MonoBehaviour {
 							}
 						}
 					}
+						//everymonth update
+						if (everyMonthUpdateList.Count > 0) {
+							int i = 0;
+							while (i < everyMonthUpdateList.Count) {
+								if (everyMonthUpdateList[i] == null) {everyMonthUpdateList.RemoveAt(i); continue;}
+								else {
+									everyMonthUpdateList[i].SendMessage("EveryMonthUpdate", SendMessageOptions.DontRequireReceiver);
+									i++;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -347,27 +372,29 @@ public class GameMaster : MonoBehaviour {
 			GUIStyle rightOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			rightOrientedLabel.alignment = TextAnchor.UpperRight;
 			rightOrientedLabel.normal.textColor = Color.white;
+			PoolMaster.GUIStyle_RightOrientedLabel = rightOrientedLabel;
 			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			centerOrientedLabel.alignment = TextAnchor.UpperCenter;
 			centerOrientedLabel.normal.textColor = Color.white;
+			PoolMaster.GUIStyle_CenterOrientedLabel = centerOrientedLabel;
 
 			GUIStyleState withoutImageStyle = new GUIStyleState();
 			withoutImageStyle.background = null;
+			withoutImageStyle.textColor = Color.white;
 			GUIStyle borderlessButton = new GUIStyle(mainGUISkin.GetStyle("Button"));
 			borderlessButton.normal = withoutImageStyle;
 			borderlessButton.onHover = withoutImageStyle;
+			PoolMaster.GUIStyle_BorderlessButton= borderlessButton;
 			GUIStyle borderlessLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			borderlessLabel.normal = withoutImageStyle;
 			borderlessLabel.onHover = withoutImageStyle;
+			PoolMaster.GUIStyle_BorderlessLabel = borderlessLabel;
 			GUIStyle systemAlert = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			systemAlert.normal = withoutImageStyle;
 			systemAlert.normal.textColor = Color.red;
 			systemAlert.fontSize = (int)guiPiece;
 			systemAlert.alignment = TextAnchor.MiddleCenter;
-			mainGUISkin.customStyles = new GUIStyle[5] {rightOrientedLabel, borderlessButton, borderlessLabel, centerOrientedLabel, systemAlert};
-			//testmode
-			//
-			GUI.skin = mainGUISkin;
+			PoolMaster.GUIStyle_SystemAlert = systemAlert;
 			fontSize_set = true;
 		}
 		GUI.skin = mainGUISkin;

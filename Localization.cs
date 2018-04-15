@@ -12,11 +12,12 @@ public static class Localization {
 	rtype_fertileSoil_name, rtype_fertileSoil_descr;
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
-	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf;
+	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
+	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_close, ui_reset, ui_add_transaction;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
 	public static string info_housing, info_population, info_level;
 	public static string announcement_powerFailure, announcement_starvation;
-	public static string objects_left, extracted, work_has_stopped;
+	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
 
 	static Localization() {
 		ChangeLanguage(Language.English);
@@ -64,6 +65,11 @@ public static class Localization {
 			ui_gather_in_progress = "Gathering in progress"; ui_pouring_in_progress = "Pouring in progress";
 			ui_accept_destruction_on_clearing = "Demolish all buildings in zone?";
 			ui_activeSelf = "Active";
+			ui_immigration = "Immigration"; ui_trading = "Trading";
+			ui_buy = "Buy"; ui_sell = "Sell"; 
+			ui_selectResource = "Select resource"; ui_add_transaction = "Add transaction";
+			ui_immigrationEnabled = "Immigration allowed"; ui_immigrationDisabled = "Immigration is not possible";
+			ui_close = "Close"; ui_reset = "Reset";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			info_housing = "Housing";
@@ -76,6 +82,8 @@ public static class Localization {
 			objects_left = "objects left";
 			extracted = "extracted";
 			work_has_stopped = "Work has stopped";
+			sales_volume = "Sales volume";
+			min_value_to_trade = "Min. value to trade";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -88,6 +96,11 @@ public static class Localization {
 			ui_dig_in_progress = "Идет извлечение грунта"; ui_clean_in_progress = "Идет очистка"; 
 			ui_gather_in_progress = "Идет сбор"; ui_pouring_in_progress = "Идет засыпка";
 			ui_stopWork = "Остановить работы"; ui_activeSelf = "Работает";
+			ui_immigration = "Иммиграция"; ui_trading = "Торговля";
+			ui_buy = "Покупка"; ui_sell = "Продажа"; 
+			ui_selectResource = "Выберите ресурс";  ui_add_transaction = "Добавить операцию";
+			ui_immigrationEnabled = "Иммиграция разрешена"; ui_immigrationDisabled = "Въезд в город закрыт";
+			ui_close = "Закрыть"; ui_reset = "Сброс";
 
 			menu_colonyInfo = "Состояние";
 			info_housing = "Свободное жильё";
@@ -100,6 +113,8 @@ public static class Localization {
 			objects_left = "осталось";
 			extracted = "извлечено";
 			work_has_stopped = "Работы остановлены";
+			sales_volume = "Объём продажи";
+			min_value_to_trade = "Мин. кол-во для сделки";
 			break;	
 		}
 	}
