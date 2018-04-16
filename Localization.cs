@@ -9,14 +9,14 @@ public static class Localization {
 	rtype_dirt_name, rtype_dirt_descr, rtype_food_name, rtype_food_descr, rtype_metalK_ore_name, rtype_metalK_descr, rtype_metalM_ore_name, rtype_metalM_descr,
 	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
 	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_elasticMass_descr, rtype_concrete_name, rtype_concrete_descr,
-	rtype_fertileSoil_name, rtype_fertileSoil_descr;
+	rtype_fertileSoil_name, rtype_fertileSoil_descr, rtype_fuel_name, rtype_fuel_descr;
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
-	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_close, ui_reset, ui_add_transaction;
+	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationMonthLimit, ui_close, ui_reset, ui_add_transaction;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
 	public static string info_housing, info_population, info_level;
-	public static string announcement_powerFailure, announcement_starvation;
+	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived;
 	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
 
 	static Localization() {
@@ -53,6 +53,7 @@ public static class Localization {
 			rtype_elasticMass_descr = "Easy-forming by special influence relatively tough material, used for building and manufacturing";
 			rtype_concrete_name = "L-Concrete"; rtype_concrete_descr = "Comfortable and easy-forming building material.";
 			rtype_fertileSoil_name = "Fertile Soil"; rtype_fertileSoil_descr = "Soil, appliable for growing edibles.";
+			rtype_fuel_name = "Fuel"; rtype_fuel_descr = "Standart fuel for spaceship engine";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
@@ -68,7 +69,7 @@ public static class Localization {
 			ui_immigration = "Immigration"; ui_trading = "Trading";
 			ui_buy = "Buy"; ui_sell = "Sell"; 
 			ui_selectResource = "Select resource"; ui_add_transaction = "Add transaction";
-			ui_immigrationEnabled = "Immigration allowed"; ui_immigrationDisabled = "Immigration is not possible";
+			ui_immigrationEnabled = "Immigration allowed"; ui_immigrationDisabled = "Immigration is not possible"; ui_immigrationMonthLimit = "Immigrants month limit";
 			ui_close = "Close"; ui_reset = "Reset";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
@@ -78,12 +79,13 @@ public static class Localization {
 
 			announcement_powerFailure = "Power Failure";
 			announcement_starvation = "People are starving!";
+			announcement_peopleArrived = "New colonists arrived";
 
 			objects_left = "objects left";
 			extracted = "extracted";
 			work_has_stopped = "Work has stopped";
 			sales_volume = "Sales volume";
-			min_value_to_trade = "Min. value to trade";
+			min_value_to_trade = "Limit";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -99,7 +101,7 @@ public static class Localization {
 			ui_immigration = "Иммиграция"; ui_trading = "Торговля";
 			ui_buy = "Покупка"; ui_sell = "Продажа"; 
 			ui_selectResource = "Выберите ресурс";  ui_add_transaction = "Добавить операцию";
-			ui_immigrationEnabled = "Иммиграция разрешена"; ui_immigrationDisabled = "Въезд в город закрыт";
+			ui_immigrationEnabled = "Иммиграция разрешена"; ui_immigrationDisabled = "Въезд в город закрыт"; ui_immigrationMonthLimit = "Максимум поселенцев в месяц";
 			ui_close = "Закрыть"; ui_reset = "Сброс";
 
 			menu_colonyInfo = "Состояние";
@@ -109,12 +111,13 @@ public static class Localization {
 
 			announcement_powerFailure = "Энергоснабжение нарушено!";
 			announcement_starvation = "Закончилась провизия!";
+			announcement_peopleArrived = "Прибыли новые поселенцы";
 
 			objects_left = "осталось";
 			extracted = "извлечено";
 			work_has_stopped = "Работы остановлены";
 			sales_volume = "Объём продажи";
-			min_value_to_trade = "Мин. кол-во для сделки";
+			min_value_to_trade = "Ограничение";
 			break;	
 		}
 	}

@@ -25,7 +25,7 @@ public class ColonyController : MonoBehaviour {
 	public List<Dock> docks{get;private set;}
 	public float shipArrivingTimer = 0;
 	byte docksLevel = 0;
-	const float SHIP_ARRIVING_TIME = 10; // for max difficulty
+	const float SHIP_ARRIVING_TIME = 30; // for max difficulty
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
@@ -47,6 +47,7 @@ public class ColonyController : MonoBehaviour {
 		happiness_coefficient = 1;
 		health_coefficient = 1;
 		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
+		energyCrystalsCount = 100;
 
 		buildings_level_1 = new List<Building>();
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
@@ -169,7 +170,8 @@ public class ColonyController : MonoBehaviour {
 					}
 					Ship s = PoolMaster.current.GetShip(docks[i].level, stype);
 					if (s!= null) {
-						s.SetDestination(docks[i]);
+						docks[freeDocks[i]].maintainingShip = true;
+						s.SetDestination(docks[freeDocks[i]]);
 					}
 					else print ("error:no ship given");
 				}
@@ -324,7 +326,7 @@ public class ColonyController : MonoBehaviour {
 		energyCrystalsCount += v;
 	}
 	public float GetEnergyCrystals(float v) {
-		if (v > energyCrystalsCount) v = energyCrystalsCount;
+		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
 		else energyCrystalsCount -= v;
 		return v;
 	}

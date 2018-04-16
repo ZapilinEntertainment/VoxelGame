@@ -8,11 +8,14 @@ public class Ship : MonoBehaviour {
 	[SerializeField]
 	byte _level = 1; // for editor set
 	public byte level {get;private set;}
+	[SerializeField]
 	ShipType _type;
 	public ShipType type{get;private set;}
 	const float DISTANCE_TO_ISLAND = 40;
 	[SerializeField]
-	float width = 0.5f, startSpeed = 10, acceleration = 1, _volume = 50;
+	float width = 0.5f, startSpeed = 10, acceleration = 1;
+	[SerializeField]
+	int _volume = 50;
 	public int volume{get; private set;}
 	bool xAxisMoving = false, docked = false, unloaded = false;
 	float destination_pos = 0, speed = 0;
@@ -21,6 +24,8 @@ public class Ship : MonoBehaviour {
 	void Awake() {
 		level = _level;
 		type = _type;
+		type = _type;
+		volume = _volume;
 	}
 
 	public void SetDestination(Dock d) {
@@ -29,28 +34,28 @@ public class Ship : MonoBehaviour {
 			xAxisMoving = true;
 			float zpos = (cpos.z ==0 ? -1 * width : Chunk.CHUNK_SIZE * Block.QUAD_SIZE + width);
 			if (Random.value > 0.5f) {
-				transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.basement.pos.y * Block.QUAD_SIZE, zpos);
+				transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, (d.basement.pos.y - 1) * Block.QUAD_SIZE, zpos);
 				transform.forward = Vector3.left;
 			}
 			else {
-				transform.position = new Vector3(-1 * DISTANCE_TO_ISLAND, d.basement.pos.y * Block.QUAD_SIZE, zpos);
+				transform.position = new Vector3(-1 * DISTANCE_TO_ISLAND, (d.basement.pos.y - 1) * Block.QUAD_SIZE, zpos);
 				transform.forward = Vector3.right;
 			}
-			destination_pos = cpos.x;
+			destination_pos = cpos.x + (transform.forward * Block.QUAD_SIZE * 0.5f).x;
 		}
 		else {
 			if ( cpos.x == 0 || cpos.x == (Chunk.CHUNK_SIZE - 1)) {
 				xAxisMoving = false;
 				float xpos = (cpos.x ==0 ? -1 * width : Chunk.CHUNK_SIZE * Block.QUAD_SIZE + width);
 				if (Random.value > 0.5f) {
-					transform.position = new Vector3(xpos, d.basement.pos.y * Block.QUAD_SIZE, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+					transform.position = new Vector3(xpos, (d.basement.pos.y - 1)* Block.QUAD_SIZE, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
 					transform.forward = Vector3.back;
 				}
 				else {
-					transform.position = new Vector3(xpos, d.basement.pos.y * Block.QUAD_SIZE, -1 * DISTANCE_TO_ISLAND);
+					transform.position = new Vector3(xpos, (d.basement.pos.y - 1) * Block.QUAD_SIZE, -1 * DISTANCE_TO_ISLAND);
 					transform.forward = Vector3.forward;
 				}
-				destination_pos = cpos.z;
+				destination_pos = cpos.z + (transform.forward * Block.QUAD_SIZE * 0.5f).z;
 			} 
 			else print ("error : incorrect dock position");
 		}
@@ -68,7 +73,7 @@ public class Ship : MonoBehaviour {
 			if ( !unloaded) { // еще не разгрузился
 				if (destination != null && destination.isActive) {
 						docked = true;
-						destination.StartCoroutine(destination.ShipLoading(this));
+						destination.ShipLoading(this);
 				}
 				else Undock();
 			}
@@ -80,7 +85,11 @@ public class Ship : MonoBehaviour {
 		}
 		if (speed * speed / 2 / acceleration > dist) speed -= acceleration * Time.deltaTime * GameMaster.gameSpeed;
 		else speed += acceleration * Time.deltaTime * GameMaster.gameSpeed;
-		if (speed != 0) transform.Translate(Vector3.forward * speed * Time.deltaTime * GameMaster.gameSpeed, Space.Self);
+		if (speed != 0) {
+			float step = speed * Time.deltaTime * GameMaster.gameSpeed; // cause of time acceleration errors
+			if (step > dist) step = dist;
+			transform.Translate(Vector3.forward * step, Space.Self);
+		}
 	}
 
 	public void Undock() {

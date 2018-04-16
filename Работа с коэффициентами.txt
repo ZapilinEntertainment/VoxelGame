@@ -5,6 +5,9 @@ GameMaster:
 	luck_coefficient
 	demolitionLossesPercent
 	lifepowerLossesPercent
+	sellPriceCoefficient
+	tradeVesselsTrafficCoefficient
+	warProximity
 Colony Controller
 	gears_coefficient
 	labourEfficientcy_coefficient

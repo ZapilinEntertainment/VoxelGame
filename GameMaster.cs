@@ -32,7 +32,7 @@ public class GameMaster : MonoBehaviour {
 	public static float demolitionLossesPercent {get;private set;}
 	public static float lifepowerLossesPercent{get;private set;}
 	public static float tradeVesselsTrafficCoefficient{get;private set;}
-	public static float warProximity{get;private set;}
+	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
 	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1;
 
@@ -395,6 +395,7 @@ public class GameMaster : MonoBehaviour {
 			systemAlert.fontSize = (int)guiPiece;
 			systemAlert.alignment = TextAnchor.MiddleCenter;
 			PoolMaster.GUIStyle_SystemAlert = systemAlert;
+
 			fontSize_set = true;
 		}
 		GUI.skin = mainGUISkin;
@@ -406,7 +407,7 @@ public class GameMaster : MonoBehaviour {
 		GUI.Label(new Rect(guiPiece, sh - guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
 
 		if (gameAnnouncements_string.Count > 0) {
-			Rect anr = new Rect(0, sh - 2 * guiPiece - gameAnnouncements_string.Count * guiPiece * 0.75f, 10 * guiPiece, 0.75f * guiPiece);
+			Rect anr = new Rect(0, sh - 3 * guiPiece - gameAnnouncements_string.Count * guiPiece * 0.75f, 10 * guiPiece, 0.75f * guiPiece);
 			GUI.color = Color.black;
 			foreach (string announcement in gameAnnouncements_string) {
 				GUI.Label(anr, announcement);
