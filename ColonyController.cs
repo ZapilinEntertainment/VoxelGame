@@ -7,25 +7,25 @@ public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 public class ColonyController : MonoBehaviour {
 	float foodCount = 0;
 	const float FOOD_CONSUMPTION = 1;
-	public Storage storage; HeadQuarters hq;
+	public Storage storage{get;private set;}
+	public HeadQuarters hq{get;private set;}
 	public float gears_coefficient {get; private set;}
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
 	public List<Building> buildings_level_1{get;private set;}
-	public Mine[] minePrefs {get;private set;}
 	public bool showColonyInfo = false;
+
 
 	public float energyStored {get;private set;}
 	public float energySurplus {get;private set;}
 	public float totalEnergyCapacity {get;private set;}
 	public float energyCrystalsCount {get;private set;}
 	List<Building> powerGrid;
-
 	public List<Dock> docks{get;private set;}
 	public float shipArrivingTimer = 0;
-	byte docksLevel = 0;
-	const float SHIP_ARRIVING_TIME = 30; // for max difficulty
+	public byte docksLevel{get; private set;}
+	const float SHIP_ARRIVING_TIME = 300; // for max difficulty
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
@@ -47,6 +47,7 @@ public class ColonyController : MonoBehaviour {
 		happiness_coefficient = 1;
 		health_coefficient = 1;
 		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
+		docksLevel = 0;
 		energyCrystalsCount = 100;
 
 		buildings_level_1 = new List<Building>();
@@ -67,9 +68,6 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Dock_level_1")) );
 		buildings_level_1[7].gameObject.SetActive(false);
 
-		minePrefs = new Mine[6];
-		minePrefs[1] = Instantiate(Resources.Load<Mine>("Structures/Buildings/Mine_level_1"));
-		minePrefs[1].gameObject.SetActive(false);
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
@@ -319,6 +317,9 @@ public class ColonyController : MonoBehaviour {
 			shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
 		}
 		else shipArrivingTimer /= 2f;
+	}
+	public void SetHQ (HeadQuarters new_hq) {
+		if (new_hq != null) hq = new_hq;
 	}
 
 	public void AddEnergyCrystals(float v) {

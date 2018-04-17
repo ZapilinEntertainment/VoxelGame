@@ -13,7 +13,7 @@ public class Plant : Structure {
 	public bool full {get;protected set;}
 	[SerializeField]
 	protected float growSpeed = 0.1f;
-	public float growth{get;protected set;}
+	public float growth;
 	public PlantType plantType{get;protected set;}
 
 	void Awake() {

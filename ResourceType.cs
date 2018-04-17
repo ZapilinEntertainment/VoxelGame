@@ -89,7 +89,6 @@ public class ResourceType {
 		Material fertileSoil_material = new Material(Dirt.material);	fertileSoil_material.SetTexture("_MainTex", Resources.Load<Texture>("Textures/Farmland"));
 		FertileSoil = new ResourceType(Localization.rtype_fertileSoil_name, FERTILE_SOIL_ID, 1, 1, fertileSoil_material, Resources.Load<Texture>("Textures/resource_fertileSoil"), Localization.rtype_fertileSoil_descr);
 		prices[FERTILE_SOIL_ID] = prices[DIRT_ID]; demand[FERTILE_SOIL_ID] = demand[DIRT_ID];
-
 	}
 
 	public static ResourceType GetResourceTypeById(int f_id) {
@@ -106,46 +105,17 @@ public class ResourceType {
 		}
 		else return resourceTypesArray[f_id].material;
 	}
+}
 
-	public static List<ResourceContainer> DecodeResourcesString(string s) {
-		List <ResourceContainer> resourcesContain = new List<ResourceContainer>();
-		int x0 = 0;
-		int x = s.IndexOf(':', 0);
-		int y0 = x + 1;
-		int y = s.IndexOf(';', 0);
-		int length = s.Length;
-		while (x > 0 && y > 0) {
-			ResourceType rt = ResourceType.Nothing; int count = 0;
-			switch (s.Substring(x0, x - x0)) {
-			case "Lumber": rt = ResourceType.Lumber; break;
-			case "Stone": rt = ResourceType.Stone; break;
-			case "Dirt": rt = ResourceType.Dirt; break;
-			case "Food": rt = ResourceType.Food; break;
-			case "metalK_ore": rt = ResourceType.metal_K_ore; break;
-			case "metalK": rt = ResourceType.metal_K; break;
-			case "metalM_ore": rt = ResourceType.metal_M_ore; break;
-			case "metalM": rt = ResourceType.metal_M; break;
-			case "metalE_ore": rt = ResourceType.metal_E_ore; break;
-			case "metalE": rt = ResourceType.metal_E; break;
-			case "metalN_ore": rt = ResourceType.metal_N_ore; break;
-			case "metalN": rt = ResourceType.metal_N; break;
-			case "metalP_ore": rt = ResourceType.metal_P_ore; break;
-			case "metalP": rt = ResourceType.metal_P; break;
-			case "metalS_ore": rt = ResourceType.metal_S_ore; break;
-			case "metalS": rt = ResourceType.metal_S; break;
-			case "mineralF": rt = ResourceType.mineral_F; break;
-			case "mineralL": rt = ResourceType.mineral_L; break;
-			case "elasticMass": rt = ResourceType.ElasticMass; break;
-			}
-			count = int.Parse(s.Substring(y0, y - y0 )); 
-			resourcesContain.Add(new ResourceContainer(rt, count));
 
-			x0 = y+1; 
-			if ( y + 1 >= length) break;
-			x = s.IndexOf(':', y+1);	y0 =x + 1; 
-			y = s.IndexOf(';', y+1);
-		}
-		return resourcesContain;
+public struct ResourceContainer {
+	public readonly ResourceType type;
+	public float volume{get; private set;}
+
+	public ResourceContainer(ResourceType f_type, float f_volume) {
+		type= f_type; 
+		if (f_volume < 0) f_volume = 0;
+		volume = f_volume;
 	}
 }
 

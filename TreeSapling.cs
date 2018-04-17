@@ -5,7 +5,6 @@ using UnityEngine;
 public class TreeSapling : Plant {
 	public LineRenderer body;
 	public const float MAXIMUM_LIFEPOWER = 50;
-	float replaceAwaitingTimer = 0;
 
 	void Awake () {
 		PrepareStructure();
@@ -28,18 +27,14 @@ public class TreeSapling : Plant {
 		}
 		if (growth >= 1) {
 			full = true; 
-			if (replaceAwaitingTimer == 0) {
 			Tree t = PoolMaster.current.GetTree();
 			t.gameObject.SetActive(true);
 			float lp = lifepower;
+			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
 			t.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
+			basement = null;
 			t.SetLifepower(lp);
-				replaceAwaitingTimer = 10;
-			}
-			else {
-				replaceAwaitingTimer -= Time.deltaTime * GameMaster.gameSpeed;
-				if (replaceAwaitingTimer <= 0) Annihilate(false);
-			}
+			PoolMaster.current.ReturnSaplingToPool(this);
 		}
 	}
 
@@ -70,7 +65,6 @@ public class TreeSapling : Plant {
 		if (basement != null && !forced) {
 			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
 		}
-		basement =null;
-		PoolMaster.current.ReturnGrassToPool(this);
+		PoolMaster.current.ReturnSaplingToPool(this);
 	}
 }

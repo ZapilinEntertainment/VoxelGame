@@ -14,11 +14,12 @@ public class Structure : MonoBehaviour {
 	public SurfaceBlock basement{get;protected set;}
 	public SurfaceRect innerPosition {get;protected set;}
 	public bool isArtificial {get;protected set;}
-	public bool undestructible{get;protected set;}
+	public bool undestructible = false;
 	public StructureType type {get;protected set;}
 	public float hp = 1;
 	public float maxHp = 1;
 	public string structureName = "structure";
+	public bool randomRotation = false;
 	public bool showOnGUI = false;
 	public float gui_ypos = 0;
 
@@ -32,7 +33,6 @@ public class Structure : MonoBehaviour {
 		innerPosition = new SurfaceRect(0,0,xsize_to_set, zsize_to_set);
 		isArtificial = markAsArtificial;
 		type = setType;
-		undestructible = false;
 	}
 
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -49,6 +49,7 @@ public class Structure : MonoBehaviour {
 	public void UnsetBasement() {
 		basement = null;
 		innerPosition = new SurfaceRect(0,0,xsize_to_set,zsize_to_set);
+		transform.parent = null;
 	}
 
 	virtual public void Annihilate( bool forced ) { // for pooling

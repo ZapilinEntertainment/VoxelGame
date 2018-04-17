@@ -10,8 +10,7 @@ public class MultiblockStructure : Structure {
 		
 	}
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (b == null) return;
+	protected void PrepareMultiblockStructure(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
 		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
 		b.AddStructure(this);
@@ -19,5 +18,10 @@ public class MultiblockStructure : Structure {
 		for (byte i = 1; i < additionalHeight; i++) {
 			myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + i), b.pos.z, this);
 		}
+	}
+
+	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (b == null) return;
+		PrepareMultiblockStructure(b,pos);
 	}
 }

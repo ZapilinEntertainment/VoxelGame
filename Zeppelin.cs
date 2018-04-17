@@ -80,12 +80,12 @@ public class Zeppelin : Transport {
 								GameMaster.colonyController = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
 
 								Structure hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
-								hq.SetBasement(landingPlace, new PixelPosByte(4,1));
+								hq.SetBasement(landingPlace, PixelPosByte.zero);
 
 								landingPlace.MakeIndestructible(true);
 								landingPlace.basement.MakeIndestructible(true);
-								GameMaster.mainChunk.SetAccessPoint(landingPlace.pos);
 								GameMaster.colonyController.AddCitizens(GameMaster.START_WORKERS_COUNT);
+								GameMaster.colonyController.SetHQ(hq.GetComponent<HeadQuarters>());
 
 								Chunk c = landingPlace.myChunk;
 

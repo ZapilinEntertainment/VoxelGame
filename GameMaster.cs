@@ -32,6 +32,7 @@ public class GameMaster : MonoBehaviour {
 	public static float demolitionLossesPercent {get;private set;}
 	public static float lifepowerLossesPercent{get;private set;}
 	public static float tradeVesselsTrafficCoefficient{get;private set;}
+	public static float upgradeDiscount{get;private set;}
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
 	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1;
@@ -108,6 +109,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0;
 			sellPriceCoefficient = 1;
 			tradeVesselsTrafficCoefficient = 0.2f;
+			upgradeDiscount = 0.5f;
 			break;
 		case Difficulty.Easy: 
 			LUCK_COEFFICIENT = 0.7f; 
@@ -115,6 +117,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.1f;
 			sellPriceCoefficient = 0.9f;
 			tradeVesselsTrafficCoefficient = 0.4f;
+			upgradeDiscount = 0.3f;
 			break;
 		case Difficulty.Normal: 
 			LUCK_COEFFICIENT = 0.5f; 
@@ -122,6 +125,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.3f;
 			sellPriceCoefficient = 0.75f;
 			tradeVesselsTrafficCoefficient = 0.5f;
+			upgradeDiscount = 0.25f;
 			break;
 		case Difficulty.Hard: 
 			LUCK_COEFFICIENT = 0.1f; 
@@ -129,6 +133,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.5f;
 			sellPriceCoefficient = 0.5f;
 			tradeVesselsTrafficCoefficient = 0.75f;
+			upgradeDiscount = 0.2f;
 			break;
 		case Difficulty.Torture: 
 			LUCK_COEFFICIENT = 0.01f; 
@@ -136,6 +141,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.85f;
 			sellPriceCoefficient = 0.33f;
 			tradeVesselsTrafficCoefficient = 1;
+			upgradeDiscount = 0.1f;
 			break;
 		}
 
@@ -152,17 +158,17 @@ public class GameMaster : MonoBehaviour {
 			colonyController = gameObject.AddComponent<ColonyController>();
 			Structure s = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
 			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
-			s.SetBasement(b, new PixelPosByte(4,1));
+			s.SetBasement(b, PixelPosByte.zero);
 			b.MakeIndestructible(true);
 			b.basement.MakeIndestructible(true);
-			mainChunk.SetAccessPoint(b.pos);
 
 			colonyController.AddCitizens(START_WORKERS_COUNT);
+			colonyController.SetHQ(s.GetComponent<HeadQuarters>());
 
 			if (xpos > 0) xpos --; else xpos++;
 			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
 			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
-			if ( startResources_string != null ) colonyController.storage.AddResources(ResourceType.DecodeResourcesString(startResources_string));
+			colonyController.storage.AddResources(ResourcesCost.info[1]);
 
 			UI ui = gameObject.AddComponent<UI>();
 			ui.lineDrawer = systemDrawLR;
@@ -373,6 +379,10 @@ public class GameMaster : MonoBehaviour {
 			rightOrientedLabel.alignment = TextAnchor.UpperRight;
 			rightOrientedLabel.normal.textColor = Color.white;
 			PoolMaster.GUIStyle_RightOrientedLabel = rightOrientedLabel;
+			GUIStyle rightBottomLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
+			rightBottomLabel.alignment = TextAnchor.LowerRight;
+			rightBottomLabel.normal.textColor = Color.white;
+			PoolMaster.GUIStyle_RightBottomLabel = rightBottomLabel;
 			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			centerOrientedLabel.alignment = TextAnchor.UpperCenter;
 			centerOrientedLabel.normal.textColor = Color.white;

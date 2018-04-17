@@ -6,21 +6,23 @@ public class Building : Structure {
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
 	public byte level = 0;
-	public List<ResourceContainer> resourcesContain {get;protected set;}
-	public string resourcesContainSet = "";
+	[SerializeField]
+	int _resourcesContainIndex = 0;
+	public int resourcesContainIndex{get;protected set;}
 	public float energySurplus = 0, energyCapacity = 0;
 	protected bool connectedToPowerGrid = false; // подключение, контролирующееся игроком
+	public bool borderOnlyConstruction{get;protected set;}
+	public Building nextStage; 
 
 	void Awake() {
 		PrepareBuilding();
+		borderOnlyConstruction = false;
+		resourcesContainIndex = _resourcesContainIndex;
 	}
 	protected void PrepareBuilding() {
 		PrepareStructure();
 		isActive = false;
 		energySupplied = false;
-		if (resourcesContainSet != null) {
-			resourcesContain = ResourceType.DecodeResourcesString(resourcesContainSet);
-		}
 	}
 
 
@@ -36,7 +38,6 @@ public class Building : Structure {
 			GameMaster.colonyController.AddToPowerGrid(this);
 			connectedToPowerGrid = true;
 		}
-		resourcesContainSet = null;
 	}
 
 
@@ -59,10 +60,10 @@ public class Building : Structure {
 	}
 
 	public void Demolish() {
-		if (resourcesContain != null && resourcesContain.Count != 0 && GameMaster.demolitionLossesPercent != 1) {
-			foreach (ResourceContainer rc in resourcesContain) {
-				rc.Get(GameMaster.demolitionLossesPercent * rc.volume);
-				GameMaster.colonyController.storage.AddResources(rc);
+		if (resourcesContainIndex != 0 && GameMaster.demolitionLossesPercent != 1) {
+			ResourceContainer[] rleft = new ResourceContainer[ResourcesCost.info[resourcesContainIndex].Length];
+			for (int i = 0 ; i < rleft.Length; i++) {
+				rleft[i] = new ResourceContainer(ResourcesCost.info[resourcesContainIndex][i].type, ResourcesCost.info[resourcesContainIndex][i].volume * (1 - GameMaster.demolitionLossesPercent));
 			}
 		}
 		Destroy(gameObject);

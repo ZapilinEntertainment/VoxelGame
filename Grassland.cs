@@ -29,12 +29,10 @@ public class Grassland : MonoBehaviour {
 	public SurfaceBlock myBlock {get;private set;}
 	float progress = 0, lifeTimer = 0;
 	public float lifepower;
-	List<Plant> plants;
 	byte prevStage = 0;
 
 	void Awake() {
 		lifepower = 0; 
-		plants = new List<Plant>();
 	}
 
 	void Update() {
@@ -70,60 +68,51 @@ public class Grassland : MonoBehaviour {
 					prevStage = stage;
 				}
 
-				if (lifepower > 2 * LIFEPOWER_TO_PREPARE) {
-					if (stage > 2) {
-						float lifepowerToSinglePlant = GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
-						float lifepowerToShare = plants.Count * lifepowerToSinglePlant;
-						if (lifepowerToShare > lifepower - 2 * LIFEPOWER_TO_PREPARE) {
-							lifepowerToShare = lifepower - 2 * LIFEPOWER_TO_PREPARE;
-							lifepowerToSinglePlant = lifepowerToShare / plants.Count;
+				if (lifepower != 0) {
+					bool noActivity = true;
+						List<Plant> plants = new List<Plant>();
+						foreach (Structure s in myBlock.surfaceObjects) {
+						if (s != null && s.type == StructureType.Plant && s.gameObject.activeSelf) plants.Add(s as Plant);
 						}
-						bool allFull = true;
-						for (int i = 0; i < plants.Count; i++) {
-							if (plants[i] == null) {
-								if (plants.Count > MAX_LIFEFORMS_COUNT) {
-									plants.RemoveAt(i);
-									continue;
+						if (lifepower > 2 * LIFEPOWER_TO_PREPARE) {
+							if (stage > 2) {
+								float lifepowerToSinglePlant = GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
+								if (plants.Count > 0) {
+									float lifepowerToShare = plants.Count * lifepowerToSinglePlant;
+									if (lifepowerToShare > lifepower - 2 * LIFEPOWER_TO_PREPARE) {
+										lifepowerToShare = lifepower - 2 * LIFEPOWER_TO_PREPARE;
+										lifepowerToSinglePlant = lifepowerToShare / plants.Count;
+									}
+									for (int i = 0; i < plants.Count; i++) {	
+										if ( !plants[i].full ) 	plants[i].AddLifepower( TakeLifepower(lifepowerToSinglePlant));
+										if (lifepower <= 0) break;
+									}
 								}
-								else {
+								if ( lifepower > 1 && plants.Count < MAX_LIFEFORMS_COUNT) {
 									PixelPosByte pos = myBlock.GetRandomCell();
-									if (pos != PixelPosByte.Empty) {
-										Plant p = PoolMaster.current.GetSapling();
-										p.gameObject.SetActive(true);
-										p.SetBasement(myBlock, pos);
-										p.AddLifepower(lifepowerToSinglePlant);
-										plants[i] = p;
-										lifepower --;
-									}
-									else {
-										plants.RemoveAt(i);
-										continue;
+									Plant p = PoolMaster.current.GetSapling();
+									p.gameObject.SetActive(true);
+									p.SetBasement(myBlock, pos);
+									p.AddLifepower(lifepowerToSinglePlant);
+									lifepower --;	
+									noActivity = false;
+								}
+							}
+						if ( noActivity ) myBlock.myChunk.AddLifePower( TakeLifepower( GameMaster.MAX_LIFEPOWER_TRANSFER ) );
+							}
+							else { // lifepower falls down
+								if (lifepower < 0 && plants.Count > 0) {
+									float lifepowerNeeded = lifepower * -2;
+									float lifepowerFromSinglePlant = lifepowerNeeded / plants.Count;
+									for (int i = 0; i < plants.Count; i++) {
+										if (plants[i].lifepower <= 0) continue;
+										lifepower += plants[i].TakeLifepower( lifepowerFromSinglePlant );
+										if (lifepower >= 0) break;
 									}
 								}
 							}
-							if ( !plants[i].full ) {
-								plants[i].AddLifepower( TakeLifepower(lifepowerToSinglePlant));
-								allFull = false;
-							}
-							if (lifepower <= 0) break;
-						}
-						if (allFull && (plants.Count == MAX_LIFEFORMS_COUNT || myBlock.cellsStatus == 1)) {
-							myBlock.myChunk.AddLifePower( TakeLifepower( GameMaster.MAX_LIFEPOWER_TRANSFER ) );
-						}
-					}
+					lifeTimer = GameMaster.LIFEPOWER_TICK;
 				}
-				else { // lifepower falls down
-					if (lifepower < 0 && plants.Count > 0) {
-						float lifepowerNeeded = lifepower * -2;
-						float lifepowerFromSinglePlant = lifepowerNeeded / plants.Count;
-						for (int i = 0; i < plants.Count; i++) {
-							if (plants[i] == null) {plants.RemoveAt(i); continue;}
-							if (plants[i].lifepower <= 0) continue;
-							lifepower += plants[i].TakeLifepower( lifepowerFromSinglePlant );
-						}
-					}
-				}
-				if (lifepower != 0) lifeTimer = GameMaster.LIFEPOWER_TICK;
 			}
 		}
 	}
@@ -147,7 +136,7 @@ public class Grassland : MonoBehaviour {
 		if (count > 2 * LIFEPOWER_TO_PREPARE) {
 			float freeEnergy = count - 2 * LIFEPOWER_TO_PREPARE;
 			int plants_count = MAX_LIFEFORMS_COUNT;
-			if (freeEnergy < MAX_LIFEFORMS_COUNT)  plants_count = (int)(freeEnergy - MAX_LIFEFORMS_COUNT); 
+			if (freeEnergy < MAX_LIFEFORMS_COUNT)  plants_count = (int)(MAX_LIFEFORMS_COUNT - freeEnergy); 
 			List<PixelPosByte> positions = myBlock.GetRandomCells(plants_count);
 			float[] lifepowers = new float[plants_count];
 			float total = 0;
@@ -163,18 +152,17 @@ public class Grassland : MonoBehaviour {
 					Tree t = PoolMaster.current.GetTree();
 					t.gameObject.SetActive(true);
 					int pos = (int) (Random.value * (positions.Count - 1));
-					t.SetBasement(myBlock, positions[pos]); // DETECTED FAILURE!
+					t.SetBasement(myBlock, positions[pos]);
 					t.SetLifepower(energy);
 					positions.RemoveAt(pos);
-					plants.Add(t);
 				}
 				else {
 					TreeSapling pl = PoolMaster.current.GetSapling();
+					pl.gameObject.SetActive(true);
 					int pos = (int) (Random.value * (positions.Count - 1));
 					pl.SetBasement(myBlock, positions[pos]);
 					pl.SetLifepower(energy);
 					positions.RemoveAt(pos);
-					plants.Add(pl);
 				}
 			}
 
@@ -209,10 +197,6 @@ public class Grassland : MonoBehaviour {
 	public void SetBlock(SurfaceBlock b) {myBlock = b;}
 
 	public void Annihilation() {
-		for (int i =0; i< plants.Count; i++) {
-			if (plants[i] != null) plants[i].Annihilate( false );
-			else plants.RemoveAt(i);
-		}
 		myBlock.myChunk.AddLifePower((int)lifepower);
 		myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
 		Destroy(this);

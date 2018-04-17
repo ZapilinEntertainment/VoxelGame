@@ -14,7 +14,7 @@ public struct ChunkPos {
 }
 
 public class Chunk : MonoBehaviour {
-	readonly Vector3 CENTER_POS = new Vector3(8,8,8);
+	Vector3 CENTER_POS = new Vector3(8,8,8);
 	Block[,,] blocks;
 	public byte prevBitmask = 63;
 	SurfaceBlock[,] surfaceBlocks;
@@ -25,11 +25,10 @@ public class Chunk : MonoBehaviour {
 	List<Grassland> grassland_blocks;
 	public const byte CHUNK_SIZE = 16;
 	public static int energy_take_speed = 10;
-	public ChunkPos accessPoint{get;private set;}
-	public bool[,,] accessibility {get;private set;}
 	List<GameObject> borderLines; int linesIndex = 0; bool bordersEnabled = false; Transform borderlinesParent;
 
 	void Awake() {
+		CENTER_POS = new Vector3(CHUNK_SIZE/2f, CHUNK_SIZE/2f, CHUNK_SIZE/2f);
 		dirt_for_grassland = new List<SurfaceBlock>();
 		grassland_blocks = new List<Grassland>();
 
@@ -280,13 +279,13 @@ public class Chunk : MonoBehaviour {
 		byte px = lifeSourcePos.x, py = lifeSourcePos.y;
 		float [,] lifepowers = new float[CHUNK_SIZE, CHUNK_SIZE];
 		lifepowers[px, py] = 1;
-		float power = 1;
+		float power = 1, half = (float)CHUNK_SIZE / 2f;
 		bool leftSide = false, rightSide = false, upSide = false, downSide = false;
 		if (px > 0) {
 			leftSide = true;
 			for (int i = px - 1; i >= 0; i--) {
 				byte delta = (byte)Mathf.Abs(surfaceBlocks[i + 1,py].pos.y - surfaceBlocks[i, py].pos.y);
-				lifepowers[i,py] = power * (1 - (delta / 8f) * (delta / 8f));
+				lifepowers[i,py] = power * (1 - (delta / half) * (delta / half));
 				power = lifepowers[i, py] * 0.9f;
 			}
 		}
@@ -295,7 +294,7 @@ public class Chunk : MonoBehaviour {
 			rightSide = true;
 			for (int i = px + 1; i < CHUNK_SIZE; i++) {
 				byte delta = (byte)Mathf.Abs(surfaceBlocks[i - 1,py].pos.y - surfaceBlocks[i, py].pos.y);
-				lifepowers[i,py] = power * (1 - (delta / 8f) * (delta / 8f));
+				lifepowers[i,py] = power * (1 - (delta / half) * (delta / half));
 				power = lifepowers[i, py] * 0.9f;
 			}
 		}
@@ -304,7 +303,7 @@ public class Chunk : MonoBehaviour {
 			downSide = true;
 			for (int i = py - 1; i >= 0; i--) {
 				byte delta = (byte)Mathf.Abs(surfaceBlocks[px, i+1].pos.y - surfaceBlocks[px,i].pos.y);
-				lifepowers[px,i] = power * (1 - (delta / 8f) * (delta / 8f));
+				lifepowers[px,i] = power * (1 - (delta / half) * (delta / half));
 				power = lifepowers[px, i] * 0.9f;
 			}
 		}
@@ -313,7 +312,7 @@ public class Chunk : MonoBehaviour {
 			upSide= true;
 			for (int i = py + 1; i < CHUNK_SIZE; i++) {
 				byte delta = (byte)Mathf.Abs(surfaceBlocks[px, i -1].pos.y - surfaceBlocks[px, i].pos.y);
-				lifepowers[px, i] = power * (1 - (delta / 8f) * (delta / 8f));
+				lifepowers[px, i] = power * (1 - (delta / half) * (delta / half));
 				power = lifepowers[px, i] * 0.9f;
 			}
 		}
@@ -325,7 +324,7 @@ public class Chunk : MonoBehaviour {
 				power= lifepowers[i, px];
 				for (int j = px - 1; j >= 0; j--) {
 					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j+1].pos.y - surfaceBlocks[i,j].pos.y);
-					lifepowers[i,j] = power  * (1 - (delta / 8f) * (delta / 8f));
+					lifepowers[i,j] = power  * (1 - (delta / half) * (delta / half));
 					power = lifepowers[i,j] * 0.9f;
 				}
 			}
@@ -336,7 +335,7 @@ public class Chunk : MonoBehaviour {
 				power= lifepowers[i, px];
 				for (int j = px +1; j < CHUNK_SIZE; j++) {
 					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j].pos.y - surfaceBlocks[i,j-1].pos.y);
-					lifepowers[i,j] = power  * (1 - (delta / 8f) * (delta / 8f));
+					lifepowers[i,j] = power  * (1 - (delta / half) * (delta / half));
 					power = lifepowers[i,j] * 0.9f;
 				}
 			}
@@ -348,7 +347,7 @@ public class Chunk : MonoBehaviour {
 				power = lifepowers [i,py];
 				for (int j = py + 1; j < CHUNK_SIZE; j++) {
 					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j].pos.y - surfaceBlocks[i,j-1].pos.y);
-					lifepowers[i,j] = (power  * (1 - (delta / 8f) * (delta / 8f)) + lifepowers[i,j] ) / 2f;
+					lifepowers[i,j] = (power  * (1 - (delta / half) * (delta / half)) + lifepowers[i,j] ) / 2f;
 					power = lifepowers[i,j] * 0.9f;
 				}
 			}
@@ -356,7 +355,7 @@ public class Chunk : MonoBehaviour {
 				power = lifepowers [i,py];
 				for (int j = py - 1; j >=0; j--) {
 					byte delta = (byte)Mathf.Abs(surfaceBlocks[i,j].pos.y - surfaceBlocks[i,j+1].pos.y);
-					lifepowers[i,j] = (power  * (1 - (delta / 8f) * (delta / 8f)) + lifepowers[i,j]) / 2f;
+					lifepowers[i,j] = (power  * (1 - (delta / half) * (delta / half)) + lifepowers[i,j]) / 2f;
 					power = lifepowers[i,j] * 0.9f;
 				}
 			}
@@ -637,10 +636,6 @@ public class Chunk : MonoBehaviour {
 		if (b != null) {Destroy(blocks[x,y,z].gameObject);}
 		else blocks[x,y,z] = new GameObject().AddComponent<Block>();
 		blocks[x,y,z].ShapelessBlockSet(this, new ChunkPos(x,y,z), s);
-	}
-
-	public void SetAccessPoint(ChunkPos pos) {
-		accessPoint = pos;
 	}
 
 	void OnGUI () {

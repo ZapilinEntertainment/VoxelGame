@@ -19,18 +19,16 @@ public class Dock : WorkBuilding {
 	const float LOADING_TIME = 10;
 	float loadingTimer = 0;
 
-
-	static Dock() {
-		isForSale = new bool?[ResourceType.resourceTypesArray.Length];
-		minValueForTrading= new int[ResourceType.resourceTypesArray.Length];
-		immigrationEnabled = true;
-		immigrantsMonthLimit = 20;
-	}
-
 	void Awake() {
 		PrepareWorkbuilding();
 		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;
+		if (isForSale == null) {
+			isForSale = new bool?[ResourceType.resourceTypesArray.Length];
+			minValueForTrading= new int[ResourceType.resourceTypesArray.Length];
+			immigrationEnabled = true;
+			immigrantsMonthLimit = 20;
+		}
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -206,7 +204,11 @@ public class Dock : WorkBuilding {
 							preparingResourceIndex = index;
 						}
 						GUI.Label(new Rect(resrect.x, resrect.y, resrect.width, resrect.height/2f), ResourceType.resourceTypesArray[index].name, PoolMaster.GUIStyle_CenterOrientedLabel);
-						GUI.Label(new Rect(resrect.x, resrect.yMax -  resrect.height/2f, resrect.width, resrect.height/2f), ((int)(colony.storage.standartResources[index] *100f)/100f ).ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
+						GUI.Label(new Rect(resrect.x, resrect.yMax -  resrect.height/2f, resrect.width, resrect.height/2f), ((int)(colony.storage.standartResources[index] *100f)/100f ).ToString(), PoolMaster.GUIStyle_RightBottomLabel);
+						if ( isForSale [index] != null) {
+							if (isForSale [index] == true) GUI.DrawTexture( new Rect(resrect.x, resrect.y + resrect.height / 2f, resrect.height / 2f, resrect.height/2f), PoolMaster.redArrow_tx, ScaleMode.StretchToFill);
+							else GUI.DrawTexture(new Rect(resrect.x, resrect.y + resrect.height / 2f, resrect.height / 2f, resrect.height/2f), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
+						}
 						index ++;
 						resrect.x += resrect.width;
 						if (index >= ResourceType.resourceTypesArray.Length) break;

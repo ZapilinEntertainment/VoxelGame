@@ -10,14 +10,15 @@ public class PoolMaster : MonoBehaviour {
 	public static GameObject quad_pref {get;private set;}
 	public static Material	default_material, lr_red_material, lr_green_material, grass_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
-	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx;
-	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert;
+	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
+		greenArrow_tx, redArrow_tx;
+	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
+	GUIStyle_RightBottomLabel;
 
-	List<GameObject> treesPool, grassPool, lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
+	List<GameObject> treesPool, saplingsPool, lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
 		lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные
 	const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
 	const int SHIPS_BUFFER_SIZE = 5;
-	public int treesPoolCount, grassPoolCount;
 	public int treesPool_buffer_size =16, grassPool_buffer_size = 16;
 	float treeClearTimer = 0, grassClearTimer = 0, shipsClearTimer = 0,clearTime = 30;
 
@@ -34,6 +35,8 @@ public class PoolMaster : MonoBehaviour {
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
 
+		redArrow_tx = Resources.Load<Texture>("Textures/redArrow");
+		greenArrow_tx = Resources.Load<Texture>("Textures/greenArrow");
 		orangeSquare_tx = Resources.Load<Texture>("Textures/orangeSquare");
 		quadSelector_tx = Resources.Load<Texture>("Textures/quadSelector");
 		minusX10Button_tx = Resources.Load<Texture>("Textures/minusX10Button");
@@ -61,7 +64,7 @@ public class PoolMaster : MonoBehaviour {
 		tree_pref = Resources.Load<GameObject>("Lifeforms/Tree");tree_pref.SetActive(false);
 		treesPool = new List<GameObject>();
 		sapling_pref = Resources.Load<GameObject>("Lifeforms/TreeSapling"); sapling_pref.SetActive(false);
-		grassPool = new List<GameObject>();
+		saplingsPool = new List<GameObject>();
 
 		Material dirtMaterial = ResourceType.GetMaterialById(ResourceType.DIRT_ID);
 		grassland_ready_25 = new Material[4]; grassland_ready_50 = new Material[4];
@@ -95,17 +98,16 @@ public class PoolMaster : MonoBehaviour {
 				else treeClearTimer = 0;
 			}
 		}
-		if (grassPool.Count > grassPool_buffer_size) {
+		if (saplingsPool.Count > grassPool_buffer_size) {
 			grassClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (grassClearTimer <= 0) {
-				GameObject grass= grassPool[grassPool.Count - 1];
-				grassPool.RemoveAt(grassPool.Count - 1);
+				GameObject grass= saplingsPool[saplingsPool.Count - 1];
+				saplingsPool.RemoveAt(saplingsPool.Count - 1);
 				Destroy(grass);
-				if (grassPool.Count > grassPool_buffer_size) grassClearTimer = clearTime;
+				if (saplingsPool.Count > grassPool_buffer_size) grassClearTimer = clearTime;
 				else grassClearTimer = 0;
 			}
 		}
-		treesPoolCount = treesPool.Count; grassPoolCount = grassPoolCount;
 
 		int docksCount = GameMaster.colonyController.docks.Count;
 		if (shipsClearTimer > 0) {
@@ -169,27 +171,27 @@ public class PoolMaster : MonoBehaviour {
 	}
 	public TreeSapling GetSapling() {
 		GameObject grass = null;
-		if (grassPool.Count == 0) grass = Instantiate(sapling_pref);
+		if (saplingsPool.Count == 0) grass = Instantiate(sapling_pref);
 		else {
-			if (grassPool[0] == null) {
+			if (saplingsPool[0] == null) {
 				grass = Instantiate(sapling_pref);
 			}
 			else {
-				grass = grassPool[0];			
+				grass = saplingsPool[0];			
 				grassClearTimer = clearTime;
 			}
-			grassPool.RemoveAt(0);
+			saplingsPool.RemoveAt(0);
 		}
 		return grass.GetComponent<TreeSapling>();
 	}
-	public void ReturnGrassToPool(TreeSapling grass) {
-		if (grass == null) return;
-		if (grass.basement != null) grass.UnsetBasement();
-		grass.hp = grass.maxHp;
-		grass.SetLifepower(0);
-		grass.transform.parent = transform;
-		grass.gameObject.SetActive(false);
-		grassPool.Add(grass.gameObject);
+	public void ReturnSaplingToPool(TreeSapling sapling) {
+		if (sapling == null) return;
+		if (sapling.basement != null) sapling.UnsetBasement();
+		sapling.hp = sapling.maxHp;
+		sapling.SetLifepower(0);
+		sapling.transform.parent = transform;
+		sapling.gameObject.SetActive(false);
+		saplingsPool.Add(sapling.gameObject);
 	}
 
 	public Ship GetShip(byte level, ShipType type) {
@@ -272,5 +274,9 @@ public class PoolMaster : MonoBehaviour {
 			break;
 		}
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
+	}
+
+	public static void BuildSplashEffect(Structure s) {
+		//заготовка
 	}
 }

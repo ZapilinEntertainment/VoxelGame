@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Lumbermill : WorkBuilding {
-	int lifepowerForSingleTree = 16;
+	int lifepowerForSingleTree = 4;
 	const int MAX_TREES = 16;
-	float chopLimit = 0.5f;
+	float chopLimit = 0.2f;
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;

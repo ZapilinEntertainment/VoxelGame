@@ -59,7 +59,7 @@ public class Constructor : MonoBehaviour {
 		SurfaceBlock[,] surface = chunk.GetSurface();
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
-		x = 7;z=7;
+		x = Chunk.CHUNK_SIZE / 2;z=Chunk.CHUNK_SIZE/2;
 		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);

@@ -98,26 +98,35 @@ public class SurfaceBlock : Block {
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
-			while (i < surfaceObjects.Count) {
-				if ( !surfaceObjects[i] == null ) {surfaceObjects.RemoveAt(i); continue;}
-				SurfaceRect a = surfaceObjects[i].innerPosition;
-				int leftX = -1, rightX = -1;
-				if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
-				if (a.x + a.x_size > sr.x + sr.x_size) rightX = sr.x + sr.x_size; else rightX = a.x + a.x_size;
-				if (leftX >= rightX) {i++;continue;}
-				int topZ = -1, downZ = -1;
-				if (a.z > sr.z) downZ = a.z; else downZ = sr.z;
-				if (a.z + a.z_size > sr.z + sr.z_size) topZ = sr.z + sr.z_size; else topZ = a.z + a.z_size;
-				if (topZ <= downZ) {i++;continue;}
-				else {
-					surfaceObjects[i].Annihilate( true );
-					i++;
+			if (sr.x_size == INNER_RESOLUTION && sr.z_size == INNER_RESOLUTION) { // destroy everything there
+				for (; i < surfaceObjects.Count; i++) {
+					if (surfaceObjects[0] != null) surfaceObjects[i].Annihilate( true );
+					surfaceObjects.RemoveAt(0);
+				}
+			}
+			else {
+				while (i < surfaceObjects.Count) {
+					if ( surfaceObjects[i] == null ) {surfaceObjects.RemoveAt(i); continue;}
+					SurfaceRect a = surfaceObjects[i].innerPosition;
+					int leftX = -1, rightX = -1;
+					if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
+					if (a.x + a.x_size > sr.x + sr.x_size) rightX = sr.x + sr.x_size; else rightX = a.x + a.x_size;
+					if (leftX >= rightX) {i++;continue;}
+					int topZ = -1, downZ = -1;
+					if (a.z > sr.z) downZ = a.z; else downZ = sr.z;
+					if (a.z + a.z_size > sr.z + sr.z_size) topZ = sr.z + sr.z_size; else topZ = a.z + a.z_size;
+					if (topZ <= downZ) {i++;continue;}
+					else {
+						surfaceObjects[i].Annihilate( true );
+						i++;
+					}
 				}
 			}
 		}
 		surfaceObjects.Add(s);
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(s.innerPosition);
+		if (s.randomRotation) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
@@ -145,6 +154,7 @@ public class SurfaceBlock : Block {
 		surfaceObjects.Add(s);
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1, 1));
+		if (s.randomRotation) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
@@ -199,11 +209,11 @@ public class SurfaceBlock : Block {
 
 	public override void ReplaceMaterial( int newId) {
 		material_id = newId;
-		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
 		if (grassland != null) {
 			grassland.Annihilation();
 			CellsStatusUpdate();
 		}
+		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
 	}
 
 	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, CubeBlock f_basement) {
