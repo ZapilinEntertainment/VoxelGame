@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
-	public byte visibilityMask {get;private set;}
 	public float naturalFossils = 0;
-	byte renderMask = 0, excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
+	byte excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
 	public int volume ;
 	public static readonly int MAX_VOLUME;
 	public bool career{get;private set;} // изменена ли верхняя поверхность на котлован?
@@ -33,9 +32,15 @@ public class CubeBlock : Block{
 	}
 
 	public int Dig(int blocksCount, bool show) {
+		if (volume == 0) {
+			if (career) myChunk.DeleteBlock(pos);
+			else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
+			return 0;
+		} 
 		if (blocksCount > volume) blocksCount = volume;
-		volume -= blocksCount;
-		if (show) CheckExcavatingStatus();
+		volume -= blocksCount;	
+		if (show) career = true;
+		if (career) CheckExcavatingStatus();
 		return blocksCount;
 	}
 
@@ -61,7 +66,7 @@ public class CubeBlock : Block{
 		}
 	}
 
-	public void SetRenderBitmask(byte x) {
+	override public void SetRenderBitmask(byte x) {
 		if (renderMask != x) {
 			renderMask = x;
 			if (visibilityMask == 0) return;
@@ -75,7 +80,7 @@ public class CubeBlock : Block{
 		}
 	}
 
-	public void SetVisibilityMask (byte x) {
+	override public void SetVisibilityMask (byte x) {
 		visibilityMask = x;
 		if (renderMask == 0) return;
 		for (int i = 0; i< 6; i++) {
@@ -86,15 +91,6 @@ public class CubeBlock : Block{
 			else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
 		}
 	}
-	public void ChangeVisibilityMask (byte index, bool value) { 
-		int vm = visibilityMask;
-		int im =(byte) (63 - (int)Mathf.Pow(2, index));
-		if (value == false) { vm &= im;}
-		else {vm = ~vm; vm &= im; vm = ~vm;}
-		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
-	}
-
-
 
 	void CreateFace(int i) {
 		if (faces == null) faces =new MeshRenderer[6];
@@ -132,7 +128,6 @@ public class CubeBlock : Block{
 			if (pc > 0.75f) {				
 				if (excavatingStatus != 0) {
 					excavatingStatus = 0; 
-					career = false;
 					if (faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
 					Block b = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
@@ -146,7 +141,6 @@ public class CubeBlock : Block{
 					excavatingStatus = 1;
 					if (faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
-					career = true;
 				}
 			}
 		}
@@ -156,7 +150,6 @@ public class CubeBlock : Block{
 					excavatingStatus = 2;
 					if (faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_05;
-					career = true;
 				}
 				}
 				else {
@@ -164,7 +157,6 @@ public class CubeBlock : Block{
 						excavatingStatus = 3; 
 						if (faces[4] == null) CreateFace(4);
 						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
-						career = true;
 					}
 				}
 			

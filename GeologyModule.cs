@@ -147,27 +147,27 @@ public class GeologyModule : MonoBehaviour {
 			case ResourceType.STONE_ID :
 				if (metalK_abundance >= v) {
 					m= metalK_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_K, m); production -= m;
+					storage.AddResources(ResourceType.metal_K_ore, m); production -= m;
 				}
 				if (metalM_abundance >= v) {
 					m= metalM_abundance * production * (Random.value +1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_M, m); production -= m;
+					storage.AddResources(ResourceType.metal_M_ore, m); production -= m;
 				}
 				if (metalE_abundance >= v) {
 					m= metalE_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_E, m); production -= m;
+					storage.AddResources(ResourceType.metal_E_ore, m); production -= m;
 				}
 				if (metalN_abundance >= v) {
 					m= metalN_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_N, m); production -= m;
+					storage.AddResources(ResourceType.metal_N_ore, m); production -= m;
 				}
 				if (metalP_abundance >= v) {
 					m= metalP_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_P, m); production -= m;
+					storage.AddResources(ResourceType.metal_P_ore, m); production -= m;
 				}
 				if (metalS_abundance >= v) {
 					m= metalS_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					storage.AddResources(ResourceType.metal_S, m); production -= m;
+					storage.AddResources(ResourceType.metal_S_ore, m); production -= m;
 				}
 				if (mineralF_abundance >= v) {
 					m= mineralF_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
@@ -184,7 +184,7 @@ public class GeologyModule : MonoBehaviour {
 			case ResourceType.DIRT_ID:
 				if (metalK_abundance >= v) {
 					m= metalK_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					GameMaster.colonyController.storage.AddResources(ResourceType.metal_K, m); production -= m;
+					GameMaster.colonyController.storage.AddResources(ResourceType.metal_K_ore, m); production -= m;
 				}
 				if (metalP_abundance >= v) {
 					m= metalP_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);

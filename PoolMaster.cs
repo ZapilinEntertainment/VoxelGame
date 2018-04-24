@@ -8,10 +8,11 @@ public class PoolMaster : MonoBehaviour {
 	public Material dryingLeaves_material, leaves_material;
 	GameObject tree_pref, sapling_pref, deadTree_pref, lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
 	public static GameObject quad_pref {get;private set;}
+	public static GameObject mineElevator_pref {get;private set;}
 	public static Material	default_material, lr_red_material, lr_green_material, grass_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
-		greenArrow_tx, redArrow_tx;
+		greenArrow_tx, redArrow_tx, empty_tx;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel;
 
@@ -35,6 +36,7 @@ public class PoolMaster : MonoBehaviour {
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
 
+		empty_tx = Resources.Load<Texture>("Textures/resource_empty");
 		redArrow_tx = Resources.Load<Texture>("Textures/redArrow");
 		greenArrow_tx = Resources.Load<Texture>("Textures/greenArrow");
 		orangeSquare_tx = Resources.Load<Texture>("Textures/orangeSquare");
@@ -60,6 +62,7 @@ public class PoolMaster : MonoBehaviour {
 		leaves_material = Resources.Load<Material>("Materials/Leaves");
 		grass_material = Resources.Load<Material>("Materials/Grass");
 
+		mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
 		deadTree_pref = Resources.Load<GameObject>("Lifeforms/DeadTree");deadTree_pref.SetActive(false);
 		tree_pref = Resources.Load<GameObject>("Lifeforms/Tree");tree_pref.SetActive(false);
 		treesPool = new List<GameObject>();

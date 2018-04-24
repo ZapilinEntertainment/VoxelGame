@@ -10,7 +10,7 @@ public class UI : MonoBehaviour {
 	public UIMode mode{get;private set;}
 
 	float leftPanelWidth;
-	byte argument;
+	byte argument, showingBuildingsLevel = 1;
 	public Rect rightPanelBox, upPanelBox, acceptBox,systemInfoRect, buildingGridRect;
 	string systemInfoString; float systemInfoTimer = 0;
 	public bool  showBuildingCreateInfo {get; private set;}
@@ -65,7 +65,7 @@ public class UI : MonoBehaviour {
 
 		float p = Screen.width/2f / SurfaceBlock.INNER_RESOLUTION;
 		float side = p * SurfaceBlock.INNER_RESOLUTION;
-		buildingGridRect = new Rect(Screen.width / 2f -  side/2f, Screen.height/2f - side/2f, side, side);
+		buildingGridRect = new Rect(rightPanelBox.x - side - 2 * p, Screen.height/2f - side/2f, side, side);
 	}
 	void Update() {
 		mousePos = Input.mousePosition;
@@ -87,7 +87,9 @@ public class UI : MonoBehaviour {
 						Block b = rh.collider.transform.parent.GetComponent<Block>();
 						if (b != null) {
 							float x ,y,z,d = Block.QUAD_SIZE/2f;
-							if ( b.type == BlockType.Surface ) {
+							switch (b.type) {
+							case BlockType.Cave:
+							case BlockType.Surface:
 									mode = UIMode.SurfaceBlockPanel;
 									chosenSurfaceBlock = b.GetComponent<SurfaceBlock>();
 									x= chosenSurfaceBlock.transform.position.x; y = chosenSurfaceBlock.transform.position.y - d + 0.01f;  z = chosenSurfaceBlock.transform.position.z;
@@ -98,8 +100,8 @@ public class UI : MonoBehaviour {
 									argument = 1;
 								if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
 								chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
-							}
-							else {
+								break;
+							case BlockType.Cube:
 								chosenCubeBlock = b.GetComponent<CubeBlock>();
 									for (byte i =0; i< 6; i++) {
 										if (chosenCubeBlock.faces[i] == null) continue;
@@ -135,7 +137,8 @@ public class UI : MonoBehaviour {
 										}
 										quadSelector.SetActive(true);
 									GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
-									}					
+									}	
+								break;
 							}
 						}
 					}
@@ -218,6 +221,11 @@ public class UI : MonoBehaviour {
 		}
 	}
 
+	public void ChangeSystemInfoString(string s) {
+		if ( s == null ) return;
+		systemInfoString = s;
+		systemInfoTimer = 2;
+	}
 
 	void OnGUI() {
 		GUI.skin = GameMaster.mainGUISkin;
@@ -297,7 +305,6 @@ public class UI : MonoBehaviour {
 					//DIG BUTTON
 					if (chosenSurfaceBlock.indestructible == false) {
 						CleanSite cs = chosenSurfaceBlock.GetComponent<CleanSite>();
-						DigSite ds = chosenSurfaceBlock.basement.GetComponent<DigSite>();
 						if (cs == null) {
 							if (GUI.Button(rr, Localization.ui_dig_block)) {
 								if (chosenSurfaceBlock.artificialStructures > 0) ChangeArgument(2);
@@ -324,14 +331,37 @@ public class UI : MonoBehaviour {
 					break;
 				case 3: // выбрать доступные для строительства домики
 					if (GUI.Button(rr, Localization.menu_cancel)) {
-						ChangeArgument(1);
-					
+						ChangeArgument(1);			
+					}
+					rr.y += rr.height;
+					GUI.DrawTexture(new Rect(rr.x + (showingBuildingsLevel - 1) * rr.height, rr.y, rr.height, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+					if (GameMaster.colonyController.hq != null) {
+						if (GUI.Button(new Rect(rr.x, rr.y, rr.height, rr.height), "1")) {
+							showingBuildingsLevel = 1;
+							ChangeArgument(3);
+						}
+						if (GameMaster.colonyController.hq.level >= 2) {
+							if (GUI.Button(new Rect(rr.x + rr.height, rr.y, rr.height, rr.height), "2")) {
+								showingBuildingsLevel = 2;
+								ChangeArgument(3);
+							}
+						}
 					}
 					rr.y += rr.height;
 					int buildingIndex = 0;
-					foreach (Building bd in GameMaster.colonyController.buildings_level_1) {
+					List<Building> showingBuildingsList = null;
+					switch (showingBuildingsLevel) {
+					case 1: showingBuildingsList = GameMaster.colonyController.buildings_level_1;break;
+					case 2: showingBuildingsList = GameMaster.colonyController.buildings_level_2;break;
+					case 3: showingBuildingsList = GameMaster.colonyController.buildings_level_3;break;
+					case 4: showingBuildingsList = GameMaster.colonyController.buildings_level_4;break;
+					case 5: showingBuildingsList = GameMaster.colonyController.buildings_level_5;break;
+					case 6: showingBuildingsList = GameMaster.colonyController.buildings_level_6;break;
+					}
+					if ( showingBuildingsList != null && showingBuildingsList.Count != 0 ) {
+						foreach (Building bd in showingBuildingsList) {
 						if (bd.borderOnlyConstruction && !chosenSurfaceBlockIsBorderBlock) continue;
-						if (GUI.Button(rr, bd.structureName)) {
+						if (GUI.Button(rr, Localization.structureName[bd.nameIndex])) {
 							if (chosenStructure != bd ) {
 								chosenStructure = bd; 
 								chosenBuildingIndex = buildingIndex;
@@ -358,7 +388,6 @@ public class UI : MonoBehaviour {
 							GUI.DrawTexture( new Rect(rr.x + rr.width/2f, rr.y, k, rr.height ) , buildingQuad_icon_tx, ScaleMode.StretchToFill);
 							GUI.Label( new Rect(rr.x + rr.width/2f + 2 *k, rr.y, rr.width/2f, rr.height) , chosenStructure.innerPosition.x_size.ToString() + " x " + chosenStructure.innerPosition.z_size.ToString());
 							rr.y += rr.height;
-
 							foreach (ResourceContainer rc in ResourcesCost.info[chosenBuilding.resourcesContainIndex]) {
 								GUI.Label(new Rect(rr.x, rr.y, rr.width * 0.75f, rr.height), rc.type.name);
 								float wx = rr.width * 0.875f; if (wx > rr.height) wx = rr.height;
@@ -393,6 +422,7 @@ public class UI : MonoBehaviour {
 						}
 						buildingIndex++;
 					}
+				}
 					// сетка для размещения постройки
 					if (argument != 4) GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); // чтобы не дублировалось
 					float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
@@ -465,7 +495,16 @@ public class UI : MonoBehaviour {
 					break;
 				}
 				#region cubeBlockPanel
-				// nothing right now
+				if (faceIndex == 4) { // верхний
+					if ( !chosenCubeBlock.career ) {
+						ChunkPos cpos = chosenCubeBlock.pos;
+						cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z);
+						chosenCubeBlock.myChunk.AddBlock(cpos, BlockType.Surface, chosenCubeBlock.material_id);
+						chosenSurfaceBlock = chosenCubeBlock.myChunk.GetBlock(cpos.x, cpos.y, cpos.z) as SurfaceBlock;
+						mode = UIMode.SurfaceBlockPanel;
+						chosenCubeBlock = null;
+					}
+				}
 				#endregion
 				break;
 			case UIMode.WorksitePanel:
@@ -492,7 +531,7 @@ public class UI : MonoBehaviour {
 						return;
 					}
 					rr.y += rr.height;
-					GUI.Label(rr, chosenStructure.structureName + " (" + Localization.info_level + b.level.ToString() + ") "); 
+					GUI.Label(rr,  Localization.structureName[chosenStructure.nameIndex] + " (" + Localization.info_level + b.level.ToString() + ") "); 
 					rr.y += rr.height;
 
 					bool act = GUI.Toggle(new Rect(rr.x, rr.y, rr.width / 2f, rr.height), b.isActive, Localization.ui_activeSelf); 
@@ -504,25 +543,6 @@ public class UI : MonoBehaviour {
 						GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  surplusString );
 					}
 					else GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  "offline" );
-					rr.y += rr.height;
-					if (b.nextStage != null) {
-						GUI.DrawTexture( new Rect(rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-						if ( b is HeadQuarters || (GameMaster.colonyController.hq != null && b.nextStage.level <= GameMaster.colonyController.hq.level ) ) {
-							if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-								ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[b.nextStage.resourcesContainIndex].Length];
-								if (requiredResources.Length > 0) {
-									for (int i = 0; i < requiredResources.Length; i++) {
-										requiredResources[i] = new ResourceContainer(ResourcesCost.info[b.nextStage.resourcesContainIndex][i].type, ResourcesCost.info[b.nextStage.resourcesContainIndex][i].volume * (1 - GameMaster.upgradeDiscount));
-									}
-								}
-								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-								{
-									Building upgraded = Instantiate(b.nextStage);
-									upgraded.SetBasement(b.basement, PixelPosByte.zero);
-								}
-							}
-						}
-					}
 					rr.y += rr.height;
 					WorkBuilding wb = b as WorkBuilding;
 					if (wb != null) {
@@ -545,36 +565,48 @@ public class UI : MonoBehaviour {
 	}
 
 	public void AddFactoryToList (Factory f) {
-		switch (f.specialization) {
-		case FactorySpecialization.Smeltery:
-			if ( !hasSmelteries ) {smelteriesList = new List<Factory>(); hasSmelteries = true;}
-			smelteriesList.Add(f);
-			break;
-			default:
-			if (!hasUnspecializedFactories) {unspecializedFactories = new List<Factory>(); hasUnspecializedFactories = true;}
-			unspecializedFactories.Add(f);
+		switch ( f.factoryType ) {
+		case FactoryType.Simple:
+			switch (f.specialization) {
+			case FactorySpecialization.Unspecialized:
+				if ( !hasUnspecializedFactories ) unspecializedFactories =new List<Factory>();
+				hasUnspecializedFactories = true;
+				unspecializedFactories.Add(f);
+				break;
+			case FactorySpecialization.Smeltery:
+				if ( !hasSmelteries ) smelteriesList =new List<Factory>();
+				hasSmelteries= true;
+				smelteriesList.Add(f);
+				break;
+			}
 			break;
 		}
 	}
 
+
 	public void RemoveFromFactoriesList (Factory f) {
-		switch (f.specialization) {
-		case FactorySpecialization.Unspecialized:
-			if (hasUnspecializedFactories) {
-				for ( int i = 0; i < unspecializedFactories.Count; i++) {
-					if (unspecializedFactories[i] == f ) { unspecializedFactories.RemoveAt(i); break; }
-				}
-				if (unspecializedFactories.Count == 0) { unspecializedFactories = null; hasUnspecializedFactories = false; }
+		switch ( f.factoryType ) {
+		case FactoryType.Simple:
+			switch ( f.specialization ) {
+			case FactorySpecialization.Smeltery:
+				RemoveObjectFromFactoryList( smelteriesList, f, ref hasSmelteries);
+				break;
+			case FactorySpecialization.Unspecialized:
+				RemoveObjectFromFactoryList( unspecializedFactories, f, ref hasUnspecializedFactories);
+				break;
 			}
 			break;
-		case FactorySpecialization.Smeltery:
-			if ( hasSmelteries ) {
-				for ( int i = 0; i < smelteriesList.Count; i++) {
-					if (smelteriesList[i] == f ) { smelteriesList.RemoveAt(i); break; }
-				}
-				if (smelteriesList.Count == 0) { smelteriesList = null; hasSmelteries = false; }
-				}
-			break;
+		}
+	}
+	void RemoveObjectFromFactoryList(List<Factory> list, Factory obj, ref bool presenceMarker) {
+		if (list == null) {presenceMarker = false; return;}
+		int i = 0;
+		while ( i < list.Count ) {
+			if (list[i] == null || list[i] == obj) list.RemoveAt(i);
+			i++;
+		}
+		if (list.Count == 0) {
+			presenceMarker = false;
 		}
 	}
 }

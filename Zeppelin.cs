@@ -83,7 +83,7 @@ public class Zeppelin : Transport {
 								hq.SetBasement(landingPlace, PixelPosByte.zero);
 
 								landingPlace.MakeIndestructible(true);
-								landingPlace.basement.MakeIndestructible(true);
+								landingPlace.myChunk.GetBlock(landingPlace.pos.x, landingPlace.pos.y - 1,landingPlace.pos.z).MakeIndestructible(true);
 								GameMaster.colonyController.AddCitizens(GameMaster.START_WORKERS_COUNT);
 								GameMaster.colonyController.SetHQ(hq.GetComponent<HeadQuarters>());
 

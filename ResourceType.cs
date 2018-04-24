@@ -35,7 +35,7 @@ public class ResourceType {
 		static ResourceType() {
 		resourceTypesArray = new ResourceType[RTYPES_COUNT];
 		prices = new float[RTYPES_COUNT]; demand = new float[RTYPES_COUNT];
-		Nothing = new ResourceType(Localization.rtype_nothing_name, 0, 0, 0, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_empty"), Localization.rtype_nothing_descr); 
+		Nothing = new ResourceType(Localization.rtype_nothing_name, 0, 0, 0, PoolMaster.default_material, PoolMaster.empty_tx, Localization.rtype_nothing_descr); 
 
 		Food = new ResourceType(Localization.rtype_food_name, FOOD_ID, 0.1f, 0.1f, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_supplies"), Localization.rtype_food_descr);
 		prices[FOOD_ID] = 1; demand[FOOD_ID] = 2;
@@ -99,11 +99,15 @@ public class ResourceType {
 		else return resourceTypesArray[f_id];
 	}
 	public static Material GetMaterialById(int f_id) {
+		Material m = PoolMaster.default_material;
 		if (f_id > resourceTypesArray.Length || f_id < 0) {
 			// return custom resource material
-			return PoolMaster.default_material;
+			return m;
 		}
-		else return resourceTypesArray[f_id].material;
+		else {
+			if (resourceTypesArray[f_id] != null) m= resourceTypesArray[f_id].material;
+		}
+		if (m != null) return m; else return PoolMaster.default_material;
 	}
 }
 

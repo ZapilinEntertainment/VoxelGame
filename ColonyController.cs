@@ -10,10 +10,16 @@ public class ColonyController : MonoBehaviour {
 	public Storage storage{get;private set;}
 	public HeadQuarters hq{get;private set;}
 	public float gears_coefficient {get; private set;}
+	public float hospitals_coefficient{get;private set;}
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
 	public List<Building> buildings_level_1{get;private set;}
+	public List<Building> buildings_level_2{get;private set;}
+	public List<Building> buildings_level_3{get;private set;}
+	public List<Building> buildings_level_4{get;private set;}
+	public List<Building> buildings_level_5{get;private set;}
+	public List<Building> buildings_level_6{get;private set;}
 	public bool showColonyInfo = false;
 
 
@@ -23,6 +29,7 @@ public class ColonyController : MonoBehaviour {
 	public float energyCrystalsCount {get;private set;}
 	List<Building> powerGrid;
 	public List<Dock> docks{get;private set;}
+	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
 	public float shipArrivingTimer = 0;
 	public byte docksLevel{get; private set;}
 	const float SHIP_ARRIVING_TIME = 300; // for max difficulty
@@ -33,7 +40,7 @@ public class ColonyController : MonoBehaviour {
 	public int deathCredit{get;private set;}
 	float peopleSurplus = 0;
 	public int totalLivespace{get;private set;}
-	List<House> houses;
+	List<House> houses; List<Hospital> hospitals;
 	Rect myRect;
 	float starvationTimer, starvationTime = 600;
 
@@ -46,6 +53,7 @@ public class ColonyController : MonoBehaviour {
 		labourEfficientcy_coefficient = 1;
 		happiness_coefficient = 1;
 		health_coefficient = 1;
+		hospitals_coefficient = 0;
 		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
 		docksLevel = 0;
 		energyCrystalsCount = 100;
@@ -68,9 +76,27 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Dock_level_1")) );
 		buildings_level_1[7].gameObject.SetActive(false);
 
+		buildings_level_2 = new List<Building>();
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Biogenerator_level_2")) );
+		buildings_level_2[0].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Hospital_level_2")) );
+		buildings_level_2[1].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/MineralPP_level_2")) );
+		buildings_level_2[2].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/OreEnricher_level_2")) );
+		buildings_level_2[3].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Smeltery_level_2")) );
+		buildings_level_2[4].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Storage_level_2")) );
+		buildings_level_2[5].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_2")) );
+		buildings_level_2[6].gameObject.SetActive(false);
+
+
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
+		rollingShops = new List<RollingShop>();
 	}
 
 	void Update() {
@@ -194,6 +220,11 @@ public class ColonyController : MonoBehaviour {
 
 	public void AddHousing(House h) {
 		if (h== null) return;
+		if ( houses.Count > 0) {
+			foreach ( House eh in houses) {
+				if ( eh == h ) return;
+			}
+		}
 		houses.Add(h);
 		RecalculateHousing();
 	}
@@ -213,15 +244,54 @@ public class ColonyController : MonoBehaviour {
 		if (houses.Count == 0) return;
 		int i = 0;
 		while (i <houses.Count) {
-			if (houses[i] == null) {houses.RemoveAt(i); continue;}
+			if (houses[i] == null || !houses[i].gameObject.activeSelf) {houses.RemoveAt(i); continue;}
 			if ( houses[i].isActive) {
 				totalLivespace += houses[i].housing;
 			}
 			i++;
 		}
 	}
+
+	public void AddHospital(Hospital h) {
+		if (h == null) return;
+		if ( hospitals.Count > 0) {
+			foreach ( Hospital eh in hospitals) {
+				if ( eh == h ) return;
+			}
+		}
+		hospitals.Add(h);
+		RecalculateHospitals();
+	}
+	public void DeleteHospital(Hospital h) {
+		int i = 0;
+		while (i < hospitals.Count)  {
+			if ( hospitals[i] == h) {
+				hospitals.RemoveAt(i);
+				RecalculateHospitals();
+				break;
+			}
+			else i++;
+		}
+	}
+	public void RecalculateHospitals() {
+		hospitals_coefficient = 0;
+		if (hospitals.Count == 0  ) return;
+		int i = 0, hospitalsCoverage = 0;
+		while (i <hospitals.Count) {
+			if (hospitals[i] == null || !hospitals[i].gameObject.activeSelf) {hospitals.RemoveAt(i); continue;}
+			if ( hospitals[i].isActive ) hospitalsCoverage += hospitals[i].coverage;
+			i++;
+		}
+		hospitals_coefficient = (float)hospitalsCoverage / (float)citizenCount;
+	}
+
 	public void AddToPowerGrid(Building b) {
 		if (b == null) return;
+		if ( powerGrid.Count > 0) {
+			foreach ( Building eb in powerGrid) {
+				if ( eb == b ) return;
+			}
+		}
 		powerGrid.Add(b);
 		ElementPowerSwitch(powerGrid.Count - 1, true);
 	}
@@ -312,12 +382,48 @@ public class ColonyController : MonoBehaviour {
 	public void AddDock( Dock d ) {
 		if ( d == null ) return;
 		docks.Add(d);
-		if (d.level > docksLevel) docksLevel = d.level;
-		if (docks.Count == 1) { // first dock
-			shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
+		if ( docks.Count > 0) {
+			foreach ( Dock ed in docks) {
+				if ( ed == d ) return;
+			}
 		}
+		else shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
+		if (d.level > docksLevel) docksLevel = d.level;
 		else shipArrivingTimer /= 2f;
 	}
+	public void RemoveDock( Dock d) {
+		if ( d == null || docks.Count == null) return;
+		int i = 0;
+		while (i < docks.Count) {
+			if (docks[i] == d) {
+				docks.RemoveAt(i);
+				return;
+			}
+			i++;
+		}
+	}
+
+	public void AddRollingShop( RollingShop rs ) {
+		if ( rs == null ) return;
+		if (rollingShops.Count > 0) {
+			foreach (RollingShop ers in rollingShops) {
+				if (ers == rs) return;
+			}
+		}
+		rollingShops.Add(rs);
+	}
+	public void RemoveRollingShop( RollingShop rs) {
+		if ( rs == null || rollingShops.Count == null) return;
+		int i = 0;
+		while (i < rollingShops.Count) {
+			if (rollingShops[i] == rs) {
+				rollingShops.RemoveAt(i);
+				return;
+			}
+			i++;
+		}
+	}
+
 	public void SetHQ (HeadQuarters new_hq) {
 		if (new_hq != null) hq = new_hq;
 	}
@@ -344,6 +450,13 @@ public class ColonyController : MonoBehaviour {
 			GUI.Box(myRect, GUIContent.none);
 			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
 			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);
+
+			GUI.Label(leftPart, Localization.info_gearsCoefficient);
+			GUI.Label(rightPart, string.Format("{0:0.##}", gears_coefficient) );
+			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
+			GUI.Label(leftPart, Localization.info_happiness);
+			GUI.Label(rightPart, ((int)(happiness_coefficient * 100 / 100f)).ToString());
+			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
 		}
 	}
 }

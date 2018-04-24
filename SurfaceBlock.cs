@@ -29,13 +29,12 @@ public struct SurfaceObject {
 
 public class SurfaceBlock : Block {
 	public const byte INNER_RESOLUTION = 16;
-	public MeshRenderer surfaceRenderer {get;private set;}
-	public Grassland grassland{get;private set;}
-	public List<Structure> surfaceObjects{get;private set;}
-	public sbyte cellsStatus {get; private set;} // -1 is not stated, 1 is full, 0 is empty;
-	public CubeBlock basement; 
+	public MeshRenderer surfaceRenderer {get;protected set;}
+	public Grassland grassland{get;protected set;}
+	public List<Structure> surfaceObjects{get;protected set;}
+	public sbyte cellsStatus {get; protected set;} // -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures = 0;
-	public bool[,] map {get; private set;}
+	public bool[,] map {get; protected set;}
 
 	void Awake() 
 	{
@@ -46,6 +45,7 @@ public class SurfaceBlock : Block {
 
 		GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
 		surfaceRenderer =g.GetComponent <MeshRenderer>();
+		surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		g.transform.parent = transform;
 		g.transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
 		g.transform.localRotation = Quaternion.Euler(90, 0, 0);
@@ -78,7 +78,7 @@ public class SurfaceBlock : Block {
 				}
 			return map;
 	}
-	void CellsStatusUpdate() {
+	protected void CellsStatusUpdate() {
 		map = GetBooleanMap();
 		bool empty = true, full = true; 
 		bool emptyCheckFailed = false, fullCheckFailed = false;
@@ -99,10 +99,7 @@ public class SurfaceBlock : Block {
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
 			if (sr.x_size == INNER_RESOLUTION && sr.z_size == INNER_RESOLUTION) { // destroy everything there
-				for (; i < surfaceObjects.Count; i++) {
-					if (surfaceObjects[0] != null) surfaceObjects[i].Annihilate( true );
-					surfaceObjects.RemoveAt(0);
-				}
+				ClearSurface();
 			}
 			else {
 				while (i < surfaceObjects.Count) {
@@ -126,10 +123,31 @@ public class SurfaceBlock : Block {
 		surfaceObjects.Add(s);
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(s.innerPosition);
-		if (s.randomRotation) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
+		if (s.randomRotation) {
+			if ( !s.rotate90only ) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
+			else s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 4) * 90f, 0 );
+		}
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
+
+	public void ClearSurface() {
+		if (surfaceObjects == null) return;
+		int i =0;
+		while ( i < surfaceObjects.Count) {
+			if (surfaceObjects[i] != null) surfaceObjects[i].Annihilate(true);
+			surfaceObjects.RemoveAt(i);
+		}
+		cellsStatus = 0; artificialStructures = 0;
+		i = 0;
+		map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
+		for (; i < INNER_RESOLUTION; i++) {
+			for (int j = 0; j < INNER_RESOLUTION; j++) {
+				map[i,j] = false;
+			}
+		}
+	}
+
 	public void AddCellStructure(Structure s, PixelPosByte pos) { 
 		if (s == null) return;
 		if (map[pos.x, pos.y] == true) {
@@ -216,7 +234,7 @@ public class SurfaceBlock : Block {
 		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
 	}
 
-	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, CubeBlock f_basement) {
+	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) {
 		// проверки при повторном использовании?
 		isTransparent = false;
 		myChunk = f_chunk; transform.parent = f_chunk.transform;
@@ -225,10 +243,8 @@ public class SurfaceBlock : Block {
 		material_id = f_material_id;
 		surfaceRenderer.material = ResourceType.GetMaterialById(material_id);
 		type = BlockType.Surface; isTransparent = false;
-		basement = f_basement;
 		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
-	public void SetBasement(CubeBlock cb) {if (cb != null) basement = cb;}
 		
 	public static Vector3 GetLocalPosition(SurfaceRect sr) {
 		float res = INNER_RESOLUTION;

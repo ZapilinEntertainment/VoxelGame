@@ -31,8 +31,8 @@ public class WorksiteSign : MonoBehaviour {
 		}
 	}
 		GUI.Label(new Rect (r.x, r.y + k/2f, k,k), "0"); 
-		GUI.Label(new Rect (r.x + r.width - k, r.y + k/2f, k,k), worksite.maxWorkers.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.RightOrientedLabel]);
-		GUI.Label(new Rect(r.x + r.width/2f - k/2f, r.y, k, k), wcount.ToString(), GameMaster.mainGUISkin.customStyles[(int)GUIStyles.CenterOrientedLabel]);
+		GUI.Label(new Rect (r.x + r.width - k, r.y + k/2f, k,k), worksite.maxWorkers.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+		GUI.Label(new Rect(r.x + r.width/2f - k/2f, r.y, k, k), wcount.ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
 		r.y += 2 * r.height; r.height  = k;
 		if (GUI.Button ( r, Localization.ui_stopWork) ) { Destroy(worksite); }
 		r.y += r.height;

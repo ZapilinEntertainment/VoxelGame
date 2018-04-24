@@ -24,7 +24,7 @@ public struct PixelPosByte {
 
 public class Grassland : MonoBehaviour {
 	public const int MAX_LIFEFORMS_COUNT= 8;
-	public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 30;
+	public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 15;
 
 	public SurfaceBlock myBlock {get;private set;}
 	float progress = 0, lifeTimer = 0;
@@ -111,7 +111,7 @@ public class Grassland : MonoBehaviour {
 									}
 								}
 							}
-					lifeTimer = GameMaster.LIFEPOWER_TICK;
+					lifeTimer = LIFE_CREATION_TIMER;
 				}
 			}
 		}

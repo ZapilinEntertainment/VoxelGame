@@ -12,6 +12,7 @@ public class GameMaster : MonoBehaviour {
 	public static float gameSpeed  {get; private set;}
 
 	public Transform camTransform, camBasis;
+	public static Vector3 camPos{get;private set;}
 	Vector3 camLookPoint; 
 	bool moveCamToLookPoint = false;
 	const float CAM_STANDART_DISTANCE = 3;
@@ -33,6 +34,7 @@ public class GameMaster : MonoBehaviour {
 	public static float lifepowerLossesPercent{get;private set;}
 	public static float tradeVesselsTrafficCoefficient{get;private set;}
 	public static float upgradeDiscount{get;private set;}
+	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
 	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1;
@@ -42,7 +44,7 @@ public class GameMaster : MonoBehaviour {
 	public static float LUCK_COEFFICIENT {get;private set;}
 	public static float sellPriceCoefficient = 0.75f;
 
-	public const int START_WORKERS_COUNT = 10, MAX_LIFEPOWER_TRANSFER = 16;
+	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f;
 
@@ -71,7 +73,7 @@ public class GameMaster : MonoBehaviour {
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
-	public bool weNeedNoResources = false;
+	public bool weNeedNoResources = false, treesOptimization = false;
 	//---------
 
 	public GameMaster () {
@@ -110,6 +112,7 @@ public class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = 1;
 			tradeVesselsTrafficCoefficient = 0.2f;
 			upgradeDiscount = 0.5f;
+			environmentalConditions = 1;
 			break;
 		case Difficulty.Easy: 
 			LUCK_COEFFICIENT = 0.7f; 
@@ -118,6 +121,7 @@ public class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = 0.9f;
 			tradeVesselsTrafficCoefficient = 0.4f;
 			upgradeDiscount = 0.3f;
+			environmentalConditions = 1;
 			break;
 		case Difficulty.Normal: 
 			LUCK_COEFFICIENT = 0.5f; 
@@ -126,6 +130,7 @@ public class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = 0.75f;
 			tradeVesselsTrafficCoefficient = 0.5f;
 			upgradeDiscount = 0.25f;
+			environmentalConditions = 0.95f;
 			break;
 		case Difficulty.Hard: 
 			LUCK_COEFFICIENT = 0.1f; 
@@ -134,6 +139,7 @@ public class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = 0.5f;
 			tradeVesselsTrafficCoefficient = 0.75f;
 			upgradeDiscount = 0.2f;
+			environmentalConditions = 0.9f;
 			break;
 		case Difficulty.Torture: 
 			LUCK_COEFFICIENT = 0.01f; 
@@ -142,6 +148,7 @@ public class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = 0.33f;
 			tradeVesselsTrafficCoefficient = 1;
 			upgradeDiscount = 0.1f;
+			environmentalConditions = 0.8f;
 			break;
 		}
 
@@ -160,7 +167,7 @@ public class GameMaster : MonoBehaviour {
 			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
 			s.SetBasement(b, PixelPosByte.zero);
 			b.MakeIndestructible(true);
-			b.basement.MakeIndestructible(true);
+			b.myChunk.GetBlock(b.pos.x, b.pos.y -1, b.pos.z).MakeIndestructible(true);
 
 			colonyController.AddCitizens(START_WORKERS_COUNT);
 			colonyController.SetHQ(s.GetComponent<HeadQuarters>());
@@ -197,6 +204,7 @@ public class GameMaster : MonoBehaviour {
 				cameraHasMoved = false;
 				cameraTimer = cameraUpdateTime;
 			}
+			camPos = camTransform.position;
 		}
 
 		sunlightIntensity = 0.4f +Mathf.PerlinNoise(0.1f, Time.time * gameSpeed / 200f);
@@ -357,6 +365,7 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	public void SetLookPoint(Vector3 point) {
+		// при двойном касании - перенос без условия
 		camLookPoint = point;
 		if (Vector3.Distance(point, camBasis.transform.position) > CAM_STANDART_DISTANCE) moveCamToLookPoint = true;
 	}

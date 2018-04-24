@@ -16,10 +16,6 @@ public class Constructor : MonoBehaviour {
 		ConstructChunk();
 	}
 
-	void Update() {
-		if (Input.GetKeyDown("g")) c.ClearChunk();
-	}
-
 	void ConstructChunk() {
 		int size = Chunk.CHUNK_SIZE;
 		int[,,] dat = new int[size, size ,size ];
@@ -56,7 +52,6 @@ public class Constructor : MonoBehaviour {
 	}
 
 	void NatureCreation(Chunk chunk) {
-		SurfaceBlock[,] surface = chunk.GetSurface();
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		x = Chunk.CHUNK_SIZE / 2;z=Chunk.CHUNK_SIZE/2;

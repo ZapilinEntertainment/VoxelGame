@@ -18,8 +18,8 @@ public class Structure : MonoBehaviour {
 	public StructureType type {get;protected set;}
 	public float hp = 1;
 	public float maxHp = 1;
-	public string structureName = "structure";
-	public bool randomRotation = false;
+	public int nameIndex = 0;
+	public bool randomRotation = false, rotate90only = true;
 	public bool showOnGUI = false;
 	public float gui_ypos = 0;
 

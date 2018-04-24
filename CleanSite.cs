@@ -16,10 +16,16 @@ public class CleanSite : Worksite {
 		if (workObject.surfaceObjects.Count == 0) {
 			workObject.myChunk.DeleteBlock(workObject.pos);
 			if (diggingMission) {
-				DigSite ds =  workObject.basement.gameObject.AddComponent<DigSite>();
-				ds.Set(workObject.basement, true);
-				ds.AddWorkers(workersCount);
-				workersCount = 0;
+				Block basement = workObject.myChunk.GetBlock(workObject.pos.x, workObject.pos.y - 1, workObject.pos.z);
+				if (basement == null || basement.type != BlockType.Cube) {
+					FreeWorkers(workersCount);
+				}
+				else {
+					DigSite ds =  basement.gameObject.AddComponent<DigSite>();
+					ds.Set(basement as CubeBlock, true);
+					ds.AddWorkers(workersCount);
+					workersCount = 0;
+				}
 			}
 			Destroy(this);
 			return;

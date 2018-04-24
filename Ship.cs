@@ -89,6 +89,7 @@ public class Ship : MonoBehaviour {
 			float step = speed * Time.deltaTime * GameMaster.gameSpeed; // cause of time acceleration errors
 			if (step > dist) step = dist;
 			transform.Translate(Vector3.forward * step, Space.Self);
+			if (Vector3.Distance(transform.position, GameMaster.mainChunk.transform.position) > 2000) PoolMaster.current.ReturnShipToPool(this);
 		}
 	}
 

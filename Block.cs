@@ -2,15 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BlockType {Shapeless, Cube, Surface}
-public struct AccessConnection{
-	public Structure structure;
-	public byte accessMask;
-	public AccessConnection (Structure f_structure, byte f_mask) {
-		structure = f_structure;
-		accessMask = f_mask;
-	}
-}
+public enum BlockType {Shapeless, Cube, Surface, Cave}
 
 public class Block : MonoBehaviour {
 	public const float QUAD_SIZE = 1;
@@ -22,6 +14,8 @@ public class Block : MonoBehaviour {
 	public Structure mainStructure{get;protected set;}
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
+	public byte visibilityMask {get;protected set;}
+	protected byte renderMask = 0;
 	public bool indestructible {get; protected set;}
 
 	public virtual void ReplaceMaterial(int newId) {
@@ -52,6 +46,21 @@ public class Block : MonoBehaviour {
 
 	public void MakeIndestructible(bool x) {
 		indestructible = x;
+	}
+
+	virtual public void SetRenderBitmask(byte x) {
+		renderMask = x;
+	}
+
+	virtual public void SetVisibilityMask (byte x) {
+		visibilityMask = x;
+	}
+	virtual public void ChangeVisibilityMask (byte index, bool value) { 
+		int vm = visibilityMask;
+		int im =(byte) (63 - (int)Mathf.Pow(2, index));
+		if (value == false) { vm &= im;}
+		else {vm = ~vm; vm &= im; vm = ~vm;}
+		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
 
 	void OnDestroy() {
