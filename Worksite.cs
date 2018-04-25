@@ -7,6 +7,9 @@ public abstract class Worksite : MonoBehaviour {
 	public int workersCount {get;protected set;}
 	protected float workflow, labourTimer, workSpeed;
 	public WorksiteSign sign{get; protected set;}
+	protected string actionLabel;
+	public bool showOnGUI = false;
+	public float gui_ypos = 0;
 
 	void Awake () {
 		labourTimer = 0; workflow = 0;
@@ -28,10 +31,6 @@ public abstract class Worksite : MonoBehaviour {
 		}
 	}
 
-	public void HideGUI() {
-		sign.showOnGUI = false;
-	}
-
 	public void FreeWorkers(int x) {
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
@@ -39,6 +38,31 @@ public abstract class Worksite : MonoBehaviour {
 		RecalculateWorkspeed();
 	}
 	protected abstract void RecalculateWorkspeed() ;
+
+	void OnGUI () {
+		if (showOnGUI == false) return;
+		GUI.depth = UI.GUIDEPTH_WORKSITE_WINDOW;
+		Rect r = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		float k = r.height;
+		if (actionLabel != null) GUI.Label (r, actionLabel , GameMaster.mainGUISkin.customStyles[3]); 
+		r.y += r.height;
+		int wcount = (int)GUI.HorizontalSlider(r, workersCount, 0, maxWorkers);
+		if (wcount != workersCount) { 
+			if (wcount < workersCount) {
+				FreeWorkers(workersCount - wcount);
+			}
+			else {
+				GameMaster.colonyController.SendWorkers(wcount - workersCount, this, WorkersDestination.ForWorksite);
+			}
+		}
+		GUI.Label(new Rect (r.x, r.y + k/2f, k,k), "0"); 
+		GUI.Label(new Rect (r.xMax - k, r.y + k/2f, k,k), maxWorkers.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+		GUI.Label(new Rect(r.x + r.width/2f - k/2f, r.y, k, k), workersCount.ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
+		r.y += 2 * r.height; r.height  = k;
+		if (GUI.Button ( r, Localization.ui_stopWork) ) { Destroy(this); return; }
+		r.y += r.height;
+		if (GUI.Button ( r, Localization.menu_cancel) ) { showOnGUI = false; UI.current.DropFocus();}
+	}
 
 	void OnDestroy() {
 		GameMaster.colonyController.AddWorkers(workersCount);

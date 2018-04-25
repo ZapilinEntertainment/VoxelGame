@@ -146,7 +146,7 @@ public class UI : MonoBehaviour {
 						WorksiteSign ws = rh.collider.GetComponent<WorksiteSign>();
 						if (ws != null) {
 							chosenWorksite = ws.worksite;
-							ws.showOnGUI = true;
+							chosenWorksite.showOnGUI = true;
 							mode = UIMode.WorksitePanel;
 						}
 					}
@@ -179,7 +179,7 @@ public class UI : MonoBehaviour {
 		chosenCubeBlock = null; 
 		if (chosenStructure != null) {chosenStructure.showOnGUI = false;chosenStructure = null; }
 		chosenSurfaceBlock = null; 
-		if (chosenWorksite != null) {chosenWorksite.HideGUI(); chosenWorksite = null;}
+		if (chosenWorksite != null) {chosenWorksite.showOnGUI = false; chosenWorksite = null;}
 		showBuildingCreateInfo = false;
 		argument = 0;
 		touchscreenTemporarilyBlocked = false;
@@ -215,8 +215,17 @@ public class UI : MonoBehaviour {
 				break;
 			}
 			break;
-		case UIMode.StructurePanel:
-			
+		case UIMode.StructurePanel:			
+			break;
+		case UIMode.WorksitePanel:
+			switch(argument) {
+			case 1:
+				chosenCubeBlock = null;
+				chosenSurfaceBlock = null;
+				lineDrawer.enabled = false;
+				quadSelector.SetActive(false);
+				break;
+			}
 			break;
 		}
 	}
@@ -361,20 +370,27 @@ public class UI : MonoBehaviour {
 					if ( showingBuildingsList != null && showingBuildingsList.Count != 0 ) {
 						foreach (Building bd in showingBuildingsList) {
 						if (bd.borderOnlyConstruction && !chosenSurfaceBlockIsBorderBlock) continue;
-						if (GUI.Button(rr, Localization.structureName[bd.nameIndex])) {
-							if (chosenStructure != bd ) {
-								chosenStructure = bd; 
-								chosenBuildingIndex = buildingIndex;
-								showBuildingCreateInfo = true;
-								if (chosenStructure.type != StructureType.MainStructure ) argument = 4;
-								break;
+							if (bd.requiredBasementMaterialId == -1 || bd.requiredBasementMaterialId == chosenSurfaceBlock.material_id) {
+								if (GUI.Button(rr, Localization.structureName[bd.nameIndex])) {
+									if (chosenStructure != bd ) {
+										chosenStructure = bd; 
+										chosenBuildingIndex = buildingIndex;
+										showBuildingCreateInfo = true;
+										if (chosenStructure.type != StructureType.MainStructure ) argument = 4;
+										break;
+									}
+									else { // уже выбрано
+										chosenStructure = null;
+										showBuildingCreateInfo = false;
+										break;
+									}
+								}
 							}
-							else { // уже выбрано
-								chosenStructure = null;
-								showBuildingCreateInfo = false;
-								break;
+							else {
+								Color c = GUI.color; GUI.color = Color.grey;
+								GUI.Label(rr, Localization.structureName[bd.nameIndex] + " (" + Localization.material_required + ResourceType.resourceTypesArray[bd.requiredBasementMaterialId].name+ " )", PoolMaster.GUIStyle_CenterOrientedLabel);
+								GUI.color = c;
 							}
-						}
 						rr.y += rr.height;
 						// отрисовка информации о выбранном здании
 						if (chosenBuildingIndex == buildingIndex && showBuildingCreateInfo)
@@ -495,16 +511,54 @@ public class UI : MonoBehaviour {
 					break;
 				}
 				#region cubeBlockPanel
-				if (faceIndex == 4) { // верхний
-					if ( !chosenCubeBlock.career ) {
-						ChunkPos cpos = chosenCubeBlock.pos;
-						cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z);
-						chosenCubeBlock.myChunk.AddBlock(cpos, BlockType.Surface, chosenCubeBlock.material_id);
-						chosenSurfaceBlock = chosenCubeBlock.myChunk.GetBlock(cpos.x, cpos.y, cpos.z) as SurfaceBlock;
-						mode = UIMode.SurfaceBlockPanel;
-						chosenCubeBlock = null;
+				if (faceIndex != 10) { 
+					if (faceIndex == 4) {// верхний
+						if ( !chosenCubeBlock.career ) {
+							ChunkPos cpos = chosenCubeBlock.pos;
+							cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z);
+							chosenCubeBlock.myChunk.AddBlock(cpos, BlockType.Surface, chosenCubeBlock.material_id);
+							chosenSurfaceBlock = chosenCubeBlock.myChunk.GetBlock(cpos.x, cpos.y, cpos.z) as SurfaceBlock;
+							mode = UIMode.SurfaceBlockPanel;
+							ChangeArgument(1);
+							chosenCubeBlock = null;
+						}
+					}
+					else {
+						if (faceIndex == 0 || faceIndex == 1 || faceIndex == 2 || faceIndex == 3) {
+							if (GUI.Button(rr, Localization.ui_dig_block)) {
+								WorksiteSign sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+								TunnelBuildingSite tbs = chosenCubeBlock.GetComponent<TunnelBuildingSite>();
+								if (tbs == null) {
+									tbs = chosenCubeBlock.gameObject.AddComponent<TunnelBuildingSite>();
+									tbs.Set(chosenCubeBlock);
+								}
+								sign.worksite = tbs;
+								switch (faceIndex) {
+								case 0:
+									sign.transform.position = chosenCubeBlock.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
+									break;
+								case 1:
+									sign.transform.position = chosenCubeBlock.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
+									sign.transform.rotation = Quaternion.Euler(0,90,0);
+									break;
+								case 2:
+									sign.transform.position = chosenCubeBlock.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
+									sign.transform.rotation = Quaternion.Euler(0,180,0);
+									break;
+								case 3:
+									sign.transform.position = chosenCubeBlock.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
+									sign.transform.rotation = Quaternion.Euler(0,-90,0);
+									break;
+								}
+								chosenWorksite = tbs;
+								mode = UIMode.WorksitePanel;
+								ChangeArgument(1);
+								return;
+							}
+						}
 					}
 				}
+
 				#endregion
 				break;
 			case UIMode.WorksitePanel:
@@ -514,6 +568,7 @@ public class UI : MonoBehaviour {
 					break;
 				}
 				// on worksite.cs.OnGUI
+				chosenWorksite.gui_ypos = rr.y;
 				break;
 			case UIMode.StructurePanel:
 				if (chosenStructure == null) {

@@ -12,6 +12,7 @@ public class Building : Structure {
 	protected bool connectedToPowerGrid = false; // подключение, контролирующееся игроком
 	public bool borderOnlyConstruction{get;protected set;}
 	public Building nextStage; 
+	public int requiredBasementMaterialId = -1;
 
 	void Awake() {
 		PrepareBuilding();
@@ -72,6 +73,7 @@ public class Building : Structure {
 	}
 
 	void OnGUI() {
+		//sync with hospital.cs
 		if ( !showOnGUI ) return;
 		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
 			Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);

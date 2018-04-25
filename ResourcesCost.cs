@@ -7,7 +7,7 @@ public static class ResourcesCost {
 	public const int MINE_UPGRADE_INDEX = 18;
 
 	static ResourcesCost() {
-		info = new ResourceContainer[19][];
+		info = new ResourceContainer[20][];
 		info[0] = new ResourceContainer[0]; //empty
 		info[1] = new ResourceContainer[] {
 			new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_E, 30),
@@ -70,6 +70,9 @@ public static class ResourcesCost {
 		info[18] = new ResourceContainer[]{
 			new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 5)
 		}; // mine upgrade
+		info[19] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.Concrete, 150), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 40)
+		};// roller shop
 	}
 }
 

@@ -20,8 +20,6 @@ public class House : Building {
 		GameMaster.colonyController.RecalculateHousing();
 	}
 
-
-
 	 void OnDestroy() {
 		PrepareBuildingForDestruction();
 		GameMaster.colonyController.DeleteHousing(this);

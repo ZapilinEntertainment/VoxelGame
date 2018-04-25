@@ -21,10 +21,10 @@ public static class Localization {
 	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources;
 	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
 	public static string[] structureName;
-	public static string hq_refuse_reason_1, hq_refuse_reason_2;
+	public static string hq_refuse_reason_1, hq_refuse_reason_2, lowered_birthrate, normal_birthrate, improved_birthrate, material_required;
 
 	static Localization() {
-		structureName = new string[25];
+		structureName = new string[26];
 		structureName[0] = "<empty>";
 		ChangeLanguage(Language.English);
 	}
@@ -74,6 +74,7 @@ public static class Localization {
 			structureName[19] ="Smeltery";structureName[20] = "Wind generator";
 			structureName[21] = "Hospital";structureName[22] = "Biogenerator";
 			structureName[23] = "Mineral F Powerplant"; structureName[24] = "Ore enricher";
+			structureName[25] = "Rolling shop";
 
 			detail_navigatingSystem = "Navigating system"; detail_shuttleHull = "Shuttle hull";
 			detail_smallPropulsionSystem = "Small propulsion system"; detail_smallThruster = "Small thruster"; 
@@ -115,9 +116,12 @@ public static class Localization {
 			work_has_stopped = "Work has stopped";
 			sales_volume = "Sales volume";
 			min_value_to_trade = "Limit";
-
 			hq_refuse_reason_1 = "No docks built";
 			hq_refuse_reason_2 = "No rolling shops built";
+			lowered_birthrate = "Low birthrate";
+			normal_birthrate = "Normal birthrate";
+			improved_birthrate = "Stimulate birthrate";
+			material_required = "Required material: ";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";

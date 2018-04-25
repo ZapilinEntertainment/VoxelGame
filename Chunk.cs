@@ -87,6 +87,7 @@ public class Chunk : MonoBehaviour {
 									else {b.grassland.AddLifepower((int)lifePower); lifePower = 0;}
 									grassland_blocks.Add(b.grassland);
 							}
+							else dirt_for_grassland.RemoveAt(pos);
 						}
 				}
 					else {//adding energy to existing life tiles
@@ -230,6 +231,13 @@ public class Chunk : MonoBehaviour {
 			b = sb;
 			blocks[x,y,z] = sb;
 			influenceMask = 31;
+			if (originalBlock.type == BlockType.Cave) {
+				CaveBlock originalSurface = originalBlock as CaveBlock;
+				foreach (Structure s in originalSurface.surfaceObjects) {
+					if (s == null) continue;
+					s.SetBasement(sb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
+				}
+			}
 			break;
 		case BlockType.Cube:
 			CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
@@ -249,6 +257,13 @@ public class Chunk : MonoBehaviour {
 			blocks[x,y,z] = cvb;
 			b = cvb;
 			influenceMask = 15;
+			if (originalBlock.type == BlockType.Surface) {
+				SurfaceBlock originalSurface = originalBlock as SurfaceBlock;
+				foreach (Structure s in originalSurface.surfaceObjects) {
+					if (s == null) continue;
+					s.SetBasement(cvb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
+				}
+			}
 			break;
 		}
 		b.SetVisibilityMask( originalBlock.visibilityMask );

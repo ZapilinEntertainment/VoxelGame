@@ -75,9 +75,9 @@ public class GatherSite : Worksite {
 	public void Set(SurfaceBlock block) {
 		workObject = block;
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/GatherSign")).GetComponent<WorksiteSign>();
+		sign.worksite = this;
 		sign.transform.position = workObject.transform.position + Vector3.down /2f * Block.QUAD_SIZE;
-		sign.Set(this);
-		sign.actionLabel = Localization.ui_gather_in_progress;
+		actionLabel = Localization.ui_gather_in_progress;
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 	}
 }

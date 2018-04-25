@@ -42,7 +42,7 @@ public class ColonyController : MonoBehaviour {
 	public int totalLivespace{get;private set;}
 	List<House> houses; List<Hospital> hospitals;
 	Rect myRect;
-	float starvationTimer, starvationTime = 600;
+	float starvationTimer, starvationTime = 600, real_birthrate = 0;
 
 	void Awake() {
 		GameMaster.colonyController = this;
@@ -91,6 +91,8 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_2[5].gameObject.SetActive(false);
 		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_2")) );
 		buildings_level_2[6].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/RollingShop_level_2")) );
+		buildings_level_2[7].gameObject.SetActive(false);
 
 
 		houses = new List<House>();
@@ -129,7 +131,7 @@ public class ColonyController : MonoBehaviour {
 		//  BIRTHRATE
 		if (birthrateCoefficient != 0) {
 			if (birthrateCoefficient > 0) {
-				peopleSurplus += birthrateCoefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
+				real_birthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
 				if (peopleSurplus > 1) {
 					int newborns = (int) peopleSurplus;
 					AddCitizens(newborns); 
@@ -137,12 +139,13 @@ public class ColonyController : MonoBehaviour {
 				}
 			}
 			else {
-				peopleSurplus += birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
+				real_birthrate = birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
 				if (peopleSurplus < - 1) {
 					KillCitizens(1); peopleSurplus += 1;
 				}
 			}
 		}
+		peopleSurplus += real_birthrate;
 
 		//   SHIPS ARRIVING
 		if (shipArrivingTimer > 0) {
@@ -254,6 +257,7 @@ public class ColonyController : MonoBehaviour {
 
 	public void AddHospital(Hospital h) {
 		if (h == null) return;
+		if (hospitals == null) hospitals = new List<Hospital>();
 		if ( hospitals.Count > 0) {
 			foreach ( Hospital eh in hospitals) {
 				if ( eh == h ) return;
@@ -445,8 +449,8 @@ public class ColonyController : MonoBehaviour {
 	void OnGUI () {
 		float k = GameMaster.guiPiece;
 		if (showColonyInfo) {
-			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, k);
-			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, k);
+			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, 3 *k);
+			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, 3 * k);
 			GUI.Box(myRect, GUIContent.none);
 			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
 			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);
@@ -457,6 +461,8 @@ public class ColonyController : MonoBehaviour {
 			GUI.Label(leftPart, Localization.info_happiness);
 			GUI.Label(rightPart, ((int)(happiness_coefficient * 100 / 100f)).ToString());
 			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
+			GUI.Label(leftPart, Localization.info_birthrate);
+			GUI.Label(rightPart, string.Format("{0:0.######}", real_birthrate) );
 		}
 	}
 }

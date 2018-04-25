@@ -113,6 +113,8 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.2f;
 			upgradeDiscount = 0.5f;
 			environmentalConditions = 1;
+			Hospital.loweredCoefficient = 0;
+			Hospital.improvedCoefficient = 2;
 			break;
 		case Difficulty.Easy: 
 			LUCK_COEFFICIENT = 0.7f; 
@@ -122,6 +124,8 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.4f;
 			upgradeDiscount = 0.3f;
 			environmentalConditions = 1;
+			Hospital.loweredCoefficient = 0.3f;
+			Hospital.improvedCoefficient = 1.75f;
 			break;
 		case Difficulty.Normal: 
 			LUCK_COEFFICIENT = 0.5f; 
@@ -131,6 +135,8 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.5f;
 			upgradeDiscount = 0.25f;
 			environmentalConditions = 0.95f;
+			Hospital.loweredCoefficient = 0.5f;
+			Hospital.improvedCoefficient = 1.5f;
 			break;
 		case Difficulty.Hard: 
 			LUCK_COEFFICIENT = 0.1f; 
@@ -140,6 +146,8 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.75f;
 			upgradeDiscount = 0.2f;
 			environmentalConditions = 0.9f;
+			Hospital.loweredCoefficient = 0.75f;
+			Hospital.improvedCoefficient = 1.2f;
 			break;
 		case Difficulty.Torture: 
 			LUCK_COEFFICIENT = 0.01f; 
@@ -149,6 +157,8 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 1;
 			upgradeDiscount = 0.1f;
 			environmentalConditions = 0.8f;
+			Hospital.loweredCoefficient = 0.9f;
+			Hospital.improvedCoefficient = 1.1f;
 			break;
 		}
 

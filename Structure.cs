@@ -57,6 +57,11 @@ public class Structure : MonoBehaviour {
 		Destroy(gameObject);
 	}
 
+	public void ApplyDamage(float d) {
+		hp -= d;
+		if ( hp <= 0 ) Annihilate(false);
+	}
+
 	void OnDestroy() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));

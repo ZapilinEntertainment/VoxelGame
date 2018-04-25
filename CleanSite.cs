@@ -14,9 +14,11 @@ public class CleanSite : Worksite {
 			return;
 		}
 		if (workObject.surfaceObjects.Count == 0) {
-			workObject.myChunk.DeleteBlock(workObject.pos);
+			Chunk ch = workObject.myChunk;
+			int x = workObject.pos.x, y = workObject.pos.y, z = workObject.pos.z;
+			ch.DeleteBlock(workObject.pos);
 			if (diggingMission) {
-				Block basement = workObject.myChunk.GetBlock(workObject.pos.x, workObject.pos.y - 1, workObject.pos.z);
+				Block basement = ch.GetBlock(x, y - 1, z);
 				if (basement == null || basement.type != BlockType.Cube) {
 					FreeWorkers(workersCount);
 				}
@@ -42,7 +44,7 @@ public class CleanSite : Worksite {
 
 	void LabourResult() {
 		Structure s = workObject.surfaceObjects[0];
-		if (s == null) {workObject.RequestAnnihilationAtIndex(0);return;}
+		if (s == null || !s.gameObject.activeSelf) {workObject.RequestAnnihilationAtIndex(0);return;}
 			Plant p = s.GetComponent<Plant>();
 			if (p != null) {
 			if (p is Tree) {
@@ -66,14 +68,11 @@ public class CleanSite : Worksite {
 					Destroy(hr.gameObject);
 				}
 				else {
-					Building b = s.GetComponent<Building>();
-					if (b != null) {
-						b.hp -= workflow;
-					}
+					s.ApplyDamage(workflow);
 				}
 			}
 		workObject.surfaceObjects[0].Annihilate( false );
-		sign.actionLabel = Localization.ui_clean_in_progress + " ( " + workObject.surfaceObjects.Count.ToString() + Localization.objects_left +')' ;
+		actionLabel = Localization.ui_clean_in_progress + " ( " + workObject.surfaceObjects.Count.ToString() + Localization.objects_left +')' ;
 	}
 
 	protected override void RecalculateWorkspeed() {
@@ -84,8 +83,8 @@ public class CleanSite : Worksite {
 		workObject = block;
 		if (block.grassland != null) {Destroy(block.grassland);}
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
+		sign.worksite = this;
 		sign.transform.position = workObject.transform.position;
-		sign.Set(this);
 		diggingMission = f_diggingMission;
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 	}

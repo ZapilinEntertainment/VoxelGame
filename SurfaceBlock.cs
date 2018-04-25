@@ -411,7 +411,7 @@ public class SurfaceBlock : Block {
 	public void RequestAnnihilationAtIndex(int index) {
 		if (index < 0 || index >= surfaceObjects.Count) return;
 		else {
-			if (surfaceObjects[index] == null ) {
+			if (surfaceObjects[index] == null || !surfaceObjects[index].gameObject.activeSelf ) {
 				surfaceObjects.RemoveAt(index);
 				CellsStatusUpdate();
 			}
