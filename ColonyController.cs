@@ -32,7 +32,7 @@ public class ColonyController : MonoBehaviour {
 	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
 	public float shipArrivingTimer = 0;
 	public byte docksLevel{get; private set;}
-	const float SHIP_ARRIVING_TIME = 300; // for max difficulty
+	const float SHIP_ARRIVING_TIME = 60; // for max difficulty
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
@@ -94,6 +94,9 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/RollingShop_level_2")) );
 		buildings_level_2[7].gameObject.SetActive(false);
 
+		buildings_level_3 = new List<Building>();
+		buildings_level_3.Add( Resources.Load<Building>("Structures/Buildings/miniReactor_level_3"));
+		buildings_level_3.Add(Resources.Load<Building>("Structures/Buildings/fuelFacility_level_3"));
 
 		houses = new List<House>();
 		powerGrid = new List<Building>();
@@ -430,6 +433,10 @@ public class ColonyController : MonoBehaviour {
 
 	public void SetHQ (HeadQuarters new_hq) {
 		if (new_hq != null) hq = new_hq;
+	}
+
+	public void ImproveGearsCoefficient (float f) {
+		if (f > 0) gears_coefficient += f;
 	}
 
 	public void AddEnergyCrystals(float v) {

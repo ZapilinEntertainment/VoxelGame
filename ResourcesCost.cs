@@ -7,7 +7,7 @@ public static class ResourcesCost {
 	public const int MINE_UPGRADE_INDEX = 18;
 
 	static ResourcesCost() {
-		info = new ResourceContainer[20][];
+		info = new ResourceContainer[23][];
 		info[0] = new ResourceContainer[0]; //empty
 		info[1] = new ResourceContainer[] {
 			new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_E, 30),
@@ -72,7 +72,15 @@ public static class ResourcesCost {
 		}; // mine upgrade
 		info[19] = new ResourceContainer[]{
 			new ResourceContainer(ResourceType.Concrete, 150), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 40)
-		};// roller shop
+		};// rolling shop
+		info[20] = new ResourceContainer[info[10].Length];  // hq level 3
+		for (int i = 0; i < info[10].Length; i++) {info[20][i] = new ResourceContainer( info[10][i].type, info[10][i].volume * GameMaster.upgradeCostIncrease);}
+		info[21] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.metal_K, 15), new ResourceContainer(ResourceType.metal_M, 5), new ResourceContainer(ResourceType.metal_N, 12)
+		}; // mini reactor level 3
+		info[22] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_M, 15), new ResourceContainer(ResourceType.Concrete, 60)
+		}; // fuel facility level 3
 	}
 }
 

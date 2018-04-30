@@ -9,13 +9,14 @@ public class Recipe {
 		public readonly float outputValue;
 		public readonly float workflowToResult;
 
-	public static readonly Recipe[] smelteryRecipes, oreRefiningRecipes;
+	public static readonly Recipe[] smelteryRecipes, oreRefiningRecipes, fuelFacilityRecipes;
 
 	public static readonly Recipe NoRecipe;
 	public static readonly Recipe StoneToConcrete;
 	public static readonly Recipe LumberToElasticMass;
 	public static readonly Recipe MetalK_smelting, MetalE_smelting, MetalN_smelting, MetalM_smelting,MetalP_smelting, MetalS_smelting;
 	public static readonly Recipe MetalK_refining, MetalE_refining,MetalN_refining,MetalM_refining,MetalP_refining,MetalS_refining;
+	public static readonly Recipe Fuel_fromNmetal, Fuel_fromNmetalOre;
 
 	static Recipe() {
 		NoRecipe = new Recipe(ResourceType.Nothing, ResourceType.Nothing, 0,0,  0);
@@ -39,6 +40,12 @@ public class Recipe {
 		MetalP_smelting = new Recipe(ResourceType.metal_P_ore, ResourceType.metal_P_ore,1,2, 10); refiningRecipesList.Add(MetalP_refining);
 		MetalS_smelting = new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S_ore,1,2, 10); refiningRecipesList.Add(MetalS_refining);
 		oreRefiningRecipes = refiningRecipesList.ToArray();
+
+		fuelFacilityRecipes = new Recipe[2];
+		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel, 1, 100, 25);
+		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel, 1, 90, 35);
+		fuelFacilityRecipes[0] = Fuel_fromNmetal;
+		fuelFacilityRecipes[1] = Fuel_fromNmetalOre;
 	}
 
 	public Recipe (ResourceType res_input, ResourceType res_output, float val_input, float val_output,  float workflowNeeded) {

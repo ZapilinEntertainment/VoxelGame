@@ -16,6 +16,7 @@ public class UI : MonoBehaviour {
 	public bool  showBuildingCreateInfo {get; private set;}
 	public bool touchscreenTemporarilyBlocked = false;
 	PixelPosByte bufferedPosition; int chosenBuildingIndex = 0;
+	ResourceContainer[] bufferedResources;
 	SurfaceBlock chosenSurfaceBlock; bool chosenSurfaceBlockIsBorderBlock = false;
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
 	Structure chosenStructure;
@@ -474,6 +475,7 @@ public class UI : MonoBehaviour {
 											s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
 										}
 										else {
+											bufferedResources = ResourcesCost.info[(chosenStructure as Building).resourcesContainIndex];
 											bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
 											ChangeArgument(5);
 											break;
@@ -494,10 +496,17 @@ public class UI : MonoBehaviour {
 							s.gameObject.SetActive(true);
 							s.SetBasement(chosenSurfaceBlock, bufferedPosition);
 							ChangeArgument(3);
+							bufferedResources = null;
 						}
 					} 
 					if (GUI.Button (new Rect(acceptBox.x + acceptBox.width/2f, acceptBox.y + acceptBox.height/2f, acceptBox.width/2f, acceptBox.height/2f), Localization.ui_decline)) {
 						bufferedPosition = PixelPosByte.Empty;
+						if (bufferedResources != null) {
+							foreach (ResourceContainer rc in bufferedResources) {
+								GameMaster.colonyController.storage.AddResources(rc);
+							}
+							bufferedResources = null;
+						}
 						ChangeArgument(3);
 					}
 					break;

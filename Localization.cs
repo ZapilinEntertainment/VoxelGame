@@ -14,17 +14,18 @@ public static class Localization {
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
-	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationMonthLimit, ui_close, ui_reset, ui_add_transaction;
+	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationMonthLimit, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
 	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources;
 	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
 	public static string[] structureName;
-	public static string hq_refuse_reason_1, hq_refuse_reason_2, lowered_birthrate, normal_birthrate, improved_birthrate, material_required;
+	public static string hq_refuse_reason_1, hq_refuse_reason_2, lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity;
+	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
 
 	static Localization() {
-		structureName = new string[26];
+		structureName = new string[27];
 		structureName[0] = "<empty>";
 		ChangeLanguage(Language.English);
 	}
@@ -74,7 +75,8 @@ public static class Localization {
 			structureName[19] ="Smeltery";structureName[20] = "Wind generator";
 			structureName[21] = "Hospital";structureName[22] = "Biogenerator";
 			structureName[23] = "Mineral F Powerplant"; structureName[24] = "Ore enricher";
-			structureName[25] = "Rolling shop";
+			structureName[25] = "Rolling shop"; structureName[26] = "Mini Grph-reactor";
+			structureName[26] = "Fuel facility";
 
 			detail_navigatingSystem = "Navigating system"; detail_shuttleHull = "Shuttle hull";
 			detail_smallPropulsionSystem = "Small propulsion system"; detail_smallThruster = "Small thruster"; 
@@ -95,6 +97,7 @@ public static class Localization {
 			ui_selectResource = "Select resource"; ui_add_transaction = "Add transaction";
 			ui_immigrationEnabled = "Immigration allowed"; ui_immigrationDisabled = "Immigration is not possible"; ui_immigrationMonthLimit = "Immigrants month limit";
 			ui_close = "Close"; ui_reset = "Reset";
+			ui_setMode = "Set mode"; ui_currentMode = "Current mode";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			info_housing = "Housing";
@@ -122,6 +125,10 @@ public static class Localization {
 			normal_birthrate = "Normal birthrate";
 			improved_birthrate = "Stimulate birthrate";
 			material_required = "Required material: ";
+			no_activity = "No activity";
+
+			rollingShop_gearsProduction = "Gears production";
+			rollingShop_boatPartsProduction = "Boat parts production";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -139,6 +146,7 @@ public static class Localization {
 			ui_selectResource = "Выберите ресурс";  ui_add_transaction = "Добавить операцию";
 			ui_immigrationEnabled = "Иммиграция разрешена"; ui_immigrationDisabled = "Въезд в город закрыт"; ui_immigrationMonthLimit = "Максимум поселенцев в месяц";
 			ui_close = "Закрыть"; ui_reset = "Сброс";
+			ui_setMode = "Изменить режим"; ui_currentMode = "Текущий режим";
 
 			menu_colonyInfo = "Состояние";
 			info_housing = "Свободное жильё";
@@ -156,6 +164,10 @@ public static class Localization {
 			work_has_stopped = "Работы остановлены";
 			sales_volume = "Объём продажи";
 			min_value_to_trade = "Ограничение";
+			no_activity = "Бездействует"; // not a developer status!!!
+
+			rollingShop_gearsProduction = "Производство оборудования";
+			rollingShop_boatPartsProduction = "Производство комплектующих для шаттлов";
 			break;	
 		}
 	}

@@ -34,6 +34,7 @@ public class GameMaster : MonoBehaviour {
 	public static float lifepowerLossesPercent{get;private set;}
 	public static float tradeVesselsTrafficCoefficient{get;private set;}
 	public static float upgradeDiscount{get;private set;}
+	public static float upgradeCostIncrease{get;private set;}
 	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
@@ -111,7 +112,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0;
 			sellPriceCoefficient = 1;
 			tradeVesselsTrafficCoefficient = 0.2f;
-			upgradeDiscount = 0.5f;
+			upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
 			environmentalConditions = 1;
 			Hospital.loweredCoefficient = 0;
 			Hospital.improvedCoefficient = 2;
@@ -122,7 +123,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.1f;
 			sellPriceCoefficient = 0.9f;
 			tradeVesselsTrafficCoefficient = 0.4f;
-			upgradeDiscount = 0.3f;
+			upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
 			environmentalConditions = 1;
 			Hospital.loweredCoefficient = 0.3f;
 			Hospital.improvedCoefficient = 1.75f;
@@ -133,7 +134,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.3f;
 			sellPriceCoefficient = 0.75f;
 			tradeVesselsTrafficCoefficient = 0.5f;
-			upgradeDiscount = 0.25f;
+			upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
 			environmentalConditions = 0.95f;
 			Hospital.loweredCoefficient = 0.5f;
 			Hospital.improvedCoefficient = 1.5f;
@@ -144,7 +145,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.5f;
 			sellPriceCoefficient = 0.5f;
 			tradeVesselsTrafficCoefficient = 0.75f;
-			upgradeDiscount = 0.2f;
+			upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
 			environmentalConditions = 0.9f;
 			Hospital.loweredCoefficient = 0.75f;
 			Hospital.improvedCoefficient = 1.2f;
@@ -155,7 +156,7 @@ public class GameMaster : MonoBehaviour {
 			lifepowerLossesPercent = 0.85f;
 			sellPriceCoefficient = 0.33f;
 			tradeVesselsTrafficCoefficient = 1;
-			upgradeDiscount = 0.1f;
+			upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
 			environmentalConditions = 0.8f;
 			Hospital.loweredCoefficient = 0.9f;
 			Hospital.improvedCoefficient = 1.1f;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum FactoryType {Simple, Advanced, Recycler}
-public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner}
+public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility}
 
 
 public class Factory : WorkBuilding {	
@@ -73,6 +73,9 @@ public class Factory : WorkBuilding {
 		if (recipe == Recipe.NoRecipe) return 0;
 		else {
 			switch (specialization) {
+			case FactorySpecialization.FuelFacility:
+				return Recipe.fuelFacilityRecipes.Length;
+				break;
 			case FactorySpecialization.OreRefiner:
 				return Recipe.oreRefiningRecipes.Length;
 				break;
@@ -123,6 +126,7 @@ public class Factory : WorkBuilding {
 		if (gui_showRecipesList) {
 			Recipe[] recipesToShow = null;
 			switch (specialization) {
+			case FactorySpecialization.FuelFacility: recipesToShow = Recipe.fuelFacilityRecipes;break;
 			case FactorySpecialization.OreRefiner: recipesToShow = Recipe.oreRefiningRecipes; break;
 			case FactorySpecialization.Smeltery: recipesToShow = Recipe.smelteryRecipes;break;
 			}

@@ -73,10 +73,15 @@ public class Building : Structure {
 	}
 
 	void OnGUI() {
-		//sync with hospital.cs
+		//sync with hospital.cs, rollingShop.cs
 		if ( !showOnGUI ) return;
+		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
 		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
-			Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+			rr.y = GUI_UpgradeButton(rr);
+		}
+	}
+
+	protected float GUI_UpgradeButton( Rect rr) {
 			GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
 			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
 				ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[nextStage.resourcesContainIndex].Length];
@@ -101,6 +106,6 @@ public class Building : Structure {
 					rr.y += rr.height;
 				}
 			}
+		return rr.y;
 		}
-	}
 }
