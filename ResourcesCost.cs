@@ -7,14 +7,14 @@ public static class ResourcesCost {
 	public const int MINE_UPGRADE_INDEX = 18;
 
 	static ResourcesCost() {
-		info = new ResourceContainer[23][];
+		info = new ResourceContainer[31][];
 		info[0] = new ResourceContainer[0]; //empty
 		info[1] = new ResourceContainer[] {
 			new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_E, 30),
 			new ResourceContainer(ResourceType.metal_M, 50), new ResourceContainer(ResourceType.Food, 140)
 		}; //start resources
 		info[2] = new ResourceContainer[] {
-			new ResourceContainer(ResourceType.metal_M, 2), new ResourceContainer(ResourceType.metal_E, 4), new ResourceContainer(ResourceType.metal_N, 2)
+			new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.metal_E, 4), new ResourceContainer(ResourceType.metal_N, 2)
 		} ;// energy capacitor lvl 1 
 		info[3] = new ResourceContainer[]{
 			new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.ElasticMass, 4), new ResourceContainer(ResourceType.Lumber, 20)
@@ -81,6 +81,32 @@ public static class ResourcesCost {
 		info[22] = new ResourceContainer[]{
 			new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_M, 15), new ResourceContainer(ResourceType.Concrete, 60)
 		}; // fuel facility level 3
+		info[23] = new ResourceContainer[] {
+			new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 12), new ResourceContainer(ResourceType.metal_N, 4),
+		} ;// energy capacitor lvl 2
+		info[24] = new ResourceContainer[] {
+			new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_E, 12), new ResourceContainer(ResourceType.metal_N, 5),
+		} ;// energy capacitor lvl 3
+		info[25] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.ElasticMass, 20), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 6)
+		} ;// farm lvl 2
+		info[26] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.ElasticMass, 20), new ResourceContainer(ResourceType.metal_K, 13), new ResourceContainer(ResourceType.metal_M, 20)
+		} ;// farm lvl 3
+		info[27] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.ElasticMass, 20), new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_M, 6)
+		} ;// lumbermill lvl 2
+		info[28] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.ElasticMass, 20), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 8)
+		} ;// lumbermill lvl 3
+		info[29] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.Concrete, 10), new ResourceContainer(ResourceType.metal_K, 4), new ResourceContainer(ResourceType.metal_M, 1),
+			new ResourceContainer(ResourceType.ElasticMass, 10)
+		};//storage lvl 1
+		info[30] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.Concrete, 25), new ResourceContainer(ResourceType.metal_K, 6), new ResourceContainer(ResourceType.metal_M, 4),
+			new ResourceContainer(ResourceType.ElasticMass, 40)
+		};//storage lvl 3
 	}
 }
 

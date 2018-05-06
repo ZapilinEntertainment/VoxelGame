@@ -25,7 +25,7 @@ public static class Localization {
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
 
 	static Localization() {
-		structureName = new string[27];
+		structureName = new string[28];
 		structureName[0] = "<empty>";
 		ChangeLanguage(Language.English);
 	}
@@ -76,7 +76,7 @@ public static class Localization {
 			structureName[21] = "Hospital";structureName[22] = "Biogenerator";
 			structureName[23] = "Mineral F Powerplant"; structureName[24] = "Ore enricher";
 			structureName[25] = "Rolling shop"; structureName[26] = "Mini Grph-reactor";
-			structureName[26] = "Fuel facility";
+			structureName[27] = "Fuel facility";
 
 			detail_navigatingSystem = "Navigating system"; detail_shuttleHull = "Shuttle hull";
 			detail_smallPropulsionSystem = "Small propulsion system"; detail_smallThruster = "Small thruster"; 

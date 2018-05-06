@@ -18,6 +18,7 @@ public class House : Building {
 		if (isActive == x) return;
 		isActive = x;
 		GameMaster.colonyController.RecalculateHousing();
+		ChangeRenderersView(x);
 	}
 
 	 void OnDestroy() {

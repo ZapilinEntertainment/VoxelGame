@@ -7,7 +7,7 @@ public class WindGenerator : Building {
 	Vector3 windDirection;
 	bool rotateHead = false, rotateScrew = true;
 	const float HEAD_ROTATE_SPEED = 10, SCREW_ROTATE_SPEED = 20;
-	float maxSurplus;
+	float maxSurplus, height_coefficient = 1;
 
 	void Awake() {
 		PrepareBuilding();
@@ -18,6 +18,7 @@ public class WindGenerator : Building {
 		if (b == null) return;
 		SetBuildingData(b, pos);
 		GameMaster.realMaster.windUpdateList.Add(this);
+		height_coefficient = basement.pos.y / 8;
 		WindUpdate(GameMaster.realMaster.windVector);
 	}
 
@@ -46,7 +47,7 @@ public class WindGenerator : Building {
 		else {
 			if (rotateScrew == false) {
 				rotateScrew = true; 
-				energySurplus = maxSurplus * direction.magnitude / GameMaster.realMaster.maxWindPower;
+				energySurplus = maxSurplus * height_coefficient * direction.magnitude / GameMaster.realMaster.maxWindPower;
 				if (connectedToPowerGrid) GameMaster.colonyController.RecalculatePowerGrid();
 			}
 			if (transform.forward != windDirection) rotateHead = true; else rotateHead = false;

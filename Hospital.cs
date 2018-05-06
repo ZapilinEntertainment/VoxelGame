@@ -11,6 +11,10 @@ public class Hospital : House {
 	public static  BirthrateMode birthrateMode{get; private set;}
 	public static float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
 
+	static Hospital() {
+		birthrateMode = BirthrateMode.Normal;
+	}
+
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
 		PrepareHouse(b,pos);

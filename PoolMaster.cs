@@ -9,7 +9,8 @@ public class PoolMaster : MonoBehaviour {
 	GameObject tree_pref, sapling_pref, deadTree_pref, lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static GameObject mineElevator_pref {get;private set;}
-	public static Material	default_material, lr_red_material, lr_green_material, grass_material;
+	public static Material	default_material, lr_red_material, lr_green_material, grass_material, 
+	glass_material, glass_offline_material, energy_material, energy_offline_material, colored_material, colored_offline_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
 		greenArrow_tx, redArrow_tx, empty_tx;
@@ -58,6 +59,12 @@ public class PoolMaster : MonoBehaviour {
 		quad_pref.GetComponent<MeshRenderer>().enabled =false;
 		default_material = Resources.Load<Material>("Materials/Default");
 
+		colored_material = Resources.Load<Material>("Materials/Plastic");
+		colored_offline_material = new Material(colored_material); colored_offline_material.color = Color.black;
+		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
+		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
+		glass_material = Resources.Load<Material>("Materials/Glass");
+		glass_offline_material = Resources.Load<Material>("Materials/OfflineGlass");
 		dryingLeaves_material = Resources.Load<Material>("Materials/DryingLeaves");
 		leaves_material = Resources.Load<Material>("Materials/Leaves");
 		grass_material = Resources.Load<Material>("Materials/Grass");

@@ -356,6 +356,12 @@ public class UI : MonoBehaviour {
 								ChangeArgument(3);
 							}
 						}
+						if (GameMaster.colonyController.hq.level >= 3) {
+							if (GUI.Button(new Rect(rr.x +2* rr.height, rr.y, rr.height, rr.height), "3")) {
+								showingBuildingsLevel = 3;
+								ChangeArgument(3);
+							}
+						}
 					}
 					rr.y += rr.height;
 					int buildingIndex = 0;
@@ -377,7 +383,7 @@ public class UI : MonoBehaviour {
 										chosenStructure = bd; 
 										chosenBuildingIndex = buildingIndex;
 										showBuildingCreateInfo = true;
-										if (chosenStructure.type != StructureType.MainStructure ) argument = 4;
+										if (chosenStructure.type != StructureType.MainStructure ) argument = 4; else argument = 3;
 										break;
 									}
 									else { // уже выбрано
@@ -588,26 +594,31 @@ public class UI : MonoBehaviour {
 				rr.y += rr.height;
 				Building b = chosenStructure as Building;
 				if ( b != null) {
-					if (GUI.Button(new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), demolishButton_tx)) {
-						mode = UIMode.View;
-						b.Demolish();
-						DropFocus();
-						return;
+					if ( !b.undestructible ) {
+						if (GUI.Button(new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), demolishButton_tx)) {
+							mode = UIMode.View;
+							b.Demolish();
+							DropFocus();
+							return;
+						}
 					}
 					rr.y += rr.height;
 					GUI.Label(rr,  Localization.structureName[chosenStructure.nameIndex] + " (" + Localization.info_level + b.level.ToString() + ") "); 
 					rr.y += rr.height;
 
-					bool act = GUI.Toggle(new Rect(rr.x, rr.y, rr.width / 2f, rr.height), b.isActive, Localization.ui_activeSelf); 
-					if (act != b.isActive) b.SetActivationStatus(act);
-					GUI.DrawTexture( new Rect (rr.x + rr.width/2f, rr.y, rr.height, rr.height), energyLightning_icon_tx, ScaleMode.StretchToFill);
-					if (b.isActive && b.energySupplied) {
-						string surplusString = b.energySurplus.ToString();
-						if (b.energySurplus > 0) surplusString = '+' + surplusString;
-						GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  surplusString );
+					if (b.canBePowerSwitched) {
+						bool act = GUI.Toggle(new Rect(rr.x, rr.y, rr.width / 2f, rr.height), b.isActive, Localization.ui_activeSelf); 
+						if (act != b.isActive) b.SetActivationStatus(act);
+						GUI.DrawTexture( new Rect (rr.x + rr.width/2f, rr.y, rr.height, rr.height), energyLightning_icon_tx, ScaleMode.StretchToFill);
+						if (b.isActive && b.energySupplied) {
+							string surplusString = b.energySurplus.ToString();
+							if (b.energySurplus > 0) surplusString = '+' + surplusString;
+							GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  surplusString );
+						}
+						else GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  "offline" );
+						rr.y += rr.height;
 					}
-					else GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  "offline" );
-					rr.y += rr.height;
+
 					WorkBuilding wb = b as WorkBuilding;
 					if (wb != null) {
 						GUI.Label (new Rect(rr.x, rr.y, rr.height, rr.height), "0" );

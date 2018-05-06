@@ -92,6 +92,14 @@ public class Mine : WorkBuilding {
 							workObject = b as CubeBlock;
 							lastWorkObjectPos = b.pos;
 							workFinished = false;
+							GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (level+1).ToString());
+							if (nextModel != null) {
+								GameObject newModelGO = Instantiate(nextModel, renderersTransform.position, renderersTransform.rotation, renderersTransform.parent);
+								Destroy(renderersTransform.gameObject);
+								renderersTransform = newModelGO.transform;
+								if ( !isActive || !energySupplied ) ChangeRenderersView(false);
+							}
+						level++;
 						}
 						else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 					}

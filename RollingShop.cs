@@ -44,9 +44,20 @@ public class RollingShop : WorkBuilding {
 		// rolling shop functional
 		if (GUI.Button(rr, Localization.ui_setMode)) showModes = !showModes; rr.y += rr.height;
 		if (showModes) {
-			if ( GUI.Button(rr, Localization.no_activity) ) mode = RollingShopMode.NoActivity;  rr.y += rr.height;
-			if (GUI.Button(rr, Localization.rollingShop_gearsProduction)) mode = RollingShopMode.GearsUpgrade;  rr.y += rr.height;
-			if (GUI.Button(rr, Localization.rollingShop_boatPartsProduction)) mode = RollingShopMode.BoatParts;  rr.y += rr.height;
+			if ( GUI.Button(rr, Localization.no_activity) ) {
+				showModes = false;
+				mode = RollingShopMode.NoActivity; 
+			} rr.y += rr.height;
+			if (GUI.Button(rr, Localization.rollingShop_gearsProduction)) {
+				showModes = false;
+				mode = RollingShopMode.GearsUpgrade; 
+			}
+				rr.y += rr.height;
+			if (GUI.Button(rr, Localization.rollingShop_boatPartsProduction)) {
+				showModes = false;
+				mode = RollingShopMode.BoatParts;  
+			}
+				rr.y += rr.height;
 		}
 		switch (mode) {
 		case RollingShopMode.NoActivity:

@@ -32,7 +32,7 @@ public class ColonyController : MonoBehaviour {
 	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
 	public float shipArrivingTimer = 0;
 	public byte docksLevel{get; private set;}
-	const float SHIP_ARRIVING_TIME = 60; // for max difficulty
+	const float SHIP_ARRIVING_TIME = 300; // for max difficulty
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
@@ -58,6 +58,7 @@ public class ColonyController : MonoBehaviour {
 		docksLevel = 0;
 		energyCrystalsCount = 100;
 
+		// вызываются, чтобы установились x-size и z-size
 		buildings_level_1 = new List<Building>();
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
 		buildings_level_1[0].gameObject.SetActive(false);
@@ -75,6 +76,8 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_1[6].gameObject.SetActive(false);
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Dock_level_1")) );
 		buildings_level_1[7].gameObject.SetActive(false);
+		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Storage_level_1")) );
+		buildings_level_1[8].gameObject.SetActive(false);
 
 		buildings_level_2 = new List<Building>();
 		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Biogenerator_level_2")) );
@@ -93,10 +96,26 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_2[6].gameObject.SetActive(false);
 		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/RollingShop_level_2")) );
 		buildings_level_2[7].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_2")) );
+		buildings_level_2[8].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_2")) );
+		buildings_level_2[9].gameObject.SetActive(false);
+		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_2")) );
+		buildings_level_2[10].gameObject.SetActive(false);
 
 		buildings_level_3 = new List<Building>();
-		buildings_level_3.Add( Resources.Load<Building>("Structures/Buildings/miniReactor_level_3"));
-		buildings_level_3.Add(Resources.Load<Building>("Structures/Buildings/fuelFacility_level_3"));
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/miniReactor_level_3")) );
+		buildings_level_3[0].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/fuelFacility_level_3")) );
+		buildings_level_3[1].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_3")) );
+		buildings_level_3[2].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_3")) );
+		buildings_level_3[3].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Storage_level_3")) );
+		buildings_level_3[4].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_3")) );
+		buildings_level_3[5].gameObject.SetActive(false);
 
 		houses = new List<House>();
 		powerGrid = new List<Building>();
@@ -388,15 +407,14 @@ public class ColonyController : MonoBehaviour {
 
 	public void AddDock( Dock d ) {
 		if ( d == null ) return;
-		docks.Add(d);
 		if ( docks.Count > 0) {
 			foreach ( Dock ed in docks) {
 				if ( ed == d ) return;
 			}
 		}
-		else shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
+		docks.Add(d);
+		shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
 		if (d.level > docksLevel) docksLevel = d.level;
-		else shipArrivingTimer /= 2f;
 	}
 	public void RemoveDock( Dock d) {
 		if ( d == null || docks.Count == null) return;

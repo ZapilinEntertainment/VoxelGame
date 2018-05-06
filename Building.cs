@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure {
+	public bool canBePowerSwitched = true;
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
 	public byte level = 0;
@@ -13,6 +14,8 @@ public class Building : Structure {
 	public bool borderOnlyConstruction{get;protected set;}
 	public Building nextStage; 
 	public int requiredBasementMaterialId = -1;
+	[SerializeField]
+	public Transform renderersTransform;
 
 	void Awake() {
 		PrepareBuilding();
@@ -22,6 +25,7 @@ public class Building : Structure {
 		isActive = false;
 		energySupplied = false;
 		borderOnlyConstruction = false;
+		renderersTransform = transform.GetChild(0);
 	}
 
 
@@ -45,9 +49,57 @@ public class Building : Structure {
 		if (connectedToPowerGrid) {
 			GameMaster.colonyController.RecalculatePowerGrid();
 		}
+		ChangeRenderersView(x);
 	}
 	public void SetEnergySupply(bool x) {
 		energySupplied = x;
+		ChangeRenderersView(x);
+	}
+
+	protected void ChangeRenderersView(bool setOnline) {
+		if (renderersTransform == null || renderersTransform.childCount == 0 ) return;
+		if (setOnline == false) {
+			for (int i = 0; i < renderersTransform.childCount; i++) {
+				MeshRenderer mr = renderersTransform.GetChild(i).GetComponent<MeshRenderer>();
+				if (mr != null) {
+					int j = 0;
+					Material[] allMaterials = mr.sharedMaterials;
+					while (j < allMaterials.Length) {
+						if (allMaterials[j] == PoolMaster.glass_material) allMaterials[j] = PoolMaster.glass_offline_material;
+						else {
+							if (allMaterials[j] == PoolMaster.colored_material) allMaterials[j] = PoolMaster.colored_offline_material;
+							else {
+								if (allMaterials[j].name == PoolMaster.energy_material.name ) {
+									allMaterials[j] = PoolMaster.energy_offline_material;
+								}
+							}
+						}
+						j++;
+					}
+					mr.sharedMaterials = allMaterials;
+				}
+			}
+		}
+		else {
+			for (int i = 0; i < renderersTransform.childCount; i++) {
+				MeshRenderer mr = renderersTransform.GetChild(i).GetComponent<MeshRenderer>();
+				if (mr != null) {
+					int j = 0;
+					Material[] allMaterials = mr.sharedMaterials;
+					while (j < allMaterials.Length) {
+						if (allMaterials[j] == PoolMaster.glass_offline_material) allMaterials[j] = PoolMaster.glass_material;
+						else {
+							if (allMaterials[j] == PoolMaster.colored_offline_material) allMaterials[j] = PoolMaster.colored_material;
+							else {
+								if (allMaterials[j] == PoolMaster.energy_offline_material) allMaterials[j] = PoolMaster.energy_material;
+							}
+						}
+						j++;
+					}
+					mr.sharedMaterials = allMaterials;
+				}
+			}
+		}
 	}
 
 	protected void PrepareBuildingForDestruction() {
@@ -93,7 +145,8 @@ public class Building : Structure {
 				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 				{
 					Building upgraded = Instantiate(nextStage);
-					upgraded.SetBasement(basement, PixelPosByte.zero);
+				upgraded.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
+					upgraded.transform.localRotation = transform.localRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}

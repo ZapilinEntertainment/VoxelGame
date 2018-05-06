@@ -109,6 +109,7 @@ public class Factory : WorkBuilding {
 				{
 					Building upgraded = Instantiate(nextStage);
 					upgraded.SetBasement(basement, PixelPosByte.zero);
+					upgraded.transform.localRotation = transform.localRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}
