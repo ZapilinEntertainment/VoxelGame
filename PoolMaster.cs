@@ -13,7 +13,7 @@ public class PoolMaster : MonoBehaviour {
 	glass_material, glass_offline_material, energy_material, energy_offline_material, colored_material, colored_offline_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
-		greenArrow_tx, redArrow_tx, empty_tx;
+	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel;
 
@@ -37,6 +37,7 @@ public class PoolMaster : MonoBehaviour {
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
 
+		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
 		empty_tx = Resources.Load<Texture>("Textures/resource_empty");
 		redArrow_tx = Resources.Load<Texture>("Textures/redArrow");
 		greenArrow_tx = Resources.Load<Texture>("Textures/greenArrow");

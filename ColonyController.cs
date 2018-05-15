@@ -30,6 +30,8 @@ public class ColonyController : MonoBehaviour {
 	List<Building> powerGrid;
 	public List<Dock> docks{get;private set;}
 	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
+	public List<GraphoniumEnricher> graphoniumEnrichers{get;private set;}
+	public List<ChemicalFactory>chemicalFactories{get;private set;}
 	public float shipArrivingTimer = 0;
 	public byte docksLevel{get; private set;}
 	const float SHIP_ARRIVING_TIME = 300; // for max difficulty
@@ -116,11 +118,47 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_3[4].gameObject.SetActive(false);
 		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_3")) );
 		buildings_level_3[5].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/GraphoniumEnricher_level_3")) );
+		buildings_level_3[6].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/XStation_level_3")) );
+		buildings_level_3[7].gameObject.SetActive(false);
+
+		buildings_level_4 = new List<Building>();
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/GraphoniumReactor_level_4")) );
+		buildings_level_4[0].gameObject.SetActive(false);
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_4")) );
+		buildings_level_4[1].gameObject.SetActive(false);
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_4")) );
+		buildings_level_4[2].gameObject.SetActive(false);
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/PlasticsFactory_level_4")) );
+		buildings_level_4[3].gameObject.SetActive(false);
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/FoodFactory_level_4")) );
+		buildings_level_4[4].gameObject.SetActive(false);
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/QuantumEnergyTransmitter_level_4")) );
+		buildings_level_4[5].gameObject.SetActive(false);
+		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/ChemicalFactory_level_4")) );
+		buildings_level_4[6].gameObject.SetActive(false);
+
+		buildings_level_5 = new List<Building>();
+		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/farmBlock_level_5")) );
+		buildings_level_5[0].gameObject.SetActive(false);
+		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/lumbermillBlock_level_5")) );
+		buildings_level_5[1].gameObject.SetActive(false);
+		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/smelteryBlock_level_5")) );
+		buildings_level_5[2].gameObject.SetActive(false);
+		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/houseBlock_level_5")) );
+		buildings_level_5[3].gameObject.SetActive(false);
+		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/foodFactoryBlock_level_5")) );
+		buildings_level_5[4].gameObject.SetActive(false);
+		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/storageBlock_level_5")) );
+		buildings_level_5[5].gameObject.SetActive(false);
 
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
 		rollingShops = new List<RollingShop>();
+		graphoniumEnrichers = new List<GraphoniumEnricher>();
+		chemicalFactories = new List<ChemicalFactory>();
 	}
 
 	void Update() {
@@ -430,22 +468,80 @@ public class ColonyController : MonoBehaviour {
 
 	public void AddRollingShop( RollingShop rs ) {
 		if ( rs == null ) return;
-		if (rollingShops.Count > 0) {
-			foreach (RollingShop ers in rollingShops) {
-				if (ers == rs) return;
+		int i = 0;
+		while ( i < rollingShops.Count ) {
+			if (rollingShops[i] == null) {
+				rollingShops.RemoveAt(i);
+				continue;
+			}
+			else {
+				if (rollingShops[i] == rs) return;
+				else i++;
 			}
 		}
 		rollingShops.Add(rs);
 	}
 	public void RemoveRollingShop( RollingShop rs) {
-		if ( rs == null || rollingShops.Count == null) return;
+		if ( rs == null || rollingShops.Count == 0) return;
 		int i = 0;
 		while (i < rollingShops.Count) {
-			if (rollingShops[i] == rs) {
+			if ( rollingShops[i] == null || rollingShops[i] == rs) {
 				rollingShops.RemoveAt(i);
-				return;
+				continue;
 			}
-			i++;
+			else i++;
+		}
+	}
+	public void AddGraphoniumEnricher( GraphoniumEnricher ge ) {
+		if ( ge == null ) return;
+		int i = 0;
+		while (i < graphoniumEnrichers.Count) {
+			if (graphoniumEnrichers[i] == null) {
+				graphoniumEnrichers.RemoveAt(i);
+				continue;
+			}
+			else {
+				if ( graphoniumEnrichers[i] == ge) return;
+				else i++;
+			}
+		}
+		graphoniumEnrichers.Add(ge);
+	}
+	public void RemoveGraphoniumEnricher ( GraphoniumEnricher ge) {
+		if ( ge == null || graphoniumEnrichers.Count == 0) return;
+		int i = 0;
+		while (i < graphoniumEnrichers.Count) {
+			if (graphoniumEnrichers[i] == null || graphoniumEnrichers[i] == ge) {
+				graphoniumEnrichers.RemoveAt(i);
+				continue;
+			}
+			else i++;
+		}
+	}
+	public void AddChemicalFactory( ChemicalFactory cf ) {
+		if ( cf == null ) return;
+		int i = 0;
+		while ( i < chemicalFactories.Count) {
+			if ( chemicalFactories[i] == null) {
+				chemicalFactories.RemoveAt(i);
+				continue;
+			}
+			else {
+				if (chemicalFactories[i] == cf) return;
+				else i++;
+			}
+		}
+		chemicalFactories.Add(cf);
+	}
+	public void RemoveChemicalFactory( ChemicalFactory cf) {
+		if ( cf == null || chemicalFactories.Count == 0) return;
+		int i = 0;
+		while (i < chemicalFactories.Count) {
+			if (chemicalFactories[i] == null || chemicalFactories[i] == cf) {
+				chemicalFactories.RemoveAt(i);
+				continue;
+			}
+			else i++;
 		}
 	}
 

@@ -27,13 +27,12 @@ public abstract class WorkBuilding : Building {
 			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			if (workflow >= workflowToProcess) {
 				LabourResult();
-				workflow -= workflowToProcess;
 			}
 		}
 	}
 
 	protected virtual void LabourResult() {
-
+		workflow = 0;
 	}
 
 	public int AddWorkers (int x) {

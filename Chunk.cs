@@ -25,12 +25,14 @@ public class Chunk : MonoBehaviour {
 	public const byte CHUNK_SIZE = 16;
 	public static int energy_take_speed = 10;
 	GameObject cave_pref;
+	public List <Component> chunkUpdateSubscribers;
 
 	void Awake() {
 		CENTER_POS = new Vector3(CHUNK_SIZE/2f, CHUNK_SIZE/2f, CHUNK_SIZE/2f);
 		grassland_blocks = new List<Grassland>();
 		surfaceBlocks = new List<SurfaceBlock>();
 		cave_pref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
+		chunkUpdateSubscribers = new List<Component>();
 
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
 	}
@@ -149,6 +151,7 @@ public class Chunk : MonoBehaviour {
 		b = GetBlock(x - 1,y ,z); if ( b != null ) b.ChangeVisibilityMask(1, ((mask & 8) != 0));
 		b = GetBlock(x ,y + 1, z ); if ( b != null ) b.ChangeVisibilityMask(5, ((mask & 16) != 0));
 		b = GetBlock(x ,y - 1,z); if ( b != null ) b.ChangeVisibilityMask(4, ((mask & 32) != 0));
+		BroadcastChunkUpdate( new ChunkPos(x,y,z) );
 	}
 
 	public void AddBlock (ChunkPos f_pos, BlockType f_type, int f_material_id) {
@@ -211,7 +214,10 @@ public class Chunk : MonoBehaviour {
 		int x = f_pos.x, y = f_pos.y, z= f_pos.z;
 		Block originalBlock = GetBlock(x,y,z);
 		if (originalBlock == null) {AddBlock(f_pos, f_newType, f_newMaterial_id); return;}
-		if (originalBlock.type == f_newType) {originalBlock.ReplaceMaterial(f_newMaterial_id);return;}
+		if (originalBlock.type == f_newType) {
+			originalBlock.ReplaceMaterial(f_newMaterial_id);
+			return;
+		}
 		else {
 			if (originalBlock.indestructible) {
 				if ((originalBlock.type == BlockType.Surface || originalBlock.type == BlockType.Cave) && f_newType != BlockType.Surface && f_newType != BlockType.Cave) return;
@@ -499,8 +505,8 @@ public class Chunk : MonoBehaviour {
 				if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
 				if (renderBitmask != prevBitmask) {
 					foreach(Block b in blocks) {
-					if ( b !=null  && b.type == BlockType.Cube) {
-						b.GetComponent<CubeBlock>().SetRenderBitmask(renderBitmask);
+					if ( b !=null ) {
+						b.SetRenderBitmask(renderBitmask);
 					}
 				}
 					prevBitmask = renderBitmask;
@@ -509,8 +515,7 @@ public class Chunk : MonoBehaviour {
 		else {
 			//camera in chunk
 			foreach (Block b in blocks) {
-				if (b == null || b.type != BlockType.Cube) continue;
-				CubeBlock cb = b.GetComponent<CubeBlock>();
+				if (b == null ) continue;
 				Vector3 icpos = campoint.InverseTransformPoint(b.transform.position);
 				Vector3 vn = Vector3.one * (-1);
 				if (icpos.x > 0) { if (icpos.x > size) vn.x = 1; else vn.x = 0;} 
@@ -520,7 +525,7 @@ public class Chunk : MonoBehaviour {
 				if (v.x ==1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
 				if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
 				if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
-				cb.SetRenderBitmask(renderBitmask);
+				b.SetRenderBitmask(renderBitmask);
 			}
 		}
 	}
@@ -553,7 +558,7 @@ public class Chunk : MonoBehaviour {
 	public void BlockByStructure(byte x, byte y, byte z, Structure s) {
 		if (x > CHUNK_SIZE || y > CHUNK_SIZE || z > CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
 		Block b = GetBlock(x,y,z);
-		if (b != null) {Destroy(blocks[x,y,z].gameObject);}
+		if (b != null) { ReplaceBlock( new ChunkPos(x,y,z), BlockType.Shapeless, 0, false); }
 		else blocks[x,y,z] = new GameObject().AddComponent<Block>();
 		blocks[x,y,z].ShapelessBlockSet(this, new ChunkPos(x,y,z), s);
 	}
@@ -563,6 +568,18 @@ public class Chunk : MonoBehaviour {
 		foreach (Block b in blocks) {
 			if (b == null) continue;
 			if (b.type == BlockType.Surface || b.type == BlockType.Cave) surfaceBlocks.Add(b as SurfaceBlock);
+		}
+	}
+
+	void BroadcastChunkUpdate(ChunkPos pos) {
+		int i =0;
+		while ( i < chunkUpdateSubscribers.Count ) {
+			if (chunkUpdateSubscribers[i] == null) {
+				chunkUpdateSubscribers.RemoveAt(i);
+				continue;
+			}
+			chunkUpdateSubscribers[i].BroadcastMessage("ChunkUpdated", pos, SendMessageOptions.DontRequireReceiver);
+			i++;
 		}
 	}
 

@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum FactoryType {Simple, Advanced, Recycler}
-public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility}
+public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
 
 
 public class Factory : WorkBuilding {	
-	public Recipe recipe {get; protected set;}
-	public FactoryType factoryType {get;protected set;}
+	Recipe recipe;
 	protected Storage storage;
 	protected const float BUFFER_LIMIT = 10;
 	public float inputResourcesBuffer  {get; protected set;}
@@ -18,7 +16,6 @@ public class Factory : WorkBuilding {
 
 	void Awake () {
 		PrepareWorkbuilding();
-		factoryType = FactoryType.Simple;
 		recipe = Recipe.NoRecipe;
 		inputResourcesBuffer = 0;
 	}
@@ -27,7 +24,6 @@ public class Factory : WorkBuilding {
 		if (b == null) return;
 		SetBuildingData(b, pos);
 		storage = GameMaster.colonyController.storage;
-		factoryType = FactoryType.Simple;
 		UI.current.AddFactoryToList(this);
 	}
 
@@ -82,6 +78,9 @@ public class Factory : WorkBuilding {
 			case FactorySpecialization.Smeltery:
 				return Recipe.smelteryRecipes.Length;
 				break;
+			case FactorySpecialization.PlasticsFactory:
+				return Recipe.plasticFactoryRecipes.Length;
+				break;
 			case FactorySpecialization.Unspecialized:
 				return 0;
 				break;
@@ -130,6 +129,7 @@ public class Factory : WorkBuilding {
 			case FactorySpecialization.FuelFacility: recipesToShow = Recipe.fuelFacilityRecipes;break;
 			case FactorySpecialization.OreRefiner: recipesToShow = Recipe.oreRefiningRecipes; break;
 			case FactorySpecialization.Smeltery: recipesToShow = Recipe.smelteryRecipes;break;
+			case FactorySpecialization.PlasticsFactory: recipesToShow = Recipe.plasticFactoryRecipes;break;
 			}
 			if (recipesToShow != null && recipesToShow.Length> 0) {
 				GUI.Box(new Rect(rr.x, rr.y, rr.width, rr.height * recipesToShow.Length), GUIContent.none);

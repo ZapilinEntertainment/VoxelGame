@@ -25,7 +25,7 @@ public class UI : MonoBehaviour {
 	GameObject quadSelector;
 
 	Texture  grid16_tx, greenSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
-	citizen_icon_tx, energy_icon_tx, energyCrystal_icon_tx, energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
+	citizen_icon_tx, energy_icon_tx,  energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
 	public Texture rightArrow_tx{get;private set;}
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
@@ -47,7 +47,6 @@ public class UI : MonoBehaviour {
 		yellowSquare_tx = Resources.Load<Texture>("Textures/yellowSquare");
 		citizen_icon_tx = Resources.Load<Texture>("Textures/citizen_icon");
 		energy_icon_tx = Resources.Load<Texture>("Textures/energy_icon");
-		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
 		energyLightning_icon_tx = Resources.Load<Texture>("Textures/energyLightning_icon");
 		buildingQuad_icon_tx = Resources.Load<Texture>("Textures/buildingQuad_icon");
 		demolishButton_tx = Resources.Load<Texture>("Textures/button_demolish");
@@ -93,6 +92,7 @@ public class UI : MonoBehaviour {
 							case BlockType.Surface:
 									mode = UIMode.SurfaceBlockPanel;
 									chosenSurfaceBlock = b.GetComponent<SurfaceBlock>();
+								chosenCubeBlock = chosenSurfaceBlock.myChunk.GetBlock(chosenSurfaceBlock.pos.x, chosenSurfaceBlock.pos.y - 1, chosenSurfaceBlock.pos.z) as CubeBlock;
 									x= chosenSurfaceBlock.transform.position.x; y = chosenSurfaceBlock.transform.position.y - d + 0.01f;  z = chosenSurfaceBlock.transform.position.z;
 									lineDrawer.SetPositions(new Vector3[5]{new Vector3(x - d, y, z+d), new Vector3(x+d,y,z+d), new Vector3(x+d,y,z-d), new Vector3(x - d, y, z-d), new Vector3(x-d, y,z+d)});
 									lineDrawer.material = PoolMaster.lr_green_material;
@@ -249,7 +249,7 @@ public class UI : MonoBehaviour {
 			GUI.DrawTexture(new Rect(5*k, 0, k, k), energy_icon_tx, ScaleMode.StretchToFill);
 			string energySurplusString = ((int)cc.energySurplus).ToString(); if (cc.energySurplus > 0) energySurplusString = '+' + energySurplusString;
 			GUI.Label( new Rect ( 6 * k, 0, 5 * k, k) , ((int)cc.energyStored).ToString() + " / " + ((int)cc.totalEnergyCapacity).ToString() + " ( " + energySurplusString + " )" );
-			GUI.DrawTexture ( new Rect ( 11 * k, 0, k, k), energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
+			GUI.DrawTexture ( new Rect ( 11 * k, 0, k, k), PoolMaster.energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
 			GUI.Label ( new Rect ( 12 * k, 0, k, k ), ((int)cc.energyCrystalsCount).ToString() ) ;
 		} 
 		//upRight infopanel
@@ -313,7 +313,7 @@ public class UI : MonoBehaviour {
 					} 
 					rr.y += rr.height;
 					//DIG BUTTON
-					if (chosenSurfaceBlock.indestructible == false) {
+					if (chosenSurfaceBlock.indestructible == false && chosenCubeBlock != null) {
 						CleanSite cs = chosenSurfaceBlock.GetComponent<CleanSite>();
 						if (cs == null) {
 							if (GUI.Button(rr, Localization.ui_dig_block)) {
@@ -346,19 +346,9 @@ public class UI : MonoBehaviour {
 					rr.y += rr.height;
 					GUI.DrawTexture(new Rect(rr.x + (showingBuildingsLevel - 1) * rr.height, rr.y, rr.height, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 					if (GameMaster.colonyController.hq != null) {
-						if (GUI.Button(new Rect(rr.x, rr.y, rr.height, rr.height), "1")) {
-							showingBuildingsLevel = 1;
-							ChangeArgument(3);
-						}
-						if (GameMaster.colonyController.hq.level >= 2) {
-							if (GUI.Button(new Rect(rr.x + rr.height, rr.y, rr.height, rr.height), "2")) {
-								showingBuildingsLevel = 2;
-								ChangeArgument(3);
-							}
-						}
-						if (GameMaster.colonyController.hq.level >= 3) {
-							if (GUI.Button(new Rect(rr.x +2* rr.height, rr.y, rr.height, rr.height), "3")) {
-								showingBuildingsLevel = 3;
+						for (int bl = 1; bl <= GameMaster.colonyController.hq.level; bl++) {
+							if (GUI.Button(new Rect(rr.x + (bl - 1) * rr.height, rr.y, rr.height, rr.height), bl.ToString())) {
+								showingBuildingsLevel = (byte)bl;
 								ChangeArgument(3);
 							}
 						}
@@ -640,8 +630,6 @@ public class UI : MonoBehaviour {
 	}
 
 	public void AddFactoryToList (Factory f) {
-		switch ( f.factoryType ) {
-		case FactoryType.Simple:
 			switch (f.specialization) {
 			case FactorySpecialization.Unspecialized:
 				if ( !hasUnspecializedFactories ) unspecializedFactories =new List<Factory>();
@@ -654,14 +642,9 @@ public class UI : MonoBehaviour {
 				smelteriesList.Add(f);
 				break;
 			}
-			break;
-		}
 	}
 
-
 	public void RemoveFromFactoriesList (Factory f) {
-		switch ( f.factoryType ) {
-		case FactoryType.Simple:
 			switch ( f.specialization ) {
 			case FactorySpecialization.Smeltery:
 				RemoveObjectFromFactoryList( smelteriesList, f, ref hasSmelteries);
@@ -670,9 +653,8 @@ public class UI : MonoBehaviour {
 				RemoveObjectFromFactoryList( unspecializedFactories, f, ref hasUnspecializedFactories);
 				break;
 			}
-			break;
-		}
 	}
+
 	void RemoveObjectFromFactoryList(List<Factory> list, Factory obj, ref bool presenceMarker) {
 		if (list == null) {presenceMarker = false; return;}
 		int i = 0;

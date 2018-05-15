@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum GeneratorFuel {Biofuel, MineralFuel}
+enum GeneratorFuel {Biofuel, MineralFuel,Graphonium}
 public class Powerplant : WorkBuilding {
 	[SerializeField]
 	GeneratorFuel fuelType;
@@ -13,8 +13,11 @@ public class Powerplant : WorkBuilding {
 
 	void Awake() {
 		PrepareWorkbuilding();
-		if (fuelType == GeneratorFuel.Biofuel) fuel = ResourceType.Food;
-		else fuel = ResourceType.mineral_F;
+		switch (fuelType) {
+		case GeneratorFuel.Biofuel: fuel = ResourceType.Food;break;
+		case GeneratorFuel.MineralFuel: fuel = ResourceType.mineral_F;break;
+		case GeneratorFuel.Graphonium : fuel = ResourceType.Graphonium;break;
+		}
 	}
 
 	void Update() {

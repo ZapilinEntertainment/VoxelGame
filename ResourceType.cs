@@ -12,14 +12,14 @@ public class ResourceType {
 	public static readonly ResourceType Nothing, Lumber, Stone, Dirt,Food, 
 		metal_K_ore, metal_M_ore, metal_E_ore, metal_N_ore, metal_P_ore, metal_S_ore, 
 		metal_K, metal_M, metal_E, metal_N, metal_P, metal_S,
-		mineral_F, mineral_L, ElasticMass, Concrete, FertileSoil, Fuel;
+	mineral_F, mineral_L, Plastics, Concrete, FertileSoil, Fuel, Graphonium;
 	public const int STONE_ID = 1, DIRT_ID = 2, LUMBER_ID = 4, METAL_K_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
-	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, ELASTIC_MASS_ID = 13, FOOD_ID = 14,
+	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, PLASTICS_ID = 13, FOOD_ID = 14,
 	CONCRETE_ID = 15, METAL_K_ORE_ID = 16, METAL_M_ORE_ID = 17, METAL_E_ORE_ID = 18, METAL_N_ORE_ID = 19, METAL_P_ORE_ID = 20,
-	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23;
+	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24;
 	public static readonly ResourceType[] resourceTypesArray;
 	public static float[] prices, demand;
-	public const int RTYPES_COUNT = 24, RTYPE_ARRAY_ROWS = 4, RTYPE_ARRAY_COLUMNS = 6; 
+	public const int RTYPES_COUNT = 25, RTYPE_ARRAY_ROWS = 5, RTYPE_ARRAY_COLUMNS = 6; 
 
 	public ResourceType(string f_name, int f_id, float f_mass, float f_toughness, Material f_material, Texture f_icon, string f_descr) {
 		name = f_name;
@@ -72,12 +72,12 @@ public class ResourceType {
 		Fuel = new ResourceType(Localization.rtype_fuel_name, FUEL_ID, 0.1f, 0, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_fuel"), Localization.rtype_fuel_descr);
 		prices[FUEL_ID] = prices[MINERAL_F_ID] * 4; demand[FUEL_ID] = 45;
 
-		ElasticMass = new ResourceType("Elastic Mass", ELASTIC_MASS_ID ,0.5f, 10, Resources.Load<Material>("Materials/Plastic"), Resources.Load<Texture>("Textures/resource_elasticMass"), Localization.rtype_elasticMass_descr);
-		prices[ELASTIC_MASS_ID] = 1.5f; demand[ELASTIC_MASS_ID] = 2;
+		Plastics = new ResourceType("Plastics", PLASTICS_ID ,0.5f, 10, Resources.Load<Material>("Materials/Plastic"), Resources.Load<Texture>("Textures/resource_elasticMass"), Localization.rtype_plastics_descr);
+		prices[PLASTICS_ID] = 1.5f; demand[PLASTICS_ID] = 2;
 		Lumber = new ResourceType(Localization.rtype_lumber_name, LUMBER_ID, 0.5f, 5,  Resources.Load<Material>("Materials/Lumber"), Resources.Load<Texture>("Textures/resource_lumber"), Localization.rtype_lumber_descr); 
-		prices[LUMBER_ID] = prices[ELASTIC_MASS_ID] / 10f; demand[LUMBER_ID] = demand[ELASTIC_MASS_ID] / 6f;
+		prices[LUMBER_ID] = prices[PLASTICS_ID] / 10f; demand[LUMBER_ID] = demand[PLASTICS_ID] / 6f;
 		mineral_L = new ResourceType("Mineral L",  MINERAL_L_ID ,1, 2, Resources.Load<Material>("Materials/MineralL"), Resources.Load<Texture>("Textures/resource_mineralL"), Localization.rtype_mineralL_descr);
-		prices[MINERAL_L_ID] = prices[ELASTIC_MASS_ID] / 2f; demand [MINERAL_L_ID] = demand[ELASTIC_MASS_ID] *ore_lowK;
+		prices[MINERAL_L_ID] = prices[PLASTICS_ID] / 2f; demand [MINERAL_L_ID] = demand[PLASTICS_ID] *ore_lowK;
 
 		Stone = new ResourceType(Localization.rtype_stone_name, STONE_ID, 2.5f, 30,  Resources.Load<Material>("Materials/Stone"), Resources.Load<Texture>("Textures/resource_stone"), Localization.rtype_stone_descr);
 		prices[STONE_ID] = 0.2f; demand[STONE_ID] = 0.5f;
@@ -89,6 +89,10 @@ public class ResourceType {
 		Material fertileSoil_material = new Material(Dirt.material);	fertileSoil_material.SetTexture("_MainTex", Resources.Load<Texture>("Textures/Farmland"));
 		FertileSoil = new ResourceType(Localization.rtype_fertileSoil_name, FERTILE_SOIL_ID, 1, 1, fertileSoil_material, Resources.Load<Texture>("Textures/resource_fertileSoil"), Localization.rtype_fertileSoil_descr);
 		prices[FERTILE_SOIL_ID] = prices[DIRT_ID]; demand[FERTILE_SOIL_ID] = demand[DIRT_ID];
+
+		Graphonium = new ResourceType(Localization.rtype_graphonium_name, GRAPHONIUM_ID, 4, 2.5f, PoolMaster.energy_material, PoolMaster.energyCrystal_icon_tx, Localization.rtype_graphonium_descr);
+		prices[GRAPHONIUM_ID] = prices[METAL_N_ID * 3];
+		demand[GRAPHONIUM_ID] = 1;
 	}
 
 	public static ResourceType GetResourceTypeById(int f_id) {

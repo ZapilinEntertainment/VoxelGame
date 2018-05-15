@@ -14,8 +14,8 @@ public class Block : MonoBehaviour {
 	public Structure mainStructure{get;protected set;}
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
-	public byte visibilityMask {get;protected set;}
-	protected byte renderMask = 0;
+	public byte visibilityMask;
+	public byte renderMask = 0;
 	public bool indestructible {get; protected set;}
 
 	public virtual void ReplaceMaterial(int newId) {
@@ -56,10 +56,11 @@ public class Block : MonoBehaviour {
 		visibilityMask = x;
 	}
 	virtual public void ChangeVisibilityMask (byte index, bool value) { 
-		int vm = visibilityMask;
-		int im =(byte) (63 - (int)Mathf.Pow(2, index));
-		if (value == false) { vm &= im;}
-		else {vm = ~vm; vm &= im; vm = ~vm;}
+		byte vm = visibilityMask;
+		byte val = (byte)( Mathf.Pow(2, index) );
+		byte nmask= (byte)~val;
+		vm &= nmask; // любое значение в позиции index меняется на 0
+		if (value) { vm +=  val;}
 		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
 

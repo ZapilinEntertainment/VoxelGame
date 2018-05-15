@@ -101,7 +101,7 @@ public class Building : Structure {
 			}
 		}
 	}
-
+		
 	protected void PrepareBuildingForDestruction() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
@@ -145,7 +145,11 @@ public class Building : Structure {
 				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 				{
 					Building upgraded = Instantiate(nextStage);
-				upgraded.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
+					PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
+					byte bzero = (byte)0;
+					if (upgraded.xsize_to_set == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+					if (upgraded.zsize_to_set == 16) setPos = new PixelPosByte(setPos.x, bzero);
+					upgraded.SetBasement(basement, setPos);
 					upgraded.transform.localRotation = transform.localRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);

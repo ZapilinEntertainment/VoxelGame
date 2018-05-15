@@ -35,6 +35,7 @@ public class SurfaceBlock : Block {
 	public sbyte cellsStatus {get; protected set;} // -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures = 0;
 	public bool[,] map {get; protected set;}
+	public BlockRendererController structureBlock;
 
 	void Awake() 
 	{
@@ -127,6 +128,14 @@ public class SurfaceBlock : Block {
 			if ( !s.rotate90only ) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 			else s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 4) * 90f, 0 );
 		}
+		else {
+			BlockRendererController brc =  s.gameObject.GetComponent<BlockRendererController>();
+			if (brc != null) {
+				structureBlock = brc;
+				brc.SetRenderBitmask(renderMask);
+				brc.SetVisibilityMask(visibilityMask);
+			}
+		}
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
@@ -146,6 +155,7 @@ public class SurfaceBlock : Block {
 				map[i,j] = false;
 			}
 		}
+		structureBlock = null;
 	}
 
 	public void AddCellStructure(Structure s, PixelPosByte pos) { 
@@ -215,6 +225,8 @@ public class SurfaceBlock : Block {
 				break;
 			}
 		}
+		BlockRendererController brc = so.structure.GetComponent<BlockRendererController>();
+		if (brc != null) structureBlock = null;
 	}
 
 	public Grassland AddGrassland() {
@@ -417,5 +429,20 @@ public class SurfaceBlock : Block {
 			}
 		}
 	}
-		
+
+	override public void SetRenderBitmask(byte x) {
+		if (renderMask != x) {
+			renderMask = x;
+			if ( visibilityMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
+			if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
+			else surfaceRenderer.enabled = true;
+		}
+	}
+
+	override public void SetVisibilityMask (byte x) {
+		visibilityMask = x;
+		if ( renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
+		if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
+		else surfaceRenderer.enabled = true;
+	}
 }

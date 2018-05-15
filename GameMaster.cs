@@ -370,7 +370,7 @@ public class GameMaster : MonoBehaviour {
 		case WorkType.Clearing: workspeed  *= clearingSpeed;break;
 		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
 		case WorkType.Mining: workspeed  *= miningSpeed;break;
-		case WorkType.Farming : workspeed *= GameMaster.lifeGrowCoefficient;break;
+		case WorkType.Farming : workspeed *= GameMaster.lifeGrowCoefficient * environmentalConditions;break;
 		}
 		return workspeed ;
 	}

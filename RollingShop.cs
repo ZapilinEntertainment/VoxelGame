@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum RollingShopMode{NoActivity, GearsUpgrade, BoatParts}
+enum RollingShopMode {NoActivity, GearsUpgrade, BoatParts}
 public class RollingShop : WorkBuilding {
 	RollingShopMode mode;
 	bool showModes = false;
@@ -24,7 +24,7 @@ public class RollingShop : WorkBuilding {
 		case RollingShopMode.BoatParts:
 			break;
 		case RollingShopMode.GearsUpgrade:
-			if (GameMaster.colonyController.gears_coefficient < GEARS_UP_LIMIT) GameMaster.colonyController.ImproveGearsCoefficient(GEARS_UPGRADE_STEP);
+			if (GameMaster.colonyController.gears_coefficient < GEARS_UP_LIMIT) GameMaster.colonyController.ImproveGearsCoefficient(GEARS_UPGRADE_STEP * workflow / workflowToProcess);
 			break;
 		}
 	}

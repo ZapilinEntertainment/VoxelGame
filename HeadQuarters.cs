@@ -4,22 +4,30 @@ using UnityEngine;
 
 public class HeadQuarters : House {
 	bool nextStageConditionMet = false;
+	ColonyController colony;
 	
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
 		PrepareHouse(b,pos);
-		GameMaster.colonyController.SetHQ(this);
+		colony = GameMaster.colonyController;
+		colony.SetHQ(this);
 	}
 
 	void Update() {
-		if ( showOnGUI) {
+		if ( showOnGUI && colony != null) {
 			switch (level) {
 			case 1:  
-				nextStageConditionMet = (GameMaster.colonyController.docks.Count != 0); 
+				nextStageConditionMet = (colony.docks.Count != 0); 
 				break;
 			case 2:  
-				nextStageConditionMet = (GameMaster.colonyController.rollingShops.Count != 0);
-				break;			
+				nextStageConditionMet = (colony.rollingShops.Count != 0);
+				break;		
+			case 3:
+				nextStageConditionMet = (colony.graphoniumEnrichers.Count != 0);
+				break;
+			case 4:
+				nextStageConditionMet = (colony.chemicalFactories.Count != 0);
+				break;
 			}
 		}
 	}
@@ -51,6 +59,10 @@ public class HeadQuarters : House {
 				switch (level) {
 				case 1: GUI.Label(rr, Localization.hq_refuse_reason_1, PoolMaster.GUIStyle_CenterOrientedLabel);break;
 				case 2: GUI.Label(rr, Localization.hq_refuse_reason_2, PoolMaster.GUIStyle_CenterOrientedLabel);break;
+				case 3: GUI.Label(rr, Localization.hq_refuse_reason_3, PoolMaster.GUIStyle_CenterOrientedLabel);break;
+				case 4: GUI.Label(rr, Localization.hq_refuse_reason_4, PoolMaster.GUIStyle_CenterOrientedLabel);break;
+				case 5: GUI.Label(rr, Localization.hq_refuse_reason_5, PoolMaster.GUIStyle_CenterOrientedLabel);break;
+				case 6: GUI.Label(rr, Localization.hq_refuse_reason_6, PoolMaster.GUIStyle_CenterOrientedLabel);break;
 				}
 				GUI.color = c;
 			}
