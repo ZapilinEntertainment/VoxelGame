@@ -6,7 +6,11 @@ public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 
 public class ColonyController : MonoBehaviour {
 	float foodCount = 0;
-	const float FOOD_CONSUMPTION = 1;
+	const float FOOD_CONSUMPTION = 1, SHIP_ARRIVING_TIME = 300, // for max difficulty
+	HOUSING_TIME = 7;
+	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
+	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
+
 	public Storage storage{get;private set;}
 	public HeadQuarters hq{get;private set;}
 	public float gears_coefficient {get; private set;}
@@ -14,6 +18,7 @@ public class ColonyController : MonoBehaviour {
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
+	House tent_pref;
 	public List<Building> buildings_level_1{get;private set;}
 	public List<Building> buildings_level_2{get;private set;}
 	public List<Building> buildings_level_3{get;private set;}
@@ -34,13 +39,13 @@ public class ColonyController : MonoBehaviour {
 	public List<ChemicalFactory>chemicalFactories{get;private set;}
 	public float shipArrivingTimer = 0;
 	public byte docksLevel{get; private set;}
-	const float SHIP_ARRIVING_TIME = 300; // for max difficulty
+	public byte housesLevel{get; private set;}
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
 	public float birthrateCoefficient{get;private set;}
 	public int deathCredit{get;private set;}
-	float peopleSurplus = 0;
+	float peopleSurplus = 0, housingTimer = 0;
 	public int totalLivespace{get;private set;}
 	List<House> houses; List<Hospital> hospitals;
 	Rect myRect;
@@ -53,7 +58,6 @@ public class ColonyController : MonoBehaviour {
 		GameMaster.realMaster.everyYearUpdateList.Add(this);
 		gears_coefficient = 1;
 		labourEfficientcy_coefficient = 1;
-		happiness_coefficient = 1;
 		health_coefficient = 1;
 		hospitals_coefficient = 0;
 		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
@@ -61,6 +65,9 @@ public class ColonyController : MonoBehaviour {
 		energyCrystalsCount = 100;
 
 		// вызываются, чтобы установились x-size и z-size
+		tent_pref = Instantiate(Resources.Load<House>("Structures/House_level_0"));
+		tent_pref.gameObject.SetActive( false );
+
 		buildings_level_1 = new List<Building>();
 		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
 		buildings_level_1[0].gameObject.SetActive(false);
@@ -122,6 +129,10 @@ public class ColonyController : MonoBehaviour {
 		buildings_level_3[6].gameObject.SetActive(false);
 		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/XStation_level_3")) );
 		buildings_level_3[7].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Smeltery_level_3")) );
+		buildings_level_3[8].gameObject.SetActive(false);
+		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_3")) );
+		buildings_level_3[9].gameObject.SetActive(false);
 
 		buildings_level_4 = new List<Building>();
 		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/GraphoniumReactor_level_4")) );
@@ -173,39 +184,11 @@ public class ColonyController : MonoBehaviour {
 				energyStored = 0;
 				int i = powerGrid.Count - 1;
 				while ( i >= 0 && energySurplus < 0) {
-					ElementPowerSwitch(i, false);
+					if (powerGrid[i].energySurplus < 0) ElementPowerSwitch(i, false);
 					i--;
 				}
 			}
 		}
-		//   Starvation mechanics
-		if (starvationTimer > 0) {
-			starvationTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			float pc = starvationTimer / starvationTime;
-			if (pc < 0.5f) {
-				pc /= 2f;
-				KillCitizens((int)(citizenCount * (1 - pc)));
-			}
-		}
-
-		//  BIRTHRATE
-		if (birthrateCoefficient != 0) {
-			if (birthrateCoefficient > 0) {
-				real_birthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
-				if (peopleSurplus > 1) {
-					int newborns = (int) peopleSurplus;
-					AddCitizens(newborns); 
-					peopleSurplus -= newborns;
-				}
-			}
-			else {
-				real_birthrate = birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
-				if (peopleSurplus < - 1) {
-					KillCitizens(1); peopleSurplus += 1;
-				}
-			}
-		}
-		peopleSurplus += real_birthrate;
 
 		//   SHIPS ARRIVING
 		if (shipArrivingTimer > 0) {
@@ -221,7 +204,7 @@ public class ColonyController : MonoBehaviour {
 				if (freeDocks.Count > 0) {
 					i = (int)(Random.value * (freeDocks.Count - 1));
 					bool  sendImmigrants = false, sendGoods = false;
-					if (Dock.immigrantsMonthLimit > 0  && Dock.immigrationEnabled ) {
+					if (Dock.immigrationPlan> 0  && Dock.immigrationEnabled ) {
 						if (Random.value < 0.3f ||totalLivespace > citizenCount) sendImmigrants = true;
 					}
 					int transitionsCount = 0;
@@ -262,14 +245,104 @@ public class ColonyController : MonoBehaviour {
 					}
 					else print ("error:no ship given");
 				}
-				shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient;
+				shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient ;
+				if (docks.Count != 0) shipArrivingTimer /= docks.Count;
 			}
 		}
+
+		//   STARVATION PROBLEM
+		float foodSupplyHappiness = 1;
+		if (starvationTimer > 0) {
+			starvationTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			float pc = starvationTimer / starvationTime;
+			foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT * pc;
+			if (pc < 0.5f) {
+				pc /= 2f;
+				KillCitizens((int)(citizenCount * (1 - pc)));
+			}
+		}
+		else {
+			float monthFoodReserves = citizenCount * FOOD_CONSUMPTION * GameMaster.DAYS_IN_WEEK * GameMaster.WEEKS_IN_MONTH;
+			foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + ( 1 - FOOD_PROBLEM_HAPPINESS_LIMIT ) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
+		}
+		//HOUSING PROBLEM
+		housingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+		if ( housingTimer <= 0 ) {
+			if ( totalLivespace < citizenCount ) {
+				int tentsCount = (citizenCount - totalLivespace) / tent_pref.housing / 2;
+				if (tentsCount > 0) {
+					int step = 1,xpos, zpos;
+					xpos = hq.basement.pos.x; zpos = hq.basement.pos.z;
+					Chunk colonyChunk = hq.basement.myChunk;
+					while (step < Chunk.CHUNK_SIZE / 2 && tentsCount > 0) {
+						for (int n = 0; n < (step * 2 + 1); n++) {
+							SurfaceBlock correctSurface =  colonyChunk.GetSurfaceBlock(xpos + step - n, zpos + step);
+							if (correctSurface  == null) {
+								correctSurface  = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos - step);
+							}
+							if (correctSurface  != null) {
+								List<PixelPosByte> positions = correctSurface.GetRandomCells(tentsCount);
+								if (positions.Count > 0) {
+									tentsCount -= positions.Count;
+									for (int j = 0 ; j < positions.Count; j++) {
+										Structure tent = Instantiate(tent_pref) as Structure;
+										tent.gameObject.SetActive(true);
+										tent.SetBasement(correctSurface, positions[j]);
+									}
+								}
+							}
+						}
+						step++;
+					}
+				}
+			}
+			housingTimer = HOUSING_TIME;
+		}
+		float housingHappiness = 1;
+		if ( housesLevel == 0) {
+			housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT;
+		}
+		else{
+			if (totalLivespace < citizenCount) {
+				float demand = citizenCount - totalLivespace;
+				housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT + (1 - HOUSE_PROBLEM_HAPPINESS_LIMIT) * demand / ((float)(citizenCount)) ;
+			}
+		}
+		//HEALTHCARE
+		if (health_coefficient < 1 && hospitals_coefficient > 0) {
+			health_coefficient += hospitals_coefficient * GameMaster.gameSpeed * Time.deltaTime * gears_coefficient * 0.001f;
+		}
+		float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT) * hospitals_coefficient;
+		healthcareHappiness *= health_coefficient;	
+		// HAPPINESS CALCULATION
+		happiness_coefficient = 1;
+		if (housingHappiness < happiness_coefficient) happiness_coefficient = housingHappiness;
+		if (healthcareHappiness < happiness_coefficient ) happiness_coefficient = healthcareHappiness;
+		if (foodSupplyHappiness < happiness_coefficient) happiness_coefficient = foodSupplyHappiness;
+
+		//  BIRTHRATE
+		if (birthrateCoefficient != 0) {
+			if (birthrateCoefficient > 0) {
+				real_birthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
+				if (peopleSurplus > 1) {
+					int newborns = (int) peopleSurplus;
+					AddCitizens(newborns); 
+					peopleSurplus -= newborns;
+				}
+			}
+			else {
+				real_birthrate = birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
+				if (peopleSurplus < - 1) {
+					KillCitizens(1); peopleSurplus += 1;
+				}
+			}
+		}
+		peopleSurplus += real_birthrate;
 	}
 
 
 	void ElementPowerSwitch( int index, bool energySupply) {
-		if ( !powerGrid[index].isActive || powerGrid[index].energySupplied == energySupply) return;
+		if ( !powerGrid[index].isActive ) return;
 		powerGrid[index].SetEnergySupply(energySupply);
 		if (energySupply) {
 			energySurplus += powerGrid[index].energySurplus;
@@ -304,14 +377,30 @@ public class ColonyController : MonoBehaviour {
 	}
 	public void RecalculateHousing() {
 		totalLivespace = 0;
+		housesLevel = 0;
 		if (houses.Count == 0) return;
-		int i = 0;
+		int i = 0, normalLivespace = 0;
+		List<int> tents = new List<int>();
 		while (i <houses.Count) {
 			if (houses[i] == null || !houses[i].gameObject.activeSelf) {houses.RemoveAt(i); continue;}
 			if ( houses[i].isActive) {
 				totalLivespace += houses[i].housing;
+				if (houses[i].level > housesLevel) housesLevel = housesLevel;
+				if (houses[i].level == 0) 	tents.Add(i);
+				else normalLivespace += houses[i].housing;
 			}
 			i++;
+		}
+		if (tents.Count > 0 && normalLivespace > citizenCount) {
+			i = 0;
+			while ( i < tents.Count && normalLivespace > citizenCount) {
+				if (normalLivespace - citizenCount >= houses[tents[i]].housing) {
+					normalLivespace -= houses[tents[i]].housing;
+					houses[tents[i]].Annihilate(false);
+				}
+				else break;
+				i++;
+			}
 		}
 	}
 
@@ -351,9 +440,15 @@ public class ColonyController : MonoBehaviour {
 
 	public void AddToPowerGrid(Building b) {
 		if (b == null) return;
-		if ( powerGrid.Count > 0) {
-			foreach ( Building eb in powerGrid) {
-				if ( eb == b ) return;
+		int i = 0;
+		while ( i < powerGrid.Count ) {
+			if (powerGrid[i] == null) {
+				powerGrid.RemoveAt(i);
+				continue;
+			}
+			else {
+				if (powerGrid[i] == b) return;
+				i++;
 			}
 		}
 		powerGrid.Add(b);
@@ -363,10 +458,11 @@ public class ColonyController : MonoBehaviour {
 		if (b == null ) return;
 		int i = 0;
 		while (i < powerGrid.Count)  {
+			if (powerGrid[i] == null) {powerGrid.RemoveAt(i); continue;}
 			if ( powerGrid[i] == b) {
 				ElementPowerSwitch(i, false);
 				powerGrid.RemoveAt(i);
-				break;
+				return;
 			}
 			else i++;
 		}
@@ -376,17 +472,27 @@ public class ColonyController : MonoBehaviour {
 		if (powerGrid.Count == 0) return;
 		int i =0; 
 		while ( i < powerGrid.Count ) {
-			if (powerGrid[i].isActive) {
-				if ( powerGrid[i].energySupplied ) {
-					energySurplus += powerGrid[i].energySurplus;
-					totalEnergyCapacity += powerGrid[i].energyCapacity;
-				}
-				else {
-					if ( powerGrid[i].energySurplus >= 0 || (powerGrid[i].energySurplus < 0 && energyStored >= Mathf.Abs(powerGrid[i].energySurplus))) { 
-						powerGrid[i].SetEnergySupply(true); 
+			if (powerGrid[i] == null) {
+				powerGrid.RemoveAt(i);
+				continue;
+			}
+			if (powerGrid[i].energySurplus >= 0 ) { //producent
+				energySurplus += powerGrid[i].energySurplus;
+				totalEnergyCapacity += powerGrid[i].energyCapacity;
+			}
+			else { // consument
+				if (powerGrid[i].isActive) {
+					if ( powerGrid[i].energySupplied ) {
 						energySurplus += powerGrid[i].energySurplus;
 						totalEnergyCapacity += powerGrid[i].energyCapacity;
-					} 
+					}
+					else {
+						if ( powerGrid[i].energySurplus < 0 && energyStored >= Mathf.Abs(powerGrid[i].energySurplus)) { 
+							powerGrid[i].SetEnergySupply(true); 
+							energySurplus += powerGrid[i].energySurplus;
+							totalEnergyCapacity += powerGrid[i].energyCapacity;
+						} 
+					}
 				}
 			}
 			i++;
@@ -570,8 +676,8 @@ public class ColonyController : MonoBehaviour {
 	void OnGUI () {
 		float k = GameMaster.guiPiece;
 		if (showColonyInfo) {
-			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, 3 *k);
-			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, 3 * k);
+			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, 5*k);
+			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, 5 * k);
 			GUI.Box(myRect, GUIContent.none);
 			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
 			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);
@@ -580,10 +686,16 @@ public class ColonyController : MonoBehaviour {
 			GUI.Label(rightPart, string.Format("{0:0.##}", gears_coefficient) );
 			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
 			GUI.Label(leftPart, Localization.info_happiness);
-			GUI.Label(rightPart, ((int)(happiness_coefficient * 100 / 100f)).ToString());
+			GUI.Label(rightPart,  string.Format("{0:0.##}", happiness_coefficient * 100) + '%');
 			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
 			GUI.Label(leftPart, Localization.info_birthrate);
 			GUI.Label(rightPart, string.Format("{0:0.######}", real_birthrate) );
+			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
+			GUI.Label(leftPart, Localization.info_hospitalsCoverage);
+			GUI.Label(rightPart, string.Format("{0:0.##}", hospitals_coefficient * 100) + '%' );
+			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
+			GUI.Label(leftPart, Localization.info_health);
+			GUI.Label(rightPart, string.Format("{0:0.##}", health_coefficient * 100) + '%' );
 		}
 	}
 }

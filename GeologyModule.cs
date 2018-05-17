@@ -15,7 +15,11 @@ public class GeologyModule : MonoBehaviour {
 	}
 
 	public void SpreadMinerals(SurfaceBlock surface) {
+		if (surface == null) return;
 		int maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION / 2;
+		List<PixelPosByte> positions = surface.GetRandomCells(maxObjectsCount);
+		if (positions.Count == 0) return;
+		maxObjectsCount = positions.Count;
 		GameObject boulderPref = Resources.Load<GameObject>("Structures/Boulder");
 		List<Structure> allBoulders = new List<Structure>();
 
@@ -118,7 +122,9 @@ public class GeologyModule : MonoBehaviour {
 			}
 		}
 		if (allBoulders.Count > 0) {
-			surface.AddMultipleCellObjects(allBoulders);
+			for ( int n = 0; n < allBoulders.Count; n++) {
+				surface.AddCellStructure(allBoulders[n], positions[n]);
+			}
 		}
 		maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION - surface.surfaceObjects.Count;
 		if (maxObjectsCount > 0) {

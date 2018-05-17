@@ -35,7 +35,7 @@ public abstract class WorkBuilding : Building {
 		workflow = 0;
 	}
 
-	public int AddWorkers (int x) {
+	virtual public int AddWorkers (int x) {
 		if (workersCount == maxWorkers) return 0;
 		else {
 			if (x > maxWorkers - workersCount) {
@@ -50,7 +50,7 @@ public abstract class WorkBuilding : Building {
 		}
 	}
 
-	public void FreeWorkers(int x) {
+	virtual public void FreeWorkers(int x) {
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		GameMaster.colonyController.AddWorkers(x);

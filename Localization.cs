@@ -13,14 +13,15 @@ public static class Localization {
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
-	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationMonthLimit, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode;
+	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
 	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources;
 	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
 	public static string[] structureName;
-	public static string hq_refuse_reason_1, hq_refuse_reason_2, hq_refuse_reason_3,hq_refuse_reason_4,hq_refuse_reason_5,hq_refuse_reason_6;
+	public static string hq_refuse_reason_1, hq_refuse_reason_2, hq_refuse_reason_3,hq_refuse_reason_4,hq_refuse_reason_5,hq_refuse_reason_6, 
+	hq_upgrade_warning, hq_upper_surface_blocked;
 	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
 
@@ -101,7 +102,8 @@ public static class Localization {
 			ui_immigration = "Immigration"; ui_trading = "Trading";
 			ui_buy = "Buy"; ui_sell = "Sell"; 
 			ui_selectResource = "Select resource"; ui_add_transaction = "Add transaction";
-			ui_immigrationEnabled = "Immigration allowed"; ui_immigrationDisabled = "Immigration is not possible"; ui_immigrationMonthLimit = "Immigrants month limit";
+			ui_immigrationEnabled = "Immigration allowed"; ui_immigrationDisabled = "Immigration is not possible"; 
+			ui_immigrationPlaces = "Immigrants count";
 			ui_close = "Close"; ui_reset = "Reset";
 			ui_setMode = "Set mode"; ui_currentMode = "Current mode";
 
@@ -131,6 +133,7 @@ public static class Localization {
 			material_required = "Required material: ";
 			no_activity = "No activity";
 
+
 			rollingShop_gearsProduction = "Gears production";
 			rollingShop_boatPartsProduction = "Boat parts production";
 
@@ -140,6 +143,8 @@ public static class Localization {
 			hq_refuse_reason_4 = "No chemical factories";
 			hq_refuse_reason_5 = string.Empty;
 			hq_refuse_reason_6 = string.Empty;
+			hq_upgrade_warning = "All buildings on the top will be deconstructed!";
+			hq_upper_surface_blocked = "Impossible : upper surface blocked";
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -155,7 +160,8 @@ public static class Localization {
 			ui_immigration = "Иммиграция"; ui_trading = "Торговля";
 			ui_buy = "Покупка"; ui_sell = "Продажа"; 
 			ui_selectResource = "Выберите ресурс";  ui_add_transaction = "Добавить операцию";
-			ui_immigrationEnabled = "Иммиграция разрешена"; ui_immigrationDisabled = "Въезд в город закрыт"; ui_immigrationMonthLimit = "Максимум поселенцев в месяц";
+			ui_immigrationEnabled = "Иммиграция разрешена"; ui_immigrationDisabled = "Въезд в город закрыт"; 
+			ui_immigrationPlaces = "Мест для приёма иммигрантов";
 			ui_close = "Закрыть"; ui_reset = "Сброс";
 			ui_setMode = "Изменить режим"; ui_currentMode = "Текущий режим";
 

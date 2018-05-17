@@ -12,9 +12,8 @@ public class Dock : WorkBuilding {
 	public static int[] minValueForTrading{get;private set;}
 	int preparingResourceIndex = 0;
 	ColonyController colony;
-	public static int immigrantsMonthLimit {get; private set;} 
+	public static int immigrationPlan {get; private set;} 
 	public static bool immigrationEnabled{get; private set;}
-	static int peopleArrivedThisMonth = 0;
 	public bool maintainingShip = false; Ship loadingShip;
 	const float LOADING_TIME = 10;
 	float loadingTimer = 0;
@@ -27,7 +26,7 @@ public class Dock : WorkBuilding {
 			isForSale = new bool?[ResourceType.resourceTypesArray.Length];
 			minValueForTrading= new int[ResourceType.resourceTypesArray.Length];
 			immigrationEnabled = true;
-			immigrantsMonthLimit = 20;
+			immigrationPlan = 0;
 		}
 	}
 
@@ -71,26 +70,18 @@ public class Dock : WorkBuilding {
 		}
 	}
 
-	void EveryMonthUpdate() {
-		peopleArrivedThisMonth = 0;
-		// maintance
-	}
-
 	public void ShipLoading(Ship s) {
 		if (loadingShip == null) {
 			loadingTimer = LOADING_TIME;
 			loadingShip = s;
 			return;
 		}
-		int peopleBefore = peopleArrivedThisMonth;
-		int availableImmigrants = 0;
-		if (immigrantsMonthLimit > 0) availableImmigrants = immigrantsMonthLimit - peopleArrivedThisMonth;
-		if (availableImmigrants < 0) availableImmigrants = 0;
+		int peopleBefore = immigrationPlan;
 		switch (s.type) {
 		case ShipType.Passenger:
-			if (availableImmigrants > 0) {
-				if (s.volume > availableImmigrants) {GameMaster.colonyController.AddCitizens(availableImmigrants); peopleArrivedThisMonth += availableImmigrants;}
-				else {GameMaster.colonyController.AddCitizens(s.volume); peopleArrivedThisMonth += s.volume;}
+			if (immigrationPlan > 0) {
+				if (s.volume > immigrationPlan) {GameMaster.colonyController.AddCitizens(immigrationPlan); immigrationPlan = 0;}
+				else {GameMaster.colonyController.AddCitizens(s.volume); immigrationPlan -= s.volume;}
 			}
 			if (isForSale[ResourceType.FOOD_ID] != null) {
 				if (isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Food, s.volume * 0.1f);
@@ -130,9 +121,9 @@ public class Dock : WorkBuilding {
 			}
 			break;
 		case ShipType.Military:
-			if (GameMaster.warProximity < 0.5f && Random.value < 0.1f && availableImmigrants > 0) {
+			if (GameMaster.warProximity < 0.5f && Random.value < 0.1f && immigrationPlan > 0) {
 				int veterans =(int)( s.volume * 0.02f);
-				if (veterans > availableImmigrants) veterans = availableImmigrants;
+				if (veterans > immigrationPlan) veterans = immigrationPlan;
 				colony.AddCitizens(veterans);
 			}
 			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, s.volume * 0.5f * (Random.value * 0.5f + 0.5f));
@@ -150,7 +141,7 @@ public class Dock : WorkBuilding {
 		loadingShip = null;
 		s.Undock();
 
-		int newPeople = peopleArrivedThisMonth - peopleBefore;
+		int newPeople = peopleBefore - immigrationPlan;
 		if (newPeople > 0) GameMaster.realMaster.AddAnnouncement(Localization.announcement_peopleArrived + " (" + newPeople.ToString() + ')');
 	}
 
@@ -310,13 +301,13 @@ public class Dock : WorkBuilding {
 				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), Localization.ui_immigrationDisabled , PoolMaster.GUIStyle_CenterOrientedLabel);
 			}
 			else {
-				GUI.Label(new Rect(r.x + 1 * r.height, r.y, r.height * 7, r.height ), Localization.ui_immigrationMonthLimit + " :", PoolMaster.GUIStyle_CenterOrientedLabel);
+				GUI.Label(new Rect(r.x + 1 * r.height, r.y, r.height * 7, r.height ), Localization.ui_immigrationPlaces + " :", PoolMaster.GUIStyle_CenterOrientedLabel);
 				r.y += r.height;
-				if (GUI.Button(new Rect(r.x + r.height, r.y, r.height, r.height), "-10")) immigrantsMonthLimit-=10;
-				if (GUI.Button(new Rect(r.x + 2 *r.height, r.y, r.height, r.height), "-1")) immigrantsMonthLimit--;
-				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), immigrantsMonthLimit.ToString() + " ("+peopleArrivedThisMonth.ToString()+')', PoolMaster.GUIStyle_CenterOrientedLabel);
-				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+1")) immigrantsMonthLimit++;
-				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrantsMonthLimit += 10;
+				if (GUI.Button(new Rect(r.x + r.height, r.y, r.height, r.height), "-10")) immigrationPlan=10;
+				if (GUI.Button(new Rect(r.x + 2 *r.height, r.y, r.height, r.height), "-1")) immigrationPlan--;
+				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), immigrationPlan.ToString() + " ("+ immigrationPlan.ToString()+')', PoolMaster.GUIStyle_CenterOrientedLabel);
+				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+1")) immigrationPlan++;
+				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrationPlan += 10;
 			}
 		}
 	}

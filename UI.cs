@@ -9,7 +9,7 @@ public class UI : MonoBehaviour {
 
 	public UIMode mode{get;private set;}
 
-	float leftPanelWidth;
+	float leftPanelWidth, buildingsListLength = 0;
 	byte argument, showingBuildingsLevel = 1;
 	public Rect rightPanelBox, upPanelBox, acceptBox,systemInfoRect, buildingGridRect;
 	string systemInfoString; float systemInfoTimer = 0;
@@ -21,8 +21,8 @@ public class UI : MonoBehaviour {
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
 	Structure chosenStructure;
 	Worksite chosenWorksite;
-	Vector2 mousePos;
-	GameObject quadSelector;
+	Vector2 mousePos, buildingsScrollViewPos = Vector2.zero;
+	GameObject quadSelector, structureFrame;
 
 	Texture  grid16_tx, greenSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
 	citizen_icon_tx, energy_icon_tx,  energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
@@ -37,6 +37,8 @@ public class UI : MonoBehaviour {
 		current = this;
 		mode = UIMode.View;
 		showBuildingCreateInfo = false;
+		structureFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame"));
+		structureFrame.SetActive(false);
 		quadSelector = Instantiate(Resources.Load<GameObject>("Prefs/QuadSelector"));
 		quadSelector.SetActive(false);
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
@@ -81,6 +83,9 @@ public class UI : MonoBehaviour {
 					Vector2 cursorPos = Camera.main.WorldToScreenPoint(s.transform.position);
 					mode = UIMode.StructurePanel;
 					GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
+					structureFrame.SetActive(true);
+					structureFrame.transform.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
+					structureFrame.transform.position = chosenStructure.transform.position;
 				}
 				else { // not a structure
 					if (rh.collider.transform.parent != null) {
@@ -177,6 +182,7 @@ public class UI : MonoBehaviour {
 	public void DropFocus() {
 		lineDrawer.enabled = false;
 		quadSelector.SetActive(false);
+		structureFrame.SetActive(false);
 		chosenCubeBlock = null; 
 		if (chosenStructure != null) {chosenStructure.showOnGUI = false;chosenStructure = null; }
 		chosenSurfaceBlock = null; 
@@ -184,6 +190,7 @@ public class UI : MonoBehaviour {
 		showBuildingCreateInfo = false;
 		argument = 0;
 		touchscreenTemporarilyBlocked = false;
+		buildingsScrollViewPos = Vector2.zero; buildingsListLength = 0;
 	}
 
 	void SwitchUIMode(UIMode newMode) {
@@ -201,6 +208,7 @@ public class UI : MonoBehaviour {
 
 	void ChangeArgument (byte newArg) {
 		argument = newArg;
+		buildingsScrollViewPos = Vector2.zero; buildingsListLength = 0;
 		switch (mode) {
 		case UIMode.SurfaceBlockPanel:
 			switch (argument) {
@@ -365,6 +373,9 @@ public class UI : MonoBehaviour {
 					case 6: showingBuildingsList = GameMaster.colonyController.buildings_level_6;break;
 					}
 					if ( showingBuildingsList != null && showingBuildingsList.Count != 0 ) {
+						bool useScroll = (buildingsListLength > Screen.height - rr.y);
+						if (useScroll) GUI.BeginScrollView(new Rect(rr.x, rr.y, Screen.width - rr.x, Screen.height - rr.y), buildingsScrollViewPos, new Rect(rr.x, rr.y, Screen.width - rr.x, buildingsListLength));
+						buildingsListLength = showingBuildingsList.Count * rr.height;
 						foreach (Building bd in showingBuildingsList) {
 						if (bd.borderOnlyConstruction && !chosenSurfaceBlockIsBorderBlock) continue;
 							if (bd.requiredBasementMaterialId == -1 || bd.requiredBasementMaterialId == chosenSurfaceBlock.material_id) {
@@ -407,6 +418,7 @@ public class UI : MonoBehaviour {
 								GUI.DrawTexture( new Rect (rr.x + rr.width * 0.75f, rr.y, wx, wx), rc.type.icon, ScaleMode.ScaleToFit );
 								GUI.Label( new Rect(rr.x + rr.width * 0.875f, rr.y, wx,wx), rc.volume.ToString());
 								rr.y += rr.height;
+								buildingsListLength += rr.height;
 							}
 							//для крупных структур:
 							if (chosenStructure.type == StructureType.MainStructure) {
@@ -435,6 +447,7 @@ public class UI : MonoBehaviour {
 						}
 						buildingIndex++;
 					}
+						if (useScroll) GUI.EndScrollView();
 				}
 					// сетка для размещения постройки
 					if (argument != 4) GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); // чтобы не дублировалось
@@ -596,18 +609,23 @@ public class UI : MonoBehaviour {
 					GUI.Label(rr,  Localization.structureName[chosenStructure.nameIndex] + " (" + Localization.info_level + b.level.ToString() + ") "); 
 					rr.y += rr.height;
 
-					if (b.canBePowerSwitched) {
+					if (b.connectedToPowerGrid) {
 						bool act = GUI.Toggle(new Rect(rr.x, rr.y, rr.width / 2f, rr.height), b.isActive, Localization.ui_activeSelf); 
+						rr.y += rr.height;
 						if (act != b.isActive) b.SetActivationStatus(act);
-						GUI.DrawTexture( new Rect (rr.x + rr.width/2f, rr.y, rr.height, rr.height), energyLightning_icon_tx, ScaleMode.StretchToFill);
+						GUI.DrawTexture( new Rect (rr.x, rr.y, rr.height, rr.height), energyLightning_icon_tx, ScaleMode.StretchToFill);
 						if (b.isActive && b.energySupplied) {
 							string surplusString = b.energySurplus.ToString();
 							if (b.energySurplus > 0) surplusString = '+' + surplusString;
-							GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  surplusString );
+							GUI.Label( new Rect(rr.x + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  surplusString );
 						}
-						else GUI.Label( new Rect(rr.x + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  "offline" );
-						rr.y += rr.height;
+						else GUI.Label( new Rect(rr.x  + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  "offline" );
 					}
+					if ( b as House != null) {
+						GUI.DrawTexture( new Rect (rr.x  + rr.width/2f  , rr.y, rr.height, rr.height), citizen_icon_tx, ScaleMode.StretchToFill);
+						GUI.Label( new Rect(rr.x  + rr.width/2f + rr.height, rr.y, rr.width/2f - rr.height, rr.height),  (b as House).housing.ToString() );
+					}
+					rr.y += rr.height;
 
 					WorkBuilding wb = b as WorkBuilding;
 					if (wb != null) {

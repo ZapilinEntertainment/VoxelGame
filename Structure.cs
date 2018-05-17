@@ -48,9 +48,11 @@ public class Structure : MonoBehaviour {
 		if (xsize_to_set == 1 && zsize_to_set == 1) b.AddCellStructure(this, pos);
 		else	b.AddStructure(this);
 		if (isBasement) {
-			ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-			Block upperBlock = basement.myChunk.GetBlock(npos.x, npos.y, npos.z);
-			if ( upperBlock == null ) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.metal_K.ID);
+			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {
+				ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
+				Block upperBlock = basement.myChunk.GetBlock(npos.x, npos.y, npos.z);
+				if ( upperBlock == null ) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.metal_K.ID);
+			}
 		}
 	} 
 
@@ -71,6 +73,10 @@ public class Structure : MonoBehaviour {
 		transform.parent = null;
 	}
 
+	/// <summary>
+	/// forces means that this object will be deleted without basement-linked actions
+	/// </summary>
+	/// <param name="forced">If set to <c>true</c> forced.</param>
 	virtual public void Annihilate( bool forced ) { // for pooling
 		if (forced) basement = null;
 		Destroy(gameObject);

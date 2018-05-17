@@ -188,28 +188,6 @@ public class SurfaceBlock : Block {
 	}
 
 	/// <summary>
-	/// For  1x1 objects only!
-	/// </summary>
-	/// <param name="cellObjects">Cell objects.</param>
-	public void AddMultipleCellObjects(List<Structure> cellObjects) {
-		List<PixelPosByte> pos = GetRandomCells(cellObjects.Count);
-		for (int i = 0; i < cellObjects.Count; i++) {
-			if (cellObjects[i] == null) continue;
-			cellObjects[i].SetBasement(this, pos[i]);
-		}
-		CellsStatusUpdate();
-	}
-	public void AddMultipleCellObjects(Structure[] cellObjects) {
-		List<PixelPosByte> pos = GetRandomCells(cellObjects.Length);
-		for (int i = 0; i < cellObjects.Length; i++) {
-			if (cellObjects[i] == null) continue;
-			SurfaceObject so = new SurfaceObject(new SurfaceRect(pos[i].x, pos[i].y, 1,1), cellObjects[i]);
-			cellObjects[i].SetBasement(this, pos[i]);
-		}
-		CellsStatusUpdate();
-	}
-
-	/// <summary>
 	/// Remove structure data from this block structures map
 	/// </summary>
 	/// <param name="so">So.</param>

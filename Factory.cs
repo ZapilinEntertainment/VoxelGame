@@ -50,7 +50,7 @@ public class Factory : WorkBuilding {
 		}
 		if (inputResourcesBuffer >= recipe.inputValue) {
 			inputResourcesBuffer -= recipe.inputValue;
-			outputResourcesBuffer += recipe.outputValue;
+			outputResourcesBuffer += recipe.outputValue * level;
 		}
 	}
 

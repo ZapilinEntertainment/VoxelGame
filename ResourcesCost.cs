@@ -7,7 +7,7 @@ public static class ResourcesCost {
 	public const int MINE_UPGRADE_INDEX = 18;
 
 	static ResourcesCost() {
-		info = new ResourceContainer[45][];
+		info = new ResourceContainer[47][];
 		info[0] = new ResourceContainer[0]; //empty
 		info[1] = new ResourceContainer[] {
 			new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_E, 30),
@@ -23,7 +23,7 @@ public static class ResourcesCost {
 			new ResourceContainer(ResourceType.metal_M, 4), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.Plastics, 4)
 		} ;// mine lvl 1
 		info[5] = new ResourceContainer[] {
-			new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_M, 8), new ResourceContainer(ResourceType.Lumber, 6)
+			new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 10), new ResourceContainer(ResourceType.Lumber, 50)
 		} ;// smeltery lvl 1
 		info[6] = new ResourceContainer[]{
 			new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 4), new ResourceContainer(ResourceType.metal_E, 2)
@@ -47,14 +47,15 @@ public static class ResourcesCost {
 			new ResourceContainer(ResourceType.Plastics, 25)
 		};//storage lvl 2
 		info[12] = new ResourceContainer[]{
-			new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_E, 1)
+			new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 2),
+			new ResourceContainer(ResourceType.Plastics, 50)
 		}; //house lvl 2
 		info[13] = new ResourceContainer[]{
 			new ResourceContainer(ResourceType.Concrete, 120), new ResourceContainer(ResourceType.metal_K, 15), new ResourceContainer(ResourceType.metal_E, 5)
 		}; //hospital lvl 2
 		info[14] = new ResourceContainer[] {
-			new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 14), new ResourceContainer(ResourceType.Plastics, 20),
-			new ResourceContainer(ResourceType.Concrete, 60)
+			new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 8), new ResourceContainer(ResourceType.Plastics, 25),
+			new ResourceContainer(ResourceType.Concrete, 40)
 		} ;// smeltery lvl 2
 		info[15] = new ResourceContainer[] {
 			new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 6),
@@ -160,6 +161,14 @@ public static class ResourcesCost {
 			new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 35),
 			new ResourceContainer(ResourceType.metal_E, 25)
 		};// chemical factory lvl 4
+		info[45] = new ResourceContainer[] {
+			new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 10), new ResourceContainer(ResourceType.Plastics, 50),
+			new ResourceContainer(ResourceType.metal_E, 20)
+		} ;// smeltery lvl 3
+		info[46] = new ResourceContainer[]{
+			new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 8),
+			new ResourceContainer(ResourceType.Plastics, 100)
+		}; //house lvl 3
 	}
 }
 

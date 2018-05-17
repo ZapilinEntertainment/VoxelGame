@@ -16,6 +16,7 @@ public class Recipe {
 	public static readonly Recipe LumberToPlastics, MineralLToPlastics;
 	public static readonly Recipe MetalK_smelting, MetalE_smelting, MetalN_smelting, MetalM_smelting,MetalP_smelting, MetalS_smelting;
 	public static readonly Recipe MetalK_refining, MetalE_refining,MetalN_refining,MetalM_refining,MetalP_refining,MetalS_refining;
+	public static readonly Recipe MineralF_refining, MineralL_refining;
 	public static readonly Recipe Fuel_fromNmetal, Fuel_fromNmetalOre, Fuel_fromMineralF;
 
 	static Recipe() {
@@ -32,16 +33,19 @@ public class Recipe {
 		MetalS_smelting = new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S,1,1, 10); smelteryRecipesList.Add(MetalS_smelting);
 		smelteryRecipes = smelteryRecipesList.ToArray();
 
-		oreRefiningRecipes = new Recipe[6];
-		MetalK_refining= new Recipe(ResourceType.metal_K_ore, ResourceType.metal_K_ore,1,2, 10);
-		MetalE_refining = new Recipe(ResourceType.metal_E_ore, ResourceType.metal_E_ore,1,2,10); 
-		MetalN_refining = new Recipe(ResourceType.metal_N_ore, ResourceType.metal_N_ore,1,2,10); 
-		MetalM_refining = new Recipe(ResourceType.metal_M_ore, ResourceType.metal_M_ore,1,2, 10); 
-		MetalP_refining = new Recipe(ResourceType.metal_P_ore, ResourceType.metal_P_ore,1,2, 10); 
-		MetalS_refining= new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S_ore,1,2, 10); 
+		oreRefiningRecipes = new Recipe[8];
+		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore,4,1, 10);
+		MetalE_refining = new Recipe(ResourceType.Stone, ResourceType.metal_E_ore,8,1,23); 
+		MetalN_refining = new Recipe(ResourceType.Stone, ResourceType.metal_N_ore,16,1,70); 
+		MetalM_refining = new Recipe(ResourceType.Stone, ResourceType.metal_M_ore,6,1, 15); 
+		MetalP_refining = new Recipe(ResourceType.Stone, ResourceType.metal_P_ore, 4,1, 12); 
+		MetalS_refining= new Recipe(ResourceType.Stone, ResourceType.metal_S_ore,10,1, 35); 
+		MineralF_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_F, 3, 1, 5);
+		MineralL_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_L, 3, 1, 7);
 		oreRefiningRecipes[0] = MetalK_refining; oreRefiningRecipes[1] = MetalE_refining;
 		oreRefiningRecipes[2] = MetalN_refining; oreRefiningRecipes[3] = MetalM_refining;
 		oreRefiningRecipes[4] = MetalP_refining; oreRefiningRecipes[5] = MetalS_refining;
+		oreRefiningRecipes[6] = MineralF_refining; oreRefiningRecipes[7] = MineralL_refining;
 
 		fuelFacilityRecipes = new Recipe[3];
 		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel, 1, 100, 25);

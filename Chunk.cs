@@ -78,7 +78,7 @@ public class Chunk : MonoBehaviour {
 										if (leftSide) candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z-1).pos.y, z-1));
 									}
 									foreach (ChunkPos p in candidats) {
-											SurfaceBlock n = GetBlock(p.x, p.y, p.z).GetComponent<SurfaceBlock>();
+										SurfaceBlock n = GetSurfaceBlock(p.x, p.z);
 											if (n == null ) continue;
 											if (n.material_id == ResourceType.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland== null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
 									}
@@ -552,7 +552,7 @@ public class Chunk : MonoBehaviour {
 		foreach (SurfaceBlock sb in surfaceBlocks) {
 			if ( sb.pos.x == x && sb.pos.z == z) fsb = sb; // to find the highest
 		}
-		return fsb;
+		return fsb; // we are not watching you. Honestly.
 	}
 
 	public void BlockByStructure(byte x, byte y, byte z, Structure s) {

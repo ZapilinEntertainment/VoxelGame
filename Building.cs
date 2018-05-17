@@ -10,7 +10,7 @@ public class Building : Structure {
 	[SerializeField]
 	public int resourcesContainIndex = 0;
 	public float energySurplus = 0, energyCapacity = 0;
-	protected bool connectedToPowerGrid = false; // подключение, контролирующееся игроком
+	public  bool connectedToPowerGrid {get; protected set;}// подключение, контролирующееся игроком
 	public bool borderOnlyConstruction{get;protected set;}
 	public Building nextStage; 
 	public int requiredBasementMaterialId = -1;
@@ -25,7 +25,8 @@ public class Building : Structure {
 		isActive = false;
 		energySupplied = false;
 		borderOnlyConstruction = false;
-		renderersTransform = transform.GetChild(0);
+		if (renderersTransform == null) renderersTransform = transform.GetChild(0);
+		connectedToPowerGrid = false;
 	}
 
 

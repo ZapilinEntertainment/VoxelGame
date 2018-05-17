@@ -21,10 +21,11 @@ public class Powerplant : WorkBuilding {
 	}
 
 	void Update() {
-		if (GameMaster.gameSpeed == 0 || !connectedToPowerGrid || !isActive) return;
-		if (ftimer > 0) ftimer -= Time.deltaTime;
+		if (GameMaster.gameSpeed == 0 ) return;
+		if (ftimer > 0) ftimer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (ftimer <= 0) {
-			float takenFuel =  GameMaster.colonyController.storage.GetResources(fuel, fuelCount);
+			float takenFuel =  0;
+			if (workersCount > 0 && isActive) takenFuel = GameMaster.colonyController.storage.GetResources(fuel, fuelCount);
 			float newEnergySurplus = 0;
 			if (takenFuel == 0) {
 				newEnergySurplus = 0;
@@ -53,7 +54,7 @@ public class Powerplant : WorkBuilding {
 		}
 	}
 
-	public int AddWorkers (int x) {
+	override public int AddWorkers (int x) {
 		if (workersCount == maxWorkers) return 0;
 		else {
 			if (x > maxWorkers - workersCount) {
@@ -67,9 +68,20 @@ public class Powerplant : WorkBuilding {
 		}
 	}
 
-	public void FreeWorkers(int x) {
+	override public void FreeWorkers(int x) {
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		GameMaster.colonyController.AddWorkers(x);
+	}
+
+	void OnGUI() {
+		if ( !showOnGUI ) return;
+		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), fuel.icon, ScaleMode.StretchToFill);
+		if (energySurplus > 0) {
+			GUI.DrawTexture(new Rect(rr.x + rr.height, rr.y, (Screen.width - rr.x - rr.height) * ftimer /fuelBurnTime, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+			GUI.Label(new Rect(rr.x + rr.height, rr.y, Screen.width - rr.x - rr.height, rr.height), string.Format("{0:0.##}", ftimer / fuelBurnTime * 100) + '%' );
+			rr.y += rr.height;
+		}
 	}
 }

@@ -52,7 +52,7 @@ public class GameMaster : MonoBehaviour {
 
 	float t;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
-	const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
+	public const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
 	public List<Component> everydayUpdateList, everyYearUpdateList, everyMonthUpdateList;
 
 	public List <Component> windUpdateList;
@@ -218,7 +218,7 @@ public class GameMaster : MonoBehaviour {
 			camPos = camTransform.position;
 		}
 
-		sunlightIntensity = 0.4f +Mathf.PerlinNoise(0.1f, Time.time * gameSpeed / 200f);
+		sunlightIntensity = 0.7f +Mathf.PerlinNoise(0.1f, Time.time * gameSpeed / 200f) * 0.3f;
 		sun.intensity = sunlightIntensity;
 
 		if (gameSpeed == 0) return;
