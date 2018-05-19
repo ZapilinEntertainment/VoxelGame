@@ -9,6 +9,7 @@ public class UI : MonoBehaviour {
 
 	public UIMode mode{get;private set;}
 
+	bool showLayerCutButtons = false;
 	float leftPanelWidth, buildingsListLength = 0;
 	byte argument, showingBuildingsLevel = 1;
 	public Rect rightPanelBox, upPanelBox, acceptBox,systemInfoRect, buildingGridRect;
@@ -25,7 +26,8 @@ public class UI : MonoBehaviour {
 	GameObject quadSelector, structureFrame;
 
 	Texture  grid16_tx, greenSquare_tx, whiteSquare_tx, whiteSpecial_tx, yellowSquare_tx,
-	citizen_icon_tx, energy_icon_tx,  energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx;
+	citizen_icon_tx, energy_icon_tx,  energyLightning_icon_tx, buildingQuad_icon_tx, demolishButton_tx,
+	layersCut_tx;
 	public Texture rightArrow_tx{get;private set;}
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
@@ -42,6 +44,7 @@ public class UI : MonoBehaviour {
 		quadSelector = Instantiate(Resources.Load<GameObject>("Prefs/QuadSelector"));
 		quadSelector.SetActive(false);
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
+		layersCut_tx = Resources.Load<Texture>("Textures/layersCut");
 		grid16_tx = Resources.Load<Texture>("Textures/AccessibleGrid");
 		greenSquare_tx = Resources.Load<Texture>("Textures/greenSquare");
 		whiteSquare_tx = Resources.Load<Texture>("Textures/whiteSquare");
@@ -58,7 +61,7 @@ public class UI : MonoBehaviour {
 
 		float k = GameMaster.guiPiece;
 		float upPanelHeight = k;
-		leftPanelWidth = k;
+		leftPanelWidth = 2 * k;
 		float rightPanelWidth = 8 * k;
 		rightPanelBox = new Rect(Screen.width - rightPanelWidth, upPanelHeight, rightPanelWidth, Screen.height - upPanelHeight);
 		upPanelBox = new Rect(0,0,Screen.width, upPanelHeight);
@@ -97,7 +100,7 @@ public class UI : MonoBehaviour {
 							case BlockType.Surface:
 									mode = UIMode.SurfaceBlockPanel;
 									chosenSurfaceBlock = b.GetComponent<SurfaceBlock>();
-								chosenCubeBlock = chosenSurfaceBlock.myChunk.GetBlock(chosenSurfaceBlock.pos.x, chosenSurfaceBlock.pos.y - 1, chosenSurfaceBlock.pos.z) as CubeBlock;
+									chosenCubeBlock = chosenSurfaceBlock.myChunk.GetBlock(chosenSurfaceBlock.pos.x, chosenSurfaceBlock.pos.y - 1, chosenSurfaceBlock.pos.z) as CubeBlock;
 									x= chosenSurfaceBlock.transform.position.x; y = chosenSurfaceBlock.transform.position.y - d + 0.01f;  z = chosenSurfaceBlock.transform.position.z;
 									lineDrawer.SetPositions(new Vector3[5]{new Vector3(x - d, y, z+d), new Vector3(x+d,y,z+d), new Vector3(x+d,y,z-d), new Vector3(x - d, y, z-d), new Vector3(x-d, y,z+d)});
 									lineDrawer.material = PoolMaster.lr_green_material;
@@ -171,7 +174,7 @@ public class UI : MonoBehaviour {
 
 	bool cursorIntersectGUI(Vector2 point) {
 		if (touchscreenTemporarilyBlocked) return true;
-		if ( point.y <= upPanelBox.height || point.x  <= leftPanelWidth) return true;
+		if ( point.y <= upPanelBox.height || point.x  <= leftPanelWidth ) return true;
 		if (mode != UIMode.View) {
 			if (point.x >= rightPanelBox.x) return true;
 			if (showBuildingCreateInfo) return true;
@@ -260,6 +263,26 @@ public class UI : MonoBehaviour {
 			GUI.DrawTexture ( new Rect ( 11 * k, 0, k, k), PoolMaster.energyCrystal_icon_tx, ScaleMode.StretchToFill ) ;
 			GUI.Label ( new Rect ( 12 * k, 0, k, k ), ((int)cc.energyCrystalsCount).ToString() ) ;
 		} 
+		//Left Panel.
+		Rect layerCutRect =new Rect(0, Screen.height - k, leftPanelWidth / 2f,k);
+		if (GUI.Button( layerCutRect, layersCut_tx, PoolMaster.GUIStyle_BorderlessButton)) showLayerCutButtons = !showLayerCutButtons;
+		if (showLayerCutButtons) {
+			layerCutRect.x += layerCutRect.width; layerCutRect.y -= 2 * k;
+			GUI.Box(new Rect(layerCutRect.x, layerCutRect.y, layerCutRect.width, layerCutRect.height * 3), GUIContent.none);
+			if (GUI.Button (layerCutRect, PoolMaster.plusButton_tx) ) {
+				GameMaster.layerCutHeight ++;
+				if (GameMaster.layerCutHeight> Chunk.CHUNK_SIZE) GameMaster.layerCutHeight= Chunk.CHUNK_SIZE ;
+				else GameMaster.mainChunk.LayersCut();
+			} 
+			layerCutRect.y += k;
+			GUI.Label (layerCutRect, GameMaster.layerCutHeight.ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
+			layerCutRect.y += k;
+			if (GUI.Button (layerCutRect, PoolMaster.minusButton_tx) ) {
+				GameMaster.layerCutHeight --;
+				if (GameMaster.layerCutHeight < 0) GameMaster.layerCutHeight = 0 ;
+				else GameMaster.mainChunk.LayersCut();
+			} 
+		}
 		//upRight infopanel
 		Rect ur = new Rect(Screen.width - 4 *k, 0, 4 *k, upPanelBox.height);
 		if (GUI.Button(ur, Localization.menu_gameMenuButton) ) SwitchUIMode(UIMode.GameMenu);
@@ -530,19 +553,6 @@ public class UI : MonoBehaviour {
 				}
 				#region cubeBlockPanel
 				if (faceIndex != 10) { 
-					if (faceIndex == 4) {// верхний
-						if ( !chosenCubeBlock.career ) {
-							ChunkPos cpos = chosenCubeBlock.pos;
-							cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z);
-							chosenCubeBlock.myChunk.AddBlock(cpos, BlockType.Surface, chosenCubeBlock.material_id);
-							chosenSurfaceBlock = chosenCubeBlock.myChunk.GetBlock(cpos.x, cpos.y, cpos.z) as SurfaceBlock;
-							mode = UIMode.SurfaceBlockPanel;
-							ChangeArgument(1);
-							chosenCubeBlock = null;
-						}
-					}
-					else {
-						if (faceIndex == 0 || faceIndex == 1 || faceIndex == 2 || faceIndex == 3) {
 							if (GUI.Button(rr, Localization.ui_dig_block)) {
 								WorksiteSign sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 								TunnelBuildingSite tbs = chosenCubeBlock.GetComponent<TunnelBuildingSite>();
@@ -572,9 +582,7 @@ public class UI : MonoBehaviour {
 								mode = UIMode.WorksitePanel;
 								ChangeArgument(1);
 								return;
-							}
 						}
-					}
 				}
 
 				#endregion

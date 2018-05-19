@@ -77,7 +77,43 @@ public class CaveBlock : SurfaceBlock {
 		}
 
 		override public void SetVisibilityMask (byte x) {
+		byte prevVisibility = visibilityMask;
+		if (visibilityMask == x) return;
 			visibilityMask = x;
+			if (visibilityMask == 0) {
+				int i = 0; bool listChanged = false;
+				while ( i < surfaceObjects.Count ) {
+					if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf ) {
+						surfaceObjects.RemoveAt(i);
+						listChanged = true;
+						continue;
+					}
+					else {
+						surfaceObjects[i].SetVisibility(false);
+						i++;
+					}
+				} 
+				surfaceRenderer.GetComponent<MeshCollider>().enabled = false;
+				if (listChanged) CellsStatusUpdate();
+			}
+		else {
+			if (prevVisibility == 0) {
+				int i = 0; bool listChanged = false;
+				while ( i < surfaceObjects.Count ) {
+					if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf ) {
+						surfaceObjects.RemoveAt(i);
+						listChanged = true;
+						continue;
+					}
+					else {
+						surfaceObjects[i].SetVisibility(true);
+						i++;
+					}
+				} 
+				if (listChanged) CellsStatusUpdate();
+				surfaceRenderer.GetComponent<MeshCollider>().enabled = true;
+			}
+		}
 			if (renderMask == 0) return;
 			for (int i = 0; i< 4; i++) {
 				if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) faces[i].enabled = true;

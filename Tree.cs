@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Tree : Plant {
 	public const int MAXIMUM_LIFEPOWER = 1000;
+	[SerializeField]
+	Renderer[] myRenderers;
 
 	void Awake() {
 		PrepareStructure();
@@ -70,5 +72,28 @@ public class Tree : Plant {
 
 	public float CalculateLumberCount() {
 		return SurfaceBlock.INNER_RESOLUTION * transform.localScale.y * transform.localScale.x * transform.localScale.z * 100;
+	}
+
+	override public void SetVisibility( bool x) {
+		if (x == visible) return;
+		else {
+			visible = x;
+			if (myRenderer != null) {
+				myRenderer.enabled = x;
+				MastSpriter ms = myRenderer.GetComponent<MastSpriter>();
+				if (ms!= null) ms.SetVisibility(x);
+			}
+			if (myRenderers != null) {
+				foreach (Renderer r in myRenderers) {
+					r.enabled = x;
+					MastSpriter ms = r.GetComponent<MastSpriter>();
+					if (ms!= null) ms.SetVisibility(x);
+					else {
+						CroneOptimizer co =  r.GetComponent<CroneOptimizer>();
+						if (co != null) co.SetVisibility(x);
+						}
+				}
+			}
+		}
 	}
 }

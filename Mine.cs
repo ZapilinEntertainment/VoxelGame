@@ -94,9 +94,14 @@ public class Mine : WorkBuilding {
 							workFinished = false;
 							GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (level+1).ToString());
 							if (nextModel != null) {
-								GameObject newModelGO = Instantiate(nextModel, renderersTransform.position, renderersTransform.rotation, renderersTransform.parent);
-								Destroy(renderersTransform.gameObject);
-								renderersTransform = newModelGO.transform;
+								GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
+								if (myRenderer != null) Destroy(myRenderer.gameObject);
+								if (myRenderers != null) {for (int n =0; n < myRenderers.Length; n++) Destroy( myRenderers[n].gameObject );}
+								myRenderers = new Renderer[newModelGO.transform.childCount];
+								for (int n = 0; n < newModelGO.transform.childCount; n++) {
+									myRenderers[n] = newModelGO.transform.GetChild(n).GetComponent<Renderer>();
+									if (!visible) myRenderers[n].enabled = false;
+								}
 								if ( !isActive || !energySupplied ) ChangeRenderersView(false);
 							}
 						level++;

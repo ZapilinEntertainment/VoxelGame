@@ -136,12 +136,15 @@ public class Chunk : MonoBehaviour {
 
 	public byte GetVisibilityMask(int i, int j, int k) {
 		byte vmask = 63;
-		Block bx = GetBlock(i+1,j,k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 61;
-		bx = GetBlock(i-1,j,k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 55;
-		bx = GetBlock(i,j+1,k); if (bx != null &&!bx.isTransparent && bx.type != BlockType.Shapeless) vmask &= 47;
-		bx = GetBlock(i,j - 1,k); if (bx != null && !bx.isTransparent && (bx.type == BlockType.Cube || bx.type == BlockType.Cave)) vmask &= 31;
-		bx = GetBlock(i,j,k+1); if (bx != null &&!bx.isTransparent && bx.type == BlockType.Cube) vmask &= 62;
-		bx = GetBlock(i,j,k-1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 59;
+		if (j > GameMaster.layerCutHeight) vmask = 0;
+		else {
+			Block bx = GetBlock(i+1,j,k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube ) vmask &= 61;
+			bx = GetBlock(i-1,j,k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube ) vmask &= 55;
+			bx = GetBlock(i,j+1,k); if (bx != null &&!bx.isTransparent && bx.type != BlockType.Shapeless && (bx.pos.y != GameMaster.layerCutHeight + 1)) vmask &= 47;
+			bx = GetBlock(i,j - 1,k); if (bx != null && !bx.isTransparent && (bx.type == BlockType.Cube || bx.type == BlockType.Cave)) vmask &= 31;
+			bx = GetBlock(i,j,k+1); if (bx != null &&!bx.isTransparent && bx.type == BlockType.Cube ) vmask &= 62;
+			bx = GetBlock(i,j,k-1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube ) vmask &= 59;
+		}
 		return vmask;
 	}
 	void ApplyVisibleInfluenceMask(int x, int y, int z, byte mask) {
@@ -580,6 +583,22 @@ public class Chunk : MonoBehaviour {
 			}
 			chunkUpdateSubscribers[i].BroadcastMessage("ChunkUpdated", pos, SendMessageOptions.DontRequireReceiver);
 			i++;
+		}
+	}
+
+	public void LayersCut (  ) {
+		for (int x = 0; x < CHUNK_SIZE; x++) {
+				for (int z = 0; z < CHUNK_SIZE; z++) {
+				int y = CHUNK_SIZE - 1;
+				if (GameMaster.layerCutHeight != CHUNK_SIZE) {
+					for (; y > GameMaster.layerCutHeight; y--) {
+						if (blocks[x,y,z] != null) blocks[x,y,z].SetVisibilityMask(0);
+					}
+				}
+				for (; y > -1; y--) {
+					if (blocks[x,y,z] != null) blocks[x,y,z].SetVisibilityMask(GetVisibilityMask(x,y,z));
+				}
+			}			
 		}
 	}
 

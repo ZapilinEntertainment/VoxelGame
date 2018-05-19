@@ -51,7 +51,6 @@ public class Block : MonoBehaviour {
 	virtual public void SetRenderBitmask(byte x) {
 		renderMask = x;
 	}
-
 	virtual public void SetVisibilityMask (byte x) {
 		visibilityMask = x;
 	}

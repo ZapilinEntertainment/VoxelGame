@@ -124,6 +124,7 @@ public class SurfaceBlock : Block {
 		surfaceObjects.Add(s);
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(s.innerPosition);
+		if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
 		if (s.randomRotation) {
 			if ( !s.rotate90only ) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 			else s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 4) * 90f, 0 );
@@ -183,6 +184,7 @@ public class SurfaceBlock : Block {
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1, 1));
 		if (s.randomRotation) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
+		if ( visibilityMask == 0 ) s.SetVisibility(false); else s.SetVisibility(true);
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
@@ -250,7 +252,6 @@ public class SurfaceBlock : Block {
 			return new PixelPosByte((byte)((xdelta + 0.5f) * INNER_RESOLUTION), (byte)(zdelta  + 0.5f) * INNER_RESOLUTION);
 		}
 	}
-
 
 	public PixelPosByte GetRandomCell() {
 		if (cellsStatus == 1) return PixelPosByte.Empty;
@@ -418,9 +419,48 @@ public class SurfaceBlock : Block {
 	}
 
 	override public void SetVisibilityMask (byte x) {
-		visibilityMask = x;
-		if ( renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
-		if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
-		else surfaceRenderer.enabled = true;
+		if (visibilityMask != x) {
+			byte prevVisibility = visibilityMask;
+			visibilityMask = x;
+			if (visibilityMask == 0) {
+				surfaceRenderer.GetComponent<Collider>().enabled = false;
+				surfaceRenderer.enabled = false;
+				int i = 0; bool listChanged = false;
+				while ( i < surfaceObjects.Count ) {
+					if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf ) {
+						surfaceObjects.RemoveAt(i);
+						listChanged = true;
+						continue;
+					}
+					else {
+						surfaceObjects[i].SetVisibility(false);
+						i++;
+					}
+				} 
+				if (listChanged) CellsStatusUpdate();
+			}
+			else {
+				if ( renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
+				if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
+				else surfaceRenderer.enabled = true;
+				if ( prevVisibility == 0) {
+					surfaceRenderer.enabled = true;
+					surfaceRenderer.GetComponent<Collider>().enabled = true;
+					int i = 0; bool listChanged = false;
+					while ( i < surfaceObjects.Count ) {
+						if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf ) {
+							surfaceObjects.RemoveAt(i);
+							listChanged = true;
+							continue;
+						}
+						else {
+							surfaceObjects[i].SetVisibility(true);
+							i++;
+						}
+					} 
+					if (listChanged) CellsStatusUpdate();
+				}
+			}
+		}
 	}
 }

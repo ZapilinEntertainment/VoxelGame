@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class TreeSapling : Plant {
-	public LineRenderer body;
 	public const float MAXIMUM_LIFEPOWER = 50;
 
 	void Awake () {
@@ -22,8 +21,8 @@ public class TreeSapling : Plant {
 		float theoreticalGrowth = lifepower / maxLifepower;
 		if (theoreticalGrowth != growth) {
 			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
-			body.SetPosition(1, body.GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
-			body.startWidth = growth * maxTall + startSize;
+			(myRenderer as LineRenderer).SetPosition(1, (myRenderer as LineRenderer).GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
+			(myRenderer as LineRenderer).startWidth = growth * maxTall + startSize;
 		}
 		if (growth >= 1) {
 			full = true; 
@@ -41,8 +40,8 @@ public class TreeSapling : Plant {
 	override public void AddLifepowerAndCalculate( float lifepower ) {
 		AddLifepower((int)lifepower);
 		growth = lifepower / MAXIMUM_LIFEPOWER;
-		body.SetPosition(1, body.GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
-		body.startWidth = growth * maxTall + startSize;
+		(myRenderer as LineRenderer).SetPosition(1, (myRenderer as LineRenderer).GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
+		(myRenderer as LineRenderer).startWidth = growth * maxTall + startSize;
 		if (growth >= 1) full = true;
 	}
 
@@ -50,15 +49,23 @@ public class TreeSapling : Plant {
 		lifepower = p;
 		if (lifepower >= maxLifepower) full = true; else full =false;
 		growth = lifepower/ maxLifepower;
-		body.SetPosition(1, body.GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
-		body.startWidth = growth * maxTall + startSize;
+		(myRenderer as LineRenderer).SetPosition(1, (myRenderer as LineRenderer).GetPosition(0) + Vector3.up * (growth * maxTall+ startSize));
+		(myRenderer as LineRenderer).startWidth = growth * maxTall + startSize;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetStructureData(b,pos);
-		body.SetPosition(0, transform.position);
-		body.SetPosition(1,transform.position + Vector3.up * startSize);
+		(myRenderer as LineRenderer).SetPosition(0, transform.position);
+		(myRenderer as LineRenderer).SetPosition(1,transform.position + Vector3.up * startSize);
+	}
+
+	virtual public void SetVisibility( bool x) {
+		if (x == visible) return;
+		else {
+			visible = x;
+			myRenderer.enabled = x;
+		}
 	}
 
 	override public void Annihilate(bool forced) {

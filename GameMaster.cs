@@ -44,6 +44,7 @@ public class GameMaster : MonoBehaviour {
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 	public static float sellPriceCoefficient = 0.75f;
+	public static int layerCutHeight = 16;
 
 	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
@@ -99,6 +100,7 @@ public class GameMaster : MonoBehaviour {
 		difficulty = Difficulty.Normal;
 		guiPiece = Screen.height / 24f;
 		warProximity = 0.01f;
+		layerCutHeight = Chunk.CHUNK_SIZE;
 	}
 
 	void Start() {
@@ -404,7 +406,7 @@ public class GameMaster : MonoBehaviour {
 			rightBottomLabel.normal.textColor = Color.white;
 			PoolMaster.GUIStyle_RightBottomLabel = rightBottomLabel;
 			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			centerOrientedLabel.alignment = TextAnchor.UpperCenter;
+			centerOrientedLabel.alignment = TextAnchor.MiddleCenter;
 			centerOrientedLabel.normal.textColor = Color.white;
 			PoolMaster.GUIStyle_CenterOrientedLabel = centerOrientedLabel;
 
@@ -431,9 +433,9 @@ public class GameMaster : MonoBehaviour {
 		GUI.skin = mainGUISkin;
 
 		int sh = Screen.height;
-		if (GUI.Button(new Rect(0, sh - 3 *guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
-		if (GUI.Button(new Rect(0, sh - 2 *guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
-		if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
+		//if (GUI.Button(new Rect(0, sh - 3 *guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
+		//if (GUI.Button(new Rect(0, sh - 2 *guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
+		//if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
 		GUI.Label(new Rect(guiPiece, sh - guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
 
 		if (gameAnnouncements_string.Count > 0) {

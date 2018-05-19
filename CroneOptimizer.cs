@@ -13,6 +13,7 @@ public class CroneOptimizer : MonoBehaviour {
 	MeshRenderer mRenderer;
 	const float OPTIMIZATION_TIME = 1;
 	float optimer = 0;
+	bool visible = true;
 
 
 	void Awake() {
@@ -75,5 +76,15 @@ public class CroneOptimizer : MonoBehaviour {
 	public void CameraUpdate(Transform t) {
 		if (GameMaster.realMaster.treesOptimization == false) return;
 		Optimize();
+	}
+
+	public void SetVisibility (bool x) {
+		if (x == visible) return;
+		visible = x;
+		if ( !visible) {
+			spRender.enabled = false;
+			mRenderer.enabled = false;
+		}
+		optimer = 0;
 	}
 }

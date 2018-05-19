@@ -7,8 +7,6 @@ public class Crop : Plant {
 	Sprite[] stages;
 	byte currentStage = 0;
 	[SerializeField]
-	SpriteRenderer myRenderer;
-	[SerializeField]
 	float maxLifepower_set, maxVisibleDistance = 25;
 	[SerializeField]
 	bool visible = true;
@@ -28,7 +26,7 @@ public class Crop : Plant {
 		growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
 		byte newStage = (byte)(growth * (stages.Length-1));
 		if (newStage != currentStage) {
-			myRenderer.sprite = stages[newStage];
+			(myRenderer as SpriteRenderer).sprite = stages[newStage];
 			currentStage = newStage;
 		}
 		if (growth >= 1) full = true;
@@ -40,7 +38,7 @@ public class Crop : Plant {
 		growth = lifepower/ maxLifepower;
 		byte newStage = (byte)(growth * (stages.Length-1));
 		if (newStage != currentStage) {
-			myRenderer.sprite = stages[newStage];
+			(myRenderer as SpriteRenderer).sprite = stages[newStage];
 			currentStage = newStage;
 		}
 	}

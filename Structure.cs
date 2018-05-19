@@ -23,7 +23,9 @@ public class Structure : MonoBehaviour {
 	public bool randomRotation = false, rotate90only = true;
 	public bool showOnGUI = false;
 	public float gui_ypos = 0;
-
+	[SerializeField]
+	protected Renderer myRenderer;
+	public bool visible {get;protected set;}
 
 	void Awake() {
 		PrepareStructure();
@@ -35,6 +37,7 @@ public class Structure : MonoBehaviour {
 		isArtificial = markAsArtificial;
 		type = setType;
 		isBasement = useAsBasement;
+		visible = true;
 	}
 
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -92,6 +95,16 @@ public class Structure : MonoBehaviour {
 		Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y+1, basement.pos.z);
 		if (upperBlock == null) {
 			basement.myChunk.AddBlock( new ChunkPos(basement.pos.x, basement.pos.y+1, basement.pos.z), BlockType.Surface, ResourceType.CONCRETE_ID);
+		}
+	}
+
+	virtual public void SetVisibility( bool x) {
+		if (x == visible) return;
+		else {
+			visible = x;
+			myRenderer.enabled = x;
+			Collider c = gameObject.GetComponent<Collider>();
+			if ( c != null ) c.enabled = x;
 		}
 	}
 

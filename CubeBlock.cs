@@ -81,14 +81,34 @@ public class CubeBlock : Block{
 	}
 
 	override public void SetVisibilityMask (byte x) {
+		if ( x == visibilityMask) return;
+		byte prevVisibility = visibilityMask;
 		visibilityMask = x;
-		if (renderMask == 0) return;
-		for (int i = 0; i< 6; i++) {
-			if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) {
-				if (faces != null && faces[i]!= null) faces[i].enabled = true;
-				else CreateFace(i);
+		if (visibilityMask == 0) {
+			if (faces != null) {
+				for (int i = 0; i < 5; i++) {
+					if (faces[i] == null) continue;
+					else {
+						faces[i].enabled = false;
+						faces[i].GetComponent<MeshCollider>().enabled = false;
+					}
+				}
 			}
-			else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
+		}
+		else {
+			if (prevVisibility == 0 && faces != null) {
+				for (int i = 0; i < 5; i++) {
+					if (faces[i] != null) faces[i].GetComponent<MeshCollider>().enabled = true;
+				}
+			}
+			if (renderMask == 0) return;
+			for (int i = 0; i< 6; i++) {
+				if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) {
+					if (faces != null && faces[i]!= null) faces[i].enabled = true;
+					else CreateFace(i);
+				}
+				else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
+			}
 		}
 	}
 

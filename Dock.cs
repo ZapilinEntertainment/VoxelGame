@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class Dock : WorkBuilding {
 	bool correctLocation = false;
-	public Transform meshTransform;
 	bool gui_tradeGoodTabActive = false, gui_sellResourcesTabActive = false, gui_addTransactionMenu = false;
 	public static bool?[] isForSale{get; private set;}
 	public static int[] minValueForTrading{get;private set;}
@@ -33,6 +32,7 @@ public class Dock : WorkBuilding {
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
+		Transform meshTransform = transform.GetChild(0);
 		if (basement.pos.z == 0) {
 			meshTransform.transform.localRotation = Quaternion.Euler(0, 180,0); correctLocation = true;
 		}

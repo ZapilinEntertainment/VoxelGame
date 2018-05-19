@@ -15,7 +15,7 @@ public class Building : Structure {
 	public Building nextStage; 
 	public int requiredBasementMaterialId = -1;
 	[SerializeField]
-	public Transform renderersTransform;
+	protected Renderer[] myRenderers;
 
 	void Awake() {
 		PrepareBuilding();
@@ -25,7 +25,6 @@ public class Building : Structure {
 		isActive = false;
 		energySupplied = false;
 		borderOnlyConstruction = false;
-		if (renderersTransform == null) renderersTransform = transform.GetChild(0);
 		connectedToPowerGrid = false;
 	}
 
@@ -58,46 +57,92 @@ public class Building : Structure {
 	}
 
 	protected void ChangeRenderersView(bool setOnline) {
-		if (renderersTransform == null || renderersTransform.childCount == 0 ) return;
 		if (setOnline == false) {
-			for (int i = 0; i < renderersTransform.childCount; i++) {
-				MeshRenderer mr = renderersTransform.GetChild(i).GetComponent<MeshRenderer>();
-				if (mr != null) {
-					int j = 0;
-					Material[] allMaterials = mr.sharedMaterials;
-					while (j < allMaterials.Length) {
-						if (allMaterials[j] == PoolMaster.glass_material) allMaterials[j] = PoolMaster.glass_offline_material;
+			if (myRenderers != null) {
+				for (int i = 0; i < myRenderers.Length; i++) {
+						Material m= myRenderers[i].sharedMaterial;
+						bool replacing = false;
+						if (m == PoolMaster.glass_material) {m = PoolMaster.glass_offline_material; replacing = true;}
 						else {
-							if (allMaterials[j] == PoolMaster.colored_material) allMaterials[j] = PoolMaster.colored_offline_material;
+							if (m == PoolMaster.colored_material) {m = PoolMaster.colored_offline_material; replacing = true;}
 							else {
-								if (allMaterials[j].name == PoolMaster.energy_material.name ) {
-									allMaterials[j] = PoolMaster.energy_offline_material;
-								}
+									if (m == PoolMaster.energy_material ) {m = PoolMaster.energy_offline_material; replacing = true;}
+									}
+						}
+					if (replacing) myRenderers[i].sharedMaterial = m;
+				}
+			}
+			if (myRenderer != null) {
+				Material[] allMaterials = myRenderer.sharedMaterials;
+				int j =0;
+				while (j < allMaterials.Length) {
+					if (allMaterials[j] == PoolMaster.glass_material) allMaterials[j] = PoolMaster.glass_offline_material;
+					else {
+						if (allMaterials[j] == PoolMaster.colored_material) allMaterials[j] = PoolMaster.colored_offline_material;
+						else {
+							if (allMaterials[j].name == PoolMaster.energy_material.name ) {
+								allMaterials[j] = PoolMaster.energy_offline_material;
 							}
 						}
-						j++;
 					}
-					mr.sharedMaterials = allMaterials;
+					j++;
 				}
+				myRenderer.sharedMaterials = allMaterials;
 			}
 		}
 		else {
-			for (int i = 0; i < renderersTransform.childCount; i++) {
-				MeshRenderer mr = renderersTransform.GetChild(i).GetComponent<MeshRenderer>();
-				if (mr != null) {
-					int j = 0;
-					Material[] allMaterials = mr.sharedMaterials;
-					while (j < allMaterials.Length) {
-						if (allMaterials[j] == PoolMaster.glass_offline_material) allMaterials[j] = PoolMaster.glass_material;
+			if (myRenderers != null) {
+				for (int i = 0; i < myRenderers.Length; i++) {
+						Material m = myRenderers[i].sharedMaterial;
+						bool replacing = false;
+						if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true;}
 						else {
-							if (allMaterials[j] == PoolMaster.colored_offline_material) allMaterials[j] = PoolMaster.colored_material;
+							if (m == PoolMaster.colored_offline_material) {m = PoolMaster.colored_material;replacing = true;}
 							else {
-								if (allMaterials[j] == PoolMaster.energy_offline_material) allMaterials[j] = PoolMaster.energy_material;
-							}
+								if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material;replacing = true;}
+									}
 						}
-						j++;
+						if (replacing) myRenderers[i].sharedMaterial = m;
+				}
+			}
+			if (myRenderer != null) {
+				int j = 0;
+				Material[] allMaterials = myRenderer.sharedMaterials;
+				while (j < allMaterials.Length) {
+					if (allMaterials[j] == PoolMaster.glass_offline_material) allMaterials[j] = PoolMaster.glass_material;
+					else {
+						if (allMaterials[j] == PoolMaster.colored_offline_material) allMaterials[j] = PoolMaster.colored_material;
+						else {
+							if (allMaterials[j] == PoolMaster.energy_offline_material) allMaterials[j] = PoolMaster.energy_material;
+						}
 					}
-					mr.sharedMaterials = allMaterials;
+					j++;
+				}
+				myRenderer.sharedMaterials = allMaterials;
+			}
+		}
+	}
+
+	override public void SetVisibility( bool x) {
+		if (x == visible) return;
+		else {
+			visible = x;
+			if (myRenderers != null) {
+				foreach (Renderer r in myRenderers) {
+					r.enabled = x;
+					if (r is SpriteRenderer) {
+						if (r.GetComponent<MastSpriter>() != null) r.GetComponent<MastSpriter>().SetVisibility(x);
+					}
+				}
+				if (isBasement) {
+					BlockRendererController brc = gameObject.GetComponent<BlockRendererController>();
+					if (brc != null) brc.SetVisibility(x);
+				}
+			}
+			if (myRenderer != null) {
+				myRenderer.enabled = x;
+				if (myRenderer is SpriteRenderer) {
+					if (myRenderer.GetComponent<MastSpriter>() != null) myRenderer.GetComponent<MastSpriter>().SetVisibility(x);
 				}
 			}
 		}
