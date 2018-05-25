@@ -76,6 +76,7 @@ public class GameMaster : MonoBehaviour {
 	// FOR TESTING
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
+	public bool generateChunk = true;
 	//---------
 
 	public GameMaster () {
@@ -84,9 +85,15 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	void Awake() {
+		path = Application.dataPath + '/';
+		if (generateChunk) Constructor.main.ConstructChunk( 16 );
+		else { // loading data
+			string saveName = "default.sav";
+			if ( !LoadGame( path + saveName) ) Constructor.main.ConstructChunk( 16 );
+		}
+
 		gameSpeed = 1;
 		cameraUpdateBroadcast = new List<GameObject>();
-		path = Application.dataPath;
 
 		everydayUpdateList = new List<Component>();
 		everyYearUpdateList = new List<Component>();
@@ -188,7 +195,12 @@ public class GameMaster : MonoBehaviour {
 			if (xpos > 0) xpos --; else xpos++;
 			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
 			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
-			colonyController.storage.AddResources(ResourcesCost.info[1]);
+			//start resources
+			colonyController.storage.AddResources(ResourceType.metal_K,100);
+			colonyController.storage.AddResources(ResourceType.metal_M,50);
+			colonyController.storage.AddResources(ResourceType.metal_E,20);
+			colonyController.storage.AddResources(ResourceType.Plastics,100);
+			colonyController.storage.AddResources(ResourceType.Food, 200);
 
 			UI ui = gameObject.AddComponent<UI>();
 			ui.lineDrawer = systemDrawLR;
@@ -389,6 +401,50 @@ public class GameMaster : MonoBehaviour {
 		}
 		gameAnnouncements_string.Add(s);
 		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
+	}
+
+	public bool LoadGame( string fpath ) {
+		if ( !File.Exists ( fpath ) ) return false;
+		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Default))
+		{
+			// size
+			string line;
+			line = sr.ReadLine();
+			//chunk blocks
+			int size = 16, dataBlocksRead = 0 ;
+			if ( !int.TryParse(line, out size) ) return false;
+			else {
+				int[,,] data = new int[size, size, size];
+
+					for ( int x = 0; x < size; x ++) {
+						for (int y = 0; y < size; y++) {
+							for (int z = 0; z < size; z++) {
+								while ((line = sr.ReadLine()) != null)
+								{
+									int i = 0, spos = line.IndexOf(';', 0), prevPos = 0, dataValue = 0;
+									while (i < size && spos != -1) {
+										if (!int.TryParse( line.Substring(prevPos, spos - prevPos), out  dataValue)) return false;
+										else {
+											data[x,y,z] = dataValue;
+											prevPos = spos;
+											spos = line.IndexOf(';', prevPos + 1);
+											dataValue = 0;
+											i++;
+										}
+									}
+									if ( i < size ) return false;
+									else dataBlocksRead += size; 
+								}
+							}
+						}
+					}
+				if (dataBlocksRead != size * size * size) return false;
+				mainChunk = new Chunk();
+				mainChunk.SetChunk(data);
+			}
+			// game master coefficients
+		}
+		return true;
 	}
 
 	void OnGUI() {

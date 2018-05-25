@@ -22,7 +22,7 @@ public class Chunk : MonoBehaviour {
 	public float lifePower = 0;
 	 float lifepower_timer = 0;
 	List<Grassland> grassland_blocks;
-	public const byte CHUNK_SIZE = 16;
+	public static byte CHUNK_SIZE  {get;private set;}
 	public static int energy_take_speed = 10;
 	GameObject cave_pref;
 	public List <Component> chunkUpdateSubscribers;
@@ -424,6 +424,8 @@ public class Chunk : MonoBehaviour {
 	public void SetChunk(int[,,] newData) {
 		if (blocks != null) ClearChunk();
 		int size = newData.GetLength(0);
+		CHUNK_SIZE = (byte) size;
+		if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
 
 		blocks = new Block[size,size,size];
 		surfaceBlocks = new List<SurfaceBlock>();
@@ -602,7 +604,11 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
-	void OnGUI () {
+	public void SaveChunk() {
+		
+	}
+
+	void OnGUI () { //test
 		GUI.Label(new Rect(0, 32, 64,32), lifePower.ToString());
 	}
 }

@@ -17,7 +17,30 @@ public class Plant : Structure {
 	public PlantType plantType{get;protected set;}
 
 	void Awake() {
-		PrepareStructure();
+		innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.Plant;
+		full = false;
+		switch ( id ) {
+		case WHEAT_CROP_ID:
+			plantType = PlantType.Crop;
+			lifepower = 1;
+			maxLifepower = 10;
+			growth = 0;
+			GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
+			break;
+		case TREE_SAPLING_ID:
+			plantType = PlantType.TreeSapling;
+			lifepower = 1;
+			maxLifepower = TreeSapling.MAXIMUM_LIFEPOWER;
+			maxTall = 0.1f;
+			break;
+		case TREE_ID: 
+			plantType = PlantType.Tree;
+			lifepower = 10;
+			maxLifepower = Tree.MAXIMUM_LIFEPOWER;
+			maxTall = 0.4f + Random.value * 0.1f;
+			maxHp = maxTall * 1000;
+			break;	
+		}
 		lifepower = 1;
 		maxLifepower = 10;
 		full = false;

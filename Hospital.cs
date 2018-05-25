@@ -33,9 +33,6 @@ public class Hospital : House {
 		//from building.cs
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
-			rr.y = GUI_UpgradeButton(rr);
-		}
 		byte p = (byte)birthrateMode;
 		GUI.DrawTexture(new Rect(rr.x, rr.y + p * rr.height, rr.width, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 		if (GUI.Button(rr, Localization.lowered_birthrate + " (" + string.Format("{0:0.##}", loweredCoefficient)  + "%)")) {

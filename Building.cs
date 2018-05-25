@@ -3,29 +3,105 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure {
+	public bool canBeUpgraded{get;protected set;}
 	public bool canBePowerSwitched = true;
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
-	public byte level = 0;
 	[SerializeField]
 	public int resourcesContainIndex = 0;
 	public float energySurplus = 0, energyCapacity = 0;
 	public  bool connectedToPowerGrid {get; protected set;}// подключение, контролирующееся игроком
-	public bool borderOnlyConstruction{get;protected set;}
-	public Building nextStage; 
 	public int requiredBasementMaterialId = -1;
 	[SerializeField]
 	protected Renderer[] myRenderers;
+	protected static ResourceContainer[] requiredResources;
 
-	void Awake() {
-		PrepareBuilding();
-	}
-	protected void PrepareBuilding() {
-		PrepareStructure();
+	public void Awake() {
 		isActive = false;
 		energySupplied = false;
 		borderOnlyConstruction = false;
 		connectedToPowerGrid = false;
+		hp = maxHp;
+		isBasement = false; isArtificial = true; borderOnlyConstruction = false;
+		hp = maxHp;
+		isBasement = false; isArtificial = true; borderOnlyConstruction = false;
+		switch ( id ) {
+		case LANDED_ZEPPELIN_ID: 
+		case MINE_ID:
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; canBeUpgraded = true;
+			break;	
+		case WIND_GENERATOR_ID:
+		case ORE_ENRICHER_ID:
+		case ROLLING_SHOP_ID:
+		case FUEL_FACILITY_ID:
+		case GRPH_REACTOR_ID:
+		case GRPH_ENRICHER_ID:
+		case XSTATION_ID:
+		case QUANTUM_ENERGY_TRANSMITTER_ID:
+		case CHEMICAL_FACTORY_ID:
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			break;		
+		case DOCK_ID:
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			borderOnlyConstruction = true;
+			break;		
+		case STORAGE_ID:
+			switch ( level ) {
+			case 0:
+			case 5: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
+			case 1: innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.Structure; break;
+			case 2: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure;  canBeUpgraded =true; break;
+			case 3: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure;  break;
+			}
+			break;
+		case HOUSE_ID:
+			switch ( level ) {
+			case 0: innerPosition = SurfaceRect.one; type = StructureType.Structure; break;
+			case 1: innerPosition = new SurfaceRect( 0, 0, 4,4); type = StructureType.Structure;break;
+			case 2: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; canBeUpgraded = true; break;
+			case 3: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; break;
+			case 5: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
+			}
+			break;
+		case ENERGY_CAPACITOR_ID:
+			switch (level) {
+			case 1: innerPosition = new SurfaceRect (0,0, 2, 4); type = StructureType.Structure; break;
+			case 2: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; canBeUpgraded = true; break;
+			case 3: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; break;
+				break;
+			}
+			break;
+		case FARM_ID:
+		case LUMBERMILL_ID:
+		case PLASTICS_FACTORY_ID:
+		case FOOD_FACTORY_ID:
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			if ( level > 4) isBasement = true;
+			else canBeUpgraded = true;
+			break;
+		case SMELTERY_ID:
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			if ( level > 4) {isBasement = true; borderOnlyConstruction = true;}
+			else canBeUpgraded = true;
+			break;
+		case HQ_ID:
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			canBeUpgraded = true;
+			if ( level > 3) isBasement = true;
+			break;
+		case BIOGENERATOR_ID:
+			innerPosition = new SurfaceRect(0,0,4,10); type = StructureType.Structure;
+			break;
+		case HOSPITAL_ID:
+		case MINI_GRPH_REACTOR_ID:
+			innerPosition = new SurfaceRect(0,0,8,8); type = StructureType.Structure;
+			break;
+		case MINERAL_POWERPLANT_ID:
+			innerPosition = new SurfaceRect(0,0,10,10); type = StructureType.Structure;
+			break;
+		}
+		visible = true;
+		visible = true;
 	}
 
 
@@ -42,8 +118,6 @@ public class Building : Structure {
 			connectedToPowerGrid = true;
 		}
 	}
-
-
 	virtual public void SetActivationStatus(bool x) {
 		isActive = x;
 		if (connectedToPowerGrid) {
@@ -158,9 +232,9 @@ public class Building : Structure {
 
 	public void Demolish() {
 		if (resourcesContainIndex != 0 && GameMaster.demolitionLossesPercent != 1) {
-			ResourceContainer[] rleft = new ResourceContainer[ResourcesCost.info[resourcesContainIndex].Length];
+			ResourceContainer[] rleft = ResourcesCost.GetCost(id,level);
 			for (int i = 0 ; i < rleft.Length; i++) {
-				rleft[i] = new ResourceContainer(ResourcesCost.info[resourcesContainIndex][i].type, ResourcesCost.info[resourcesContainIndex][i].volume * (1 - GameMaster.demolitionLossesPercent));
+				rleft[i] = new ResourceContainer(rleft[i].type, rleft[i].volume * (1 - GameMaster.demolitionLossesPercent));
 			}
 		}
 		Destroy(gameObject);
@@ -170,45 +244,55 @@ public class Building : Structure {
 		PrepareBuildingForDestruction();
 	}
 
+	override public void SetGUIVisible (bool x) {
+		if (x != showOnGUI) {
+			showOnGUI = x;
+			if ( showOnGUI) {
+				requiredResources = ResourcesCost.GetCost(id, (byte)(level + 1));
+				if (requiredResources.Length > 0) {
+					for (int i = 0; i < requiredResources.Length; i++) {
+						requiredResources[i] = new ResourceContainer(requiredResources[i].type, requiredResources[i].volume * GameMaster.upgradeDiscount);
+					}
+				}
+			}
+		}
+	}
+
 	void OnGUI() {
 		//sync with hospital.cs, rollingShop.cs
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
+		if (canBeUpgraded && level < GameMaster.colonyController.hq.level) {
 			rr.y = GUI_UpgradeButton(rr);
 		}
 	}
 
-	protected float GUI_UpgradeButton( Rect rr) {
+	virtual protected float GUI_UpgradeButton( Rect rr) {
 			GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
 			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-				ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[nextStage.resourcesContainIndex].Length];
-				if (requiredResources.Length > 0) {
-					for (int i = 0; i < requiredResources.Length; i++) {
-						requiredResources[i] = new ResourceContainer(ResourcesCost.info[nextStage.resourcesContainIndex][i].type, ResourcesCost.info[nextStage.resourcesContainIndex][i].volume * (1 - GameMaster.upgradeDiscount));
-					}
-				}
 				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 				{
-					Building upgraded = Instantiate(nextStage);
+				Building upgraded = Structure.LoadStructure(id, (byte)(level + 1)) as Building;
+					upgraded.Awake();
 					PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
 					byte bzero = (byte)0;
-					if (upgraded.xsize_to_set == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-					if (upgraded.zsize_to_set == 16) setPos = new PixelPosByte(setPos.x, bzero);
+				if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+				if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+					Quaternion originalRotation = transform.rotation;
 					upgraded.SetBasement(basement, setPos);
-					upgraded.transform.localRotation = transform.localRotation;
+				upgraded.transform.localRotation = originalRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}
-			if ( ResourcesCost.info[ nextStage.resourcesContainIndex ].Length > 0) {
+		if ( requiredResources.Length > 0) {
+			rr.y += rr.height;
+			for (int i = 0; i < requiredResources.Length; i++) {
+				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
+				GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
+				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
 				rr.y += rr.height;
-				for (int i = 0; i < ResourcesCost.info[ nextStage.resourcesContainIndex ].Length; i++) {
-					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.icon, ScaleMode.StretchToFill);
-					GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.name);
-					GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (ResourcesCost.info[ nextStage.resourcesContainIndex ][i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-					rr.y += rr.height;
-				}
 			}
+		}
 		return rr.y;
 		}
 }

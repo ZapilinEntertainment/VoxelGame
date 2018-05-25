@@ -7,18 +7,6 @@ public class Tree : Plant {
 	[SerializeField]
 	Renderer[] myRenderers;
 
-	void Awake() {
-		PrepareStructure();
-		full = false;
-		lifepower = 1;
-		maxLifepower = MAXIMUM_LIFEPOWER;
-		maxTall = 0.4f + Random.value * 0.1f;
-		maxHp = maxTall * 1000;
-		type = StructureType.Plant;
-		plantType = PlantType.Tree;
-	}
-
-
 	void Update() {
 		if (full || GameMaster.gameSpeed == 0) return;
 		float theoreticalGrowth = lifepower / maxLifepower;

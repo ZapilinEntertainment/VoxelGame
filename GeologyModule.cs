@@ -20,103 +20,86 @@ public class GeologyModule : MonoBehaviour {
 		List<PixelPosByte> positions = surface.GetRandomCells(maxObjectsCount);
 		if (positions.Count == 0) return;
 		maxObjectsCount = positions.Count;
-		GameObject boulderPref = Resources.Load<GameObject>("Structures/Boulder");
-		List<Structure> allBoulders = new List<Structure>();
+		HarvestableResource containerPref = Structure.LoadStructure(Structure.CONTAINER_ID, 0) as HarvestableResource;
+		List<HarvestableResource> allBoulders = new List<HarvestableResource>();
 
-		int bouldersCount = 0;
+		int containersCount = 0;
 		if (Random.value < metalK_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalK_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material = ResourceType.metal_K.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_K, 1+ Random.value * 100 * metalK_abundance);
+			containersCount= (int)(maxObjectsCount * GameMaster.geologyModule.metalK_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.metal_K_ore, 1+ Random.value * 100 * metalK_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
 		if (Random.value < metalM_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalM_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_M.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_M, 1+ Random.value * 100 * metalM_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalM_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.metal_M_ore, 1+ Random.value * 100 * metalM_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
 		if (Random.value < metalE_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalE_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_E.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_E, 1+ Random.value * 100 * metalE_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalE_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.metal_E_ore, 1+ Random.value * 100 * metalE_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
 		if (Random.value < metalN_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalN_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_N.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_N, 1+ Random.value * 100 * metalN_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalN_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.metal_N_ore, 1+ Random.value * 100 * metalN_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
 		if (Random.value < metalP_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalP_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_P.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_P, 1+ Random.value * 100 * metalP_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalP_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.metal_P_ore, 1+ Random.value * 100 * metalP_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
 		if (Random.value < metalS_abundance * 10) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalS_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.metal_S.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_S, 1+ Random.value * 100 * metalS_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.metalS_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr =Instantiate(containerPref);
+					hr.SetResources(ResourceType.metal_S_ore, 1+ Random.value * 100 * metalS_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
-		boulderPref = Resources.Load<GameObject>("Structures/Pile");
 		if (Random.value < mineralF_abundance * 4) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.mineralF_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.mineral_F.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_S, 1+ Random.value * 100 * mineralF_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.mineralF_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.mineral_F, 1+ Random.value * 100 * mineralF_abundance);
 					allBoulders.Add(hr);
 				}
 			}
 		}
 		if (Random.value < mineralL_abundance * 4) {
-			bouldersCount = (int)(maxObjectsCount * GameMaster.geologyModule.mineralL_abundance * Random.value);
-			if (bouldersCount != 0) {						
-				for (int i = 0; i< bouldersCount; i++) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.mineral_L.material;
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
-					hr.SetResources(ResourceType.metal_S, 1+ Random.value * 100 * mineralL_abundance);
+			containersCount = (int)(maxObjectsCount * GameMaster.geologyModule.mineralL_abundance * Random.value);
+			if (containersCount != 0) {						
+				for (int i = 0; i< containersCount; i++) {
+					HarvestableResource hr = Instantiate(containerPref);
+					hr.SetResources(ResourceType.mineral_L, 1+ Random.value * 100 * mineralL_abundance);
 					allBoulders.Add(hr);
 				}
 			}
@@ -133,16 +116,14 @@ public class GeologyModule : MonoBehaviour {
 			List<PixelPosByte> points = surface.GetRandomPositions(2,2,count);
 			if (points.Count > 0) {
 				foreach (PixelPosByte p in points) {
-					GameObject g = Instantiate(boulderPref);
-					g.transform.GetChild(0).GetComponent<MeshRenderer>().material =  ResourceType.Stone.material;
-					g.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
-					HarvestableResource hr = g.GetComponent<HarvestableResource>();
+					HarvestableResource hr = Instantiate(containerPref);
 					hr.SetResources(ResourceType.Stone, 4 + Random.value * 10);
 					hr.SetBasement(surface, p);
 					hr.transform.localRotation = Quaternion.Euler(0, Random.value * 360,0);
 				}
 			}
 		}
+		Destroy(containerPref);
 	}
 
 	public void CalculateOutput(float production, CubeBlock workObject, Storage storage) {

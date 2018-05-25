@@ -13,11 +13,10 @@ public class Constructor : MonoBehaviour {
 	void Awake () {
 		if (main != null) {Destroy(main); main = this;} // singleton pattern
 		seed += System.DateTime.Now.Second;
-		ConstructChunk();
 	}
 
-	void ConstructChunk() {
-		int size = Chunk.CHUNK_SIZE;
+	public void ConstructChunk( int chunkSize ) {
+		int size = chunkSize;
 		int[,,] dat = new int[size, size ,size ];
 		float radius = size * Mathf.Sqrt(2);
 		for (int x =0; x< size ; x++) {
@@ -54,7 +53,7 @@ public class Constructor : MonoBehaviour {
 	void NatureCreation(Chunk chunk) {
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
-		x = Chunk.CHUNK_SIZE / 2;z=Chunk.CHUNK_SIZE/2;
+		x = (byte)(Chunk.CHUNK_SIZE / 2) ;z = (byte)(Chunk.CHUNK_SIZE/2);
 		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);
@@ -65,5 +64,4 @@ public class Constructor : MonoBehaviour {
 		SurfaceBlock sb = chunk.GetSurfaceBlock(x,z);
 		ms.SetBasement(sb, PixelPosByte.zero);
 	}
-
 }

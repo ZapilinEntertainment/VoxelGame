@@ -32,6 +32,7 @@ public class UI : MonoBehaviour {
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
 	List<Factory> unspecializedFactories; bool hasUnspecializedFactories = false;
+	List<Building> showingBuildingsList;
 	public const int GUIDEPTH_UI_MAIN = 10, GUIDEPTH_WORKSITE_WINDOW = 9;
 
 
@@ -82,7 +83,7 @@ public class UI : MonoBehaviour {
 				Structure s = rh.collider.GetComponent<Structure>();
 				if (s != null) {
 					chosenStructure = s;
-					chosenStructure.showOnGUI = true;
+					chosenStructure.SetGUIVisible(true);
 					Vector2 cursorPos = Camera.main.WorldToScreenPoint(s.transform.position);
 					mode = UIMode.StructurePanel;
 					GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
@@ -107,8 +108,10 @@ public class UI : MonoBehaviour {
 									lineDrawer.enabled = true;
 									GameMaster.realMaster.SetLookPoint (chosenSurfaceBlock.transform.position + Vector3.down * Block.QUAD_SIZE /2f);
 									argument = 1;
-								if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
-								chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
+									if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
+									chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
+									// подборка зданий
+									showingBuildingsList = new List<Building>();
 								break;
 							case BlockType.Cube:
 								chosenCubeBlock = b.GetComponent<CubeBlock>();
@@ -187,7 +190,7 @@ public class UI : MonoBehaviour {
 		quadSelector.SetActive(false);
 		structureFrame.SetActive(false);
 		chosenCubeBlock = null; 
-		if (chosenStructure != null) {chosenStructure.showOnGUI = false;chosenStructure = null; }
+		if (chosenStructure != null) {chosenStructure.SetGUIVisible(false);chosenStructure = null; }
 		chosenSurfaceBlock = null; 
 		if (chosenWorksite != null) {chosenWorksite.showOnGUI = false; chosenWorksite = null;}
 		showBuildingCreateInfo = false;
@@ -386,15 +389,6 @@ public class UI : MonoBehaviour {
 					}
 					rr.y += rr.height;
 					int buildingIndex = 0;
-					List<Building> showingBuildingsList = null;
-					switch (showingBuildingsLevel) {
-					case 1: showingBuildingsList = GameMaster.colonyController.buildings_level_1;break;
-					case 2: showingBuildingsList = GameMaster.colonyController.buildings_level_2;break;
-					case 3: showingBuildingsList = GameMaster.colonyController.buildings_level_3;break;
-					case 4: showingBuildingsList = GameMaster.colonyController.buildings_level_4;break;
-					case 5: showingBuildingsList = GameMaster.colonyController.buildings_level_5;break;
-					case 6: showingBuildingsList = GameMaster.colonyController.buildings_level_6;break;
-					}
 					if ( showingBuildingsList != null && showingBuildingsList.Count != 0 ) {
 						bool useScroll = (buildingsListLength > Screen.height - rr.y);
 						if (useScroll) GUI.BeginScrollView(new Rect(rr.x, rr.y, Screen.width - rr.x, Screen.height - rr.y), buildingsScrollViewPos, new Rect(rr.x, rr.y, Screen.width - rr.x, buildingsListLength));

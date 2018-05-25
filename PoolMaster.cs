@@ -6,7 +6,7 @@ public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
 	public Material[] grassland_ready_25, grassland_ready_50;
 	public Material dryingLeaves_material, leaves_material;
-	GameObject tree_pref, sapling_pref, deadTree_pref, lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
+	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static GameObject mineElevator_pref {get;private set;}
 	public static Material	default_material, lr_red_material, lr_green_material, grass_material, 
@@ -71,10 +71,7 @@ public class PoolMaster : MonoBehaviour {
 		grass_material = Resources.Load<Material>("Materials/Grass");
 
 		mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-		deadTree_pref = Resources.Load<GameObject>("Lifeforms/DeadTree");deadTree_pref.SetActive(false);
-		tree_pref = Resources.Load<GameObject>("Lifeforms/Tree");tree_pref.SetActive(false);
 		treesPool = new List<GameObject>();
-		sapling_pref = Resources.Load<GameObject>("Lifeforms/TreeSapling"); sapling_pref.SetActive(false);
 		saplingsPool = new List<GameObject>();
 
 		Material dirtMaterial = ResourceType.GetMaterialById(ResourceType.DIRT_ID);
@@ -147,12 +144,12 @@ public class PoolMaster : MonoBehaviour {
 
 	public Tree GetTree() {
 		GameObject tree = null;
-		if (treesPool.Count == 0)	tree = Instantiate(tree_pref);
+		if (treesPool.Count == 0)	tree = Structure.LoadStructure(Structure.TREE_ID, 0).gameObject;
 		else {
-			if (treesPool[0] == null) tree = Instantiate(tree_pref);
+			if (treesPool[0] == null) tree = Structure.LoadStructure(Structure.TREE_ID, 0).gameObject;
 			else {tree = treesPool[0]; treeClearTimer = clearTime;}
 			treesPool.RemoveAt(0);
-			if (tree.GetComponent<Tree>() == null) tree.AddComponent<Tree>();
+			if (tree.GetComponent<Tree>() == null) tree.gameObject.AddComponent<Tree>();
 		}
 		return tree.GetComponent<Tree>();
 	}
@@ -182,10 +179,10 @@ public class PoolMaster : MonoBehaviour {
 	}
 	public TreeSapling GetSapling() {
 		GameObject grass = null;
-		if (saplingsPool.Count == 0) grass = Instantiate(sapling_pref);
+		if (saplingsPool.Count == 0) grass = Structure.LoadStructure(Structure.TREE_SAPLING_ID, 0).gameObject;
 		else {
 			if (saplingsPool[0] == null) {
-				grass = Instantiate(sapling_pref);
+				grass = Structure.LoadStructure(Structure.TREE_SAPLING_ID, 0).gameObject;
 			}
 			else {
 				grass = saplingsPool[0];			

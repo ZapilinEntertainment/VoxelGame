@@ -15,8 +15,15 @@ public struct SurfaceRect {
 		z_size = f_zsize;
 	}
 
+	static SurfaceRect() {
+		one = new SurfaceRect(0,0,1,1);
+		full = new SurfaceRect(0,0, SurfaceBlock.INNER_RESOLUTION, SurfaceBlock.INNER_RESOLUTION);
+	}
+
 	public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) {return lhs.Equals(rhs);}
 	public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) {return !(lhs.Equals(rhs));}
+	public static SurfaceRect one{get; private set;}
+	public static SurfaceRect full {get;private set;}
 }
 public struct SurfaceObject {
 	public SurfaceRect rect;
@@ -96,6 +103,7 @@ public class SurfaceBlock : Block {
 
 	public void AddStructure(Structure s) { // with autoreplacing
 		if (s == null) return;
+		if (s.innerPosition.x_size == 1 && s.innerPosition.z_size == 1) {AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); return;}
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
