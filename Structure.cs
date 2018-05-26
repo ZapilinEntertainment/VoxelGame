@@ -108,6 +108,19 @@ public class Structure : MonoBehaviour {
 		}
 	}
 
+	virtual public string SaveStructure() {
+		string sdata = "";
+		switch (type) {
+		case StructureType.NotAssigned: sdata += '0';break;
+		case StructureType.Structure: sdata += '1';break;
+		case StructureType.MainStructure: sdata += '2';break;
+		case StructureType.Plant: sdata += '3';break;
+		case StructureType.HarvestableResources: sdata += '4';break;
+		}
+
+		return sdata;
+	}
+
 	void OnDestroy() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));

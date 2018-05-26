@@ -391,6 +391,72 @@ public class GameMaster : MonoBehaviour {
 		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 	}
 
+	public bool LoadGame( string fpath ) {
+		if ( !File.Exists ( fpath ) ) return false;
+		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Default))
+		{
+			// size
+			string line;
+			line = sr.ReadLine();
+			//chunk blocks
+			int size = 16, dataBlocksRead = 0 ;
+			if ( !int.TryParse(line, out size) ) return false;
+			else {
+				int[,,] data = new int[size, size, size];
+
+				for ( int x = 0; x < size; x ++) {
+					for (int y = 0; y < size; y++) {
+						
+					}
+				}
+				if (dataBlocksRead != size * size * size) return false;
+				float gs = GameMaster.gameSpeed;
+				Time.timeScale = 0; GameMaster.gameSpeed = 0;
+				mainChunk = new Chunk();
+				mainChunk.SetChunk(data);
+
+				Time.timeScale = 1; GameMaster.gameSpeed = gs;
+			}
+			// game master coefficients
+		}
+		return true;
+	}
+
+	public bool SaveGame(string fpath) {
+		using (StreamWriter sw = new StreamWriter( fpath, System.Text.Encoding.Default))
+		{
+			//chunk blocks
+			float gs = GameMaster.gameSpeed;
+			Time.timeScale = 0; GameMaster.gameSpeed = 0;
+			int size = Chunk.CHUNK_SIZE;
+			sw.WriteLine(size.ToString());
+			string[] blocksData = mainChunk.SaveBlocksIds();
+			for (int i =0; i < blocksData.Length; i++) {
+				sw.WriteLine(blocksData[i]);
+			}
+			// structures
+			Block b = null;
+			SurfaceBlock sb = null;
+			for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
+				for (int y =0; y < Chunk.CHUNK_SIZE; y++) {
+					for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
+						b = mainChunk.GetBlock(x,y,z);
+						if ( b == null || !(b.type == BlockType.Cave | b.type == BlockType.Surface)) continue;
+						sb = b as SurfaceBlock;
+						if ( sb.cellsStatus == 0) continue;
+						sw.WriteLine( x.ToString()+';'+y.ToString()+';'+z.ToString()+';');
+						foreach (Structure s in sb.surfaceObjects) {
+							if (s == null) continue;
+							sw.WriteLine('>' + s.SaveStructure());
+						}
+					}
+				}
+			}
+
+			Time.timeScale = 1; GameMaster.gameSpeed = gs;
+		}
+	}
+
 	void OnGUI() {
 		if (!fontSize_set) {
 			mainGUISkin = Resources.Load<GUISkin>("MainSkin");

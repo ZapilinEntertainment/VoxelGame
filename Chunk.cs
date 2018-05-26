@@ -602,6 +602,30 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
+	public string[] SaveBlocksIds() {
+		string[] database = new string[CHUNK_SIZE * CHUNK_SIZE];
+		int k = 0;
+		for (int x = 0; x < CHUNK_SIZE; x++) {
+			for (int y = 0; y < CHUNK_SIZE; y++) {
+				database[k] = "";
+				for (int z = 0; z < CHUNK_SIZE; z++) {
+					if (blocks[x,y,z] !=null ) {
+						switch (blocks[x,y,z].type) {
+						case BlockType.Shapeless: database[k] += '0';break;
+						case BlockType.Cube: database[k] += '1';break;
+						case BlockType.Surface: database[k] += '2';break;
+						case BlockType.Cave: database[k] += '3';break;
+						}
+						database[k] += blocks[x,y,z].material_id;
+					}
+					database[k] += ';';
+				}
+				k++;
+			}
+		}
+		return database;
+	}
+
 	void OnGUI () {
 		GUI.Label(new Rect(0, 32, 64,32), lifePower.ToString());
 	}
