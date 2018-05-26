@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure {
-	public bool canBeUpgraded{get;protected set;}
+	public int upgradedIndex = -1;
 	public bool canBePowerSwitched = true;
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
@@ -16,92 +16,36 @@ public class Building : Structure {
 	protected Renderer[] myRenderers;
 	protected static ResourceContainer[] requiredResources;
 
-	public void Awake() {
+	void Awake() {PrepareBuilding();}
+
+	protected void	PrepareBuilding() {
+		PrepareStructure();
 		isActive = false;
 		energySupplied = false;
 		borderOnlyConstruction = false;
 		connectedToPowerGrid = false;
-		hp = maxHp;
-		isBasement = false; isArtificial = true; borderOnlyConstruction = false;
-		hp = maxHp;
-		isBasement = false; isArtificial = true; borderOnlyConstruction = false;
-		switch ( id ) {
-		case LANDED_ZEPPELIN_ID: 
-		case MINE_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; canBeUpgraded = true;
-			break;	
-		case WIND_GENERATOR_ID:
-		case ORE_ENRICHER_ID:
-		case ROLLING_SHOP_ID:
-		case FUEL_FACILITY_ID:
-		case GRPH_REACTOR_ID:
-		case GRPH_ENRICHER_ID:
-		case XSTATION_ID:
-		case QUANTUM_ENERGY_TRANSMITTER_ID:
-		case CHEMICAL_FACTORY_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
-			break;		
-		case DOCK_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
-			borderOnlyConstruction = true;
-			break;		
-		case STORAGE_ID:
-			switch ( level ) {
-			case 0:
-			case 5: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
-			case 1: innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.Structure; break;
-			case 2: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure;  canBeUpgraded =true; break;
-			case 3: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure;  break;
-			}
-			break;
-		case HOUSE_ID:
-			switch ( level ) {
-			case 0: innerPosition = SurfaceRect.one; type = StructureType.Structure; break;
-			case 1: innerPosition = new SurfaceRect( 0, 0, 4,4); type = StructureType.Structure;break;
-			case 2: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; canBeUpgraded = true; break;
-			case 3: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; break;
-			case 5: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
-			}
-			break;
-		case ENERGY_CAPACITOR_ID:
-			switch (level) {
-			case 1: innerPosition = new SurfaceRect (0,0, 2, 4); type = StructureType.Structure; break;
-			case 2: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; canBeUpgraded = true; break;
-			case 3: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; break;
-				break;
-			}
-			break;
-		case FARM_ID:
-		case LUMBERMILL_ID:
-		case PLASTICS_FACTORY_ID:
-		case FOOD_FACTORY_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
-			if ( level > 4) isBasement = true;
-			else canBeUpgraded = true;
-			break;
-		case SMELTERY_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
-			if ( level > 4) {isBasement = true; borderOnlyConstruction = true;}
-			else canBeUpgraded = true;
-			break;
-		case HQ_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
-			canBeUpgraded = true;
-			if ( level > 3) isBasement = true;
-			break;
-		case BIOGENERATOR_ID:
-			innerPosition = new SurfaceRect(0,0,4,10); type = StructureType.Structure;
-			break;
-		case HOSPITAL_ID:
-		case MINI_GRPH_REACTOR_ID:
-			innerPosition = new SurfaceRect(0,0,8,8); type = StructureType.Structure;
-			break;
-		case MINERAL_POWERPLANT_ID:
-			innerPosition = new SurfaceRect(0,0,10,10); type = StructureType.Structure;
-			break;
+		switch (id) {
+		case LANDED_ZEPPELIN_ID: upgradedIndex = HQ_2_ID; break;
+		case STORAGE_0_ID: upgradedIndex = STORAGE_1_ID;break;
+		case FARM_1_ID: upgradedIndex = FARM_2_ID;break;
+		case HQ_2_ID : upgradedIndex = HQ_3_ID;break;
+		case LUMBERMILL_1_ID: upgradedIndex = LUMBERMILL_2_ID;break;
+		case SMELTERY_1_ID : upgradedIndex = SMELTERY_2_ID;break;
+		case FOOD_FACTORY_4_ID: upgradedIndex = FOOD_FACTORY_5_ID;break;
+		case STORAGE_2_ID: upgradedIndex = STORAGE_3_ID;break; 
+		case HOUSE_2_ID: upgradedIndex = HOUSE_3_ID;break;
+		case ENERGY_CAPACITOR_2_ID: upgradedIndex = ENERGY_CAPACITOR_3_ID;break;
+		case FARM_2_ID : upgradedIndex = FARM_3_ID;break;
+		case FARM_3_ID : upgradedIndex = FARM_4_ID;break;
+		case FARM_4_ID: upgradedIndex = FARM_5_ID;break;
+		case LUMBERMILL_2_ID : upgradedIndex = LUMBERMILL_3_ID;break;
+		case LUMBERMILL_3_ID : upgradedIndex = LUMBERMILL_4_ID;break;
+		case LUMBERMILL_4_ID: upgradedIndex = LUMBERMILL_5_ID;break;
+		case SMELTERY_2_ID: upgradedIndex = SMELTERY_3_ID;break;
+		case SMELTERY_3_ID: upgradedIndex = SMELTERY_4_ID;break;
+		case SMELTERY_4_ID: upgradedIndex = SMELTERY_5_ID;break;
+		case HQ_3_ID: upgradedIndex = HQ_4_ID;break;
 		}
-		visible = true;
-		visible = true;
 	}
 
 
@@ -232,7 +176,7 @@ public class Building : Structure {
 
 	public void Demolish() {
 		if (resourcesContainIndex != 0 && GameMaster.demolitionLossesPercent != 1) {
-			ResourceContainer[] rleft = ResourcesCost.GetCost(id,level);
+			ResourceContainer[] rleft = ResourcesCost.GetCost(id);
 			for (int i = 0 ; i < rleft.Length; i++) {
 				rleft[i] = new ResourceContainer(rleft[i].type, rleft[i].volume * (1 - GameMaster.demolitionLossesPercent));
 			}
@@ -248,7 +192,7 @@ public class Building : Structure {
 		if (x != showOnGUI) {
 			showOnGUI = x;
 			if ( showOnGUI) {
-				requiredResources = ResourcesCost.GetCost(id, (byte)(level + 1));
+				requiredResources = ResourcesCost.GetCost(id);
 				if (requiredResources.Length > 0) {
 					for (int i = 0; i < requiredResources.Length; i++) {
 						requiredResources[i] = new ResourceContainer(requiredResources[i].type, requiredResources[i].volume * GameMaster.upgradeDiscount);
