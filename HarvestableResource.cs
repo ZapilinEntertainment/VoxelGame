@@ -8,14 +8,10 @@ public class HarvestableResource : Structure {
 
 
 	void Awake() {
+		PrepareStructure();
 		mainResource = ResourceType.Nothing; 
 		hp = maxHp;
 		count1 = 0;
-		switch (id) {
-		case CONTAINER_ID :	
-			innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.HarvestableResources; 
-			break;
-		}
 	}
 
 	public void SetResources(ResourceType resType, float f_count1) {
@@ -46,7 +42,7 @@ public class HarvestableResource : Structure {
 			model.transform.localPosition = Vector3.zero;
 			model.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 			model.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
-			myRenderer = model.GetComponent<MeshRenderer>();
+			myRenderer = model.transform.GetChild(0).GetComponent<MeshRenderer>();
 			myRenderer.sharedMaterial = ResourceType.GetMaterialById(resType.ID);
 		}
 	}

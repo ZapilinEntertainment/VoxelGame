@@ -95,7 +95,7 @@ public class Factory : WorkBuilding {
 		if ( !showOnGUI ) return;
 		//upgrading
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (canBeUpgraded && level < GameMaster.colonyController.hq.level) {
+		if (upgradedIndex != -1 && level < GameMaster.colonyController.hq.level) {
 			rr.y = GUI_UpgradeButton(rr);
 		}
 		//factory actions

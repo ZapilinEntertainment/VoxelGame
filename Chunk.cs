@@ -421,11 +421,16 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
+	public static void SetChunkSize( byte x) {
+		CHUNK_SIZE = x;
+	}
+
 	public void SetChunk(int[,,] newData) {
 		if (blocks != null) ClearChunk();
 		int size = newData.GetLength(0);
 		CHUNK_SIZE = (byte) size;
 		if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
+		GameMaster.layerCutHeight = CHUNK_SIZE;
 
 		blocks = new Block[size,size,size];
 		surfaceBlocks = new List<SurfaceBlock>();

@@ -93,6 +93,8 @@ public class PoolMaster : MonoBehaviour {
 		grassland_ready_50[2].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_2"));
 		grassland_ready_50[3] = new Material(dirtMaterial ); grassland_ready_50[3].name ="grassland_50_3";
 		grassland_ready_50[3].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_3"));
+
+		Structure.LoadPrefs();
 	}
 
 	void Update() {
@@ -144,9 +146,9 @@ public class PoolMaster : MonoBehaviour {
 
 	public Tree GetTree() {
 		GameObject tree = null;
-		if (treesPool.Count == 0)	tree = Structure.LoadStructure(Structure.TREE_ID, 0).gameObject;
+		if (treesPool.Count == 0)	tree = Structure.GetNewStructure(Structure.TREE_ID).gameObject;
 		else {
-			if (treesPool[0] == null) tree = Structure.LoadStructure(Structure.TREE_ID, 0).gameObject;
+			if (treesPool[0] == null) tree = Structure.GetNewStructure(Structure.TREE_ID).gameObject;
 			else {tree = treesPool[0]; treeClearTimer = clearTime;}
 			treesPool.RemoveAt(0);
 			if (tree.GetComponent<Tree>() == null) tree.gameObject.AddComponent<Tree>();
@@ -179,10 +181,10 @@ public class PoolMaster : MonoBehaviour {
 	}
 	public TreeSapling GetSapling() {
 		GameObject grass = null;
-		if (saplingsPool.Count == 0) grass = Structure.LoadStructure(Structure.TREE_SAPLING_ID, 0).gameObject;
+		if (saplingsPool.Count == 0) grass = Structure.GetNewStructure(Structure.TREE_SAPLING_ID).gameObject;
 		else {
 			if (saplingsPool[0] == null) {
-				grass = Structure.LoadStructure(Structure.TREE_SAPLING_ID, 0).gameObject;
+				grass =  Structure.GetNewStructure(Structure.TREE_SAPLING_ID).gameObject;
 			}
 			else {
 				grass = saplingsPool[0];			

@@ -29,11 +29,12 @@ public class Structure : MonoBehaviour {
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
 	LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, FOOD_FACTORY_5_ID = 53, SMELTERY_2_ID = 54, 
-	SMELTERY_3_ID = 55, SMELTERY_4_ID = 56, SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59;
+	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59;
+	public const int TOTAL_STRUCTURES_COUNT = 60;
 	static Structure[] prefs;
 
-	static Structure() {
-		prefs = new Structure[60];
+	public static void LoadPrefs() {
+		prefs = new Structure[TOTAL_STRUCTURES_COUNT];
 		prefs[TREE_SAPLING_ID] = Resources.Load<Structure>("Lifeforms/TreeSapling");
 		prefs[TREE_ID] = Resources.Load<Structure>("Lifeforms/Tree");
 		prefs[DEAD_TREE_ID] = Resources.Load<Structure>("Lifeforms/DeadTree");
@@ -74,7 +75,6 @@ public class Structure : MonoBehaviour {
 		prefs[SMELTERY_1_ID] = Resources.Load<Structure>("Structures/Buildings/Smeltery_level_1");
 		prefs[SMELTERY_2_ID] = Resources.Load<Structure>("Structures/Buildings/Smeltery_level_2");
 		prefs[SMELTERY_3_ID] = Resources.Load<Structure>("Structures/Buildings/Smeltery_level_3");
-		prefs[SMELTERY_4_ID] = Resources.Load<Structure>("Structures/Buildings/Smeltery_level_4");
 		prefs[SMELTERY_5_ID] = Resources.Load<Structure>("Structures/Blocks/smelteryBlock_level_5");
 		prefs[WIND_GENERATOR_1_ID] = Resources.Load<Structure>("Structures/Buildings/windGenerator_level_1");
 		prefs[BIOGENERATOR_2_ID] = Resources.Load<Structure>("Structures/Buildings/Biogenerator_level_1");
@@ -93,9 +93,18 @@ public class Structure : MonoBehaviour {
 		prefs[QUANTUM_ENERGY_TRANSMITTER_ID] = Resources.Load<Structure>("Structures/Buildings/quantumEnergyTransmitter_level_4");
 		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_5");
 	}
+	public static Structure GetNewStructure(int s_id) {
+		Structure s = prefs[s_id];
+		if (s == null) return null;
+		s = Instantiate(s);
+		if ( !s.gameObject.activeSelf ) s.gameObject.SetActive(true);
+		s.id = s_id;
+		s.Awake();
+		return s;
+	}
 
 	void Awake() {
-		PrepareStructure();
+		PrepareStructure();			
 	}
 	protected void PrepareStructure() {
 		hp = maxHp;
@@ -176,7 +185,7 @@ public class Structure : MonoBehaviour {
 		case SMELTERY_1_ID:
 		case SMELTERY_2_ID:
 		case SMELTERY_3_ID:
-		case SMELTERY_4_ID:innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
 		case SMELTERY_5_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			isBasement = true; borderOnlyConstruction = true;
@@ -274,13 +283,6 @@ public class Structure : MonoBehaviour {
 		if (x != showOnGUI) {
 			showOnGUI = x;
 		}
-	}
-
-	//return the link to the pref
-	public static Structure LoadStructure (int id) {
-		Structure pref = prefs[id];
-		if ( pref == null) print ("error: asset not loaded, id: "+id.ToString());
-		return pref;
 	}
 
 	void OnDestroy() {

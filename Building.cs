@@ -13,10 +13,12 @@ public class Building : Structure {
 	public  bool connectedToPowerGrid {get; protected set;}// подключение, контролирующееся игроком
 	public int requiredBasementMaterialId = -1;
 	[SerializeField]
+	public byte level {get; protected set;}
+	[SerializeField]
 	protected Renderer[] myRenderers;
 	protected static ResourceContainer[] requiredResources;
 
-	void Awake() {PrepareBuilding();}
+	public void Awake() {PrepareBuilding();}
 
 	protected void	PrepareBuilding() {
 		PrepareStructure();
@@ -25,26 +27,25 @@ public class Building : Structure {
 		borderOnlyConstruction = false;
 		connectedToPowerGrid = false;
 		switch (id) {
-		case LANDED_ZEPPELIN_ID: upgradedIndex = HQ_2_ID; break;
-		case STORAGE_0_ID: upgradedIndex = STORAGE_1_ID;break;
-		case FARM_1_ID: upgradedIndex = FARM_2_ID;break;
-		case HQ_2_ID : upgradedIndex = HQ_3_ID;break;
-		case LUMBERMILL_1_ID: upgradedIndex = LUMBERMILL_2_ID;break;
-		case SMELTERY_1_ID : upgradedIndex = SMELTERY_2_ID;break;
-		case FOOD_FACTORY_4_ID: upgradedIndex = FOOD_FACTORY_5_ID;break;
-		case STORAGE_2_ID: upgradedIndex = STORAGE_3_ID;break; 
-		case HOUSE_2_ID: upgradedIndex = HOUSE_3_ID;break;
-		case ENERGY_CAPACITOR_2_ID: upgradedIndex = ENERGY_CAPACITOR_3_ID;break;
-		case FARM_2_ID : upgradedIndex = FARM_3_ID;break;
-		case FARM_3_ID : upgradedIndex = FARM_4_ID;break;
-		case FARM_4_ID: upgradedIndex = FARM_5_ID;break;
-		case LUMBERMILL_2_ID : upgradedIndex = LUMBERMILL_3_ID;break;
-		case LUMBERMILL_3_ID : upgradedIndex = LUMBERMILL_4_ID;break;
-		case LUMBERMILL_4_ID: upgradedIndex = LUMBERMILL_5_ID;break;
-		case SMELTERY_2_ID: upgradedIndex = SMELTERY_3_ID;break;
-		case SMELTERY_3_ID: upgradedIndex = SMELTERY_4_ID;break;
-		case SMELTERY_4_ID: upgradedIndex = SMELTERY_5_ID;break;
-		case HQ_3_ID: upgradedIndex = HQ_4_ID;break;
+		case LANDED_ZEPPELIN_ID: upgradedIndex = HQ_2_ID; level = 1; break;
+		case STORAGE_0_ID: upgradedIndex = STORAGE_1_ID; level = 0; break;
+		case FARM_1_ID: upgradedIndex = FARM_2_ID; level = 1;break;
+		case HQ_2_ID : upgradedIndex = HQ_3_ID; level = 2;break;
+		case LUMBERMILL_1_ID: upgradedIndex = LUMBERMILL_2_ID;  level = 1;break;
+		case SMELTERY_1_ID : upgradedIndex = SMELTERY_2_ID;  level = 1;break;
+		case FOOD_FACTORY_4_ID: upgradedIndex = FOOD_FACTORY_5_ID;  level = 4;break;
+		case STORAGE_2_ID: upgradedIndex = STORAGE_3_ID;  level = 2;break; 
+		case HOUSE_2_ID: upgradedIndex = HOUSE_3_ID;  level = 2;break;
+		case ENERGY_CAPACITOR_2_ID: upgradedIndex = ENERGY_CAPACITOR_3_ID;  level = 3;break;
+		case FARM_2_ID : upgradedIndex = FARM_3_ID;  level = 2;break;
+		case FARM_3_ID : upgradedIndex = FARM_4_ID; level = 3;break;
+		case FARM_4_ID: upgradedIndex = FARM_5_ID; level = 4;break;
+		case LUMBERMILL_2_ID : upgradedIndex = LUMBERMILL_3_ID; level = 2;break;
+		case LUMBERMILL_3_ID : upgradedIndex = LUMBERMILL_4_ID;  level = 3;break;
+		case LUMBERMILL_4_ID: upgradedIndex = LUMBERMILL_5_ID;  level = 4;break;
+		case SMELTERY_2_ID: upgradedIndex = SMELTERY_3_ID;  level = 2; break;
+		case SMELTERY_3_ID: upgradedIndex = SMELTERY_5_ID;  level = 3;break;
+		case HQ_3_ID: upgradedIndex = HQ_4_ID;  level = 3;break;
 		}
 	}
 
@@ -206,7 +207,7 @@ public class Building : Structure {
 		//sync with hospital.cs, rollingShop.cs
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (canBeUpgraded && level < GameMaster.colonyController.hq.level) {
+		if (upgradedIndex != -1 && level < GameMaster.colonyController.hq.level) {
 			rr.y = GUI_UpgradeButton(rr);
 		}
 	}
@@ -216,15 +217,15 @@ public class Building : Structure {
 			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
 				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 				{
-				Building upgraded = Structure.LoadStructure(id, (byte)(level + 1)) as Building;
+				Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
 					upgraded.Awake();
 					PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
 					byte bzero = (byte)0;
-				if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-				if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+					if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+					if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
 					Quaternion originalRotation = transform.rotation;
 					upgraded.SetBasement(basement, setPos);
-				upgraded.transform.localRotation = originalRotation;
+					upgraded.transform.localRotation = originalRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}

@@ -39,7 +39,7 @@ public class Farm : WorkBuilding {
 			List<PixelPosByte> cropsPositions = basement.GetRandomCells(MAX_CROPS);
 			if (cropsPositions.Count > 0) {
 				crops = new Plant[cropsPositions.Count];
-				crops[0] = Structure.LoadStructure(Structure.WHEAT_CROP_ID, 0) as Plant;
+				crops[0] = Structure.GetNewStructure(Structure.WHEAT_CROP_ID) as Plant;
 				for (int i =1; i< crops.Length; i++) {
 					crops[i] = Instantiate(crops[0]);
 					crops[i].gameObject.SetActive(true);
@@ -54,7 +54,7 @@ public class Farm : WorkBuilding {
 					if (crops[i] == null) {
 						PixelPosByte ppos = basement.GetRandomCell();
 						if (ppos != PixelPosByte.Empty) {
-							crops[i] = Structure.LoadStructure(Structure.WHEAT_CROP_ID, 0) as Plant;
+							crops[i] = Structure.GetNewStructure(Structure.WHEAT_CROP_ID) as Plant;
 							crops[i].gameObject.SetActive(true);
 							crops[i].SetBasement(basement, ppos);
 						}

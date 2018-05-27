@@ -65,13 +65,13 @@ public abstract class WorkBuilding : Building {
 		if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
 			if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 			{
-				WorkBuilding upgraded = Structure.LoadStructure(id, (byte)(level + 1)) as WorkBuilding;
+				WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
 				upgraded.Awake();
 				PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
 				byte bzero = (byte)0;
 				if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
 				if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
-				float workers = workersCount;
+				int workers = workersCount;
 				workersCount = 0;
 				Quaternion originalRotation = transform.rotation;
 				upgraded.SetBasement(basement, setPos);

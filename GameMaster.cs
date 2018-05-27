@@ -11,6 +11,7 @@ public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
 
+	public Constructor constructor;
 	public Transform camTransform, camBasis;
 	public static Vector3 camPos{get;private set;}
 	Vector3 camLookPoint; 
@@ -85,13 +86,6 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	void Awake() {
-		path = Application.dataPath + '/';
-		if (generateChunk) Constructor.main.ConstructChunk( 16 );
-		else { // loading data
-			string saveName = "default.sav";
-			if ( !LoadGame( path + saveName) ) Constructor.main.ConstructChunk( 16 );
-		}
-
 		gameSpeed = 1;
 		cameraUpdateBroadcast = new List<GameObject>();
 
@@ -108,6 +102,17 @@ public class GameMaster : MonoBehaviour {
 		guiPiece = Screen.height / 24f;
 		warProximity = 0.01f;
 		layerCutHeight = Chunk.CHUNK_SIZE;
+
+		path = Application.dataPath + '/';
+		string saveName = "default.sav";
+		if (generateChunk || !LoadGame( path + saveName) ) {
+			byte standartSize = 16;
+			Chunk.SetChunkSize( standartSize );
+			constructor.ConstructChunk( standartSize );
+		}
+		else { // loading data
+			
+		}
 	}
 
 	void Start() {
@@ -183,7 +188,7 @@ public class GameMaster : MonoBehaviour {
 			int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 
 			colonyController = gameObject.AddComponent<ColonyController>();
-			Structure s = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
+			Structure s = Structure.GetNewStructure(Structure.LANDED_ZEPPELIN_ID);
 			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
 			s.SetBasement(b, PixelPosByte.zero);
 			b.MakeIndestructible(true);
@@ -193,7 +198,7 @@ public class GameMaster : MonoBehaviour {
 			colonyController.SetHQ(s.GetComponent<HeadQuarters>());
 
 			if (xpos > 0) xpos --; else xpos++;
-			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
+			StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
 			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
 			//start resources
 			colonyController.storage.AddResources(ResourceType.metal_K,100);

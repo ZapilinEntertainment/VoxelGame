@@ -396,11 +396,12 @@ public class UI : MonoBehaviour {
 						foreach (Building bd in showingBuildingsList) {
 						if (bd.borderOnlyConstruction && !chosenSurfaceBlockIsBorderBlock) continue;
 							if (bd.requiredBasementMaterialId == -1 || bd.requiredBasementMaterialId == chosenSurfaceBlock.material_id) {
-								if (GUI.Button(rr, Localization.structureName[bd.nameIndex])) {
+								if (GUI.Button(rr, Localization.structureName[bd.id])) {
 									if (chosenStructure != bd ) {
 										chosenStructure = bd; 
 										chosenBuildingIndex = buildingIndex;
 										showBuildingCreateInfo = true;
+										bufferedResources = ResourcesCost.GetCost(bd.id);
 										if (chosenStructure.type != StructureType.MainStructure ) argument = 4; else argument = 3;
 										break;
 									}
@@ -413,7 +414,7 @@ public class UI : MonoBehaviour {
 							}
 							else {
 								Color c = GUI.color; GUI.color = Color.grey;
-								GUI.Label(rr, Localization.structureName[bd.nameIndex] + " (" + Localization.material_required + ResourceType.resourceTypesArray[bd.requiredBasementMaterialId].name+ " )", PoolMaster.GUIStyle_CenterOrientedLabel);
+								GUI.Label(rr, Localization.structureName[bd.id] + " (" + Localization.material_required + ResourceType.resourceTypesArray[bd.requiredBasementMaterialId].name+ " )", PoolMaster.GUIStyle_CenterOrientedLabel);
 								GUI.color = c;
 							}
 						rr.y += rr.height;
@@ -429,7 +430,7 @@ public class UI : MonoBehaviour {
 							GUI.DrawTexture( new Rect(rr.x + rr.width/2f, rr.y, k, rr.height ) , buildingQuad_icon_tx, ScaleMode.StretchToFill);
 							GUI.Label( new Rect(rr.x + rr.width/2f + 2 *k, rr.y, rr.width/2f, rr.height) , chosenStructure.innerPosition.x_size.ToString() + " x " + chosenStructure.innerPosition.z_size.ToString());
 							rr.y += rr.height;
-							foreach (ResourceContainer rc in ResourcesCost.info[chosenBuilding.resourcesContainIndex]) {
+							foreach (ResourceContainer rc in bufferedResources) {
 								GUI.Label(new Rect(rr.x, rr.y, rr.width * 0.75f, rr.height), rc.type.name);
 								float wx = rr.width * 0.875f; if (wx > rr.height) wx = rr.height;
 								GUI.DrawTexture( new Rect (rr.x + rr.width * 0.75f, rr.y, wx, wx), rc.type.icon, ScaleMode.ScaleToFit );
@@ -441,7 +442,7 @@ public class UI : MonoBehaviour {
 							if (chosenStructure.type == StructureType.MainStructure) {
 								if (GUI.Button ( new Rect(rr.x + rr.width/4f, rr.y, rr.width / 2f, rr.height), Localization.ui_build )) {
 									PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
-									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( ResourcesCost.info[chosenBuilding.resourcesContainIndex] )){
+										if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
 										if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
 											Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
 											s.gameObject.SetActive(true);
@@ -485,15 +486,15 @@ public class UI : MonoBehaviour {
 					}
 						
 					break;
-				case 4:
+				case 4: // размещение на сетке
 					GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); 
 					p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
 					SurfaceRect surpos = chosenStructure.innerPosition;
 					for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
 						for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
 							if ( i <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.x_size && j <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.z_size) {
-								if (GUI.Button(new Rect(buildingGridRect.x + i * p, buildingGridRect.y + buildingGridRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {								
-									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( ResourcesCost.info[(chosenStructure as Building).resourcesContainIndex] )) {
+								if (GUI.Button(new Rect(buildingGridRect.x + i * p, buildingGridRect.y + buildingGridRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {		
+									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
 										surpos.x = i; surpos.z = j;
 										if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
 											Structure s = Instantiate(chosenStructure);
@@ -501,7 +502,7 @@ public class UI : MonoBehaviour {
 											s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
 										}
 										else {
-											bufferedResources = ResourcesCost.info[(chosenStructure as Building).resourcesContainIndex];
+											bufferedResources = ResourcesCost.GetCost(chosenStructure.id);
 											bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
 											ChangeArgument(5);
 											break;
@@ -608,7 +609,7 @@ public class UI : MonoBehaviour {
 						}
 					}
 					rr.y += rr.height;
-					GUI.Label(rr,  Localization.structureName[chosenStructure.nameIndex] + " (" + Localization.info_level + b.level.ToString() + ") "); 
+					GUI.Label(rr,  Localization.structureName[chosenStructure.id]); 
 					rr.y += rr.height;
 
 					if (b.connectedToPowerGrid) {

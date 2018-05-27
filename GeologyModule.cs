@@ -20,7 +20,7 @@ public class GeologyModule : MonoBehaviour {
 		List<PixelPosByte> positions = surface.GetRandomCells(maxObjectsCount);
 		if (positions.Count == 0) return;
 		maxObjectsCount = positions.Count;
-		HarvestableResource containerPref = Structure.LoadStructure(Structure.CONTAINER_ID, 0) as HarvestableResource;
+		HarvestableResource containerPref = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
 		List<HarvestableResource> allBoulders = new List<HarvestableResource>();
 
 		int containersCount = 0;

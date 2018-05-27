@@ -177,8 +177,8 @@ public class ColonyController : MonoBehaviour {
 								if (positions.Count > 0) {
 									tentsCount -= positions.Count;
 									for (int j = 0 ; j < positions.Count; j++) {
-										Structure tent = Structure.LoadStructure(Structure.HOUSE_ID, 0);
-										tent.gameObject.SetActive(true);
+										House tent = Structure.GetNewStructure(Structure.HOUSE_0_ID) as House;
+										tent.Awake();
 										tent.SetBasement(correctSurface, positions[j]);
 									}
 								}

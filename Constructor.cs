@@ -15,7 +15,8 @@ public class Constructor : MonoBehaviour {
 		seed += System.DateTime.Now.Second;
 	}
 
-	public void ConstructChunk( int chunkSize ) {
+	public void ConstructChunk( byte chunkSize ) {
+		seed += System.DateTime.Now.Second;
 		int size = chunkSize;
 		int[,,] dat = new int[size, size ,size ];
 		float radius = size * Mathf.Sqrt(2);

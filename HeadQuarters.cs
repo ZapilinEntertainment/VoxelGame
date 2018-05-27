@@ -42,7 +42,7 @@ public class HeadQuarters : House {
 						if (level < 4) {
 								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 								{
-							Building upgraded =Structure.LoadStructure(id, (byte)(level+1)) as Building;
+							Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
 									upgraded.SetBasement(basement, PixelPosByte.zero);
 								}
 								else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
