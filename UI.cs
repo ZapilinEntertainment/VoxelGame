@@ -39,7 +39,10 @@ public class UI : MonoBehaviour {
 	void Awake() {
 		current = this;
 		mode = UIMode.View;
+
 		showBuildingCreateInfo = false;
+		showingBuildingsLevel = 0;
+
 		structureFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame"));
 		structureFrame.SetActive(false);
 		quadSelector = Instantiate(Resources.Load<GameObject>("Prefs/QuadSelector"));
@@ -378,11 +381,14 @@ public class UI : MonoBehaviour {
 						ChangeArgument(1);			
 					}
 					rr.y += rr.height;
-					GUI.DrawTexture(new Rect(rr.x + (showingBuildingsLevel - 1) * rr.height, rr.y, rr.height, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+					//level button
+
+					if (showingBuildingsLevel != 0)	GUI.DrawTexture(new Rect(rr.x + (showingBuildingsLevel - 1) * rr.height, rr.y, rr.height, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 					if (GameMaster.colonyController.hq != null) {
-						for (int bl = 1; bl <= GameMaster.colonyController.hq.level; bl++) {
+						for (byte bl = 1; bl <= GameMaster.colonyController.hq.level; bl++) {
 							if (GUI.Button(new Rect(rr.x + (bl - 1) * rr.height, rr.y, rr.height, rr.height), bl.ToString())) {
 								showingBuildingsLevel = (byte)bl;
+								showingBuildingsList = Structure.GetApplicableBuildingsList(bl, chosenSurfaceBlock);
 								ChangeArgument(3);
 							}
 						}
@@ -469,26 +475,28 @@ public class UI : MonoBehaviour {
 				}
 					// сетка для размещения постройки
 					if (argument != 4) GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); // чтобы не дублировалось
-					float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
-					int n = 0;
-					while ( n < chosenSurfaceBlock.surfaceObjects.Count) {
-						if (chosenSurfaceBlock.surfaceObjects[n] == null) {chosenSurfaceBlock.RequestAnnihilationAtIndex(n); n++; continue;}
-						Texture t = PoolMaster.quadSelector_tx;
-						switch (chosenSurfaceBlock.surfaceObjects[n].type) {
-						case StructureType.HarvestableResources: t = PoolMaster.orangeSquare_tx;break;
-						case StructureType.MainStructure: t = whiteSpecial_tx;break;
-						case StructureType.Plant: t = greenSquare_tx;break;
-						case StructureType.Structure : t = whiteSquare_tx;break;
+					if (chosenSurfaceBlock.cellsStatus != 0 ) {
+						float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
+						int n = 0;
+						while ( n < chosenSurfaceBlock.surfaceObjects.Count) {
+							if (chosenSurfaceBlock.surfaceObjects[n] == null) {chosenSurfaceBlock.RequestAnnihilationAtIndex(n); n++; continue;}
+							Texture t = PoolMaster.quadSelector_tx;
+							switch (chosenSurfaceBlock.surfaceObjects[n].type) {
+							case StructureType.HarvestableResources: t = PoolMaster.orangeSquare_tx;break;
+							case StructureType.MainStructure: t = whiteSpecial_tx;break;
+							case StructureType.Plant: t = greenSquare_tx;break;
+							case StructureType.Structure : t = whiteSquare_tx;break;
+							}
+							SurfaceRect sr= chosenSurfaceBlock.surfaceObjects[n].innerPosition;
+							GUI.DrawTexture(new Rect(buildingGridRect.x + sr.x * p, buildingGridRect.y + buildingGridRect.height -  (sr.z+ sr.z_size) * p , p * sr.x_size, p * sr.z_size), t, ScaleMode.StretchToFill);
+							n++;
 						}
-						SurfaceRect sr= chosenSurfaceBlock.surfaceObjects[n].innerPosition;
-						GUI.DrawTexture(new Rect(buildingGridRect.x + sr.x * p, buildingGridRect.y + buildingGridRect.height -  (sr.z+ sr.z_size) * p , p * sr.x_size, p * sr.z_size), t, ScaleMode.StretchToFill);
-						n++;
-					}
-						
+					}	
 					break;
 				case 4: // размещение на сетке
+					{
 					GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); 
-					p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
+					float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
 					SurfaceRect surpos = chosenStructure.innerPosition;
 					for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
 						for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
@@ -514,6 +522,7 @@ public class UI : MonoBehaviour {
 						}
 					}
 					goto case 3;
+					}
 					break;
 				case 5: // подтверждение на снос при строительстве
 					GUI.Box(acceptBox, Localization.ui_accept_destruction_on_clearing);

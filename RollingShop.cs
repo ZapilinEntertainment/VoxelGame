@@ -8,7 +8,7 @@ public class RollingShop : WorkBuilding {
 	bool showModes = false;
 	const float GEARS_UP_LIMIT = 3, GEARS_UPGRADE_STEP = 0.1f;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		mode = RollingShopMode.NoActivity;
 	}

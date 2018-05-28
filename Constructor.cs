@@ -60,8 +60,9 @@ public class Constructor : MonoBehaviour {
 		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);
 
 		GameObject pref;
-		if (Random.value > 0.5f) pref = Resources.Load<GameObject>("Structures/Tree of Life") ; else pref = Resources.Load<GameObject>("Structures/LifeStone");
-		MultiblockStructure ms = Instantiate(pref).GetComponent<MultiblockStructure>();
+		MultiblockStructure ms = null;
+		if (Random.value > 0.5f) ms = Structure.GetNewStructure(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;
+		else ms = Structure.GetNewStructure(Structure.LIFESTONE_ID) as MultiblockStructure;
 		SurfaceBlock sb = chunk.GetSurfaceBlock(x,z);
 		ms.SetBasement(sb, PixelPosByte.zero);
 	}

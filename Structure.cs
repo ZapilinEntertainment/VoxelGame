@@ -16,7 +16,7 @@ public class Structure : MonoBehaviour {
 	public bool randomRotation = false, rotate90only = true;
 	public bool showOnGUI{get; protected set;}
 	public float gui_ypos = 0;
-	public int id {get; protected set;}
+	public int id {get; private set;}
 	[SerializeField]
 	protected Renderer myRenderer;
 	public bool visible {get;protected set;}
@@ -32,6 +32,7 @@ public class Structure : MonoBehaviour {
 	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59;
 	public const int TOTAL_STRUCTURES_COUNT = 60;
 	static Structure[] prefs;
+	static List<Building> allConstructableBuildingsList;
 
 	public static void LoadPrefs() {
 		prefs = new Structure[TOTAL_STRUCTURES_COUNT];
@@ -42,7 +43,7 @@ public class Structure : MonoBehaviour {
 		prefs[LANDED_ZEPPELIN_ID] = Resources.Load<Structure>("Structures/ZeppelinBasement");
 		prefs[TREE_OF_LIFE_ID] = Resources.Load<Structure>("Structures/Tree of Life");
 		prefs[STORAGE_0_ID] = Resources.Load<Structure>("Structures/Storage_level_0");
-		prefs[STORAGE_1_ID] = Resources.Load<Structure>("Structures/Buildings/Storage_level_1");
+		prefs[STORAGE_1_ID] = Resources.Load<Structure>("Structures/Buildings/Storage_level_1"); 
 		prefs[STORAGE_2_ID] =  Resources.Load<Structure>("Structures/Buildings/Storage_level_2");
 		prefs[STORAGE_3_ID] = Resources.Load<Structure>("Structures/Buildings/Storage_level_3");
 		prefs[STORAGE_5_ID] = Resources.Load<Structure>("Structures/Blocks/storageBlock_level_5");
@@ -77,7 +78,7 @@ public class Structure : MonoBehaviour {
 		prefs[SMELTERY_3_ID] = Resources.Load<Structure>("Structures/Buildings/Smeltery_level_3");
 		prefs[SMELTERY_5_ID] = Resources.Load<Structure>("Structures/Blocks/smelteryBlock_level_5");
 		prefs[WIND_GENERATOR_1_ID] = Resources.Load<Structure>("Structures/Buildings/windGenerator_level_1");
-		prefs[BIOGENERATOR_2_ID] = Resources.Load<Structure>("Structures/Buildings/Biogenerator_level_1");
+		prefs[BIOGENERATOR_2_ID] = Resources.Load<Structure>("Structures/Buildings/Biogenerator_level_2");
 		prefs[HOSPITAL_2_ID] = Resources.Load<Structure>("Structures/Buildings/Hospital_level_2");
 		prefs[MINERAL_POWERPLANT_2_ID] = Resources.Load<Structure>("Structures/Buildings/mineralPP_level_2");
 		prefs[ORE_ENRICHER_2_ID] = Resources.Load<Structure>("Structures/Buildings/oreEnricher_level_2");
@@ -87,23 +88,74 @@ public class Structure : MonoBehaviour {
 		prefs[GRPH_REACTOR_4_ID] = Resources.Load<Structure>("Structures/Buildings/graphoniumReactor_level_4");
 		prefs[PLASTICS_FACTORY_4_ID] = Resources.Load<Structure>("Structures/Buildings/plasticsFactory_level_4");
 		prefs[FOOD_FACTORY_4_ID] = Resources.Load<Structure>("Structures/Buildings/foodFactory_level_4");
-		prefs[FOOD_FACTORY_5_ID] = Resources.Load<Structure>("Structures/Blocks/foodFactory_level_5");
-		prefs[GRPH_ENRICHER_ID] = Resources.Load<Structure>("Structures/Buildings/graphoniumEnricher_level_4");
+		prefs[FOOD_FACTORY_5_ID] = Resources.Load<Structure>("Structures/Blocks/foodFactoryBlock_level_5");
+		prefs[GRPH_ENRICHER_ID] = Resources.Load<Structure>("Structures/Buildings/graphoniumEnricher_level_3");
 		prefs[XSTATION_ID] = Resources.Load<Structure>("Structures/Buildings/XStation_level_3");
 		prefs[QUANTUM_ENERGY_TRANSMITTER_ID] = Resources.Load<Structure>("Structures/Buildings/quantumEnergyTransmitter_level_4");
 		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_5");
+	
+		allConstructableBuildingsList = new List<Building>();
+		allConstructableBuildingsList.Add( GetNewStructure(WIND_GENERATOR_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(HOUSE_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FARM_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(ENERGY_CAPACITOR_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(MINE_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(DOCK_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+
+		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(HOUSE_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FARM_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(ENERGY_CAPACITOR_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(ORE_ENRICHER_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(BIOGENERATOR_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(MINERAL_POWERPLANT_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(HOSPITAL_2_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);	
+		allConstructableBuildingsList.Add( GetNewStructure(ROLLING_SHOP_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+
+		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(HOUSE_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FARM_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(ENERGY_CAPACITOR_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(MINI_GRPH_REACTOR_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FUEL_FACILITY_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(XSTATION_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(GRPH_ENRICHER_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+
+		allConstructableBuildingsList.Add( GetNewStructure(FARM_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(PLASTICS_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(GRPH_REACTOR_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(QUANTUM_ENERGY_TRANSMITTER_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+
+		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(HOUSE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FARM_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(CHEMICAL_FACTORY_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+
 	}
+
 	public static Structure GetNewStructure(int s_id) {
 		Structure s = prefs[s_id];
 		if (s == null) return null;
 		s = Instantiate(s);
 		if ( !s.gameObject.activeSelf ) s.gameObject.SetActive(true);
 		s.id = s_id;
-		s.Awake();
+		s.Prepare();
 		return s;
 	}
 
-	void Awake() {
+	virtual public void Prepare() {
 		PrepareStructure();			
 	}
 	protected void PrepareStructure() {
@@ -215,7 +267,7 @@ public class Structure : MonoBehaviour {
 	protected void SetStructureData(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
 		innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.x_size, innerPosition.z_size);
-		b.AddCellStructure(this, pos);
+		b.AddStructure(this);
 		if (isBasement) {
 			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {
 				ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
@@ -283,6 +335,19 @@ public class Structure : MonoBehaviour {
 		if (x != showOnGUI) {
 			showOnGUI = x;
 		}
+	}
+
+	public static List<Building> GetApplicableBuildingsList(byte s_level, SurfaceBlock sblock) {
+		List<Building> buildingsList = new List<Building>();
+		foreach (Building b in allConstructableBuildingsList) {
+			if (b == null ) continue;
+			else {
+				if (b.level == s_level)	buildingsList.Add(b);
+				else {if (b.level > s_level) break;}
+			}
+		}
+		print (buildingsList.Count);
+		return buildingsList;
 	}
 
 	void OnDestroy() {

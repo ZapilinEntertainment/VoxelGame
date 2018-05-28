@@ -76,9 +76,6 @@ public class Zeppelin : Transport {
 								landed = true;
 								anchor.gameObject.SetActive(false);
 								anchorChain_as.enabled = false;
-
-								GameMaster.colonyController = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
-
 								Structure hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
 								hq.SetBasement(landingPlace, PixelPosByte.zero);
 

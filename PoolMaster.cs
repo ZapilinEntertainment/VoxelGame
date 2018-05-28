@@ -24,7 +24,7 @@ public class PoolMaster : MonoBehaviour {
 	public int treesPool_buffer_size =16, grassPool_buffer_size = 16;
 	float treeClearTimer = 0, grassClearTimer = 0, shipsClearTimer = 0,clearTime = 30;
 
-	void Awake() {
+	public void Load() {
 		if (current != null && current != this) Destroy(current); 
 		current = this;
 

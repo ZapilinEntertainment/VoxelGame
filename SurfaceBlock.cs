@@ -39,7 +39,7 @@ public class SurfaceBlock : Block {
 	public MeshRenderer surfaceRenderer {get;protected set;}
 	public Grassland grassland{get;protected set;}
 	public List<Structure> surfaceObjects{get;protected set;}
-	public sbyte cellsStatus {get; protected set;} // -1 is not stated, 1 is full, 0 is empty;
+	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures = 0;
 	public bool[,] map {get; protected set;}
 	public BlockRendererController structureBlock;
@@ -68,20 +68,23 @@ public class SurfaceBlock : Block {
 
 	public bool[,] GetBooleanMap() {
 			map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-			for (int i =0; i < map.GetLength(0); i++) {
-				for (int j =0; j< map.GetLength(1); j++) map[i,j] = false;
+			for (int i =0; i < INNER_RESOLUTION; i++) {
+				for (int j =0; j< INNER_RESOLUTION; j++) map[i,j] = false;
 			}
 			if (surfaceObjects.Count != 0) {
 				int a = 0;
 				while (a < surfaceObjects.Count) {
-				if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
-				SurfaceRect sr = surfaceObjects[a].innerPosition;					
-					for (int i =0; i< sr.x_size; i++) {
-						for (int j =0; j < sr.z_size; j++) {
+					if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
+					SurfaceRect sr = surfaceObjects[a].innerPosition;	
+					int i = 0, j=0;
+				while ( i < sr.x_size && sr.x + i < INNER_RESOLUTION) {
+					while (j < sr.z_size && sr.z + j < INNER_RESOLUTION) {
 							map[sr.x + i, sr.z + j] = true;
+							j++;
 						}
+						i++;
 					}
-					a++;
+						a++;
 				}
 				}
 			return map;
@@ -103,6 +106,10 @@ public class SurfaceBlock : Block {
 
 	public void AddStructure(Structure s) { // with autoreplacing
 		if (s == null) return;
+		if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION  ) {
+			print ("error in structure size");
+			return;
+		}
 		if (s.innerPosition.x_size == 1 && s.innerPosition.z_size == 1) {AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); return;}
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;

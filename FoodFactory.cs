@@ -9,7 +9,7 @@ public class FoodFactory : WorkBuilding {
 	Storage storage;
 	const float BUFFER_LIMIT = 10;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		storage = GameMaster.colonyController.storage;
 	}

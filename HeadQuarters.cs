@@ -69,7 +69,6 @@ public class HeadQuarters : House {
 									}
 									SurfaceBlock upperSurface = upperBlock as SurfaceBlock;	
 									Building upgraded = Instantiate(Resources.Load<Building>("Prefs/HQ_addon"));
-									upgraded.Awake();
 									upgraded.SetBasement(upperSurface, PixelPosByte.zero);
 									level++;
 							}

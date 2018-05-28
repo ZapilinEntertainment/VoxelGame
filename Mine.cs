@@ -10,7 +10,7 @@ public class Mine : WorkBuilding {
 	public List<Structure> elevators;
 	public bool awaitingElevatorBuilding = false;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		elevators = new List<Structure>();
 	}

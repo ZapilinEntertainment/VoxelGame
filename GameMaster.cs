@@ -23,7 +23,7 @@ public class GameMaster : MonoBehaviour {
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	int camCullingMask = 1;
 	public static Chunk mainChunk; 
-	public static ColonyController colonyController; 
+	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
 	public  LineRenderer systemDrawLR;
 	static string path;
@@ -102,6 +102,10 @@ public class GameMaster : MonoBehaviour {
 		guiPiece = Screen.height / 24f;
 		warProximity = 0.01f;
 		layerCutHeight = Chunk.CHUNK_SIZE;
+		colonyController = gameObject.AddComponent<ColonyController>();
+		colonyController.CreateStorage();
+		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+		pm.Load();
 
 		path = Application.dataPath + '/';
 		string saveName = "default.sav";
@@ -187,7 +191,7 @@ public class GameMaster : MonoBehaviour {
 			int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 			int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 
-			colonyController = gameObject.AddComponent<ColonyController>();
+			if (colonyController == null )colonyController = gameObject.AddComponent<ColonyController>();
 			Structure s = Structure.GetNewStructure(Structure.LANDED_ZEPPELIN_ID);
 			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
 			s.SetBasement(b, PixelPosByte.zero);
@@ -199,7 +203,7 @@ public class GameMaster : MonoBehaviour {
 
 			if (xpos > 0) xpos --; else xpos++;
 			StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
-			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
+			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.zero);
 			//start resources
 			colonyController.storage.AddResources(ResourceType.metal_K,100);
 			colonyController.storage.AddResources(ResourceType.metal_M,50);
@@ -340,6 +344,7 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	public void AddToCameraUpdateBroadcast(GameObject g) {
+		if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
 		if (g != null) cameraUpdateBroadcast.Add(g);
 	}
 

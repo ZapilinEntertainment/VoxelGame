@@ -7,7 +7,7 @@ public class HarvestableResource : Structure {
 	public float count1;
 
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareStructure();
 		mainResource = ResourceType.Nothing; 
 		hp = maxHp;

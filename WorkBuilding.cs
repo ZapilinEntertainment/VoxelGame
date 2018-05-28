@@ -11,7 +11,7 @@ public abstract class WorkBuilding : Building {
 	const float WORKFLOW_GAIN = 1;
 	public float workflowToProcess_setValue = 1;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 	}
 	protected void PrepareWorkbuilding() {
@@ -66,7 +66,6 @@ public abstract class WorkBuilding : Building {
 			if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 			{
 				WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
-				upgraded.Awake();
 				PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
 				byte bzero = (byte)0;
 				if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);

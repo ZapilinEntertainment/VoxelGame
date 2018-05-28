@@ -12,13 +12,12 @@ public class Building : Structure {
 	public float energySurplus = 0, energyCapacity = 0;
 	public  bool connectedToPowerGrid {get; protected set;}// подключение, контролирующееся игроком
 	public int requiredBasementMaterialId = -1;
-	[SerializeField]
-	public byte level {get; protected set;}
+	public byte level{get;protected set;}
 	[SerializeField]
 	protected Renderer[] myRenderers;
 	protected static ResourceContainer[] requiredResources;
 
-	public void Awake() {PrepareBuilding();}
+	override public void Prepare() {PrepareBuilding();}
 
 	protected void	PrepareBuilding() {
 		PrepareStructure();
@@ -28,7 +27,7 @@ public class Building : Structure {
 		connectedToPowerGrid = false;
 		switch (id) {
 		case LANDED_ZEPPELIN_ID: upgradedIndex = HQ_2_ID; level = 1; break;
-		case STORAGE_0_ID: upgradedIndex = STORAGE_1_ID; level = 0; break;
+		case STORAGE_0_ID: level = 0; break;
 		case FARM_1_ID: upgradedIndex = FARM_2_ID; level = 1;break;
 		case HQ_2_ID : upgradedIndex = HQ_3_ID; level = 2;break;
 		case LUMBERMILL_1_ID: upgradedIndex = LUMBERMILL_2_ID;  level = 1;break;
@@ -46,6 +45,44 @@ public class Building : Structure {
 		case SMELTERY_2_ID: upgradedIndex = SMELTERY_3_ID;  level = 2; break;
 		case SMELTERY_3_ID: upgradedIndex = SMELTERY_5_ID;  level = 3;break;
 		case HQ_3_ID: upgradedIndex = HQ_4_ID;  level = 3;break;
+		case MINE_ID:
+		case WIND_GENERATOR_1_ID:
+		case DOCK_ID:
+		case STORAGE_1_ID:
+		case ENERGY_CAPACITOR_1_ID:	
+			level = 1;
+			break;
+		case ORE_ENRICHER_2_ID:
+		case ROLLING_SHOP_ID:
+		case BIOGENERATOR_2_ID:
+		case HOSPITAL_2_ID:
+		case MINERAL_POWERPLANT_2_ID:
+			level = 2;
+			break;
+		case FUEL_FACILITY_3_ID:
+		case GRPH_ENRICHER_ID:
+		case XSTATION_ID:
+		case STORAGE_3_ID:
+		case HOUSE_3_ID:
+		case ENERGY_CAPACITOR_3_ID:
+		case MINI_GRPH_REACTOR_ID:
+			level = 3;
+			break;
+		case GRPH_REACTOR_4_ID:
+		case QUANTUM_ENERGY_TRANSMITTER_ID:
+		case PLASTICS_FACTORY_4_ID:
+		case HQ_4_ID:
+			level = 4;
+			break;
+		case CHEMICAL_FACTORY_ID:
+		case STORAGE_5_ID: 
+		case HOUSE_5_ID:
+		case FARM_5_ID:
+		case LUMBERMILL_5_ID:
+		case FOOD_FACTORY_5_ID:
+		case SMELTERY_5_ID:
+			level = 5;
+			break;				
 		}
 	}
 
@@ -217,8 +254,7 @@ public class Building : Structure {
 			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
 				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 				{
-				Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
-					upgraded.Awake();
+					Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
 					PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
 					byte bzero = (byte)0;
 					if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);

@@ -16,7 +16,7 @@ public class Plant : Structure {
 	public float growth;
 	public PlantType plantType{get;protected set;}
 
-	void Awake() {
+	override public void Prepare() {
 		innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.Plant;
 		full = false;
 		switch ( id ) {

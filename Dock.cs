@@ -17,7 +17,7 @@ public class Dock : WorkBuilding {
 	const float LOADING_TIME = 10;
 	float loadingTimer = 0;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;

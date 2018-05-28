@@ -44,8 +44,6 @@ public class ColonyController : MonoBehaviour {
 	float starvationTimer, starvationTime = 600, real_birthrate = 0;
 
 	void Awake() {
-		GameMaster.colonyController = this;
-		if (storage == null) storage = gameObject.AddComponent<Storage>();
 		GameMaster.realMaster.everydayUpdateList.Add(this);
 		GameMaster.realMaster.everyYearUpdateList.Add(this);
 		gears_coefficient = 1;
@@ -62,6 +60,10 @@ public class ColonyController : MonoBehaviour {
 		rollingShops = new List<RollingShop>();
 		graphoniumEnrichers = new List<GraphoniumEnricher>();
 		chemicalFactories = new List<ChemicalFactory>();
+	}
+
+	public void CreateStorage() { // call from game master
+		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
 	}
 
 	void Update() {
@@ -178,7 +180,6 @@ public class ColonyController : MonoBehaviour {
 									tentsCount -= positions.Count;
 									for (int j = 0 ; j < positions.Count; j++) {
 										House tent = Structure.GetNewStructure(Structure.HOUSE_0_ID) as House;
-										tent.Awake();
 										tent.SetBasement(correctSurface, positions[j]);
 									}
 								}

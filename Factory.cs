@@ -14,7 +14,7 @@ public class Factory : WorkBuilding {
 	public FactorySpecialization specialization;
 	protected float outputResourcesBuffer = 0;
 
-	void Awake () {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		recipe = Recipe.NoRecipe;
 		inputResourcesBuffer = 0;

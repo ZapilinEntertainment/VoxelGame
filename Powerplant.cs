@@ -11,7 +11,7 @@ public class Powerplant : WorkBuilding {
 	 float output = 100, fuelCount = 1, fuelBurnTime = 10, fuelLoadTryingTime = 2;
 	float ftimer = 0;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		switch (fuelType) {
 		case GeneratorFuel.Biofuel: fuel = ResourceType.Food;break;
