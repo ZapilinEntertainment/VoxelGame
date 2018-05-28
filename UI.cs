@@ -114,7 +114,7 @@ public class UI : MonoBehaviour {
 									if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
 									chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
 									// подборка зданий
-									showingBuildingsList = new List<Building>();
+								if (showingBuildingsLevel != 0) showingBuildingsList = Structure.GetApplicableBuildingsList(showingBuildingsLevel, chosenSurfaceBlock);
 								break;
 							case BlockType.Cube:
 								chosenCubeBlock = b.GetComponent<CubeBlock>();
@@ -450,7 +450,7 @@ public class UI : MonoBehaviour {
 									PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
 										if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
 										if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
-											Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
+												Structure s = Structure.GetNewStructure(chosenStructure.id);
 											s.gameObject.SetActive(true);
 											s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
 											ChangeArgument(3);
@@ -505,7 +505,7 @@ public class UI : MonoBehaviour {
 									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
 										surpos.x = i; surpos.z = j;
 										if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
-											Structure s = Instantiate(chosenStructure);
+												Structure s = Structure.GetNewStructure(chosenStructure.id);
 											s.gameObject.SetActive(true);
 											s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
 										}
@@ -528,7 +528,7 @@ public class UI : MonoBehaviour {
 					GUI.Box(acceptBox, Localization.ui_accept_destruction_on_clearing);
 					if (GUI.Button (new Rect(acceptBox.x, acceptBox.y + acceptBox.height/2f, acceptBox.width/2f, acceptBox.height/2f), Localization.ui_accept)) {
 						if ( bufferedPosition != PixelPosByte.Empty ) {
-							Structure s = Instantiate(chosenStructure);
+							Structure s = Structure.GetNewStructure(chosenStructure.id);
 							s.gameObject.SetActive(true);
 							s.SetBasement(chosenSurfaceBlock, bufferedPosition);
 							ChangeArgument(3);

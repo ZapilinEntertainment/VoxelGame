@@ -35,7 +35,7 @@ public class Building : Structure {
 		case FOOD_FACTORY_4_ID: upgradedIndex = FOOD_FACTORY_5_ID;  level = 4;break;
 		case STORAGE_2_ID: upgradedIndex = STORAGE_3_ID;  level = 2;break; 
 		case HOUSE_2_ID: upgradedIndex = HOUSE_3_ID;  level = 2;break;
-		case ENERGY_CAPACITOR_2_ID: upgradedIndex = ENERGY_CAPACITOR_3_ID;  level = 3;break;
+		case ENERGY_CAPACITOR_2_ID: upgradedIndex = ENERGY_CAPACITOR_3_ID;  level = 2;break;
 		case FARM_2_ID : upgradedIndex = FARM_3_ID;  level = 2;break;
 		case FARM_3_ID : upgradedIndex = FARM_4_ID; level = 3;break;
 		case FARM_4_ID: upgradedIndex = FARM_5_ID; level = 4;break;
@@ -45,11 +45,13 @@ public class Building : Structure {
 		case SMELTERY_2_ID: upgradedIndex = SMELTERY_3_ID;  level = 2; break;
 		case SMELTERY_3_ID: upgradedIndex = SMELTERY_5_ID;  level = 3;break;
 		case HQ_3_ID: upgradedIndex = HQ_4_ID;  level = 3;break;
+			
 		case MINE_ID:
 		case WIND_GENERATOR_1_ID:
 		case DOCK_ID:
 		case STORAGE_1_ID:
 		case ENERGY_CAPACITOR_1_ID:	
+		case HOUSE_1_ID:
 			level = 1;
 			break;
 		case ORE_ENRICHER_2_ID:
@@ -72,9 +74,9 @@ public class Building : Structure {
 		case QUANTUM_ENERGY_TRANSMITTER_ID:
 		case PLASTICS_FACTORY_4_ID:
 		case HQ_4_ID:
+		case CHEMICAL_FACTORY_ID:
 			level = 4;
 			break;
-		case CHEMICAL_FACTORY_ID:
 		case STORAGE_5_ID: 
 		case HOUSE_5_ID:
 		case FARM_5_ID:
@@ -85,8 +87,7 @@ public class Building : Structure {
 			break;				
 		}
 	}
-
-
+		
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);

@@ -5,7 +5,7 @@ using UnityEngine;
 public enum StructureType {NotAssigned, Plant, HarvestableResources, Structure, MainStructure}
 public class Structure : MonoBehaviour {
 	public SurfaceBlock basement{get;protected set;}
-	public SurfaceRect innerPosition {get;protected set;}
+	public SurfaceRect innerPosition;
 	public bool borderOnlyConstruction{get;protected set;}
 	public bool isArtificial {get;protected set;}
 	public bool isBasement{get;protected set;}
@@ -92,7 +92,7 @@ public class Structure : MonoBehaviour {
 		prefs[GRPH_ENRICHER_ID] = Resources.Load<Structure>("Structures/Buildings/graphoniumEnricher_level_3");
 		prefs[XSTATION_ID] = Resources.Load<Structure>("Structures/Buildings/XStation_level_3");
 		prefs[QUANTUM_ENERGY_TRANSMITTER_ID] = Resources.Load<Structure>("Structures/Buildings/quantumEnergyTransmitter_level_4");
-		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_5");
+		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_4");
 	
 		allConstructableBuildingsList = new List<Building>();
 		allConstructableBuildingsList.Add( GetNewStructure(WIND_GENERATOR_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -134,6 +134,7 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(PLASTICS_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(GRPH_REACTOR_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(QUANTUM_ENERGY_TRANSMITTER_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(CHEMICAL_FACTORY_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 
 		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(HOUSE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -141,7 +142,6 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
-		allConstructableBuildingsList.Add( GetNewStructure(CHEMICAL_FACTORY_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 
 	}
 
@@ -213,9 +213,9 @@ public class Structure : MonoBehaviour {
 		case ENERGY_CAPACITOR_1_ID: innerPosition = new SurfaceRect (0,0, 2, 4); type = StructureType.Structure; break;
 		case ENERGY_CAPACITOR_2_ID:
 		case ENERGY_CAPACITOR_3_ID: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; break;
-		case FARM_1_ID:
-		case FARM_2_ID:
-		case FARM_3_ID:
+		case FARM_1_ID: innerPosition = new SurfaceRect(0,0,2,4); type = StructureType.MainStructure; break;
+		case FARM_2_ID: innerPosition = new SurfaceRect(0,0,4,6); type = StructureType.MainStructure; break;
+		case FARM_3_ID: innerPosition = new SurfaceRect(0,0,4,8); type = StructureType.MainStructure; break;
 		case FARM_4_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			break;
@@ -225,6 +225,8 @@ public class Structure : MonoBehaviour {
 		case LUMBERMILL_1_ID:
 		case LUMBERMILL_2_ID:
 		case LUMBERMILL_3_ID:
+			innerPosition = new SurfaceRect(0,0,2,6); type = StructureType.MainStructure;
+			break;
 		case LUMBERMILL_4_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			break;
@@ -267,6 +269,7 @@ public class Structure : MonoBehaviour {
 	protected void SetStructureData(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
 		innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.x_size, innerPosition.z_size);
+
 		b.AddStructure(this);
 		if (isBasement) {
 			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {
@@ -346,7 +349,6 @@ public class Structure : MonoBehaviour {
 				else {if (b.level > s_level) break;}
 			}
 		}
-		print (buildingsList.Count);
 		return buildingsList;
 	}
 

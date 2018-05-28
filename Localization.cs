@@ -77,6 +77,10 @@ public static class Localization {
 			structureName[Structure.MINE_ELEVATOR_ID] = "Mine elevator"; 
 			structureName[Structure.LIFESTONE_ID] = "Life stone"; 
 			structureName[Structure.HOUSE_0_ID] = "Tent"; 
+			structureName[Structure.HOUSE_1_ID] = "Small house";
+			structureName[Structure.HOUSE_2_ID] = "House";
+			structureName[Structure.HOUSE_3_ID] = "Advanced house";
+			structureName[Structure.HOUSE_5_ID] = "Residential Block";
 			structureName[Structure.DOCK_ID] = "Basic dock"; 
 			structureName[Structure.ENERGY_CAPACITOR_1_ID] = "Power capacitor (lvl 1)"; 
 			structureName[Structure.ENERGY_CAPACITOR_2_ID] = "Power capacitor (lvl 2)"; 

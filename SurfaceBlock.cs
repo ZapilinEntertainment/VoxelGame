@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public struct SurfaceRect {
 	public byte x,z,x_size,z_size;
 	public SurfaceRect(byte f_x, byte f_z, byte f_xsize, byte f_zsize) {
@@ -103,14 +104,20 @@ public class SurfaceBlock : Block {
 			}
 		}
 	}
-
+	/// <summary>
+	/// Do not use directly, use "Set Basement" instead
+	/// </summary>
+	/// <param name="s">S.</param>
 	public void AddStructure(Structure s) { // with autoreplacing
 		if (s == null) return;
 		if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION  ) {
 			print ("error in structure size");
 			return;
 		}
-		if (s.innerPosition.x_size == 1 && s.innerPosition.z_size == 1) {AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); return;}
+		if (s.innerPosition.x_size == 1 && s.innerPosition.z_size == 1) {
+			AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); 
+			return;
+		}
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
@@ -174,6 +181,11 @@ public class SurfaceBlock : Block {
 		structureBlock = null;
 	}
 
+	/// <summary>
+	/// Do not use directly, use "Set Basement" instead
+	/// </summary>
+	/// <param name="s">S.</param>
+	/// <param name="pos">Position.</param>
 	public void AddCellStructure(Structure s, PixelPosByte pos) { 
 		if (s == null) return;
 		if (map[pos.x, pos.y] == true) {
