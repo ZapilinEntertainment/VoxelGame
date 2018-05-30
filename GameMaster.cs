@@ -11,6 +11,7 @@ public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
 
+	public Constructor constructor;
 	public Transform camTransform, camBasis;
 	public static Vector3 camPos{get;private set;}
 	Vector3 camLookPoint; 
@@ -22,7 +23,7 @@ public class GameMaster : MonoBehaviour {
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	int camCullingMask = 1;
 	public static Chunk mainChunk; 
-	public static ColonyController colonyController; 
+	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
 	public  LineRenderer systemDrawLR;
 	static string path;
@@ -76,6 +77,7 @@ public class GameMaster : MonoBehaviour {
 	// FOR TESTING
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
+	public bool generateChunk = true;
 	//---------
 
 	public GameMaster () {
@@ -86,7 +88,6 @@ public class GameMaster : MonoBehaviour {
 	void Awake() {
 		gameSpeed = 1;
 		cameraUpdateBroadcast = new List<GameObject>();
-		path = Application.dataPath;
 
 		everydayUpdateList = new List<Component>();
 		everyYearUpdateList = new List<Component>();
@@ -101,6 +102,21 @@ public class GameMaster : MonoBehaviour {
 		guiPiece = Screen.height / 24f;
 		warProximity = 0.01f;
 		layerCutHeight = Chunk.CHUNK_SIZE;
+		colonyController = gameObject.AddComponent<ColonyController>();
+		colonyController.CreateStorage();
+		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+		pm.Load();
+
+		path = Application.dataPath + '/';
+		string saveName = "default.sav";
+		if (generateChunk || !LoadGame( path + saveName) ) {
+			byte standartSize = 16;
+			Chunk.SetChunkSize( standartSize );
+			constructor.ConstructChunk( standartSize );
+		}
+		else { // loading data
+			
+		}
 	}
 
 	void Start() {
@@ -175,8 +191,8 @@ public class GameMaster : MonoBehaviour {
 			int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 			int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
 
-			colonyController = gameObject.AddComponent<ColonyController>();
-			Structure s = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
+			if (colonyController == null )colonyController = gameObject.AddComponent<ColonyController>();
+			Structure s = Structure.GetNewStructure(Structure.LANDED_ZEPPELIN_ID);
 			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
 			s.SetBasement(b, PixelPosByte.zero);
 			b.MakeIndestructible(true);
@@ -186,9 +202,14 @@ public class GameMaster : MonoBehaviour {
 			colonyController.SetHQ(s.GetComponent<HeadQuarters>());
 
 			if (xpos > 0) xpos --; else xpos++;
-			StorageHouse firstStorage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<StorageHouse>();
-			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.one);
-			colonyController.storage.AddResources(ResourcesCost.info[1]);
+			StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
+			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.zero);
+			//start resources
+			colonyController.storage.AddResources(ResourceType.metal_K,100);
+			colonyController.storage.AddResources(ResourceType.metal_M,50);
+			colonyController.storage.AddResources(ResourceType.metal_E,20);
+			colonyController.storage.AddResources(ResourceType.Plastics,100);
+			colonyController.storage.AddResources(ResourceType.Food, 200);
 
 			UI ui = gameObject.AddComponent<UI>();
 			ui.lineDrawer = systemDrawLR;
@@ -323,6 +344,7 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	public void AddToCameraUpdateBroadcast(GameObject g) {
+		if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
 		if (g != null) cameraUpdateBroadcast.Add(g);
 	}
 
@@ -391,70 +413,57 @@ public class GameMaster : MonoBehaviour {
 		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 	}
 
-	public bool LoadGame( string fpath ) {
-		if ( !File.Exists ( fpath ) ) return false;
-		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Default))
+	public bool LoadGame( string name ) {
+		string fpath = path + "Saves/" + name + ".txt";
+		if ( !File.Exists ( fpath ) ) {
+			print ("file not exist");
+			return false;
+		}
+		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Unicode))
 		{
-			// size
 			string line;
 			line = sr.ReadLine();
-			//chunk blocks
-			int size = 16, dataBlocksRead = 0 ;
-			if ( !int.TryParse(line, out size) ) return false;
-			else {
-				int[,,] data = new int[size, size, size];
-
-				for ( int x = 0; x < size; x ++) {
-					for (int y = 0; y < size; y++) {
-						
-					}
-				}
-				if (dataBlocksRead != size * size * size) return false;
-				float gs = GameMaster.gameSpeed;
-				Time.timeScale = 0; GameMaster.gameSpeed = 0;
-				mainChunk = new Chunk();
-				mainChunk.SetChunk(data);
-
-				Time.timeScale = 1; GameMaster.gameSpeed = gs;
+			int size = 0;
+			if ( !int.TryParse(line, out size) ) {
+				print ("length parsing failed");
+				return false;
 			}
-			// game master coefficients
+			else { 
+				string[] data = new string[ size * size];
+				int k = 0; line = sr.ReadLine();
+				while ( k < data.Length && line != null ) {
+					data[k] = line;
+					line = sr.ReadLine();
+					k++;
+				}
+				if (k < data.Length) {
+					print ("not all data here");
+					return false;
+				}
+				Chunk nchunk = new GameObject("chunk").AddComponent<Chunk>();
+				bool creatingChunkSuccess = nchunk.LoadChunk(data, size);
+				if (creatingChunkSuccess) {
+					Destroy(mainChunk.gameObject);
+					mainChunk = nchunk;
+				}
+				else {
+					print ("chunk creating failed");
+					return false;
+				}
+			}
 		}
 		return true;
 	}
 
-	public bool SaveGame(string fpath) {
-		using (StreamWriter sw = new StreamWriter( fpath, System.Text.Encoding.Default))
-		{
-			//chunk blocks
-			float gs = GameMaster.gameSpeed;
-			Time.timeScale = 0; GameMaster.gameSpeed = 0;
-			int size = Chunk.CHUNK_SIZE;
-			sw.WriteLine(size.ToString());
-			string[] blocksData = mainChunk.SaveBlocksIds();
-			for (int i =0; i < blocksData.Length; i++) {
-				sw.WriteLine(blocksData[i]);
+	public bool SaveGame( string name ) {
+		string fpath = path + "Saves/"+ name + ".txt";
+		string[] blocksData = mainChunk.SaveChunkData();
+		using (StreamWriter sw = new StreamWriter(fpath,false, System.Text.Encoding.Unicode)) {
+			foreach (string s in blocksData) {
+				sw.WriteLine(s);
 			}
-			// structures
-			Block b = null;
-			SurfaceBlock sb = null;
-			for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
-				for (int y =0; y < Chunk.CHUNK_SIZE; y++) {
-					for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
-						b = mainChunk.GetBlock(x,y,z);
-						if ( b == null || !(b.type == BlockType.Cave | b.type == BlockType.Surface)) continue;
-						sb = b as SurfaceBlock;
-						if ( sb.cellsStatus == 0) continue;
-						sw.WriteLine( x.ToString()+';'+y.ToString()+';'+z.ToString()+';');
-						foreach (Structure s in sb.surfaceObjects) {
-							if (s == null) continue;
-							sw.WriteLine('>' + s.SaveStructure());
-						}
-					}
-				}
-			}
-
-			Time.timeScale = 1; GameMaster.gameSpeed = gs;
 		}
+		return true;
 	}
 
 	void OnGUI() {

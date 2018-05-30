@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum Language{English, Russian};
+public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
 
 public static class Localization {
 	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
@@ -14,7 +15,7 @@ public static class Localization {
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
 	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode;
-	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel;
+	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
 	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources;
@@ -24,10 +25,10 @@ public static class Localization {
 	hq_upgrade_warning, hq_upper_surface_blocked;
 	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
+	public static Language currentLanguage;
 
 	static Localization() {
-		structureName = new string[41];
-		structureName[0] = "<empty>";
+		structureName = new string[Structure.TOTAL_STRUCTURES_COUNT];
 		ChangeLanguage(Language.English);
 	}
 
@@ -64,29 +65,62 @@ public static class Localization {
 			rtype_fuel_name = "Fuel"; rtype_fuel_descr = "Standart fuel for spaceship engine";
 			rtype_graphonium_name = "Graphonium"; rtype_graphonium_descr = "Superstructured material, wrapping reality nearby";
 
-
-			structureName[1] = "Tree sapling"; structureName[2] = "Tree";
-			structureName[3] = "Dead tree"; structureName[4] = "Wheat crop";
-			structureName[5] = "Landed Zeppelin"; structureName[6] = "Tree of Life";
-			structureName[7] = "Storage"; structureName[8] = "Pile";
-			structureName[9] = "Mine elevator"; structureName[10] = "Lifestone";
-			structureName[11] = "House";structureName[12] = "Boulder";
-			structureName[13] = "Dock";structureName[14] = "Energy capacitor";
-			structureName[15] = "Farm";structureName[16] = "Head Quarters";
-			structureName[17] = "Lumbermill";structureName[18] = "Mine";
-			structureName[19] ="Smeltery";structureName[20] = "Wind generator";
-			structureName[21] = "Hospital";structureName[22] = "Biogenerator";
-			structureName[23] = "Mineral F Powerplant"; structureName[24] = "Ore enricher";
-			structureName[25] = "Rolling shop"; structureName[26] = "Mini Grph-reactor";
-			structureName[27] = "Fuel facility"; structureName[28] = "Grph - reactor";
-			structureName[29] = "Plastics factory"; structureName[30] = "Food factory";
-			structureName[31] = "Graphonium Enricher"; structureName[32] = "Experimental Station";
-			structureName[33] = "Quantum Energy Transmitter";
-			structureName[34] = "Farm Block"; structureName[35] = "Lumbermill Block";
-			structureName[36] = "Smeltery Block"; structureName[37] = "Residential Block";
-			structureName[38] = "Food Factory Block"; structureName[39] = "Storage Block";
-			structureName[40] = "Chemical Factory";
-
+			structureName[Structure.TREE_SAPLING_ID] = "Sapling"; 
+			structureName[Structure.TREE_ID] = "Tree"; 
+			structureName[Structure.DEAD_TREE_ID] = "Dead tree"; 
+			structureName[Structure.TREE_SAPLING_ID] = "Wheat crop"; 
+			structureName[Structure.LANDED_ZEPPELIN_ID] = "Landed Zeppelin"; 
+			structureName[Structure.STORAGE_0_ID] = "Primary storage";
+			structureName[Structure.STORAGE_1_ID] = "Storage (level 1)"; 
+			structureName[Structure.STORAGE_2_ID] = "Storage (level 2)"; 
+			structureName[Structure.STORAGE_3_ID] = "Storage (level 3)"; 
+			structureName[Structure.STORAGE_5_ID] = "Storage"; 
+			structureName[Structure.CONTAINER_ID] = "Container"; 
+			structureName[Structure.MINE_ELEVATOR_ID] = "Mine elevator"; 
+			structureName[Structure.LIFESTONE_ID] = "Life stone"; 
+			structureName[Structure.HOUSE_0_ID] = "Tent"; 
+			structureName[Structure.HOUSE_1_ID] = "Small house";
+			structureName[Structure.HOUSE_2_ID] = "House";
+			structureName[Structure.HOUSE_3_ID] = "Advanced house";
+			structureName[Structure.HOUSE_5_ID] = "Residential Block";
+			structureName[Structure.DOCK_ID] = "Basic dock"; 
+			structureName[Structure.ENERGY_CAPACITOR_1_ID] = "Power capacitor (lvl 1)"; 
+			structureName[Structure.ENERGY_CAPACITOR_2_ID] = "Power capacitor (lvl 2)"; 
+			structureName[Structure.ENERGY_CAPACITOR_3_ID] = "Power capacitor (lvl 3)"; 
+			structureName[Structure.FARM_1_ID] = "Farm (lvl 1)"; 
+			structureName[Structure.FARM_2_ID] = "Farm (lvl 2)"; 
+			structureName[Structure.FARM_3_ID] = "Farm (lvl 3)"; 
+			structureName[Structure.FARM_4_ID] = "Covered farm (lvl 4)"; 
+			structureName[Structure.FARM_5_ID] = "Farm Block (lvl 5)"; 
+			structureName[Structure.HQ_2_ID] = "HeadQuarters (lvl 2)"; 
+			structureName[Structure.HQ_3_ID] = "HeadQuarters (lvl 3)"; 
+			structureName[Structure.HQ_4_ID] = "HeadQuarters Block (lvl 4)"; 
+			structureName[Structure.LUMBERMILL_1_ID] = "Lumbermill (lvl 1)"; 
+			structureName[Structure.LUMBERMILL_2_ID] = "Lumbermill (lvl 2)"; 
+			structureName[Structure.LUMBERMILL_3_ID] = "Lumbermill (lvl 3)"; 
+			structureName[Structure.LUMBERMILL_4_ID] = "Covered lumbermill (lvl 4)"; 
+			structureName[Structure.LUMBERMILL_5_ID] = "Lumbermill Block(lvl 5)"; 
+			structureName[Structure.MINE_ID] = "Mine Entrance";
+			structureName[Structure.SMELTERY_1_ID] = "Smeltery (lvl 1)"; 
+			structureName[Structure.SMELTERY_2_ID] = "Smeltery (lvl 2)"; 
+			structureName[Structure.SMELTERY_3_ID] = "Smelting Facility (lvl 3)"; 
+			structureName[Structure.SMELTERY_5_ID] = "Smeltery Block (lvl 5)"; 
+			structureName[Structure.WIND_GENERATOR_1_ID] = "Wind generator"; 
+			structureName[Structure.BIOGENERATOR_2_ID] = "Biogenerator";
+			structureName[Structure.HOSPITAL_2_ID] = "Hospital";
+			structureName[Structure.MINERAL_POWERPLANT_2_ID] = "Mineral F powerplant";
+			structureName[Structure.ORE_ENRICHER_2_ID] = "Ore enricher";
+			structureName[Structure.ROLLING_SHOP_ID] = "Rolling shop";
+			structureName[Structure.MINI_GRPH_REACTOR_ID] = "Small Graphonum reactor";
+			structureName[Structure.FUEL_FACILITY_3_ID] = "Fuel facility";
+			structureName[Structure.GRPH_REACTOR_4_ID] = "Graphonium reactor";
+			structureName[Structure.PLASTICS_FACTORY_4_ID] = "Plastics factory";
+			structureName[Structure.FOOD_FACTORY_4_ID] = "Food factory";
+			structureName[Structure.FOOD_FACTORY_5_ID] = "Food factory Block";
+			structureName[Structure.GRPH_ENRICHER_ID] = "Graphonium enricher";
+			structureName[Structure.XSTATION_ID] = "Experimental station";
+			structureName[Structure.QUANTUM_ENERGY_TRANSMITTER_ID] = "Quantum energy transmitter";
+			structureName[Structure.CHEMICAL_FACTORY_ID] = "Chemical factory";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
@@ -108,6 +142,7 @@ public static class Localization {
 			ui_setMode = "Set mode"; ui_currentMode = "Current mode";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
+			menu_save = "Save game"; menu_load = "Load game";
 			info_housing = "Housing";
 			info_population = "Population";
 			info_level = " lvl.";
@@ -145,6 +180,8 @@ public static class Localization {
 			hq_refuse_reason_6 = string.Empty;
 			hq_upgrade_warning = "All buildings on the top will be deconstructed!";
 			hq_upper_surface_blocked = "Impossible : upper surface blocked";
+
+			currentLanguage = Language.English;
 			break;
 		case  Language.Russian: 
 			ui_storage_name = "Склад";
@@ -185,7 +222,37 @@ public static class Localization {
 
 			rollingShop_gearsProduction = "Производство оборудования";
 			rollingShop_boatPartsProduction = "Производство комплектующих для шаттлов";
+
+			currentLanguage = Language.Russian;
 			break;	
 		}
+	}
+
+	public static string GetGameMessage( GameMessage m) {
+		string s = "";
+		switch (m) {
+		case GameMessage.GameSaved: 
+			switch ( currentLanguage ) {
+			case Language.English : s = "Game successfully saved"; break;
+			case Language.Russian: s = "Игра сохранена"; break;
+			}
+			break;
+		case GameMessage.GameLoaded:
+			switch ( currentLanguage ) {
+			case Language.English : s = "Save loaded"; break;
+			case Language.Russian: s = "Сохранение загружено"; break;
+			}
+			break;
+		case GameMessage.LoadingFailed:
+			switch ( currentLanguage ) {
+			case Language.English : s = "Loading failed"; break;
+			case Language.Russian: s = "Не удалось загрузить"; break;
+			}
+			break;
+		default:
+			s = "...?";
+			break;
+		}
+		return s;
 	}
 }

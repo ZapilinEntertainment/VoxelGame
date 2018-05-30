@@ -9,7 +9,7 @@ public class WindGenerator : Building {
 	const float HEAD_ROTATE_SPEED = 10, SCREW_ROTATE_SPEED = 20;
 	float maxSurplus, height_coefficient = 1;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareBuilding();
 		maxSurplus = energySurplus;
 	}

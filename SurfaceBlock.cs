@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public struct SurfaceRect {
 	public byte x,z,x_size,z_size;
 	public SurfaceRect(byte f_x, byte f_z, byte f_xsize, byte f_zsize) {
@@ -15,8 +16,15 @@ public struct SurfaceRect {
 		z_size = f_zsize;
 	}
 
+	static SurfaceRect() {
+		one = new SurfaceRect(0,0,1,1);
+		full = new SurfaceRect(0,0, SurfaceBlock.INNER_RESOLUTION, SurfaceBlock.INNER_RESOLUTION);
+	}
+
 	public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) {return lhs.Equals(rhs);}
 	public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) {return !(lhs.Equals(rhs));}
+	public static SurfaceRect one{get; private set;}
+	public static SurfaceRect full {get;private set;}
 }
 public struct SurfaceObject {
 	public SurfaceRect rect;
@@ -32,7 +40,7 @@ public class SurfaceBlock : Block {
 	public MeshRenderer surfaceRenderer {get;protected set;}
 	public Grassland grassland{get;protected set;}
 	public List<Structure> surfaceObjects{get;protected set;}
-	public sbyte cellsStatus {get; protected set;} // -1 is not stated, 1 is full, 0 is empty;
+	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures = 0;
 	public bool[,] map {get; protected set;}
 	public BlockRendererController structureBlock;
@@ -43,16 +51,7 @@ public class SurfaceBlock : Block {
 		for (int i =0; i < map.GetLength(0); i++) {
 			for (int j =0; j< map.GetLength(1); j++) map[i,j] = false;
 		}
-
-		GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
-		surfaceRenderer =g.GetComponent <MeshRenderer>();
-		surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		g.transform.parent = transform;
-		g.transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
-		g.transform.localRotation = Quaternion.Euler(90, 0, 0);
-		g.name = "upper_plane"; 
 		material_id = 0;
-		surfaceRenderer.enabled = true;
 		surfaceObjects = new List<Structure>();
 		artificialStructures = 0;
 		isTransparent = false;
@@ -61,20 +60,23 @@ public class SurfaceBlock : Block {
 
 	public bool[,] GetBooleanMap() {
 			map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-			for (int i =0; i < map.GetLength(0); i++) {
-				for (int j =0; j< map.GetLength(1); j++) map[i,j] = false;
+			for (int i =0; i < INNER_RESOLUTION; i++) {
+				for (int j =0; j< INNER_RESOLUTION; j++) map[i,j] = false;
 			}
 			if (surfaceObjects.Count != 0) {
 				int a = 0;
 				while (a < surfaceObjects.Count) {
-				if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
-				SurfaceRect sr = surfaceObjects[a].innerPosition;					
-					for (int i =0; i< sr.x_size; i++) {
-						for (int j =0; j < sr.z_size; j++) {
+					if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
+					SurfaceRect sr = surfaceObjects[a].innerPosition;	
+					int i = 0, j=0;
+				while ( i < sr.x_size && sr.x + i < INNER_RESOLUTION) {
+					while (j < sr.z_size && sr.z + j < INNER_RESOLUTION) {
 							map[sr.x + i, sr.z + j] = true;
+							j++;
 						}
+						i++;
 					}
-					a++;
+						a++;
 				}
 				}
 			return map;
@@ -93,9 +95,20 @@ public class SurfaceBlock : Block {
 			}
 		}
 	}
-
+	/// <summary>
+	/// Do not use directly, use "Set Basement" instead
+	/// </summary>
+	/// <param name="s">S.</param>
 	public void AddStructure(Structure s) { // with autoreplacing
 		if (s == null) return;
+		if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION  ) {
+			print ("error in structure size");
+			return;
+		}
+		if (s.innerPosition.x_size == 1 && s.innerPosition.z_size == 1) {
+			AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); 
+			return;
+		}
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
@@ -159,6 +172,11 @@ public class SurfaceBlock : Block {
 		structureBlock = null;
 	}
 
+	/// <summary>
+	/// Do not use directly, use "Set Basement" instead
+	/// </summary>
+	/// <param name="s">S.</param>
+	/// <param name="pos">Position.</param>
 	public void AddCellStructure(Structure s, PixelPosByte pos) { 
 		if (s == null) return;
 		if (map[pos.x, pos.y] == true) {
@@ -233,7 +251,19 @@ public class SurfaceBlock : Block {
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = f_material_id;
+
+		if (surfaceRenderer == null) {
+			GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
+			surfaceRenderer =g.GetComponent <MeshRenderer>();
+			surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			g.transform.parent = transform;
+			g.transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
+			g.transform.localRotation = Quaternion.Euler(90, 0, 0);
+			g.name = "upper_plane"; 
+		}
 		surfaceRenderer.material = ResourceType.GetMaterialById(material_id);
+		if (visibilityMask != 0) surfaceRenderer.enabled = true;
+
 		type = BlockType.Surface; isTransparent = false;
 		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}

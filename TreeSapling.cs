@@ -5,17 +5,6 @@ using UnityEngine;
 public class TreeSapling : Plant {
 	public const float MAXIMUM_LIFEPOWER = 50;
 
-	void Awake () {
-		PrepareStructure();
-		lifepower = 1;
-		maxLifepower = MAXIMUM_LIFEPOWER;
-		maxTall = 0.1f;
-		full = false;
-		type = StructureType.Plant;
-		plantType = PlantType.TreeSapling;
-	}
-
-
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
 		float theoreticalGrowth = lifepower / maxLifepower;

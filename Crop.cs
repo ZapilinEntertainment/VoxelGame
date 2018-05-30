@@ -7,18 +7,9 @@ public class Crop : Plant {
 	Sprite[] stages;
 	byte currentStage = 0;
 	[SerializeField]
-	float maxLifepower_set, maxVisibleDistance = 25;
+	float maxVisibleDistance = 25;
 	[SerializeField]
 	bool visible = true;
-
-	void Awake() {
-		PrepareStructure();
-		lifepower = 1;
-		maxLifepower = maxLifepower_set;
-		full = false;
-		growth = 0;
-		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
-	}
 
 	void Update() {
 		if (full || GameMaster.gameSpeed == 0) return;

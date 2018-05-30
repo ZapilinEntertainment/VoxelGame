@@ -22,12 +22,12 @@ public class Chunk : MonoBehaviour {
 	public float lifePower = 0;
 	 float lifepower_timer = 0;
 	List<Grassland> grassland_blocks;
-	public const byte CHUNK_SIZE = 16;
+	public static byte CHUNK_SIZE  {get;private set;}
 	public static int energy_take_speed = 10;
 	GameObject cave_pref;
 	public List <Component> chunkUpdateSubscribers;
 
-	void Awake() {
+	public void Awake() {
 		CENTER_POS = new Vector3(CHUNK_SIZE/2f, CHUNK_SIZE/2f, CHUNK_SIZE/2f);
 		grassland_blocks = new List<Grassland>();
 		surfaceBlocks = new List<SurfaceBlock>();
@@ -421,9 +421,16 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
+	public static void SetChunkSize( byte x) {
+		CHUNK_SIZE = x;
+	}
+
 	public void SetChunk(int[,,] newData) {
 		if (blocks != null) ClearChunk();
 		int size = newData.GetLength(0);
+		CHUNK_SIZE = (byte) size;
+		if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
+		GameMaster.layerCutHeight = CHUNK_SIZE;
 
 		blocks = new Block[size,size,size];
 		surfaceBlocks = new List<SurfaceBlock>();
@@ -602,31 +609,124 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
-	public string[] SaveBlocksIds() {
-		string[] database = new string[CHUNK_SIZE * CHUNK_SIZE];
-		int k = 0;
-		for (int x = 0; x < CHUNK_SIZE; x++) {
-			for (int y = 0; y < CHUNK_SIZE; y++) {
-				database[k] = "";
+	public string[] SaveChunkData() {
+		string[] chunkData = new string[CHUNK_SIZE * CHUNK_SIZE + 1];
+		chunkData[0] = CHUNK_SIZE.ToString();
+		int k =1;
+		for (int x = 0; x < CHUNK_SIZE ; x++) {
+			for ( int y = 0; y < CHUNK_SIZE; y++) {
+				string s = "";
 				for (int z = 0; z < CHUNK_SIZE; z++) {
-					if (blocks[x,y,z] !=null ) {
-						switch (blocks[x,y,z].type) {
-						case BlockType.Shapeless: database[k] += '0';break;
-						case BlockType.Cube: database[k] += '1';break;
-						case BlockType.Surface: database[k] += '2';break;
-						case BlockType.Cave: database[k] += '3';break;
+					if (blocks[x,y,z] == null) {s+= ';'; continue;}
+					switch (blocks[x,y,z].type) {
+					case BlockType.Shapeless: s+= 'h';break;
+					case BlockType.Surface: 
+						SurfaceBlock sb = blocks[x,y,z] as SurfaceBlock;
+						s+='s' + string.Format( "{0:d3}", sb.material_id );
+						if (sb.grassland != null && sb.grassland.lifepower > 1) {
+							s += Mathf.RoundToInt(sb.grassland.lifepower).ToString();
 						}
-						database[k] += blocks[x,y,z].material_id;
+						break;
+					case BlockType.Cube: 
+						s += 'c';
+						{
+							CubeBlock cb = blocks[x,y,z] as CubeBlock;
+							float pc = (float)cb.volume / (float)CubeBlock.MAX_VOLUME;
+							pc *= 1000;
+							s += string.Format( "{0:d3}", blocks[x,y,z].material_id ) + string.Format("{0:d4}", ((int)pc));
+							if (cb.career) s += '1'; else s+='0';
+							pc = cb.naturalFossils / (float)CubeBlock.MAX_VOLUME;
+							pc *= 1000;
+							s += string.Format("{0:d4}", ((int)pc));
+						}
+						break;
+					case BlockType.Cave: s+= 'v'+ string.Format( "{0:d3}", blocks[x,y,z].material_id );break;						
 					}
-					database[k] += ';';
+					s += ';';
+					}
+				chunkData[k] = s; k++;
 				}
-				k++;
-			}
 		}
-		return database;
+		return chunkData;
 	}
 
-	void OnGUI () {
+	public bool LoadChunk( string[] s_data, int size ) {
+			blocks = new Block[size,size,size];
+			int k =0;
+			for ( int x = 0; x < size; x ++) {
+				for (int y = 0; y < size; y++) {		
+					int  startIndex = 0, endIndex = -1;
+					for (int z = 0; z < size; z++) {
+						int prevEndIndex = endIndex;
+						endIndex = s_data[k].IndexOf(";",endIndex + 1);
+						if (endIndex == -1) {
+							print (z.ToString() +" not enough data: " + s_data[k]);
+							return false;
+						}
+						if (endIndex - prevEndIndex > 1) {
+							int m_id = 0;
+							switch (s_data[k][startIndex ]) {
+								case 'h': // shapeless
+									blocks[x,y,z] = new GameObject().AddComponent<Block>(); 
+									blocks[x,y,z].ShapelessBlockSet(this, new ChunkPos(x,y,z), null);
+								break;
+								case 's': // surface
+								{	
+									SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+									m_id =  int.Parse(s_data[k].Substring(startIndex +1,3));
+									sb.SurfaceBlockSet(this, new ChunkPos(x,y,z), m_id);
+									blocks[x,y,z] = sb;
+								if (endIndex > startIndex + 5) {
+									int lp = int.Parse(s_data[k].Substring(startIndex + 4, endIndex - (startIndex + 4)));
+									Grassland gl = sb.AddGrassland();
+									gl.AddLifepowerAndCalculate(lp);
+								}
+								}
+								break;
+								case 'c': // cube block
+								{
+									CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
+
+									m_id =  int.Parse(s_data[k].Substring(startIndex + 1,3));
+									int vol = (int)(int.Parse(s_data[k].Substring(startIndex + 4, 4)) / 1000f * CubeBlock.MAX_VOLUME);
+									bool career = (s_data[k][startIndex + 8] == '1');
+									int fossils = (int)(int.Parse(s_data[k].Substring(startIndex + 9, 4)) / 1000f * CubeBlock.MAX_VOLUME);
+
+									cb.BlockSet( this, new ChunkPos(x,y,z), m_id, (fossils > 0));
+									if (vol != CubeBlock.MAX_VOLUME) cb.Dig(CubeBlock.MAX_VOLUME - vol, career);
+									cb.SetFossilsVolume(fossils);
+									blocks[x,y,z] = cb;
+								}
+								break;
+								case 'v': 
+								{
+									CaveBlock cb = Instantiate(cave_pref).GetComponent<CaveBlock>();
+									m_id =  int.Parse(s_data[k].Substring(startIndex +1,3));
+									cb.CaveBlockSet(this, new ChunkPos(x,y,z), m_id, m_id);
+									blocks[x,y,z] = cb;
+								}
+							break;
+								default: ; // error, desu
+								break;
+							}
+					}
+						startIndex = endIndex + 1;
+					}
+				k++;
+				}
+			}
+		for (int x = 0; x< size; x++) {
+			for (int z =0; z< size; z++) {
+				for (int y = 0; y< size; y++) {
+					if (blocks[x,y,z] == null ) continue;
+					blocks[x,y,z].SetVisibilityMask(GetVisibilityMask(x,y,z));
+				}
+			}
+		}
+		return true;
+	}
+
+	void OnGUI () { //test
 		GUI.Label(new Rect(0, 32, 64,32), lifePower.ToString());
 	}
 }

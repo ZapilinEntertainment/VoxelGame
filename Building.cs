@@ -3,32 +3,91 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure {
+	public int upgradedIndex = -1;
 	public bool canBePowerSwitched = true;
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
-	public byte level = 0;
 	[SerializeField]
 	public int resourcesContainIndex = 0;
 	public float energySurplus = 0, energyCapacity = 0;
 	public  bool connectedToPowerGrid {get; protected set;}// подключение, контролирующееся игроком
-	public bool borderOnlyConstruction{get;protected set;}
-	public Building nextStage; 
 	public int requiredBasementMaterialId = -1;
+	public byte level{get;protected set;}
 	[SerializeField]
 	protected Renderer[] myRenderers;
+	protected static ResourceContainer[] requiredResources;
 
-	void Awake() {
-		PrepareBuilding();
-	}
-	protected void PrepareBuilding() {
+	override public void Prepare() {PrepareBuilding();}
+
+	protected void	PrepareBuilding() {
 		PrepareStructure();
 		isActive = false;
 		energySupplied = false;
 		borderOnlyConstruction = false;
 		connectedToPowerGrid = false;
+		switch (id) {
+		case LANDED_ZEPPELIN_ID: upgradedIndex = HQ_2_ID; level = 1; break;
+		case STORAGE_0_ID: level = 0; break;
+		case FARM_1_ID: upgradedIndex = FARM_2_ID; level = 1;break;
+		case HQ_2_ID : upgradedIndex = HQ_3_ID; level = 2;break;
+		case LUMBERMILL_1_ID: upgradedIndex = LUMBERMILL_2_ID;  level = 1;break;
+		case SMELTERY_1_ID : upgradedIndex = SMELTERY_2_ID;  level = 1;break;
+		case FOOD_FACTORY_4_ID: upgradedIndex = FOOD_FACTORY_5_ID;  level = 4;break;
+		case STORAGE_2_ID: upgradedIndex = STORAGE_3_ID;  level = 2;break; 
+		case HOUSE_2_ID: upgradedIndex = HOUSE_3_ID;  level = 2;break;
+		case ENERGY_CAPACITOR_2_ID: upgradedIndex = ENERGY_CAPACITOR_3_ID;  level = 2;break;
+		case FARM_2_ID : upgradedIndex = FARM_3_ID;  level = 2;break;
+		case FARM_3_ID : upgradedIndex = FARM_4_ID; level = 3;break;
+		case FARM_4_ID: upgradedIndex = FARM_5_ID; level = 4;break;
+		case LUMBERMILL_2_ID : upgradedIndex = LUMBERMILL_3_ID; level = 2;break;
+		case LUMBERMILL_3_ID : upgradedIndex = LUMBERMILL_4_ID;  level = 3;break;
+		case LUMBERMILL_4_ID: upgradedIndex = LUMBERMILL_5_ID;  level = 4;break;
+		case SMELTERY_2_ID: upgradedIndex = SMELTERY_3_ID;  level = 2; break;
+		case SMELTERY_3_ID: upgradedIndex = SMELTERY_5_ID;  level = 3;break;
+		case HQ_3_ID: upgradedIndex = HQ_4_ID;  level = 3;break;
+			
+		case MINE_ID:
+		case WIND_GENERATOR_1_ID:
+		case DOCK_ID:
+		case STORAGE_1_ID:
+		case ENERGY_CAPACITOR_1_ID:	
+		case HOUSE_1_ID:
+			level = 1;
+			break;
+		case ORE_ENRICHER_2_ID:
+		case ROLLING_SHOP_ID:
+		case BIOGENERATOR_2_ID:
+		case HOSPITAL_2_ID:
+		case MINERAL_POWERPLANT_2_ID:
+			level = 2;
+			break;
+		case FUEL_FACILITY_3_ID:
+		case GRPH_ENRICHER_ID:
+		case XSTATION_ID:
+		case STORAGE_3_ID:
+		case HOUSE_3_ID:
+		case ENERGY_CAPACITOR_3_ID:
+		case MINI_GRPH_REACTOR_ID:
+			level = 3;
+			break;
+		case GRPH_REACTOR_4_ID:
+		case QUANTUM_ENERGY_TRANSMITTER_ID:
+		case PLASTICS_FACTORY_4_ID:
+		case HQ_4_ID:
+		case CHEMICAL_FACTORY_ID:
+			level = 4;
+			break;
+		case STORAGE_5_ID: 
+		case HOUSE_5_ID:
+		case FARM_5_ID:
+		case LUMBERMILL_5_ID:
+		case FOOD_FACTORY_5_ID:
+		case SMELTERY_5_ID:
+			level = 5;
+			break;				
+		}
 	}
-
-
+		
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
@@ -42,8 +101,6 @@ public class Building : Structure {
 			connectedToPowerGrid = true;
 		}
 	}
-
-
 	virtual public void SetActivationStatus(bool x) {
 		isActive = x;
 		if (connectedToPowerGrid) {
@@ -158,9 +215,9 @@ public class Building : Structure {
 
 	public void Demolish() {
 		if (resourcesContainIndex != 0 && GameMaster.demolitionLossesPercent != 1) {
-			ResourceContainer[] rleft = new ResourceContainer[ResourcesCost.info[resourcesContainIndex].Length];
+			ResourceContainer[] rleft = ResourcesCost.GetCost(id);
 			for (int i = 0 ; i < rleft.Length; i++) {
-				rleft[i] = new ResourceContainer(ResourcesCost.info[resourcesContainIndex][i].type, ResourcesCost.info[resourcesContainIndex][i].volume * (1 - GameMaster.demolitionLossesPercent));
+				rleft[i] = new ResourceContainer(rleft[i].type, rleft[i].volume * (1 - GameMaster.demolitionLossesPercent));
 			}
 		}
 		Destroy(gameObject);
@@ -170,45 +227,54 @@ public class Building : Structure {
 		PrepareBuildingForDestruction();
 	}
 
+	override public void SetGUIVisible (bool x) {
+		if (x != showOnGUI) {
+			showOnGUI = x;
+			if ( showOnGUI) {
+				requiredResources = ResourcesCost.GetCost(id);
+				if (requiredResources.Length > 0) {
+					for (int i = 0; i < requiredResources.Length; i++) {
+						requiredResources[i] = new ResourceContainer(requiredResources[i].type, requiredResources[i].volume * GameMaster.upgradeDiscount);
+					}
+				}
+			}
+		}
+	}
+
 	void OnGUI() {
 		//sync with hospital.cs, rollingShop.cs
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
+		if (upgradedIndex != -1 && level < GameMaster.colonyController.hq.level) {
 			rr.y = GUI_UpgradeButton(rr);
 		}
 	}
 
-	protected float GUI_UpgradeButton( Rect rr) {
+	virtual protected float GUI_UpgradeButton( Rect rr) {
 			GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
 			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-				ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[nextStage.resourcesContainIndex].Length];
-				if (requiredResources.Length > 0) {
-					for (int i = 0; i < requiredResources.Length; i++) {
-						requiredResources[i] = new ResourceContainer(ResourcesCost.info[nextStage.resourcesContainIndex][i].type, ResourcesCost.info[nextStage.resourcesContainIndex][i].volume * (1 - GameMaster.upgradeDiscount));
-					}
-				}
 				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 				{
-					Building upgraded = Instantiate(nextStage);
+					Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
 					PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
 					byte bzero = (byte)0;
-					if (upgraded.xsize_to_set == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-					if (upgraded.zsize_to_set == 16) setPos = new PixelPosByte(setPos.x, bzero);
+					if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+					if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+					Quaternion originalRotation = transform.rotation;
 					upgraded.SetBasement(basement, setPos);
-					upgraded.transform.localRotation = transform.localRotation;
+					upgraded.transform.localRotation = originalRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}
-			if ( ResourcesCost.info[ nextStage.resourcesContainIndex ].Length > 0) {
+		if ( requiredResources.Length > 0) {
+			rr.y += rr.height;
+			for (int i = 0; i < requiredResources.Length; i++) {
+				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
+				GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
+				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
 				rr.y += rr.height;
-				for (int i = 0; i < ResourcesCost.info[ nextStage.resourcesContainIndex ].Length; i++) {
-					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.icon, ScaleMode.StretchToFill);
-					GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.name);
-					GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (ResourcesCost.info[ nextStage.resourcesContainIndex ][i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-					rr.y += rr.height;
-				}
 			}
+		}
 		return rr.y;
 		}
 }

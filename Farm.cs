@@ -7,9 +7,7 @@ public class Farm : WorkBuilding {
 	float farmFertility = 1;
 	int lifepowerToEveryCrop = 2;
 	Plant[] crops;
-	[SerializeField]
-	Plant crop_pref;
-	int MAX_CROPS = 256;
+	static int MAX_CROPS = 256;
 
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -41,8 +39,9 @@ public class Farm : WorkBuilding {
 			List<PixelPosByte> cropsPositions = basement.GetRandomCells(MAX_CROPS);
 			if (cropsPositions.Count > 0) {
 				crops = new Plant[cropsPositions.Count];
-				for (int i =0; i< crops.Length; i++) {
-					crops[i] = Instantiate(crop_pref); // заменить на пуллинг
+				crops[0] = Structure.GetNewStructure(Structure.WHEAT_CROP_ID) as Plant;
+				for (int i =1; i< crops.Length; i++) {
+					crops[i] = Instantiate(crops[0]);
 					crops[i].gameObject.SetActive(true);
 					crops[i].SetBasement(basement, cropsPositions[i]);
 				}
@@ -55,7 +54,7 @@ public class Farm : WorkBuilding {
 					if (crops[i] == null) {
 						PixelPosByte ppos = basement.GetRandomCell();
 						if (ppos != PixelPosByte.Empty) {
-							crops[i] = Instantiate(crop_pref);
+							crops[i] = Structure.GetNewStructure(Structure.WHEAT_CROP_ID) as Plant;
 							crops[i].gameObject.SetActive(true);
 							crops[i].SetBasement(basement, ppos);
 						}

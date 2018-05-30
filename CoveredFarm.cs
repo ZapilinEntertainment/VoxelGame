@@ -12,7 +12,7 @@ public class CoveredFarm : WorkBuilding {
 	const float MIN_SPEED = 0.2f;
 	Storage s;
 
-	void Awake() {
+	override public void Prepare()  {
 		PrepareWorkbuilding();
 		if (outputResource_type == CoveredFarmOutput.Food) outputResource = ResourceType.Food;
 		else outputResource = ResourceType.Lumber;

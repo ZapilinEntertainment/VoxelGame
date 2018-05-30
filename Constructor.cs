@@ -13,11 +13,11 @@ public class Constructor : MonoBehaviour {
 	void Awake () {
 		if (main != null) {Destroy(main); main = this;} // singleton pattern
 		seed += System.DateTime.Now.Second;
-		ConstructChunk();
 	}
 
-	void ConstructChunk() {
-		int size = Chunk.CHUNK_SIZE;
+	public void ConstructChunk( byte chunkSize ) {
+		seed += System.DateTime.Now.Second;
+		int size = chunkSize;
 		int[,,] dat = new int[size, size ,size ];
 		float radius = size * Mathf.Sqrt(2);
 		for (int x =0; x< size ; x++) {
@@ -54,16 +54,16 @@ public class Constructor : MonoBehaviour {
 	void NatureCreation(Chunk chunk) {
 		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
 		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
-		x = Chunk.CHUNK_SIZE / 2;z=Chunk.CHUNK_SIZE/2;
+		x = (byte)(Chunk.CHUNK_SIZE / 2) ;z = (byte)(Chunk.CHUNK_SIZE/2);
 		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);
 
 		GameObject pref;
-		if (Random.value > 0.5f) pref = Resources.Load<GameObject>("Structures/Tree of Life") ; else pref = Resources.Load<GameObject>("Structures/LifeStone");
-		MultiblockStructure ms = Instantiate(pref).GetComponent<MultiblockStructure>();
+		MultiblockStructure ms = null;
+		if (Random.value > 0.5f) ms = Structure.GetNewStructure(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;
+		else ms = Structure.GetNewStructure(Structure.LIFESTONE_ID) as MultiblockStructure;
 		SurfaceBlock sb = chunk.GetSurfaceBlock(x,z);
 		ms.SetBasement(sb, PixelPosByte.zero);
 	}
-
 }

@@ -18,15 +18,7 @@ public class ColonyController : MonoBehaviour {
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
-	House tent_pref;
-	public List<Building> buildings_level_1{get;private set;}
-	public List<Building> buildings_level_2{get;private set;}
-	public List<Building> buildings_level_3{get;private set;}
-	public List<Building> buildings_level_4{get;private set;}
-	public List<Building> buildings_level_5{get;private set;}
-	public List<Building> buildings_level_6{get;private set;}
 	public bool showColonyInfo = false;
-
 
 	public float energyStored {get;private set;}
 	public float energySurplus {get;private set;}
@@ -52,8 +44,6 @@ public class ColonyController : MonoBehaviour {
 	float starvationTimer, starvationTime = 600, real_birthrate = 0;
 
 	void Awake() {
-		GameMaster.colonyController = this;
-		if (storage == null) storage = gameObject.AddComponent<Storage>();
 		GameMaster.realMaster.everydayUpdateList.Add(this);
 		GameMaster.realMaster.everyYearUpdateList.Add(this);
 		gears_coefficient = 1;
@@ -64,112 +54,16 @@ public class ColonyController : MonoBehaviour {
 		docksLevel = 0;
 		energyCrystalsCount = 100;
 
-		// вызываются, чтобы установились x-size и z-size
-		tent_pref = Instantiate(Resources.Load<House>("Structures/House_level_0"));
-		tent_pref.gameObject.SetActive( false );
-
-		buildings_level_1 = new List<Building>();
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_1")) );
-		buildings_level_1[0].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Smeltery_level_1")) );
-		buildings_level_1[1].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/WindGenerator_level_1")) );
-		buildings_level_1[2].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_1")) );
-		buildings_level_1[3].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_1")) );
-		buildings_level_1[4].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_1")) );
-		buildings_level_1[5].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Mine_level_1")) );
-		buildings_level_1[6].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Dock_level_1")) );
-		buildings_level_1[7].gameObject.SetActive(false);
-		buildings_level_1.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Storage_level_1")) );
-		buildings_level_1[8].gameObject.SetActive(false);
-
-		buildings_level_2 = new List<Building>();
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Biogenerator_level_2")) );
-		buildings_level_2[0].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Hospital_level_2")) );
-		buildings_level_2[1].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/MineralPP_level_2")) );
-		buildings_level_2[2].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/OreEnricher_level_2")) );
-		buildings_level_2[3].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Smeltery_level_2")) );
-		buildings_level_2[4].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Storage_level_2")) );
-		buildings_level_2[5].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_2")) );
-		buildings_level_2[6].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/RollingShop_level_2")) );
-		buildings_level_2[7].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_2")) );
-		buildings_level_2[8].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_2")) );
-		buildings_level_2[9].gameObject.SetActive(false);
-		buildings_level_2.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_2")) );
-		buildings_level_2[10].gameObject.SetActive(false);
-
-		buildings_level_3 = new List<Building>();
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/miniReactor_level_3")) );
-		buildings_level_3[0].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/fuelFacility_level_3")) );
-		buildings_level_3[1].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/EnergyCapacitor_level_3")) );
-		buildings_level_3[2].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_3")) );
-		buildings_level_3[3].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Storage_level_3")) );
-		buildings_level_3[4].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_3")) );
-		buildings_level_3[5].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/GraphoniumEnricher_level_3")) );
-		buildings_level_3[6].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/XStation_level_3")) );
-		buildings_level_3[7].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Smeltery_level_3")) );
-		buildings_level_3[8].gameObject.SetActive(false);
-		buildings_level_3.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/House_level_3")) );
-		buildings_level_3[9].gameObject.SetActive(false);
-
-		buildings_level_4 = new List<Building>();
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/GraphoniumReactor_level_4")) );
-		buildings_level_4[0].gameObject.SetActive(false);
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Farm_level_4")) );
-		buildings_level_4[1].gameObject.SetActive(false);
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/Lumbermill_level_4")) );
-		buildings_level_4[2].gameObject.SetActive(false);
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/PlasticsFactory_level_4")) );
-		buildings_level_4[3].gameObject.SetActive(false);
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/FoodFactory_level_4")) );
-		buildings_level_4[4].gameObject.SetActive(false);
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/QuantumEnergyTransmitter_level_4")) );
-		buildings_level_4[5].gameObject.SetActive(false);
-		buildings_level_4.Add( Instantiate(Resources.Load<Building>("Structures/Buildings/ChemicalFactory_level_4")) );
-		buildings_level_4[6].gameObject.SetActive(false);
-
-		buildings_level_5 = new List<Building>();
-		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/farmBlock_level_5")) );
-		buildings_level_5[0].gameObject.SetActive(false);
-		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/lumbermillBlock_level_5")) );
-		buildings_level_5[1].gameObject.SetActive(false);
-		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/smelteryBlock_level_5")) );
-		buildings_level_5[2].gameObject.SetActive(false);
-		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/houseBlock_level_5")) );
-		buildings_level_5[3].gameObject.SetActive(false);
-		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/foodFactoryBlock_level_5")) );
-		buildings_level_5[4].gameObject.SetActive(false);
-		buildings_level_5.Add( Instantiate(Resources.Load<Building>("Structures/Blocks/storageBlock_level_5")) );
-		buildings_level_5[5].gameObject.SetActive(false);
-
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
 		rollingShops = new List<RollingShop>();
 		graphoniumEnrichers = new List<GraphoniumEnricher>();
 		chemicalFactories = new List<ChemicalFactory>();
+	}
+
+	public void CreateStorage() { // call from game master
+		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
 	}
 
 	void Update() {
@@ -269,7 +163,7 @@ public class ColonyController : MonoBehaviour {
 		housingTimer -= Time.deltaTime * GameMaster.gameSpeed;
 		if ( housingTimer <= 0 ) {
 			if ( totalLivespace < citizenCount ) {
-				int tentsCount = (citizenCount - totalLivespace) / tent_pref.housing / 2;
+				int tentsCount = (citizenCount - totalLivespace) / 4;
 				if (tentsCount > 0) {
 					int step = 1,xpos, zpos;
 					xpos = hq.basement.pos.x; zpos = hq.basement.pos.z;
@@ -285,8 +179,7 @@ public class ColonyController : MonoBehaviour {
 								if (positions.Count > 0) {
 									tentsCount -= positions.Count;
 									for (int j = 0 ; j < positions.Count; j++) {
-										Structure tent = Instantiate(tent_pref) as Structure;
-										tent.gameObject.SetActive(true);
+										House tent = Structure.GetNewStructure(Structure.HOUSE_0_ID) as House;
 										tent.SetBasement(correctSurface, positions[j]);
 									}
 								}

@@ -8,7 +8,7 @@ public class RollingShop : WorkBuilding {
 	bool showModes = false;
 	const float GEARS_UP_LIMIT = 3, GEARS_UPGRADE_STEP = 0.1f;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		mode = RollingShopMode.NoActivity;
 	}
@@ -38,9 +38,6 @@ public class RollingShop : WorkBuilding {
 		//based on building.cs
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
-			rr.y = GUI_UpgradeButton(rr);
-		}
 		// rolling shop functional
 		if (GUI.Button(rr, Localization.ui_setMode)) showModes = !showModes; rr.y += rr.height;
 		if (showModes) {

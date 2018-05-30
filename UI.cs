@@ -32,13 +32,17 @@ public class UI : MonoBehaviour {
 
 	List<Factory> smelteriesList; bool hasSmelteries = false;
 	List<Factory> unspecializedFactories; bool hasUnspecializedFactories = false;
+	List<Building> showingBuildingsList;
 	public const int GUIDEPTH_UI_MAIN = 10, GUIDEPTH_WORKSITE_WINDOW = 9;
 
 
 	void Awake() {
 		current = this;
 		mode = UIMode.View;
+
 		showBuildingCreateInfo = false;
+		showingBuildingsLevel = 0;
+
 		structureFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame"));
 		structureFrame.SetActive(false);
 		quadSelector = Instantiate(Resources.Load<GameObject>("Prefs/QuadSelector"));
@@ -82,7 +86,7 @@ public class UI : MonoBehaviour {
 				Structure s = rh.collider.GetComponent<Structure>();
 				if (s != null) {
 					chosenStructure = s;
-					chosenStructure.showOnGUI = true;
+					chosenStructure.SetGUIVisible(true);
 					Vector2 cursorPos = Camera.main.WorldToScreenPoint(s.transform.position);
 					mode = UIMode.StructurePanel;
 					GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
@@ -107,8 +111,10 @@ public class UI : MonoBehaviour {
 									lineDrawer.enabled = true;
 									GameMaster.realMaster.SetLookPoint (chosenSurfaceBlock.transform.position + Vector3.down * Block.QUAD_SIZE /2f);
 									argument = 1;
-								if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
-								chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
+									if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
+									chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
+									// подборка зданий
+								if (showingBuildingsLevel != 0) showingBuildingsList = Structure.GetApplicableBuildingsList(showingBuildingsLevel, chosenSurfaceBlock);
 								break;
 							case BlockType.Cube:
 								chosenCubeBlock = b.GetComponent<CubeBlock>();
@@ -187,7 +193,7 @@ public class UI : MonoBehaviour {
 		quadSelector.SetActive(false);
 		structureFrame.SetActive(false);
 		chosenCubeBlock = null; 
-		if (chosenStructure != null) {chosenStructure.showOnGUI = false;chosenStructure = null; }
+		if (chosenStructure != null) {chosenStructure.SetGUIVisible(false);chosenStructure = null; }
 		chosenSurfaceBlock = null; 
 		if (chosenWorksite != null) {chosenWorksite.showOnGUI = false; chosenWorksite = null;}
 		showBuildingCreateInfo = false;
@@ -375,26 +381,20 @@ public class UI : MonoBehaviour {
 						ChangeArgument(1);			
 					}
 					rr.y += rr.height;
-					GUI.DrawTexture(new Rect(rr.x + (showingBuildingsLevel - 1) * rr.height, rr.y, rr.height, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+					//level button
+
+					if (showingBuildingsLevel != 0)	GUI.DrawTexture(new Rect(rr.x + (showingBuildingsLevel - 1) * rr.height, rr.y, rr.height, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 					if (GameMaster.colonyController.hq != null) {
-						for (int bl = 1; bl <= GameMaster.colonyController.hq.level; bl++) {
+						for (byte bl = 1; bl <= GameMaster.colonyController.hq.level; bl++) {
 							if (GUI.Button(new Rect(rr.x + (bl - 1) * rr.height, rr.y, rr.height, rr.height), bl.ToString())) {
 								showingBuildingsLevel = (byte)bl;
+								showingBuildingsList = Structure.GetApplicableBuildingsList(bl, chosenSurfaceBlock);
 								ChangeArgument(3);
 							}
 						}
 					}
 					rr.y += rr.height;
 					int buildingIndex = 0;
-					List<Building> showingBuildingsList = null;
-					switch (showingBuildingsLevel) {
-					case 1: showingBuildingsList = GameMaster.colonyController.buildings_level_1;break;
-					case 2: showingBuildingsList = GameMaster.colonyController.buildings_level_2;break;
-					case 3: showingBuildingsList = GameMaster.colonyController.buildings_level_3;break;
-					case 4: showingBuildingsList = GameMaster.colonyController.buildings_level_4;break;
-					case 5: showingBuildingsList = GameMaster.colonyController.buildings_level_5;break;
-					case 6: showingBuildingsList = GameMaster.colonyController.buildings_level_6;break;
-					}
 					if ( showingBuildingsList != null && showingBuildingsList.Count != 0 ) {
 						bool useScroll = (buildingsListLength > Screen.height - rr.y);
 						if (useScroll) GUI.BeginScrollView(new Rect(rr.x, rr.y, Screen.width - rr.x, Screen.height - rr.y), buildingsScrollViewPos, new Rect(rr.x, rr.y, Screen.width - rr.x, buildingsListLength));
@@ -402,11 +402,12 @@ public class UI : MonoBehaviour {
 						foreach (Building bd in showingBuildingsList) {
 						if (bd.borderOnlyConstruction && !chosenSurfaceBlockIsBorderBlock) continue;
 							if (bd.requiredBasementMaterialId == -1 || bd.requiredBasementMaterialId == chosenSurfaceBlock.material_id) {
-								if (GUI.Button(rr, Localization.structureName[bd.nameIndex])) {
+								if (GUI.Button(rr, Localization.structureName[bd.id])) {
 									if (chosenStructure != bd ) {
 										chosenStructure = bd; 
 										chosenBuildingIndex = buildingIndex;
 										showBuildingCreateInfo = true;
+										bufferedResources = ResourcesCost.GetCost(bd.id);
 										if (chosenStructure.type != StructureType.MainStructure ) argument = 4; else argument = 3;
 										break;
 									}
@@ -419,7 +420,7 @@ public class UI : MonoBehaviour {
 							}
 							else {
 								Color c = GUI.color; GUI.color = Color.grey;
-								GUI.Label(rr, Localization.structureName[bd.nameIndex] + " (" + Localization.material_required + ResourceType.resourceTypesArray[bd.requiredBasementMaterialId].name+ " )", PoolMaster.GUIStyle_CenterOrientedLabel);
+								GUI.Label(rr, Localization.structureName[bd.id] + " (" + Localization.material_required + ResourceType.resourceTypesArray[bd.requiredBasementMaterialId].name+ " )", PoolMaster.GUIStyle_CenterOrientedLabel);
 								GUI.color = c;
 							}
 						rr.y += rr.height;
@@ -435,7 +436,7 @@ public class UI : MonoBehaviour {
 							GUI.DrawTexture( new Rect(rr.x + rr.width/2f, rr.y, k, rr.height ) , buildingQuad_icon_tx, ScaleMode.StretchToFill);
 							GUI.Label( new Rect(rr.x + rr.width/2f + 2 *k, rr.y, rr.width/2f, rr.height) , chosenStructure.innerPosition.x_size.ToString() + " x " + chosenStructure.innerPosition.z_size.ToString());
 							rr.y += rr.height;
-							foreach (ResourceContainer rc in ResourcesCost.info[chosenBuilding.resourcesContainIndex]) {
+							foreach (ResourceContainer rc in bufferedResources) {
 								GUI.Label(new Rect(rr.x, rr.y, rr.width * 0.75f, rr.height), rc.type.name);
 								float wx = rr.width * 0.875f; if (wx > rr.height) wx = rr.height;
 								GUI.DrawTexture( new Rect (rr.x + rr.width * 0.75f, rr.y, wx, wx), rc.type.icon, ScaleMode.ScaleToFit );
@@ -447,9 +448,9 @@ public class UI : MonoBehaviour {
 							if (chosenStructure.type == StructureType.MainStructure) {
 								if (GUI.Button ( new Rect(rr.x + rr.width/4f, rr.y, rr.width / 2f, rr.height), Localization.ui_build )) {
 									PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
-									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( ResourcesCost.info[chosenBuilding.resourcesContainIndex] )){
+										if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
 										if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
-											Structure s = Instantiate(chosenStructure).GetComponent<Structure>();
+												Structure s = Structure.GetNewStructure(chosenStructure.id);
 											s.gameObject.SetActive(true);
 											s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
 											ChangeArgument(3);
@@ -474,40 +475,42 @@ public class UI : MonoBehaviour {
 				}
 					// сетка для размещения постройки
 					if (argument != 4) GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); // чтобы не дублировалось
-					float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
-					int n = 0;
-					while ( n < chosenSurfaceBlock.surfaceObjects.Count) {
-						if (chosenSurfaceBlock.surfaceObjects[n] == null) {chosenSurfaceBlock.RequestAnnihilationAtIndex(n); n++; continue;}
-						Texture t = PoolMaster.quadSelector_tx;
-						switch (chosenSurfaceBlock.surfaceObjects[n].type) {
-						case StructureType.HarvestableResources: t = PoolMaster.orangeSquare_tx;break;
-						case StructureType.MainStructure: t = whiteSpecial_tx;break;
-						case StructureType.Plant: t = greenSquare_tx;break;
-						case StructureType.Structure : t = whiteSquare_tx;break;
+					if (chosenSurfaceBlock.cellsStatus != 0 ) {
+						float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
+						int n = 0;
+						while ( n < chosenSurfaceBlock.surfaceObjects.Count) {
+							if (chosenSurfaceBlock.surfaceObjects[n] == null) {chosenSurfaceBlock.RequestAnnihilationAtIndex(n); n++; continue;}
+							Texture t = PoolMaster.quadSelector_tx;
+							switch (chosenSurfaceBlock.surfaceObjects[n].type) {
+							case StructureType.HarvestableResources: t = PoolMaster.orangeSquare_tx;break;
+							case StructureType.MainStructure: t = whiteSpecial_tx;break;
+							case StructureType.Plant: t = greenSquare_tx;break;
+							case StructureType.Structure : t = whiteSquare_tx;break;
+							}
+							SurfaceRect sr= chosenSurfaceBlock.surfaceObjects[n].innerPosition;
+							GUI.DrawTexture(new Rect(buildingGridRect.x + sr.x * p, buildingGridRect.y + buildingGridRect.height -  (sr.z+ sr.z_size) * p , p * sr.x_size, p * sr.z_size), t, ScaleMode.StretchToFill);
+							n++;
 						}
-						SurfaceRect sr= chosenSurfaceBlock.surfaceObjects[n].innerPosition;
-						GUI.DrawTexture(new Rect(buildingGridRect.x + sr.x * p, buildingGridRect.y + buildingGridRect.height -  (sr.z+ sr.z_size) * p , p * sr.x_size, p * sr.z_size), t, ScaleMode.StretchToFill);
-						n++;
-					}
-						
+					}	
 					break;
-				case 4:
+				case 4: // размещение на сетке
+					{
 					GUI.DrawTexture(buildingGridRect, grid16_tx, ScaleMode.StretchToFill); 
-					p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
+					float p = buildingGridRect.width / SurfaceBlock.INNER_RESOLUTION;
 					SurfaceRect surpos = chosenStructure.innerPosition;
 					for (byte i =0; i < chosenSurfaceBlock.map.GetLength(0); i++) {
 						for (byte j = 0; j < chosenSurfaceBlock.map.GetLength(1); j++) {
 							if ( i <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.x_size && j <= SurfaceBlock.INNER_RESOLUTION - chosenStructure.innerPosition.z_size) {
-								if (GUI.Button(new Rect(buildingGridRect.x + i * p, buildingGridRect.y + buildingGridRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {								
-									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( ResourcesCost.info[(chosenStructure as Building).resourcesContainIndex] )) {
+								if (GUI.Button(new Rect(buildingGridRect.x + i * p, buildingGridRect.y + buildingGridRect.height - (j+1) *p, p, p), yellowSquare_tx, GameMaster.mainGUISkin.customStyles[1])) {		
+									if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
 										surpos.x = i; surpos.z = j;
 										if ( chosenSurfaceBlock.IsAnyBuildingInArea(surpos) == false) {
-											Structure s = Instantiate(chosenStructure);
+												Structure s = Structure.GetNewStructure(chosenStructure.id);
 											s.gameObject.SetActive(true);
 											s.SetBasement(chosenSurfaceBlock, new PixelPosByte(i,j));
 										}
 										else {
-											bufferedResources = ResourcesCost.info[(chosenStructure as Building).resourcesContainIndex];
+											bufferedResources = ResourcesCost.GetCost(chosenStructure.id);
 											bufferedPosition = new PixelPosByte(surpos.x, surpos.z); 
 											ChangeArgument(5);
 											break;
@@ -519,12 +522,13 @@ public class UI : MonoBehaviour {
 						}
 					}
 					goto case 3;
+					}
 					break;
 				case 5: // подтверждение на снос при строительстве
 					GUI.Box(acceptBox, Localization.ui_accept_destruction_on_clearing);
 					if (GUI.Button (new Rect(acceptBox.x, acceptBox.y + acceptBox.height/2f, acceptBox.width/2f, acceptBox.height/2f), Localization.ui_accept)) {
 						if ( bufferedPosition != PixelPosByte.Empty ) {
-							Structure s = Instantiate(chosenStructure);
+							Structure s = Structure.GetNewStructure(chosenStructure.id);
 							s.gameObject.SetActive(true);
 							s.SetBasement(chosenSurfaceBlock, bufferedPosition);
 							ChangeArgument(3);
@@ -614,7 +618,7 @@ public class UI : MonoBehaviour {
 						}
 					}
 					rr.y += rr.height;
-					GUI.Label(rr,  Localization.structureName[chosenStructure.nameIndex] + " (" + Localization.info_level + b.level.ToString() + ") "); 
+					GUI.Label(rr,  Localization.structureName[chosenStructure.id]); 
 					rr.y += rr.height;
 
 					if (b.connectedToPowerGrid) {
@@ -649,6 +653,17 @@ public class UI : MonoBehaviour {
 					}
 				}
 				chosenStructure.gui_ypos = rr.y;
+				break;
+			case UIMode.GameMenu:
+				if (GUI.Button(rr, Localization.menu_save)) {
+					GameMaster.realMaster.SaveGame("newsave");
+					GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.GameSaved));
+				}
+				rr.y += rr.height;
+				if (GUI.Button(rr, Localization.menu_load)) {
+					if (GameMaster.realMaster.LoadGame("newsave"))	GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.GameLoaded));
+					else GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.LoadingFailed));
+				}
 				break;
 			}
 	}

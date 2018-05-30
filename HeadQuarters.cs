@@ -34,33 +34,20 @@ public class HeadQuarters : House {
 
 	void OnGUI() {
 		if ( !showOnGUI ) return;
-			if (nextStage != null ) {
+		if (level < 7) {
 				Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
 				if (nextStageConditionMet) {
 					GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
 					if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
 						if (level < 4) {
-								ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[nextStage.resourcesContainIndex].Length];
-								if (requiredResources.Length > 0) {
-									for (int i = 0; i < requiredResources.Length; i++) {
-										requiredResources[i] = new ResourceContainer(ResourcesCost.info[nextStage.resourcesContainIndex][i].type, ResourcesCost.info[nextStage.resourcesContainIndex][i].volume * (1 - GameMaster.upgradeDiscount));
-									}
-								}
 								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 								{
-									Building upgraded = Instantiate(nextStage);
+							Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
 									upgraded.SetBasement(basement, PixelPosByte.zero);
 								}
 								else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 							}
 							else { // building blocks on the top
-								ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[nextStage.resourcesContainIndex].Length];
-								float multiplier = level - 3;
-								if (requiredResources.Length > 0) {
-									for (int i = 0; i < requiredResources.Length; i++) {
-										requiredResources[i] = new ResourceContainer(ResourcesCost.info[nextStage.resourcesContainIndex][i].type, ResourcesCost.info[nextStage.resourcesContainIndex][i].volume * (1 - GameMaster.upgradeDiscount) * multiplier);
-									}
-								}
 								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 								{
 									Chunk chunk = basement.myChunk;
@@ -81,7 +68,7 @@ public class HeadQuarters : House {
 										}
 									}
 									SurfaceBlock upperSurface = upperBlock as SurfaceBlock;	
-									Building upgraded = Instantiate(nextStage);
+									Building upgraded = Instantiate(Resources.Load<Building>("Prefs/HQ_addon"));
 									upgraded.SetBasement(upperSurface, PixelPosByte.zero);
 									level++;
 							}
@@ -110,11 +97,11 @@ public class HeadQuarters : House {
 					GUI.color = c;
 				}
 				rr.y += rr.height;
-				if ( ResourcesCost.info[ nextStage.resourcesContainIndex ].Length > 0) {
-					for (int i = 0; i < ResourcesCost.info[ nextStage.resourcesContainIndex ].Length; i++) {
-						GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.icon, ScaleMode.StretchToFill);
-						GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.name);
-						GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (ResourcesCost.info[ nextStage.resourcesContainIndex ][i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+			if ( requiredResources.Length > 0) {
+				for (int i = 0; i < requiredResources.Length; i++) {
+					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
+					GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
+					GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
 						rr.y += rr.height;
 					}
 				}

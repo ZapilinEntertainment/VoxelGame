@@ -10,7 +10,7 @@ public class Mine : WorkBuilding {
 	public List<Structure> elevators;
 	public bool awaitingElevatorBuilding = false;
 
-	void Awake() {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		elevators = new List<Structure>();
 	}
@@ -81,12 +81,6 @@ public class Mine : WorkBuilding {
 				rr.y += rr.height;
 				GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
 					if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-						ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[ResourcesCost.MINE_UPGRADE_INDEX].Length];
-						if (requiredResources.Length > 0) {
-							for (int i = 0; i < requiredResources.Length; i++) {
-							requiredResources[i] = new ResourceContainer(ResourcesCost.info[ResourcesCost.MINE_UPGRADE_INDEX][i].type, ResourcesCost.info[ResourcesCost.MINE_UPGRADE_INDEX][i].volume * level);
-							}
-						}
 						if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 						{
 							workObject = b as CubeBlock;
@@ -108,12 +102,12 @@ public class Mine : WorkBuilding {
 						}
 						else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 					}
-				if ( ResourcesCost.info[ ResourcesCost.MINE_UPGRADE_INDEX ].Length > 0) {
+				if ( requiredResources.Length > 0) {
 						rr.y += rr.height;
-					for (int i = 0; i < ResourcesCost.info[ ResourcesCost.MINE_UPGRADE_INDEX ].Length; i++) {
-						GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), ResourcesCost.info[ ResourcesCost.MINE_UPGRADE_INDEX ][i].type.icon, ScaleMode.StretchToFill);
-						GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), ResourcesCost.info[ ResourcesCost.MINE_UPGRADE_INDEX ][i].type.name);
-						GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (ResourcesCost.info[ ResourcesCost.MINE_UPGRADE_INDEX ][i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+					for (int i = 0; i < requiredResources.Length; i++) {
+						GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
+						GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
+						GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
 							rr.y += rr.height;
 						}
 					}

@@ -14,7 +14,7 @@ public class Factory : WorkBuilding {
 	public FactorySpecialization specialization;
 	protected float outputResourcesBuffer = 0;
 
-	void Awake () {
+	override public void Prepare() {
 		PrepareWorkbuilding();
 		recipe = Recipe.NoRecipe;
 		inputResourcesBuffer = 0;
@@ -29,7 +29,7 @@ public class Factory : WorkBuilding {
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-		if (outputResourcesBuffer <= BUFFER_LIMIT) {
+		if (outputResourcesBuffer <= BUFFER_LIMIT ) {
 			if (workersCount > 0 && recipe != Recipe.NoRecipe) {
 				workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
 				if (workflow >= workflowToProcess ) {
@@ -95,32 +95,8 @@ public class Factory : WorkBuilding {
 		if ( !showOnGUI ) return;
 		//upgrading
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (nextStage != null && level < GameMaster.colonyController.hq.level) {
-			GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-				ResourceContainer[] requiredResources = new ResourceContainer[ResourcesCost.info[nextStage.resourcesContainIndex].Length];
-				if (requiredResources.Length > 0) {
-					for (int i = 0; i < requiredResources.Length; i++) {
-						requiredResources[i] = new ResourceContainer(ResourcesCost.info[nextStage.resourcesContainIndex][i].type, ResourcesCost.info[nextStage.resourcesContainIndex][i].volume * (1 - GameMaster.upgradeDiscount));
-					}
-				}
-				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-				{
-					Building upgraded = Instantiate(nextStage);
-					upgraded.SetBasement(basement, PixelPosByte.zero);
-					upgraded.transform.localRotation = transform.localRotation;
-				}
-				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
-			}
-			if ( ResourcesCost.info[ nextStage.resourcesContainIndex ].Length > 0) {
-				rr.y += rr.height;
-				for (int i = 0; i < ResourcesCost.info[ nextStage.resourcesContainIndex ].Length; i++) {
-					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.icon, ScaleMode.StretchToFill);
-					GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), ResourcesCost.info[ nextStage.resourcesContainIndex ][i].type.name);
-					GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (ResourcesCost.info[ nextStage.resourcesContainIndex ][i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-					rr.y += rr.height;
-				}
-			}
+		if (upgradedIndex != -1 && level < GameMaster.colonyController.hq.level) {
+			rr.y = GUI_UpgradeButton(rr);
 		}
 		//factory actions
 		if (gui_showRecipesList) {

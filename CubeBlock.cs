@@ -44,6 +44,10 @@ public class CubeBlock : Block{
 		return blocksCount;
 	}
 
+	public void SetFossilsVolume ( int x) {
+		naturalFossils = x;
+	}
+
 	public void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration) {
 		myChunk = f_chunk; transform.parent = f_chunk.transform;
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
@@ -148,7 +152,7 @@ public class CubeBlock : Block{
 			if (pc > 0.75f) {				
 				if (excavatingStatus != 0) {
 					excavatingStatus = 0; 
-					if (faces[4] == null) CreateFace(4);
+					if (faces == null || faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
 					Block b = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
 					if (b == null && pos.y +1 < Chunk.CHUNK_SIZE) {
@@ -159,7 +163,7 @@ public class CubeBlock : Block{
 			else {
 				if (excavatingStatus != 1) {
 					excavatingStatus = 1;
-					if (faces[4] == null) CreateFace(4);
+					if (faces == null || faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
 				}
 			}
@@ -168,14 +172,14 @@ public class CubeBlock : Block{
 				if (pc > 0.25f) {
 				if (excavatingStatus != 2) {
 					excavatingStatus = 2;
-					if (faces[4] == null) CreateFace(4);
+					if ( faces == null || faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_05;
 				}
 				}
 				else {
 					if (excavatingStatus != 3) {
 						excavatingStatus = 3; 
-						if (faces[4] == null) CreateFace(4);
+					if ( faces == null || faces[4] == null) CreateFace(4);
 						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
 					}
 				}

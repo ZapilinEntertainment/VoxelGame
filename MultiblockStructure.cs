@@ -12,7 +12,7 @@ public class MultiblockStructure : Structure {
 
 	protected void PrepareMultiblockStructure(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
-		innerPosition = new SurfaceRect(pos.x, pos.y, xsize_to_set, zsize_to_set);
+		innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.x_size, innerPosition.z_size);
 		b.AddStructure(this);
 		Chunk myChunk = basement.myChunk;
 		for (byte i = 1; i < additionalHeight; i++) {
