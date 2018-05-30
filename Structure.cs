@@ -339,15 +339,15 @@ public class Structure : MonoBehaviour {
 		
 	protected string SaveStructureData() {
 		string s = string.Format("{0:d2}", innerPosition.x) + string.Format("{0:d2}", innerPosition.z);
-		s += string.Format("{0:d3}", id) ;
-		s += ((int)(transform.localRotation.eulerAngles.y / 45)).ToString(); // 1 -8, rotation
+		s += string.Format("{0:d3}", id) ; 
+		s +=  string.Format("{0:d1}", (int)(transform.localRotation.eulerAngles.y / 45)) ;
 		s += string.Format( "{0:d3}", (int)(hp / maxHp * 100));
 		return s;
 	}
 
 	public virtual void Load(string s_data, Chunk c, SurfaceBlock surface) {
 		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(3,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
 		Prepare();
 		SetBasement(surface, new PixelPosByte(x,z));
 		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);

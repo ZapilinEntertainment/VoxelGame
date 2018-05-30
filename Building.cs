@@ -218,7 +218,7 @@ public class Building : Structure {
 
 	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
 		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(3,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
 		Prepare();
 		SetBasement(surface, new PixelPosByte(x,z));
 		SetActivationStatus(s_data[11] == '1');     // <-----BUILDING class part

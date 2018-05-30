@@ -41,12 +41,7 @@ public class Plant : Structure {
 			maxHp = maxTall * 1000;
 			break;	
 		}
-		lifepower = 1;
-		maxLifepower = 10;
-		full = false;
-		maxTall = 0.15f + Random.value * 0.05f;
 		growth = 0;
-		type = StructureType.Plant;
 	}
 
 	void Update() {
@@ -94,28 +89,44 @@ public class Plant : Structure {
 		lifepower = p; 
 		if (lifepower < maxLifepower) full = false; else full = true;
 	}
-
 	//---------------------                   SAVING       SYSTEM-------------------------------
 	public override string Save() {
-		return SaveStructureData() + SavePlantData();
+		string s =  SaveStructureData() + SavePlantData();
+		//if (s.Length != 17) print (s.Length);
+		return s;
 	}
 
 	protected string SavePlantData() {
 		string s = "";
-		s += string.Format("{0:d3}", (int)(lifepower/maxLifepower * 100f));
-		s += string.Format("{0:d3}", (int)(growth * 100f));
+		float f = lifepower/maxLifepower; 
+		if (f > 10) {
+			f = 9.99f;
+			print ("save error : " +lifepower.ToString() + " -  too much lifepower! " + name);
+		}
+		s += string.Format("{0:d3}", (int)(f * 100f));
+		f = growth; 
+		if (f > 10) {
+			f= 9.99f;
+			print ("save error : unexpectable growth");
+		}
+		s += string.Format("{0:d3}", (int)(f * 100f));
+		if (s.Length != 6) print(s);
 		return s;
 	}
 
 	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
 		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(3,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
 		Prepare();
 		SetBasement(surface, new PixelPosByte(x,z));
 		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
 		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
 		// PLANT class part
 		SetLifepower(int.Parse(s_data.Substring(11,3)) / 100f * maxLifepower );
+		float g = int.Parse(s_data.Substring(14,3)) / 100f;
+		if (g > 1) {
+			//print (s_data + "  " + g.ToString());
+		}
 		SetGrowth( int.Parse(s_data.Substring(14,3)) / 100f );
 	}
 	//---------------------------------------------------------------------------------------------------	
