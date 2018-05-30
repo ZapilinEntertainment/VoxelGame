@@ -139,7 +139,7 @@ public class SurfaceBlock : Block {
 		s.transform.localPosition = GetLocalPosition(s.innerPosition);
 		if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
 		if (s.randomRotation) {
-			if ( !s.rotate90only ) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
+			if ( !s.rotate90only ) s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 8) * 45, 0);
 			else s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 4) * 90f, 0 );
 		}
 		else {

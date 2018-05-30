@@ -144,7 +144,7 @@ public class Grassland : MonoBehaviour {
 				lifepowers[i] = Random.value;
 				total += lifepowers[i];
 			}
-			float lifePiece = count; lifePiece /= total;
+			float lifePiece = count; lifePiece /= total * 2;
 
 			for (int i =0; i< plants_count; i++) {
 				float energy = lifepowers[i] * lifePiece;

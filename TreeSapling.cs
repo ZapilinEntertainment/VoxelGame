@@ -16,12 +16,14 @@ public class TreeSapling : Plant {
 		if (growth >= 1) {
 			full = true; 
 			Tree t = PoolMaster.current.GetTree();
-			t.gameObject.SetActive(true);
 			float lp = lifepower;
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
 			t.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
 			basement = null;
 			t.SetLifepower(lp);
+			t.SetGrowth(0.2f);
+			t.gameObject.SetActive(true);
+			t.SetVisibility(true);
 			PoolMaster.current.ReturnSaplingToPool(this);
 		}
 	}

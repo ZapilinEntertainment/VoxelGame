@@ -8,28 +8,27 @@ public class Tree : Plant {
 	Renderer[] myRenderers;
 
 	void Update() {
-		if (full || GameMaster.gameSpeed == 0) return;
+		if (GameMaster.gameSpeed == 0) return;
 		float theoreticalGrowth = lifepower / maxLifepower;
 		if (theoreticalGrowth < 0) theoreticalGrowth = 0;
 		if (theoreticalGrowth != growth) {
-			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  Mathf.Cos(growth * Mathf.PI/2f) * growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
-			if (growth >= 1) full = true; 
+			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  Mathf.Cos(Mathf.Clamp01(growth) * Mathf.PI/2f) * growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
 			hp = growth * maxHp;
 			transform.localScale = Vector3.one * (growth * maxTall + startSize);	
 		}
 	}	
 	override public void AddLifepowerAndCalculate( float lifepower ) {
 		AddLifepower((int)lifepower);
-		growth = lifepower / MAXIMUM_LIFEPOWER;
-		hp = growth * maxHp;
-		transform.localScale = Vector3.one * (growth * maxTall + startSize);	
-		if (growth >= 1) full = true;
+		SetGrowth(lifepower / maxLifepower);
 	}
 	override public void SetLifepower (float p) {
 		lifepower = p;
 		if (maxLifepower == 0) maxLifepower = MAXIMUM_LIFEPOWER;
 		if (lifepower >= maxLifepower) full = true; else full =false;
-		growth = lifepower/ maxLifepower;
+	}
+	public override void SetGrowth(float t) {
+		growth = t;
+		hp = growth * maxHp;
 		transform.localScale = Vector3.one * (growth * maxTall + startSize);	
 	}
 		
@@ -53,9 +52,10 @@ public class Tree : Plant {
 		if (basement != null) {
 			basement.grassland.AddLifepower((int)lifepower);
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			UnsetBasement();
 		}
-		gameObject.AddComponent<FallingTree>();
-		Destroy(this); // script "Tree"
+		if (GetComponent<FallingTree>() == null) gameObject.AddComponent<FallingTree>();
+		this.enabled = false;
 	}
 
 	public float CalculateLumberCount() {
@@ -84,4 +84,5 @@ public class Tree : Plant {
 			}
 		}
 	}
+		
 }

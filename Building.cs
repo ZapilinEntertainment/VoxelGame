@@ -10,7 +10,7 @@ public class Building : Structure {
 	[SerializeField]
 	public int resourcesContainIndex = 0;
 	public float energySurplus = 0, energyCapacity = 0;
-	public  bool connectedToPowerGrid {get; protected set;}// подключение, контролирующееся игроком
+	public  bool connectedToPowerGrid {get; protected set;}// установлено ли подключение к электросети
 	public int requiredBasementMaterialId = -1;
 	public byte level{get;protected set;}
 	[SerializeField]
@@ -204,7 +204,29 @@ public class Building : Structure {
 			}
 		}
 	}
-		
+
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData();
+	}
+
+	protected string SaveBuildingData() {
+		string s = "";
+		if (isActive) s += "1"; else s+="0";
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(3,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		SetActivationStatus(s_data[11] == '1');     // <-----BUILDING class part
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
+
 	protected void PrepareBuildingForDestruction() {
 		if (basement != null) {
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));

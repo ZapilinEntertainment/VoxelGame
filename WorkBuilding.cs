@@ -60,6 +60,33 @@ public abstract class WorkBuilding : Building {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
 	}
 
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData();
+	}
+
+	protected string SaveWorkBuildingData() {
+		string s = "";
+		s += string.Format("{0:d3}",(int)(workflow /workflowToProcess * 100));
+		s += string.Format("{0:d3}", workersCount );
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(3,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		//building class part
+		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
+		AddWorkers(int.Parse(s_data.Substring(15,3)));
+		SetActivationStatus(s_data[11] == '1');     
+		//--
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
+
 	override protected float GUI_UpgradeButton( Rect rr) {
 		GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
 		if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {

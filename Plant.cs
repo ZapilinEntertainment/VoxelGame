@@ -5,7 +5,7 @@ using UnityEngine;
 public enum PlantType {TreeSapling, Tree, Crop}
 
 public class Plant : Structure {
-	public float lifepower {get;protected set;}
+	public float lifepower;
 	public float maxLifepower {get;protected set;}
 	[SerializeField]
 	protected float startSize = 0.05f;
@@ -50,7 +50,7 @@ public class Plant : Structure {
 	}
 
 	void Update() {
-		if (full || GameMaster.gameSpeed == 0) return;
+		if (GameMaster.gameSpeed == 0) return;
 		float theoreticalGrowth = lifepower / maxLifepower;
 		growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
 		if (growth >= 1) full = true;
@@ -59,16 +59,20 @@ public class Plant : Structure {
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetStructureData(b,pos);
-		transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 	}
 
 	public virtual void AddLifepower(float life) {
 		if (full) return;
 		lifepower += (int)life;
-		if (lifepower >= maxLifepower) {full = true; growth = lifepower/ maxLifepower;}
+		if (lifepower >= maxLifepower) full = true;  else full =false;
 	}
 	public virtual void AddLifepowerAndCalculate(float life) {
-		AddLifepower((int)life);
+		lifepower += (int) life;
+		if (lifepower >= maxLifepower) full = true;  else full =false;
+		SetGrowth( lifepower / maxLifepower);
+	}
+	public virtual void SetGrowth(float t) {
+		growth = t;
 	}
 		
 	public virtual int TakeLifepower(float life) {
@@ -82,16 +86,39 @@ public class Plant : Structure {
 		return (int)lifeTransfer;
 	}
 
-
 	virtual protected void Dry() {
 		Annihilate( false );
 	}
 
 	virtual public void SetLifepower(float p) {
 		lifepower = p; 
-		growth = lifepower/ maxLifepower;
 		if (lifepower < maxLifepower) full = false; else full = true;
 	}
+
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SavePlantData();
+	}
+
+	protected string SavePlantData() {
+		string s = "";
+		s += string.Format("{0:d3}", (int)(lifepower/maxLifepower * 100f));
+		s += string.Format("{0:d3}", (int)(growth * 100f));
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(3,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+		// PLANT class part
+		SetLifepower(int.Parse(s_data.Substring(11,3)) / 100f * maxLifepower );
+		SetGrowth( int.Parse(s_data.Substring(14,3)) / 100f );
+	}
+	//---------------------------------------------------------------------------------------------------	
 
 	public override void Annihilate( bool forced ) {
 		if (basement != null && !forced ) {

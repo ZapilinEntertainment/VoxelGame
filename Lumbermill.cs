@@ -27,7 +27,7 @@ public class Lumbermill : WorkBuilding {
 			if (basement.surfaceObjects[i].type != StructureType.Plant) {i++;continue;}
 			else {
 				Plant p = basement.surfaceObjects[i] as Plant;
-				if (p.plantType == PlantType.Tree || p.plantType == PlantType.TreeSapling) {
+				if ((p.plantType == PlantType.Tree | p.plantType == PlantType.TreeSapling) && p.enabled) {
 					saplingsAndTrees[firstEmptySaplingIndex++] = p;
 					if (firstEmptySaplingIndex >= MAX_TREES) break;
 				}

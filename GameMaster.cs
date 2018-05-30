@@ -110,7 +110,7 @@ public class GameMaster : MonoBehaviour {
 		path = Application.dataPath + '/';
 		string saveName = "default.sav";
 		if (generateChunk || !LoadGame( path + saveName) ) {
-			byte standartSize = 16;
+			byte standartSize = 16; // cannot be bigger than 99, cause I say Limited
 			Chunk.SetChunkSize( standartSize );
 			constructor.ConstructChunk( standartSize );
 		}
@@ -440,11 +440,24 @@ public class GameMaster : MonoBehaviour {
 					print ("not all data here");
 					return false;
 				}
+
 				Chunk nchunk = new GameObject("chunk").AddComponent<Chunk>();
 				bool creatingChunkSuccess = nchunk.LoadChunk(data, size);
 				if (creatingChunkSuccess) {
 					Destroy(mainChunk.gameObject);
 					mainChunk = nchunk;
+					if (line == "$") {
+						List<string> str_data = new List<string>();
+						line = sr.ReadLine();
+						while ( line != "$" & !sr.EndOfStream) {
+							str_data.Add(line);
+							line = sr.ReadLine();
+						}
+						mainChunk.LoadStructures(str_data);
+					}
+					else {
+						print (line + ", no structures");
+					}
 				}
 				else {
 					print ("chunk creating failed");
@@ -457,11 +470,19 @@ public class GameMaster : MonoBehaviour {
 
 	public bool SaveGame( string name ) {
 		string fpath = path + "Saves/"+ name + ".txt";
-		string[] blocksData = mainChunk.SaveChunkData();
 		using (StreamWriter sw = new StreamWriter(fpath,false, System.Text.Encoding.Unicode)) {
-			foreach (string s in blocksData) {
+			string[] dataString = mainChunk.SaveChunkData();
+			foreach (string s in dataString) {
 				sw.WriteLine(s);
 			}
+			sw.WriteLine("$");
+			dataString = mainChunk.SaveStructures();
+			if (dataString != null && dataString.Length > 0) {
+				foreach (string s in dataString) {
+					sw.WriteLine(s);
+				}
+			}
+			sw.WriteLine("$");
 		}
 		return true;
 	}

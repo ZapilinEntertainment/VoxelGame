@@ -153,6 +153,7 @@ public class Structure : MonoBehaviour {
 		s = Instantiate(s);
 		if ( !s.gameObject.activeSelf ) s.gameObject.SetActive(true);
 		s.id = s_id;
+		s.SetVisibility( false );
 		s.Prepare();
 		return s;
 	}
@@ -227,7 +228,7 @@ public class Structure : MonoBehaviour {
 		case LUMBERMILL_1_ID:
 		case LUMBERMILL_2_ID:
 		case LUMBERMILL_3_ID:
-			innerPosition = new SurfaceRect(0,0,2,6); type = StructureType.MainStructure;
+			innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.MainStructure;
 			break;
 		case LUMBERMILL_4_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
@@ -331,10 +332,28 @@ public class Structure : MonoBehaviour {
 		}
 	}
 
+	//--------SAVE  SYSTEM-------------
 	public virtual string Save() {
-		string data = string.Empty;
-		return data;
+		return SaveStructureData();
 	}
+		
+	protected string SaveStructureData() {
+		string s = string.Format("{0:d2}", innerPosition.x) + string.Format("{0:d2}", innerPosition.z);
+		s += string.Format("{0:d3}", id) ;
+		s += ((int)(transform.localRotation.eulerAngles.y / 45)).ToString(); // 1 -8, rotation
+		s += string.Format( "{0:d3}", (int)(hp / maxHp * 100));
+		return s;
+	}
+
+	public virtual void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(3,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	// ------------------------------------------
 
 	public virtual void SetGUIVisible (bool x) {
 		if (x != showOnGUI) {

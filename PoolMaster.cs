@@ -160,12 +160,14 @@ public class PoolMaster : MonoBehaviour {
 		if (t.basement != null) t.UnsetBasement();
 		t.hp = t.maxHp;
 		t.SetLifepower(0);
+		t.SetGrowth(0);
 		t.transform.parent = transform;
 		if (t.GetComponent<FallingTree>() != null) {
 			Destroy(t.GetComponent<FallingTree>());
 			t.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
 		}
 		t.gameObject.SetActive(false);
+		t.enabled = true;
 		treesPool.Add(t.gameObject);
 	}
 	public void ReturnTreeToPool(GameObject g) {

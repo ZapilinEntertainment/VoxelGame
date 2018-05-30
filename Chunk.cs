@@ -651,6 +651,7 @@ public class Chunk : MonoBehaviour {
 	}
 
 	public bool LoadChunk( string[] s_data, int size ) {
+			if (size > 99) size = 99;
 			blocks = new Block[size,size,size];
 			int k =0;
 			for ( int x = 0; x < size; x ++) {
@@ -724,6 +725,38 @@ public class Chunk : MonoBehaviour {
 			}
 		}
 		return true;
+	}
+
+	public string[] SaveStructures() {
+		List<string> sdata = new List<string>();
+		foreach (Block b in blocks) {
+			if (b == null || !(b.type == BlockType.Surface | b.type == BlockType.Cave)) continue;
+			SurfaceBlock sb = b as SurfaceBlock;
+			if ( sb.cellsStatus == 0) continue;
+			else { // запись
+					string s = string.Format("{0:d2}", b.pos.x) + string.Format("{0:d2}", b.pos.y) + 
+						string.Format("{0:d2}", b.pos.z);
+					foreach (Structure str in sb.surfaceObjects) {
+					if (str == null) continue;
+					s += str.Save() + ';';
+				}
+				sdata.Add(s);
+			}
+		}
+		return sdata.ToArray();
+	}
+
+	public void LoadStructures( List<string> sdata) {
+		foreach (string s in sdata) {
+			SurfaceBlock sb = blocks[byte.Parse(s.Substring(0,2)), byte.Parse(s.Substring(2,2)), byte.Parse(s.Substring(4,2))] as SurfaceBlock ;
+			int startIndex = 6, endIndex = s.IndexOf(';');
+			while ( endIndex != -1 ) {
+				Structure str = Structure.GetNewStructure( int.Parse(s.Substring(startIndex + 4, 3)) );
+				str.Load(s.Substring(startIndex, endIndex - startIndex), this, sb);
+				startIndex = endIndex + 1;
+				endIndex = s.IndexOf(';', startIndex);
+			}
+		}
 	}
 
 	void OnGUI () { //test
