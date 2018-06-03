@@ -21,7 +21,6 @@ public class GameMaster : MonoBehaviour {
 	List<GameObject> cameraUpdateBroadcast;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
-	int camCullingMask = 1;
 	public static Chunk mainChunk; 
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
@@ -337,7 +336,6 @@ public class GameMaster : MonoBehaviour {
 
 	void LateUpdate() {
 		if (moveCamToLookPoint) {
-			float prevY = camBasis.transform.position.y, y = transform.position.y;
 			camBasis.position = Vector3.MoveTowards(camBasis.position, camLookPoint, CAM_LOOK_SPEED * Time.deltaTime);
 			if (Vector3.Distance(camBasis.position, camLookPoint) == 0) moveCamToLookPoint = false;
 		}
@@ -443,7 +441,10 @@ public class GameMaster : MonoBehaviour {
 
 				Chunk nchunk = new GameObject("chunk").AddComponent<Chunk>();
 				bool creatingChunkSuccess = nchunk.LoadChunk(data, size);
-				if (creatingChunkSuccess) {
+				if ( !creatingChunkSuccess ) {
+					print ("chunk creating failed");
+					return false;
+				}
 					Destroy(mainChunk.gameObject);
 					mainChunk = nchunk;
 					if (line == "$") {
@@ -455,14 +456,14 @@ public class GameMaster : MonoBehaviour {
 						}
 						mainChunk.LoadStructures(str_data);
 					}
-					else {
-						print (line + ", no structures");
-					}
-				}
-				else {
-					print ("chunk creating failed");
-					return false;
-				}
+					//wind vector
+					Vector3 savedVector = windVector;
+					savedVector = Quaternion.AngleAxis( int.Parse(line.Substring(0,3)) , Vector3.up) * Vector3.forward * int.Parse(line.Substring(3,2));
+					windVector = savedVector;
+					windTimer = windChangeTime * (0.5f + Random.value * 0.5f);
+					foreach (Component c in windUpdateList) { c.BroadcastMessage("WindUpdate", windVector, SendMessageOptions.DontRequireReceiver);}
+					// hospital birthrate
+				 Hospital.SetBirthrateMode( int.Parse(sr.ReadLine()));
 			}
 		}
 		return true;
@@ -483,6 +484,8 @@ public class GameMaster : MonoBehaviour {
 				}
 			}
 			sw.WriteLine("$");
+			sw.WriteLine( string.Format("{0:d3}", (int)(Vector3.Angle(Vector3.forward, windVector))) +  string.Format("{0:d2}", (int)windVector.magnitude));
+			sw.WriteLine(Hospital.GetBirthrateModeIndex());
 		}
 		return true;
 	}

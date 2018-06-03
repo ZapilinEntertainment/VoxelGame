@@ -51,7 +51,7 @@ public class TreeSapling : Plant {
 		(myRenderer as LineRenderer).SetPosition(1,transform.position + Vector3.up * startSize);
 	}
 
-	virtual public void SetVisibility( bool x) {
+	override public void SetVisibility( bool x) {
 		if (x == visible) return;
 		else {
 			visible = x;

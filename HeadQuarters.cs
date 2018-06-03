@@ -64,7 +64,6 @@ public class HeadQuarters : House {
 											GameMaster.realMaster.AddAnnouncement(Localization.hq_upper_surface_blocked);
 											colony.storage.AddResources(requiredResources);
 											return;
-											break;
 										}
 									}
 									SurfaceBlock upperSurface = upperBlock as SurfaceBlock;	

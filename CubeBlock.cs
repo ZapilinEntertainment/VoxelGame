@@ -141,7 +141,7 @@ public class CubeBlock : Block{
 		}
 		faces[i].material = ResourceType.GetMaterialById(material_id);
 		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
+		//if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
 		faces[i].enabled = true;
 	}
 

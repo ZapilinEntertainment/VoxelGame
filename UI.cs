@@ -87,7 +87,6 @@ public class UI : MonoBehaviour {
 				if (s != null) {
 					chosenStructure = s;
 					chosenStructure.SetGUIVisible(true);
-					Vector2 cursorPos = Camera.main.WorldToScreenPoint(s.transform.position);
 					mode = UIMode.StructurePanel;
 					GameMaster.realMaster.SetLookPoint (chosenStructure.transform.position);
 					structureFrame.SetActive(true);
@@ -523,7 +522,6 @@ public class UI : MonoBehaviour {
 					}
 					goto case 3;
 					}
-					break;
 				case 5: // подтверждение на снос при строительстве
 					GUI.Box(acceptBox, Localization.ui_accept_destruction_on_clearing);
 					if (GUI.Button (new Rect(acceptBox.x, acceptBox.y + acceptBox.height/2f, acceptBox.width/2f, acceptBox.height/2f), Localization.ui_accept)) {

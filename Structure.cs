@@ -5,7 +5,7 @@ using UnityEngine;
 public enum StructureType {NotAssigned, Plant, HarvestableResources, Structure, MainStructure}
 public class Structure : MonoBehaviour {
 	public SurfaceBlock basement{get;protected set;}
-	public SurfaceRect innerPosition;
+	public SurfaceRect innerPosition{get;protected set;}
 	public bool borderOnlyConstruction{get;protected set;}
 	public bool isArtificial {get;protected set;}
 	public bool isBasement{get;protected set;}
@@ -193,17 +193,13 @@ public class Structure : MonoBehaviour {
 			break;		
 		case STORAGE_0_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; break;
-			break;
 		case STORAGE_1_ID:
 			innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.Structure; break;
-			break;
 		case STORAGE_2_ID:
 		case STORAGE_3_ID:
 			innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; break;
-			break;
 		case STORAGE_5_ID: 
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
-			break;
 		case CONTAINER_ID :	
 			innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.HarvestableResources; 
 			break;

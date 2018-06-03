@@ -8,7 +8,7 @@ public class Dock : WorkBuilding {
 	bool correctLocation = false;
 	bool gui_tradeGoodTabActive = false, gui_sellResourcesTabActive = false, gui_addTransactionMenu = false;
 	public static bool?[] isForSale{get; private set;}
-	public static int[] minValueForTrading{get;private set;}
+	public static int[] minValueForTrading{get; private set;}
 	int preparingResourceIndex = 0;
 	ColonyController colony;
 	public static int immigrationPlan {get; private set;} 
@@ -154,6 +154,35 @@ public class Dock : WorkBuilding {
 		colony.storage.AddResources(rt, volume);
 	}
 
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveDockData();
+	}
+
+	protected string SaveDockData() {
+		string s = "";
+		// сохранить корабль и таймер, лоты хранятся в общем
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		//workbuilding class part
+		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
+		AddWorkers(int.Parse(s_data.Substring(15,3)));
+		//building class part
+		SetActivationStatus(s_data[11] == '1');     
+		//dock class part
+
+		//--
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
+
 	void OnDestroy() {
 		GameMaster.colonyController.RemoveDock(this);
 		PrepareWorkbuildingForDestruction();
@@ -262,6 +291,7 @@ public class Dock : WorkBuilding {
 				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 2, r.height ), minValueForTrading[i].ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
 				if (GUI.Button(new Rect(r.x + 5 * r.height, r.y, r.height, r.height), "+1")) minValueForTrading[i]++;
 				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+10")) minValueForTrading[i] += 10;
+				if (minValueForTrading[i] >= 10000) minValueForTrading[i] = 9999;
 				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), PoolMaster.minusButton_tx)) {isForSale [i] = null; minValueForTrading[i] = 0;}
 					r.y += r.height;
 				}

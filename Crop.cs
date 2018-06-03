@@ -8,8 +8,7 @@ public class Crop : Plant {
 	byte currentStage = 0;
 	[SerializeField]
 	float maxVisibleDistance = 25;
-	[SerializeField]
-	bool visible = true;
+	bool rangeVisibility = true;
 
 	void Update() {
 		if (full || GameMaster.gameSpeed == 0) return;
@@ -36,13 +35,28 @@ public class Crop : Plant {
 
 	public void CameraUpdate(Transform t) {
 		if (Vector3.Distance(myRenderer.transform.position, t.position) > maxVisibleDistance) { 
-			if (visible) {myRenderer.enabled = false; visible = false;}
+			if (rangeVisibility) {
+				if (visible) myRenderer.enabled = false; 
+				rangeVisibility = false;
+			}
 		}
 		else {
-			if (!visible) {myRenderer.enabled = true;visible =true;}
+			if (!rangeVisibility) {
+				if (visible) myRenderer.enabled = true; 
+				rangeVisibility =true;
+			}
 			Vector3 dir = t.position - myRenderer.transform.position;
 			dir.y = 0;
 			myRenderer.transform.forward = dir;
+		}
+	}
+
+	override public void SetVisibility( bool x) {
+		if (x == visible) return;
+		else {
+			visible = x;
+			if ( visible && rangeVisibility ) myRenderer.enabled = true;
+			else {if (myRenderer.enabled) myRenderer.enabled = false;}
 		}
 	}
 }

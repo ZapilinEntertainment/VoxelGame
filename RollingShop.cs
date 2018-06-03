@@ -29,6 +29,53 @@ public class RollingShop : WorkBuilding {
 		}
 	}
 
+	public int GetActivityModeIndex() {
+		switch (mode) {
+		case RollingShopMode.NoActivity: return 0;
+		case RollingShopMode.GearsUpgrade: return 1;
+		case RollingShopMode.BoatParts: return 2;
+		default: return 0;
+		}
+	}
+
+	public void SetMode(int i) {
+		switch (i) {
+		case 0: mode = RollingShopMode.NoActivity;break;
+		case 1: mode = RollingShopMode.GearsUpgrade;break;
+		case 2: mode = RollingShopMode.BoatParts;break;
+		default: mode = RollingShopMode.NoActivity;break;
+		}
+	}
+
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData()+SaveRollingShopData();
+	}
+
+	protected string SaveRollingShopData() {
+		string s = "";
+		s +=string.Format("{0:d1}", GetActivityModeIndex());
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		//workbuilding class part
+		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
+		AddWorkers(int.Parse(s_data.Substring(15,3)));
+		//rollingshop class part
+		SetMode( int.Parse(s_data[18].ToString()) );
+		//building class part
+		SetActivationStatus(s_data[11] == '1');     
+		//--
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
+
 	void OnDestroy() {
 		GameMaster.colonyController.RemoveRollingShop(this);
 		PrepareBuildingForDestruction();

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class FoodFactory : WorkBuilding {
 	[SerializeField]
-	float food_input = 1, metalP_input = 1, output = 5;
+	float food_input = 10, metalP_input = 1, output = 5;
 	float food_inputBuffer = 0, metalP_inputBuffer = 0, food_outputBuffer = 0; 
 	Storage storage;
 	const float BUFFER_LIMIT = 10;
@@ -37,6 +37,37 @@ public class FoodFactory : WorkBuilding {
 		food_inputBuffer -= val * food_input;
 		workflow = 0;
 	}
+
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveFoodFactoryData();
+	}
+
+	protected string SaveFoodFactoryData() {
+		string s = "";
+		s += string.Format("{0:d5}", (int)(food_inputBuffer * 1000f ));
+		s += string.Format("{0:d5}", (int)(metalP_inputBuffer * 1000f ));
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		//workbuilding class part
+		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
+		AddWorkers(int.Parse(s_data.Substring(15,3)));
+		//food factory class part
+		food_input = int.Parse(s_data.Substring(18,5)) / 1000f;
+		metalP_input = int.Parse(s_data.Substring(23,5)) / 1000f;
+		//building class part
+		SetActivationStatus(s_data[11] == '1');     
+		//--
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
 
 	void OnDestroy() {
 		if (food_inputBuffer > 0) {

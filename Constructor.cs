@@ -59,7 +59,6 @@ public class Constructor : MonoBehaviour {
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
 		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);
 
-		GameObject pref;
 		MultiblockStructure ms = null;
 		if (Random.value > 0.5f) ms = Structure.GetNewStructure(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;
 		else ms = Structure.GetNewStructure(Structure.LIFESTONE_ID) as MultiblockStructure;

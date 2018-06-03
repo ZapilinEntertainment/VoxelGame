@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Flag : MonoBehaviour {
 	public float maxDistance = 40 * Block.QUAD_SIZE;
-	bool enabled = true;
+	bool visible = true;
 	public SpriteRenderer spRender;
 	public GameObject flag;
 	void Awake() {
@@ -14,9 +14,9 @@ public class Flag : MonoBehaviour {
 
 	public void CameraUpdate(Transform t) {
 		Vector3 pos = t.position;
-		if (Vector3.Distance(pos, transform.position) > maxDistance) { if (enabled) {spRender.enabled = false; enabled = false;}}
+		if (Vector3.Distance(pos, transform.position) > maxDistance) { if (visible) {spRender.enabled = false; visible = false;}}
 		else {
-			if (!enabled) {spRender.enabled = true;enabled=true;}
+			if (!visible) {spRender.enabled = true; visible=true;}
 			pos.y = transform.position.y;
 			flag.transform.LookAt(pos);
 		}

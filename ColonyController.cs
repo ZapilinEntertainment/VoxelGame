@@ -5,7 +5,6 @@ using UnityEngine;
 public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 
 public class ColonyController : MonoBehaviour {
-	float foodCount = 0;
 	const float FOOD_CONSUMPTION = 1, SHIP_ARRIVING_TIME = 300, // for max difficulty
 	HOUSING_TIME = 7;
 	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
@@ -85,7 +84,7 @@ public class ColonyController : MonoBehaviour {
 		}
 
 		//   SHIPS ARRIVING
-		if (shipArrivingTimer > 0) {
+		if (shipArrivingTimer > 0) { // переписать на каждый док
 			shipArrivingTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (shipArrivingTimer <= 0 && docks.Count != 0) {
 				List<int>freeDocks = new List<int>();
@@ -454,7 +453,7 @@ public class ColonyController : MonoBehaviour {
 		if (d.level > docksLevel) docksLevel = d.level;
 	}
 	public void RemoveDock( Dock d) {
-		if ( d == null || docks.Count == null) return;
+		if ( d == null || docks.Count == 0) return;
 		int i = 0;
 		while (i < docks.Count) {
 			if (docks[i] == d) {

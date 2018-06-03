@@ -14,7 +14,6 @@ public struct ChunkPos {
 }
 
 public class Chunk : MonoBehaviour {
-	Vector3 CENTER_POS = new Vector3(8,8,8);
 	Block[,,] blocks;
 	List<SurfaceBlock> surfaceBlocks;
 	public byte prevBitmask = 63;
@@ -28,7 +27,6 @@ public class Chunk : MonoBehaviour {
 	public List <Component> chunkUpdateSubscribers;
 
 	public void Awake() {
-		CENTER_POS = new Vector3(CHUNK_SIZE/2f, CHUNK_SIZE/2f, CHUNK_SIZE/2f);
 		grassland_blocks = new List<Grassland>();
 		surfaceBlocks = new List<SurfaceBlock>();
 		cave_pref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
@@ -289,7 +287,6 @@ public class Chunk : MonoBehaviour {
 		int x = pos.x, y = pos.y, z = pos.z;
 		switch (b.type) {
 		case BlockType.Cube : 
-			CubeBlock cb = b.GetComponent<CubeBlock>();
 			Block upperBlock = GetBlock(x, y+1, z);
 			if ( upperBlock != null && upperBlock.type == BlockType.Surface ) DeleteBlock(new ChunkPos(x, y+1, z));
 			break;
@@ -497,7 +494,6 @@ public class Chunk : MonoBehaviour {
 
 	void CullingUpdate(Transform campoint) {
 		if (campoint == null) campoint = Camera.main.transform;
-		byte camSector = 0;
 		Vector3 cpos = transform.InverseTransformPoint(campoint.position);
 		Vector3 v = Vector3.one * (-1);
 		int size = blocks.GetLength(0);
@@ -506,9 +502,7 @@ public class Chunk : MonoBehaviour {
 		if (cpos.z > 0) {if (cpos.z > size) v.z = 1; else v.z = 0;}
 		//print (v);
 		if (v != Vector3.zero) {
-			Vector3 cdir = transform.InverseTransformDirection(campoint.forward);
-			//easy-culling
-			float av = Vector3.Angle(CENTER_POS - cpos, cdir);				
+			//easy-culling	
 				byte renderBitmask = 63;
 				if (v.x ==1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
 				if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;

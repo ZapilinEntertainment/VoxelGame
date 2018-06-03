@@ -20,6 +20,22 @@ public struct PixelPosByte {
 
 	public static bool operator ==(PixelPosByte lhs, PixelPosByte rhs) {return lhs.Equals(rhs);}
 	public static bool operator !=(PixelPosByte lhs, PixelPosByte rhs) {return !(lhs.Equals(rhs));}
+
+	public override bool Equals(object obj) 
+	{
+		// Check for null values and compare run-time types.
+		if (obj == null || GetType() != obj.GetType()) 
+			return false;
+
+		PixelPosByte p = (PixelPosByte)obj;
+		return (x == p.x) && (y == p.y) && (exists == p.exists);
+	}
+
+	public override int GetHashCode()
+	{ 
+		if (exists) return x * y;
+		else return x* y * (-1);
+	}
 }
 
 public class Grassland : MonoBehaviour {

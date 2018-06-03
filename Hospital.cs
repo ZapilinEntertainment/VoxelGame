@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BirthrateMode {Lowered, Normal, Improved}
+public enum BirthrateMode {Normal, Improved, Lowered}
 public class Hospital : House {
 	[SerializeField]
 	int _coverage = 100;
@@ -10,10 +10,6 @@ public class Hospital : House {
 	public static float hospital_birthrate_coefficient = 1;
 	public static  BirthrateMode birthrateMode{get; private set;}
 	public static float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
-
-	static Hospital() {
-		birthrateMode = BirthrateMode.Normal;
-	}
 
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
@@ -27,6 +23,22 @@ public class Hospital : House {
 		isActive = x;
 		GameMaster.colonyController.RecalculateHousing();
 		GameMaster.colonyController.RecalculateHospitals();
+	}
+
+	public static void SetBirthrateMode(int x) {
+		switch (x) {
+		case 0: birthrateMode = BirthrateMode.Normal;break;
+		case 1: birthrateMode = BirthrateMode.Improved;break;
+		case 2: birthrateMode = BirthrateMode.Lowered;break;
+		}
+	}
+	public static int GetBirthrateModeIndex() {
+		switch (birthrateMode) {
+		case BirthrateMode.Normal: return 0;
+		case BirthrateMode.Improved: return 1;
+		case BirthrateMode.Lowered: return 2;
+		default: return 0;
+		}
 	}
 
 	void OnGUI() {

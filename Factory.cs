@@ -69,28 +69,49 @@ public class Factory : WorkBuilding {
 		if (recipe == Recipe.NoRecipe) return 0;
 		else {
 			switch (specialization) {
-			case FactorySpecialization.FuelFacility:
-				return Recipe.fuelFacilityRecipes.Length;
-				break;
-			case FactorySpecialization.OreRefiner:
-				return Recipe.oreRefiningRecipes.Length;
-				break;
-			case FactorySpecialization.Smeltery:
-				return Recipe.smelteryRecipes.Length;
-				break;
-			case FactorySpecialization.PlasticsFactory:
-				return Recipe.plasticFactoryRecipes.Length;
-				break;
-			case FactorySpecialization.Unspecialized:
-				return 0;
-				break;
-				default:
-				return 0;
-				break;
+			case FactorySpecialization.FuelFacility:		return Recipe.fuelFacilityRecipes.Length;
+			case FactorySpecialization.OreRefiner:		return Recipe.oreRefiningRecipes.Length;
+			case FactorySpecialization.Smeltery:			return Recipe.smelteryRecipes.Length;
+			case FactorySpecialization.PlasticsFactory:		return Recipe.plasticFactoryRecipes.Length;
+			case FactorySpecialization.Unspecialized:			return 0;
+			default:		return 0;
 			}
 		}
 	}
 		
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveFactoryData();
+	}
+
+	protected string SaveFactoryData() {
+		string s = "";
+		s += string.Format("{0:d3}", recipe.ID);
+		s += string.Format("{0:d5}", (int)(inputResourcesBuffer * 1000) );
+		s += string.Format("{0:d5}",(int)(outputResourcesBuffer * 1000) );
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
+		Prepare();
+		SetBasement(surface, new PixelPosByte(x,z));
+		//workbuilding class part
+		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
+		AddWorkers(int.Parse(s_data.Substring(15,3)));
+		//factory class part
+		SetRecipe(Recipe.GetRecipeByNumber(int.Parse(s_data.Substring(18,3))));
+		inputResourcesBuffer = int.Parse(s_data.Substring(21,5)) / 1000f;
+		outputResourcesBuffer = int.Parse(s_data.Substring(26,5)) / 1000f;
+		//building class part
+		SetActivationStatus(s_data[11] == '1');     
+		//--
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
+
 	void OnGUI() {
 		if ( !showOnGUI ) return;
 		//upgrading

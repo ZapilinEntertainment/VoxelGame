@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Zeppelin : Transport {
+public class Zeppelin : MonoBehaviour {
 	SurfaceBlock landingPlace, s_place1, s_place2;
 	bool landing = false, anchored = false, landed = false;
 	public Transform anchor, leftScrew,rightScrew, body;

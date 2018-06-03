@@ -77,9 +77,10 @@ public abstract class WorkBuilding : Building {
 		byte z = byte.Parse(s_data.Substring(2,2));
 		Prepare();
 		SetBasement(surface, new PixelPosByte(x,z));
-		//building class part
+		//workbuilding class part
 		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
 		AddWorkers(int.Parse(s_data.Substring(15,3)));
+		//building class part
 		SetActivationStatus(s_data[11] == '1');     
 		//--
 		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);

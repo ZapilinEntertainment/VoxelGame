@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class FallingTree : MonoBehaviour {
-	Vector3 startPos;
 	Quaternion fallRotation;
 	float timer = 10;
 	void Awake() {
-		startPos = transform.position;
 		fallRotation = Quaternion.LookRotation(Vector3.up, new Vector3(Random.value, 0, Random.value));
 	}
 	// Update is called once per frame

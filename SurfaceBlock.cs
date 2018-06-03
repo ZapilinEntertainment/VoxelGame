@@ -23,6 +23,20 @@ public struct SurfaceRect {
 
 	public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) {return lhs.Equals(rhs);}
 	public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) {return !(lhs.Equals(rhs));}
+	public override bool Equals(object obj) 
+	{
+		// Check for null values and compare run-time types.
+		if (obj == null || GetType() != obj.GetType()) 
+			return false;
+
+		SurfaceRect p = (SurfaceRect)obj;
+		return (x == p.x) && (z == p.z) && (x_size == p.x_size) && (z_size == p.z_size);
+	}
+
+	public override int GetHashCode()
+	{ 
+		return x + z + x_size + z_size;
+	}
 	public static SurfaceRect one{get; private set;}
 	public static SurfaceRect full {get;private set;}
 }
