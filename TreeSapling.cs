@@ -19,11 +19,10 @@ public class TreeSapling : Plant {
 			float lp = lifepower;
 			lifepower = 0;
 			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			t.gameObject.SetActive(true);
 			t.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
 			basement = null;
 			t.AddLifepowerAndCalculate(lp);
-			t.gameObject.SetActive(true);
-			t.SetVisibility(true);
 			PoolMaster.current.ReturnSaplingToPool(this);
 		}
 	}

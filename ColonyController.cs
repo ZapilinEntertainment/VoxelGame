@@ -402,6 +402,16 @@ public class ColonyController : MonoBehaviour {
 		}
 		else freeWorkers -= x;
 	}
+
+	public void SetCitizens(int x) {
+		if (x == citizenCount) return;
+		if (x > citizenCount) {AddCitizens(x - citizenCount);}
+		else {
+			freeWorkers -= (citizenCount - x);
+			if (freeWorkers < 0) freeWorkers = 0;
+		}
+	}
+
 	public void AddWorkers(int x) {
 		freeWorkers += x;
 	}

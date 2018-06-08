@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Farm : WorkBuilding {
-	[SerializeField]
-	float farmFertility = 1;
+	protected float farmFertility = 1;
 	int lifepowerToEveryCrop = 2;
-	Plant[] crops;
-	static int MAX_CROPS = 256;
+	 static int MAX_CROPS = 256;
+	List<Plant> unusedCrops;
 
+	override public void Prepare() {
+		PrepareWorkbuilding();
+		unusedCrops = new List<Plant>();
+	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
@@ -35,43 +38,56 @@ public class Farm : WorkBuilding {
 	}
 
 	override protected void LabourResult() {
-		if (crops == null) {
-			List<PixelPosByte> cropsPositions = basement.GetRandomCells(MAX_CROPS);
-			if (cropsPositions.Count > 0) {
-				crops = new Plant[cropsPositions.Count];
-				crops[0] = Structure.GetNewStructure(Structure.WHEAT_CROP_ID) as Plant;
-				for (int i =1; i< crops.Length; i++) {
-					crops[i] = Instantiate(crops[0]);
-					crops[i].gameObject.SetActive(true);
-					crops[i].SetBasement(basement, cropsPositions[i]);
+		int i = 0;
+		if (basement.cellsStatus != 0) {			
+			float harvest = 0;
+			while ( i < basement.surfaceObjects.Count ) {
+				if ( basement.surfaceObjects[i] == null ) {
+					basement.RequestAnnihilationAtIndex(i);
+					continue;
 				}
-			}
-		}
-		else {
-			if (crops[0].growth >=1) { // harvesting
-				float harvest = 0;
-				for (int i = 0; i < crops.Length; i++) {
-					if (crops[i] == null) {
-						PixelPosByte ppos = basement.GetRandomCell();
-						if (ppos != PixelPosByte.Empty) {
-							crops[i] = Structure.GetNewStructure(Structure.WHEAT_CROP_ID) as Plant;
-							crops[i].gameObject.SetActive(true);
-							crops[i].SetBasement(basement, ppos);
+				else {
+					Plant p = basement.surfaceObjects[i] as Plant;
+					if ( p != null && p.plantType == PlantType.Crop  ) {
+						if ( !p.full ) 	p.AddLifepower( lifepowerToEveryCrop );
+						else {
+							if (p.growth >= 1) {
+								harvest += farmFertility;
+								p.Annihilate(false);
+							}
 						}
 					}
-					else {
-						harvest += farmFertility;
-						crops[i].SetLifepower(0);
-					}
 				}
-				if (harvest != 0) GameMaster.colonyController.storage.AddResources(new ResourceContainer(ResourceType.Food, harvest));
+				i++;
 			}
-			else {
-				foreach (Plant p in crops) {
-					if ( p == null) continue;
-					p.AddLifepower(lifepowerToEveryCrop);
+			if ( harvest > 0 ) {
+				GameMaster.colonyController.storage.AddResources(ResourceType.Food, harvest);
+			}
+		}
+		if (i < MAX_CROPS) {
+			List<PixelPosByte> positions = basement.GetRandomCells(i);
+			i = positions.Count - 1;
+			while ( i >= 0 ) {
+				Structure s = null;
+				if ( unusedCrops.Count > 0 ) {
+					s = unusedCrops[0];
+					s.gameObject.SetActive(true);
+					unusedCrops.RemoveAt(0);
 				}
+				else s = Structure.GetNewStructure(Structure.WHEAT_CROP_ID);
+				s.SetBasement(basement, positions[i]);
+				(s as Plant).AddLifepower(lifepowerToEveryCrop);
+				i--;
 			}
+		}
+	}
+
+	public void ReturnCropToPool (Plant c) {
+		if (c != null ) {
+			c.SetLifepower(0);
+			c.SetGrowth(0);
+			c.gameObject.SetActive(false);
+			unusedCrops.Add(c);
 		}
 	}
 

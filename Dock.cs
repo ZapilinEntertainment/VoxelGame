@@ -22,8 +22,8 @@ public class Dock : WorkBuilding {
 		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;
 		if (isForSale == null) {
-			isForSale = new bool?[ResourceType.resourceTypesArray.Length];
-			minValueForTrading= new int[ResourceType.resourceTypesArray.Length];
+			isForSale = new bool?[ResourceType.RTYPES_COUNT];
+			minValueForTrading= new int[ResourceType.RTYPES_COUNT];
 			immigrationEnabled = true;
 			immigrationPlan = 0;
 		}
@@ -122,7 +122,7 @@ public class Dock : WorkBuilding {
 			break;
 		case ShipType.Military:
 			if (GameMaster.warProximity < 0.5f && Random.value < 0.1f && immigrationPlan > 0) {
-				int veterans =(int)( s.volume * 0.02f);
+				int veterans =(int)( s.volume * 0.02f );
 				if (veterans > immigrationPlan) veterans = immigrationPlan;
 				colony.AddCitizens(veterans);
 			}
@@ -154,6 +154,16 @@ public class Dock : WorkBuilding {
 		colony.storage.AddResources(rt, volume);
 	}
 
+	public static void MakeLot( int index, bool forSale, int minValue ) {
+		isForSale[index] = forSale;
+		minValueForTrading[index] = minValue;
+	}
+
+	public static void SetImmigrationStatus ( bool x, int count) {
+		immigrationEnabled = x;
+		immigrationPlan = count;
+	}
+
 	//---------------------                   SAVING       SYSTEM-------------------------------
 	public override string Save() {
 		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveDockData();
@@ -161,7 +171,22 @@ public class Dock : WorkBuilding {
 
 	protected string SaveDockData() {
 		string s = "";
-		// сохранить корабль и таймер, лоты хранятся в общем
+		if (maintainingShip ) s+='1'; else s+='0';
+		if ( loadingShip == null ) {
+			s += "000000";
+		}
+		else {
+			switch ( loadingShip.type ) {
+			case ShipType.Cargo : s += '1';break;
+			case ShipType.Military: s += '2'; break;
+			case ShipType.Passenger: s+= '3';break;
+			case ShipType.Private: s+='4';break;
+			}
+			s += loadingShip.level.ToString();
+			if (loadingTimer == LOADING_TIME) loadingTimer = LOADING_TIME * 0.99f;
+			s += string.Format("{0:d2}", ((int) (loadingTimer / LOADING_TIME * 100 )).ToString());
+
+		}
 		return s;
 	}
 
@@ -176,7 +201,17 @@ public class Dock : WorkBuilding {
 		//building class part
 		SetActivationStatus(s_data[11] == '1');     
 		//dock class part
-
+		if ( s_data[18] == '1' ) maintainingShip = true;
+		switch (s_data[19]) {
+		case '1': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Cargo ); break;
+		case '2': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Military ); break;
+		case '3': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Passenger ); break;
+		case '4': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Private ); break;
+		default: loadingShip = null; break;
+		}
+		if ( loadingShip != null ) {
+			
+		}
 		//--
 		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
 		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
@@ -311,6 +346,7 @@ public class Dock : WorkBuilding {
 				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), immigrationPlan.ToString() + " ("+ immigrationPlan.ToString()+')', PoolMaster.GUIStyle_CenterOrientedLabel);
 				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+1")) immigrationPlan++;
 				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrationPlan += 10;
+				if (immigrationPlan >= 1000) immigrationPlan = 999;
 			}
 		}
 	}

@@ -411,7 +411,7 @@ public class GameMaster : MonoBehaviour {
 		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 	}
 
-	public bool LoadGame( string name ) {
+	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
 		string fpath = path + "Saves/" + name + ".txt";
 		if ( !File.Exists ( fpath ) ) {
 			print ("file not exist");
@@ -464,6 +464,24 @@ public class GameMaster : MonoBehaviour {
 					foreach (Component c in windUpdateList) { c.BroadcastMessage("WindUpdate", windVector, SendMessageOptions.DontRequireReceiver);}
 					// hospital birthrate
 				 Hospital.SetBirthrateMode( int.Parse(sr.ReadLine()));
+				// trade operations
+				line = sr.ReadLine();
+				int i = 0, p =0;
+				while ( i < ResourceType.RTYPES_COUNT ) {
+					if ( line[p] == '0' ) p++;
+					else {
+						if ( line[p] == '1' ) Dock.MakeLot(i, false, int.Parse( line.Substring(p+1,4) ));
+						else Dock.MakeLot(i, true, int.Parse( line.Substring(p+1,4) ));
+						p += 5;
+					}
+					i++;
+				}
+				//immigration
+				line = sr.ReadLine();
+				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,4)) * (-1) );
+				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,4)));
+				// total citizen count
+				colonyController.SetCitizens( int.Parse( sr.ReadLine() ));
 			}
 		}
 		return true;
@@ -473,19 +491,40 @@ public class GameMaster : MonoBehaviour {
 		string fpath = path + "Saves/"+ name + ".txt";
 		using (StreamWriter sw = new StreamWriter(fpath,false, System.Text.Encoding.Unicode)) {
 			string[] dataString = mainChunk.SaveChunkData();
-			foreach (string s in dataString) {
-				sw.WriteLine(s);
+			foreach (string ds in dataString) {
+				sw.WriteLine(ds);
 			}
 			sw.WriteLine("$");
 			dataString = mainChunk.SaveStructures();
 			if (dataString != null && dataString.Length > 0) {
-				foreach (string s in dataString) {
-					sw.WriteLine(s);
+				foreach (string ds in dataString) {
+					sw.WriteLine(ds);
 				}
 			}
 			sw.WriteLine("$");
 			sw.WriteLine( string.Format("{0:d3}", (int)(Vector3.Angle(Vector3.forward, windVector))) +  string.Format("{0:d2}", (int)windVector.magnitude));
 			sw.WriteLine(Hospital.GetBirthrateModeIndex());
+			//trading operations
+			int i = 0;
+			string s = "";
+			while ( i < ResourceType.RTYPES_COUNT ) {
+				if (Dock.isForSale[i] == null) {
+					s += '0';
+				}
+				else {
+					if ( Dock.isForSale[i] == true ) s += '1'; else s += '2';
+					s += string.Format("{0:d4}", Dock.minValueForTrading[i]);
+				}
+				i++;
+			}
+			sw.WriteLine(s);
+			//immigration
+			s= "";
+			if ( Dock.immigrationEnabled ) s+= '1'; else s+='0';
+			if ( Dock.immigrationPlan < 0) s += '0'; else s+='1';
+			s += string.Format("{0:d3}", (int)(Dock.immigrationPlan * Mathf.Sign(Dock.immigrationPlan)));
+			//total citizens count
+			sw.WriteLine(colonyController.citizenCount);
 		}
 		return true;
 	}

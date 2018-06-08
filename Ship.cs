@@ -84,13 +84,45 @@ public class Ship : MonoBehaviour {
 			}
 		}
 		if (speed * speed / 2 / acceleration > dist) speed -= acceleration * Time.deltaTime * GameMaster.gameSpeed;
-		else speed += acceleration * Time.deltaTime * GameMaster.gameSpeed;
+		else {
+			if (speed < 100) speed += acceleration * Time.deltaTime * GameMaster.gameSpeed;
+		}
 		if (speed != 0) {
 			float step = speed * Time.deltaTime * GameMaster.gameSpeed; // cause of time acceleration errors
 			if (step > dist) step = dist;
 			transform.Translate(Vector3.forward * step, Space.Self);
 			if (Vector3.Distance(transform.position, GameMaster.mainChunk.transform.position) > 2000) PoolMaster.current.ReturnShipToPool(this);
 		}
+	}
+
+	public string Save() {
+		string s = "";
+		if (speed >= 100) speed = 99;
+		s += string.Format("{0:d2}", (int)speed );
+		float t = transform.position.x;
+		int signs = (t < 0) ? 1 : 0;
+		t *= Mathf.Sign(t);
+		s += string.Format("{0:d3}", (int)(t * 100) );
+		t = transform.position.y; signs += (t < 0) ? 1 : 0 * 2; t *= Mathf.Sign(t);
+		s += string.Format("{0:d3}", (int)(t * 100) );
+		t = transform.position.z; signs += (t < 0) ? 1 : 0* 4; t *= Mathf.Sign(t);
+		s += string.Format("{0:d3}", (int)(t * 100) );
+		s += signs.ToString();
+		//direction
+		if ( transform.forward.x > 0 ) s += '0';
+		else {
+			if ( transform.forward.x == 0 ) {
+				if ( transform.forward.z > 0 ) s += '2';
+				else s += '3';
+			}
+			else s += '1';
+		}
+		return s;
+	}
+
+	public void Load(bool docked, string s) {
+		speed = int.Parse(s.Substring(23,2));
+
 	}
 
 	public void Undock() {

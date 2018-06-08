@@ -36,36 +36,36 @@ public class GatherSite : Worksite {
 			while (i < workObject.surfaceObjects.Count) {
 				if (workObject.surfaceObjects[i]== null) { workObject.RequestAnnihilationAtIndex(i); continue;}
 				Tree t = workObject.surfaceObjects[i].GetComponent<Tree>();
-				if ( t != null) {
-					resourcesFound = true;
-					if (t.hp < workflow) {
-						workflow -= t.hp;
-						GameMaster.colonyController.storage.AddResources(ResourceType.Lumber, t.CalculateLumberCount());
-						t.Chop();
-						i++;
-						break;
-					}
-					else {i++; continue;}
-				}
-				else {
-					HarvestableResource hr = workObject.surfaceObjects[i].GetComponent<HarvestableResource>();
-					if (hr == null) {i++; continue;}
-					else {
+				if ( t != null && t.enabled) {
 						resourcesFound = true;
-						if (workflow > hr.count1) {
-							GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
-							workflow -= hr.count1;
-							Destroy(hr.gameObject);
+						if (t.hp < workflow) {
+							workflow -= t.hp;
+							GameMaster.colonyController.storage.AddResources(ResourceType.Lumber, t.CalculateLumberCount());
+							t.Chop();
+							i++;
 							break;
 						}
+						else {i++; continue;}
+					}
+					else {
+						HarvestableResource hr = workObject.surfaceObjects[i].GetComponent<HarvestableResource>();
+						if (hr == null) {i++; continue;}
 						else {
-							GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
-							hr.count1 -= Mathf.FloorToInt(workflow); workflow = 0;
-							break;
+							resourcesFound = true;
+							if (workflow > hr.count1) {
+								GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
+								workflow -= hr.count1;
+								Destroy(hr.gameObject);
+								break;
+							}
+							else {
+								GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
+								hr.count1 -= Mathf.FloorToInt(workflow); workflow = 0;
+								break;
+							}
 						}
 					}
 				}
-			}
 			if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
 	}
 
