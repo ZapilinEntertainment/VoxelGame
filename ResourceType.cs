@@ -119,11 +119,15 @@ public class ResourceType {
 public struct ResourceContainer {
 	public readonly ResourceType type;
 	public float volume{get; private set;}
+	public static readonly ResourceContainer Empty;
 
 	public ResourceContainer(ResourceType f_type, float f_volume) {
 		type= f_type; 
 		if (f_volume < 0) f_volume = 0;
 		volume = f_volume;
+	}
+	static ResourceContainer() {
+		Empty = new ResourceContainer (ResourceType.resourceTypesArray[0], 0);
 	}
 }
 

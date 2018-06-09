@@ -20,7 +20,7 @@ public class CoveredFarm : WorkBuilding {
 	}
 
 	override protected void LabourResult() {
-		s.AddResources( new ResourceContainer (outputResource, output_value * workflow / workflowToProcess) );
+		s.AddResource( new ResourceContainer (outputResource, output_value * workflow / workflowToProcess) );
 		workflow = 0;
 	}
 

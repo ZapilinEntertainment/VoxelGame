@@ -204,11 +204,11 @@ public class GameMaster : MonoBehaviour {
 			StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
 			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.zero);
 			//start resources
-			colonyController.storage.AddResources(ResourceType.metal_K,100);
-			colonyController.storage.AddResources(ResourceType.metal_M,50);
-			colonyController.storage.AddResources(ResourceType.metal_E,20);
-			colonyController.storage.AddResources(ResourceType.Plastics,100);
-			colonyController.storage.AddResources(ResourceType.Food, 200);
+			colonyController.storage.AddResource(ResourceType.metal_K,100);
+			colonyController.storage.AddResource(ResourceType.metal_M,50);
+			colonyController.storage.AddResource(ResourceType.metal_E,20);
+			colonyController.storage.AddResource(ResourceType.Plastics,100);
+			colonyController.storage.AddResource(ResourceType.Food, 200);
 
 			UI ui = gameObject.AddComponent<UI>();
 			ui.lineDrawer = systemDrawLR;
@@ -312,6 +312,7 @@ public class GameMaster : MonoBehaviour {
 			windVector = Random.onUnitSphere * (maxWindPower * Random.value);
 			windVector += Vector3.down * windVector.y;
 			windTimer = windChangeTime + Random.value * windChangeTime;
+			if (windVector.magnitude == 0) AddAnnouncement( Localization.announcement_stillWind );
 			if (windUpdateList.Count != 0) {
 				int i = 0;
 				while (i < windUpdateList.Count) {
@@ -457,6 +458,7 @@ public class GameMaster : MonoBehaviour {
 						mainChunk.LoadStructures(str_data);
 					}
 					//wind vector
+				line = sr.ReadLine();
 					Vector3 savedVector = windVector;
 					savedVector = Quaternion.AngleAxis( int.Parse(line.Substring(0,3)) , Vector3.up) * Vector3.forward * int.Parse(line.Substring(3,2));
 					windVector = savedVector;
@@ -477,11 +479,12 @@ public class GameMaster : MonoBehaviour {
 					i++;
 				}
 				//immigration
-				line = sr.ReadLine();
 				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,4)) * (-1) );
 				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,4)));
-				// total citizen count
-				colonyController.SetCitizens( int.Parse( sr.ReadLine() ));
+				//colony controller
+				colonyController.Load( sr.ReadLine() );
+				// storage
+				colonyController.storage.Load( sr.ReadLine() );
 			}
 		}
 		return true;
@@ -523,8 +526,10 @@ public class GameMaster : MonoBehaviour {
 			if ( Dock.immigrationEnabled ) s+= '1'; else s+='0';
 			if ( Dock.immigrationPlan < 0) s += '0'; else s+='1';
 			s += string.Format("{0:d3}", (int)(Dock.immigrationPlan * Mathf.Sign(Dock.immigrationPlan)));
-			//total citizens count
-			sw.WriteLine(colonyController.citizenCount);
+			//colony controller
+			sw.WriteLine(colonyController.Save());
+			// storage
+			sw.WriteLine(colonyController.storage.Save());
 		}
 		return true;
 	}

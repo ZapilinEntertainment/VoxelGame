@@ -11,7 +11,7 @@ public class Crop : Plant {
 	bool rangeVisibility = true;
 
 	void Update() {
-		if (full || GameMaster.gameSpeed == 0) return;
+		if (GameMaster.gameSpeed == 0) return;
 		float theoreticalGrowth = lifepower / maxLifepower;
 		growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
 		byte newStage = (byte)(growth * (stages.Length-1));
@@ -19,13 +19,15 @@ public class Crop : Plant {
 			(myRenderer as SpriteRenderer).sprite = stages[newStage];
 			currentStage = newStage;
 		}
-		if (growth >= 1) full = true;
 	}	
 
 	override public void SetLifepower(float p) {
 		lifepower = p; 
 		if (lifepower < maxLifepower) full = false; else full = true;
-		growth = lifepower/ maxLifepower;
+	}
+
+	public override void SetGrowth(float t) {
+		growth = t;
 		byte newStage = (byte)(growth * (stages.Length-1));
 		if (newStage != currentStage) {
 			(myRenderer as SpriteRenderer).sprite = stages[newStage];
@@ -58,5 +60,15 @@ public class Crop : Plant {
 			if ( visible && rangeVisibility ) myRenderer.enabled = true;
 			else {if (myRenderer.enabled) myRenderer.enabled = false;}
 		}
+	}
+
+	public override void Annihilate( bool forced ) {
+		if (basement != null && !forced ) {
+			if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+			basement.RemoveStructure( new SurfaceObject(innerPosition, this));
+		}
+		Farm f = ( transform.parent == null ? null : transform.parent.GetComponent<Farm>() );
+		if (f == null) Destroy(gameObject);
+		else f.ReturnCropToPool(this);
 	}
 }

@@ -13,9 +13,11 @@ public class Dock : WorkBuilding {
 	ColonyController colony;
 	public static int immigrationPlan {get; private set;} 
 	public static bool immigrationEnabled{get; private set;}
-	public bool maintainingShip = false; Ship loadingShip;
+	public bool maintainingShip{get; private set;}
+	Ship loadingShip;
 	const float LOADING_TIME = 10;
-	float loadingTimer = 0;
+	float loadingTimer = 0, shipArrivingTimer = 0;
+	const float SHIP_ARRIVING_TIME = 300;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -56,16 +58,68 @@ public class Dock : WorkBuilding {
 			basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
 			colony = GameMaster.colonyController;
 			colony.AddDock(this);
+			shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) /2f ;
 		}
 	}
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
-		if (loadingTimer > 0) {
-			loadingTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (loadingTimer <= 0) {
-				if (loadingShip != null) ShipLoading(loadingShip);
-				loadingTimer = 0;
+		if ( maintainingShip ) {
+			if (loadingTimer > 0) {
+					loadingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+					if (loadingTimer <= 0) {
+						if (loadingShip != null) ShipLoading(loadingShip);
+						loadingTimer = 0;
+					}
+			}
+		}
+		else {
+			// ship arriving
+			if (shipArrivingTimer > 0) { 
+				shipArrivingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+				if (shipArrivingTimer <= 0 ) {
+					bool sendImmigrants = false, sendGoods = false;
+					if ( immigrationPlan > 0  && immigrationEnabled ) {
+						if (Random.value < 0.3f || colony.totalLivespace > colony.citizenCount) sendImmigrants = true;
+					}
+					int transitionsCount = 0;
+					for (int x = 0; x < Dock.isForSale.Length; x++) {
+						if (Dock.isForSale[x] != null) transitionsCount++;
+					}
+					if (transitionsCount > 0) sendGoods = true;
+					ShipType stype = ShipType.Cargo;
+					if (sendImmigrants) {
+						if (sendGoods) {
+							if (Random.value > 0.55f ) stype = ShipType.Passenger;
+						}
+						else {
+							if (Random.value < 0.05f) stype = ShipType.Private;
+							else stype = ShipType.Passenger;
+						}
+					}
+					else {
+						if (sendGoods) {
+							if (Random.value <= GameMaster.warProximity) stype = ShipType.Military;
+							else stype = ShipType.Cargo;
+						}
+						else {
+							if (Random.value > 0.5f) {
+								if (Random.value > 0.1f) stype = ShipType.Passenger;
+								else stype = ShipType.Private;
+							}
+							else {
+								if (Random.value > GameMaster.warProximity) stype = ShipType.Cargo;
+								else stype = ShipType.Military;
+							}
+						}
+					}
+					Ship s = PoolMaster.current.GetShip( level, stype );
+					if ( s!= null ) {
+						maintainingShip = true;
+						s.SetDestination( this );
+					}
+					else print ("error:no ship given");
+				}
 			}
 		}
 	}
@@ -139,7 +193,14 @@ public class Dock : WorkBuilding {
 			break;
 		}
 		loadingShip = null;
+		maintainingShip = false;
 		s.Undock();
+
+		shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f))  ;
+		float f = 1;
+		if (colony.docks.Count != 0) f /= (float)colony.docks.Count;
+		if ( f < 0.1f ) f = 0.1f;
+		shipArrivingTimer /= f;
 
 		int newPeople = peopleBefore - immigrationPlan;
 		if (newPeople > 0) GameMaster.realMaster.AddAnnouncement(Localization.announcement_peopleArrived + " (" + newPeople.ToString() + ')');
@@ -151,7 +212,7 @@ public class Dock : WorkBuilding {
 	}
 	void BuyResource(ResourceType rt, float volume) {
 		volume = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]) / ResourceType.prices[rt.ID];
-		colony.storage.AddResources(rt, volume);
+		colony.storage.AddResource(rt, volume);
 	}
 
 	public static void MakeLot( int index, bool forSale, int minValue ) {
@@ -172,10 +233,7 @@ public class Dock : WorkBuilding {
 	protected string SaveDockData() {
 		string s = "";
 		if (maintainingShip ) s+='1'; else s+='0';
-		if ( loadingShip == null ) {
-			s += "000000";
-		}
-		else {
+		if ( loadingShip != null ) {
 			switch ( loadingShip.type ) {
 			case ShipType.Cargo : s += '1';break;
 			case ShipType.Military: s += '2'; break;
@@ -185,8 +243,9 @@ public class Dock : WorkBuilding {
 			s += loadingShip.level.ToString();
 			if (loadingTimer == LOADING_TIME) loadingTimer = LOADING_TIME * 0.99f;
 			s += string.Format("{0:d2}", ((int) (loadingTimer / LOADING_TIME * 100 )).ToString());
-
+			s += loadingShip.Save();
 		}
+		s += string.Format("{0:000}", shipArrivingTimer);
 		return s;
 	}
 
@@ -202,6 +261,7 @@ public class Dock : WorkBuilding {
 		SetActivationStatus(s_data[11] == '1');     
 		//dock class part
 		if ( s_data[18] == '1' ) maintainingShip = true;
+		if ( s_data.Length < 20 || s_data[19] == ';') return;
 		switch (s_data[19]) {
 		case '1': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Cargo ); break;
 		case '2': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Military ); break;
@@ -210,8 +270,10 @@ public class Dock : WorkBuilding {
 		default: loadingShip = null; break;
 		}
 		if ( loadingShip != null ) {
-			
+			loadingShip.SetDestination(this);
+			loadingShip.Load(s_data);
 		}
+		if (s_data.Length > 36) shipArrivingTimer = float.Parse(s_data.Substring(36, s_data.Length - 36));
 		//--
 		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
 		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
@@ -343,7 +405,7 @@ public class Dock : WorkBuilding {
 				r.y += r.height;
 				if (GUI.Button(new Rect(r.x + r.height, r.y, r.height, r.height), "-10")) immigrationPlan=10;
 				if (GUI.Button(new Rect(r.x + 2 *r.height, r.y, r.height, r.height), "-1")) immigrationPlan--;
-				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), immigrationPlan.ToString() + " ("+ immigrationPlan.ToString()+')', PoolMaster.GUIStyle_CenterOrientedLabel);
+				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), Localization.ui_immigrationPlaces + " : " + immigrationPlan.ToString(),  PoolMaster.GUIStyle_CenterOrientedLabel);
 				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+1")) immigrationPlan++;
 				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrationPlan += 10;
 				if (immigrationPlan >= 1000) immigrationPlan = 999;

@@ -5,7 +5,7 @@ using UnityEngine;
 public enum StructureType {NotAssigned, Plant, HarvestableResources, Structure, MainStructure}
 public class Structure : MonoBehaviour {
 	public SurfaceBlock basement{get;protected set;}
-	public SurfaceRect innerPosition{get;protected set;}
+	public SurfaceRect innerPosition;
 	public bool borderOnlyConstruction{get;protected set;}
 	public bool isArtificial {get;protected set;}
 	public bool isBasement{get;protected set;}
@@ -48,7 +48,7 @@ public class Structure : MonoBehaviour {
 		prefs[STORAGE_3_ID] = Resources.Load<Structure>("Structures/Buildings/Storage_level_3");
 		prefs[STORAGE_5_ID] = Resources.Load<Structure>("Structures/Blocks/storageBlock_level_5");
 		prefs[CONTAINER_ID] = Resources.Load<Structure>("Structures/Container");
-		prefs[MINE_ELEVATOR_ID] = Resources.Load<Structure>("Structures/BMineElevator");
+		prefs[MINE_ELEVATOR_ID] = Resources.Load<Structure>("Structures/MineElevator");
 		prefs[LIFESTONE_ID] = Resources.Load<Structure>("Structures/LifeStone");
 		prefs[HOUSE_0_ID] = Resources.Load<Structure>("Structures/House_level_0");
 		prefs[HOUSE_1_ID] = Resources.Load<Structure>("Structures/Buildings/House_level_1");
@@ -212,9 +212,9 @@ public class Structure : MonoBehaviour {
 		case ENERGY_CAPACITOR_1_ID: innerPosition = new SurfaceRect (0,0, 2, 4); type = StructureType.Structure; break;
 		case ENERGY_CAPACITOR_2_ID:
 		case ENERGY_CAPACITOR_3_ID: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; break;
-		case FARM_1_ID: innerPosition = new SurfaceRect(0,0,2,4); type = StructureType.MainStructure; break;
-		case FARM_2_ID: innerPosition = new SurfaceRect(0,0,4,6); type = StructureType.MainStructure; break;
-		case FARM_3_ID: innerPosition = new SurfaceRect(0,0,4,8); type = StructureType.MainStructure; break;
+		case FARM_1_ID: innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.MainStructure; break;
+		case FARM_2_ID: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.MainStructure; break;
+		case FARM_3_ID: innerPosition = new SurfaceRect(0,0,8,8); type = StructureType.MainStructure; break;
 		case FARM_4_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			break;
@@ -268,7 +268,6 @@ public class Structure : MonoBehaviour {
 	protected void SetStructureData(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
 		innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.x_size, innerPosition.z_size);
-
 		b.AddStructure(this);
 		if (isBasement) {
 			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {

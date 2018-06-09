@@ -106,12 +106,14 @@ public class Grassland : MonoBehaviour {
 								}
 								if ( lifepower > 1 && plants.Count < MAX_LIFEFORMS_COUNT) {
 									PixelPosByte pos = myBlock.GetRandomCell();
-									Plant p = PoolMaster.current.GetSapling();
-									p.gameObject.SetActive(true);
-									p.SetBasement(myBlock, pos);
-									p.AddLifepower(lifepowerToSinglePlant);
-									lifepower --;	
-									noActivity = false;
+									if (pos != PixelPosByte.Empty) {
+										Plant p = PoolMaster.current.GetSapling();
+										p.gameObject.SetActive(true);
+										p.SetBasement(myBlock, pos);
+										p.AddLifepower(lifepowerToSinglePlant);
+										lifepower --;	
+										noActivity = false;
+									}
 								}
 							}
 						if ( noActivity ) myBlock.myChunk.AddLifePower( TakeLifepower( GameMaster.MAX_LIFEPOWER_TRANSFER ) );

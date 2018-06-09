@@ -32,7 +32,7 @@ public class Ship : MonoBehaviour {
 		ChunkPos cpos = d.basement.pos;
 		if (cpos.z == 0 || cpos.z == (Chunk.CHUNK_SIZE - 1)) {
 			xAxisMoving = true;
-			float zpos = (cpos.z ==0 ? -1 * width : Chunk.CHUNK_SIZE * Block.QUAD_SIZE + width);
+			float zpos = (cpos.z ==0 ? -1 * width : (Chunk.CHUNK_SIZE -1 ) * Block.QUAD_SIZE + width);
 			if (Random.value > 0.5f) {
 				transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, (d.basement.pos.y - 1) * Block.QUAD_SIZE, zpos);
 				transform.forward = Vector3.left;
@@ -46,7 +46,7 @@ public class Ship : MonoBehaviour {
 		else {
 			if ( cpos.x == 0 || cpos.x == (Chunk.CHUNK_SIZE - 1)) {
 				xAxisMoving = false;
-				float xpos = (cpos.x ==0 ? -1 * width : Chunk.CHUNK_SIZE * Block.QUAD_SIZE + width);
+				float xpos = (cpos.x ==0 ? -1 * width : ( Chunk.CHUNK_SIZE - 1 ) * Block.QUAD_SIZE + width);
 				if (Random.value > 0.5f) {
 					transform.position = new Vector3(xpos, (d.basement.pos.y - 1)* Block.QUAD_SIZE, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
 					transform.forward = Vector3.back;
@@ -61,7 +61,7 @@ public class Ship : MonoBehaviour {
 		}
 		speed = startSpeed;
 		docked = false; unloaded = false;
-		destination = d; destination.maintainingShip = true;
+		destination = d; 
 	}
 
 	void Update() {
@@ -79,7 +79,7 @@ public class Ship : MonoBehaviour {
 			}
 			else { //уходит
 				docked = false; unloaded = false; 
-				destination.maintainingShip = false; destination = null;
+				destination = null;
 				PoolMaster.current.ReturnShipToPool(this);
 			}
 		}
@@ -120,9 +120,18 @@ public class Ship : MonoBehaviour {
 		return s;
 	}
 
-	public void Load(bool docked, string s) {
+	public void Load(string s) {
+		if (s.Substring(20,2) != "00") docked = true; else docked = false;
 		speed = int.Parse(s.Substring(23,2));
-
+		int sign = int.Parse(s[34].ToString());
+		transform.position = new Vector3( int.Parse(s.Substring(25, 3)) * (((sign & 4) == 0) ? 1 : (-1)) , int.Parse(s.Substring(28, 3)) * (((sign & 2) == 0) ? 1 : (-1)) , int.Parse(s.Substring(31, 3)) * (((sign & 1) == 0) ? 1 : (-1)) );
+		switch ( s[35] ) {
+		case '0': transform.forward = Vector3.right; break;
+		case '1': transform.forward = Vector3.left;break;
+		case '2': transform.forward = Vector3.forward;break;
+		case '3': transform.forward = Vector3.back;break;
+		default: transform.forward = Vector3.right;break;
+		}
 	}
 
 	public void Undock() {

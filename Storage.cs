@@ -7,20 +7,14 @@ public class Storage : MonoBehaviour {
 	List<ResourceContainer> customResources;
 	List<StorageHouse> warehouses;
 	public bool showStorage = false;
-	public float[] standartResources;
-	bool[] resourceInStock;
-	int acceptableStandartTypesCount = 0;
+	public float[] standartResources{get;private set;}
 	Rect myRect;
+	const float MIN_VALUE_TO_SHOW = 0.001f;
 
 	void Awake() {
 		totalVolume = 0;
 		maxVolume = 0;
 		standartResources = new float[ResourceType.resourceTypesArray.Length];
-		resourceInStock = new bool[standartResources.Length];
-		for (int i = 0; i < standartResources.Length; i++) {
-			standartResources[i] = 0;
-			resourceInStock[i] = false;
-		}
 		warehouses = new List<StorageHouse>();
 	}
 
@@ -56,8 +50,8 @@ public class Storage : MonoBehaviour {
 	/// <returns>The resources.</returns>
 	/// <param name="rtype">Rtype.</param>
 	/// <param name="count">Count.</param>
-	public float AddResources(ResourceType rtype, float count) {
-		if (totalVolume == maxVolume || count == 0) return 0;
+	public float AddResource(ResourceType rtype, float count) {
+		if (totalVolume == maxVolume || count == 0) return count;
 		float loadedCount = count;
 		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - totalVolume;
 		if (rtype.ID < 0 || rtype.ID >= standartResources.Length) { // custom resources
@@ -78,10 +72,7 @@ public class Storage : MonoBehaviour {
 				}
 			}
 		}
-		else { //standart resources
-			standartResources[rtype.ID] += loadedCount;
-			if (resourceInStock[rtype.ID] == false ) {resourceInStock[rtype.ID] = true;acceptableStandartTypesCount++;}
-		}
+		else 	standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
 		return (count - loadedCount);
 	}
@@ -89,10 +80,10 @@ public class Storage : MonoBehaviour {
 	/// Attention: container will be destroyed after resources transfer!
 	/// </summary>
 	/// <param name="rc">Rc.</param>
-	public void AddResources(ResourceContainer rc) {
-		AddResources(rc.type, rc.volume);
+	public void AddResource(ResourceContainer rc) {
+		AddResource(rc.type, rc.volume);
 	}
-	public void AddResource(List<ResourceContainer> resourcesList) {
+	public void AddResources(List<ResourceContainer> resourcesList) {
 		AddResources(resourcesList.ToArray());
 	}
 	public void AddResources(ResourceContainer[] resourcesList) {
@@ -100,13 +91,12 @@ public class Storage : MonoBehaviour {
 		if (freeSpace == 0) return;
 		int idsCount = ResourceType.resourceTypesArray.Length;
 		int i =0;
-		while ( i < resourcesList.Length && freeSpace > 0) {
+		while ( i < resourcesList.Length & freeSpace > 0) {
 			float appliableVolume = resourcesList[i].volume;
 			int id = resourcesList[i].type.ID;
 			if (appliableVolume > freeSpace) appliableVolume = freeSpace;
-			if (id > 0 && id < idsCount) {
+			if (id > 0 & id < idsCount) {
 				standartResources[id] += appliableVolume;
-				if (resourceInStock[id] == false) {resourceInStock[id] = true; acceptableStandartTypesCount++;}
 				freeSpace -= appliableVolume;
 			}
 			else {
@@ -132,7 +122,7 @@ public class Storage : MonoBehaviour {
 	}
 
 	public float GetResources(ResourceType rtype, float count) {
-		if (totalVolume == 0) return 0;
+		if (totalVolume == 0 ) return 0;
 		float gainedCount = 0;
 		if (rtype.ID < 0 || rtype.ID > standartResources.Length) { // custom resource
 			if ( customResources != null )  {
@@ -153,18 +143,23 @@ public class Storage : MonoBehaviour {
 			}
 		}
 		else { //standart resource
-			if (standartResources[rtype.ID] >= count) {
+			if (standartResources[rtype.ID] > count) {
 				gainedCount = count;
 				standartResources[rtype.ID] -= count;
 			}
 			else {
 				gainedCount = standartResources[rtype.ID];
 				standartResources[rtype.ID] = 0;
-				if (resourceInStock[rtype.ID] == true) {resourceInStock[rtype.ID] = false; acceptableStandartTypesCount--; }
 			}
 		}
 		return gainedCount;
 	}
+
+	/// <summary>
+	/// standart resources only
+	/// </summary>
+	/// <param name="index">Index.</param>
+	/// <param name="val">Value.</param>
 
 	public bool CheckBuildPossibilityAndCollectIfPossible (ResourceContainer[] resourcesContain) {
 		//TEST ZONE
@@ -208,23 +203,44 @@ public class Storage : MonoBehaviour {
 				}
 				j++;
 			}
-			else {
-				standartResources[rc.type.ID] -= rc.volume;
-				if (standartResources[rc.type.ID] == 0) {
-					if (resourceInStock[rc.type.ID] == true) {
-						resourceInStock[rc.type.ID] = false; acceptableStandartTypesCount--;
-					}
-				}
-			}
+			else 	standartResources[rc.type.ID] -= rc.volume;
 		}
 		return true;
+	}
+
+	public string Save() {
+		string s =""; 
+		for ( int i =0; i < ResourceType.RTYPES_COUNT; i++) {
+			if ( standartResources[i] != 0 ) s += string.Format("{0:0.000}", standartResources[i]);
+			s += ';' ;
+		}
+		return s;
+	}
+	public void Load( string s) {
+		int startIndex = 0, endIndex = s.IndexOf(';', startIndex), i =0;
+		totalVolume = 0;
+		while ( startIndex < s.Length & endIndex != -1 & i < ResourceType.RTYPES_COUNT ) {
+			if (endIndex == startIndex)  	standartResources[i] = 0; 
+			else {
+				standartResources[i] =  float.Parse(s.Substring(startIndex, endIndex - startIndex)) ;
+				totalVolume += standartResources[i];
+			}
+			i++;
+			startIndex = endIndex + 1;
+			endIndex = s.IndexOf( ';', startIndex);
+		}
+		i= 0;
 	}
 
 	void OnGUI () {
 		if (showStorage) {
 			GUI.skin = GameMaster.mainGUISkin;
 			float k = GameMaster.guiPiece;
-			int positionsCount = acceptableStandartTypesCount + 1;
+			int positionsCount = 0;
+			foreach ( float f in standartResources ) {
+				if ( f > MIN_VALUE_TO_SHOW) positionsCount++;
+			}
+			positionsCount ++; // для total
 			if (customResources != null) positionsCount += customResources.Count;
 
 			if (UI.current.mode != UIMode.View) myRect =new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k , k * 0.75f * positionsCount);
@@ -235,13 +251,14 @@ public class Storage : MonoBehaviour {
 			Rect r_name = new Rect (r_image.x + r_image.width, myRect.y, myRect.width * 0.7f, r_image.height);
 			Rect r_count = new Rect(myRect.x + r_name.width * 0.5f, myRect.y, myRect.width * 0.5f, r_name.height);
 			int i = 0;
-			if (acceptableStandartTypesCount != 0) {				
+			if ( positionsCount != 0) {				
 				for (; i < standartResources.Length; i++) {
-					if (standartResources[i] > 0.01f) {
+					if (standartResources[i] > 0.001f) {
 						ResourceType rt =  ResourceType.resourceTypesArray[i];
 						GUI.DrawTexture(r_image, rt.icon, ScaleMode.ScaleToFit); r_image.y += r_image.height;
 						GUI.Label(r_name, rt.name); r_name.y += r_image.height;
-						GUI.Label(r_count, ((int)(standartResources[i] * 100) / 100f).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+						if (standartResources[i] < 1000) GUI.Label(r_count, string.Format("{0:0.###}", standartResources[i]), PoolMaster.GUIStyle_RightOrientedLabel);
+						else GUI.Label(r_count, string.Format("{0:0.#}", standartResources[i]), PoolMaster.GUIStyle_RightOrientedLabel);
 						r_count.y += r_image.height;
 					}
 				}
@@ -249,10 +266,10 @@ public class Storage : MonoBehaviour {
 			if (customResources != null) {
 				i = 0;
 				for (; i < customResources.Count; i++) {
-					if (customResources[i].volume > 0.01f) {
+					if (customResources[i].volume > 0.001f) {
 						GUI.DrawTexture(r_image, customResources[i].type.icon, ScaleMode.ScaleToFit); r_image.y += r_image.height;
 						GUI.Label(r_name, customResources[i].type.name); r_name.y += r_image.height;
-						GUI.Label(r_count, ((int)(customResources[i].volume * 100) / 100f).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+						GUI.Label(r_count, string.Format("{0:0.###}", customResources[i]), PoolMaster.GUIStyle_RightOrientedLabel);
 						r_count.y += r_image.height;
 					}
 				}

@@ -17,7 +17,7 @@ public class FoodFactory : WorkBuilding {
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
 		if (food_outputBuffer > 0) {
-			food_outputBuffer = storage.AddResources(ResourceType.Food, food_outputBuffer);
+			food_outputBuffer = storage.AddResource(ResourceType.Food, food_outputBuffer);
 			if (food_outputBuffer > BUFFER_LIMIT) return;
 		}
 		if (workersCount > 0) {
@@ -71,10 +71,10 @@ public class FoodFactory : WorkBuilding {
 
 	void OnDestroy() {
 		if (food_inputBuffer > 0) {
-			if (food_outputBuffer > 0) storage.AddResources(ResourceType.Food, food_inputBuffer + food_outputBuffer);
-			else storage.AddResources(ResourceType.Food, food_inputBuffer);
+			if (food_outputBuffer > 0) storage.AddResource(ResourceType.Food, food_inputBuffer + food_outputBuffer);
+			else storage.AddResource(ResourceType.Food, food_inputBuffer);
 		}
-		if (food_outputBuffer > 0) storage.AddResources(ResourceType.metal_P, metalP_inputBuffer);
+		if (food_outputBuffer > 0) storage.AddResource(ResourceType.metal_P, metalP_inputBuffer);
 		PrepareWorkbuildingForDestruction();
 	}
 }

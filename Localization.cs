@@ -18,7 +18,8 @@ public static class Localization {
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
-	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources;
+	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources,
+	announcement_stillWind;
 	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
 	public static string[] structureName;
 	public static string hq_refuse_reason_1, hq_refuse_reason_2, hq_refuse_reason_3,hq_refuse_reason_4,hq_refuse_reason_5,hq_refuse_reason_6, 
@@ -156,6 +157,7 @@ public static class Localization {
 			announcement_starvation = "People are starving!";
 			announcement_peopleArrived = "New colonists arrived";
 			announcement_notEnoughResources = "Not enough resources";
+			announcement_stillWind = "No wind! All wind generators stopped";
 
 			objects_left = "objects left";
 			extracted = "extracted";
@@ -212,6 +214,7 @@ public static class Localization {
 			announcement_starvation = "Закончилась провизия!";
 			announcement_peopleArrived = "Прибыли новые поселенцы";
 			announcement_notEnoughResources = "Недостаточно ресурсов!";
+			announcement_stillWind = "Безветрие! Все ветрогенераторы остановились";
 
 			objects_left = "осталось";
 			extracted = "извлечено";

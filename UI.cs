@@ -435,11 +435,14 @@ public class UI : MonoBehaviour {
 							GUI.DrawTexture( new Rect(rr.x + rr.width/2f, rr.y, k, rr.height ) , buildingQuad_icon_tx, ScaleMode.StretchToFill);
 							GUI.Label( new Rect(rr.x + rr.width/2f + 2 *k, rr.y, rr.width/2f, rr.height) , chosenStructure.innerPosition.x_size.ToString() + " x " + chosenStructure.innerPosition.z_size.ToString());
 							rr.y += rr.height;
+								Storage storage = GameMaster.colonyController.storage;
 							foreach (ResourceContainer rc in bufferedResources) {
-								GUI.Label(new Rect(rr.x, rr.y, rr.width * 0.75f, rr.height), rc.type.name);
 								float wx = rr.width * 0.875f; if (wx > rr.height) wx = rr.height;
+								if (rc.volume > storage.standartResources[rc.type.ID] ) GUI.color = Color.red;
+								GUI.Label(new Rect(rr.x, rr.y, rr.width * 0.75f, rr.height), rc.type.name);
 								GUI.DrawTexture( new Rect (rr.x + rr.width * 0.75f, rr.y, wx, wx), rc.type.icon, ScaleMode.ScaleToFit );
 								GUI.Label( new Rect(rr.x + rr.width * 0.875f, rr.y, wx,wx), rc.volume.ToString());
+								GUI.color = Color.white;
 								rr.y += rr.height;
 								buildingsListLength += rr.height;
 							}
@@ -536,9 +539,7 @@ public class UI : MonoBehaviour {
 					if (GUI.Button (new Rect(acceptBox.x + acceptBox.width/2f, acceptBox.y + acceptBox.height/2f, acceptBox.width/2f, acceptBox.height/2f), Localization.ui_decline)) {
 						bufferedPosition = PixelPosByte.Empty;
 						if (bufferedResources != null) {
-							foreach (ResourceContainer rc in bufferedResources) {
-								GameMaster.colonyController.storage.AddResources(rc);
-							}
+							GameMaster.colonyController.storage.AddResources( bufferedResources );
 							bufferedResources = null;
 						}
 						ChangeArgument(3);
@@ -639,15 +640,22 @@ public class UI : MonoBehaviour {
 
 					WorkBuilding wb = b as WorkBuilding;
 					if (wb != null) {
-						GUI.Label (new Rect(rr.x, rr.y, rr.height, rr.height), "0" );
-						int wcount = (int)GUI.HorizontalSlider(new Rect(rr.x + rr.height, rr.y, rr.width - 2 * rr.height, rr.height), wb.workersCount, 0, wb.maxWorkers);
-						GUI.Label( new Rect (rr.xMax - rr.height, rr.y, rr.height, rr.height), wb.maxWorkers.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-						GUI.Label( new Rect (rr.x + rr.width /2f - rr.height/4f, rr.y, rr.height, rr.height/2f), wb.workersCount.ToString() );
+						float p = rr.height;
+						GUI.Label (new Rect(rr.x , rr.y, p, p), "0" );
+						GUI.Label ( new Rect (rr.xMax - p, rr.y, p, p), wb.maxWorkers.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+						int wcount = (int)GUI.HorizontalSlider(new Rect(rr.x +  p, rr.y, rr.width - 2 * p, p), wb.workersCount, 0, wb.maxWorkers);
 						if (wcount != wb.workersCount) {
 							if (wcount > wb.workersCount) GameMaster.colonyController.SendWorkers(wcount - wb.workersCount, wb, WorkersDestination.ForWorkBuilding);
 							else wb.FreeWorkers(wb.workersCount - wcount);
 						}
-						rr.y += rr.height;
+						rr.y += p;
+						p *= 1.5f;
+						if ( wb.workersCount > 0 && GUI.Button (new Rect( rr.x, rr.y, p, p ), PoolMaster.minusX10Button_tx)) { wb.FreeWorkers();}
+						if ( wb.workersCount > 0 && GUI.Button (new Rect( rr.x + p, rr.y, p, p ), PoolMaster.minusButton_tx)) { wb.FreeWorkers(1);}
+						GUI.Label ( new Rect (rr.x + 2 *p, rr.y, rr.width - 4 * p, p), wb.workersCount.ToString(), PoolMaster.GUIStyle_CenterOrientedLabel );
+						if ( wb.workersCount != wb.maxWorkers && GUI.Button (new Rect( rr.xMax - 2 *p, rr.y, p, p ), PoolMaster.plusButton_tx) ) { GameMaster.colonyController.SendWorkers(1,wb, WorkersDestination.ForWorkBuilding);}
+						if ( wb.workersCount != wb.maxWorkers &&GUI.Button (new Rect( rr.xMax - p, rr.y, p, p ), PoolMaster.plusX10Button_tx)) { GameMaster.colonyController.SendWorkers(wb.maxWorkers - wb.workersCount,wb, WorkersDestination.ForWorkBuilding);}
+						rr.y += p;
 					}
 				}
 				chosenStructure.gui_ypos = rr.y;

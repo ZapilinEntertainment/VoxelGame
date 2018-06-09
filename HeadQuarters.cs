@@ -42,7 +42,7 @@ public class HeadQuarters : House {
 						if (level < 4) {
 								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 								{
-							Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
+									Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
 									upgraded.SetBasement(basement, PixelPosByte.zero);
 								}
 								else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
@@ -97,11 +97,14 @@ public class HeadQuarters : House {
 				}
 				rr.y += rr.height;
 			if ( requiredResources.Length > 0) {
+				Storage storage = GameMaster.colonyController.storage;
 				for (int i = 0; i < requiredResources.Length; i++) {
+					if (requiredResources[i].volume > storage.standartResources[requiredResources[i].type.ID]) GUI.color = Color.red;
 					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
 					GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-					GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+					GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), requiredResources[i].volume.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
 						rr.y += rr.height;
+					GUI.color = Color.white;
 					}
 				}
 			}

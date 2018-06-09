@@ -51,7 +51,7 @@ public class CleanSite : Worksite {
 					Tree t = s.GetComponent<Tree>();
 					if (t != null) {
 						float lumberDelta= t.CalculateLumberCount(); 
-						GameMaster.colonyController.storage.AddResources(ResourceType.Lumber, lumberDelta * 0.9f);
+						GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, lumberDelta * 0.9f);
 						t.Chop();
 						workflow -= lumberDelta;
 					}
@@ -64,7 +64,7 @@ public class CleanSite : Worksite {
 			else {
 				HarvestableResource hr = s.GetComponent<HarvestableResource>();
 				if (hr != null) {
-					GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
+					GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
 					Destroy(hr.gameObject);
 				}
 				else {

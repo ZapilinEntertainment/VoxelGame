@@ -61,7 +61,7 @@ public class Farm : WorkBuilding {
 				i++;
 			}
 			if ( harvest > 0 ) {
-				GameMaster.colonyController.storage.AddResources(ResourceType.Food, harvest);
+				GameMaster.colonyController.storage.AddResource(ResourceType.Food, harvest);
 			}
 		}
 		if (i < MAX_CROPS) {

@@ -28,7 +28,7 @@ public class Mine : WorkBuilding {
 			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y, lastWorkObjectPos.z);
 			if ( b != null ) {
 				if (b.type == BlockType.Cave ) {
-					Structure s = Instantiate(PoolMaster.mineElevator_pref).GetComponent<Structure>();
+					Structure s = Structure.GetNewStructure(Structure.MINE_ELEVATOR_ID);
 					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.z_size/2));
 					elevators.Add(s);
 					awaitingElevatorBuilding = false;

@@ -5,7 +5,7 @@ using UnityEngine;
 public class Lumbermill : WorkBuilding {
 	int lifepowerForSingleTree = 4;
 	const int MAX_TREES = 16;
-	float chopLimit = 0.2f;
+	const float chopLimit = 0.08f;
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
@@ -50,7 +50,7 @@ public class Lumbermill : WorkBuilding {
 			if (saplingsAndTrees[i] is Tree) {
 				Tree t = saplingsAndTrees[i] as Tree;
 					if (t.growth >= chopLimit) {
-						GameMaster.colonyController.storage.AddResources(ResourceType.Lumber, t.CalculateLumberCount());
+						GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, t.CalculateLumberCount());
 						t.Chop();
 					saplingsAndTrees[i] = null;
 						i++;

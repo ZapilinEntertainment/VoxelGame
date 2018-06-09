@@ -290,10 +290,13 @@ public class Building : Structure {
 			}
 		if ( requiredResources.Length > 0) {
 			rr.y += rr.height;
+			Storage storage = GameMaster.colonyController.storage;
 			for (int i = 0; i < requiredResources.Length; i++) {
+				if (requiredResources[i].volume> storage.standartResources[requiredResources[i].type.ID]) GUI.color = Color.red;
 				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
 				GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), requiredResources[i].volume.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
+				GUI.color = Color.white;
 				rr.y += rr.height;
 			}
 		}

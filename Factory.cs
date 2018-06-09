@@ -39,7 +39,7 @@ public class Factory : WorkBuilding {
 			}
 		}
 		if (outputResourcesBuffer > 0) {
-			outputResourcesBuffer =  storage.AddResources(recipe.output, outputResourcesBuffer); 
+			outputResourcesBuffer =  storage.AddResource(recipe.output, outputResourcesBuffer); 
 		}
 	}
 
@@ -57,8 +57,8 @@ public class Factory : WorkBuilding {
 	public void SetRecipe( Recipe r ) {
 		if (r == recipe) return;
 		if (recipe != Recipe.NoRecipe) {
-			if (inputResourcesBuffer > 0) storage.AddResources(recipe.input, recipe.inputValue);
-			if (outputResourcesBuffer > 0) storage.AddResources(recipe.output, recipe.outputValue);
+			if (inputResourcesBuffer > 0) storage.AddResource(recipe.input, recipe.inputValue);
+			if (outputResourcesBuffer > 0) storage.AddResource(recipe.output, recipe.outputValue);
 			}
 		inputResourcesBuffer = 0; outputResourcesBuffer = 0;
 		recipe = r;

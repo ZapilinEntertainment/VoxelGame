@@ -6,6 +6,7 @@ public class GatherSite : Worksite {
 	float destructionTimer;
 	SurfaceBlock workObject;
 	const int START_WORKERS_COUNT = 5;
+	ResourceContainer bufer = ResourceContainer.Empty;
 
 	void Awake() {
 		workersCount = 0;
@@ -21,8 +22,20 @@ public class GatherSite : Worksite {
 			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if ( labourTimer <= 0 ) {
-				if (workflow >= 1) LabourResult();
-				labourTimer = GameMaster.LABOUR_TICK;
+				if (workflow >= 1) {
+					if (bufer.Equals( ResourceContainer.Empty)) {
+						LabourResult();
+						labourTimer = GameMaster.LABOUR_TICK;
+					}
+					else {
+						Storage s = GameMaster.colonyController.storage;
+						if (s.maxVolume -  s.totalVolume > bufer.volume) {
+							s.AddResource(bufer);
+							bufer = ResourceContainer.Empty;
+						}
+						destructionTimer = GameMaster.LABOUR_TICK * 10;
+					}
+				}
 			}
 		}
 			
@@ -33,15 +46,16 @@ public class GatherSite : Worksite {
 	void LabourResult() {
 			int i = 0;
 			bool resourcesFound = false;
-			while (i < workObject.surfaceObjects.Count) {
+		while (i < workObject.surfaceObjects.Count & bufer.Equals(ResourceContainer.Empty)) {
 				if (workObject.surfaceObjects[i]== null) { workObject.RequestAnnihilationAtIndex(i); continue;}
 				Tree t = workObject.surfaceObjects[i].GetComponent<Tree>();
 				if ( t != null && t.enabled) {
 						resourcesFound = true;
 						if (t.hp < workflow) {
 							workflow -= t.hp;
-							GameMaster.colonyController.storage.AddResources(ResourceType.Lumber, t.CalculateLumberCount());
+							float r = GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, t.CalculateLumberCount());
 							t.Chop();
+							if ( r > 0) bufer = new ResourceContainer(ResourceType.Lumber, r);
 							i++;
 							break;
 						}
@@ -53,13 +67,13 @@ public class GatherSite : Worksite {
 						else {
 							resourcesFound = true;
 							if (workflow > hr.count1) {
-								GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
+								GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
 								workflow -= hr.count1;
 								Destroy(hr.gameObject);
 								break;
 							}
 							else {
-								GameMaster.colonyController.storage.AddResources(hr.mainResource, hr.count1);
+								GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
 								hr.count1 -= Mathf.FloorToInt(workflow); workflow = 0;
 								break;
 							}

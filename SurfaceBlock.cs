@@ -58,6 +58,7 @@ public class SurfaceBlock : Block {
 	public int artificialStructures = 0;
 	public bool[,] map {get; protected set;}
 	public BlockRendererController structureBlock;
+	public int freeCells = 0;
 
 	void Awake() 
 	{
@@ -82,18 +83,26 @@ public class SurfaceBlock : Block {
 				while (a < surfaceObjects.Count) {
 					if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
 					SurfaceRect sr = surfaceObjects[a].innerPosition;	
+				//if (sr.x_size != 1 && sr.z_size != 1) print (surfaceObjects[a].name+ ' '+ sr.x_size.ToString() + ' ' + sr.z_size.ToString());
 					int i = 0, j=0;
-				while ( i < sr.x_size && sr.x + i < INNER_RESOLUTION) {
-					while (j < sr.z_size && sr.z + j < INNER_RESOLUTION) {
-							map[sr.x + i, sr.z + j] = true;
-							j++;
+					while ( j < sr.z_size ) {
+						while (i < sr.x_size ) {
+								map[ sr.x + i, sr.z + j ] = true;
+								i++;
 						}
-						i++;
+						i = 0; // обнуляй переменные !
+						j++;
 					}
 						a++;
 				}
+			}
+			freeCells = 0;
+			for (int i =0; i < INNER_RESOLUTION; i++) {
+				for (int j =0; j< INNER_RESOLUTION; j++) {
+					if (map[i,j] == false) freeCells ++;
 				}
-			return map;
+			}
+		return map;
 	}
 	protected void CellsStatusUpdate() {
 		map = GetBooleanMap();
@@ -312,7 +321,7 @@ public class SurfaceBlock : Block {
 		List<PixelPosByte> positions = new List<PixelPosByte>();
 		if (cellsStatus != 1)  {
 			List<PixelPosByte> acceptableVariants = GetAcceptablePositions(INNER_RESOLUTION * INNER_RESOLUTION);
-			while (positions.Count <= count && acceptableVariants.Count > 0) {
+			while (positions.Count < count && acceptableVariants.Count > 0) {
 				int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
 				positions.Add(acceptableVariants[ppos]);
 				acceptableVariants.RemoveAt(ppos);

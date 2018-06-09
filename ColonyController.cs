@@ -5,8 +5,7 @@ using UnityEngine;
 public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 
 public class ColonyController : MonoBehaviour {
-	const float FOOD_CONSUMPTION = 1, SHIP_ARRIVING_TIME = 300, // for max difficulty
-	HOUSING_TIME = 7;
+	const float FOOD_CONSUMPTION = 1,  HOUSING_TIME = 7;
 	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
 	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
 
@@ -28,7 +27,6 @@ public class ColonyController : MonoBehaviour {
 	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
 	public List<GraphoniumEnricher> graphoniumEnrichers{get;private set;}
 	public List<ChemicalFactory>chemicalFactories{get;private set;}
-	public float shipArrivingTimer = 0;
 	public byte docksLevel{get; private set;}
 	public byte housesLevel{get; private set;}
 
@@ -82,67 +80,7 @@ public class ColonyController : MonoBehaviour {
 				}
 			}
 		}
-
-		//   SHIPS ARRIVING
-		if (shipArrivingTimer > 0) { // переписать на каждый док
-			shipArrivingTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (shipArrivingTimer <= 0 && docks.Count != 0) {
-				List<int>freeDocks = new List<int>();
-				int i = docks.Count - 1;
-				while ( i >= 0) {
-					if (docks[i] == null) {docks.RemoveAt(i); i--; continue;}
-					if ( docks[i].maintainingShip == false ) freeDocks.Add(i);
-					i--;
-				}
-				if (freeDocks.Count > 0) {
-					i = (int)(Random.value * (freeDocks.Count - 1));
-					bool  sendImmigrants = false, sendGoods = false;
-					if (Dock.immigrationPlan> 0  && Dock.immigrationEnabled ) {
-						if (Random.value < 0.3f ||totalLivespace > citizenCount) sendImmigrants = true;
-					}
-					int transitionsCount = 0;
-					for (int x = 0; x < Dock.isForSale.Length; x++) {
-						if (Dock.isForSale[x] != null) transitionsCount++;
-					}
-					if (transitionsCount > 0) sendGoods = true;
-					ShipType stype = ShipType.Cargo;
-					if (sendImmigrants) {
-						if (sendGoods) {
-							if (Random.value > 0.55f ) stype = ShipType.Passenger;
-						}
-						else {
-							if (Random.value < 0.05f) stype = ShipType.Private;
-							else stype = ShipType.Passenger;
-						}
-					}
-					else {
-						if (sendGoods) {
-							if (Random.value <= GameMaster.warProximity) stype = ShipType.Military;
-							else stype = ShipType.Cargo;
-						}
-						else {
-							if (Random.value > 0.5f) {
-								if (Random.value > 0.1f) stype = ShipType.Passenger;
-								else stype = ShipType.Private;
-							}
-							else {
-								if (Random.value > GameMaster.warProximity) stype = ShipType.Cargo;
-								else stype = ShipType.Military;
-							}
-						}
-					}
-					Ship s = PoolMaster.current.GetShip(docks[i].level, stype);
-					if (s!= null) {
-						docks[freeDocks[i]].maintainingShip = true;
-						s.SetDestination(docks[freeDocks[i]]);
-					}
-					else print ("error:no ship given");
-				}
-				shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient ;
-				if (docks.Count != 0) shipArrivingTimer /= docks.Count;
-			}
-		}
-
+			
 		//   STARVATION PROBLEM
 		float foodSupplyHappiness = 1;
 		if (starvationTimer > 0) {
@@ -403,15 +341,6 @@ public class ColonyController : MonoBehaviour {
 		else freeWorkers -= x;
 	}
 
-	public void SetCitizens(int x) {
-		if (x == citizenCount) return;
-		if (x > citizenCount) {AddCitizens(x - citizenCount);}
-		else {
-			freeWorkers -= (citizenCount - x);
-			if (freeWorkers < 0) freeWorkers = 0;
-		}
-	}
-
 	public void AddWorkers(int x) {
 		freeWorkers += x;
 	}
@@ -459,7 +388,6 @@ public class ColonyController : MonoBehaviour {
 			}
 		}
 		docks.Add(d);
-		shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (float)docksLevel * 2 / 100f);
 		if (d.level > docksLevel) docksLevel = d.level;
 	}
 	public void RemoveDock( Dock d) {
@@ -569,6 +497,28 @@ public class ColonyController : MonoBehaviour {
 		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
 		else energyCrystalsCount -= v;
 		return v;
+	}
+
+	public string Save() {
+		string s = "";
+		s += citizenCount.ToString() + ';';
+		s += freeWorkers.ToString() + ';';
+		s += deathCredit.ToString() +';';
+		s += string.Format("{0:0.000}", energyCrystalsCount) +';';
+		s += string.Format("{0:0.00000}", gears_coefficient)  +';';
+		return s;
+	}
+	public void Load (string s) {
+		int p =  s.IndexOf(';');
+		citizenCount = int.Parse( s.Substring(0, p));
+		int p2 =  s.IndexOf(';', p + 1);
+		freeWorkers = int.Parse( s.Substring(p+1, p2 - p -1)); 
+		p = s.IndexOf(';', p2 + 1);
+		deathCredit = int.Parse( s.Substring(p2 + 1, p - p2 -1));
+		p2 = s.IndexOf(';', p + 1);
+		energyCrystalsCount = float.Parse(s.Substring(p + 1, p2- p -1));
+		p = s.IndexOf(';', p2 + 1);
+		gears_coefficient = float.Parse(s.Substring(p2 + 1, p- p2 -1));
 	}
 
 	void OnDestroy() {
