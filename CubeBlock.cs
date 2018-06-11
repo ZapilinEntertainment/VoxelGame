@@ -32,15 +32,18 @@ public class CubeBlock : Block{
 	}
 
 	public int Dig(int blocksCount, bool show) {
-		if (volume == 0) {
-			if (career) myChunk.DeleteBlock(pos);
-			else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
-			return 0;
-		} 
 		if (blocksCount > volume) blocksCount = volume;
 		volume -= blocksCount;	
 		if (show) career = true;
-		if (career) CheckExcavatingStatus();
+		if (volume == 0) {
+			if (career) {
+				Block b = myChunk.GetBlock(pos.x, pos.y - 1, pos.z);
+				if ( b == null | !(b.type == BlockType.Cube | b.type == BlockType.Cave)) myChunk.DeleteBlock(pos);
+				else myChunk.ReplaceBlock(pos, BlockType.Surface, b.material_id, false);
+			}
+			else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
+		} 
+		else if (career) CheckExcavatingStatus();
 		return blocksCount;
 	}
 

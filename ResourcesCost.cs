@@ -112,17 +112,17 @@ public static class ResourcesCost {
 			break;
 		case Structure.ENERGY_CAPACITOR_1_ID: 
 			cost = new ResourceContainer[] {
-				new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.metal_E, 4), new ResourceContainer(ResourceType.metal_N, 2)
+				new ResourceContainer(ResourceType.metal_K, 1), new ResourceContainer(ResourceType.metal_E, 2), new ResourceContainer(ResourceType.Plastics, 8)
 			};
 			break;
 		case Structure.ENERGY_CAPACITOR_2_ID:
 			cost = new ResourceContainer[] {
-				new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 12), new ResourceContainer(ResourceType.metal_N, 4),
+				new ResourceContainer(ResourceType.metal_K, 4), new ResourceContainer(ResourceType.metal_E, 4), new ResourceContainer(ResourceType.Plastics, 10)
 			} ;
 			break;
 		case Structure.ENERGY_CAPACITOR_3_ID:
 			cost = new ResourceContainer[] {
-				new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_E, 12), new ResourceContainer(ResourceType.metal_N, 5),
+				new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_E, 12),  new ResourceContainer(ResourceType.Plastics, 20)
 			} ;
 			break;
 		case Structure.FARM_1_ID:

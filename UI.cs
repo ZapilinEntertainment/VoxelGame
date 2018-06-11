@@ -81,6 +81,7 @@ public class UI : MonoBehaviour {
 		mousePos.y = Screen.height - mousePos.y;
 		if (Input.GetMouseButtonDown(0) && !cursorIntersectGUI(mousePos) ) {
 			RaycastHit rh;
+			CLICK_POINT:
 			if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out rh)) {
 				DropFocus();
 				Structure s = rh.collider.GetComponent<Structure>();
@@ -140,9 +141,24 @@ public class UI : MonoBehaviour {
 											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.left * (Block.QUAD_SIZE/2f + 0.01f);
 											quadSelector.transform.rotation = Quaternion.Euler(0,0,90);
 											break;
-										case 4:
+										case 4: // up
+										if ( !chosenCubeBlock.career  ) {
+											if (chosenCubeBlock.pos.y != GameMaster.layerCutHeight - 1 ) {
+												ChunkPos cpos = new ChunkPos(chosenCubeBlock.pos.x , chosenCubeBlock.pos.y + 1, chosenCubeBlock.pos.z);
+												Block ub = chosenCubeBlock.myChunk.GetBlock( cpos.x , cpos.y, cpos.z);
+												Block uub = chosenCubeBlock.myChunk.GetBlock(cpos.x, cpos.y + 1, cpos.z);
+												if (ub == null || ub.type == BlockType.Shapeless) {
+													if (uub == null || uub.type == BlockType.Shapeless ) chosenCubeBlock.myChunk.ReplaceBlock(cpos, BlockType.Surface, chosenCubeBlock.material_id, false);
+													else chosenCubeBlock.myChunk.ReplaceBlock(cpos, BlockType.Cave, chosenCubeBlock.material_id, false);
+												}
+											}
+											chosenCubeBlock = null;
+											goto CLICK_POINT;
+										}
+										else {
 											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.up * (Block.QUAD_SIZE/2f + 0.01f);
 											quadSelector.transform.rotation = Quaternion.Euler(0,0,0);
+										}
 											break;
 										case 5:
 											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.down * (Block.QUAD_SIZE/2f + 0.01f);
@@ -150,7 +166,7 @@ public class UI : MonoBehaviour {
 											break;
 										}
 										quadSelector.SetActive(true);
-									GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
+										GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
 									}	
 								break;
 							}
@@ -270,7 +286,20 @@ public class UI : MonoBehaviour {
 		} 
 		//Left Panel.
 		Rect layerCutRect =new Rect(0, Screen.height - k, leftPanelWidth / 2f,k);
-		if (GUI.Button( layerCutRect, layersCut_tx, PoolMaster.GUIStyle_BorderlessButton)) showLayerCutButtons = !showLayerCutButtons;
+		if (GUI.Button( layerCutRect, layersCut_tx, PoolMaster.GUIStyle_BorderlessButton)) {
+			if (showLayerCutButtons) {
+				GameMaster.prevCutHeight = GameMaster.layerCutHeight;
+				GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
+				GameMaster.mainChunk.LayersCut();
+				showLayerCutButtons = false;
+			}
+			else {
+				int p = GameMaster.layerCutHeight;
+				GameMaster.layerCutHeight = GameMaster.prevCutHeight;
+				if (GameMaster.layerCutHeight != p)  GameMaster.mainChunk.LayersCut();
+				showLayerCutButtons = true;
+			}
+		}
 		if (showLayerCutButtons) {
 			layerCutRect.x += layerCutRect.width; layerCutRect.y -= 2 * k;
 			GUI.Box(new Rect(layerCutRect.x, layerCutRect.y, layerCutRect.width, layerCutRect.height * 3), GUIContent.none);
@@ -557,30 +586,46 @@ public class UI : MonoBehaviour {
 				#region cubeBlockPanel
 				if (faceIndex != 10) { 
 							if (GUI.Button(rr, Localization.ui_dig_block)) {
-								WorksiteSign sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 								TunnelBuildingSite tbs = chosenCubeBlock.GetComponent<TunnelBuildingSite>();
 								if (tbs == null) {
 									tbs = chosenCubeBlock.gameObject.AddComponent<TunnelBuildingSite>();
 									tbs.Set(chosenCubeBlock);
 								}
-								sign.worksite = tbs;
+								WorksiteSign sign = null;
 								switch (faceIndex) {
 								case 0:
+								if ((tbs.signsMask & 1) == 0) {
+									sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 									sign.transform.position = chosenCubeBlock.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
-									break;
+									tbs.signsMask += 1;
+								}	
+								break;
 								case 1:
-									sign.transform.position = chosenCubeBlock.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
-									sign.transform.rotation = Quaternion.Euler(0,90,0);
+								if ((tbs.signsMask & 2 )== 0) {
+										sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+										sign.transform.position = chosenCubeBlock.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
+										sign.transform.rotation = Quaternion.Euler(0,90,0);
+										tbs.signsMask += 2;
+									}
 									break;
 								case 2:
-									sign.transform.position = chosenCubeBlock.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
-									sign.transform.rotation = Quaternion.Euler(0,180,0);
+								if ((tbs.signsMask & 4 )== 0) {
+										sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+										sign.transform.position = chosenCubeBlock.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
+										sign.transform.rotation = Quaternion.Euler(0,180,0);
+										tbs.signsMask += 4;
+									}
 									break;
 								case 3:
+								if ((tbs.signsMask & 8) == 0) {
+									sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 									sign.transform.position = chosenCubeBlock.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
 									sign.transform.rotation = Quaternion.Euler(0,-90,0);
+									tbs.signsMask += 8;
+								}
 									break;
 								}
+								if (sign != null) sign.worksite = tbs;
 								chosenWorksite = tbs;
 								mode = UIMode.WorksitePanel;
 								ChangeArgument(1);

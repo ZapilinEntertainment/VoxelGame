@@ -27,6 +27,7 @@ public class ColonyController : MonoBehaviour {
 	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
 	public List<GraphoniumEnricher> graphoniumEnrichers{get;private set;}
 	public List<ChemicalFactory>chemicalFactories{get;private set;}
+	public List<Worksite> worksites{get;private set;}
 	public byte docksLevel{get; private set;}
 	public byte housesLevel{get; private set;}
 
@@ -57,6 +58,7 @@ public class ColonyController : MonoBehaviour {
 		rollingShops = new List<RollingShop>();
 		graphoniumEnrichers = new List<GraphoniumEnricher>();
 		chemicalFactories = new List<ChemicalFactory>();
+		worksites = new List<Worksite>();
 	}
 
 	public void CreateStorage() { // call from game master
@@ -170,6 +172,56 @@ public class ColonyController : MonoBehaviour {
 		peopleSurplus += real_birthrate;
 	}
 
+	public void AddCitizens(int x) {
+		citizenCount += x;
+		freeWorkers += x;
+	}
+	public void KillCitizens(int x) {
+		if (freeWorkers < x) {			
+			deathCredit += x - freeWorkers;
+			freeWorkers = 0;
+		}
+		else freeWorkers -= x;
+	}
+
+	public void AddWorkers(int x) {
+		freeWorkers += x;
+	}
+	public void SendWorkers( int x, Component destination,  WorkersDestination destinationCode ) {
+		if (freeWorkers == 0) return;
+		if (x > freeWorkers) x = freeWorkers;
+		switch (destinationCode) {
+		case WorkersDestination.ForWorksite:
+			Worksite ws = destination as Worksite;
+			if (ws == null) return;
+			else 	freeWorkers -= ws.AddWorkers(x);
+			break;
+		case WorkersDestination.ForWorkBuilding:
+			WorkBuilding wb = destination as WorkBuilding;
+			if (wb == null) return;
+			else freeWorkers -= wb.AddWorkers(x);
+			break;
+		}
+	}
+
+	void EverydayUpdate() {
+		//   FOOD  CONSUMPTION
+		float fc = FOOD_CONSUMPTION * citizenCount;
+		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
+			storage.standartResources[ResourceType.FOOD_ID] = 0;
+			if (starvationTimer <= 0) {
+				starvationTimer = starvationTime;
+				GameMaster.realMaster.AddAnnouncement(Localization.announcement_starvation);
+			}
+		}
+		else {
+			storage.standartResources[ResourceType.FOOD_ID] -= fc;
+			if (starvationTimer > 0) starvationTimer = 0;
+		}
+	}
+	void EveryYearUpdate() {
+		gears_coefficient -= GameMaster.GEARS_ANNUAL_DEGRADE;
+	}
 
 	void ElementPowerSwitch( int index, bool energySupply) {
 		if ( !powerGrid[index].isActive ) return;
@@ -181,6 +233,31 @@ public class ColonyController : MonoBehaviour {
 		else {
 			energySurplus -= powerGrid[index].energySurplus;
 			totalEnergyCapacity -= powerGrid[index].energyCapacity;
+		}
+	}
+
+	#region AddingToLists
+	public void AddWorksite( Worksite w ) {
+		if ( w == null ) return;
+		int i = 0;
+		while ( i < worksites.Count) {
+			if ( worksites[i] == null ) worksites.RemoveAt(i);
+			else {
+				if ( worksites[i] == w ) return;
+				else i++;
+			}
+		}
+		worksites.Add(w);
+	}
+	public void RemoveWorksite( Worksite w) {
+		if ( w == null || worksites.Count == 0) return;
+		int i = 0;
+		while (i < worksites.Count) {
+			if ( worksites[i] == w | worksites[i] == null ) {
+				docks.RemoveAt(i);
+				continue;
+			}
+			i++;
 		}
 	}
 
@@ -329,57 +406,6 @@ public class ColonyController : MonoBehaviour {
 		}
 	}
 
-	public void AddCitizens(int x) {
-		citizenCount += x;
-		freeWorkers += x;
-	}
-	public void KillCitizens(int x) {
-		if (freeWorkers < x) {			
-			deathCredit += x - freeWorkers;
-			freeWorkers = 0;
-		}
-		else freeWorkers -= x;
-	}
-
-	public void AddWorkers(int x) {
-		freeWorkers += x;
-	}
-	public void SendWorkers( int x, Component destination,  WorkersDestination destinationCode ) {
-		if (freeWorkers == 0) return;
-		if (x > freeWorkers) x = freeWorkers;
-		switch (destinationCode) {
-		case WorkersDestination.ForWorksite:
-			Worksite ws = destination as Worksite;
-			if (ws == null) return;
-			else 	freeWorkers -= ws.AddWorkers(x);
-			break;
-		case WorkersDestination.ForWorkBuilding:
-			WorkBuilding wb = destination as WorkBuilding;
-			if (wb == null) return;
-			else freeWorkers -= wb.AddWorkers(x);
-			break;
-		}
-	}
-
-	void EverydayUpdate() {
-		//   FOOD  CONSUMPTION
-		float fc = FOOD_CONSUMPTION * citizenCount;
-		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
-			storage.standartResources[ResourceType.FOOD_ID] = 0;
-			if (starvationTimer <= 0) {
-				starvationTimer = starvationTime;
-				GameMaster.realMaster.AddAnnouncement(Localization.announcement_starvation);
-			}
-		}
-		else {
-			storage.standartResources[ResourceType.FOOD_ID] -= fc;
-			if (starvationTimer > 0) starvationTimer = 0;
-		}
-	}
-	void EveryYearUpdate() {
-		gears_coefficient -= GameMaster.GEARS_ANNUAL_DEGRADE;
-	}
-
 	public void AddDock( Dock d ) {
 		if ( d == null ) return;
 		if ( docks.Count > 0) {
@@ -480,6 +506,7 @@ public class ColonyController : MonoBehaviour {
 			else i++;
 		}
 	}
+	#endregion
 
 	public void SetHQ (HeadQuarters new_hq) {
 		if (new_hq != null) hq = new_hq;
@@ -506,6 +533,7 @@ public class ColonyController : MonoBehaviour {
 		s += deathCredit.ToString() +';';
 		s += string.Format("{0:0.000}", energyCrystalsCount) +';';
 		s += string.Format("{0:0.00000}", gears_coefficient)  +';';
+		s += string.Format("{0:0.00000}", happiness_coefficient) + ';';
 		return s;
 	}
 	public void Load (string s) {
@@ -519,6 +547,8 @@ public class ColonyController : MonoBehaviour {
 		energyCrystalsCount = float.Parse(s.Substring(p + 1, p2- p -1));
 		p = s.IndexOf(';', p2 + 1);
 		gears_coefficient = float.Parse(s.Substring(p2 + 1, p- p2 -1));
+		p2 = s.IndexOf(';', p + 1);
+		happiness_coefficient = float.Parse(s.Substring(p + 1, p2- p -1));
 	}
 
 	void OnDestroy() {

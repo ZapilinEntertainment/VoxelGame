@@ -284,7 +284,7 @@ public class Building : Structure {
 					if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
 					Quaternion originalRotation = transform.rotation;
 					upgraded.SetBasement(basement, setPos);
-					upgraded.transform.localRotation = originalRotation;
+					if ( !upgraded.isBasement ) upgraded.transform.localRotation = originalRotation;
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}

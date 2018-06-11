@@ -405,7 +405,7 @@ public class Dock : WorkBuilding {
 				r.y += r.height;
 				if (GUI.Button(new Rect(r.x + r.height, r.y, r.height, r.height), "-10")) immigrationPlan=10;
 				if (GUI.Button(new Rect(r.x + 2 *r.height, r.y, r.height, r.height), "-1")) immigrationPlan--;
-				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), Localization.ui_immigrationPlaces + " : " + immigrationPlan.ToString(),  PoolMaster.GUIStyle_CenterOrientedLabel);
+				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), immigrationPlan.ToString(),  PoolMaster.GUIStyle_CenterOrientedLabel);
 				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+1")) immigrationPlan++;
 				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrationPlan += 10;
 				if (immigrationPlan >= 1000) immigrationPlan = 999;

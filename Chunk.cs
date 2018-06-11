@@ -186,7 +186,7 @@ public class Chunk : MonoBehaviour {
 			sb.SurfaceBlockSet(this, f_pos, f_material_id);
 			blocks[x,y,z] = sb;
 			surfaceBlocks.Add(sb);
-			influenceMask = 47;
+			influenceMask = 31;
 			break;
 		case BlockType.Cave:
 			Block upperBlock = blocks[x, y-1, z]; 
@@ -428,6 +428,7 @@ public class Chunk : MonoBehaviour {
 		CHUNK_SIZE = (byte) size;
 		if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
 		GameMaster.layerCutHeight = CHUNK_SIZE;
+		GameMaster.prevCutHeight = GameMaster.layerCutHeight;
 
 		blocks = new Block[size,size,size];
 		surfaceBlocks = new List<SurfaceBlock>();

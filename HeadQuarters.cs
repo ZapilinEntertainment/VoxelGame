@@ -68,7 +68,9 @@ public class HeadQuarters : House {
 									}
 									SurfaceBlock upperSurface = upperBlock as SurfaceBlock;	
 									Building upgraded = Instantiate(Resources.Load<Building>("Prefs/HQ_addon"));
+									Quaternion originalRotation = transform.rotation;
 									upgraded.SetBasement(upperSurface, PixelPosByte.zero);
+									if ( !upgraded.isBasement ) upgraded.transform.rotation = originalRotation;
 									level++;
 							}
 							else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);

@@ -185,6 +185,7 @@ public class Structure : MonoBehaviour {
 		case XSTATION_ID:
 		case QUANTUM_ENERGY_TRANSMITTER_ID:
 		case CHEMICAL_FACTORY_ID:
+		case MINI_GRPH_REACTOR_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			break;		
 		case DOCK_ID:
@@ -250,7 +251,6 @@ public class Structure : MonoBehaviour {
 			innerPosition = new SurfaceRect(0,0,4,10); type = StructureType.Structure;
 			break;
 		case HOSPITAL_2_ID:
-		case MINI_GRPH_REACTOR_ID:
 			innerPosition = new SurfaceRect(0,0,8,8); type = StructureType.Structure;
 			break;
 		case MINERAL_POWERPLANT_2_ID:

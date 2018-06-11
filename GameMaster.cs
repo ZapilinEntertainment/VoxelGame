@@ -44,7 +44,7 @@ public class GameMaster : MonoBehaviour {
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 	public static float sellPriceCoefficient = 0.75f;
-	public static int layerCutHeight = 16;
+	public static int layerCutHeight = 16, prevCutHeight = 16;
 
 	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
@@ -100,7 +100,7 @@ public class GameMaster : MonoBehaviour {
 		difficulty = Difficulty.Normal;
 		guiPiece = Screen.height / 24f;
 		warProximity = 0.01f;
-		layerCutHeight = Chunk.CHUNK_SIZE;
+		layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
 		colonyController = gameObject.AddComponent<ColonyController>();
 		colonyController.CreateStorage();
 		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
@@ -479,12 +479,58 @@ public class GameMaster : MonoBehaviour {
 					i++;
 				}
 				//immigration
-				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,4)) * (-1) );
-				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,4)));
+				line = sr.ReadLine();
+				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)) * (-1) );
+				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)));
 				//colony controller
 				colonyController.Load( sr.ReadLine() );
 				// storage
 				colonyController.storage.Load( sr.ReadLine() );
+				//worksites
+				line = sr.ReadLine();
+				if (line != null) {
+					if (line[0] == 'w') {
+						if (line.Length > 1) {
+							p = line.IndexOf(';', 1);
+							int p2 = 1;
+							while (p != -1 & p2 < line.Length ) {
+								int x = int.Parse(line.Substring(p2 + 12, 2)), y = int.Parse(line.Substring(p2 + 14, 2)), z =int.Parse(line.Substring(p2 + 16, 2));
+								switch ( line[p2] ) {
+								case '1':
+									GatherSite gs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<GatherSite>();
+									gs.Load(line.Substring(p2, p - p2));
+									break;
+								case '2':
+									DigSite ds = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<DigSite>();
+									ds.Load(line.Substring(p2, p - p2));
+									break;
+								case '3':
+									CleanSite cs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<CleanSite>();
+									cs.Load(line.Substring(p2, p - p2));
+									break;
+								case '4':
+									TunnelBuildingSite tbs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<TunnelBuildingSite>();
+									tbs.Load(line.Substring(p2, p - p2));
+									break;
+								}
+								p2 = p + 1;
+								p = line.IndexOf(';', p+1);
+							}
+						}
+					}
+				}
+				//data
+				line = sr.ReadLine();
+				if (line != null && line[0] == 'd') {
+					day = uint.Parse(line[1].ToString());
+					week = uint.Parse(line[2].ToString());
+					month = uint.Parse(line.Substring(3,2));
+					year = uint.Parse(line.Substring(5,3));
+					millenium = uint.Parse(line[7].ToString());
+				}
+				//end
+				colonyController.RecalculatePowerGrid();
+				colonyController.RecalculateHousing();
 			}
 		}
 		return true;
@@ -523,13 +569,36 @@ public class GameMaster : MonoBehaviour {
 			sw.WriteLine(s);
 			//immigration
 			s= "";
-			if ( Dock.immigrationEnabled ) s+= '1'; else s+='0';
+			if ( Dock.immigrationEnabled ) s+= '1'; else s+='0'; 
 			if ( Dock.immigrationPlan < 0) s += '0'; else s+='1';
 			s += string.Format("{0:d3}", (int)(Dock.immigrationPlan * Mathf.Sign(Dock.immigrationPlan)));
+			sw.WriteLine(s);
 			//colony controller
 			sw.WriteLine(colonyController.Save());
 			// storage
 			sw.WriteLine(colonyController.storage.Save());
+			//worksites
+			s = "w";
+			if ( colonyController.worksites.Count > 0) {
+				foreach ( Worksite w in colonyController.worksites ) {
+					if (w == null) continue;
+					if (w is GatherSite) {
+						s += '1' + w.Save() + ';';
+					}
+					else {
+						if (w is DigSite) {s += '2' + w.Save() + ';';}
+						else {
+							if (w is CleanSite) {s += '3' + w.Save() + ';' ;}
+							else {
+								if (w is TunnelBuildingSite) {s += '4' + w.Save() + ';';}
+								}
+						}
+					}
+				}
+			}
+			sw.WriteLine(s);
+			// data
+			sw.WriteLine( 'd' + day.ToString() + week.ToString() + string.Format("{0:d2}", month) + string.Format("{0:d3}", year) + millenium.ToString() );
 		}
 		return true;
 	}

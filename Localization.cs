@@ -242,8 +242,8 @@ public static class Localization {
 			break;
 		case GameMessage.GameLoaded:
 			switch ( currentLanguage ) {
-			case Language.English : s = "Save loaded"; break;
-			case Language.Russian: s = "Сохранение загружено"; break;
+			case Language.English : s = "Game loaded"; break;
+			case Language.Russian: s = "Игра загружена"; break;
 			}
 			break;
 		case GameMessage.LoadingFailed:

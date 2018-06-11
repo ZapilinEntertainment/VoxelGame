@@ -85,6 +85,7 @@ public class Mine : WorkBuilding {
 		}
 		s += 'e';
 		if (workFinished) s += 'f'; else s += 'n';
+		s += string.Format("{0:d2}", level);
 		return s;
 	}
 
@@ -108,6 +109,9 @@ public class Mine : WorkBuilding {
 				k+=2;
 			}
 			if ( s_data[k+1] =='f' ) workFinished = true; else workFinished = false;
+			int n_level = int.Parse(s_data.Substring( k + 2, 2 ));
+			ChangeModel((byte)n_level);
+
 			Block b = basement.myChunk.GetBlock(block_xpos, endDepth - 1, block_zpos);
 			if ( b != null && b.type == BlockType.Cube) {
 				workObject = b as CubeBlock;
@@ -126,6 +130,23 @@ public class Mine : WorkBuilding {
 	}
 	//---------------------------------------------------------------------------------------------------	
 
+	void ChangeModel(byte f_level) {
+		if (f_level == level ) return;
+		GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
+		if (nextModel != null) {
+			GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
+			if (myRenderer != null) Destroy(myRenderer.gameObject);
+			if (myRenderers != null) {for (int n =0; n < myRenderers.Length; n++) Destroy( myRenderers[n].gameObject );}
+			myRenderers = new Renderer[newModelGO.transform.childCount];
+			for (int n = 0; n < newModelGO.transform.childCount; n++) {
+				myRenderers[n] = newModelGO.transform.GetChild(n).GetComponent<Renderer>();
+				if (!visible) myRenderers[n].enabled = false;
+			}
+			if ( !isActive || !energySupplied ) ChangeRenderersView(false);
+		}
+		level = f_level;
+	}
+
 	void OnGUI() {
 		if ( !showOnGUI ) return;
 		GUI.skin = GameMaster.mainGUISkin;
@@ -142,19 +163,7 @@ public class Mine : WorkBuilding {
 							workObject = b as CubeBlock;
 							lastWorkObjectPos = b.pos;
 							workFinished = false;
-							GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (level+1).ToString());
-							if (nextModel != null) {
-								GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
-								if (myRenderer != null) Destroy(myRenderer.gameObject);
-								if (myRenderers != null) {for (int n =0; n < myRenderers.Length; n++) Destroy( myRenderers[n].gameObject );}
-								myRenderers = new Renderer[newModelGO.transform.childCount];
-								for (int n = 0; n < newModelGO.transform.childCount; n++) {
-									myRenderers[n] = newModelGO.transform.GetChild(n).GetComponent<Renderer>();
-									if (!visible) myRenderers[n].enabled = false;
-								}
-								if ( !isActive || !energySupplied ) ChangeRenderersView(false);
-							}
-						level++;
+							ChangeModel((byte)(level +1));
 						}
 						else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 					}

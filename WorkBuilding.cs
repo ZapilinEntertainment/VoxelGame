@@ -70,6 +70,7 @@ public abstract class WorkBuilding : Building {
 
 	protected string SaveWorkBuildingData() {
 		string s = "";
+		if (workflow < 0) workflow = 0;
 		s += string.Format("{0:d3}",(int)(workflow /workflowToProcess * 100));
 		s += string.Format("{0:d3}", workersCount );
 		return s;
@@ -105,7 +106,7 @@ public abstract class WorkBuilding : Building {
 				workersCount = 0;
 				Quaternion originalRotation = transform.rotation;
 				upgraded.SetBasement(basement, setPos);
-				upgraded.transform.localRotation = originalRotation;
+				if ( !upgraded.isBasement ) upgraded.transform.localRotation = originalRotation;
 				upgraded.AddWorkers(workers);
 			}
 			else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);

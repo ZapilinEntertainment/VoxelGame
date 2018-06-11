@@ -72,7 +72,7 @@ public class CleanSite : Worksite {
 				}
 			}
 		workObject.surfaceObjects[0].Annihilate( false );
-		actionLabel = Localization.ui_clean_in_progress + " ( " + workObject.surfaceObjects.Count.ToString() + Localization.objects_left +')' ;
+		actionLabel = Localization.ui_clean_in_progress + " (" + workObject.surfaceObjects.Count.ToString() +' '+ Localization.objects_left +")" ;
 	}
 
 	protected override void RecalculateWorkspeed() {
@@ -87,6 +87,33 @@ public class CleanSite : Worksite {
 		sign.transform.position = workObject.transform.position;
 		diggingMission = f_diggingMission;
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
+		GameMaster.colonyController.AddWorksite(this);
 	}
+
+	//---------SAVE   SYSTEM----------------
+	public override string Save() {
+		return SaveWorksite() + SaveCleanSite();
+	}
+	protected string SaveCleanSite() {
+		string s = "";
+		s += string.Format("{0:00}",workObject.pos.x) + string.Format("{0:00}",workObject.pos.y) + string.Format("{0:00}",workObject.pos.z); 
+		if (diggingMission) s += '1'; else s+='0';
+		return s;
+	}
+	public override void Load(string s) {
+		workersCount = int.Parse(s.Substring(1,3));
+		workflow = int.Parse(s.Substring(4,4)) / 100f;
+		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
+		// position
+		workObject = GameMaster.mainChunk.GetBlock(int.Parse(s.Substring(12,2)), int.Parse(s.Substring(14,2)), int.Parse(s.Substring(16,2)) ) as SurfaceBlock;
+		//clean site part
+		diggingMission = (s[18] == '1');
+		if (workObject.grassland != null) {Destroy(workObject.grassland);}
+		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
+		sign.worksite = this;
+		sign.transform.position = workObject.transform.position;
+		GameMaster.colonyController.AddWorksite(this);
+	}
+	// --------------------------------------------------------
 			
 }
