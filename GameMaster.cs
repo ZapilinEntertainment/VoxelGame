@@ -582,18 +582,7 @@ public class GameMaster : MonoBehaviour {
 			if ( colonyController.worksites.Count > 0) {
 				foreach ( Worksite w in colonyController.worksites ) {
 					if (w == null) continue;
-					if (w is GatherSite) {
-						s += '1' + w.Save() + ';';
-					}
-					else {
-						if (w is DigSite) {s += '2' + w.Save() + ';';}
-						else {
-							if (w is CleanSite) {s += '3' + w.Save() + ';' ;}
-							else {
-								if (w is TunnelBuildingSite) {s += '4' + w.Save() + ';';}
-								}
-						}
-					}
+					else s += w.Save() + ';';
 				}
 			}
 			sw.WriteLine(s);

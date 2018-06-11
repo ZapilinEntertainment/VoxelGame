@@ -92,7 +92,7 @@ public class CleanSite : Worksite {
 
 	//---------SAVE   SYSTEM----------------
 	public override string Save() {
-		return SaveWorksite() + SaveCleanSite();
+		return '3' + SaveWorksite() + SaveCleanSite();
 	}
 	protected string SaveCleanSite() {
 		string s = "";

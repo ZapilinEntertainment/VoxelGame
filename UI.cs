@@ -81,7 +81,6 @@ public class UI : MonoBehaviour {
 		mousePos.y = Screen.height - mousePos.y;
 		if (Input.GetMouseButtonDown(0) && !cursorIntersectGUI(mousePos) ) {
 			RaycastHit rh;
-			CLICK_POINT:
 			if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out rh)) {
 				DropFocus();
 				Structure s = rh.collider.GetComponent<Structure>();
@@ -142,24 +141,11 @@ public class UI : MonoBehaviour {
 											quadSelector.transform.rotation = Quaternion.Euler(0,0,90);
 											break;
 										case 4: // up
-										if ( !chosenCubeBlock.career  ) {
-											if (chosenCubeBlock.pos.y != GameMaster.layerCutHeight - 1 ) {
-												ChunkPos cpos = new ChunkPos(chosenCubeBlock.pos.x , chosenCubeBlock.pos.y + 1, chosenCubeBlock.pos.z);
-												Block ub = chosenCubeBlock.myChunk.GetBlock( cpos.x , cpos.y, cpos.z);
-												Block uub = chosenCubeBlock.myChunk.GetBlock(cpos.x, cpos.y + 1, cpos.z);
-												if (ub == null || ub.type == BlockType.Shapeless) {
-													if (uub == null || uub.type == BlockType.Shapeless ) chosenCubeBlock.myChunk.ReplaceBlock(cpos, BlockType.Surface, chosenCubeBlock.material_id, false);
-													else chosenCubeBlock.myChunk.ReplaceBlock(cpos, BlockType.Cave, chosenCubeBlock.material_id, false);
-												}
-											}
-											chosenCubeBlock = null;
-											goto CLICK_POINT;
-										}
-										else {
+										if ( chosenCubeBlock.career  ) {
 											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.up * (Block.QUAD_SIZE/2f + 0.01f);
 											quadSelector.transform.rotation = Quaternion.Euler(0,0,0);
 										}
-											break;
+										break;
 										case 5:
 											quadSelector.transform.position = chosenCubeBlock.transform.position + Vector3.down * (Block.QUAD_SIZE/2f + 0.01f);
 											quadSelector.transform.rotation = Quaternion.Euler(0,0,180);
@@ -364,6 +350,9 @@ public class UI : MonoBehaviour {
 				case 1:
 					//BUILDING BUTTON
 					if (GUI.Button(rr, Localization.ui_build)) ChangeArgument(3); // list of available buildings
+					rr.y += rr.height;
+					//BLOCK BUILDING BUTTON
+					if (GUI.Button(rr, Localization.ui_build +' '+ Localization.block)) ChangeArgument(6); // select material inside
 					rr.y += rr.height;
 					//GATHER BUTTON
 					GatherSite gs = chosenSurfaceBlock.GetComponent<GatherSite>();
@@ -572,6 +561,28 @@ public class UI : MonoBehaviour {
 							bufferedResources = null;
 						}
 						ChangeArgument(3);
+					}
+					break;
+				case 6:
+					if (GUI.Button(rr, Localization.menu_cancel)) {
+						ChangeArgument(1);			
+					}
+					rr.y += 2 * rr.height;
+					ResourceType[] blockMaterials = new ResourceType[] {
+						ResourceType.Concrete, ResourceType.Dirt, ResourceType.Lumber, ResourceType.metal_E, ResourceType.metal_K, ResourceType.metal_M,
+						ResourceType.metal_N, ResourceType.metal_P, ResourceType.metal_S, ResourceType.mineral_F, ResourceType.mineral_L, ResourceType.Plastics,
+						ResourceType.Stone
+					};
+					{
+						foreach (ResourceType rt in blockMaterials) {
+							GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), rt.icon, ScaleMode.StretchToFill);
+							if (GUI.Button(new Rect(rr.x + rr.height, rr.y, rr.width - rr.height, rr.height), rt.name)) {
+								BlockBuildingSite bbs = chosenSurfaceBlock.gameObject.GetComponent<BlockBuildingSite>();
+								if (bbs == null) bbs = chosenSurfaceBlock.gameObject.AddComponent<BlockBuildingSite>();
+								bbs.Set(chosenSurfaceBlock, rt);
+							}
+							rr.y += rr.height;
+						}
 					}
 					break;
 				}

@@ -24,7 +24,7 @@ public static class Localization {
 	public static string[] structureName;
 	public static string hq_refuse_reason_1, hq_refuse_reason_2, hq_refuse_reason_3,hq_refuse_reason_4,hq_refuse_reason_5,hq_refuse_reason_6, 
 	hq_upgrade_warning, hq_upper_surface_blocked;
-	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity;
+	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity, block;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
 	public static Language currentLanguage;
 
@@ -122,6 +122,7 @@ public static class Localization {
 			structureName[Structure.XSTATION_ID] = "Experimental station";
 			structureName[Structure.QUANTUM_ENERGY_TRANSMITTER_ID] = "Quantum energy transmitter";
 			structureName[Structure.CHEMICAL_FACTORY_ID] = "Chemical factory";
+			structureName[Structure.RESOURCE_STICK_ID] = "Constructing block...";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
@@ -169,6 +170,7 @@ public static class Localization {
 			improved_birthrate = "Stimulate birthrate";
 			material_required = "Required material: ";
 			no_activity = "No activity";
+			block = "block";
 
 
 			rollingShop_gearsProduction = "Gears production";

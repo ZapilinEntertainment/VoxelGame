@@ -46,7 +46,7 @@ public class ResourceType {
 		prices[METAL_M_ID] = 5; demand[METAL_M_ID] = 5;
 		metal_E = new ResourceType("Metal E", METAL_E_ID, 0.3f, 3,  Resources.Load<Material>("Materials/MetalE"), Resources.Load<Texture>("Textures/resource_metalE"), Localization.rtype_metalE_descr);
 		prices[METAL_E_ID] = 7; demand[METAL_E_ID] = 5;
-		metal_N = new ResourceType("Metal N", METAL_N_ID, 2, 3,  Resources.Load<Material>("Materials/MetalKN"), Resources.Load<Texture>("Textures/resource_metalN"), Localization.rtype_metalN_descr);
+		metal_N = new ResourceType("Metal N", METAL_N_ID, 2, 3,  Resources.Load<Material>("Materials/MetalN"), Resources.Load<Texture>("Textures/resource_metalN"), Localization.rtype_metalN_descr);
 		prices[METAL_N_ID] = 25; demand[METAL_N_ID] = 10;
 		metal_P = new ResourceType("Metal P", METAL_P_ID, 0.63f, 32,  Resources.Load<Material>("Materials/MetalP"), Resources.Load<Texture>("Textures/resource_metalP"), Localization.rtype_metalP_descr);
 		prices[METAL_P_ID] = 5; demand[METAL_P_ID] = 1;

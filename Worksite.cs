@@ -41,7 +41,7 @@ public abstract class Worksite : MonoBehaviour {
 
 	//---------SAVE   SYSTEM----------------
 	public virtual string Save() {
-		return SaveWorksite();
+		return '0' + SaveWorksite();
 	}
 	protected string SaveWorksite() {
 		string s = "";

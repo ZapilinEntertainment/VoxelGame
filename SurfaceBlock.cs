@@ -380,7 +380,8 @@ public class SurfaceBlock : Block {
 				}
 			}
 		}
-		return acceptablePositions[(int)(Random.value * (acceptablePositions.Count - 1))];
+		if (acceptablePositions.Count > 0)	return acceptablePositions[(int)(Random.value * (acceptablePositions.Count - 1))];
+		else return PixelPosByte.Empty;
 	}
 
 	List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants) {

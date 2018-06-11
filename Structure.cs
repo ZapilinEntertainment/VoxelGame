@@ -29,8 +29,8 @@ public class Structure : MonoBehaviour {
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
 	LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, FOOD_FACTORY_5_ID = 53, SMELTERY_2_ID = 54, 
-	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59;
-	public const int TOTAL_STRUCTURES_COUNT = 60;
+	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, RESOURCE_STICK_ID = 60;
+	public const int TOTAL_STRUCTURES_COUNT = 61;
 	static Structure[] prefs;
 	static List<Building> allConstructableBuildingsList;
 
@@ -93,6 +93,7 @@ public class Structure : MonoBehaviour {
 		prefs[XSTATION_ID] = Resources.Load<Structure>("Structures/Buildings/XStation_level_3");
 		prefs[QUANTUM_ENERGY_TRANSMITTER_ID] = Resources.Load<Structure>("Structures/Buildings/quantumEnergyTransmitter_level_4");
 		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_4");
+		prefs[RESOURCE_STICK_ID] = Resources.Load<Structure>("Structures/resourceStick");
 	
 		allConstructableBuildingsList = new List<Building>();
 		allConstructableBuildingsList.Add( GetNewStructure(WIND_GENERATOR_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -255,6 +256,9 @@ public class Structure : MonoBehaviour {
 			break;
 		case MINERAL_POWERPLANT_2_ID:
 			innerPosition = new SurfaceRect(0,0,10,10); type = StructureType.Structure;
+			break;
+		case RESOURCE_STICK_ID:
+			innerPosition = new SurfaceRect(0,0,2,2); type = StructureType.Structure;
 			break;
 		}
 		visible = true;

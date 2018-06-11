@@ -98,7 +98,7 @@ public class GatherSite : Worksite {
 
 	//---------SAVE   SYSTEM----------------
 	public override string Save() {
-		return SaveWorksite() + SaveGatherSite();
+		return '1' + SaveWorksite() + SaveGatherSite();
 	}
 	protected string SaveGatherSite() {
 		string s = "";

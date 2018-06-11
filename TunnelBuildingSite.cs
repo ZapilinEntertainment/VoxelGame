@@ -45,7 +45,7 @@ public class TunnelBuildingSite : Worksite {
 
 	//---------SAVE   SYSTEM----------------
 	public override string Save() {
-		return SaveWorksite() + SaveTunnelBuildingSite();
+		return '4' + SaveWorksite() + SaveTunnelBuildingSite();
 	}
 	protected string SaveTunnelBuildingSite() {
 		string s = "";

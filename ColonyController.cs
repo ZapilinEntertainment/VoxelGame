@@ -205,18 +205,20 @@ public class ColonyController : MonoBehaviour {
 	}
 
 	void EverydayUpdate() {
-		//   FOOD  CONSUMPTION
-		float fc = FOOD_CONSUMPTION * citizenCount;
-		if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
-			storage.standartResources[ResourceType.FOOD_ID] = 0;
-			if (starvationTimer <= 0) {
-				starvationTimer = starvationTime;
-				GameMaster.realMaster.AddAnnouncement(Localization.announcement_starvation);
+		if (!GameMaster.realMaster.weNeedNoResources) {
+			//   FOOD  CONSUMPTION
+			float fc = FOOD_CONSUMPTION * citizenCount;
+			if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
+				storage.standartResources[ResourceType.FOOD_ID] = 0;
+				if (starvationTimer <= 0) {
+					starvationTimer = starvationTime;
+					GameMaster.realMaster.AddAnnouncement(Localization.announcement_starvation);
+				}
 			}
-		}
-		else {
-			storage.standartResources[ResourceType.FOOD_ID] -= fc;
-			if (starvationTimer > 0) starvationTimer = 0;
+			else {
+				storage.standartResources[ResourceType.FOOD_ID] -= fc;
+				if (starvationTimer > 0) starvationTimer = 0;
+			}
 		}
 	}
 	void EveryYearUpdate() {

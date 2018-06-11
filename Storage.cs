@@ -122,6 +122,7 @@ public class Storage : MonoBehaviour {
 	}
 
 	public float GetResources(ResourceType rtype, float count) {
+		if (GameMaster.realMaster.weNeedNoResources) return count;
 		if (totalVolume == 0 ) return 0;
 		float gainedCount = 0;
 		if (rtype.ID < 0 || rtype.ID > standartResources.Length) { // custom resource

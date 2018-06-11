@@ -162,6 +162,7 @@ public class Chunk : MonoBehaviour {
 		CubeBlock cb = null;
 		Block b = null;
 		byte visMask = GetVisibilityMask(x,y,z), influenceMask = 63; // видимость объекта, видимость стенок соседних объектов
+		bool calculateUpperBlock = false;
 
 		switch (f_type) {
 		case BlockType.Cube:
@@ -170,6 +171,7 @@ public class Chunk : MonoBehaviour {
 			cb.BlockSet(this, f_pos, f_material_id, false);
 			blocks[x,y,z] = cb;
 			if (cb.isTransparent == false) influenceMask = 0; else influenceMask = 1; // закрывает собой все соседние стенки
+			calculateUpperBlock = true;
 			break;
 		case BlockType.Shapeless:
 			g = new GameObject();
@@ -190,10 +192,6 @@ public class Chunk : MonoBehaviour {
 			break;
 		case BlockType.Cave:
 			Block upperBlock = blocks[x, y-1, z]; 
-			if (upperBlock == null) {
-				AddBlock(f_pos, BlockType.Surface, f_material_id);
-				return;
-			}
 			g = Instantiate(cave_pref);
 			Block lowerBlock = blocks[x, y-1, z]; 
 			if ( lowerBlock == null ) {
@@ -204,11 +202,20 @@ public class Chunk : MonoBehaviour {
 			caveb.CaveBlockSet(this, f_pos, f_material_id, upperBlock.material_id );
 			blocks[x,y,z] = caveb;
 			influenceMask = 15;
+			calculateUpperBlock = true;
 			break;
 		}
 		blocks[x,y,z].SetVisibilityMask(visMask);
 		blocks[x,y,z].SetRenderBitmask(prevBitmask);
 		ApplyVisibleInfluenceMask(x,y,z, influenceMask);
+		if (calculateUpperBlock) {
+			if (blocks[x,y+1,z] == null) {
+				if (blocks[x,y+2,z] != null) {
+					AddBlock(new ChunkPos(x, y+1,z), BlockType.Cave, f_material_id);
+				}
+				else AddBlock(new ChunkPos(x, y+1,z), BlockType.Surface, f_material_id);
+			}
+		}
 	}
 
 	public void ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int f_newMaterial_id, bool naturalGeneration) {
@@ -226,6 +233,7 @@ public class Chunk : MonoBehaviour {
 		}
 		Block b = null;
 		byte influenceMask = 63;
+		bool calculateUpperBlock =false;
 		switch (f_newType) {
 		case BlockType.Shapeless:
 			b = new GameObject().AddComponent<Block>();
@@ -252,6 +260,7 @@ public class Chunk : MonoBehaviour {
 			b = cb;
 			blocks[x,y,z] = cb;
 			influenceMask = 0;
+			calculateUpperBlock = true;
 			break;
 		case BlockType.Cave:
 			CaveBlock cvb = Instantiate(cave_pref).GetComponent<CaveBlock>();
@@ -271,6 +280,7 @@ public class Chunk : MonoBehaviour {
 					s.SetBasement(cvb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
 				}
 			}
+			calculateUpperBlock = true;
 			break;
 		}
 		b.SetVisibilityMask( originalBlock.visibilityMask );
@@ -278,6 +288,14 @@ public class Chunk : MonoBehaviour {
 		Destroy(originalBlock.gameObject);
 		b.SetRenderBitmask(prevBitmask);
 		ApplyVisibleInfluenceMask(x,y,z,influenceMask);
+		if (calculateUpperBlock) {
+			if (GetBlock(x,y+1,z) == null) {
+				if (GetBlock(x,y+2,z) != null) {
+					AddBlock(new ChunkPos(x, y+1,z), BlockType.Cave, f_newMaterial_id);
+				}
+				else AddBlock(new ChunkPos(x, y+1,z), BlockType.Surface, f_newMaterial_id);
+			}
+		}
 	}
 
 	public void DeleteBlock(ChunkPos pos) {
