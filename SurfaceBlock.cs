@@ -132,11 +132,16 @@ public class SurfaceBlock : Block {
 			AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); 
 			return;
 		}
+		Structure savedBasementForNow = null;
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
 			if (sr.x_size == INNER_RESOLUTION && sr.z_size == INNER_RESOLUTION) { // destroy everything there
-				ClearSurface();
+				foreach (Structure gs in surfaceObjects) {
+					if (gs == null) continue;
+					if (gs.isBasement) savedBasementForNow = gs;
+					else gs.Annihilate(true);
+				}
 			}
 			else {
 				while (i < surfaceObjects.Count) {
@@ -151,7 +156,8 @@ public class SurfaceBlock : Block {
 					if (a.z + a.z_size > sr.z + sr.z_size) topZ = sr.z + sr.z_size; else topZ = a.z + a.z_size;
 					if (topZ <= downZ) {i++;continue;}
 					else {
-						surfaceObjects[i].Annihilate( true );
+						if (surfaceObjects[i].isBasement) savedBasementForNow = surfaceObjects[i];
+						else surfaceObjects[i].Annihilate( true );
 						i++;
 					}
 				}
@@ -175,6 +181,9 @@ public class SurfaceBlock : Block {
 		}
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
+		if (savedBasementForNow != null) {
+			savedBasementForNow.Annihilate(true);
+		}
 	}
 
 	public void ClearSurface() {

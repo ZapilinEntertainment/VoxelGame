@@ -67,18 +67,18 @@ public class Grassland : MonoBehaviour {
 				if (stage != prevStage) {
 					switch (stage) {
 					case 0: 						
-						myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
+						myBlock.surfaceRenderer.sharedMaterial = ResourceType.Dirt.material;
 						break;
 					case 1:
 						int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-						myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
+						myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_25[index1];
 						break;
 					case 2:
 						int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-						myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
+						myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_50[index2];
 						break;
 					case 3:
-						myBlock.surfaceRenderer.material = PoolMaster.grass_material;
+						myBlock.surfaceRenderer.sharedMaterial = PoolMaster.grass_material;
 						break;
 					}
 					prevStage = stage;
@@ -145,6 +145,32 @@ public class Grassland : MonoBehaviour {
 		if (count > lifepower) {if (lifepower >= 0) lifeTransfer = lifepower; else lifeTransfer = 0;}
 		lifepower -= lifeTransfer;
 		return (int)lifeTransfer;
+	}
+	public void SetLifepower(float count) {
+		lifepower = count;
+		progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
+		byte stage = 0; 
+		if (progress > 0.5f) {if (progress == 1) stage = 3; else stage = 2;}
+		else { if (progress > 0.25f) stage = 1;}
+		if (stage != prevStage) {
+			switch (stage) {
+			case 0: 						
+				myBlock.surfaceRenderer.sharedMaterial = ResourceType.Dirt.material;
+				break;
+			case 1:
+				int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
+				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_25[index1];
+				break;
+			case 2:
+				int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
+				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_50[index2];
+				break;
+			case 3:
+				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.grass_material;
+				break;
+			}
+			prevStage = stage;
+		}
 	}
 
 	/// <summary>

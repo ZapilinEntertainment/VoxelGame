@@ -157,10 +157,6 @@ public class CubeBlock : Block{
 					excavatingStatus = 0; 
 					if (faces == null || faces[4] == null) CreateFace(4);
 					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
-					Block b = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
-					if (b == null && pos.y +1 < Chunk.CHUNK_SIZE) {
-						myChunk.AddBlock(new ChunkPos(pos.x, pos.y+1, pos.z), BlockType.Surface,material_id);
-					} 
 				}
 			}
 			else {

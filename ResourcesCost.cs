@@ -263,6 +263,9 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.metal_E, 10)
 			};
 			break;
+		case Structure.COLUMN_ID:
+			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_K, 120)};
+			break;
 		}
 		return cost;
 	}

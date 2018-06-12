@@ -51,14 +51,14 @@ public class HeadQuarters : House {
 								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 								{
 									Chunk chunk = basement.myChunk;
-									ChunkPos upperPos = new ChunkPos( basement.pos.x, basement.pos.y + 1, basement.pos.z);
-									Block upperBlock = chunk.GetBlock(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-									if (upperBlock == null) chunk.AddBlock(upperPos, BlockType.Surface, ResourceType.CONCRETE_ID);
+									ChunkPos upperPos = new ChunkPos( basement.pos.x, basement.pos.y + (level - 4), basement.pos.z);
+									Block upperBlock = chunk.GetBlock(basement.pos.x, basement.pos.y + (level - 4), basement.pos.z);
+									if (upperBlock == null) chunk.AddBlock(upperPos, BlockType.Surface, ResourceType.CONCRETE_ID, false);
 									else {
 										switch (upperBlock.type) {
 										case BlockType.Shapeless:
 										case BlockType.Cave:
-											chunk.ReplaceBlock(upperPos, BlockType.Surface, upperBlock.material_id, false );
+										chunk.ReplaceBlock(upperPos, BlockType.Surface, ResourceType.CONCRETE_ID, false );
 										break;
 										case BlockType.Cube:
 											GameMaster.realMaster.AddAnnouncement(Localization.hq_upper_surface_blocked);

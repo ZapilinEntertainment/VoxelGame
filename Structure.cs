@@ -29,8 +29,8 @@ public class Structure : MonoBehaviour {
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
 	LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, FOOD_FACTORY_5_ID = 53, SMELTERY_2_ID = 54, 
-	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, RESOURCE_STICK_ID = 60;
-	public const int TOTAL_STRUCTURES_COUNT = 61;
+	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, RESOURCE_STICK_ID = 60, COLUMN_ID = 61;
+	public const int TOTAL_STRUCTURES_COUNT = 62;
 	static Structure[] prefs;
 	static List<Building> allConstructableBuildingsList;
 
@@ -94,6 +94,7 @@ public class Structure : MonoBehaviour {
 		prefs[QUANTUM_ENERGY_TRANSMITTER_ID] = Resources.Load<Structure>("Structures/Buildings/quantumEnergyTransmitter_level_4");
 		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_4");
 		prefs[RESOURCE_STICK_ID] = Resources.Load<Structure>("Structures/resourceStick");
+		prefs[COLUMN_ID] = Resources.Load<Structure>("Structures/Column");
 	
 		allConstructableBuildingsList = new List<Building>();
 		allConstructableBuildingsList.Add( GetNewStructure(WIND_GENERATOR_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -259,7 +260,10 @@ public class Structure : MonoBehaviour {
 			break;
 		case RESOURCE_STICK_ID:
 			innerPosition = new SurfaceRect(0,0,2,2); type = StructureType.Structure;
-			break;
+			break;		
+		case COLUMN_ID:
+			innerPosition = new SurfaceRect(0,0,2,2); type = StructureType.Structure;isBasement = true;
+			break;		
 		}
 		visible = true;
 	}
@@ -277,7 +281,7 @@ public class Structure : MonoBehaviour {
 			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {
 				ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
 				Block upperBlock = basement.myChunk.GetBlock(npos.x, npos.y, npos.z);
-				if ( upperBlock == null ) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.metal_K.ID);
+				if ( upperBlock == null ) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.CONCRETE_ID, false);
 			}
 		}
 	} 
@@ -299,14 +303,6 @@ public class Structure : MonoBehaviour {
 		transform.parent = null;
 	}
 
-	/// <summary>
-	/// forced means that this object will be deleted without basement-linked actions
-	/// </summary>
-	/// <param name="forced">If set to <c>true</c> forced.</param>
-	virtual public void Annihilate( bool forced ) { // for pooling
-		if (forced) basement = null;
-		Destroy(gameObject);
-	}
 
 	public void ApplyDamage(float d) {
 		hp -= d;
@@ -317,7 +313,7 @@ public class Structure : MonoBehaviour {
 		if ( !isBasement || basement == null) return;
 		Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y+1, basement.pos.z);
 		if (upperBlock == null) {
-			basement.myChunk.AddBlock( new ChunkPos(basement.pos.x, basement.pos.y+1, basement.pos.z), BlockType.Surface, ResourceType.CONCRETE_ID);
+			basement.myChunk.AddBlock( new ChunkPos(basement.pos.x, basement.pos.y+1, basement.pos.z), BlockType.Surface, ResourceType.CONCRETE_ID, false);
 		}
 	}
 
@@ -370,6 +366,26 @@ public class Structure : MonoBehaviour {
 			}
 		}
 		return buildingsList;
+	}
+
+	/// <summary>
+	/// forced means that this object will be deleted without basement-linked actions
+	/// </summary>
+	/// <param name="forced">If set to <c>true</c> forced.</param>
+	virtual public void Annihilate( bool forced ) { // for pooling
+		SurfaceBlock lastBasement = basement;
+		if (forced) UnsetBasement();
+		if (isBasement) {
+			Block ub = lastBasement.myChunk.GetBlock(lastBasement.pos.x , lastBasement.pos.y+1, lastBasement.pos.z);
+			if ( ub != null ) {
+				if ( lastBasement.myChunk.CalculateSupportPoints(lastBasement.pos.x, lastBasement.pos.y, lastBasement.pos.z) < 1 )	{
+					lastBasement.myChunk.DeleteBlock(ub.pos);
+
+				}
+				else lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, ub.material_id, false);
+			}
+		}
+		Destroy(gameObject);
 	}
 
 	void OnDestroy() {

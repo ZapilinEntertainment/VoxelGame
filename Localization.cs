@@ -123,6 +123,7 @@ public static class Localization {
 			structureName[Structure.QUANTUM_ENERGY_TRANSMITTER_ID] = "Quantum energy transmitter";
 			structureName[Structure.CHEMICAL_FACTORY_ID] = "Chemical factory";
 			structureName[Structure.RESOURCE_STICK_ID] = "Constructing block...";
+			structureName[Structure.COLUMN_ID] = "Column";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 

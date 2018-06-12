@@ -67,7 +67,7 @@ public class BlockBuildingSite : Worksite {
 		if ( placesToWork == 0 ) {
 			actionLabel = "Block completed";
 			workObject.ClearSurface();
-			workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID,false);
+			workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
 			Destroy(this);
 		}
 		else {
