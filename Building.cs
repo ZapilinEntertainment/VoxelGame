@@ -7,14 +7,12 @@ public class Building : Structure {
 	public bool canBePowerSwitched = true;
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
-	[SerializeField]
-	public int resourcesContainIndex = 0;
 	public float energySurplus = 0, energyCapacity = 0;
 	public  bool connectedToPowerGrid {get; protected set;}// установлено ли подключение к электросети
 	public int requiredBasementMaterialId = -1;
 	public byte level{get;protected set;}
 	[SerializeField]
-	protected Renderer[] myRenderers;
+	protected List<Renderer> myRenderers;
 	protected static ResourceContainer[] requiredResources;
 
 	override public void Prepare() {PrepareBuilding();}
@@ -48,11 +46,13 @@ public class Building : Structure {
 			
 		case MINE_ID:
 		case WIND_GENERATOR_1_ID:
-		case DOCK_ID:
 		case STORAGE_1_ID:
 		case ENERGY_CAPACITOR_1_ID:	
 		case HOUSE_1_ID:
 			level = 1;
+			break;
+		case DOCK_ID:
+			level = 1; borderOnlyConstruction = true;
 			break;
 		case ORE_ENRICHER_2_ID:
 		case ROLLING_SHOP_ID:
@@ -71,11 +71,14 @@ public class Building : Structure {
 			level = 3;
 			break;
 		case GRPH_REACTOR_4_ID:
-		case QUANTUM_ENERGY_TRANSMITTER_ID:
 		case PLASTICS_FACTORY_4_ID:
 		case HQ_4_ID:
 		case CHEMICAL_FACTORY_ID:
+		case RECRUITING_CENTER_ID:
 			level = 4;
+			break;
+		case SHUTTLE_HANGAR_ID:
+			level = 4; borderOnlyConstruction = true;
 			break;
 		case STORAGE_5_ID: 
 		case HOUSE_5_ID:
@@ -83,8 +86,11 @@ public class Building : Structure {
 		case LUMBERMILL_5_ID:
 		case FOOD_FACTORY_5_ID:
 		case SMELTERY_5_ID:
+		case SWITCH_TOWER_ID:
+		case QUANTUM_ENERGY_TRANSMITTER_ID:
 			level = 5;
-			break;				
+			break;			
+
 		}
 	}
 		
@@ -116,7 +122,7 @@ public class Building : Structure {
 	protected void ChangeRenderersView(bool setOnline) {
 		if (setOnline == false) {
 			if (myRenderers != null) {
-				for (int i = 0; i < myRenderers.Length; i++) {
+				for (int i = 0; i < myRenderers.Count; i++) {
 						Material m= myRenderers[i].sharedMaterial;
 						bool replacing = false;
 						if (m == PoolMaster.glass_material) {m = PoolMaster.glass_offline_material; replacing = true;}
@@ -149,7 +155,7 @@ public class Building : Structure {
 		}
 		else {
 			if (myRenderers != null) {
-				for (int i = 0; i < myRenderers.Length; i++) {
+				for (int i = 0; i < myRenderers.Count; i++) {
 						Material m = myRenderers[i].sharedMaterial;
 						bool replacing = false;
 						if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true;}
@@ -236,7 +242,7 @@ public class Building : Structure {
 	}
 
 	public void Demolish() {
-		if (resourcesContainIndex != 0 && GameMaster.demolitionLossesPercent != 1) {
+		if (GameMaster.demolitionLossesPercent != 1) {
 			ResourceContainer[] rleft = ResourcesCost.GetCost(id);
 			for (int i = 0 ; i < rleft.Length; i++) {
 				rleft[i] = new ResourceContainer(rleft[i].type, rleft[i].volume * (1 - GameMaster.demolitionLossesPercent));

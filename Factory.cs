@@ -29,6 +29,9 @@ public class Factory : WorkBuilding {
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
+		if (outputResourcesBuffer > 0) {
+			outputResourcesBuffer =  storage.AddResource(recipe.output, outputResourcesBuffer); 
+		}
 		if (outputResourcesBuffer <= BUFFER_LIMIT ) {
 			if (workersCount > 0 && recipe != Recipe.NoRecipe) {
 				workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
@@ -38,19 +41,13 @@ public class Factory : WorkBuilding {
 				}
 			}
 		}
-		if (outputResourcesBuffer > 0) {
-			outputResourcesBuffer =  storage.AddResource(recipe.output, outputResourcesBuffer); 
-		}
 	}
 
 	override protected void LabourResult() {
-		if (inputResourcesBuffer < recipe.inputValue) {
-			float input = storage.GetResources(recipe.input, recipe.inputValue - inputResourcesBuffer);
-			inputResourcesBuffer += input;
-		}
-		if (inputResourcesBuffer >= recipe.inputValue) {
+		while ( inputResourcesBuffer >= recipe.inputValue & workflow >= workflowToProcess ) {
 			inputResourcesBuffer -= recipe.inputValue;
-			outputResourcesBuffer += recipe.outputValue * level;
+			workflow -= workflowToProcess;
+			outputResourcesBuffer += recipe.outputValue;
 		}
 	}
 

@@ -38,7 +38,7 @@ public class GameMaster : MonoBehaviour {
 	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
 	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
-	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1;
+	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f;
 
 	public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
@@ -412,130 +412,6 @@ public class GameMaster : MonoBehaviour {
 		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 	}
 
-	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
-		string fpath = path + "Saves/" + name + ".txt";
-		if ( !File.Exists ( fpath ) ) {
-			print ("file not exist");
-			return false;
-		}
-		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Unicode))
-		{
-			string line;
-			line = sr.ReadLine();
-			int size = 0;
-			if ( !int.TryParse(line, out size) ) {
-				print ("length parsing failed");
-				return false;
-			}
-			else { 
-				string[] data = new string[ size * size];
-				int k = 0; line = sr.ReadLine();
-				while ( k < data.Length && line != null ) {
-					data[k] = line;
-					line = sr.ReadLine();
-					k++;
-				}
-				if (k < data.Length) {
-					print ("not all data here");
-					return false;
-				}
-
-				Chunk nchunk = new GameObject("chunk").AddComponent<Chunk>();
-				bool creatingChunkSuccess = nchunk.LoadChunk(data, size);
-				if ( !creatingChunkSuccess ) {
-					print ("chunk creating failed");
-					return false;
-				}
-					Destroy(mainChunk.gameObject);
-					mainChunk = nchunk;
-					if (line == "$") {
-						List<string> str_data = new List<string>();
-						line = sr.ReadLine();
-						while ( line != "$" & !sr.EndOfStream) {
-							str_data.Add(line);
-							line = sr.ReadLine();
-						}
-						mainChunk.LoadStructures(str_data);
-					}
-					//wind vector
-				line = sr.ReadLine();
-					Vector3 savedVector = windVector;
-					savedVector = Quaternion.AngleAxis( int.Parse(line.Substring(0,3)) , Vector3.up) * Vector3.forward * int.Parse(line.Substring(3,2));
-					windVector = savedVector;
-					windTimer = windChangeTime * (0.5f + Random.value * 0.5f);
-					foreach (Component c in windUpdateList) { c.BroadcastMessage("WindUpdate", windVector, SendMessageOptions.DontRequireReceiver);}
-					// hospital birthrate
-				 Hospital.SetBirthrateMode( int.Parse(sr.ReadLine()));
-				// trade operations
-				line = sr.ReadLine();
-				int i = 0, p =0;
-				while ( i < ResourceType.RTYPES_COUNT ) {
-					if ( line[p] == '0' ) p++;
-					else {
-						if ( line[p] == '1' ) Dock.MakeLot(i, false, int.Parse( line.Substring(p+1,4) ));
-						else Dock.MakeLot(i, true, int.Parse( line.Substring(p+1,4) ));
-						p += 5;
-					}
-					i++;
-				}
-				//immigration
-				line = sr.ReadLine();
-				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)) * (-1) );
-				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)));
-				//colony controller
-				colonyController.Load( sr.ReadLine() );
-				// storage
-				colonyController.storage.Load( sr.ReadLine() );
-				//worksites
-				line = sr.ReadLine();
-				if (line != null) {
-					if (line[0] == 'w') {
-						if (line.Length > 1) {
-							p = line.IndexOf(';', 1);
-							int p2 = 1;
-							while (p != -1 & p2 < line.Length ) {
-								int x = int.Parse(line.Substring(p2 + 12, 2)), y = int.Parse(line.Substring(p2 + 14, 2)), z =int.Parse(line.Substring(p2 + 16, 2));
-								switch ( line[p2] ) {
-								case '1':
-									GatherSite gs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<GatherSite>();
-									gs.Load(line.Substring(p2, p - p2));
-									break;
-								case '2':
-									DigSite ds = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<DigSite>();
-									ds.Load(line.Substring(p2, p - p2));
-									break;
-								case '3':
-									CleanSite cs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<CleanSite>();
-									cs.Load(line.Substring(p2, p - p2));
-									break;
-								case '4':
-									TunnelBuildingSite tbs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<TunnelBuildingSite>();
-									tbs.Load(line.Substring(p2, p - p2));
-									break;
-								}
-								p2 = p + 1;
-								p = line.IndexOf(';', p+1);
-							}
-						}
-					}
-				}
-				//data
-				line = sr.ReadLine();
-				if (line != null && line[0] == 'd') {
-					day = uint.Parse(line[1].ToString());
-					week = uint.Parse(line[2].ToString());
-					month = uint.Parse(line.Substring(3,2));
-					year = uint.Parse(line.Substring(5,3));
-					millenium = uint.Parse(line[7].ToString());
-				}
-				//end
-				colonyController.RecalculatePowerGrid();
-				colonyController.RecalculateHousing();
-			}
-		}
-		return true;
-	}
-
 	public bool SaveGame( string name ) {
 		string fpath = path + "Saves/"+ name + ".txt";
 		using (StreamWriter sw = new StreamWriter(fpath,false, System.Text.Encoding.Unicode)) {
@@ -586,8 +462,155 @@ public class GameMaster : MonoBehaviour {
 				}
 			}
 			sw.WriteLine(s);
-			// data
+			// game data
 			sw.WriteLine( 'd' + day.ToString() + week.ToString() + string.Format("{0:d2}", month) + string.Format("{0:d3}", year) + millenium.ToString() );
+			// crews
+			s = "";
+			s += string.Format("{0:d3}", Crew.lastNumber);
+			string s2 = "";
+			int crewsCount = 0;
+			foreach (Crew cr in Crew.crewsList) {
+				if (cr == null) continue;
+				crewsCount++;
+				s2 += cr.Save() + ';';
+			}
+			s += string.Format("{0:d3}",crewsCount);
+			s += s2;
+			sw.WriteLine(s);
+		}
+		return true;
+	}
+
+	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
+		string fpath = path + "Saves/" + name + ".txt";
+		if ( !File.Exists ( fpath ) ) {
+			print ("file not exist");
+			return false;
+		}
+		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Unicode))
+		{
+			string line;
+			line = sr.ReadLine();
+			int size = 0;
+			if ( !int.TryParse(line, out size) ) {
+				print ("length parsing failed");
+				return false;
+			}
+			else { 
+				string[] data = new string[ size * size];
+				int k = 0; line = sr.ReadLine();
+				while ( k < data.Length && line != null ) {
+					data[k] = line;
+					line = sr.ReadLine();
+					k++;
+				}
+				if (k < data.Length) {
+					print ("not all data here");
+					return false;
+				}
+
+				Chunk nchunk = new GameObject("chunk").AddComponent<Chunk>();
+				bool creatingChunkSuccess = nchunk.LoadChunk(data, size);
+				if ( !creatingChunkSuccess ) {
+					print ("chunk creating failed");
+					return false;
+				}
+				Destroy(mainChunk.gameObject);
+				mainChunk = nchunk;
+				if (line == "$") {
+					List<string> str_data = new List<string>();
+					line = sr.ReadLine();
+					while ( line != "$" & !sr.EndOfStream) {
+						str_data.Add(line);
+						line = sr.ReadLine();
+					}
+					mainChunk.LoadStructures(str_data);
+				}
+				//wind vector
+				line = sr.ReadLine();
+				Vector3 savedVector = windVector;
+				savedVector = Quaternion.AngleAxis( int.Parse(line.Substring(0,3)) , Vector3.up) * Vector3.forward * int.Parse(line.Substring(3,2));
+				windVector = savedVector;
+				windTimer = windChangeTime * (0.5f + Random.value * 0.5f);
+				foreach (Component c in windUpdateList) { c.BroadcastMessage("WindUpdate", windVector, SendMessageOptions.DontRequireReceiver);}
+				// hospital birthrate
+				Hospital.SetBirthrateMode( int.Parse(sr.ReadLine()));
+				// trade operations
+				line = sr.ReadLine();
+				int i = 0, p =0;
+				while ( i < ResourceType.RTYPES_COUNT ) {
+					if (p >= line.Length) break;
+					if ( line[p] == '0' ) p++;
+					else {
+						if ( line[p] == '1' ) Dock.MakeLot(i, false, int.Parse( line.Substring(p+1,4) ));
+						else Dock.MakeLot(i, true, int.Parse( line.Substring(p+1,4) ));
+						p += 5;
+					}
+					i++;
+				}
+				//immigration
+				line = sr.ReadLine();
+				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)) * (-1) );
+				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)));
+				//colony controller
+				colonyController.Load( sr.ReadLine() );
+				// storage
+				colonyController.storage.Load( sr.ReadLine() );
+				//worksites
+				line = sr.ReadLine();
+				if (line != null) {
+					if (line[0] == 'w') {
+						if (line.Length > 1) {
+							p = line.IndexOf(';', 1);
+							int p2 = 1;
+							while (p != -1 & p2 < line.Length ) {
+								int x = int.Parse(line.Substring(p2 + 12, 2)), y = int.Parse(line.Substring(p2 + 14, 2)), z =int.Parse(line.Substring(p2 + 16, 2));
+								switch ( line[p2] ) {
+								case '1':
+									GatherSite gs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<GatherSite>();
+									gs.Load(line.Substring(p2, p - p2));
+									break;
+								case '2':
+									DigSite ds = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<DigSite>();
+									ds.Load(line.Substring(p2, p - p2));
+									break;
+								case '3':
+									CleanSite cs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<CleanSite>();
+									cs.Load(line.Substring(p2, p - p2));
+									break;
+								case '4':
+									TunnelBuildingSite tbs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<TunnelBuildingSite>();
+									tbs.Load(line.Substring(p2, p - p2));
+									break;
+								}
+								p2 = p + 1;
+								p = line.IndexOf(';', p+1);
+							}
+						}
+					}
+				}
+				//game data
+				line = sr.ReadLine();
+				if (line != null && line[0] == 'd') {
+					day = uint.Parse(line[1].ToString());
+					week = uint.Parse(line[2].ToString());
+					month = uint.Parse(line.Substring(3,2));
+					year = uint.Parse(line.Substring(5,3));
+					millenium = uint.Parse(line[7].ToString());
+				}
+				//crews
+				line = sr.ReadLine();
+				if (line != null) {
+					Crew.SetLastNumber(int.Parse(line.Substring(0,3)));
+					int crewsCount = int.Parse(line.Substring(3,3));
+					if (crewsCount > 0) {
+						Crew.Load(line.Substring(6, line.Length - 6), crewsCount);
+					}
+				}
+				//end
+				colonyController.RecalculatePowerGrid();
+				colonyController.RecalculateHousing();
+			}
 		}
 		return true;
 	}
@@ -606,10 +629,13 @@ public class GameMaster : MonoBehaviour {
 			rightBottomLabel.alignment = TextAnchor.LowerRight;
 			rightBottomLabel.normal.textColor = Color.white;
 			PoolMaster.GUIStyle_RightBottomLabel = rightBottomLabel;
+
 			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
 			centerOrientedLabel.alignment = TextAnchor.MiddleCenter;
 			centerOrientedLabel.normal.textColor = Color.white;
 			PoolMaster.GUIStyle_CenterOrientedLabel = centerOrientedLabel;
+			PoolMaster.GUIStyle_COLabel_red = new GUIStyle(centerOrientedLabel);
+			PoolMaster.GUIStyle_COLabel_red.normal.textColor = Color.red;
 
 			GUIStyleState withoutImageStyle = new GUIStyleState();
 			withoutImageStyle.background = null;
@@ -628,6 +654,11 @@ public class GameMaster : MonoBehaviour {
 			systemAlert.fontSize = (int)guiPiece;
 			systemAlert.alignment = TextAnchor.MiddleCenter;
 			PoolMaster.GUIStyle_SystemAlert = systemAlert;
+
+			PoolMaster.GUIStyle_Button_red = new GUIStyle(GUI.skin.button);
+			PoolMaster.GUIStyle_Button_red.normal.textColor = Color.red;
+			PoolMaster.GUIStyle_Button_red.active.textColor = Color.red;
+			PoolMaster.GUIStyle_Button_red.hover.textColor = Color.red;
 
 			fontSize_set = true;
 		}

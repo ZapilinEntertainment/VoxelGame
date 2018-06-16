@@ -87,6 +87,7 @@ public class ColonyController : MonoBehaviour {
 		float foodSupplyHappiness = 1;
 		if (starvationTimer > 0) {
 			starvationTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			if (starvationTimer < 0) starvationTimer = starvationTime;
 			float pc = starvationTimer / starvationTime;
 			foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT * pc;
 			if (pc < 0.5f) {
@@ -208,17 +209,15 @@ public class ColonyController : MonoBehaviour {
 		if (!GameMaster.realMaster.weNeedNoResources) {
 			//   FOOD  CONSUMPTION
 			float fc = FOOD_CONSUMPTION * citizenCount;
-			if (fc >= storage.standartResources[ResourceType.FOOD_ID]) {
-				storage.standartResources[ResourceType.FOOD_ID] = 0;
-				if (starvationTimer <= 0) {
-					starvationTimer = starvationTime;
-					GameMaster.realMaster.AddAnnouncement(Localization.announcement_starvation);
+			fc -= storage.GetResources(ResourceType.Food, fc);
+			if (fc > 0) {
+				fc -= storage.GetResources(ResourceType.Supplies, fc);
+				if (fc > 0) {
+					if (starvationTimer <= 0) starvationTimer = starvationTime;
 				}
+				starvationTimer = 0;
 			}
-			else {
-				storage.standartResources[ResourceType.FOOD_ID] -= fc;
-				if (starvationTimer > 0) starvationTimer = 0;
-			}
+			else starvationTimer = 0;
 		}
 	}
 	void EveryYearUpdate() {

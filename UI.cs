@@ -9,7 +9,7 @@ public class UI : MonoBehaviour {
 
 	public UIMode mode{get;private set;}
 
-	bool showLayerCutButtons = false;
+	public bool showLayerCutButtons = false;
 	float leftPanelWidth, buildingsListLength = 0;
 	byte argument, showingBuildingsLevel = 1;
 	public Rect rightPanelBox, upPanelBox, acceptBox,systemInfoRect, buildingGridRect;
@@ -384,8 +384,7 @@ public class UI : MonoBehaviour {
 						rr.y += rr.height;
 					}
 					//COLUMN  BUILDING
-					//if (GameMaster.colonyController.hq.level > 4)
-					if (chosenSurfaceBlock.pos.y < Chunk.CHUNK_SIZE - 1)
+					if (GameMaster.colonyController.hq.level > 4 && chosenSurfaceBlock.pos.y < Chunk.CHUNK_SIZE - 1)
 					{
 						ResourceContainer[] rcc = ResourcesCost.GetCost(Structure.COLUMN_ID);
 						if (GUI.Button(rr, Localization.ui_build +' '+ Localization.structureName[Structure.COLUMN_ID])) {
@@ -414,6 +413,14 @@ public class UI : MonoBehaviour {
 							GUI.color = Color.white;
 							rr.y += rr.height;
 						}
+					}
+					// CHANGING MATERIAL
+					if (GameMaster.colonyController.gears_coefficient >=2 ) 
+					{
+						if (GUI.Button(rr, Localization.ui_changeMaterial)) {
+							ChangeArgument(8);
+						}
+						rr.y += rr.height;
 					}
 					break;
 
@@ -452,7 +459,6 @@ public class UI : MonoBehaviour {
 						if (useScroll) GUI.BeginScrollView(new Rect(rr.x, rr.y, Screen.width - rr.x, Screen.height - rr.y), buildingsScrollViewPos, new Rect(rr.x, rr.y, Screen.width - rr.x, buildingsListLength));
 						buildingsListLength = showingBuildingsList.Count * rr.height;
 						foreach (Building bd in showingBuildingsList) {
-						if (bd.borderOnlyConstruction && !chosenSurfaceBlockIsBorderBlock) continue;
 							if (bd.requiredBasementMaterialId == -1 || bd.requiredBasementMaterialId == chosenSurfaceBlock.material_id) {
 								if (GUI.Button(rr, Localization.structureName[bd.id])) {
 									if (chosenStructure != bd ) {
@@ -501,27 +507,58 @@ public class UI : MonoBehaviour {
 							}
 							//для крупных структур:
 							if (chosenStructure.type == StructureType.MainStructure) {
-								if (GUI.Button ( new Rect(rr.x + rr.width/4f, rr.y, rr.width / 2f, rr.height), Localization.ui_build )) {
-									PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
-										if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
-										if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
-												Structure s = Structure.GetNewStructure(chosenStructure.id);
-												s.gameObject.SetActive(true);
-												s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
-												ChangeArgument(3);
-												break;
+									bool pass = true;
+									if (chosenBuilding.borderOnlyConstruction) { 
+										if ( !chosenSurfaceBlockIsBorderBlock ) {
+											Color c = GUI.color;
+											GUI.color = Color.yellow;
+											GUI.Label(rr, Localization.ui_buildOnSideOnly, PoolMaster.GUIStyle_CenterOrientedLabel);
+											rr.y+=rr.height;
+											GUI.color = c;
+											pass = false;
 										}
 										else {
-											bufferedPosition = mainStructurePosition; 
-											ChangeArgument(5);
-											break;
+												int side = 0;
+												if ( chosenSurfaceBlock.pos.x == 0 ) {
+													if (chosenSurfaceBlock.pos.z == 0) side = 2;
+												}
+												else {
+													if (chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
+													else side = 3;
+												}
+												if (chosenSurfaceBlock.myChunk.sideBlockingMap[chosenSurfaceBlock.pos.y, side] == true) {
+												Color c = GUI.color;
+												GUI.color = Color.red;
+												GUI.Label(rr, Localization.ui_heightBlocked, PoolMaster.GUIStyle_CenterOrientedLabel);
+												rr.y+=rr.height;
+												GUI.color = c;
+												pass = false;
+											}
 										}
 									}
-									else {
-										systemInfoString = "Not enough resources"; systemInfoTimer = 2;
-									}
-								}
-								rr.y += rr.height;
+									if (pass) {
+										if (GUI.Button ( new Rect(rr.x + rr.width/4f, rr.y, rr.width / 2f, rr.height), Localization.ui_build )) {
+											PixelPosByte mainStructurePosition = new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - chosenStructure.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION / 2  -  chosenStructure.innerPosition.z_size/2);
+												if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( bufferedResources )) {
+												if ( chosenSurfaceBlock.IsAnyBuildingInArea( new SurfaceRect (mainStructurePosition.x, mainStructurePosition.y, chosenStructure.innerPosition.x_size, chosenStructure.innerPosition.z_size) ) == false) {
+														Structure s = Structure.GetNewStructure(chosenStructure.id);
+														s.gameObject.SetActive(true);
+														s.SetBasement(chosenSurfaceBlock, mainStructurePosition);
+														ChangeArgument(3);
+														break;
+												}
+												else {
+													bufferedPosition = mainStructurePosition; 
+													ChangeArgument(5);
+													break;
+												}
+											}
+											else {
+												systemInfoString = "Not enough resources"; systemInfoTimer = 2;
+											}
+										}
+										rr.y += rr.height;
+								}								
 							}
 						}
 						buildingIndex++;
@@ -626,6 +663,23 @@ public class UI : MonoBehaviour {
 					break;
 				case 7: //CREATING   COLUMNS
 					
+					break;
+				case 8: // CHANGING MATERIAL
+					if (chosenSurfaceBlock == null) {
+						ChangeArgument(1);
+						return;
+					}
+					GUI.Label(rr, Localization.material_required + " 256"); rr.y += rr.height;
+					foreach (ResourceType rt in ResourceType.materialsForCovering) {
+						GUI.DrawTexture( new Rect(rr.x, rr.y, rr.height, rr.height), rt.icon, ScaleMode.StretchToFill );
+						if ( GUI.Button (new Rect(rr.x + rr.height, rr.y, rr.width -rr.height, rr.height), rt.name ) ) {
+							if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[]{new ResourceContainer(rt,256)}) )
+							{
+								chosenSurfaceBlock.ReplaceMaterial(rt.ID);
+							}
+						}
+						rr.y += rr.height;
+					}
 					break;
 				}
 				break;

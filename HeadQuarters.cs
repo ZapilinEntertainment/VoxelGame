@@ -5,10 +5,34 @@ using UnityEngine;
 public class HeadQuarters : House {
 	bool nextStageConditionMet = false;
 	ColonyController colony;
+	GameObject rooftop;
 	
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
 		PrepareHouse(b,pos);
+		if (level > 3 ) {
+			if (rooftop == null) {
+				rooftop = Instantiate(Resources.Load<GameObject>("Structures/HQ_rooftop"));
+				rooftop.transform.parent = transform;
+				rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
+				myRenderers.Add(rooftop.transform.GetChild(0).GetComponent<MeshRenderer>());
+			}
+			if (level > 4) {
+				int i = 5;
+				while (i <= level) {
+					b.myChunk.BlockByStructure( b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this);
+					GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
+					addon.transform.parent = transform;
+					addon.transform.localPosition = Vector3.zero + (i - 3.5f) * Vector3.up * Block.QUAD_SIZE;
+					addon.transform.localRotation = transform.localRotation;
+					myRenderers.Add(addon.transform.GetChild(0).GetComponent<MeshRenderer>());
+					i++;
+				}
+				BoxCollider bc = gameObject.GetComponent<BoxCollider>();
+				bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE/2f;
+				bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE );
+			}
+		}
 		colony = GameMaster.colonyController;
 		colony.SetHQ(this);
 	}
@@ -32,6 +56,29 @@ public class HeadQuarters : House {
 		}
 	}
 
+	//---------------------                   SAVING       SYSTEM-------------------------------
+	public override string Save() {
+		return SaveStructureData() + SaveBuildingData() + SaveHQData();
+	}
+
+	protected string SaveHQData() {
+		string s = "";
+		s += level.ToString();
+		return s;
+	}
+
+	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
+		byte x = byte.Parse(s_data.Substring(0,2));
+		byte z = byte.Parse(s_data.Substring(2,2));
+		Prepare();
+		if (s_data.Length > 12) level = byte.Parse(s_data[12].ToString());
+		SetBasement(surface, new PixelPosByte(x,z));
+		SetActivationStatus(s_data[11] == '1');     // <-----BUILDING class part
+		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
+		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	}
+	//---------------------------------------------------------------------------------------------------	
+
 	void OnGUI() {
 		if ( !showOnGUI ) return;
 		if (level < 7) {
@@ -51,37 +98,38 @@ public class HeadQuarters : House {
 								if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
 								{
 									Chunk chunk = basement.myChunk;
-									ChunkPos upperPos = new ChunkPos( basement.pos.x, basement.pos.y + (level - 4), basement.pos.z);
-									Block upperBlock = chunk.GetBlock(basement.pos.x, basement.pos.y + (level - 4), basement.pos.z);
-									if (upperBlock == null) chunk.AddBlock(upperPos, BlockType.Surface, ResourceType.CONCRETE_ID, false);
-									else {
-										switch (upperBlock.type) {
-										case BlockType.Shapeless:
-										case BlockType.Cave:
-										chunk.ReplaceBlock(upperPos, BlockType.Surface, ResourceType.CONCRETE_ID, false );
-										break;
-										case BlockType.Cube:
-											GameMaster.realMaster.AddAnnouncement(Localization.hq_upper_surface_blocked);
-											colony.storage.AddResources(requiredResources);
-											return;
-										}
+									ChunkPos upperPos = new ChunkPos( basement.pos.x, basement.pos.y + (level - 3), basement.pos.z);
+									Block upperBlock = chunk.GetBlock(upperPos.x, upperPos.y, upperPos.z);
+									if (upperBlock != null) {
+									chunk.BlockByStructure(upperPos.x, upperPos.y, upperPos.z, this);
 									}
-									SurfaceBlock upperSurface = upperBlock as SurfaceBlock;	
-									Building upgraded = Instantiate(Resources.Load<Building>("Prefs/HQ_addon"));
-									Quaternion originalRotation = transform.rotation;
-									upgraded.SetBasement(upperSurface, PixelPosByte.zero);
-									if ( !upgraded.isBasement ) upgraded.transform.rotation = originalRotation;
+									GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
+									addon.transform.parent = transform;
+									addon.transform.localPosition = Vector3.zero + (level - 2.5f) * Vector3.up * Block.QUAD_SIZE;
+									addon.transform.localRotation = transform.localRotation;
+									myRenderers.Add(addon.transform.GetChild(0).GetComponent<MeshRenderer>());
+									BoxCollider bc = gameObject.GetComponent<BoxCollider>();
+									bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE);
+									bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE/2f;
+									if (rooftop== null) {
+										rooftop = Instantiate(Resources.Load<GameObject>("Structures/HQ_rooftop"));
+										rooftop.transform.parent = transform;
+									}
+									rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;
 									level++;
 							}
 							else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 						}
 				}
-				if (level > 4) {
+				if (level > 3) {
 					rr.y += rr.height;
 					Color c = GUI.color;
 					GUI.color = Color.red;
 					GUI.Label(rr, Localization.hq_upgrade_warning);
+					rr.y += rr.height;
 					GUI.color = c;
+					GUI.Label(rr, Localization.info_level + " : " + level.ToString());
+					rr.y += rr.height;
 				}
 			}
 				else {

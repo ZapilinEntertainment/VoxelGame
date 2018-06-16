@@ -15,7 +15,7 @@ public class PoolMaster : MonoBehaviour {
 	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
 	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
-	GUIStyle_RightBottomLabel;
+	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
 	List<GameObject> treesPool, saplingsPool, lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
 		lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные

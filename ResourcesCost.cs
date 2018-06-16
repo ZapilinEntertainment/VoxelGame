@@ -3,10 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public static class ResourcesCost {
+	public const int SHUTTLE_BUILD_COST_ID =  -2;
 
 	public static ResourceContainer[] GetCost (int id) {
 		ResourceContainer[] cost = new ResourceContainer[0];
 		switch ( id ) {
+		case SHUTTLE_BUILD_COST_ID:
+			cost = new ResourceContainer[] {
+				new ResourceContainer(ResourceType.metal_S, 25), new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.metal_M, 4),
+				new ResourceContainer(ResourceType.Plastics, 40)
+			} ;
+			break;
 		case Structure.MINE_ID:
 			cost = new ResourceContainer[] {
 				new ResourceContainer(ResourceType.metal_M, 4), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.Plastics, 4)
@@ -60,7 +67,7 @@ public static class ResourcesCost {
 		case Structure.DOCK_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 10), new ResourceContainer(ResourceType.metal_E, 2), 
-				new ResourceContainer(ResourceType.Concrete, 100)
+				new ResourceContainer(ResourceType.Concrete, 280)
 			} ;
 			break;		
 		case Structure.STORAGE_1_ID:
@@ -264,8 +271,22 @@ public static class ResourcesCost {
 			};
 			break;
 		case Structure.COLUMN_ID:
-			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_K, 120)};
+			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 500), new ResourceContainer(ResourceType.metal_K, 120)};
 			break;
+		case Structure.SWITCH_TOWER_ID:
+			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 10), new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.Plastics,10)};
+			break;
+		case Structure.SHUTTLE_HANGAR_ID:
+			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 300), new ResourceContainer(ResourceType.metal_K, 40), new ResourceContainer(ResourceType.Plastics, 250),
+				new ResourceContainer(ResourceType.metal_M, 30)
+			};
+			break;
+		case Structure.RECRUITING_CENTER_ID:
+			cost = new ResourceContainer[]{
+				new ResourceContainer(ResourceType.Concrete, 340), new ResourceContainer(ResourceType.metal_K, 80), new ResourceContainer(ResourceType.Plastics, 250)
+			};
+			break;
+
 		}
 		return cost;
 	}

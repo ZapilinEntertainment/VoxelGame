@@ -25,12 +25,19 @@ public class Chunk : MonoBehaviour {
 	public static int energy_take_speed = 10;
 	GameObject cave_pref;
 	public List <Component> chunkUpdateSubscribers;
+	public bool[,] sideBlockingMap{get; private set;}
 
 	public void Awake() {
 		grassland_blocks = new List<Grassland>();
 		surfaceBlocks = new List<SurfaceBlock>();
 		cave_pref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
 		chunkUpdateSubscribers = new List<Component>();
+		sideBlockingMap = new bool[CHUNK_SIZE , 4];
+		for (int a = 0; a < CHUNK_SIZE; a++) {
+			for (int b = 0; b < 4; b++) {
+				sideBlockingMap[a,b] = false;
+			}
+		}
 
 		GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
 	}
@@ -894,6 +901,13 @@ public class Chunk : MonoBehaviour {
 			}
 		}
 		return true;
+	}
+
+	public void BlockRow (int index, int side) {
+			sideBlockingMap[index, side] = true;
+	}
+	public void UnblockRow (int index, int side) {
+			sideBlockingMap[index, side] = false;
 	}
 
 	public string[] SaveStructures() {

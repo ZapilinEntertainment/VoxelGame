@@ -136,10 +136,10 @@ public class Mine : WorkBuilding {
 		if (nextModel != null) {
 			GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
 			if (myRenderer != null) Destroy(myRenderer.gameObject);
-			if (myRenderers != null) {for (int n =0; n < myRenderers.Length; n++) Destroy( myRenderers[n].gameObject );}
-			myRenderers = new Renderer[newModelGO.transform.childCount];
+			if (myRenderers != null) {for (int n =0; n < myRenderers.Count; n++) Destroy( myRenderers[n].gameObject );}
+			myRenderers = new List<Renderer>();
 			for (int n = 0; n < newModelGO.transform.childCount; n++) {
-				myRenderers[n] = newModelGO.transform.GetChild(n).GetComponent<Renderer>();
+				myRenderers.Add( newModelGO.transform.GetChild(n).GetComponent<Renderer>());
 				if (!visible) myRenderers[n].enabled = false;
 			}
 			if ( !isActive || !energySupplied ) ChangeRenderersView(false);

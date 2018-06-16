@@ -29,8 +29,9 @@ public class Structure : MonoBehaviour {
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
 	LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, FOOD_FACTORY_5_ID = 53, SMELTERY_2_ID = 54, 
-	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, RESOURCE_STICK_ID = 60, COLUMN_ID = 61;
-	public const int TOTAL_STRUCTURES_COUNT = 62;
+	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, RESOURCE_STICK_ID = 60, COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_ID = 63,
+	RECRUITING_CENTER_ID = 64;
+	public const int TOTAL_STRUCTURES_COUNT = 65;
 	static Structure[] prefs;
 	static List<Building> allConstructableBuildingsList;
 
@@ -95,6 +96,9 @@ public class Structure : MonoBehaviour {
 		prefs[CHEMICAL_FACTORY_ID] = Resources.Load<Structure>("Structures/Buildings/chemicalFactory_level_4");
 		prefs[RESOURCE_STICK_ID] = Resources.Load<Structure>("Structures/resourceStick");
 		prefs[COLUMN_ID] = Resources.Load<Structure>("Structures/Column");
+		prefs[SWITCH_TOWER_ID] = Resources.Load<Structure>("Structures/Buildings/switchTower");
+		prefs[SHUTTLE_HANGAR_ID] = Resources.Load<Structure>("Structures/Buildings/shuttleHangar");
+		prefs[RECRUITING_CENTER_ID] = Resources.Load<Structure>("Structures/Buildings/recruitingCenter");
 	
 		allConstructableBuildingsList = new List<Building>();
 		allConstructableBuildingsList.Add( GetNewStructure(WIND_GENERATOR_1_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -135,7 +139,8 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(PLASTICS_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(GRPH_REACTOR_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
-		allConstructableBuildingsList.Add( GetNewStructure(QUANTUM_ENERGY_TRANSMITTER_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add (GetNewStructure(SHUTTLE_HANGAR_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add (GetNewStructure(RECRUITING_CENTER_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(CHEMICAL_FACTORY_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 
 		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -144,6 +149,8 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(QUANTUM_ENERGY_TRANSMITTER_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add(GetNewStructure(SWITCH_TOWER_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		foreach (Building b in allConstructableBuildingsList) {
 			b.transform.parent = GameMaster.realMaster.transform;
 		}
@@ -191,12 +198,15 @@ public class Structure : MonoBehaviour {
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			break;		
 		case DOCK_ID:
+		case SHUTTLE_HANGAR_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
 			borderOnlyConstruction = true;
 			break;		
+		case RECRUITING_CENTER_ID:
 		case STORAGE_0_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; break;
 		case STORAGE_1_ID:
+		case SWITCH_TOWER_ID:
 			innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.Structure; break;
 		case STORAGE_2_ID:
 		case STORAGE_3_ID:
@@ -247,8 +257,9 @@ public class Structure : MonoBehaviour {
 			isBasement = true; borderOnlyConstruction = true;
 		break;
 		case HQ_2_ID:
-		case HQ_3_ID: innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
-		case HQ_4_ID: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true;	break;
+		case HQ_3_ID: 
+		case HQ_4_ID: 
+			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
 		case BIOGENERATOR_2_ID:
 			innerPosition = new SurfaceRect(0,0,4,10); type = StructureType.Structure;
 			break;

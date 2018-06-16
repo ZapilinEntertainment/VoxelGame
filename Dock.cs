@@ -18,6 +18,7 @@ public class Dock : WorkBuilding {
 	const float LOADING_TIME = 10;
 	float loadingTimer = 0, shipArrivingTimer = 0;
 	const float SHIP_ARRIVING_TIME = 300;
+	int blockedHeight = -1, blockedSide = -1;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -33,6 +34,9 @@ public class Dock : WorkBuilding {
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
+		if (blockedHeight != -1 & blockedSide != -1) {
+			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
+		}
 		SetBuildingData(b, pos);
 		Transform meshTransform = transform.GetChild(0);
 		if (basement.pos.z == 0) {
@@ -59,6 +63,16 @@ public class Dock : WorkBuilding {
 			colony = GameMaster.colonyController;
 			colony.AddDock(this);
 			shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) /2f ;
+			int side = 0;
+			if ( b.pos.x == 0 ) {
+				if (b.pos.z == 0) side = 2;
+			}
+			else {
+				if (b.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
+				else side = 3;
+			}
+			b.myChunk.BlockRow(b.pos.y, side);
+			blockedHeight = b.pos.y; blockedSide = side;
 		}
 	}
 
@@ -279,12 +293,6 @@ public class Dock : WorkBuilding {
 		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
 	}
 	//---------------------------------------------------------------------------------------------------	
-
-	void OnDestroy() {
-		GameMaster.colonyController.RemoveDock(this);
-		PrepareWorkbuildingForDestruction();
-	}
-
 	void OnGUI() {
 		if (!showOnGUI) return;
 		GUI.skin = GameMaster.mainGUISkin;
@@ -410,6 +418,14 @@ public class Dock : WorkBuilding {
 				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrationPlan += 10;
 				if (immigrationPlan >= 1000) immigrationPlan = 999;
 			}
+		}
+	}
+
+	void OnDestroy() {
+		PrepareWorkbuildingForDestruction();
+		GameMaster.colonyController.RemoveDock(this);
+		if (blockedHeight != -1 & blockedSide != -1) {
+			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
 		}
 	}
 }

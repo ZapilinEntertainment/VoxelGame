@@ -10,11 +10,13 @@ public static class Localization {
 	rtype_dirt_name, rtype_dirt_descr, rtype_food_name, rtype_food_descr, rtype_metalK_ore_name, rtype_metalK_descr, rtype_metalM_ore_name, rtype_metalM_descr,
 	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
 	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_plastics_descr, rtype_concrete_name, rtype_concrete_descr,
-	rtype_fertileSoil_name, rtype_fertileSoil_descr, rtype_fuel_name, rtype_fuel_descr, rtype_graphonium_name, rtype_graphonium_descr;
+	rtype_fertileSoil_name, rtype_fertileSoil_descr, rtype_fuel_name, rtype_fuel_descr, rtype_graphonium_name, rtype_graphonium_descr,
+	rtype_supplies_name, rtype_supplies_descr;
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
-	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode;
+	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode,
+	ui_changeMaterial, ui_heightBlocked, ui_buildOnSideOnly, ui_freeSlots, ui_recruitmentInProgress;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
@@ -26,6 +28,7 @@ public static class Localization {
 	hq_upgrade_warning, hq_upper_surface_blocked;
 	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity, block;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
+	public static string hangar_noShuttle, hangar_noCrew, hangar_hireCrew, hangar_hireCost, hangar_crewSalary;
 	public static Language currentLanguage;
 
 	static Localization() {
@@ -65,6 +68,7 @@ public static class Localization {
 			rtype_fertileSoil_name = "Fertile Soil"; rtype_fertileSoil_descr = "Soil, appliable for growing edibles.";
 			rtype_fuel_name = "Fuel"; rtype_fuel_descr = "Standart fuel for spaceship engine";
 			rtype_graphonium_name = "Graphonium"; rtype_graphonium_descr = "Superstructured material, wrapping reality nearby";
+			rtype_supplies_name = "Supplies"; rtype_supplies_descr = "Well-packed food, medicaments and another life-support goods.";
 
 			structureName[Structure.TREE_SAPLING_ID] = "Sapling"; 
 			structureName[Structure.TREE_ID] = "Tree"; 
@@ -95,7 +99,7 @@ public static class Localization {
 			structureName[Structure.FARM_5_ID] = "Farm Block (lvl 5)"; 
 			structureName[Structure.HQ_2_ID] = "HeadQuarters (lvl 2)"; 
 			structureName[Structure.HQ_3_ID] = "HeadQuarters (lvl 3)"; 
-			structureName[Structure.HQ_4_ID] = "HeadQuarters Block (lvl 4)"; 
+			structureName[Structure.HQ_4_ID] = "HeadQuarters"; 
 			structureName[Structure.LUMBERMILL_1_ID] = "Lumbermill (lvl 1)"; 
 			structureName[Structure.LUMBERMILL_2_ID] = "Lumbermill (lvl 2)"; 
 			structureName[Structure.LUMBERMILL_3_ID] = "Lumbermill (lvl 3)"; 
@@ -124,6 +128,9 @@ public static class Localization {
 			structureName[Structure.CHEMICAL_FACTORY_ID] = "Chemical factory";
 			structureName[Structure.RESOURCE_STICK_ID] = "Constructing block...";
 			structureName[Structure.COLUMN_ID] = "Column";
+			structureName[Structure.SWITCH_TOWER_ID] = "Switch tower";
+			structureName[Structure.SHUTTLE_HANGAR_ID] = "Shuttle hangar";
+			structureName[Structure.RECRUITING_CENTER_ID] = "Recruiting Center";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
@@ -143,6 +150,10 @@ public static class Localization {
 			ui_immigrationPlaces = "Immigrants count";
 			ui_close = "Close"; ui_reset = "Reset";
 			ui_setMode = "Set mode"; ui_currentMode = "Current mode";
+			ui_changeMaterial = "Change material";
+			ui_heightBlocked = "Height blocked";
+			ui_buildOnSideOnly = "Can be placed only on side blocks";
+			ui_freeSlots = "Free slots";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			menu_save = "Save game"; menu_load = "Load game";
@@ -173,6 +184,11 @@ public static class Localization {
 			no_activity = "No activity";
 			block = "block";
 
+			hangar_noShuttle = "No shuttle";
+			hangar_noCrew = "No crew";
+			hangar_hireCrew = "Hire crew";
+			hangar_hireCost = "Hire cost";
+			hangar_crewSalary = "Monthly payment";
 
 			rollingShop_gearsProduction = "Gears production";
 			rollingShop_boatPartsProduction = "Boat parts production";
@@ -260,5 +276,19 @@ public static class Localization {
 			break;
 		}
 		return s;
+	}
+
+	public static string CostInCoins(float count) {
+		switch (currentLanguage) {
+		default:
+		case Language.English: return count.ToString() + " coins";
+		}
+	}
+
+	public static string AnnounceCrewReady( string name ) {
+		switch (currentLanguage) {
+		default:
+		case Language.English: return "crew " + name + " ready";
+		}
 	}
 }

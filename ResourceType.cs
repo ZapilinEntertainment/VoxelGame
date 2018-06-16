@@ -12,14 +12,14 @@ public class ResourceType {
 	public static readonly ResourceType Nothing, Lumber, Stone, Dirt,Food, 
 		metal_K_ore, metal_M_ore, metal_E_ore, metal_N_ore, metal_P_ore, metal_S_ore, 
 		metal_K, metal_M, metal_E, metal_N, metal_P, metal_S,
-	mineral_F, mineral_L, Plastics, Concrete, FertileSoil, Fuel, Graphonium;
+	mineral_F, mineral_L, Plastics, Concrete, FertileSoil, Fuel, Graphonium, Supplies;
 	public const int STONE_ID = 1, DIRT_ID = 2, LUMBER_ID = 4, METAL_K_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
 	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, PLASTICS_ID = 13, FOOD_ID = 14,
 	CONCRETE_ID = 15, METAL_K_ORE_ID = 16, METAL_M_ORE_ID = 17, METAL_E_ORE_ID = 18, METAL_N_ORE_ID = 19, METAL_P_ORE_ID = 20,
-	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24;
-	public static readonly ResourceType[] resourceTypesArray;
+	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25;
+	public static readonly ResourceType[] resourceTypesArray, materialsForCovering;
 	public static float[] prices, demand;
-	public const int RTYPES_COUNT = 25, RTYPE_ARRAY_ROWS = 5, RTYPE_ARRAY_COLUMNS = 6; 
+	public const int RTYPES_COUNT = 26, RTYPE_ARRAY_ROWS = 5, RTYPE_ARRAY_COLUMNS = 6; 
 
 	public ResourceType(string f_name, int f_id, float f_mass, float f_toughness, Material f_material, Texture f_icon, string f_descr) {
 		name = f_name;
@@ -37,7 +37,7 @@ public class ResourceType {
 		prices = new float[RTYPES_COUNT]; demand = new float[RTYPES_COUNT];
 		Nothing = new ResourceType(Localization.rtype_nothing_name, 0, 0, 0, PoolMaster.default_material, PoolMaster.empty_tx, Localization.rtype_nothing_descr); 
 
-		Food = new ResourceType(Localization.rtype_food_name, FOOD_ID, 0.1f, 0.1f, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_supplies"), Localization.rtype_food_descr);
+		Food = new ResourceType(Localization.rtype_food_name, FOOD_ID, 0.1f, 0.1f, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_food"), Localization.rtype_food_descr);
 		prices[FOOD_ID] = 1; demand[FOOD_ID] = 2;
 
 		metal_K = new ResourceType("Metal K", METAL_K_ID, 0.7f, 50, Resources.Load<Material>("Materials/MetalK") , Resources.Load<Texture>("Textures/resource_metalK"), Localization.rtype_metalK_descr);
@@ -93,6 +93,11 @@ public class ResourceType {
 		Graphonium = new ResourceType(Localization.rtype_graphonium_name, GRAPHONIUM_ID, 4, 2.5f, PoolMaster.energy_material, PoolMaster.energyCrystal_icon_tx, Localization.rtype_graphonium_descr);
 		prices[GRAPHONIUM_ID] = prices[METAL_N_ID * 3];
 		demand[GRAPHONIUM_ID] = 1;
+
+		Supplies = new ResourceType(Localization.rtype_supplies_name, SUPPLIES_ID, 0.1f, 0.1f, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_supplies"), Localization.rtype_supplies_descr);
+		prices[SUPPLIES_ID] = prices[FOOD_ID] * 2; demand[SUPPLIES_ID] = demand[FOOD_ID] * 0.95f;
+
+		materialsForCovering = new ResourceType[] {ResourceType.Concrete, ResourceType.Dirt, ResourceType.metal_K, ResourceType.metal_S, ResourceType.Stone};
 	}
 
 	public static ResourceType GetResourceTypeById(int f_id) {
