@@ -1,9 +1,0 @@
-EnergyCapacitor - metalM:2;metalE:4;metalN:2;
-House - metalK:1;elasticMass:4;
-Mine - metalK:4;elasticMass:1;metalM:1;
-Smeltery - metalK:8;metalM:8;elasticMass:4;
-WindGenerator - metalK:1;metalM:2;metalE:1;
-Farm - Lumber:50;metalK:7;metalM:4
-Lumbermill - Lumber:30;metalK:5;metalM:10;
-
-StartResources_string metalK:100;metalE:30;metalM:50;Food:140;
