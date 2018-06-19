@@ -22,6 +22,7 @@ public class UI : MonoBehaviour {
 	CubeBlock chosenCubeBlock; byte faceIndex = 10;
 	Structure chosenStructure;
 	Worksite chosenWorksite;
+	Crew showingCrew; bool showCrewsOrVesselsList = false, dissmissConfirmation = false;
 	Vector2 mousePos, buildingsScrollViewPos = Vector2.zero;
 	GameObject quadSelector, structureFrame;
 
@@ -326,6 +327,66 @@ public class UI : MonoBehaviour {
 			}
 		}	
 
+		//Crew panel
+		if (showingCrew != null) {
+			float a = Screen.width / 34f, left= Screen.width / 2f - 10 * a, up = 4 *k;
+			GUI.Box(new Rect(left, up, 17 * a, 9* a), GUIContent.none);
+			bool hasShip = (showingCrew.shuttle != null);
+			Crew.GUI_DrawCrewIcon(showingCrew, new Rect(left, up,2 * a, 2*a));
+			showingCrew.name = GUI.TextField(new Rect(left + 2 * a,  up, 7 * a, a), showingCrew.name);
+			GUI.Label(new Rect(left + 9 * a, up, a,a), showingCrew.level.ToString());
+			GUI.DrawTexture(new Rect(left + 2 * a, up + a, 8 * a, a), whiteSquare_tx, ScaleMode.StretchToFill);
+			GUI.DrawTexture(new Rect(left + a * a, up + a, 8*a * showingCrew.experience / showingCrew.nextExperienceLimit,a), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+			GUI.Label(new Rect(left, up + 2 *a, 5 * a, a), Localization.vessel + " :");
+			GUI.Label(new Rect(left, up + 3 * a, 8 * a, a), showingCrew.shuttle.name);
+			if (Shuttle.shuttlesList.Count != 0) {
+				if (GUI.Button(new Rect(left + 5 * a, up + 2 * a, 5 * a, a), Localization.change)) {
+					showCrewsOrVesselsList = !showCrewsOrVesselsList;
+				}
+			}
+			if (showCrewsOrVesselsList) {
+				int vn = 0; 
+				while (vn < Shuttle.shuttlesList.Count) {
+					if (Shuttle.shuttlesList[vn] == null) {
+						Shuttle.shuttlesList.RemoveAt(vn);
+						continue;
+					}
+					if (hasShip && Shuttle.shuttlesList[vn] == showingCrew.shuttle) GUI.DrawTexture(new Rect(left, up + (4+vn)*a, 10 * a, a), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+					GUI.DrawTexture(new Rect(left, up + (4 + vn) * a, a,a), showingCrew.shuttle.condition > 0.85f ? PoolMaster.shuttle_good_icon : ( showingCrew.shuttle.condition  < 0.5f ? PoolMaster.shuttle_bad_icon : PoolMaster.shuttle_normal_icon), ScaleMode.StretchToFill );
+					if (Shuttle.shuttlesList[vn].crew != null) GUI.DrawTexture(new Rect(left, up + (4 + vn) * a, a,a), showingCrew.stamina < 0.5f ? PoolMaster.crew_bad_icon : ( showingCrew.stamina > 0.85f ? PoolMaster.crew_good_icon : PoolMaster.crew_normal_icon), ScaleMode.StretchToFill);
+					if (GUI.Button(new Rect(left + a, up + (4 + vn) * a, 9*a,a), Shuttle.shuttlesList[vn].name)) showingCrew.ChangeShip(Shuttle.shuttlesList[vn]);
+					vn++;
+				}
+			}
+			else { // other info
+				GUI.Label(new Rect(left, up + 5 * a, 4 * a,a), Localization.crew_membersCount + ": ");
+				GUI.Label(new Rect(left + 4*a, up + 5 * a, 3 * a,a), showingCrew.count.ToString());
+				if (showingCrew.count > Crew.MIN_MEMBERS_COUNT) {
+					if (GUI.Button(new Rect(left + 7 * a, up + 5 * a, a,a), PoolMaster.minusButton_tx)) showingCrew.DismissMember();
+				}
+				if (showingCrew.count < Crew.MAX_MEMBER_COUNT & GameMaster.colonyController.freeWorkers > 0) {
+					if (GUI.Button(new Rect(left + 8 * a, up + 5 * a, a,a), PoolMaster.plusButton_tx)) showingCrew.AddMember();
+				}
+				if (GUI.Button(new Rect(left + 9*a, up + 5*a,a,a), PoolMaster.redArrow_tx )) {
+					dissmissConfirmation = true;
+				}
+				GUI.Label(new Rect(left, up + 7 * a, 3*a,a), Localization.hangar_crewSalary + ':');
+				GUI.Label(new Rect(left + 3 *a, up + 7*a, 2*a,a), string.Format("{0:0.##}",showingCrew.salary));
+				GUI.Label(new Rect(left + 5 *a, up + 7*a, 3*a,a), Localization.crew_stamina +':');
+				GUI.Label(new Rect(left +8 *a, up + 7*a, 2*a,a), ((int)(showingCrew.stamina * 100)).ToString() + '%');
+			}
+			GUI.Label(new Rect(left + 10 * a, up, 4 *a,a), Localization.crew_perception +':'); GUI.Label(new Rect(left+14*a, up, 3 *a, a), string.Format("{0:0.###}", showingCrew.perception));
+			GUI.Label(new Rect(left + 10 * a, up + a, 4 *a,a), Localization.crew_persistence +':'); GUI.Label(new Rect(left+14*a, up + a, 3 *a, a), string.Format("{0:0.###}", showingCrew.persistence));
+			GUI.Label(new Rect(left + 10 * a, up + 2 *a, 4 *a,a), Localization.crew_bravery +':'); GUI.Label(new Rect(left+14*a, up + 2 *a, 3 *a, a), string.Format("{0:0.###}", showingCrew.bravery));
+			GUI.Label(new Rect(left + 10 * a, up + 3 *a, 4 *a,a), Localization.crew_techSkills +':'); GUI.Label(new Rect(left+14*a, up + 3*a, 3 *a, a), string.Format("{0:0.###}", showingCrew.techSkills));
+			GUI.Label(new Rect(left + 10 * a, up + 4 *a, 4 *a,a), Localization.crew_survivalSkills +':'); GUI.Label(new Rect(left+14*a, up + 4 *a, 3 *a, a), string.Format("{0:0.###}", showingCrew.survivalSkills));
+			GUI.Label(new Rect(left + 10 * a, up + 5 *a, 4 *a,a), Localization.crew_teamWork +':'); GUI.Label(new Rect(left+14*a, up + 5*a, 3 *a, a), string.Format("{0:0.###}", showingCrew.teamWork));
+
+			GUI.Label(new Rect(left + 10*a, up + 7*a, 3*a, a), Localization.crew_successfulMissions + ": " + showingCrew.successfulOperations.ToString());
+			GUI.Label(new Rect(left + 14*a, up + 7*a, 3*a, a), Localization.crew_totalMissions + ": " + showingCrew.totalOperations.ToString());
+			if (GUI.Button(new Rect(left + 9 *a, up + 9*a, 9 *a, a), Localization.ui_close)) HideCrewCard();
+		}
+
 
 		//  RIGHT  PANEL : 
 		if (mode != UIMode.View) {
@@ -333,7 +394,7 @@ public class UI : MonoBehaviour {
 			GUI.depth = GUIDEPTH_UI_MAIN;
 			GUI.Box(rightPanelBox, GUIContent.none);
 			Rect rr = new Rect(rightPanelBox.x, rightPanelBox.y, rightPanelBox.width, k);
-			if (GUI.Button(rr, "Close Panel")) SwitchUIMode(UIMode.View); // СДЕЛАТЬ  ШТОРКОЙ
+			if (GUI.Button(rr, "Close Panel")) SwitchUIMode(UIMode.View); // СДЕЛАТЬ  ШТОРКОЙ //???
 			rr.y += rr.height;
 
 			switch (mode) {
@@ -864,5 +925,19 @@ public class UI : MonoBehaviour {
 		if (list.Count == 0) {
 			presenceMarker = false;
 		}
+	}
+
+	public void ShowCrewCard(Crew c) {
+		if (c == null) return;
+		showingCrew = c;
+		touchscreenTemporarilyBlocked = true;
+		showCrewsOrVesselsList = false;
+	}
+
+	public void HideCrewCard() {
+		if (showingCrew == null) return;
+		showingCrew = null;
+		touchscreenTemporarilyBlocked = false;
+		showCrewsOrVesselsList =false;
 	}
 }

@@ -16,19 +16,25 @@ public static class Localization {
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
 	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode,
-	ui_changeMaterial, ui_heightBlocked, ui_buildOnSideOnly, ui_freeSlots, ui_recruitmentInProgress;
+	ui_changeMaterial, ui_heightBlocked, ui_buildOnSideOnly, ui_freeSlots, ui_recruitmentInProgress, ui_showCrewCard, ui_showCrewsList, ui_noShip,
+	ui_assemblyInProgress, ui_showVesselsList;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
 	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources,
 	announcement_stillWind;
-	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade;
+	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade, empty, vessel, change,cost;
 	public static string[] structureName;
 	public static string hq_refuse_reason_1, hq_refuse_reason_2, hq_refuse_reason_3,hq_refuse_reason_4,hq_refuse_reason_5,hq_refuse_reason_6, 
 	hq_upgrade_warning, hq_upper_surface_blocked;
-	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity, block;
+	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity, block,resources,coins;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
-	public static string hangar_noShuttle, hangar_noCrew, hangar_hireCrew, hangar_hireCost, hangar_crewSalary;
+	public static string hangar_noShuttle, hangar_noCrew, hangar_hireCrew, hangar_hireCost, hangar_crewSalary, hangar_repairFor, hangar_readiness,
+	hangar_refuel;
+	public static string crew_membersCount,crew_stamina,crew_perception, crew_persistence, crew_bravery, crew_techSkills, crew_survivalSkills, crew_teamWork,
+	crew_successfulMissions, crew_totalMissions;
+	public static string quests_vesselsAvailable, quests_transmittersAvailable, quests_crewsAvailable, quests_vesselsRequired, quests_crewsRequired,
+	quests_no_suitable_vessels;
 	public static Language currentLanguage;
 
 	static Localization() {
@@ -131,6 +137,8 @@ public static class Localization {
 			structureName[Structure.SWITCH_TOWER_ID] = "Switch tower";
 			structureName[Structure.SHUTTLE_HANGAR_ID] = "Shuttle hangar";
 			structureName[Structure.RECRUITING_CENTER_ID] = "Recruiting Center";
+			structureName[Structure.EXPEDITION_CORPUS_ID] = "Expedition Corpus";
+			structureName[Structure.QUANTUM_TRANSMITTER_ID] = "Quantum transmitter";
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
@@ -154,6 +162,10 @@ public static class Localization {
 			ui_heightBlocked = "Height blocked";
 			ui_buildOnSideOnly = "Can be placed only on side blocks";
 			ui_freeSlots = "Free slots";
+			ui_showCrewCard = "Show crew card";
+			ui_showCrewsList = "Show crews list"; ui_showVesselsList = "Show vessels list";
+			ui_noShip = "No ship";
+			ui_assemblyInProgress = "Assembly in progress"; // shuttle assembling
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			menu_save = "Save game"; menu_load = "Load game";
@@ -183,12 +195,37 @@ public static class Localization {
 			material_required = "Required material: ";
 			no_activity = "No activity";
 			block = "block";
+			vessel = "vessel";
+			change = "change"; cost ="cost";
 
 			hangar_noShuttle = "No shuttle";
 			hangar_noCrew = "No crew";
 			hangar_hireCrew = "Hire crew";
 			hangar_hireCost = "Hire cost";
 			hangar_crewSalary = "Monthly payment";
+			hangar_repairFor = "Repair for";
+			resources = "resources";
+			coins = "coins";
+			hangar_readiness = "Readiness";
+			hangar_refuel = "Refuel";
+
+			crew_membersCount = "Members count";
+			crew_stamina = "Stamina";
+			crew_perception = "Perception";
+			crew_persistence = "Persistence";
+			crew_bravery = "Bravery";
+			crew_techSkills = "Tech skills";
+			crew_survivalSkills = "Survival skills";
+			crew_teamWork = "Team work";
+			crew_successfulMissions = "Successful missions";
+			crew_totalMissions = "Total missions";
+
+			quests_vesselsAvailable = "Vessels available";
+			quests_transmittersAvailable = "Transmitters available";
+			quests_crewsAvailable = "Crews available";
+			quests_crewsRequired = "Crews required";
+			quests_vesselsRequired = "Vessels required";
+			quests_no_suitable_vessels = "No suitable vessels";
 
 			rollingShop_gearsProduction = "Gears production";
 			rollingShop_boatPartsProduction = "Boat parts production";
@@ -289,6 +326,24 @@ public static class Localization {
 		switch (currentLanguage) {
 		default:
 		case Language.English: return "crew " + name + " ready";
+		}
+	}
+
+	public static string NameCrew() { // waiting for креатив
+		switch (currentLanguage) {
+		default:
+		case Language.English:
+			return "crew " + Crew.lastNumber.ToString();
+			break;
+		}
+	}
+
+	public static string NameShuttle() { // waiting for креатив
+		switch (currentLanguage) {
+		default:
+		case Language.English:
+			return "shuttle "+ Shuttle.lastIndex.ToString();
+			break;
 		}
 	}
 }

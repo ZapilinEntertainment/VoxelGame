@@ -7,13 +7,14 @@ public class RecruitingCenter : WorkBuilding {
 	bool finding = false;
 	ColonyController colonyController;
 	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
-	public static float hireCost = 150;
+	public static float hireCost = -1;
 
-	static RecruitingCenter() {
+	public static void Reset() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+		if (hireCost == -1) Reset();
 		bool movement = false;
 		if (basement != null) movement = true;
 		if (b == null) return;
@@ -30,7 +31,8 @@ public class RecruitingCenter : WorkBuilding {
 				if (candidatsCountFactor > 1) candidatsCountFactor = 1;
 				progress += ( workSpeed * 0.3f + colonyController.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.gameSpeed * Time.deltaTime / workflowToProcess;
 				if (progress >= 1) {
-					Crew ncrew = new Crew(colonyController, hireCost);
+					Crew ncrew = new Crew();
+					ncrew.SetCrew(colonyController, hireCost);
 					Crew.crewsList.Add(ncrew);
 					progress = 0;
 					finding = false;

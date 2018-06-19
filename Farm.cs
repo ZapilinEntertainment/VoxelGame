@@ -5,7 +5,7 @@ using UnityEngine;
 public class Farm : WorkBuilding {
 	protected float farmFertility = 1;
 	int lifepowerToEveryCrop = 2;
-	 static int MAX_CROPS = 256;
+	int MAX_CROPS = 256;
 	List<Plant> unusedCrops;
 
 	override public void Prepare() {

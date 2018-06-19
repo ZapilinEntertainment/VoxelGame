@@ -13,7 +13,8 @@ public class PoolMaster : MonoBehaviour {
 	glass_material, glass_offline_material, energy_material, energy_offline_material, colored_material, colored_offline_material;
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
-	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx;
+	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx, shuttle_good_icon, shuttle_normal_icon, shuttle_bad_icon, 
+	crew_good_icon, crew_normal_icon, crew_bad_icon;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
@@ -37,6 +38,12 @@ public class PoolMaster : MonoBehaviour {
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
 
+		crew_good_icon = Resources.Load<Texture>("Textures/crew_good_icon");
+		crew_normal_icon = Resources.Load<Texture>("Textures/crew_normal_icon");
+		crew_bad_icon = Resources.Load<Texture>("Textures/crew_bad_icon");
+		shuttle_good_icon = Resources.Load<Texture>("Textures/shuttle_good_icon");
+		shuttle_normal_icon = Resources.Load<Texture>("Textures/shuttle_normal_icon");
+		shuttle_bad_icon = Resources.Load<Texture>("Textures/shuttle_bad_icon");
 		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
 		empty_tx = Resources.Load<Texture>("Textures/resource_empty");
 		redArrow_tx = Resources.Load<Texture>("Textures/redArrow");

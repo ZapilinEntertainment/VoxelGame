@@ -20,15 +20,19 @@ public class Dock : WorkBuilding {
 	const float SHIP_ARRIVING_TIME = 300;
 	int blockedHeight = -1, blockedSide = -1;
 
+	public static void Reset() {
+		isForSale = new bool?[ResourceType.RTYPES_COUNT];
+		minValueForTrading= new int[ResourceType.RTYPES_COUNT];
+		immigrationEnabled = true;
+		immigrationPlan = 0;
+	}
+
 	override public void Prepare() {
 		PrepareWorkbuilding();
 		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;
 		if (isForSale == null) {
-			isForSale = new bool?[ResourceType.RTYPES_COUNT];
-			minValueForTrading= new int[ResourceType.RTYPES_COUNT];
-			immigrationEnabled = true;
-			immigrationPlan = 0;
+			Reset();
 		}
 	}
 

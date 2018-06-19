@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Crew  {
-	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9, STANDART_STAMINA = 10;
+public class Crew {
+	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
 	public static int lastNumber {get;private set;}
 	public static List<Crew> crewsList{get;private set;}
@@ -11,11 +11,12 @@ public class Crew  {
 
 	public float salary {get; private set;}
 	public int count {get;private set;}
-	public string name {get; private set;}
+	public string name ;
 	public float experience{get; private set;}
+	public float nextExperienceLimit {get;private set;}
 	public byte level {get; private set;}
 	public int id{get;private set;}
-	public Shuttle vessel{get;private set;}
+	public Shuttle shuttle{get;private set;}
 
 	public float perception{get;private set;}  // тесты на нахождение и внимательность
 	public float persistence{get;private set;}   // тесты на выносливость и желание продолжать поиски
@@ -25,26 +26,15 @@ public class Crew  {
 	public float survivalSkills{get;private set;} // для наземных операций
 	public float teamWork{get;private set;}
 
-	public float stamina{get;private set;}  // тратися в поисках, восстанавливается дома
+	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
 	public int successfulOperations{get;private set;}
 	public int totalOperations{get;private set;}
 
-	public bool onMission = false;
+	public bool onMission{get;private set;}
 
-	static Crew() {
-		crewsList = new List<Crew>();
-		crewSlots = 0;
-	}
-
-	/// <summary>
-	/// use only for loading
-	/// </summary>
-	public Crew () {
-		id = -1;
-	}
-	public Crew (ColonyController home, float hireCost) {
+	public void SetCrew (ColonyController home, float hireCost) {
 		level = 0;
-		name = 'C' + lastNumber.ToString();
+		name = Localization.NameCrew();
 		id = lastNumber;
 		lastNumber ++;
 		if (lastNumber >= 1000) lastNumber = 0;
@@ -58,10 +48,18 @@ public class Crew  {
 		survivalSkills = persistence * 0.15f + luck * 0.05f + techSkills * 0.15f + bravery * 0.15f + 0.5f; // еще пара зависимостей от зданий
 		teamWork = 0.75f * home.happiness_coefficient + 0.25f * Random.value;
 
-		stamina = STANDART_STAMINA + 3 * Random.value;
+		stamina = 0.9f + Random.value * 0.1f;
 		count = (int)( MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT) );
 		if (count > MAX_MEMBER_COUNT) count = MAX_MEMBER_COUNT;
 		crewSlots --;
+	}
+
+	public void ChangeShip(Shuttle s) {
+		if (s == null || (shuttle!= null & s == shuttle)) return;
+		if (s.SetCrew(this) == false) return;
+		shuttle = s;
+		stamina -= 0.1f;
+		if (stamina < 0) stamina = 0;
 	}
 
 	public static void AddCrewSlots(int x) {
@@ -72,6 +70,10 @@ public class Crew  {
 		if (crewSlots < 0) crewSlots = 0;
 	}
 
+	/// <summary>
+	/// Uses for loading only
+	/// </summary>
+	/// <param name="x">The x coordinate.</param>
 	public static void SetLastNumber(int x) {
 		lastNumber = x;
 	}
@@ -84,7 +86,7 @@ public class Crew  {
 		s += level.ToString() + ',';
 		s += salary.ToString() + ',';
 		s += experience.ToString() + ',';
-		if (vessel != null) s += vessel.id.ToString() + ','; else s += "-1,";
+		if (shuttle != null) s += shuttle.id.ToString() + ','; else s += "-1,";
 
 		s += perception.ToString() + ',';
 		s += persistence.ToString() + ',';
@@ -101,8 +103,13 @@ public class Crew  {
 		return s;
 	}
 
-	public static void Load(string s, int count) {
+	public static void Reset() {
 		crewsList = new List<Crew>();
+		crewSlots = 0;
+		lastNumber = 0;
+	}
+
+	public static void Load(string s, int count) {
 		int p1 = 0, p2 = s.IndexOf(',');
 		for (int i = 0; i < count; i++) {
 			Crew c = new Crew();
@@ -112,7 +119,8 @@ public class Crew  {
 			c.level = byte.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
 			c.salary = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
 			c.experience = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.vessel = Shuttle.GetVesselById(int.Parse (s.Substring(p1,p2 - p1)));  p1 = p2+1; p2 = s.IndexOf(',', p1);
+			c.nextExperienceLimit = CalculateExperienceLimit(c.level);
+			c.shuttle = Shuttle.GetVesselById(int.Parse (s.Substring(p1,p2 - p1)));  p1 = p2+1; p2 = s.IndexOf(',', p1);
 			c.perception = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
 			c.persistence =  float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
 			c.luck = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
@@ -128,6 +136,34 @@ public class Crew  {
 			p2 = s.IndexOf(',', p1);
 
 			crewsList.Add(c); crewSlots--;
+		}
+	}
+
+	public static float GUI_DrawCrewIcon(Crew cw, Rect rr) {
+		if (cw.shuttle != null) GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), cw.shuttle.condition > 0.85f ? PoolMaster.shuttle_good_icon : ( cw.shuttle.condition  < 0.5f ? PoolMaster.shuttle_bad_icon : PoolMaster.shuttle_normal_icon), ScaleMode.StretchToFill);
+		GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), cw.stamina < 0.5f ? PoolMaster.crew_bad_icon : ( cw.stamina > 0.85f ? PoolMaster.crew_good_icon : PoolMaster.crew_normal_icon), ScaleMode.StretchToFill );
+		return 0;
+	}
+
+	static float CalculateExperienceLimit(byte f_level) {
+		return Mathf.Pow(2, f_level);
+	}
+
+	public void DismissMember() {}
+	public void AddMember() {}
+
+	public void Delete() {
+		GameMaster.colonyController.AddWorkers(count);
+		if (shuttle != null) {
+			shuttle.SetCrew(null);
+		}
+		int i =0;
+		while (i < crewsList.Count) {
+			if (crewsList[i] == this) {
+				crewsList.RemoveAt(i);
+				crewSlots++;
+			}
+			else	i++;
 		}
 	}
 }

@@ -75,6 +75,8 @@ public class Building : Structure {
 		case HQ_4_ID:
 		case CHEMICAL_FACTORY_ID:
 		case RECRUITING_CENTER_ID:
+		case EXPEDITION_CORPUS_ID:
+		case QUANTUM_TRANSMITTER_ID:
 			level = 4;
 			break;
 		case SHUTTLE_HANGAR_ID:
@@ -114,7 +116,7 @@ public class Building : Structure {
 		}
 		ChangeRenderersView(x);
 	}
-	public void SetEnergySupply(bool x) {
+	public virtual void SetEnergySupply(bool x) {
 		energySupplied = x;
 		ChangeRenderersView(x);
 	}

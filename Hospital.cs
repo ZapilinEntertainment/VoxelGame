@@ -9,7 +9,11 @@ public class Hospital : House {
 	public int coverage {get;private set;}
 	public static float hospital_birthrate_coefficient = 1;
 	public static  BirthrateMode birthrateMode{get; private set;}
-	public static float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
+	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
+
+	public static void Reset() {
+		SetBirthrateMode(0);
+	}
 
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;

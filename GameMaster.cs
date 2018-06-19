@@ -5,7 +5,7 @@ using System.IO;
 
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
-public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming}
+public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 
 public class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
@@ -48,7 +48,7 @@ public class GameMaster : MonoBehaviour {
 
 	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f;
+	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 
 
 	float t;
@@ -131,8 +131,6 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.2f;
 			upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
 			environmentalConditions = 1;
-			Hospital.loweredCoefficient = 0;
-			Hospital.improvedCoefficient = 2;
 			break;
 		case Difficulty.Easy: 
 			LUCK_COEFFICIENT = 0.7f; 
@@ -142,8 +140,6 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.4f;
 			upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
 			environmentalConditions = 1;
-			Hospital.loweredCoefficient = 0.3f;
-			Hospital.improvedCoefficient = 1.75f;
 			break;
 		case Difficulty.Normal: 
 			LUCK_COEFFICIENT = 0.5f; 
@@ -153,8 +149,6 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.5f;
 			upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
 			environmentalConditions = 0.95f;
-			Hospital.loweredCoefficient = 0.5f;
-			Hospital.improvedCoefficient = 1.5f;
 			break;
 		case Difficulty.Hard: 
 			LUCK_COEFFICIENT = 0.1f; 
@@ -164,8 +158,6 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 0.75f;
 			upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
 			environmentalConditions = 0.9f;
-			Hospital.loweredCoefficient = 0.75f;
-			Hospital.improvedCoefficient = 1.2f;
 			break;
 		case Difficulty.Torture: 
 			LUCK_COEFFICIENT = 0.01f; 
@@ -175,8 +167,6 @@ public class GameMaster : MonoBehaviour {
 			tradeVesselsTrafficCoefficient = 1;
 			upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
 			environmentalConditions = 0.8f;
-			Hospital.loweredCoefficient = 0.9f;
-			Hospital.improvedCoefficient = 1.1f;
 			break;
 		}
 
@@ -394,6 +384,7 @@ public class GameMaster : MonoBehaviour {
 		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
 		case WorkType.Mining: workspeed  *= miningSpeed;break;
 		case WorkType.Farming : workspeed *= GameMaster.lifeGrowCoefficient * environmentalConditions;break;
+		case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed;break;
 		}
 		return workspeed ;
 	}
@@ -517,6 +508,12 @@ public class GameMaster : MonoBehaviour {
 				}
 				Destroy(mainChunk.gameObject);
 				mainChunk = nchunk;
+
+				//-----all correct, loading other
+				//--resetting all static data
+				Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
+				QuantumTransmitter.Reset();
+
 				if (line == "$") {
 					List<string> str_data = new List<string>();
 					line = sr.ReadLine();

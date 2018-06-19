@@ -934,6 +934,7 @@ public class Chunk : MonoBehaviour {
 			SurfaceBlock sb = blocks[byte.Parse(s.Substring(0,2)), byte.Parse(s.Substring(2,2)), byte.Parse(s.Substring(4,2))] as SurfaceBlock ;
 			int startIndex = 6, endIndex = s.IndexOf(';');
 			while ( endIndex != -1 && startIndex + 7< s.Length && endIndex != -1) {
+				//print (s.Substring(startIndex + 4, 3));
 				Structure str = Structure.GetNewStructure( int.Parse(s.Substring(startIndex + 4, 3)) );
 				str.Load(s.Substring(startIndex, endIndex - startIndex), this, sb);
 				startIndex = endIndex + 1;
