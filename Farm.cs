@@ -39,6 +39,7 @@ public class Farm : WorkBuilding {
 
 	override protected void LabourResult() {
 		int i = 0;
+		float lifepowerCost = 0;
 		if (basement.cellsStatus != 0) {			
 			float harvest = 0;
 			while ( i < basement.surfaceObjects.Count ) {
@@ -49,7 +50,10 @@ public class Farm : WorkBuilding {
 				else {
 					Plant p = basement.surfaceObjects[i] as Plant;
 					if ( p != null && p.plantType == PlantType.Crop  ) {
-						if ( !p.full ) 	p.AddLifepower( lifepowerToEveryCrop );
+						if ( !p.full ) 	{
+							p.AddLifepower( lifepowerToEveryCrop );
+							lifepowerCost += lifepowerToEveryCrop;
+						}
 						else {
 							if (p.growth >= 1) {
 								harvest += farmFertility;
@@ -77,9 +81,11 @@ public class Farm : WorkBuilding {
 				else s = Structure.GetNewStructure(Structure.WHEAT_CROP_ID);
 				s.SetBasement(basement, positions[i]);
 				(s as Plant).AddLifepower(lifepowerToEveryCrop);
+				lifepowerCost += lifepowerToEveryCrop;
 				i--;
 			}
 		}
+		if (lifepowerCost > 0) basement.myChunk.TakeLifePowerWithForce(Mathf.RoundToInt(lifepowerCost));
 	}
 
 	public void ReturnCropToPool (Plant c) {
@@ -90,5 +96,10 @@ public class Farm : WorkBuilding {
 			unusedCrops.Add(c);
 		}
 	}
-
+	void OnDestroy() {
+		if (basement != null) {
+			if (basement.material_id == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
+		}
+		PrepareWorkbuildingForDestruction();
+	}
 }

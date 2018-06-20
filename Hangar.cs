@@ -3,9 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Hangar : WorkBuilding {
+	static int hangarsCount = 0;
 	public Shuttle shuttle{get; private set;}
 	const float CREW_HIRE_BASE_COST = 100;
 	bool constructing = false, showCrews = false;
+
+	public static void Reset() {
+		hangarsCount = 0;
+	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
@@ -26,6 +31,8 @@ public class Hangar : WorkBuilding {
 				}
 			}
 		}
+		hangarsCount++;
+		if (hangarsCount == 1) ExpeditionCorpus.InitializeQuest(Quest.FIRST_COMMUNICATOR_SET_ID);
 	}
 
 	void Update() {
@@ -162,5 +169,6 @@ public class Hangar : WorkBuilding {
 
 	void OnDestroy() {
 		PrepareWorkbuildingForDestruction();
+		hangarsCount--;
 	}
 }

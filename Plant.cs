@@ -11,7 +11,6 @@ public class Plant : Structure {
 	protected float startSize = 0.05f;
 	public float maxTall {get; protected set;}
 	public bool full {get;protected set;}
-	[SerializeField]
 	protected float growSpeed = 0.1f;
 	public float growth;
 	public PlantType plantType{get;protected set;}
@@ -25,6 +24,7 @@ public class Plant : Structure {
 			lifepower = 1;
 			maxLifepower = 10;
 			growth = 0;
+			growSpeed = 0.01f;
 			GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
 			break;
 		case TREE_SAPLING_ID:
@@ -32,6 +32,7 @@ public class Plant : Structure {
 			lifepower = 1;
 			maxLifepower = TreeSapling.MAXIMUM_LIFEPOWER;
 			maxTall = 0.1f;
+			growSpeed = 0.03f;
 			break;
 		case TREE_ID: 
 			plantType = PlantType.Tree;
@@ -39,6 +40,7 @@ public class Plant : Structure {
 			maxLifepower = Tree.MAXIMUM_LIFEPOWER;
 			maxTall = 0.4f + Random.value * 0.1f;
 			maxHp = maxTall * 1000;
+			growSpeed = 0.05f;
 			break;	
 		}
 		growth = 0;
@@ -48,7 +50,6 @@ public class Plant : Structure {
 		if (GameMaster.gameSpeed == 0) return;
 		float theoreticalGrowth = lifepower / maxLifepower;
 		growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
-		if (growth >= 1) full = true;
 	}	
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -134,11 +135,8 @@ public class Plant : Structure {
 	public override void Annihilate( bool forced ) {
 		if (basement != null && !forced ) {
 			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
 		}
-		basement =null;
 		Destroy(gameObject);
-	}
-
-	void OnDestroy() {
 	}
 }

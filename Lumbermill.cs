@@ -44,7 +44,8 @@ public class Lumbermill : WorkBuilding {
 						firstEmptySaplingIndex++;
 					}
 		}
-			i =0;
+		i =0;
+		float lifepowerCost = 0;
 		for (;i < saplingsAndTrees.Length; i++) {
 			if (saplingsAndTrees[i] == null) continue;
 			if (saplingsAndTrees[i] is Tree) {
@@ -57,12 +58,19 @@ public class Lumbermill : WorkBuilding {
 						continue;
 					}
 					else {
-					if ( !saplingsAndTrees[i].full ) saplingsAndTrees[i].AddLifepower(lifepowerForSingleTree);
+					if ( !saplingsAndTrees[i].full ) {
+						saplingsAndTrees[i].AddLifepower(lifepowerForSingleTree);
+						lifepowerCost += lifepowerForSingleTree;
+					}
 					}
 				}
 				else {
-					if ( !saplingsAndTrees[i].full ) saplingsAndTrees[i].AddLifepower(lifepowerForSingleTree/4);
+				if ( !saplingsAndTrees[i].full ) {
+					saplingsAndTrees[i].AddLifepower(lifepowerForSingleTree/4);
+					lifepowerCost += lifepowerForSingleTree/4;
+				}
 				}
 			}
+		if (lifepowerCost > 0) basement.myChunk.TakeLifePowerWithForce(Mathf.RoundToInt(lifepowerCost));
 		}
 }

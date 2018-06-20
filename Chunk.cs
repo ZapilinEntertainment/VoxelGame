@@ -20,7 +20,6 @@ public class Chunk : MonoBehaviour {
 	List<GameObject> structures;
 	public float lifePower = 0;
 	 float lifepower_timer = 0;
-	List<Grassland> grassland_blocks;
 	public static byte CHUNK_SIZE  {get;private set;}
 	public static int energy_take_speed = 10;
 	GameObject cave_pref;
@@ -28,7 +27,6 @@ public class Chunk : MonoBehaviour {
 	public bool[,] sideBlockingMap{get; private set;}
 
 	public void Awake() {
-		grassland_blocks = new List<Grassland>();
 		surfaceBlocks = new List<SurfaceBlock>();
 		cave_pref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
 		chunkUpdateSubscribers = new List<Component>();
@@ -54,6 +52,15 @@ public class Chunk : MonoBehaviour {
 		if (lifepower_timer > 0) {
 			lifepower_timer -= Time.deltaTime  * GameMaster.gameSpeed;
 		if (lifepower_timer <= 0) {
+				List<Grassland> grassland_blocks = new List<Grassland>();
+				if (surfaceBlocks.Count > 0) {
+					int i = 0;
+					while (i < surfaceBlocks.Count) {
+						if (surfaceBlocks[i] == null) {surfaceBlocks.RemoveAt(i);continue;}
+						if (surfaceBlocks[i].grassland != null) grassland_blocks.Add(surfaceBlocks[i].grassland);
+						i++;
+					}
+				}
 				if (lifePower > 0) {
 					if ((Random.value > 0.5f || grassland_blocks.Count == 0) && surfaceBlocks.Count > 0)
 					{ // creating new grassland
@@ -116,16 +123,14 @@ public class Chunk : MonoBehaviour {
 					lifepower_timer = GameMaster.LIFEPOWER_TICK;
 				}
 				if (lifePower < -100) { // LifePower decreases
-					//print (grassland_blocks.Count);
-					if (grassland_blocks.Count == 0) lifepower_timer = 0;
-					else {
+					if (grassland_blocks.Count != 0) {
 						Grassland gl = null;
 						int pos = 0;
-						while (pos < grassland_blocks.Count && lifePower <= 0) {
+						float part = lifePower * (-1) / grassland_blocks.Count;
+						while (pos < grassland_blocks.Count & lifePower <= 0) {
 							gl = grassland_blocks[pos];
 							if (gl != null) {
-								if (gl.lifepower <= 0 ) gl.Annihilation();
-								else lifePower += gl.TakeLifepower(energy_take_speed);
+								lifePower += gl.TakeLifepower(part);
 								pos++;
 							}
 							else {
@@ -217,6 +222,7 @@ public class Chunk : MonoBehaviour {
 			if (lowerBlock.type != BlockType.Surface) influenceMask = 15;
 			else influenceMask = 47;
 			calculateUpperBlock = true;
+			surfaceBlocks.Add(caveb);
 			break;
 		}
 		blocks[x,y,z].SetVisibilityMask(visMask);
@@ -262,6 +268,7 @@ public class Chunk : MonoBehaviour {
 		case BlockType.Surface:
 			SurfaceBlock sb= new GameObject().AddComponent<SurfaceBlock>();
 			sb.SurfaceBlockSet(this, f_pos, material1_id);
+			surfaceBlocks.Add(sb);
 			b = sb;
 			blocks[x,y,z] = sb;
 			if (blocks[x,y-1,z].type != BlockType.Surface & blocks[x,y-1,z].type != BlockType.Cave) influenceMask = 31;
@@ -290,6 +297,7 @@ public class Chunk : MonoBehaviour {
 
 			CaveBlock cvb = Instantiate(cave_pref).GetComponent<CaveBlock>();
 			cvb.CaveBlockSet(this, f_pos, material2_id, material1_id);
+			surfaceBlocks.Add(cvb);
 			blocks[x,y,z] = cvb;
 			b = cvb;
 			if (GetBlock(x,y-1,z) != null) {
@@ -595,7 +603,6 @@ public class Chunk : MonoBehaviour {
 			if (b.grassland == null) {gl = b.AddGrassland();}
 			else gl = b.grassland;
 			b.grassland.AddLifepowerAndCalculate((int)(lifepowers[b.pos.x, b.pos.z] * lifePiece));
-			grassland_blocks.Add(b.grassland);
 		}
 	}
 
@@ -670,7 +677,7 @@ public class Chunk : MonoBehaviour {
 			}
 		}
 		blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-		surfaceBlocks.Clear(); grassland_blocks.Clear();
+		surfaceBlocks.Clear(); 
 	}
 		
 

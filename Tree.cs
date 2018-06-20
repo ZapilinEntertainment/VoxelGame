@@ -12,9 +12,18 @@ public class Tree : Plant {
 		float theoreticalGrowth = lifepower / maxLifepower;
 		if (theoreticalGrowth < 0) theoreticalGrowth = 0;
 		if (theoreticalGrowth != growth) {
-			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  Mathf.Cos(Mathf.Clamp01(growth) * Mathf.PI/2f) * growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
-			hp = growth * maxHp;
-			transform.localScale = Vector3.one * (growth * maxTall + startSize);	
+			if (theoreticalGrowth < growth) {
+				if (growth - theoreticalGrowth > 0.5f ) {
+					if (lifepower != 0) basement.grassland.AddLifepower((int)lifepower);
+					Dry();
+					return;
+				}
+			}
+			else {
+				growth = Mathf.MoveTowards(growth, theoreticalGrowth,  Mathf.Cos(Mathf.Clamp01(growth) * Mathf.PI/2f) * growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
+				hp = growth * maxHp;
+				transform.localScale = Vector3.one * (growth * maxTall + startSize);	
+			}
 		}
 	}	
 	override public void AddLifepowerAndCalculate( float lifepower ) {
@@ -44,7 +53,7 @@ public class Tree : Plant {
 		GameObject g = Instantiate(Resources.Load<GameObject>("Lifeforms/DeadTree")) as GameObject;
 		g.transform.localScale = transform.localScale;
 		HarvestableResource hr = g.GetComponent<HarvestableResource>();
-		hr.SetResources(ResourceType.Lumber, (int)(100 * transform.localScale.y));
+		hr.SetResources(ResourceType.Lumber, CalculateLumberCount());
 		hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
 	}
 

@@ -96,7 +96,7 @@ public static class ResourcesCost {
 			break;
 		case Structure.HOUSE_1_ID: 	
 			cost = new ResourceContainer[]{
-				new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.Plastics, 4), new ResourceContainer(ResourceType.Lumber, 20)
+				new ResourceContainer(ResourceType.metal_K, 0.5f), new ResourceContainer(ResourceType.Plastics, 4), new ResourceContainer(ResourceType.Lumber, 20)
 			};
 			break;
 		case Structure.HOUSE_2_ID:

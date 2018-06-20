@@ -460,10 +460,12 @@ public class GameMaster : MonoBehaviour {
 			s += string.Format("{0:d3}", Crew.lastNumber);
 			string s2 = "";
 			int crewsCount = 0;
-			foreach (Crew cr in Crew.crewsList) {
-				if (cr == null) continue;
-				crewsCount++;
-				s2 += cr.Save() + ';';
+			if (Crew.crewsList != null && Crew.crewsList.Count > 0) {
+				foreach (Crew cr in Crew.crewsList) {
+					if (cr == null) continue;
+					crewsCount++;
+					s2 += cr.Save() + ';';
+				}
 			}
 			s += string.Format("{0:d3}",crewsCount);
 			s += s2;
@@ -512,7 +514,7 @@ public class GameMaster : MonoBehaviour {
 				//-----all correct, loading other
 				//--resetting all static data
 				Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
-				QuantumTransmitter.Reset();
+				QuantumTransmitter.Reset();Hangar.Reset();
 
 				if (line == "$") {
 					List<string> str_data = new List<string>();

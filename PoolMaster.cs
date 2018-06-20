@@ -14,7 +14,7 @@ public class PoolMaster : MonoBehaviour {
 	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
 	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx, shuttle_good_icon, shuttle_normal_icon, shuttle_bad_icon, 
-	crew_good_icon, crew_normal_icon, crew_bad_icon;
+	crew_good_icon, crew_normal_icon, crew_bad_icon, quest_defaultIcon, quest_unacceptableIcon;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
@@ -26,7 +26,7 @@ public class PoolMaster : MonoBehaviour {
 	float treeClearTimer = 0, grassClearTimer = 0, shipsClearTimer = 0,clearTime = 30;
 
 	public void Load() {
-		if (current != null && current != this) Destroy(current); 
+		if (current != null) return;
 		current = this;
 
 		lightPassengerShip_pref = Resources.Load<GameObject>("Prefs/lightPassengerShip");
@@ -38,6 +38,8 @@ public class PoolMaster : MonoBehaviour {
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
 
+		quest_unacceptableIcon = Resources.Load<Texture>("Textures/questUnacceptableIcon");
+		quest_defaultIcon = Resources.Load<Texture>("Textures/questDefaultIcon");
 		crew_good_icon = Resources.Load<Texture>("Textures/crew_good_icon");
 		crew_normal_icon = Resources.Load<Texture>("Textures/crew_normal_icon");
 		crew_bad_icon = Resources.Load<Texture>("Textures/crew_bad_icon");

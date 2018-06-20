@@ -15,6 +15,9 @@ public class Quest  {
 	public int vesselsRequired{get;private set;}
 	public int crewsRequired{get;private set;}
 	public Expedition expedition{get;private set;}
+	public int id{get;private set;}
+	public const int FIRST_COMMUNICATOR_SET_ID = 1;
+	public const int TOTAL_QUESTS_COUNT = 2;
 
 	public bool CanBePicked() {
 		if (cost > GameMaster.colonyController.energyCrystalsCount) return false;
@@ -38,4 +41,17 @@ public class Quest  {
 		else expedition = new Expedition();
 		expedition.Initialize(this);
 	}
+
+	/// <summary>
+	/// uses only by expedition.Initialize quest
+	/// </summary>
+	/// <param name="id">Identifier.</param>
+	public static Quest Create(int id) {
+		Quest q = new Quest();
+		q.poster = PoolMaster.quest_defaultIcon;
+		q.name = "default quest";
+		q.vesselsRequired = 1;
+		q.crewsRequired = 1;
+		return q;
+	} 
 }

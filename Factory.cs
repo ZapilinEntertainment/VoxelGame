@@ -24,6 +24,7 @@ public class Factory : WorkBuilding {
 		if (b == null) return;
 		SetBuildingData(b, pos);
 		storage = GameMaster.colonyController.storage;
+		SetRecipe(Recipe.NoRecipe);
 		UI.current.AddFactoryToList(this);
 	}
 
@@ -33,21 +34,25 @@ public class Factory : WorkBuilding {
 			outputResourcesBuffer =  storage.AddResource(recipe.output, outputResourcesBuffer); 
 		}
 		if (outputResourcesBuffer <= BUFFER_LIMIT ) {
-			if (workersCount > 0 && recipe != Recipe.NoRecipe) {
-				workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
-				if (workflow >= workflowToProcess ) {
-					LabourResult();
-					workflow -= workflowToProcess;
-				}
+			if (workersCount > 0 && recipe != Recipe.NoRecipe) { // сильно намудрил!
+				float progress = workflow / workflowToProcess;
+				float resourcesSupport = inputResourcesBuffer / recipe.inputValue;
+				if (resourcesSupport < 1 ) inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue - inputResourcesBuffer);
+				resourcesSupport = inputResourcesBuffer / recipe.inputValue;
+				if (resourcesSupport > progress) 	workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
+				if (workflow >= workflowToProcess) LabourResult();
 			}
 		}
 	}
 
 	override protected void LabourResult() {
-		while ( inputResourcesBuffer >= recipe.inputValue & workflow >= workflowToProcess ) {
+		int iterations = (int)(workflow / workflowToProcess);
+		if (inputResourcesBuffer < recipe.inputValue * iterations) inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
+		while ( iterations >=1 & inputResourcesBuffer >= recipe.inputValue) {
 			inputResourcesBuffer -= recipe.inputValue;
-			workflow -= workflowToProcess;
 			outputResourcesBuffer += recipe.outputValue;
+			workflow -= workflowToProcess;
+			iterations --;
 		}
 	}
 
@@ -56,7 +61,8 @@ public class Factory : WorkBuilding {
 		if (recipe != Recipe.NoRecipe) {
 			if (inputResourcesBuffer > 0) storage.AddResource(recipe.input, recipe.inputValue);
 			if (outputResourcesBuffer > 0) storage.AddResource(recipe.output, recipe.outputValue);
-			}
+		}
+		workflow = 0;
 		inputResourcesBuffer = 0; outputResourcesBuffer = 0;
 		recipe = r;
 		workflowToProcess = r.workflowToResult;

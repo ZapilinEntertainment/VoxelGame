@@ -243,16 +243,6 @@ public class Building : Structure {
 		if (connectedToPowerGrid) GameMaster.colonyController.DisconnectFromPowerGrid(this);
 	}
 
-	public void Demolish() {
-		if (GameMaster.demolitionLossesPercent != 1) {
-			ResourceContainer[] rleft = ResourcesCost.GetCost(id);
-			for (int i = 0 ; i < rleft.Length; i++) {
-				rleft[i] = new ResourceContainer(rleft[i].type, rleft[i].volume * (1 - GameMaster.demolitionLossesPercent));
-			}
-		}
-		Destroy(gameObject);
-	}
-
 	void OnDestroy() {
 		PrepareBuildingForDestruction();
 	}

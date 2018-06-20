@@ -22,6 +22,10 @@ public class Shuttle : MonoBehaviour {
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
 
+	void Awake() {
+		shuttlesList = new List<Shuttle>();
+	}
+
 	public static void Reset() {
 		shuttlesList = new List<Shuttle>();
 		lastIndex = 0;

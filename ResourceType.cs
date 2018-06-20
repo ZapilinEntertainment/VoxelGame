@@ -35,9 +35,9 @@ public class ResourceType {
 		static ResourceType() {
 		resourceTypesArray = new ResourceType[RTYPES_COUNT];
 		prices = new float[RTYPES_COUNT]; demand = new float[RTYPES_COUNT];
-		Nothing = new ResourceType(Localization.rtype_nothing_name, 0, 0, 0, PoolMaster.default_material, PoolMaster.empty_tx, Localization.rtype_nothing_descr); 
+		Nothing = new ResourceType(Localization.rtype_nothing_name, 0, 0, 0, Resources.Load<Material>("Materials/default"), Resources.Load<Texture>("Textures/resource_empty"), Localization.rtype_nothing_descr); 
 
-		Food = new ResourceType(Localization.rtype_food_name, FOOD_ID, 0.1f, 0.1f, PoolMaster.default_material, Resources.Load<Texture>("Textures/resource_food"), Localization.rtype_food_descr);
+		Food = new ResourceType(Localization.rtype_food_name, FOOD_ID, 0.1f, 0.1f, Resources.Load<Material>("Materials/default"), Resources.Load<Texture>("Textures/resource_food"), Localization.rtype_food_descr);
 		prices[FOOD_ID] = 1; demand[FOOD_ID] = 2;
 
 		metal_K = new ResourceType("Metal K", METAL_K_ID, 0.7f, 50, Resources.Load<Material>("Materials/MetalK") , Resources.Load<Texture>("Textures/resource_metalK"), Localization.rtype_metalK_descr);

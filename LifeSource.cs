@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class LifeSource : MultiblockStructure {
 	public float tick = 3, lifepowerVolume = 100, timer = 0;
+	const float UP_LIMIT = 4000;
 	bool hasBeenSet = false;
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -16,9 +17,10 @@ public class LifeSource : MultiblockStructure {
 		if (GameMaster.gameSpeed == 0 || !hasBeenSet) return;
 		timer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (timer <= 0 ) {
-			int ticksCount = (int)(timer / tick * (-1));
+			int ticksCount = (int)(timer / tick);
+			if (ticksCount < 0) ticksCount *= -1;
 			ticksCount ++;
-			basement.myChunk.AddLifePower((int)lifepowerVolume);
+			if (basement.myChunk.lifePower < UP_LIMIT) basement.myChunk.AddLifePower((int)(lifepowerVolume * ticksCount));
 			timer = tick;
 		}
 	}

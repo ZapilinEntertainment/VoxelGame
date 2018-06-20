@@ -4,30 +4,52 @@ using UnityEngine;
 
 public class ExpeditionCorpus : WorkBuilding {
 	static List<Expedition> currentExpeditions;
-	static List<Quest> quests;
+	static List<Quest> delayedQuests;
+	static Quest[] quests;
 	static List<Shuttle> suitableShuttles;
-	public static int maxAvailableQuests = 12;
-	const int START_QUEST_SLOTS = 4;
+	const int MAX_AVAILABLE_QUESTS = 9;
+	static bool[] questAccessibilityMap, questsCompletenessMap;
 	bool showSuitableShuttlesList = false;
 
 	public static void Reset() {
 		currentExpeditions = new List<Expedition>();
-		maxAvailableQuests = START_QUEST_SLOTS;
-		quests = new List<Quest>();
+		questAccessibilityMap = new bool[MAX_AVAILABLE_QUESTS];
+		questAccessibilityMap[0] = true;
+		questAccessibilityMap[1] = true;
+		questAccessibilityMap[2] = true;
+		questAccessibilityMap[3] = true;
+		for (int i = 4; i < MAX_AVAILABLE_QUESTS; i++) {
+			questAccessibilityMap[i] = false;
+		}
+		questsCompletenessMap = new bool[Quest.TOTAL_QUESTS_COUNT];
+		for (int i = 0; i < Quest.TOTAL_QUESTS_COUNT; i++) {
+			questsCompletenessMap[i] =false;
+		}
+		quests = new Quest[MAX_AVAILABLE_QUESTS];
+		delayedQuests = new List<Quest>();
 		suitableShuttles = new List<Shuttle>();
 	}
 
 	override public void SetGUIVisible (bool x) {
 		if (x != showOnGUI) {
 			showOnGUI = x;
-			if ( showOnGUI) {
-				
-			}
+			UI.current.touchscreenTemporarilyBlocked = showOnGUI;
 		}
 	}
 
-	public void CreateExpedition(Quest q) {
-		
+	public static void InitializeQuest(int id) {
+		if (questsCompletenessMap[id] == true) return;
+		questsCompletenessMap[id] = true;
+		Quest q = Quest.Create(id);
+		bool questSet = false;
+		for (int i = 0; i < MAX_AVAILABLE_QUESTS;i++) {
+			if (quests[i] == null & questAccessibilityMap[i] == true) {
+				quests[i] = q;
+				questSet = true;
+				break;
+			}
+		}
+		if ( !questSet ) delayedQuests.Add(q);
 	}
 
 	void OnGUI() {
@@ -58,9 +80,21 @@ public class ExpeditionCorpus : WorkBuilding {
 			}
 		}
 		GUI.Label(rr, Localization.quests_transmittersAvailable + ": " + freeTransmitters.ToString() ); rr.y += rr.height;
+
+		//quests window
+		Rect qw = new Rect(UI.current.leftPanelWidth, UI.current.upPanelBox.height, Screen.width - UI.current.leftPanelWidth - UI.current.rightPanelBox.width, Screen.height - UI.current.upPanelBox.height);
+		GUI.Box(qw, GUIContent.none);
+		float h = qw.height / 3f;
+		if (qw.width / 3f < h) h = qw.width/3f;
+		for (int i = 0; i < MAX_AVAILABLE_QUESTS; i++) {
+			Rect qr = new Rect(qw.x + (i %3) * h, qw.y + (i / 3 )* h, h,  h);
+			if (quests[i] != null) GUI_QuestWindow(quests[i], qr);
+			else GUI.Box(qr, PoolMaster.quest_unacceptableIcon);
+		}
 	}
 
 	float GUI_QuestWindow(Quest q, Rect r) {
+		GUI.skin = GameMaster.mainGUISkin;
 		GUI.DrawTexture(r, q.poster);
 		float p = r.height / 6f;
 		GUI.Label(new Rect(r.x, r.y, r.width - 2 * p, p), q.name);
@@ -121,6 +155,11 @@ public class ExpeditionCorpus : WorkBuilding {
 			GUI.Label(new Rect(r.xMax - 3 *p,r.y + 3 *p, 3*p,p), Localization.cost + ": "+ Localization.CostInCoins(q.cost));
 		}
 		return 0;
+	}
+
+	void OnDestroy() {
+		PrepareWorkbuildingForDestruction();
+		if (showOnGUI) UI.current.touchscreenTemporarilyBlocked = false;
 	}
 }
 

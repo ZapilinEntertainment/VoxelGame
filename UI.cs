@@ -10,7 +10,8 @@ public class UI : MonoBehaviour {
 	public UIMode mode{get;private set;}
 
 	public bool showLayerCutButtons = false;
-	float leftPanelWidth, buildingsListLength = 0;
+	float buildingsListLength = 0;
+	public float leftPanelWidth{get;private set;}
 	byte argument, showingBuildingsLevel = 1;
 	public Rect rightPanelBox, upPanelBox, acceptBox,systemInfoRect, buildingGridRect;
 	string systemInfoString; float systemInfoTimer = 0;
@@ -818,17 +819,19 @@ public class UI : MonoBehaviour {
 					DropFocus();
 					break;
 				}
-				rr.y += rr.height;
-				Building b = chosenStructure as Building;
-				if ( b != null) {
-					if ( !b.undestructible ) {
+				else {
+					if ( !chosenStructure.undestructible ) {
 						if (GUI.Button(new Rect(rr.xMax - rr.height, rr.y, rr.height, rr.height), demolishButton_tx)) {
 							mode = UIMode.View;
-							b.Demolish();
+							chosenStructure.Annihilate(false);
 							DropFocus();
 							return;
 						}
 					}
+				}
+				rr.y += rr.height;
+				Building b = chosenStructure as Building;
+				if ( b != null) {
 					rr.y += rr.height;
 					GUI.Label(rr,  Localization.structureName[chosenStructure.id]); 
 					rr.y += rr.height;

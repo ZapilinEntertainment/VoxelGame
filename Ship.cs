@@ -32,7 +32,7 @@ public class Ship : MonoBehaviour {
 		ChunkPos cpos = d.basement.pos;
 		if (cpos.z == 0 || cpos.z == (Chunk.CHUNK_SIZE - 1)) {
 			xAxisMoving = true;
-			float zpos = (cpos.z ==0 ? -1 * width : (Chunk.CHUNK_SIZE -1 ) * Block.QUAD_SIZE + width);
+			float zpos = (cpos.z ==0 ? -1 * width - Block.QUAD_SIZE  : (Chunk.CHUNK_SIZE -1 ) * Block.QUAD_SIZE + width);
 			if (Random.value > 0.5f) {
 				transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, (d.basement.pos.y - 1) * Block.QUAD_SIZE, zpos);
 				transform.forward = Vector3.left;

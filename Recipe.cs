@@ -30,8 +30,9 @@ public class Recipe {
 		NoRecipe = new Recipe(ResourceType.Nothing, ResourceType.Nothing,0, 0,0,  0);
 
 		List<Recipe> smelteryRecipesList = new List<Recipe>();
-		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 1, 1,  10); smelteryRecipesList.Add(StoneToConcrete);
-		LumberToPlastics = new Recipe(ResourceType.Lumber, ResourceType.Plastics, LUMBER_TO_PLASTICS_ID, 5, 1,  15);  smelteryRecipesList.Add(LumberToPlastics);
+		smelteryRecipesList.Add(NoRecipe);
+		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 2, 2,  10); smelteryRecipesList.Add(StoneToConcrete);
+		LumberToPlastics = new Recipe(ResourceType.Lumber, ResourceType.Plastics, LUMBER_TO_PLASTICS_ID, 3, 1,  15);  smelteryRecipesList.Add(LumberToPlastics);
 		MetalK_smelting = new Recipe(ResourceType.metal_K_ore, ResourceType.metal_K, METAL_K_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalK_smelting);
 		MetalE_smelting = new Recipe(ResourceType.metal_E_ore, ResourceType.metal_E, METAL_E_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalE_smelting);
 		MetalN_smelting = new Recipe(ResourceType.metal_N_ore, ResourceType.metal_N, METAL_N_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalN_smelting);
@@ -40,7 +41,7 @@ public class Recipe {
 		MetalS_smelting = new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S, METAL_S_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalS_smelting);
 		smelteryRecipes = smelteryRecipesList.ToArray();
 
-		oreRefiningRecipes = new Recipe[8];
+		oreRefiningRecipes = new Recipe[9];
 		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore, METAL_K_REFINIG_ID, 4,1, 10);
 		MetalE_refining = new Recipe(ResourceType.Stone, ResourceType.metal_E_ore, METAL_E_REFINING_ID, 8,1,23); 
 		MetalN_refining = new Recipe(ResourceType.Stone, ResourceType.metal_N_ore, METAL_N_REFINING_ID, 16,1,70); 
@@ -49,23 +50,26 @@ public class Recipe {
 		MetalS_refining= new Recipe(ResourceType.Stone, ResourceType.metal_S_ore, METAL_S_REFINING_ID, 10,1, 35); 
 		MineralF_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_F, MINERAL_F_REFINING_ID, 3, 1, 5);
 		MineralL_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_L,  MINERAL_L_REFINING_ID, 3, 1, 7);
-		oreRefiningRecipes[0] = MetalK_refining; oreRefiningRecipes[1] = MetalE_refining;
-		oreRefiningRecipes[2] = MetalN_refining; oreRefiningRecipes[3] = MetalM_refining;
-		oreRefiningRecipes[4] = MetalP_refining; oreRefiningRecipes[5] = MetalS_refining;
-		oreRefiningRecipes[6] = MineralF_refining; oreRefiningRecipes[7] = MineralL_refining;
+		oreRefiningRecipes[0] = NoRecipe;
+		oreRefiningRecipes[1] = MetalK_refining; oreRefiningRecipes[2] = MetalE_refining;
+		oreRefiningRecipes[3] = MetalN_refining; oreRefiningRecipes[4] = MetalM_refining;
+		oreRefiningRecipes[5] = MetalP_refining; oreRefiningRecipes[6] = MetalS_refining;
+		oreRefiningRecipes[7] = MineralF_refining; oreRefiningRecipes[8] = MineralL_refining;
 
-		fuelFacilityRecipes = new Recipe[3];
+		fuelFacilityRecipes = new Recipe[4];
 		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 100, 25);
 		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 90, 35);
 		Fuel_fromMineralF = new Recipe(ResourceType.mineral_F, ResourceType.Fuel,  FUEL_FROM_MINERAL_F_ID, 1, 10, 10);
-		fuelFacilityRecipes[0] = Fuel_fromNmetal;
-		fuelFacilityRecipes[1] = Fuel_fromNmetalOre;
-		fuelFacilityRecipes[2] = Fuel_fromMineralF;
+		fuelFacilityRecipes[0] = NoRecipe;
+		fuelFacilityRecipes[1] = Fuel_fromNmetal;
+		fuelFacilityRecipes[2] = Fuel_fromNmetalOre;
+		fuelFacilityRecipes[3] = Fuel_fromMineralF;
 
-		plasticFactoryRecipes = new Recipe[2];
-		plasticFactoryRecipes[0] = LumberToPlastics;
+		plasticFactoryRecipes = new Recipe[3];
+		plasticFactoryRecipes[0] = NoRecipe;
+		plasticFactoryRecipes[1] = LumberToPlastics;
 		MineralLToPlastics = new Recipe(ResourceType.mineral_L, ResourceType.Plastics, MINERAL_L_TO_PLASTICS_ID, 1, 2, 8);
-		plasticFactoryRecipes[1] = MineralLToPlastics;
+		plasticFactoryRecipes[2] = MineralLToPlastics;
 	}
 
 	public Recipe (ResourceType res_input, ResourceType res_output,int f_id, float val_input, float val_output,  float workflowNeeded) {

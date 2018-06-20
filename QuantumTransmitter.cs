@@ -82,6 +82,6 @@ public class QuantumTransmitter : Building {
 
 	void OnDestroy() {
 		PrepareBuildingForDestruction();
-		RemoveFromList(this);
+		if (transmittersList != null) RemoveFromList(this);
 	}
 }

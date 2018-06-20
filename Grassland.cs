@@ -40,12 +40,12 @@ public struct PixelPosByte {
 
 public class Grassland : MonoBehaviour {
 	public const int MAX_LIFEFORMS_COUNT= 8;
-	public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 15;
+	public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22;
 
 	public SurfaceBlock myBlock {get;private set;}
-	float progress = 0, lifeTimer = 0;
+	float progress = 0, lifeTimer = 0, growTimer = 0;
 	public float lifepower;
-	byte prevStage = 0;
+	int prevStage = 0;
 
 	void Awake() {
 		lifepower = 0; 
@@ -53,86 +53,95 @@ public class Grassland : MonoBehaviour {
 
 	void Update() {
 		if (lifepower == 0) return;
+		if (growTimer > 0) growTimer -=Time.deltaTime * GameMaster.gameSpeed;
 		if (lifeTimer > 0) {
 			lifeTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (lifeTimer <=0) {				
-				progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
-				byte stage = 0; 
-				if (progress > 0.5f) {if (progress == 1) stage = 3; else stage = 2;}
-				else { if (progress > 0.25f) stage = 1;}
-				if (Mathf.Abs(stage - prevStage) > 1) {
-					if (stage > prevStage) stage = (byte)(prevStage+1);
-					else stage =  (byte)(prevStage - 1);
+				bool noActivity = true;
+				List<Plant> plants = new List<Plant>();
+				foreach (Structure s in myBlock.surfaceObjects) {
+					if (s != null && s.type == StructureType.Plant && s.gameObject.activeSelf) plants.Add(s as Plant);
 				}
-				if (stage != prevStage) {
-					switch (stage) {
-					case 0: 						
-						myBlock.surfaceRenderer.sharedMaterial = ResourceType.Dirt.material;
-						break;
-					case 1:
-						int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-						myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_25[index1];
-						break;
-					case 2:
-						int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-						myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_50[index2];
-						break;
-					case 3:
-						myBlock.surfaceRenderer.sharedMaterial = PoolMaster.grass_material;
-						break;
-					}
-					prevStage = stage;
-				}
-
-				if (lifepower != 0) {
-					bool noActivity = true;
-						List<Plant> plants = new List<Plant>();
-						foreach (Structure s in myBlock.surfaceObjects) {
-						if (s != null && s.type == StructureType.Plant && s.gameObject.activeSelf) plants.Add(s as Plant);
+				if (lifepower > 2 * LIFEPOWER_TO_PREPARE) {
+					int stage = CheckGrasslandStage();
+					float lifepowerTransfer = lifepower - 2 * LIFEPOWER_TO_PREPARE;
+					float lifepowerToSinglePlant = GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
+					if (stage > 2 & plants.Count > 0) {
+						float lifepowerToShare = plants.Count * lifepowerToSinglePlant;
+						if (lifepowerToShare > lifepowerTransfer) {
+								for (int i = 0; i < plants.Count; i++) {	
+								if ( !plants[i].full ) 	{
+									plants[i].AddLifepower( TakeLifepower(lifepowerToSinglePlant));
+									noActivity = false;
+								}
+							}
 						}
-						if (lifepower > 2 * LIFEPOWER_TO_PREPARE) {
-							if (stage > 2) {
-								float lifepowerToSinglePlant = GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
-								if (plants.Count > 0) {
-									float lifepowerToShare = plants.Count * lifepowerToSinglePlant;
-									if (lifepowerToShare > lifepower - 2 * LIFEPOWER_TO_PREPARE) {
-										lifepowerToShare = lifepower - 2 * LIFEPOWER_TO_PREPARE;
-										lifepowerToSinglePlant = lifepowerToShare / plants.Count;
-									}
-									for (int i = 0; i < plants.Count; i++) {	
-										if ( !plants[i].full ) 	plants[i].AddLifepower( TakeLifepower(lifepowerToSinglePlant));
-										if (lifepower <= 0) break;
-									}
-								}
-								if ( lifepower > 1 && plants.Count < MAX_LIFEFORMS_COUNT) {
-									PixelPosByte pos = myBlock.GetRandomCell();
-									if (pos != PixelPosByte.Empty) {
-										Plant p = PoolMaster.current.GetSapling();
-										p.gameObject.SetActive(true);
-										p.SetBasement(myBlock, pos);
-										p.AddLifepower(lifepowerToSinglePlant);
-										lifepower --;	
-										noActivity = false;
-									}
-								}
-							}
-						if ( noActivity ) myBlock.myChunk.AddLifePower( TakeLifepower( GameMaster.MAX_LIFEPOWER_TRANSFER ) );
-							}
-							else { // lifepower falls down
-								if (lifepower < 0 && plants.Count > 0) {
-									float lifepowerNeeded = lifepower * -2;
-									float lifepowerFromSinglePlant = lifepowerNeeded / plants.Count;
-									for (int i = 0; i < plants.Count; i++) {
-										if (plants[i].lifepower <= 0) continue;
-										lifepower += plants[i].TakeLifepower( lifepowerFromSinglePlant );
-										if (lifepower >= 0) break;
-									}
-								}
-							}
-					lifeTimer = LIFE_CREATION_TIMER;
+						lifepowerTransfer = lifepower - 2 * LIFEPOWER_TO_PREPARE;
+					}
+
+					if ( lifepowerTransfer > lifepowerToSinglePlant & plants.Count < MAX_LIFEFORMS_COUNT & growTimer <= 0) {
+						PixelPosByte pos = myBlock.GetRandomCell();
+						if (pos != PixelPosByte.Empty) {
+							Plant p = PoolMaster.current.GetSapling();
+							p.gameObject.SetActive(true);
+							p.SetBasement(myBlock, pos);
+							p.AddLifepower(lifepowerToSinglePlant);
+							lifepower -= lifepowerToSinglePlant;	
+							noActivity = false;
+							growTimer = LIFE_CREATION_TIMER;
+						}
+					}
+					if ( noActivity ) {
+						if (lifepowerTransfer > GameMaster.MAX_LIFEPOWER_TRANSFER) lifepowerTransfer = GameMaster.MAX_LIFEPOWER_TRANSFER;
+						myBlock.myChunk.AddLifePower( TakeLifepower( lifepowerTransfer ) );
+					}
 				}
+				else { // lifepower falls down
+					if (lifepower < LIFEPOWER_TO_PREPARE & plants.Count > 0) {
+					float lifepowerNeeded = Mathf.Abs(lifepower) + LIFEPOWER_TO_PREPARE + 2;
+					float lifepowerFromSinglePlant = lifepowerNeeded / (float)plants.Count;
+					while (lifepower <= LIFEPOWER_TO_PREPARE & plants.Count > 0) {
+							int i = (int)(Random.value * (plants.Count - 1));
+							lifepower += plants[i].TakeLifepower(lifepowerFromSinglePlant);
+							plants.RemoveAt(i);
+						}
+					}
+					CheckGrasslandStage();
+				}
+				lifeTimer = GameMaster.LIFEPOWER_TICK;
 			}
 		}
+	}
+
+	int CheckGrasslandStage() {
+		progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
+		int stage = 0; 
+		if (progress > 0.5f) {if (progress == 1) stage = 3; else stage = 2;}
+		else { if (progress > 0.25f) stage = 1;}
+		if (Mathf.Abs(stage - prevStage) > 1) {
+			if (stage > prevStage) stage = prevStage+1;
+			else stage =  prevStage - 1;
+		}
+		if (stage != prevStage) {
+			switch (stage) {
+			case 0: 						
+				myBlock.surfaceRenderer.sharedMaterial = ResourceType.Dirt.material;
+				break;
+			case 1:
+				int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
+				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_25[index1];
+				break;
+			case 2:
+				int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
+				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_50[index2];
+				break;
+			case 3:
+				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.grass_material;
+				break;
+			}
+			prevStage = stage;
+		}
+		return stage;
 	}
 
 	public void AddLifepower(int count) {
@@ -141,10 +150,11 @@ public class Grassland : MonoBehaviour {
 	}
 	public int TakeLifepower(float count) {
 		if (count < 0) return 0 ;
-		float lifeTransfer = count;
-		if (count > lifepower) {if (lifepower >= 0) lifeTransfer = lifepower; else lifeTransfer = 0;}
-		lifepower -= lifeTransfer;
-		return (int)lifeTransfer;
+		if (lifepower < - 25) count = 0;
+		else 	lifepower -= count;
+		if (lifeTimer == 0 ) lifeTimer = GameMaster.LIFEPOWER_TICK;
+		int lifeTransfer = (int) count;
+		return lifeTransfer;
 	}
 	public void SetLifepower(float count) {
 		lifepower = count;

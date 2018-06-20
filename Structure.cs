@@ -392,6 +392,15 @@ public class Structure : MonoBehaviour {
 	virtual public void Annihilate( bool forced ) { // for pooling
 		SurfaceBlock lastBasement = basement;
 		if (forced) UnsetBasement();
+		else {
+			ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
+			if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1) {
+				for (int i =0; i< resourcesLeft.Length; i++) {
+					resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
+				}
+				GameMaster.colonyController.storage.AddResources(resourcesLeft);
+			}
+		}
 		if (isBasement) {
 			Block ub = lastBasement.myChunk.GetBlock(lastBasement.pos.x , lastBasement.pos.y+1, lastBasement.pos.z);
 			if ( ub != null ) {
