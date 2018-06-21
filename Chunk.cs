@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public struct ChunkPos {
 	public byte x, y, z;
 	public ChunkPos (byte xpos, byte ypos, byte zpos) {
@@ -13,15 +14,20 @@ public struct ChunkPos {
 	}
 }
 
+[System.Serializable]
+public class ChunkSerializer {
+	public List<byte[]> blocksData;
+	public float lifepower, lifepowerTimer;
+	public byte chunkSize;
+}
+
 public class Chunk : MonoBehaviour {
 	Block[,,] blocks;
 	List<SurfaceBlock> surfaceBlocks;
 	public byte prevBitmask = 63;
-	List<GameObject> structures;
 	public float lifePower = 0;
 	 float lifepower_timer = 0;
 	public static byte CHUNK_SIZE  {get;private set;}
-	public static int energy_take_speed = 10;
 	GameObject cave_pref;
 	public List <Component> chunkUpdateSubscribers;
 	public bool[,] sideBlockingMap{get; private set;}
@@ -792,45 +798,17 @@ public class Chunk : MonoBehaviour {
 		}
 	}
 
-	public string[] SaveChunkData() {
-		string[] chunkData = new string[CHUNK_SIZE * CHUNK_SIZE + 1];
-		chunkData[0] = CHUNK_SIZE.ToString();
-		int k =1;
-		for (int x = 0; x < CHUNK_SIZE ; x++) {
-			for ( int y = 0; y < CHUNK_SIZE; y++) {
-				string s = "";
+	public ChunkSerializer SaveChunkData() {
+		ChunkSerializer cs = new ChunkSerializer();
+		cs.blocksData = new List<byte[]>();
+		for ( int x = 0; x < CHUNK_SIZE; x ++) {
+			for (int y = 0; y < CHUNK_SIZE; y++) {		
 				for (int z = 0; z < CHUNK_SIZE; z++) {
-					if (blocks[x,y,z] == null) {s+= ';'; continue;}
-					switch (blocks[x,y,z].type) {
-					case BlockType.Shapeless: s+= 'h';break;
-					case BlockType.Surface: 
-						SurfaceBlock sb = blocks[x,y,z] as SurfaceBlock;
-						s+='s' + string.Format( "{0:d3}", sb.material_id );
-						if (sb.grassland != null && sb.grassland.lifepower > 1) {
-							s += Mathf.RoundToInt(sb.grassland.lifepower).ToString();
-						}
-						break;
-					case BlockType.Cube: 
-						s += 'c';
-						{
-							CubeBlock cb = blocks[x,y,z] as CubeBlock;
-							float pc = (float)cb.volume / (float)CubeBlock.MAX_VOLUME;
-							pc *= 1000;
-							s += string.Format( "{0:d3}", blocks[x,y,z].material_id ) + string.Format("{0:d4}", ((int)pc));
-							if (cb.career) s += '1'; else s+='0';
-							pc = cb.naturalFossils / (float)CubeBlock.MAX_VOLUME;
-							pc *= 1000;
-							s += string.Format("{0:d4}", ((int)pc));
-						}
-						break;
-					case BlockType.Cave: s+= 'v'+ string.Format( "{0:d3}", blocks[x,y,z].material_id );break;						
-					}
-					s += ';';
-					}
-				chunkData[k] = s; k++;
+					cs.blocksData.Add(blocks[x,y,z].Save());
 				}
+			}
 		}
-		return chunkData;
+		return cs;
 	}
 
 	public bool LoadChunk( string[] s_data, int size ) {

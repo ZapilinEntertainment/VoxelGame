@@ -527,7 +527,8 @@ public class ColonyController : MonoBehaviour {
 		return v;
 	}
 
-	public string Save() {
+	public string[] Save() {
+		List<string> result = new List<string>();
 		string s = "";
 		s += citizenCount.ToString() + ';';
 		s += freeWorkers.ToString() + ';';
@@ -535,7 +536,17 @@ public class ColonyController : MonoBehaviour {
 		s += string.Format("{0:0.000}", energyCrystalsCount) +';';
 		s += string.Format("{0:0.00000}", gears_coefficient)  +';';
 		s += string.Format("{0:0.00000}", happiness_coefficient) + ';';
-		return s;
+		//storage save also!
+
+		//worksites save:
+		s = "w";
+		if ( colonyController.worksites.Count > 0) {
+			foreach ( Worksite w in colonyController.worksites ) {
+				if (w == null) continue;
+				else s += w.Save() + ';';
+			}
+		}
+		return result.ToArray();
 	}
 	public void Load (string s) {
 		int p =  s.IndexOf(';');

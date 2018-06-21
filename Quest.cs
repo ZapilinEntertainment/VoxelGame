@@ -54,4 +54,9 @@ public class Quest  {
 		q.crewsRequired = 1;
 		return q;
 	} 
+
+	public static string[] SaveStaticData() {
+		List<string> result = new List<string>();
+		return result.ToArray();
+	}
 }

@@ -32,6 +32,10 @@ public class Crew {
 
 	public bool onMission{get;private set;}
 
+	void Awake() {
+		if (crewsList == null) crewsList = new List<Crew>();
+	}
+
 	public void SetCrew (ColonyController home, float hireCost) {
 		level = 0;
 		name = Localization.NameCrew();
@@ -76,6 +80,11 @@ public class Crew {
 	/// <param name="x">The x coordinate.</param>
 	public static void SetLastNumber(int x) {
 		lastNumber = x;
+	}
+
+	public static string[] SaveStaticData() {
+		List<string> result = new List<string>();
+		return result.ToArray();
 	}
 
 	public string Save() {

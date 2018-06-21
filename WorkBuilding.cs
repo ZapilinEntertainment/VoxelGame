@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class WorkBuildingSerializer {
+	public BuildingSerializer buildingSerializer;
+	public float workflow, workSpeed, workflowToProcees;
+	public int workersCount;
+}
+
 public abstract class WorkBuilding : Building {
 	public float workflow {get;protected set;} 
 	protected float workSpeed = 0;
 	public float workflowToProcess{get; protected set;}
-	public int maxWorkers = 8;
-	public int workersCount {get; protected set;}
+	public int maxWorkers = 8; // fixed by asset
+	public int workersCount {get; protected set;} 
 	const float WORKFLOW_GAIN = 1;
-	public float workflowToProcess_setValue = 1;
+	public float workflowToProcess_setValue = 1;//fixed by asset
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -64,32 +71,25 @@ public abstract class WorkBuilding : Building {
 	}
 
 	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData();
+	override public byte[] Save() {
+		WorkBuildingSerializer wbs = GetWorkBuildingSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, wbs);
+			return stream.ToArray();
+		}
 	}
 
-	protected string SaveWorkBuildingData() {
-		string s = "";
-		if (workflow < 0) workflow = 0;
-		s += string.Format("{0:d3}",(int)(workflow /workflowToProcess * 100));
-		s += string.Format("{0:d3}", workersCount );
-		return s;
+	public WorkBuildingSerializer GetWorkBuildingSerializer() {
+		WorkBuildingSerializer wbs = new WorkBuildingSerializer();
+		wbs.buildingSerializer = GetBuildingSerializer();
+		wbs.workflow = workflow;
+		wbs.workSpeed = workSpeed;
+		wbs.workflowToProcees = wbs.workflowToProcees;
+		wbs.workersCount = workersCount;
+		return wbs;
 	}
-
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
-	}
+		
 	//---------------------------------------------------------------------------------------------------	
 
 	override protected float GUI_UpgradeButton( Rect rr) {

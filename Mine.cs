@@ -27,11 +27,12 @@ public class Mine : WorkBuilding {
 		if (awaitingElevatorBuilding) {
 			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y, lastWorkObjectPos.z);
 			if ( b != null ) {
-				if (b.type == BlockType.Cave ) {
+				if (b.type == BlockType.Cave | b.type == BlockType.Surface ) {
 					Structure s = Structure.GetNewStructure(Structure.MINE_ELEVATOR_ID);
 					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.z_size/2));
 					elevators.Add(s);
 					awaitingElevatorBuilding = false;
+					GameMaster.realMaster.AddAnnouncement(Localization.mine_levelFinished);
 				}
 			}
 		}
@@ -47,23 +48,21 @@ public class Mine : WorkBuilding {
 		}
 	}
 
-	override protected void LabourResult() {
-				int x = (int) workflow;
-				float production = x;
-				production = workObject.Dig(x, false);
-				if (workObject.volume == 0) {
-					workFinished = true;
-					actionLabel = Localization.work_has_stopped;
-					production = workObject.Dig(x, false);
-					awaitingElevatorBuilding = true;
-				}
-				else {
-					production = workObject.Dig(x, false);
-					GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
-					int percent = (int)((1 - (float)workObject.volume / (float) CubeBlock.MAX_VOLUME) * 100);
-					actionLabel = percent.ToString() + "% " + Localization.extracted; 
-				}
-				workflow -= production;	
+override protected void LabourResult() {
+		int x = (int) workflow;
+		float production = x;
+		production = workObject.Dig(x, false);
+		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
+		if ( workObject!=null & workObject.volume != 0) {
+			int percent = (int)((1 - (float)workObject.volume / (float) CubeBlock.MAX_VOLUME) * 100);
+			actionLabel = percent.ToString() + "% " + Localization.extracted; 
+			workflow -= production;	
+		}
+		else {
+			workFinished = true;
+			actionLabel = Localization.work_has_stopped;
+			awaitingElevatorBuilding = true;
+		}			
 	}
 
 	override protected void RecalculateWorkspeed() {

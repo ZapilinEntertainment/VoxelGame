@@ -52,6 +52,11 @@ public class ExpeditionCorpus : WorkBuilding {
 		if ( !questSet ) delayedQuests.Add(q);
 	}
 
+	public static string[] SaveStaticData() {
+		List<string> result = new List<string>();
+		return result.ToArray();
+	}
+
 	void OnGUI() {
 		// base on buiding.cs
 		if ( !showOnGUI ) return;

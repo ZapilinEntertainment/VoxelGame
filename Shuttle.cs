@@ -23,7 +23,7 @@ public class Shuttle : MonoBehaviour {
 	public static int lastIndex{get;private set;}
 
 	void Awake() {
-		shuttlesList = new List<Shuttle>();
+		if (shuttlesList == null) shuttlesList = new List<Shuttle>();
 	}
 
 	public static void Reset() {
@@ -65,6 +65,11 @@ public class Shuttle : MonoBehaviour {
 	// used only by Expedition class, use expedition.AssignShuttle
 	public void AssignTo(Expedition e) {
 		assignedToExpedition = e;
+	}
+
+	public static string[] SaveStaticData() {
+		List<string> result = new List<string>();
+		return result.ToArray();
 	}
 
 	public static float GUI_DrawShuttleIcon(Shuttle sh, Rect rr) {

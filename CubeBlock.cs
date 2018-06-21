@@ -2,6 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class CubeBlockSerializer {
+	public BlockSerializer blockSerializer;
+	public float naturalFossils;
+	public byte excavatingStatus;
+	public int volume;
+	public bool career;
+}
+
 public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public float naturalFossils = 0;
@@ -185,4 +194,18 @@ public class CubeBlock : Block{
 			
 		}
 	}
+
+	override public byte[] Save() {
+		CubeBlockSerializer cbs = new CubeBlockSerializer();
+		cbs.blockSerializer = GetBlockSerializer();
+		cbs.naturalFossils =naturalFossils;
+		cbs.excavatingStatus = excavatingStatus;
+		cbs.volume = volume;
+		cbs.career = career;
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, cbs);
+			return stream.ToArray();
+		}
+	} 
 }

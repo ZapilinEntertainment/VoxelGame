@@ -35,6 +35,7 @@ public static class Localization {
 	crew_successfulMissions, crew_totalMissions;
 	public static string quests_vesselsAvailable, quests_transmittersAvailable, quests_crewsAvailable, quests_vesselsRequired, quests_crewsRequired,
 	quests_no_suitable_vessels;
+	public static string mine_levelFinished;
 	public static Language currentLanguage;
 
 	static Localization() {
@@ -125,7 +126,7 @@ public static class Localization {
 			structureName[Structure.MINI_GRPH_REACTOR_ID] = "Small Graphonum reactor";
 			structureName[Structure.FUEL_FACILITY_3_ID] = "Fuel facility";
 			structureName[Structure.GRPH_REACTOR_4_ID] = "Graphonium reactor";
-			structureName[Structure.PLASTICS_FACTORY_4_ID] = "Plastics factory";
+			structureName[Structure.PLASTICS_FACTORY_3_ID] = "Plastics factory";
 			structureName[Structure.FOOD_FACTORY_4_ID] = "Food factory";
 			structureName[Structure.FOOD_FACTORY_5_ID] = "Food factory Block";
 			structureName[Structure.GRPH_ENRICHER_ID] = "Graphonium enricher";
@@ -197,6 +198,8 @@ public static class Localization {
 			block = "block";
 			vessel = "vessel";
 			change = "change"; cost ="cost";
+
+			mine_levelFinished = "Mine has finished new level";
 
 			hangar_noShuttle = "No shuttle";
 			hangar_noCrew = "No crew";

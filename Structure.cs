@@ -2,29 +2,39 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public enum StructureType {NotAssigned, Plant, HarvestableResources, Structure, MainStructure}
+[System.Serializable]
+public class StructureSerializer {
+	public SurfaceRect innerPosition;
+	public bool undestructible;
+	public float hp, maxHp;
+	public Quaternion rotation;
+	public int id;
+}
+
 public class Structure : MonoBehaviour {
 	public SurfaceBlock basement{get;protected set;}
 	public SurfaceRect innerPosition;
-	public bool borderOnlyConstruction{get;protected set;}
-	public bool isArtificial {get;protected set;}
-	public bool isBasement{get;protected set;}
-	public bool undestructible = false;
-	public StructureType type {get;protected set;}
+	public bool borderOnlyConstruction{get;protected set;}  // fixed in ID
+	public bool isArtificial {get;protected set;} // fixed in ID
+	public bool isBasement{get;protected set;} // fixed in ID
+	public bool undestructible = false; // fixed in asset
+	public StructureType type {get;protected set;} // fixed in ID
 	public float hp = 1;
-	public float maxHp = 1;
-	public bool randomRotation = false, rotate90only = true;
+	public float maxHp = 1; // fixed in asset
+	public bool randomRotation = false, rotate90only = true; // fixed in asset
 	public bool showOnGUI{get; protected set;}
 	public float gui_ypos = 0;
 	public int id {get; private set;}
 	[SerializeField]
-	protected Renderer myRenderer;
+	protected Renderer myRenderer; // fixed in asset
 	public bool visible {get;protected set;}
 	public const int TREE_SAPLING_ID = 1,  TREE_ID = 2, DEAD_TREE_ID = 3, WHEAT_CROP_ID = 4, LANDED_ZEPPELIN_ID = 5,
 	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, HOUSE_0_ID = 11, 
 	DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19, 
 	WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
-	ROLLING_SHOP_ID = 25, MINI_GRPH_REACTOR_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_4_ID = 29,
+	ROLLING_SHOP_ID = 25, MINI_GRPH_REACTOR_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
 	FOOD_FACTORY_4_ID = 30, GRPH_ENRICHER_ID = 31, XSTATION_ID = 32, QUANTUM_ENERGY_TRANSMITTER_ID = 33, CHEMICAL_FACTORY_ID = 34,
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
@@ -87,7 +97,7 @@ public class Structure : MonoBehaviour {
 		prefs[MINI_GRPH_REACTOR_ID]  = Resources.Load<Structure>("Structures/Buildings/miniReactor_level_3");
 		prefs[FUEL_FACILITY_3_ID] = Resources.Load<Structure>("Structures/Buildings/fuelFacility_level_3");
 		prefs[GRPH_REACTOR_4_ID] = Resources.Load<Structure>("Structures/Buildings/graphoniumReactor_level_4");
-		prefs[PLASTICS_FACTORY_4_ID] = Resources.Load<Structure>("Structures/Buildings/plasticsFactory_level_4");
+		prefs[PLASTICS_FACTORY_3_ID] = Resources.Load<Structure>("Structures/Buildings/plasticsFactory_level_3");
 		prefs[FOOD_FACTORY_4_ID] = Resources.Load<Structure>("Structures/Buildings/foodFactory_level_4");
 		prefs[FOOD_FACTORY_5_ID] = Resources.Load<Structure>("Structures/Blocks/foodFactoryBlock_level_5");
 		prefs[GRPH_ENRICHER_ID] = Resources.Load<Structure>("Structures/Buildings/graphoniumEnricher_level_3");
@@ -130,6 +140,7 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(FARM_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(PLASTICS_FACTORY_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(ENERGY_CAPACITOR_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(MINI_GRPH_REACTOR_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(FUEL_FACILITY_3_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -139,7 +150,6 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(FARM_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(LUMBERMILL_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
-		allConstructableBuildingsList.Add( GetNewStructure(PLASTICS_FACTORY_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(GRPH_REACTOR_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add (GetNewStructure(SHUTTLE_HANGAR_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add (GetNewStructure(RECRUITING_CENTER_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -251,7 +261,7 @@ public class Structure : MonoBehaviour {
 		case LUMBERMILL_5_ID:
 			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true;
 			break;
-		case PLASTICS_FACTORY_4_ID:	innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
+		case PLASTICS_FACTORY_3_ID:	innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
 		case FOOD_FACTORY_4_ID:		innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
 		case FOOD_FACTORY_5_ID: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
 		case SMELTERY_1_ID:
@@ -345,25 +355,23 @@ public class Structure : MonoBehaviour {
 	}
 
 	//--------SAVE  SYSTEM-------------
-	public virtual string Save() {
-		return SaveStructureData();
+	public virtual byte[] Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, ss);
+			return stream.ToArray();
+		}
 	}
 		
-	protected string SaveStructureData() {
-		string s = string.Format("{0:d2}", innerPosition.x) + string.Format("{0:d2}", innerPosition.z);
-		s += string.Format("{0:d3}", id) ; 
-		s +=  string.Format("{0:d1}", (int)(transform.localRotation.eulerAngles.y / 45)) ;
-		s += string.Format( "{0:d3}", (int)(hp / maxHp * 100));
-		return s;
-	}
-
-	public virtual void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	protected StructureSerializer GetStructureSerializer() {
+		StructureSerializer ss = new StructureSerializer();
+		ss.innerPosition = innerPosition;
+		ss.undestructible = undestructible;
+		ss.hp = hp;
+		ss.maxHp == ss.maxHp;
+		ss.rotation = transform.localRotation;
+		ss.id = id;
 	}
 	// ------------------------------------------
 
@@ -416,7 +424,7 @@ public class Structure : MonoBehaviour {
 
 	void OnDestroy() {
 		if (basement != null) {
-			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			basement.RemoveStructure(this);
 		}
 	}
 }

@@ -4,6 +4,11 @@ using UnityEngine;
 
 public enum ShipType {Passenger, Cargo, Private, Military}
 
+[System.Serializable]
+public class ShipSerializer {
+	
+}
+
 public class Ship : MonoBehaviour {
 	[SerializeField]
 	byte _level = 1; // for editor set
@@ -32,7 +37,7 @@ public class Ship : MonoBehaviour {
 		ChunkPos cpos = d.basement.pos;
 		if (cpos.z == 0 || cpos.z == (Chunk.CHUNK_SIZE - 1)) {
 			xAxisMoving = true;
-			float zpos = (cpos.z ==0 ? -1 * width - Block.QUAD_SIZE  : (Chunk.CHUNK_SIZE -1 ) * Block.QUAD_SIZE + width);
+			float zpos = (cpos.z ==0 ? -1 * width - Block.QUAD_SIZE/2f  : (Chunk.CHUNK_SIZE -1 ) * Block.QUAD_SIZE + width);
 			if (Random.value > 0.5f) {
 				transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, (d.basement.pos.y - 1) * Block.QUAD_SIZE, zpos);
 				transform.forward = Vector3.left;
@@ -46,7 +51,7 @@ public class Ship : MonoBehaviour {
 		else {
 			if ( cpos.x == 0 || cpos.x == (Chunk.CHUNK_SIZE - 1)) {
 				xAxisMoving = false;
-				float xpos = (cpos.x ==0 ? -1 * width : ( Chunk.CHUNK_SIZE - 1 ) * Block.QUAD_SIZE + width);
+				float xpos = (cpos.x ==0 ? -1 * width - Block.QUAD_SIZE / 2f : ( Chunk.CHUNK_SIZE - 1 ) * Block.QUAD_SIZE + width);
 				if (Random.value > 0.5f) {
 					transform.position = new Vector3(xpos, (d.basement.pos.y - 1)* Block.QUAD_SIZE, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
 					transform.forward = Vector3.back;
@@ -95,44 +100,12 @@ public class Ship : MonoBehaviour {
 		}
 	}
 
-	public string Save() {
-		string s = "";
-		if (speed >= 100) speed = 99;
-		s += string.Format("{0:d2}", (int)speed );
-		float t = transform.position.x;
-		int signs = (t < 0) ? 1 : 0;
-		t *= Mathf.Sign(t);
-		s += string.Format("{0:d3}", (int)(t * 100) );
-		t = transform.position.y; signs += (t < 0) ? 1 : 0 * 2; t *= Mathf.Sign(t);
-		s += string.Format("{0:d3}", (int)(t * 100) );
-		t = transform.position.z; signs += (t < 0) ? 1 : 0* 4; t *= Mathf.Sign(t);
-		s += string.Format("{0:d3}", (int)(t * 100) );
-		s += signs.ToString();
-		//direction
-		if ( transform.forward.x > 0 ) s += '0';
-		else {
-			if ( transform.forward.x == 0 ) {
-				if ( transform.forward.z > 0 ) s += '2';
-				else s += '3';
-			}
-			else s += '1';
-		}
-		return s;
+	//---------------------------------------------------- SAVE   SYSTEM
+	public ShipSerializer GetShipSerializer() {
+		ShipSerializer ss = new ShipSerializer();
+		return ss;
 	}
-
-	public void Load(string s) {
-		if (s.Substring(20,2) != "00") docked = true; else docked = false;
-		speed = int.Parse(s.Substring(23,2));
-		int sign = int.Parse(s[34].ToString());
-		transform.position = new Vector3( int.Parse(s.Substring(25, 3)) * (((sign & 4) == 0) ? 1 : (-1)) , int.Parse(s.Substring(28, 3)) * (((sign & 2) == 0) ? 1 : (-1)) , int.Parse(s.Substring(31, 3)) * (((sign & 1) == 0) ? 1 : (-1)) );
-		switch ( s[35] ) {
-		case '0': transform.forward = Vector3.right; break;
-		case '1': transform.forward = Vector3.left;break;
-		case '2': transform.forward = Vector3.forward;break;
-		case '3': transform.forward = Vector3.back;break;
-		default: transform.forward = Vector3.right;break;
-		}
-	}
+	//-----------------------------------------------------
 
 	public void Undock() {
 		docked = false;

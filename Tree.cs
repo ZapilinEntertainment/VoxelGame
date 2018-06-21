@@ -60,7 +60,7 @@ public class Tree : Plant {
 	public void Chop() {
 		if (basement != null) {
 			basement.grassland.AddLifepower((int)lifepower);
-			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			basement.RemoveStructure(this);
 			UnsetBasement();
 		}
 		if (GetComponent<FallingTree>() == null) gameObject.AddComponent<FallingTree>();
