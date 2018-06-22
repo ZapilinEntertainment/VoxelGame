@@ -6,22 +6,26 @@ public enum ShipType {Passenger, Cargo, Private, Military}
 
 [System.Serializable]
 public class ShipSerializer {
-	
+	public float xpos, ypos,zpos,xrot,yrot,zrot,wrot;
+	public bool xAxisMoving, docked, unloaded;
+	public float destinationPos, speed;
+	public byte level;
+	public ShipType type;
 }
 
 public class Ship : MonoBehaviour {
 	[SerializeField]
-	byte _level = 1; // for editor set
-	public byte level {get;private set;}
+	byte _level = 1; 
+	public byte level {get;private set;} // fixed by asset
 	[SerializeField]
 	ShipType _type;
-	public ShipType type{get;private set;}
+	public ShipType type{get;private set;} // fixed by asset
 	const float DISTANCE_TO_ISLAND = 40;
 	[SerializeField]
-	float width = 0.5f, startSpeed = 10, acceleration = 1;
+	float width = 0.5f, startSpeed = 10, acceleration = 1; // fixed by asset
 	[SerializeField]
 	int _volume = 50;
-	public int volume{get; private set;}
+	public int volume{get; private set;} // fixed by asset
 	bool xAxisMoving = false, docked = false, unloaded = false;
 	float destination_pos = 0, speed = 0;
 	Dock destination;
@@ -103,7 +107,20 @@ public class Ship : MonoBehaviour {
 	//---------------------------------------------------- SAVE   SYSTEM
 	public ShipSerializer GetShipSerializer() {
 		ShipSerializer ss = new ShipSerializer();
+		ss.destinationPos = destination_pos;
+		ss.docked = docked;
+		ss.xpos = transform.position.x; ss.ypos = transform.position.y; ss.zpos = transform.position.z; 
+		ss.xrot = transform.rotation.x;ss.yrot = transform.rotation.y;ss.zrot = transform.rotation.z;ss.wrot = transform.rotation.w;
+		ss.speed = speed;
+		ss.unloaded = unloaded;
+		ss.xAxisMoving = xAxisMoving;
+		ss.level = level;
+		ss.type = type;
 		return ss;
+	}
+
+	public void Load(ShipSerializer ss, Dock d) {
+		
 	}
 	//-----------------------------------------------------
 

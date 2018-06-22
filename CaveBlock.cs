@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class CaveBlockSerializer {
+	public SurfaceBlockSerializer surfaceBlockSerializer;
+	public int upMaterial_ID;
+	public bool surfaceEnabled;
+}
+
 public class CaveBlock : SurfaceBlock {
 		[SerializeField]
 		MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west
@@ -130,4 +137,33 @@ public class CaveBlock : SurfaceBlock {
 			
 			if ( structureBlock != null) structureBlock.SetVisibilityMask(x);
 		}
+
+	#region save-load system
+	override public BlockSerializer Save() {
+		BlockSerializer bs = GetBlockSerializer();
+		CaveBlockSerializer cbs = new CaveBlockSerializer();
+		cbs.upMaterial_ID = material_id;
+		cbs.surfaceEnabled = true;
+		cbs.surfaceBlockSerializer = GetSurfaceBlockSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, cbs);
+			bs.specificData =  stream.ToArray();
+		}
+		return bs;
+	} 
+
+	override public void Load(BlockSerializer bs) {
+		LoadBlockData(bs);
+		CaveBlockSerializer cbs = new CaveBlockSerializer();
+		GameMaster.DeserializeByteArray<CaveBlockSerializer>(bs.specificData, ref cbs);
+		LoadCaveBlockData(cbs);
+	}
+
+	protected void LoadCaveBlockData(CaveBlockSerializer cbs) {
+		LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
+		//cbs.upMaterial_ID
+		//cbs.surfaceEnabled
+	}
+	#endregion
 }

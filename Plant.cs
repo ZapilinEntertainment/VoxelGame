@@ -6,7 +6,6 @@ public enum PlantType {TreeSapling, Tree, Crop}
 
 [System.Serializable]
 public class PlantSerializer {
-	public StructureSerializer structureSerializer;
 	public float lifepower, growth;
 	public bool full;
 }
@@ -98,18 +97,31 @@ public class Plant : Structure {
 		if (lifepower < maxLifepower) full = false; else full = true;
 	}
 	//---------------------                   SAVING       SYSTEM-------------------------------
-	override public byte[] Save() {
-		PlantSerializer ps = GetPlantSerializer();
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, ps);
-			return stream.ToArray();
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetPlantSerializer());
+			ss.specificData =  stream.ToArray();
 		}
+		return ss;
+	}
+
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss,sblock);
+		PlantSerializer ps = new PlantSerializer();
+		GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
+		LoadPlantData(ps);
+	}
+
+	protected void LoadPlantData(PlantSerializer ps) {
+		lifepower = ps.lifepower;
+		full = ps.full;
+		SetGrowth(ps.growth);
 	}
 
 	protected PlantSerializer GetPlantSerializer() {
 		PlantSerializer ps = new PlantSerializer();
-		ps.structureSerializer = GetStructureSerializer();
 		ps.full = full;
 		ps.growth = growth;
 		ps.lifepower = lifepower;

@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class StorageSerializer {
+	public float[] standartResources;
+}
+
 public class Storage : MonoBehaviour {
 	public float totalVolume = 0, maxVolume;
 	List<ResourceContainer> customResources;
@@ -208,31 +213,13 @@ public class Storage : MonoBehaviour {
 		}
 		return true;
 	}
-
-	public string Save() {
-		string s =""; 
-		for ( int i =0; i < ResourceType.RTYPES_COUNT; i++) {
-			if ( standartResources[i] != 0 ) s += string.Format("{0:0.000}", standartResources[i]);
-			s += ';' ;
-		}
-		return s;
+	//---------------------------------------------SAVE         SYSTEM
+	public StorageSerializer Save() {
+		StorageSerializer ss = new StorageSerializer();
+		ss.standartResources = standartResources;
+		return ss;
 	}
-	public void Load( string s) {
-		int startIndex = 0, endIndex = s.IndexOf(';', startIndex), i =0;
-		totalVolume = 0;
-		while ( startIndex < s.Length & endIndex != -1 & i < ResourceType.RTYPES_COUNT ) {
-			if (endIndex == startIndex)  	standartResources[i] = 0; 
-			else {
-				standartResources[i] =  float.Parse(s.Substring(startIndex, endIndex - startIndex)) ;
-				totalVolume += standartResources[i];
-			}
-			i++;
-			startIndex = endIndex + 1;
-			endIndex = s.IndexOf( ';', startIndex);
-		}
-		i= 0;
-	}
-
+	//------------------------------------------------------------------
 	void OnGUI () {
 		if (showStorage) {
 			GUI.skin = GameMaster.mainGUISkin;

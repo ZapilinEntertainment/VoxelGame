@@ -2,22 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class DockSerializer {
-	public WorkBuildingSerializer workBuildingSerializer;
-	public bool correctLocation, maintainingShip;
-	ShipSerializer loadingShip;
-	public float loadingTimer = 0, shipArrivingTimer = 0;
-}
-[System.Serializable]
-public class DockStaticSerializer {
-	public bool?[] isForSale;
-	public int[] minValueForTrading;
-	public float[] prices, demand;
-	public int immigrationPlan ;
-	public bool immigrationEnabled;
-}
-
 public class Dock : WorkBuilding {
 	bool correctLocation = false;
 	bool gui_tradeGoodTabActive = false, gui_sellResourcesTabActive = false, gui_addTransactionMenu = false;
@@ -256,7 +240,7 @@ public class Dock : WorkBuilding {
 		immigrationPlan = count;
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
+	#region save-load system
 	public static DockStaticSerializer SaveStaticDockData() {
 		DockStaticSerializer dss = new DockStaticSerializer();
 		dss.isForSale = isForSale;
@@ -268,28 +252,56 @@ public class Dock : WorkBuilding {
 		return dss;
 	}
 
-	public override byte[] Save() {
-		DockSerializer ds = GetDockSerializer();
+	public static void LoadStaticData( DockStaticSerializer dss) {
+		isForSale = dss.isForSale;
+		minValueForTrading = dss.minValueForTrading;
+		ResourceType.prices = dss.prices;
+		ResourceType.demand = dss.demand;
+		immigrationPlan = dss.immigrationPlan;
+		immigrationEnabled = dss.immigrationEnabled;
+	}
+
+	public override StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, ds);
-			return stream.ToArray();
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetDockSerializer());
+			ss.specificData =  stream.ToArray();
 		}
+		return ss;
 	}
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		DockSerializer ds= new DockSerializer();
+		GameMaster.DeserializeByteArray<DockSerializer>(ss.specificData, ref ds);
+		LoadDockData(ds);
+	}
+	protected void LoadDockData(DockSerializer ds) {
+		LoadWorkBuildingData(ds.workBuildingSerializer);
+		correctLocation = ds.correctLocation;
+		maintainingShip =ds.maintainingShip;
+		if (maintainingShip) {
+			ShipSerializer ss = ds.loadingShip;
+			Ship s = PoolMaster.current.GetShip( ss.level, ss.type );
+			s.Load(ss, this);
+			loadingShip = s;
+		}
+		loadingTimer =  ds.loadingTimer;
+		shipArrivingTimer = ds.shipArrivingTimer;
+	} 
 
 	protected DockSerializer GetDockSerializer() {
 		DockSerializer ds = new DockSerializer();
 		ds.workBuildingSerializer = GetWorkBuildingSerializer();
 		ds.correctLocation = correctLocation;
 		ds.maintainingShip = maintainingShip;
-		loadingShip = loadingShip.GetShipSerializer();
+		ds.loadingShip = loadingShip.GetShipSerializer();
 		ds.loadingTimer = loadingTimer;
 		ds.shipArrivingTimer = shipArrivingTimer;
 		return ds;
 	}
+	#endregion
 
-
-	//---------------------------------------------------------------------------------------------------	
 	void OnGUI() {
 		if (!showOnGUI) return;
 		GUI.skin = GameMaster.mainGUISkin;
@@ -425,4 +437,20 @@ public class Dock : WorkBuilding {
 			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
 		}
 	}
+}
+
+[System.Serializable]
+public class DockSerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public bool correctLocation, maintainingShip;
+	public ShipSerializer loadingShip;
+	public float loadingTimer = 0, shipArrivingTimer = 0;
+}
+[System.Serializable]
+public class DockStaticSerializer {
+	public bool?[] isForSale;
+	public int[] minValueForTrading;
+	public float[] prices, demand;
+	public int immigrationPlan ;
+	public bool immigrationEnabled;
 }

@@ -4,8 +4,8 @@ using UnityEngine;
 
 [System.Serializable]
 public class BuildingSerializer {
-	public StructureSerializer structureSerializer;
 	public bool isActive;
+	public float energySurplus;
 }
 
 public class Building : Structure {
@@ -13,7 +13,8 @@ public class Building : Structure {
 	public bool canBePowerSwitched = true; // fixed by asset
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
-	public float energySurplus = 0, energyCapacity = 0; // fixed by asset
+	public float energySurplus = 0; // can be changed later (ex.: generator)
+	public float energyCapacity = 0; // fixed by asset
 	public  bool connectedToPowerGrid {get; protected set;}// установлено ли подключение к электросети
 	public int requiredBasementMaterialId = -1; // fixed by asset
 	public byte level{get;protected set;} // fixed by id (except for mine)
@@ -219,30 +220,34 @@ public class Building : Structure {
 		}
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	override public byte[] Save() {
-		BuildingSerializer bs = GetBuildingSerializer();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss  = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, bs);
-			return stream.ToArray();
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetBuildingSerializer());
+			ss.specificData = stream.ToArray();
 		}
+		return ss;
+	}
+
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		BuildingSerializer bs = new BuildingSerializer();
+		GameMaster.DeserializeByteArray<BuildingSerializer>(ss.specificData, ref bs);
+	}
+	protected void LoadBuildingData(BuildingSerializer bs) {
+		energySurplus = bs.energySurplus;
+		SetActivationStatus(bs.isActive);
 	}
 
 	protected BuildingSerializer GetBuildingSerializer() {
 		BuildingSerializer bs = new BuildingSerializer();
-		bs.structureSerializer = GetStructureSerializer();
 		bs.isActive = isActive;
+		bs.energySurplus = energySurplus;
+		return bs;
 	}
-
-	protected string SaveBuildingData() {
-		string s = "";
-		if (isActive) s += "1"; else s+="0";
-		return s;
-	}
-
-
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	protected void PrepareBuildingForDestruction() {
 		if (basement != null) {

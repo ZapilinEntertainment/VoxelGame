@@ -8,7 +8,7 @@ public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 
-public class GameMaster : MonoBehaviour {
+public sealed class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
 
@@ -47,7 +47,7 @@ public class GameMaster : MonoBehaviour {
 	public static int layerCutHeight = 16, prevCutHeight = 16;
 
 	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
-	float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
+	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 
 
@@ -106,9 +106,8 @@ public class GameMaster : MonoBehaviour {
 		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
 		pm.Load();
 
-		path = Application.dataPath + '/';
 		string saveName = "default.sav";
-		if (generateChunk || !LoadGame( path + saveName) ) {
+		if (generateChunk ) {
 			byte standartSize = 16; // cannot be bigger than 99, cause I say Limited
 			Chunk.SetChunkSize( standartSize );
 			constructor.ConstructChunk( standartSize );
@@ -336,40 +335,6 @@ public class GameMaster : MonoBehaviour {
 		if (g != null) cameraUpdateBroadcast.Add(g);
 	}
 
-	public static void Save2DMatrix (float[,] arr, string fileName ) {
-		// Не совсем правильный вывод, поправить
-		using (StreamWriter sw = File.CreateText(path + '/' + fileName+".txt")) 
-		{
-			for (int i = arr.GetLength(0) - 1; i >= 0; i--) {
-				string s = "";
-				for (int j = 0; j< arr.GetLength(1); j++) {
-					string ts = arr[i,j].ToString();
-					if (ts.Length > 5) ts = ts.Substring(0,5); else {
-						switch (ts.Length) {
-						case 1: ts += ".000"; break;
-						case 3: ts +="00";break;
-						}
-					}
-					s += ts + ' ';
-				}
-				sw.WriteLine(s);
-			}
-		}	
-	}
-	public static void Save2DMatrix (bool[,] arr, string fileName ) {
-		// Не совсем правильный вывод, поправить
-		using (StreamWriter sw = File.CreateText(path + '/' + fileName+".txt")) 
-		{
-			for (int i = arr.GetLength(1) - 1; i >= 0; i--) {
-				string s = "";
-				for (int j = 0; j< arr.GetLength(0); j++) {
-					if (arr[i,j] == true) s+=" 1"; else s+=" 0";
-					}
-				sw.WriteLine(s);
-				}
-			}
-		}	
-
 	public static float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
 		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
@@ -402,6 +367,7 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
+		Time.timeScale = 0;
 		GameMasterSerializer gms = new GameMasterSerializer();
 		#region gms mainPartFilling
 		gms.gameSpeed = gameSpeed;
@@ -412,8 +378,8 @@ public class GameMaster : MonoBehaviour {
 		gms.sellPriceCoefficient = sellPriceCoefficient;
 		gms.tradeVesselsTrafficCoefficient = tradeVesselsTrafficCoefficient;
 		gms.upgradeDiscount = upgradeDiscount;
-		gms.environmentalConditions;
-		gms.warProximity;
+		gms.environmentalConditions = environmentalConditions;
+		gms.warProximity = warProximity;
 		gms.difficulty = difficulty;
 		gms.startGameWith = startGameWith;
 		gms.prevCutHeight = prevCutHeight;
@@ -425,28 +391,78 @@ public class GameMaster : MonoBehaviour {
 		gms.miningSpeed = miningSpeed;
 		gms.machineConstructingSpeed = machineConstructingSpeed;
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
-		gms.windVector = windVector; gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
+		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
+		gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
 		gms.sunlightIntensity = sunlightIntensity;
 		gms.gameAnnouncements_string = gameAnnouncements_string;
 		gms.announcementTimer = announcementTimer;
+		gms.recruiting_hireCost = RecruitingCenter.hireCost;
 		#endregion
-		gms.DockStaticData = Dock.SaveStaticDockData();
-		gms.ColonyControllerData = colonyController.Save();
+		gms.dockStaticSerializer = Dock.SaveStaticDockData();
+		gms.colonyControllerSerializer = colonyController.Save();
 		gms.CrewsData = Crew.SaveStaticData();
 		gms.ShuttlesData = Shuttle.SaveStaticData();
 		gms.QuestsData = Quest.SaveStaticData();
 		gms.ExpeditionCorpusData = ExpeditionCorpus.SaveStaticData();
-		FileStream fs = File.Create(Application.dataPath + "/Saves/save.sav");
+		FileStream fs = File.Create(Application.dataPath + "/Saves/save.txt");
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
+		fs.Close();
+		Time.timeScale = 1;
 		return true;
 	}
 
 	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
-	
+		if(File.Exists(Application.dataPath + "/Saves/save.txt")) {
+			BinaryFormatter bf = new BinaryFormatter();
+			FileStream file = File.Open(Application.dataPath + "/Saves/save.txt", FileMode.Open);
+			Time.timeScale = 0; GameMaster.gameSpeed = 0;
+			GameMasterSerializer gms = (GameMasterSerializer) bf.Deserialize(file);
+			#region gms mainPartLoading
+			gameSpeed =  gms.gameSpeed;
+			lifeGrowCoefficient = gms.lifeGrowCoefficient;
+			demolitionLossesPercent = gms.demolitionLossesPercent;
+			lifepowerLossesPercent = gms.lifepowerLossesPercent;
+			LUCK_COEFFICIENT = gms.luckCoefficient;
+			sellPriceCoefficient = gms.sellPriceCoefficient;
+			tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient ;
+			upgradeDiscount = gms.upgradeDiscount;
+			environmentalConditions = gms.environmentalConditions ;
+			warProximity = gms.warProximity;
+			difficulty = gms.difficulty ;
+			startGameWith = gms.startGameWith ;
+			prevCutHeight = gms.prevCutHeight;
+			diggingSpeed = gms.diggingSpeed ;
+			pouringSpeed = gms.pouringSpeed ;
+			manufacturingSpeed =gms.manufacturingSpeed ;
+			clearingSpeed = gms.clearingSpeed;
+			gatheringSpeed = gms.gatheringSpeed ;
+			miningSpeed = gms.miningSpeed ;
+			machineConstructingSpeed = gms.machineConstructingSpeed ;
+			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
+			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
+			maxWindPower = gms.maxWindPower ;windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
+			sunlightIntensity = gms.sunlightIntensity;
+			gameAnnouncements_string = gms.gameAnnouncements_string ;
+			announcementTimer = gms.announcementTimer;
+			RecruitingCenter.hireCost = gms.recruiting_hireCost;
+			#endregion
+			Destroy (mainChunk.gameObject);
+			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
+			QuantumTransmitter.Reset();Hangar.Reset();
+
+			GameObject g = new GameObject("chunk");
+			mainChunk = g.AddComponent<Chunk>();
+			mainChunk.LoadChunkData(gms.chunkSerializer);
+
+			Dock.LoadStaticData(gms.dockStaticSerializer);
+
+			file.Close();
+			Time.timeScale = 1;
+			return true;
+		}
+		else return false;
 	}
-
-
 
 	void OnGUI() {
 		if (!fontSize_set) {
@@ -513,6 +529,13 @@ public class GameMaster : MonoBehaviour {
 			GUI.color = Color.white;
 		}
 	}
+
+	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
+		using (MemoryStream stream = new MemoryStream(data))
+		{
+			output=  (T)(new BinaryFormatter().Deserialize(stream));
+		}
+	}
 }
 
 [System.Serializable]
@@ -526,7 +549,7 @@ class GameMasterSerializer {
 	public float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
-	public Vector3 windVector;
+	public float windVector_x,windVector_y,windVector_z;
 	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
 	public float sunlightIntensity;
 	public List<string> gameAnnouncements_string; 
@@ -534,6 +557,8 @@ class GameMasterSerializer {
 
 	public ChunkSerializer chunkSerializer;
 	public DockStaticSerializer dockStaticSerializer;
-	public string[] ColonyControllerData, CrewsData,ShuttlesData, QuestsData, ExpeditionCorpusData;
+	public ColonyControllerSerializer colonyControllerSerializer;
+	public float recruiting_hireCost;
+	public string[]  CrewsData,ShuttlesData, QuestsData, ExpeditionCorpusData;
 	// все, что можно - в классы - сериализаторы
 }

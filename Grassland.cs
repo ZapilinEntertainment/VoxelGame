@@ -272,4 +272,12 @@ public class Grassland : MonoBehaviour {
 		gs.prevStage = prevStage;
 		return gs;
 	}
+
+	public void Load( GrasslandSerializer gs) {
+		SetLifepower(gs.lifepower);
+		progress = gs.progress;
+		lifeTimer = gs.lifeTimer;
+		growTimer = gs.growTimer;
+		prevStage = gs.prevStage;
+	}
 }

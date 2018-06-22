@@ -4,7 +4,21 @@ using UnityEngine;
 
 public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 
-public class ColonyController : MonoBehaviour {
+[System.Serializable]
+public sealed class ColonyControllerSerializer{
+	public StorageSerializer storageSerializer;
+	public float gears_coefficient, labourEfficientcy_coefficient,
+	happiness_coefficient, health_coefficient,birthrateCoefficient;
+
+	public float energyStored,energyCrystalsCount;
+	public bool haveWorksites;
+	public List<WorksiteBasisSerializer> worksites;
+
+	public int freeWorkers, citizenCount,deathCredit;
+	public float peopleSurplus = 0, housingTimer = 0,starvationTimer, starvationTime = 600, real_birthrate = 0;
+}
+
+public sealed class ColonyController : MonoBehaviour {
 	const float FOOD_CONSUMPTION = 1,  HOUSING_TIME = 7;
 	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
 	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
@@ -527,40 +541,39 @@ public class ColonyController : MonoBehaviour {
 		return v;
 	}
 
-	public string[] Save() {
-		List<string> result = new List<string>();
-		string s = "";
-		s += citizenCount.ToString() + ';';
-		s += freeWorkers.ToString() + ';';
-		s += deathCredit.ToString() +';';
-		s += string.Format("{0:0.000}", energyCrystalsCount) +';';
-		s += string.Format("{0:0.00000}", gears_coefficient)  +';';
-		s += string.Format("{0:0.00000}", happiness_coefficient) + ';';
-		//storage save also!
+	public ColonyControllerSerializer Save() {
+		ColonyControllerSerializer ccs = new ColonyControllerSerializer();
+		ccs.storageSerializer = storage.Save();
+		ccs.gears_coefficient = gears_coefficient;
+		ccs.labourEfficientcy_coefficient = labourEfficientcy_coefficient;
+		ccs.happiness_coefficient = happiness_coefficient;
+		ccs.health_coefficient = health_coefficient;
+		ccs.birthrateCoefficient = birthrateCoefficient;
 
-		//worksites save:
-		s = "w";
-		if ( colonyController.worksites.Count > 0) {
-			foreach ( Worksite w in colonyController.worksites ) {
+		ccs.energyStored = energyStored;
+		ccs.energyCrystalsCount = energyCrystalsCount;
+		if (worksites.Count == 0) ccs.haveWorksites = false;
+		else {
+			int realCount = 0;
+			ccs.worksites = new List<WorksiteBasisSerializer>();
+			foreach (Worksite w in worksites) {
 				if (w == null) continue;
-				else s += w.Save() + ';';
+				WorksiteBasisSerializer wbs = w.Save();
+				if (wbs == null) continue;
+				ccs.worksites.Add(wbs);
+				realCount++;
 			}
+			if (realCount == 0) ccs.haveWorksites = false; else ccs.haveWorksites = true;
 		}
-		return result.ToArray();
-	}
-	public void Load (string s) {
-		int p =  s.IndexOf(';');
-		citizenCount = int.Parse( s.Substring(0, p));
-		int p2 =  s.IndexOf(';', p + 1);
-		freeWorkers = int.Parse( s.Substring(p+1, p2 - p -1)); 
-		p = s.IndexOf(';', p2 + 1);
-		deathCredit = int.Parse( s.Substring(p2 + 1, p - p2 -1));
-		p2 = s.IndexOf(';', p + 1);
-		energyCrystalsCount = float.Parse(s.Substring(p + 1, p2- p -1));
-		p = s.IndexOf(';', p2 + 1);
-		gears_coefficient = float.Parse(s.Substring(p2 + 1, p- p2 -1));
-		p2 = s.IndexOf(';', p + 1);
-		happiness_coefficient = float.Parse(s.Substring(p + 1, p2- p -1));
+		ccs.freeWorkers = freeWorkers;
+		ccs.citizenCount = citizenCount;
+		ccs.deathCredit = deathCredit;
+		ccs.peopleSurplus = peopleSurplus;
+		ccs.housingTimer = housingTimer;
+		ccs.starvationTimer = starvationTimer;
+		ccs.starvationTime = starvationTime;
+		ccs.real_birthrate = real_birthrate;
+		return ccs;
 	}
 
 	void OnDestroy() {

@@ -2,6 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class WorksiteBasisSerializer {
+	public WorksiteType type;
+	public byte[] data;
+	public bool bool1;
+	public ChunkPos workObjectPos;
+}
+[System.Serializable]
+public class WorksiteSerializer {
+	public int maxWorkers,workersCount;
+	public float workflow, labourTimer, workSpeed;
+}
+
+public enum WorksiteType {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
+
 public abstract class Worksite : MonoBehaviour {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
@@ -40,20 +55,25 @@ public abstract class Worksite : MonoBehaviour {
 	protected abstract void RecalculateWorkspeed() ;
 
 	//---------SAVE   SYSTEM----------------
-	public virtual string Save() {
-		return '0' + SaveWorksite();
+	virtual public WorksiteBasisSerializer Save() {
+		WorksiteBasisSerializer wbs = new WorksiteBasisSerializer();
+		wbs.type = WorksiteType.Abstract;
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorksiteSerializer());
+			wbs.data = stream.ToArray();
+		}
+		return wbs;
 	}
-	protected string SaveWorksite() {
-		string s = "";
-		s += string.Format("{0:d3}", workersCount);
-		s += string.Format("{0:d4}", (int)(workflow * 100));
-		s += string.Format("{0:d4}", (int)(labourTimer * 100));
-		return s;
-	}
-	public virtual void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
+
+	protected WorksiteSerializer GetWorksiteSerializer() {
+		WorksiteSerializer ws = new WorksiteSerializer();
+		ws.maxWorkers = maxWorkers;
+		ws.workersCount = workersCount;
+		ws.labourTimer = labourTimer;
+		ws.workflow = workflow;
+		ws.workSpeed = workSpeed;
+		return ws;
 	}
 	// --------------------------------------------------------
 

@@ -74,6 +74,23 @@ public class Powerplant : WorkBuilding {
 		GameMaster.colonyController.AddWorkers(x);
 	}
 
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, ftimer);
+			ss.specificData = stream.ToArray();
+		}
+		return ss;
+	}
+
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss,sblock);
+		GameMaster.DeserializeByteArray(ss.specificData, ref ftimer);
+	}
+	#endregion
+
 	void OnGUI() {
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);

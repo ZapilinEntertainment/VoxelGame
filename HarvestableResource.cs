@@ -2,10 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class HarvestableResourceSerializer {
+	public ResourceType mainResource;
+	public float count;
+}
+
 public class HarvestableResource : Structure {
 	public ResourceType mainResource {get;protected set;}
 	public float count1;
-
 
 	override public void Prepare() {
 		PrepareStructure();
@@ -46,4 +51,31 @@ public class HarvestableResource : Structure {
 			myRenderer.sharedMaterial = ResourceType.GetMaterialById(resType.ID);
 		}
 	}
+
+	#region save-load system
+	override public  StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHarvestableResourceSerializer());
+			ss.specificData = stream.ToArray();
+		}
+		return ss;
+	}
+
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
+		GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
+		SetResources(hrs.mainResource, hrs.count);
+	}
+
+
+	protected HarvestableResourceSerializer GetHarvestableResourceSerializer() {
+		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
+		hrs.mainResource = mainResource;
+		hrs.count = count1;
+		return hrs;
+	}
+	#endregion
 }

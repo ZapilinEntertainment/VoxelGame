@@ -70,14 +70,29 @@ public abstract class WorkBuilding : Building {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	override public byte[] Save() {
-		WorkBuildingSerializer wbs = GetWorkBuildingSerializer();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, wbs);
-			return stream.ToArray();
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorkBuildingSerializer());
+			ss.specificData =  stream.ToArray();
 		}
+		return ss;
+	}
+
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		WorkBuildingSerializer wbs = new WorkBuildingSerializer();
+		GameMaster.DeserializeByteArray<WorkBuildingSerializer>(ss.specificData, ref wbs);
+		LoadWorkBuildingData(wbs);
+	}
+	protected void LoadWorkBuildingData (WorkBuildingSerializer wbs) {
+		LoadBuildingData(wbs.buildingSerializer);
+		workersCount = wbs.workersCount;
+		workflow = wbs.workflow;
+		workSpeed = wbs.workSpeed;
+		workflowToProcess = wbs.workflowToProcees;
 	}
 
 	public WorkBuildingSerializer GetWorkBuildingSerializer() {
@@ -90,7 +105,7 @@ public abstract class WorkBuilding : Building {
 		return wbs;
 	}
 		
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	override protected float GUI_UpgradeButton( Rect rr) {
 		GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);

@@ -91,28 +91,21 @@ public class CleanSite : Worksite {
 	}
 
 	//---------SAVE   SYSTEM----------------
-	public override string Save() {
-		return '3' + SaveWorksite() + SaveCleanSite();
-	}
-	protected string SaveCleanSite() {
-		string s = "";
-		s += string.Format("{0:00}",workObject.pos.x) + string.Format("{0:00}",workObject.pos.y) + string.Format("{0:00}",workObject.pos.z); 
-		if (diggingMission) s += '1'; else s+='0';
-		return s;
-	}
-	public override void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
-		// position
-		workObject = GameMaster.mainChunk.GetBlock(int.Parse(s.Substring(12,2)), int.Parse(s.Substring(14,2)), int.Parse(s.Substring(16,2)) ) as SurfaceBlock;
-		//clean site part
-		diggingMission = (s[18] == '1');
-		if (workObject.grassland != null) {Destroy(workObject.grassland);}
-		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
-		sign.worksite = this;
-		sign.transform.position = workObject.transform.position;
-		GameMaster.colonyController.AddWorksite(this);
+	override public WorksiteBasisSerializer Save() {
+		if (workObject == null) {
+			Destroy(this);
+			return null;
+		}
+		WorksiteBasisSerializer wbs = new WorksiteBasisSerializer();
+		wbs.type = WorksiteType.CleanSite;
+		wbs.bool1 = diggingMission;
+		wbs.workObjectPos = workObject.pos;
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorksiteSerializer());
+			wbs.data = stream.ToArray();
+		}
+		return wbs;
 	}
 	// --------------------------------------------------------
 			

@@ -15,13 +15,13 @@ public struct ChunkPos {
 }
 
 [System.Serializable]
-public class ChunkSerializer {
-	public List<byte[]> blocksData;
+public sealed class ChunkSerializer {
+	public List<BlockSerializer> blocksData;
 	public float lifepower, lifepowerTimer;
 	public byte chunkSize;
 }
 
-public class Chunk : MonoBehaviour {
+public sealed class Chunk : MonoBehaviour {
 	Block[,,] blocks;
 	List<SurfaceBlock> surfaceBlocks;
 	public byte prevBitmask = 63;
@@ -173,15 +173,12 @@ public class Chunk : MonoBehaviour {
 		BroadcastChunkUpdate( new ChunkPos(x,y,z) );
 	}
 
-	public void AddBlock (ChunkPos f_pos, BlockType f_type, int material1_id,  bool naturalGeneration) {
-		AddBlock (f_pos, f_type, material1_id, material1_id, naturalGeneration);
+	public Block AddBlock (ChunkPos f_pos, BlockType f_type, int material1_id,  bool naturalGeneration) {
+		return AddBlock (f_pos, f_type, material1_id, material1_id, naturalGeneration);
 	}
-	public void AddBlock (ChunkPos f_pos, BlockType f_type, int material1_id, int material2_id, bool naturalGeneration) {
+	public Block AddBlock (ChunkPos f_pos, BlockType f_type, int material1_id, int material2_id, bool naturalGeneration) {
 		int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-		if (GetBlock(x,y,z) != null) {
-			ReplaceBlock(f_pos, f_type, material1_id, material2_id, naturalGeneration);
-			return;
-		}
+		if (GetBlock(x,y,z) != null) return ReplaceBlock(f_pos, f_type, material1_id, material2_id, naturalGeneration);
 		GameObject g = null;
 		CubeBlock cb = null;
 		Block b = null;
@@ -205,7 +202,7 @@ public class Chunk : MonoBehaviour {
 		case BlockType.Surface:
 			b = blocks[x, y-1, z];
 			if (b == null ) {
-				return;
+				return null;
 			}
 			g = new GameObject();
 			SurfaceBlock sb = g.AddComponent<SurfaceBlock>();
@@ -220,7 +217,7 @@ public class Chunk : MonoBehaviour {
 			if (spoints < 1) goto case BlockType.Surface;
 
 			Block lowerBlock = blocks[x, y-1, z]; 
-			if ( lowerBlock == null ) return;
+			if ( lowerBlock == null ) return null; // переделать на cave без пола
 			g = Instantiate(cave_pref);
 			CaveBlock caveb = g.GetComponent<CaveBlock>();
 			caveb.CaveBlockSet(this, f_pos, material2_id, material1_id );
@@ -231,8 +228,9 @@ public class Chunk : MonoBehaviour {
 			surfaceBlocks.Add(caveb);
 			break;
 		}
-		blocks[x,y,z].SetVisibilityMask(visMask);
-		blocks[x,y,z].SetRenderBitmask(prevBitmask);
+		b = blocks[x,y,z];
+		b.SetVisibilityMask(visMask);
+		b.SetRenderBitmask(prevBitmask);
 		ApplyVisibleInfluenceMask(x,y,z, influenceMask);
 		if (calculateUpperBlock) {
 			if (GetBlock(x,y+1,z) == null) {
@@ -242,22 +240,23 @@ public class Chunk : MonoBehaviour {
 				else AddBlock(new ChunkPos(x, y+1,z), BlockType.Surface, material2_id, material2_id, naturalGeneration);
 			}
 		}
+		return b;
 	}
 
-	public void ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int material1_id, bool naturalGeneration) {
-		ReplaceBlock(f_pos, f_newType,material1_id, material1_id, naturalGeneration);
+	public Block ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int material1_id, bool naturalGeneration) {
+		return ReplaceBlock(f_pos, f_newType,material1_id, material1_id, naturalGeneration);
 	}
-	public void ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int material1_id, int material2_id, bool naturalGeneration) {
+	public Block ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int material1_id, int material2_id, bool naturalGeneration) {
 		int x = f_pos.x, y = f_pos.y, z= f_pos.z;
 		Block originalBlock = GetBlock(x,y,z);
-		if (originalBlock == null) { AddBlock(f_pos, f_newType, material1_id, material2_id, naturalGeneration); return;}
+		if (originalBlock == null) return AddBlock(f_pos, f_newType, material1_id, material2_id, naturalGeneration); 
 		if (originalBlock.type == f_newType) {
 			originalBlock.ReplaceMaterial(material1_id);
-			return;
+			return originalBlock;
 		}
 		else {
 			if (originalBlock.indestructible) {
-				if ((originalBlock.type == BlockType.Surface || originalBlock.type == BlockType.Cave) && f_newType != BlockType.Surface && f_newType != BlockType.Cave) return;
+				if ((originalBlock.type == BlockType.Surface || originalBlock.type == BlockType.Cave) && f_newType != BlockType.Surface && f_newType != BlockType.Cave) return originalBlock;
 			}
 		}
 		Block b = null;
@@ -341,6 +340,7 @@ public class Chunk : MonoBehaviour {
 				else AddBlock(new ChunkPos(x, y+1,z), BlockType.Surface, material2_id, naturalGeneration);
 			}
 		}
+		return b;
 	}
 		
 	public void DeleteBlock(ChunkPos pos) {
@@ -800,7 +800,7 @@ public class Chunk : MonoBehaviour {
 
 	public ChunkSerializer SaveChunkData() {
 		ChunkSerializer cs = new ChunkSerializer();
-		cs.blocksData = new List<byte[]>();
+		cs.blocksData = new List<BlockSerializer>();
 		for ( int x = 0; x < CHUNK_SIZE; x ++) {
 			for (int y = 0; y < CHUNK_SIZE; y++) {		
 				for (int z = 0; z < CHUNK_SIZE; z++) {
@@ -811,121 +811,23 @@ public class Chunk : MonoBehaviour {
 		return cs;
 	}
 
-	public bool LoadChunk( string[] s_data, int size ) {
-			if (size > 99) size = 99;
-			blocks = new Block[size,size,size];
-			int k =0;
-			for ( int x = 0; x < size; x ++) {
-				for (int y = 0; y < size; y++) {		
-					int  startIndex = 0, endIndex = -1;
-					for (int z = 0; z < size; z++) {
-						int prevEndIndex = endIndex;
-						endIndex = s_data[k].IndexOf(";",endIndex + 1);
-						if (endIndex == -1) {
-							print (z.ToString() +" not enough data: " + s_data[k]);
-							return false;
-						}
-						if (endIndex - prevEndIndex > 1) {
-							int m_id = 0;
-							switch (s_data[k][startIndex ]) {
-								case 'h': // shapeless
-									blocks[x,y,z] = new GameObject().AddComponent<Block>(); 
-									blocks[x,y,z].ShapelessBlockSet(this, new ChunkPos(x,y,z), null);
-								break;
-								case 's': // surface
-								{	
-									SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-									m_id =  int.Parse(s_data[k].Substring(startIndex +1,3));
-									sb.SurfaceBlockSet(this, new ChunkPos(x,y,z), m_id);
-									blocks[x,y,z] = sb;
-								if (endIndex > startIndex + 5) {
-									int lp = int.Parse(s_data[k].Substring(startIndex + 4, endIndex - (startIndex + 4)));
-									Grassland gl = sb.AddGrassland();
-									gl.AddLifepowerAndCalculate(lp);
-								}
-								}
-								break;
-								case 'c': // cube block
-								{
-									CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
-
-									m_id =  int.Parse(s_data[k].Substring(startIndex + 1,3));
-									int vol = (int)(int.Parse(s_data[k].Substring(startIndex + 4, 4)) / 1000f * CubeBlock.MAX_VOLUME);
-									bool career = (s_data[k][startIndex + 8] == '1');
-									int fossils = (int)(int.Parse(s_data[k].Substring(startIndex + 9, 4)) / 1000f * CubeBlock.MAX_VOLUME);
-
-									cb.BlockSet( this, new ChunkPos(x,y,z), m_id, (fossils > 0));
-									if (vol != CubeBlock.MAX_VOLUME) cb.Dig(CubeBlock.MAX_VOLUME - vol, career);
-									cb.SetFossilsVolume(fossils);
-									blocks[x,y,z] = cb;
-								}
-								break;
-								case 'v': 
-								{
-									CaveBlock cb = Instantiate(cave_pref).GetComponent<CaveBlock>();
-									m_id =  int.Parse(s_data[k].Substring(startIndex +1,3));
-									cb.CaveBlockSet(this, new ChunkPos(x,y,z), m_id, m_id);
-									blocks[x,y,z] = cb;
-								}
-							break;
-								default: ; // error, desu
-								break;
-							}
-					}
-						startIndex = endIndex + 1;
-					}
-				k++;
-				}
-			}
-		for (int x = 0; x< size; x++) {
-			for (int z =0; z< size; z++) {
-				for (int y = 0; y< size; y++) {
-					if (blocks[x,y,z] == null ) continue;
-					blocks[x,y,z].SetVisibilityMask(GetVisibilityMask(x,y,z));
-				}
-			}
+	public void LoadChunkData( ChunkSerializer cs ) {
+		CHUNK_SIZE = cs.chunkSize;
+		blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
+		foreach (BlockSerializer bs in cs.blocksData) {
+			Block b = AddBlock(bs.pos,bs.type, bs.material_id, true);
+			b.Load(bs);
 		}
-		return true;
+		lifePower = cs.lifepower;
+		lifepower_timer = cs.lifepowerTimer;
 	}
+
 
 	public void BlockRow (int index, int side) {
 			sideBlockingMap[index, side] = true;
 	}
 	public void UnblockRow (int index, int side) {
 			sideBlockingMap[index, side] = false;
-	}
-
-	public string[] SaveStructures() {
-		List<string> sdata = new List<string>();
-		foreach (Block b in blocks) {
-			if (b == null || !(b.type == BlockType.Surface | b.type == BlockType.Cave)) continue;
-			SurfaceBlock sb = b as SurfaceBlock;
-			if ( sb.cellsStatus == 0) continue;
-			else { // запись
-					string s = string.Format("{0:d2}", b.pos.x) + string.Format("{0:d2}", b.pos.y) + 
-						string.Format("{0:d2}", b.pos.z);
-					foreach (Structure str in sb.surfaceObjects) {
-					if (str == null) continue;
-					s += str.Save() + ';';
-				}
-				sdata.Add(s);
-			}
-		}
-		return sdata.ToArray();
-	}
-
-	public void LoadStructures( List<string> sdata) {
-		foreach (string s in sdata) {
-			SurfaceBlock sb = blocks[byte.Parse(s.Substring(0,2)), byte.Parse(s.Substring(2,2)), byte.Parse(s.Substring(4,2))] as SurfaceBlock ;
-			int startIndex = 6, endIndex = s.IndexOf(';');
-			while ( endIndex != -1 && startIndex + 7< s.Length && endIndex != -1) {
-				//print (s.Substring(startIndex + 4, 3));
-				Structure str = Structure.GetNewStructure( int.Parse(s.Substring(startIndex + 4, 3)) );
-				str.Load(s.Substring(startIndex, endIndex - startIndex), this, sb);
-				startIndex = endIndex + 1;
-				endIndex = s.IndexOf(';', startIndex);
-			}
-		}
 	}
 
 	void OnGUI () { //test

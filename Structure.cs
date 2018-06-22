@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
 public enum StructureType {NotAssigned, Plant, HarvestableResources, Structure, MainStructure}
 [System.Serializable]
 public class StructureSerializer {
-	public SurfaceRect innerPosition;
+	public PixelPosByte pos;
 	public bool undestructible;
 	public float hp, maxHp;
-	public Quaternion rotation;
+	public float xrot,yrot,zrot,wrot;
 	public int id;
+	public byte[] specificData;
 }
 
 public class Structure : MonoBehaviour {
@@ -354,26 +354,33 @@ public class Structure : MonoBehaviour {
 		}
 	}
 
-	//--------SAVE  SYSTEM-------------
-	public virtual byte[] Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, ss);
-			return stream.ToArray();
-		}
+	#region save-load system
+	public virtual StructureSerializer Save() {
+		return GetStructureSerializer();
+	}
+
+	public virtual void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss,sblock);
+	}
+
+	protected void LoadStructureData(StructureSerializer ss, SurfaceBlock sblock) {
+		undestructible =ss.undestructible;
+		SetBasement(sblock, ss.pos);
+		maxHp = ss.maxHp; hp =ss.maxHp;
+		transform.rotation = new Quaternion(ss.xrot, ss.yrot, ss.zrot, ss.wrot);
 	}
 		
 	protected StructureSerializer GetStructureSerializer() {
 		StructureSerializer ss = new StructureSerializer();
-		ss.innerPosition = innerPosition;
+		ss.pos = new PixelPosByte(innerPosition.x, innerPosition.z);
 		ss.undestructible = undestructible;
 		ss.hp = hp;
-		ss.maxHp == ss.maxHp;
-		ss.rotation = transform.localRotation;
+		ss.maxHp = ss.maxHp;
+		ss.xrot = transform.rotation.x;ss.yrot = transform.rotation.y;ss.zrot = transform.rotation.z;ss.wrot = transform.rotation.w;
 		ss.id = id;
+		return ss;
 	}
-	// ------------------------------------------
+	#endregion
 
 	public virtual void SetGUIVisible (bool x) {
 		if (x != showOnGUI) {

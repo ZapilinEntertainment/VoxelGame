@@ -63,14 +63,17 @@ public class Block : MonoBehaviour {
 		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
 
-	virtual public byte[] Save() {
-		BlockSerializer bs = GetBlockSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, bs);
-			return stream.ToArray();
-		}
+	virtual public BlockSerializer Save() {
+		return GetBlockSerializer();
 	} 
+
+	virtual public void Load(BlockSerializer bs) {
+		LoadBlockData(bs);
+	}
+
+	protected void LoadBlockData(BlockSerializer bs) {
+		isTransparent = bs.isTransparent;
+	}
 
 	void OnDestroy() {
 		if (mainStructure == null) return;
@@ -94,4 +97,5 @@ public class BlockSerializer {
 	public bool isTransparent;
 	public ChunkPos pos;
 	public int material_id;
+	public byte[] specificData;
 }

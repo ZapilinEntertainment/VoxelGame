@@ -132,17 +132,25 @@ public class BlockBuildingSite : Worksite {
 
 
 	//---------SAVE   SYSTEM----------------
-	public virtual string Save() {
-		return '0' + SaveWorksite() + SaveBlockBuildingSite();
+	override public WorksiteBasisSerializer Save() {
+		if (workObject == null) {
+			Destroy(this);
+			return null;
+		}
+		WorksiteBasisSerializer wbs = new WorksiteBasisSerializer();
+		wbs.type = WorksiteType.BlockBuildingSite;
+		wbs.workObjectPos = workObject.pos;
+		DigSiteSerializer dss = new DigSiteSerializer();
+		dss.worksiteSerializer = GetWorksiteSerializer();
+		dss.resourceTypeID = rtype.ID;
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, dss);
+			wbs.data = stream.ToArray();
+		}
+		return wbs;
 	}
-	protected string SaveBlockBuildingSite() {
-		return string.Format("{0:d3}", rtype.ID);
-	}
-	public virtual void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
-		rtype = ResourceType.GetResourceTypeById(int.Parse(s.Substring(18,3)));
-	}
+
+
 	// --------------------------------------------------------
 }

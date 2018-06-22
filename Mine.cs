@@ -2,6 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class MineSerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public bool workFinished;
+	public ChunkPos lastWorkObjectPos;
+	public bool awaitingElevatorBuilding;
+	public byte level;
+	public List<StructureSerializer> elevators;
+	public List<byte>elevatorHeights;
+	public bool haveElevators;
+}
+
 public class Mine : WorkBuilding {
 	CubeBlock workObject;
 	bool workFinished = false;
@@ -69,65 +81,62 @@ override protected void LabourResult() {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Mining);
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() +SaveMineData();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetMineSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveMineData() {
-		string s = "";
-		if (elevators != null && elevators.Count > 0) {
-			foreach (Structure str in elevators) {
-				if (str == null) continue;
-				s += string.Format("{0:d2}", str.basement.pos.y);
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		MineSerializer ms = new MineSerializer();
+		GameMaster.DeserializeByteArray(ss.specificData, ref ms);
+		LoadMineData(ms);
+	}
+
+	protected void LoadMineData(MineSerializer ms) {
+		LoadWorkBuildingData(ms.workBuildingSerializer);
+		level = ms.level;
+		elevators = new List<Structure>();
+		if (level > 1 & ms.haveElevators) {
+			for (int i = 0; i < ms.elevators.Count; i++) {
+				Structure s = Structure.GetNewStructure(MINE_ELEVATOR_ID);
+				s.Load(ms.elevators[i], basement.myChunk.GetBlock(basement.pos.x, ms.elevatorHeights[i], basement.pos.z) as SurfaceBlock);
+				elevators.Add(s);
 			}
 		}
-		s += 'e';
-		if (workFinished) s += 'f'; else s += 'n';
-		s += string.Format("{0:d2}", level);
-		return s;
+		workFinished = ms.workFinished;
+		lastWorkObjectPos = ms.lastWorkObjectPos;
+		awaitingElevatorBuilding = ms.awaitingElevatorBuilding;
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//mine class part
-		int endIndex = s_data.IndexOf("e", 18);
-		if (endIndex > 18 ) {
-			int k = 18, block_xpos = basement.pos.x, block_zpos = basement.pos.z;
-			elevators = new List<Structure>();
-			byte endDepth = basement.pos.y;
-			while ( s_data[k] != 'e') {
-				byte ypos = (byte)int.Parse(s_data.Substring(k,2));
-				Structure elevator = Structure.GetNewStructure(Structure.MINE_ELEVATOR_ID);
-				elevator.SetBasement( basement.myChunk.GetBlock(block_xpos, ypos, block_zpos) as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - elevator.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - elevator.innerPosition.z_size/2)  );
-				elevators.Add(elevator);
-				endDepth = ypos;
-				k+=2;
+	protected MineSerializer GetMineSerializer() {
+		MineSerializer ms = new MineSerializer();
+		ms.workBuildingSerializer = GetWorkBuildingSerializer();
+		ms.workFinished = workFinished;
+		ms.lastWorkObjectPos = lastWorkObjectPos;
+		ms.awaitingElevatorBuilding = awaitingElevatorBuilding;
+		ms.level = level;
+		ms.elevators = new List<StructureSerializer>(); ms.elevatorHeights = new List<byte>();
+		ms.haveElevators = false;
+		if (level > 1) {
+			for (int i = 0; i < elevators.Count; i++) {
+				if (elevators[i] == null) continue;
+				else {
+					ms.elevators.Add((elevators[i] as MineElevator).GetSerializer());
+					ms.elevatorHeights.Add(elevators[i].basement.pos.y);
+					ms.haveElevators = true;
+				}
 			}
-			if ( s_data[k+1] =='f' ) workFinished = true; else workFinished = false;
-			int n_level = int.Parse(s_data.Substring( k + 2, 2 ));
-			ChangeModel((byte)n_level);
-
-			Block b = basement.myChunk.GetBlock(block_xpos, endDepth - 1, block_zpos);
-			if ( b != null && b.type == BlockType.Cube) {
-				workObject = b as CubeBlock;
-				lastWorkObjectPos = workObject.pos;
-			}
-			awaitingElevatorBuilding = false;
 		}
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+		return ms;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	void ChangeModel(byte f_level) {
 		if (f_level == level ) return;

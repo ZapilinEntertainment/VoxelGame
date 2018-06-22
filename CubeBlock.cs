@@ -4,7 +4,6 @@ using UnityEngine;
 
 [System.Serializable]
 public class CubeBlockSerializer {
-	public BlockSerializer blockSerializer;
 	public float naturalFossils;
 	public byte excavatingStatus;
 	public int volume;
@@ -195,17 +194,39 @@ public class CubeBlock : Block{
 		}
 	}
 
-	override public byte[] Save() {
+	#region save-load system
+	override public BlockSerializer Save() {
+		BlockSerializer bs = GetBlockSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, bs);
+			bs.specificData =  stream.ToArray();
+		}
+		return bs;
+	} 
+
+	override public void Load(BlockSerializer bs) {
+		LoadBlockData(bs);
 		CubeBlockSerializer cbs = new CubeBlockSerializer();
-		cbs.blockSerializer = GetBlockSerializer();
+		GameMaster.DeserializeByteArray<CubeBlockSerializer>(bs.specificData, ref cbs);
+		LoadCubeBlockData(cbs);
+	}
+
+	protected void LoadCubeBlockData(CubeBlockSerializer cbs) {
+		career = cbs.career;
+		excavatingStatus = cbs.excavatingStatus;
+		if (career) CheckExcavatingStatus();
+		naturalFossils =  cbs.naturalFossils;
+		volume = cbs.volume;
+	}
+	#endregion
+
+	CubeBlockSerializer GetCubeBlockSerializer() {
+		CubeBlockSerializer cbs = new CubeBlockSerializer();
 		cbs.naturalFossils =naturalFossils;
 		cbs.excavatingStatus = excavatingStatus;
 		cbs.volume = volume;
 		cbs.career = career;
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, cbs);
-			return stream.ToArray();
-		}
-	} 
+		return cbs;
+	}
 }

@@ -2,6 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class FoodFactorySerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public float food_inputBuffer, metalP_inputBuffer, supplies_outputBuffer; 
+}
+
 public class FoodFactory : WorkBuilding {
 	const float food_input = 10, metalP_input = 1, output = 15;
 	float food_inputBuffer = 0, metalP_inputBuffer = 0, supplies_outputBuffer = 0; 
@@ -39,38 +45,40 @@ public class FoodFactory : WorkBuilding {
 		}
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveFoodFactoryData();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetFoodFactorySerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveFoodFactoryData() {
-		string s = "";
-		s += string.Format("{0:d5}", (int)(food_inputBuffer * 1000f ));
-		s += string.Format("{0:d5}", (int)(metalP_inputBuffer * 1000f ));
-		s += string.Format("{0:d5}", (int)(supplies_outputBuffer * 1000f));
-		return s;
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		FoodFactorySerializer ffs = new FoodFactorySerializer();
+		GameMaster.DeserializeByteArray<FoodFactorySerializer>(ss.specificData, ref ffs);
+		LoadFoodFactoryData(ffs);
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//food factory class part
-		food_inputBuffer = int.Parse(s_data.Substring(18,5)) / 1000f;
-		metalP_inputBuffer = int.Parse(s_data.Substring(23,5)) / 1000f;
-		supplies_outputBuffer = int.Parse(s_data.Substring(28,5)) / 1000f;
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	protected void LoadFoodFactoryData(FoodFactorySerializer ffs) {
+		LoadWorkBuildingData(ffs.workBuildingSerializer);
+		food_inputBuffer = ffs.food_inputBuffer;
+		metalP_inputBuffer = ffs.metalP_inputBuffer;
+		supplies_outputBuffer = ffs.supplies_outputBuffer;
 	}
-	//---------------------------------------------------------------------------------------------------	
+
+	public FoodFactorySerializer GetFoodFactorySerializer() {
+		FoodFactorySerializer ffs = new FoodFactorySerializer();
+		ffs.workBuildingSerializer = GetWorkBuildingSerializer();
+		ffs.food_inputBuffer = food_inputBuffer;
+		ffs.metalP_inputBuffer = metalP_inputBuffer;
+		ffs.supplies_outputBuffer = supplies_outputBuffer;
+		return ffs;
+	}
+	#endregion
 
 	void OnDestroy() {
 		if (food_inputBuffer > 0) storage.AddResource(ResourceType.Food, food_inputBuffer);
