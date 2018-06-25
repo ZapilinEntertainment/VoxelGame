@@ -63,9 +63,39 @@ public class Block : MonoBehaviour {
 		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
 
+	virtual public BlockSerializer Save() {
+		return GetBlockSerializer();
+	} 
+
+	virtual public void Load(BlockSerializer bs) {
+		LoadBlockData(bs);
+	}
+
+	protected void LoadBlockData(BlockSerializer bs) {
+		isTransparent = bs.isTransparent;
+	}
+
 	void OnDestroy() {
 		if (mainStructure == null) return;
 		MultiblockStructure ms =  mainStructure.gameObject.GetComponent<MultiblockStructure>();
 		if (ms != null) ms.PartCollapse(pos);
 	}
+
+	protected BlockSerializer GetBlockSerializer() {
+		BlockSerializer bs = new BlockSerializer();
+		bs.type = type;
+		bs.isTransparent = isTransparent;
+		bs.pos = pos;
+		bs.material_id = material_id;
+		return bs;
+	}
+}
+
+[System.Serializable]
+public class BlockSerializer {
+	public BlockType type;
+	public bool isTransparent;
+	public ChunkPos pos;
+	public int material_id;
+	public byte[] specificData;
 }

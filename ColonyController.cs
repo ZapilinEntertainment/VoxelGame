@@ -4,7 +4,21 @@ using UnityEngine;
 
 public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 
-public class ColonyController : MonoBehaviour {
+[System.Serializable]
+public sealed class ColonyControllerSerializer{
+	public StorageSerializer storageSerializer;
+	public float gears_coefficient, labourEfficientcy_coefficient,
+	happiness_coefficient, health_coefficient,birthrateCoefficient;
+
+	public float energyStored,energyCrystalsCount;
+	public bool haveWorksites;
+	public List<WorksiteSerializer> worksites;
+
+	public int freeWorkers, citizenCount,deathCredit;
+	public float peopleSurplus = 0, housingTimer = 0,starvationTimer, starvationTime = 600, real_birthrate = 0;
+}
+
+public sealed class ColonyController : MonoBehaviour {
 	const float FOOD_CONSUMPTION = 1,  HOUSING_TIME = 7;
 	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
 	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
@@ -527,30 +541,90 @@ public class ColonyController : MonoBehaviour {
 		return v;
 	}
 
-	public string Save() {
-		string s = "";
-		s += citizenCount.ToString() + ';';
-		s += freeWorkers.ToString() + ';';
-		s += deathCredit.ToString() +';';
-		s += string.Format("{0:0.000}", energyCrystalsCount) +';';
-		s += string.Format("{0:0.00000}", gears_coefficient)  +';';
-		s += string.Format("{0:0.00000}", happiness_coefficient) + ';';
-		return s;
+	#region save-load system
+	public ColonyControllerSerializer Save() {
+		ColonyControllerSerializer ccs = new ColonyControllerSerializer();
+		ccs.storageSerializer = storage.Save();
+		ccs.gears_coefficient = gears_coefficient;
+		ccs.labourEfficientcy_coefficient = labourEfficientcy_coefficient;
+		ccs.happiness_coefficient = happiness_coefficient;
+		ccs.health_coefficient = health_coefficient;
+		ccs.birthrateCoefficient = birthrateCoefficient;
+
+		ccs.energyStored = energyStored;
+		ccs.energyCrystalsCount = energyCrystalsCount;
+		if (worksites.Count == 0) ccs.haveWorksites = false;
+		else {
+			int realCount = 0;
+			ccs.worksites = new List<WorksiteSerializer>();
+			foreach (Worksite w in worksites) {
+				if (w == null) continue;
+				WorksiteSerializer wbs = w.Save();
+				if (wbs == null) continue;
+				ccs.worksites.Add(wbs);
+				realCount++;
+			}
+			if (realCount == 0) ccs.haveWorksites = false; else ccs.haveWorksites = true;
+		}
+		ccs.freeWorkers = freeWorkers;
+		ccs.citizenCount = citizenCount;
+		ccs.deathCredit = deathCredit;
+		ccs.peopleSurplus = peopleSurplus;
+		ccs.housingTimer = housingTimer;
+		ccs.starvationTimer = starvationTimer;
+		ccs.starvationTime = starvationTime;
+		ccs.real_birthrate = real_birthrate;
+		return ccs;
 	}
-	public void Load (string s) {
-		int p =  s.IndexOf(';');
-		citizenCount = int.Parse( s.Substring(0, p));
-		int p2 =  s.IndexOf(';', p + 1);
-		freeWorkers = int.Parse( s.Substring(p+1, p2 - p -1)); 
-		p = s.IndexOf(';', p2 + 1);
-		deathCredit = int.Parse( s.Substring(p2 + 1, p - p2 -1));
-		p2 = s.IndexOf(';', p + 1);
-		energyCrystalsCount = float.Parse(s.Substring(p + 1, p2- p -1));
-		p = s.IndexOf(';', p2 + 1);
-		gears_coefficient = float.Parse(s.Substring(p2 + 1, p- p2 -1));
-		p2 = s.IndexOf(';', p + 1);
-		happiness_coefficient = float.Parse(s.Substring(p + 1, p2- p -1));
+	public void Load(ColonyControllerSerializer ccs) {
+		if (storage == null) storage = gameObject.AddComponent<Storage>();
+		storage.Load(ccs.storageSerializer);
+		gears_coefficient = ccs.gears_coefficient;
+		labourEfficientcy_coefficient = ccs.labourEfficientcy_coefficient;
+		happiness_coefficient = ccs.happiness_coefficient;
+		health_coefficient = ccs.health_coefficient;
+		birthrateCoefficient = ccs.birthrateCoefficient;
+
+		energyStored = ccs.energyStored;
+		energyCrystalsCount = ccs.energyCrystalsCount;
+		if (ccs.haveWorksites) {
+			foreach (WorksiteSerializer ws in ccs.worksites) {
+				Worksite w = null;
+				Block b = GameMaster.mainChunk.GetBlock(ws.workObjectPos);
+				if (b == null) continue;
+				switch (ws.type) {
+				case WorksiteType.Abstract : 
+					w = b.gameObject.AddComponent<Worksite>();
+					break;
+				case WorksiteType.BlockBuildingSite:
+					w= b.gameObject.AddComponent<BlockBuildingSite>();
+					break;
+				case WorksiteType.CleanSite:
+					w = b.gameObject.AddComponent<CleanSite>();
+					break;
+				case WorksiteType.DigSite:
+					w = b.gameObject.AddComponent<DigSite>();
+					break;
+				case WorksiteType.GatherSite:
+					w = b.gameObject.AddComponent<GatherSite>();
+					break;
+				case WorksiteType.TunnelBuildingSite:
+					w = b.gameObject.AddComponent<TunnelBuildingSite>();
+					break;
+				}
+				w.Load(ws);
+			}
+		}
+		freeWorkers =ccs.freeWorkers;
+		citizenCount = ccs.citizenCount;
+		deathCredit = ccs.deathCredit;
+		peopleSurplus = ccs.peopleSurplus;
+		housingTimer = ccs.housingTimer;
+		starvationTimer = ccs.starvationTimer;
+		starvationTime = ccs.starvationTime;
+		real_birthrate = ccs.real_birthrate;
 	}
+	#endregion
 
 	void OnDestroy() {
 		GameMaster.realMaster.everydayUpdateList.Remove(this);

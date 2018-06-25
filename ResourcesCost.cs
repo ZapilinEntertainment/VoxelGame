@@ -10,8 +10,8 @@ public static class ResourcesCost {
 		switch ( id ) {
 		case SHUTTLE_BUILD_COST_ID:
 			cost = new ResourceContainer[] {
-				new ResourceContainer(ResourceType.metal_S, 25), new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.metal_M, 4),
-				new ResourceContainer(ResourceType.Plastics, 40)
+				new ResourceContainer(ResourceType.metal_S, 50), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 20),
+				new ResourceContainer(ResourceType.Plastics, 100), new ResourceContainer(ResourceType.metal_E, 10)
 			} ;
 			break;
 		case Structure.MINE_ID:
@@ -184,7 +184,7 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_M, 28)
 			} ;
 			break;
-		case Structure.PLASTICS_FACTORY_4_ID:
+		case Structure.PLASTICS_FACTORY_3_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Plastics, 20), new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_M, 20),
 				new ResourceContainer(ResourceType.Concrete, 50)
@@ -284,6 +284,18 @@ public static class ResourcesCost {
 		case Structure.RECRUITING_CENTER_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 340), new ResourceContainer(ResourceType.metal_K, 80), new ResourceContainer(ResourceType.Plastics, 250)
+			};
+			break;
+		case Structure.EXPEDITION_CORPUS_ID:
+			cost = new ResourceContainer[]{
+				new ResourceContainer(ResourceType.Concrete, 350), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.Plastics, 250),
+				new ResourceContainer(ResourceType.metal_E, 20)
+			};
+			break;
+		case Structure.QUANTUM_TRANSMITTER_ID:
+			cost = new ResourceContainer[]{
+				new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_S, 70),
+				new ResourceContainer(ResourceType.metal_N, 20)
 			};
 			break;
 

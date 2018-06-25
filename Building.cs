@@ -2,17 +2,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class BuildingSerializer {
+	public bool isActive;
+	public float energySurplus;
+}
+
 public class Building : Structure {
-	public int upgradedIndex = -1;
-	public bool canBePowerSwitched = true;
+	public int upgradedIndex = -1; // fixed by asset
+	public bool canBePowerSwitched = true; // fixed by asset
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
-	public float energySurplus = 0, energyCapacity = 0;
+	public float energySurplus = 0; // can be changed later (ex.: generator)
+	public float energyCapacity = 0; // fixed by asset
 	public  bool connectedToPowerGrid {get; protected set;}// установлено ли подключение к электросети
-	public int requiredBasementMaterialId = -1;
-	public byte level{get;protected set;}
+	public int requiredBasementMaterialId = -1; // fixed by asset
+	public byte level{get;protected set;} // fixed by id (except for mine)
 	[SerializeField]
-	protected List<Renderer> myRenderers;
+	protected List<Renderer> myRenderers; // fixed by asset
 	protected static ResourceContainer[] requiredResources;
 
 	override public void Prepare() {PrepareBuilding();}
@@ -68,10 +75,10 @@ public class Building : Structure {
 		case HOUSE_3_ID:
 		case ENERGY_CAPACITOR_3_ID:
 		case MINI_GRPH_REACTOR_ID:
+		case PLASTICS_FACTORY_3_ID:
 			level = 3;
 			break;
 		case GRPH_REACTOR_4_ID:
-		case PLASTICS_FACTORY_4_ID:
 		case HQ_4_ID:
 		case CHEMICAL_FACTORY_ID:
 		case RECRUITING_CENTER_ID:
@@ -213,31 +220,38 @@ public class Building : Structure {
 		}
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss  = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetBuildingSerializer());
+			ss.specificData = stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveBuildingData() {
-		string s = "";
-		if (isActive) s += "1"; else s+="0";
-		return s;
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		BuildingSerializer bs = new BuildingSerializer();
+		GameMaster.DeserializeByteArray<BuildingSerializer>(ss.specificData, ref bs);
+	}
+	protected void LoadBuildingData(BuildingSerializer bs) {
+		energySurplus = bs.energySurplus;
+		SetActivationStatus(bs.isActive);
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		SetActivationStatus(s_data[11] == '1');     // <-----BUILDING class part
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	protected BuildingSerializer GetBuildingSerializer() {
+		BuildingSerializer bs = new BuildingSerializer();
+		bs.isActive = isActive;
+		bs.energySurplus = energySurplus;
+		return bs;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	protected void PrepareBuildingForDestruction() {
 		if (basement != null) {
-			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			basement.RemoveStructure(this);
 			basement.artificialStructures --;
 		}
 		if (connectedToPowerGrid) GameMaster.colonyController.DisconnectFromPowerGrid(this);
@@ -282,7 +296,9 @@ public class Building : Structure {
 					if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
 					Quaternion originalRotation = transform.rotation;
 					upgraded.SetBasement(basement, setPos);
-					if ( !upgraded.isBasement ) upgraded.transform.localRotation = originalRotation;
+					if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
+						upgraded.transform.localRotation = originalRotation;
+					}
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}

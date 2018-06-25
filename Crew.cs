@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum CrewStatus {Idle_noShip, Idle_withShip, onMission}
+
 public class Crew {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
@@ -15,8 +17,9 @@ public class Crew {
 	public float experience{get; private set;}
 	public float nextExperienceLimit {get;private set;}
 	public byte level {get; private set;}
-	public int id{get;private set;}
+	public int ID{get;private set;}
 	public Shuttle shuttle{get;private set;}
+	public CrewStatus status;
 
 	public float perception{get;private set;}  // тесты на нахождение и внимательность
 	public float persistence{get;private set;}   // тесты на выносливость и желание продолжать поиски
@@ -30,14 +33,20 @@ public class Crew {
 	public int successfulOperations{get;private set;}
 	public int totalOperations{get;private set;}
 
-	public bool onMission{get;private set;}
+	public static void Reset() {
+		crewsList = new List<Crew>();
+		crewSlots = 0;
+		lastNumber = 0;
+	}
+
+	void Awake() {
+		if (crewsList == null) crewsList = new List<Crew>();
+	}
 
 	public void SetCrew (ColonyController home, float hireCost) {
 		level = 0;
 		name = Localization.NameCrew();
-		id = lastNumber;
-		lastNumber ++;
-		if (lastNumber >= 1000) lastNumber = 0;
+		ID = lastNumber;	lastNumber ++;
 
 		salary = ((int)((hireCost / 12f) * 100)) / 100f;
 		perception = 1; // сделать зависимость от исследованных технологий
@@ -70,74 +79,87 @@ public class Crew {
 		if (crewSlots < 0) crewSlots = 0;
 	}
 
-	/// <summary>
-	/// Uses for loading only
-	/// </summary>
-	/// <param name="x">The x coordinate.</param>
-	public static void SetLastNumber(int x) {
-		lastNumber = x;
-	}
-
-	public string Save() {
-		string s ="";
-		s += id.ToString() +',';
-		s += name + ',';
-		s += count.ToString() +',';
-		s += level.ToString() + ',';
-		s += salary.ToString() + ',';
-		s += experience.ToString() + ',';
-		if (shuttle != null) s += shuttle.id.ToString() + ','; else s += "-1,";
-
-		s += perception.ToString() + ',';
-		s += persistence.ToString() + ',';
-		s += luck.ToString() + ',';
-		s += bravery.ToString() + ',';
-		s += techSkills.ToString() + ',';
-		s += survivalSkills.ToString() + ',';
-		s += teamWork.ToString() + ',';
-
-		s += stamina.ToString() + ',';
-		s += successfulOperations.ToString() + ',';
-		s +=totalOperations.ToString() + ',';
-		if (onMission) s += '1'; else s+= '0';
-		return s;
-	}
-
-	public static void Reset() {
-		crewsList = new List<Crew>();
-		crewSlots = 0;
-		lastNumber = 0;
-	}
-
-	public static void Load(string s, int count) {
-		int p1 = 0, p2 = s.IndexOf(',');
-		for (int i = 0; i < count; i++) {
-			Crew c = new Crew();
-			c.id = int.Parse (s.Substring(p1,p2 - p1)); p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.name = s.Substring(p1,p2-p1); p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.count = byte.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.level = byte.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.salary = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.experience = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.nextExperienceLimit = CalculateExperienceLimit(c.level);
-			c.shuttle = Shuttle.GetVesselById(int.Parse (s.Substring(p1,p2 - p1)));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.perception = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.persistence =  float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.luck = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.bravery = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.techSkills = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.survivalSkills = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.teamWork = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.stamina = float.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.successfulOperations =int.Parse (s.Substring(p1,p2 - p1));  p1 = p2+1; p2 = s.IndexOf(',', p1);
-			c.totalOperations = int.Parse (s.Substring(p1,p2 - p1)); 
-			if (s[p2+1] == '1') c.onMission = true; else c.onMission = false;
-			p1 = p2+3; 
-			p2 = s.IndexOf(',', p1);
-
-			crewsList.Add(c); crewSlots--;
+	#region save-load system
+	public static CrewStaticSerializer SaveStaticData() {
+		CrewStaticSerializer css = new CrewStaticSerializer();
+		css.haveCrews = false; css.crewsList = new List<CrewSerializer>();
+		if (crewsList != null && crewsList.Count > 0) {
+			int i = 0;
+			while (i < crewsList.Count) {
+				if (crewsList[i] == null) {
+					crewsList.RemoveAt(i);
+					continue;
+				}
+				else {
+					css.crewsList.Add(crewsList[i].Save());
+				}
+				i++;
+			}
+			if (css.crewsList.Count > 0) css.haveCrews = true;
 		}
+		css.lastNumber = lastNumber;
+		return css;
 	}
+	public static void LoadStaticData(CrewStaticSerializer css) {
+		crewsList = new List<Crew>();
+		if (css.haveCrews) {
+			for (int i = 0; i < css.crewsList.Count; i++) {
+				crewsList.Add(new Crew().Load(css.crewsList[i]));
+			}
+		}
+		lastNumber = css.lastNumber;
+	}
+
+	public CrewSerializer Save() {
+		CrewSerializer cs = new CrewSerializer();
+		cs.salary = salary;
+		cs.count = count;
+		cs.experience = experience;
+		cs.nextExperienceLimit = nextExperienceLimit;
+		cs.name  = name;
+		cs.level = level;
+		cs.ID = ID;
+		cs.shuttleID = (shuttle == null ? -1 : shuttle.ID) ;
+		cs.status = status;
+
+		cs.perception = perception;
+		cs.persistence = persistence;
+		cs.luck = luck;
+		cs.bravery = bravery;
+		cs.techSkills = techSkills;
+		cs.survivalSkills = survivalSkills;
+		cs.teamWork = teamWork;
+		cs.stamina = stamina;
+		cs.successfulOperations = successfulOperations;
+		cs.totalOperations = totalOperations;
+		return cs;
+	}
+
+	public Crew Load(CrewSerializer cs) {
+		salary = cs.salary;
+		count = cs.count;
+		level = cs.level;
+		nextExperienceLimit = cs.nextExperienceLimit;
+		experience = cs.experience;
+		name = cs.name;
+		ID = cs.ID;
+		ChangeShip(cs.shuttleID == -1 ? null : Shuttle.GetShuttle(cs.shuttleID));
+		status = cs.status;
+		perception = cs.perception;
+		persistence = cs.persistence;
+		luck = cs.luck;
+		bravery = cs.bravery;
+		techSkills = cs.techSkills;
+		survivalSkills = cs.survivalSkills;
+		teamWork = cs.teamWork;
+		stamina = cs.stamina;
+		successfulOperations =cs.successfulOperations;
+		totalOperations=cs.totalOperations;
+		return this;
+	}
+		
+	#endregion
+
 
 	public static float GUI_DrawCrewIcon(Crew cw, Rect rr) {
 		if (cw.shuttle != null) GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), cw.shuttle.condition > 0.85f ? PoolMaster.shuttle_good_icon : ( cw.shuttle.condition  < 0.5f ? PoolMaster.shuttle_bad_icon : PoolMaster.shuttle_normal_icon), ScaleMode.StretchToFill);
@@ -146,7 +168,7 @@ public class Crew {
 	}
 
 	static float CalculateExperienceLimit(byte f_level) {
-		return Mathf.Pow(2, f_level);
+		return 2 * f_level;
 	}
 
 	public void DismissMember() {}
@@ -166,4 +188,23 @@ public class Crew {
 			else	i++;
 		}
 	}
+}
+
+[System.Serializable]
+public class CrewSerializer {
+	public float salary,  experience, nextExperienceLimit;
+	public string name ;
+	public byte level ;
+	public int ID, shuttleID,count;
+	public CrewStatus status;
+
+	public float perception, persistence, luck,bravery, techSkills,survivalSkills,teamWork,stamina;
+	public int successfulOperations, totalOperations;
+}
+
+[System.Serializable]
+public class CrewStaticSerializer {
+	public bool haveCrews;
+	public List<CrewSerializer> crewsList;
+	public int lastNumber;
 }

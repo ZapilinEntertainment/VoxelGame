@@ -4,6 +4,12 @@ using UnityEngine;
 
 public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
 
+[System.Serializable]
+public class FactorySerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public int recipeID;
+	public float inputResourcesBuffer,outputResourcesBuffer;
+}
 
 public class Factory : WorkBuilding {	
 	Recipe recipe;
@@ -11,7 +17,7 @@ public class Factory : WorkBuilding {
 	protected const float BUFFER_LIMIT = 10;
 	public float inputResourcesBuffer  {get; protected set;}
 	protected bool gui_showRecipesList = false;
-	public FactorySpecialization specialization;
+	public FactorySpecialization specialization; // fixed by asset
 	protected float outputResourcesBuffer = 0;
 
 	override public void Prepare() {
@@ -82,38 +88,40 @@ public class Factory : WorkBuilding {
 		}
 	}
 		
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveFactoryData();
+	#region save-load system
+	public override StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetFactorySerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveFactoryData() {
-		string s = "";
-		s += string.Format("{0:d3}", recipe.ID);
-		s += string.Format("{0:d5}", (int)(inputResourcesBuffer * 1000) );
-		s += string.Format("{0:d5}",(int)(outputResourcesBuffer * 1000) );
-		return s;
+	override public void Load (StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		FactorySerializer fs = new FactorySerializer();
+		GameMaster.DeserializeByteArray(ss.specificData, ref fs);
+		LoadFactoryData(fs);
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//factory class part
-		SetRecipe(Recipe.GetRecipeByNumber(int.Parse(s_data.Substring(18,3))));
-		inputResourcesBuffer = int.Parse(s_data.Substring(21,5)) / 1000f;
-		outputResourcesBuffer = int.Parse(s_data.Substring(26,5)) / 1000f;
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	protected void LoadFactoryData(FactorySerializer fs) {
+		LoadWorkBuildingData(fs.workBuildingSerializer);
+		SetRecipe(Recipe.GetRecipeByNumber(fs.recipeID));
+		inputResourcesBuffer = fs.inputResourcesBuffer;
+		outputResourcesBuffer = fs.outputResourcesBuffer;
 	}
-	//---------------------------------------------------------------------------------------------------	
+
+	protected FactorySerializer GetFactorySerializer() {
+		FactorySerializer fs = new FactorySerializer();
+		fs.workBuildingSerializer = GetWorkBuildingSerializer();
+		fs.recipeID = recipe.ID;
+		fs.inputResourcesBuffer = inputResourcesBuffer;
+		fs.outputResourcesBuffer = outputResourcesBuffer;
+		return fs;
+	}
+	#endregion
 
 	void OnGUI() {
 		if ( !showOnGUI ) return;

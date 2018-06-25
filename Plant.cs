@@ -4,16 +4,22 @@ using UnityEngine;
 
 public enum PlantType {TreeSapling, Tree, Crop}
 
+[System.Serializable]
+public class PlantSerializer {
+	public float lifepower, growth;
+	public bool full;
+}
+
 public class Plant : Structure {
 	public float lifepower;
-	public float maxLifepower {get;protected set;}
+	public float maxLifepower {get;protected set;}  // fixed by id
 	[SerializeField]
-	protected float startSize = 0.05f;
-	public float maxTall {get; protected set;}
+	protected float startSize = 0.05f; // fixed by asset
+	public float maxTall {get; protected set;} //fixed by id
 	public bool full {get;protected set;}
-	protected float growSpeed = 0.1f;
+	protected float growSpeed = 0.1f; // fixed by id
 	public float growth;
-	public PlantType plantType{get;protected set;}
+	public PlantType plantType{get;protected set;} // fixed by id
 
 	override public void Prepare() {
 		innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.Plant;
@@ -90,52 +96,43 @@ public class Plant : Structure {
 		lifepower = p; 
 		if (lifepower < maxLifepower) full = false; else full = true;
 	}
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		string s =  SaveStructureData() + SavePlantData();
-		//if (s.Length != 17) print (s.Length);
-		return s;
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetPlantSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SavePlantData() {
-		string s = "";
-		float f = lifepower/maxLifepower; 
-		if (f > 10) {
-			f = 9.99f;
-			print ("save error : " +lifepower.ToString() + " -  too much lifepower! " + name);
-		}
-		s += string.Format("{0:d3}", (int)(f * 100f));
-		f = growth; 
-		if (f > 10) {
-			f= 9.99f;
-			print ("save error : unexpectable growth");
-		}
-		s += string.Format("{0:d3}", (int)(f * 100f));
-		if (s.Length != 6) print(s);
-		return s;
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss,sblock);
+		PlantSerializer ps = new PlantSerializer();
+		GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
+		LoadPlantData(ps);
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
-		// PLANT class part
-		SetLifepower(int.Parse(s_data.Substring(11,3)) / 100f * maxLifepower );
-		float g = int.Parse(s_data.Substring(14,3)) / 100f;
-		if (g > 1) {
-			//print (s_data + "  " + g.ToString());
-		}
-		SetGrowth( int.Parse(s_data.Substring(14,3)) / 100f );
+	protected void LoadPlantData(PlantSerializer ps) {
+		lifepower = ps.lifepower;
+		full = ps.full;
+		SetGrowth(ps.growth);
 	}
-	//---------------------------------------------------------------------------------------------------	
+
+	protected PlantSerializer GetPlantSerializer() {
+		PlantSerializer ps = new PlantSerializer();
+		ps.full = full;
+		ps.growth = growth;
+		ps.lifepower = lifepower;
+		return ps;
+	}
+	#endregion
 
 	public override void Annihilate( bool forced ) {
 		if (basement != null && !forced ) {
 			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
-			basement.RemoveStructure(new SurfaceObject(innerPosition, this));
+			basement.RemoveStructure(this);
 		}
 		Destroy(gameObject);
 	}

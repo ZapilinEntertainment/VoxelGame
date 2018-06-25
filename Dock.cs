@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 public class Dock : WorkBuilding {
 	bool correctLocation = false;
 	bool gui_tradeGoodTabActive = false, gui_sellResourcesTabActive = false, gui_addTransactionMenu = false;
 	public static bool?[] isForSale{get; private set;}
 	public static int[] minValueForTrading{get; private set;}
-	int preparingResourceIndex = 0;
 	ColonyController colony;
 	public static int immigrationPlan {get; private set;} 
 	public static bool immigrationEnabled{get; private set;}
@@ -18,7 +15,7 @@ public class Dock : WorkBuilding {
 	const float LOADING_TIME = 10;
 	float loadingTimer = 0, shipArrivingTimer = 0;
 	const float SHIP_ARRIVING_TIME = 300;
-	int blockedHeight = -1, blockedSide = -1;
+	int blockedHeight = -1, blockedSide = -1, preparingResourceIndex;
 
 	public static void Reset() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
@@ -243,60 +240,68 @@ public class Dock : WorkBuilding {
 		immigrationPlan = count;
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveDockData();
+	#region save-load system
+	public static DockStaticSerializer SaveStaticDockData() {
+		DockStaticSerializer dss = new DockStaticSerializer();
+		dss.isForSale = isForSale;
+		dss.minValueForTrading = minValueForTrading;
+		dss.prices = ResourceType.prices;
+		dss.demand = ResourceType.demand;
+		dss.immigrationPlan = immigrationPlan;
+		dss.immigrationEnabled = immigrationEnabled;
+		return dss;
 	}
 
-	protected string SaveDockData() {
-		string s = "";
-		if (maintainingShip ) s+='1'; else s+='0';
-		if ( loadingShip != null ) {
-			switch ( loadingShip.type ) {
-			case ShipType.Cargo : s += '1';break;
-			case ShipType.Military: s += '2'; break;
-			case ShipType.Passenger: s+= '3';break;
-			case ShipType.Private: s+='4';break;
-			}
-			s += loadingShip.level.ToString();
-			if (loadingTimer == LOADING_TIME) loadingTimer = LOADING_TIME * 0.99f;
-			s += string.Format("{0:d2}", ((int) (loadingTimer / LOADING_TIME * 100 )).ToString());
-			s += loadingShip.Save();
-		}
-		s += string.Format("{0:000}", shipArrivingTimer);
-		return s;
+	public static void LoadStaticData( DockStaticSerializer dss) {
+		isForSale = dss.isForSale;
+		minValueForTrading = dss.minValueForTrading;
+		ResourceType.prices = dss.prices;
+		ResourceType.demand = dss.demand;
+		immigrationPlan = dss.immigrationPlan;
+		immigrationEnabled = dss.immigrationEnabled;
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//dock class part
-		if ( s_data[18] == '1' ) maintainingShip = true;
-		if ( s_data.Length < 20 || s_data[19] == ';') return;
-		switch (s_data[19]) {
-		case '1': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Cargo ); break;
-		case '2': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Military ); break;
-		case '3': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Passenger ); break;
-		case '4': loadingShip = PoolMaster.current.GetShip( (byte)int.Parse(s_data.Substring(20,1)), ShipType.Private ); break;
-		default: loadingShip = null; break;
+	public override StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetDockSerializer());
+			ss.specificData =  stream.ToArray();
 		}
-		if ( loadingShip != null ) {
-			loadingShip.SetDestination(this);
-			loadingShip.Load(s_data);
-		}
-		if (s_data.Length > 36) shipArrivingTimer = float.Parse(s_data.Substring(36, s_data.Length - 36));
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+		return ss;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		DockSerializer ds= new DockSerializer();
+		GameMaster.DeserializeByteArray<DockSerializer>(ss.specificData, ref ds);
+		LoadDockData(ds);
+	}
+	protected void LoadDockData(DockSerializer ds) {
+		LoadWorkBuildingData(ds.workBuildingSerializer);
+		correctLocation = ds.correctLocation;
+		maintainingShip =ds.maintainingShip;
+		if (maintainingShip) {
+			ShipSerializer ss = ds.loadingShip;
+			Ship s = PoolMaster.current.GetShip( ss.level, ss.type );
+			s.Load(ss, this);
+			loadingShip = s;
+		}
+		loadingTimer =  ds.loadingTimer;
+		shipArrivingTimer = ds.shipArrivingTimer;
+	} 
+
+	protected DockSerializer GetDockSerializer() {
+		DockSerializer ds = new DockSerializer();
+		ds.workBuildingSerializer = GetWorkBuildingSerializer();
+		ds.correctLocation = correctLocation;
+		ds.maintainingShip = maintainingShip;
+		if (maintainingShip) ds.loadingShip =  loadingShip.GetShipSerializer();
+		ds.loadingTimer = loadingTimer;
+		ds.shipArrivingTimer = shipArrivingTimer;
+		return ds;
+	}
+	#endregion
+
 	void OnGUI() {
 		if (!showOnGUI) return;
 		GUI.skin = GameMaster.mainGUISkin;
@@ -432,4 +437,20 @@ public class Dock : WorkBuilding {
 			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
 		}
 	}
+}
+
+[System.Serializable]
+public class DockSerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public bool correctLocation, maintainingShip;
+	public ShipSerializer loadingShip;
+	public float loadingTimer = 0, shipArrivingTimer = 0;
+}
+[System.Serializable]
+public class DockStaticSerializer {
+	public bool?[] isForSale;
+	public int[] minValueForTrading;
+	public float[] prices, demand;
+	public int immigrationPlan ;
+	public bool immigrationEnabled;
 }

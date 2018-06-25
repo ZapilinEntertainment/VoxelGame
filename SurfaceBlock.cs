@@ -37,16 +37,8 @@ public struct SurfaceRect {
 	{ 
 		return x + z + x_size + z_size;
 	}
-	public static SurfaceRect one{get; private set;}
-	public static SurfaceRect full {get;private set;}
-}
-public struct SurfaceObject {
-	public SurfaceRect rect;
-	public Structure structure;
-
-	public SurfaceObject(SurfaceRect f_rect, Structure f_structure) {
-		rect = f_rect; structure = f_structure;
-	}
+	public static readonly SurfaceRect one;
+	public static readonly SurfaceRect full;
 }
 
 public class SurfaceBlock : Block {
@@ -243,19 +235,19 @@ public class SurfaceBlock : Block {
 	/// Remove structure data from this block structures map
 	/// </summary>
 	/// <param name="so">So.</param>
-	public void RemoveStructure(SurfaceObject so) {
+	public void RemoveStructure(Structure s) {
 		int count = surfaceObjects.Count;
 		if (count == 0) return;
 		for ( int i = 0; i < count; i++) {
-			if (surfaceObjects[i].Equals(so)) {
-				if (so.structure.isArtificial) artificialStructures--;	if (artificialStructures < 0) artificialStructures = 0;
+			if (surfaceObjects[i] == s) {
+				if (s.isArtificial) artificialStructures--;	if (artificialStructures < 0) artificialStructures = 0;
 				surfaceObjects.RemoveAt(i);
 				if (surfaceObjects.Count == 0) cellsStatus = 0;
 				else CellsStatusUpdate();
 				break;
 			}
 		}
-		BlockRendererController brc = so.structure.GetComponent<BlockRendererController>();
+		BlockRendererController brc = s.GetComponent<BlockRendererController>();
 		if (brc != null) structureBlock = null;
 	}
 
@@ -526,4 +518,68 @@ public class SurfaceBlock : Block {
 			}
 		}
 	}
+
+	#region save-load system
+	override public BlockSerializer Save() {
+		BlockSerializer bs = GetBlockSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetSurfaceBlockSerializer());
+			bs.specificData =  stream.ToArray();
+		}
+		return bs;
+	} 
+
+	override public void Load(BlockSerializer bs) {
+		LoadBlockData(bs);
+		SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();
+		GameMaster.DeserializeByteArray<SurfaceBlockSerializer>(bs.specificData, ref sbs);
+		LoadSurfaceBlockData(sbs);
+		if (sbs.haveStructures) {
+			foreach (StructureSerializer ss in sbs.structuresList) {
+				Structure s = Structure.GetNewStructure(ss.id);
+				s.Load(ss,this);
+			}
+		}
+	}
+
+	protected void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) {
+		if (sbs.haveGrassland) {
+			AddGrassland();
+			grassland.Load(sbs.grasslandSerializer);
+		}
+	}
+
+	public SurfaceBlockSerializer GetSurfaceBlockSerializer() {
+		SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();
+		if (grassland != null) {
+			sbs.haveGrassland = true; 
+			sbs.grasslandSerializer = grassland.Save();
+		}
+		else sbs.haveGrassland = false;
+		if (surfaceObjects.Count != 0) {
+			sbs.haveStructures = true;
+			sbs.structuresList = new List<StructureSerializer>();
+			int realCount = 0;
+			foreach (Structure s in surfaceObjects) {
+				if (s == null) continue;
+				StructureSerializer ss = s.Save();
+				if (ss == null) continue;
+				sbs.structuresList.Add(ss);
+				realCount++;
+			}
+			if (realCount == 0) sbs.haveStructures = false;
+		}
+		else sbs.haveStructures = false;
+		return sbs;
+	}
+	#endregion
+}
+
+[System.Serializable]
+public class SurfaceBlockSerializer {
+	public bool haveGrassland;
+	public GrasslandSerializer grasslandSerializer;
+	public bool haveStructures;
+	public List<StructureSerializer> structuresList;
 }

@@ -24,7 +24,7 @@ public class Constructor : MonoBehaviour {
 			for (int z= 0; z< size ; z++)
 			{
 				float cs = size ;
-				float perlin = Mathf.PerlinNoise(x/cs * (10 * TERRAIN_ROUGHNESS), z/cs * (10 * TERRAIN_ROUGHNESS));
+				float perlin = Mathf.PerlinNoise(x/cs * (10 * TERRAIN_ROUGHNESS) + seed, z/cs * (10 * TERRAIN_ROUGHNESS) + seed);
 				//perlin += pc; if (perlin > 1) perlin = 1;
 				int height = (int)(size/2 * perlin);
 				if (height < 2) height = 2; else	if (height > size/2  ) height = size/2 ;

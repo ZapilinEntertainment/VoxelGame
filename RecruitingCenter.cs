@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class RecruitingCenterSerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public float backupSpeed, progress;
+	public bool finding;
+}
+
 public class RecruitingCenter : WorkBuilding {
 	float backupSpeed = 0.02f, progress = 0;
 	bool finding = false;
@@ -77,43 +84,35 @@ public class RecruitingCenter : WorkBuilding {
 		}
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData() + SaveRecruitmentCenterData();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetRecruitingCenterSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
+	}
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		RecruitingCenterSerializer rcs = new RecruitingCenterSerializer();
+		GameMaster.DeserializeByteArray<RecruitingCenterSerializer>(ss.specificData, ref rcs);
+		LoadWorkBuildingData(rcs.workBuildingSerializer);
+		backupSpeed = rcs.backupSpeed;
+		finding = rcs.finding;
+		progress = rcs.progress;
 	}
 
-	protected string SaveRecruitmentCenterData() {
-		string s="";
-		if (finding) {
-			s += '1'; 
-			s += progress.ToString();
-			s += ';';
-		}
-		else s += '0';
-		return s;
+	protected RecruitingCenterSerializer GetRecruitingCenterSerializer() {
+		RecruitingCenterSerializer rcs = new RecruitingCenterSerializer();
+		rcs.workBuildingSerializer = GetWorkBuildingSerializer();
+		rcs.backupSpeed = backupSpeed;
+		rcs.finding = finding;
+		rcs.progress = progress;
+		return rcs;
 	}
-
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//recruitment center class part
-		finding = (s_data[18] ==1);
-		if (finding) {
-			int p = s_data.IndexOf(';', 18);
-			progress = float.Parse(s_data.Substring(19, p- 18));
-		}
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
-	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 	void OnDestroy() {
 		PrepareWorkbuildingForDestruction();
 		Crew.RemoveCrewSlots(CREW_SLOTS_FOR_BUILDING);

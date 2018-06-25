@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class HeadQuartersSerializer {
+	public BuildingSerializer buildingSerializer;
+	public bool nextStageConditionMet;
+	public byte level;
+}
+
 public class HeadQuarters : House {
 	bool nextStageConditionMet = false;
 	ColonyController colony;
@@ -56,28 +63,35 @@ public class HeadQuarters : House {
 		}
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveHQData();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHeadQuartersSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveHQData() {
-		string s = "";
-		s += level.ToString();
-		return s;
-	}
+	override public void Load (StructureSerializer ss, SurfaceBlock sb) {
+		HeadQuartersSerializer hqs = new HeadQuartersSerializer();
+		GameMaster.DeserializeByteArray<HeadQuartersSerializer>(ss.specificData, ref hqs);
+		level = hqs.level; 
+		LoadStructureData(ss, sb);
+		LoadBuildingData(hqs.buildingSerializer);
+		nextStageConditionMet = hqs.nextStageConditionMet;
+	} 
+		
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		if (s_data.Length > 12) level = byte.Parse(s_data[12].ToString());
-		SetBasement(surface, new PixelPosByte(x,z));
-		SetActivationStatus(s_data[11] == '1');     // <-----BUILDING class part
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	protected HeadQuartersSerializer GetHeadQuartersSerializer() {
+		HeadQuartersSerializer hqs = new HeadQuartersSerializer();
+		hqs.level = level;
+		hqs.nextStageConditionMet = nextStageConditionMet;
+		hqs.buildingSerializer = GetBuildingSerializer();
+		return hqs;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	void OnGUI() {
 		if ( !showOnGUI ) return;

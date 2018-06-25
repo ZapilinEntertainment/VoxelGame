@@ -2,6 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class GatherSiteSerializer {
+	public float destructionTimer;
+	public int bufer_resourceID; public float bufer_volume;
+}
+
 public class GatherSite : Worksite {
 	float destructionTimer;
 	SurfaceBlock workObject;
@@ -96,31 +102,42 @@ public class GatherSite : Worksite {
 		GameMaster.colonyController.AddWorksite(this);
 	}
 
-	//---------SAVE   SYSTEM----------------
-	public override string Save() {
-		return '1' + SaveWorksite() + SaveGatherSite();
+	#region save-load system
+	override public WorksiteSerializer Save() {
+		if (workObject == null) {
+			Destroy(this);
+			return null;
+		}
+		WorksiteSerializer ws = GetWorksiteSerializer();
+		ws.type = WorksiteType.GatherSite;
+		ws.workObjectPos = workObject.pos;
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetGatherSiteSerializer());
+			ws.specificData = stream.ToArray();
+		}
+		return ws;
 	}
-	protected string SaveGatherSite() {
-		string s = "";
-		s += string.Format("{0:00}",workObject.pos.x) + string.Format("{0:00}",workObject.pos.y) + string.Format("{0:00}",workObject.pos.z); 
-		s += string.Format("{0:000}", bufer.type.ID) + string.Format("{0:0.000}", bufer.volume) + ';';
-		return s;
+	override public void Load(WorksiteSerializer ws) {
+		LoadWorksiteData(ws);
+		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock);
+		GatherSiteSerializer gss = new GatherSiteSerializer();
+		GameMaster.DeserializeByteArray(ws.specificData, ref gss);
+		destructionTimer = gss.destructionTimer;
+		bufer = new ResourceContainer(ResourceType.GetResourceTypeById(gss.bufer_resourceID), gss.bufer_volume);
 	}
-	public override void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
-		// position
-		workObject = GameMaster.mainChunk.GetBlock(int.Parse(s.Substring(12,2)), int.Parse(s.Substring(14,2)), int.Parse(s.Substring(16,2)) ) as SurfaceBlock;
-		//gathersite part
-		int id = int.Parse(s.Substring(18,3));
-		if (id != 0) bufer = new ResourceContainer(ResourceType.resourceTypesArray[id], float.Parse( s.Substring(20, s.IndexOf(';', 21) - 20) ) );
-		else bufer = ResourceContainer.Empty;
-		sign = Instantiate(Resources.Load<GameObject> ("Prefs/GatherSign")).GetComponent<WorksiteSign>();
-		sign.worksite = this;
-		sign.transform.position = workObject.transform.position + Vector3.down /2f * Block.QUAD_SIZE;
-		actionLabel = Localization.ui_gather_in_progress;
-		GameMaster.colonyController.AddWorksite(this);
+
+	protected GatherSiteSerializer GetGatherSiteSerializer() {
+		GatherSiteSerializer gss = new GatherSiteSerializer();
+		gss.destructionTimer = destructionTimer;
+		if ( !bufer.Equals(ResourceContainer.Empty) ) {
+			gss.bufer_resourceID = bufer.type.ID;
+			gss.bufer_volume = bufer.volume;
+		}
+		else {
+			gss. bufer_resourceID = 0;
+		}
+		return gss;
 	}
-	// --------------------------------------------------------
+	#endregion
 }

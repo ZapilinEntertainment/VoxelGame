@@ -17,7 +17,7 @@ public static class Localization {
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
 	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode,
 	ui_changeMaterial, ui_heightBlocked, ui_buildOnSideOnly, ui_freeSlots, ui_recruitmentInProgress, ui_showCrewCard, ui_showCrewsList, ui_noShip,
-	ui_assemblyInProgress, ui_showVesselsList;
+	ui_assemblyInProgress, ui_showVesselsList, ui_points_sec;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
@@ -35,6 +35,7 @@ public static class Localization {
 	crew_successfulMissions, crew_totalMissions;
 	public static string quests_vesselsAvailable, quests_transmittersAvailable, quests_crewsAvailable, quests_vesselsRequired, quests_crewsRequired,
 	quests_no_suitable_vessels;
+	public static string mine_levelFinished;
 	public static Language currentLanguage;
 
 	static Localization() {
@@ -125,7 +126,7 @@ public static class Localization {
 			structureName[Structure.MINI_GRPH_REACTOR_ID] = "Small Graphonum reactor";
 			structureName[Structure.FUEL_FACILITY_3_ID] = "Fuel facility";
 			structureName[Structure.GRPH_REACTOR_4_ID] = "Graphonium reactor";
-			structureName[Structure.PLASTICS_FACTORY_4_ID] = "Plastics factory";
+			structureName[Structure.PLASTICS_FACTORY_3_ID] = "Plastics factory";
 			structureName[Structure.FOOD_FACTORY_4_ID] = "Food factory";
 			structureName[Structure.FOOD_FACTORY_5_ID] = "Food factory Block";
 			structureName[Structure.GRPH_ENRICHER_ID] = "Graphonium enricher";
@@ -166,6 +167,7 @@ public static class Localization {
 			ui_showCrewsList = "Show crews list"; ui_showVesselsList = "Show vessels list";
 			ui_noShip = "No ship";
 			ui_assemblyInProgress = "Assembly in progress"; // shuttle assembling
+			ui_points_sec = "points/sec";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			menu_save = "Save game"; menu_load = "Load game";
@@ -197,6 +199,8 @@ public static class Localization {
 			block = "block";
 			vessel = "vessel";
 			change = "change"; cost ="cost";
+
+			mine_levelFinished = "Mine has finished new level";
 
 			hangar_noShuttle = "No shuttle";
 			hangar_noCrew = "No crew";
@@ -325,7 +329,7 @@ public static class Localization {
 	public static string AnnounceCrewReady( string name ) {
 		switch (currentLanguage) {
 		default:
-		case Language.English: return "crew " + name + " ready";
+		case Language.English: return "crew \" " + name + "\" ready";
 		}
 	}
 

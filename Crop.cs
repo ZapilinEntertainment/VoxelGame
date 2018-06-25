@@ -65,7 +65,7 @@ public class Crop : Plant {
 	public override void Annihilate( bool forced ) {
 		if (basement != null && !forced ) {
 			if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
-			basement.RemoveStructure( new SurfaceObject(innerPosition, this));
+			basement.RemoveStructure( this );
 		}
 		Farm f = ( transform.parent == null ? null : transform.parent.GetComponent<Farm>() );
 		if (f == null) Destroy(gameObject);

@@ -2,6 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class CubeBlockSerializer {
+	public float naturalFossils;
+	public byte excavatingStatus;
+	public int volume;
+	public bool career;
+}
+
 public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public float naturalFossils = 0;
@@ -184,5 +192,41 @@ public class CubeBlock : Block{
 				}
 			
 		}
+	}
+
+	#region save-load system
+	override public BlockSerializer Save() {
+		BlockSerializer bs = GetBlockSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetCubeBlockSerializer());
+			bs.specificData =  stream.ToArray();
+		}
+		return bs;
+	} 
+
+	override public void Load(BlockSerializer bs) {
+		LoadBlockData(bs);
+		CubeBlockSerializer cbs = new CubeBlockSerializer();
+		GameMaster.DeserializeByteArray<CubeBlockSerializer>(bs.specificData, ref cbs);
+		LoadCubeBlockData(cbs);
+	}
+
+	protected void LoadCubeBlockData(CubeBlockSerializer cbs) {
+		career = cbs.career;
+		excavatingStatus = cbs.excavatingStatus;
+		if (career) CheckExcavatingStatus();
+		naturalFossils =  cbs.naturalFossils;
+		volume = cbs.volume;
+	}
+	#endregion
+
+	CubeBlockSerializer GetCubeBlockSerializer() {
+		CubeBlockSerializer cbs = new CubeBlockSerializer();
+		cbs.naturalFossils =naturalFossils;
+		cbs.excavatingStatus = excavatingStatus;
+		cbs.volume = volume;
+		cbs.career = career;
+		return cbs;
 	}
 }

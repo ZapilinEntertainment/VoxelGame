@@ -78,6 +78,11 @@ public class UI : MonoBehaviour {
 		float side = p * SurfaceBlock.INNER_RESOLUTION;
 		buildingGridRect = new Rect(rightPanelBox.x - side - 2 * p, Screen.height/2f - side/2f, side, side);
 	}
+	public void Reset() {
+		bufferedResources = null;
+		DropFocus();
+	}
+
 	void Update() {
 		mousePos = Input.mousePosition;
 		mousePos.y = Screen.height - mousePos.y;
@@ -337,7 +342,7 @@ public class UI : MonoBehaviour {
 			showingCrew.name = GUI.TextField(new Rect(left + 2 * a,  up, 7 * a, a), showingCrew.name);
 			GUI.Label(new Rect(left + 9 * a, up, a,a), showingCrew.level.ToString());
 			GUI.DrawTexture(new Rect(left + 2 * a, up + a, 8 * a, a), whiteSquare_tx, ScaleMode.StretchToFill);
-			GUI.DrawTexture(new Rect(left + a * a, up + a, 8*a * showingCrew.experience / showingCrew.nextExperienceLimit,a), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+			if (showingCrew.experience > 0) GUI.DrawTexture(new Rect(left + a * a, up + a, 8*a * showingCrew.experience / showingCrew.nextExperienceLimit,a), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 			GUI.Label(new Rect(left, up + 2 *a, 5 * a, a), Localization.vessel + " :");
 			GUI.Label(new Rect(left, up + 3 * a, 8 * a, a), showingCrew.shuttle.name);
 			if (Shuttle.shuttlesList.Count != 0) {
@@ -760,41 +765,7 @@ public class UI : MonoBehaviour {
 									tbs = chosenCubeBlock.gameObject.AddComponent<TunnelBuildingSite>();
 									tbs.Set(chosenCubeBlock);
 								}
-								WorksiteSign sign = null;
-								switch (faceIndex) {
-								case 0:
-								if ((tbs.signsMask & 1) == 0) {
-									sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-									sign.transform.position = chosenCubeBlock.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
-									tbs.signsMask += 1;
-								}	
-								break;
-								case 1:
-								if ((tbs.signsMask & 2 )== 0) {
-										sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-										sign.transform.position = chosenCubeBlock.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
-										sign.transform.rotation = Quaternion.Euler(0,90,0);
-										tbs.signsMask += 2;
-									}
-									break;
-								case 2:
-								if ((tbs.signsMask & 4 )== 0) {
-										sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-										sign.transform.position = chosenCubeBlock.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
-										sign.transform.rotation = Quaternion.Euler(0,180,0);
-										tbs.signsMask += 4;
-									}
-									break;
-								case 3:
-								if ((tbs.signsMask & 8) == 0) {
-									sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-									sign.transform.position = chosenCubeBlock.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
-									sign.transform.rotation = Quaternion.Euler(0,-90,0);
-									tbs.signsMask += 8;
-								}
-									break;
-								}
-								if (sign != null) sign.worksite = tbs;
+								tbs.CreateSign(faceIndex);
 								chosenWorksite = tbs;
 								mode = UIMode.WorksitePanel;
 								ChangeArgument(1);
@@ -872,6 +843,8 @@ public class UI : MonoBehaviour {
 						if ( wb.workersCount != wb.maxWorkers && GUI.Button (new Rect( rr.xMax - 2 *p, rr.y, p, p ), PoolMaster.plusButton_tx) ) { GameMaster.colonyController.SendWorkers(1,wb, WorkersDestination.ForWorkBuilding);}
 						if ( wb.workersCount != wb.maxWorkers &&GUI.Button (new Rect( rr.xMax - p, rr.y, p, p ), PoolMaster.plusX10Button_tx)) { GameMaster.colonyController.SendWorkers(wb.maxWorkers - wb.workersCount,wb, WorkersDestination.ForWorkBuilding);}
 						rr.y += p;
+						GUI.Label ( new Rect (rr.x , rr.y, rr.width , rr.height), string.Format("{0:0.##}",wb.workSpeed) + ' ' + Localization.ui_points_sec, PoolMaster.GUIStyle_CenterOrientedLabel );
+						rr.y += rr.height;
 					}
 				}
 				chosenStructure.gui_ypos = rr.y;

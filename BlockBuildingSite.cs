@@ -131,18 +131,27 @@ public class BlockBuildingSite : Worksite {
 	}
 
 
-	//---------SAVE   SYSTEM----------------
-	public virtual string Save() {
-		return '0' + SaveWorksite() + SaveBlockBuildingSite();
+	#region save-load system
+	override public WorksiteSerializer Save() {
+		if (workObject == null) {
+			Destroy(this);
+			return null;
+		}
+		WorksiteSerializer ws = GetWorksiteSerializer();
+		ws.type = WorksiteType.BlockBuildingSite;
+		ws.workObjectPos = workObject.pos;
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, rtype.ID);
+			ws.specificData = stream.ToArray();
+		}
+		return ws;
 	}
-	protected string SaveBlockBuildingSite() {
-		return string.Format("{0:d3}", rtype.ID);
+	override public void Load(WorksiteSerializer ws) {
+		LoadWorksiteData(ws);
+		int res_id = 0;
+		GameMaster.DeserializeByteArray<int>(ws.specificData, ref res_id);
+		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ResourceType.GetResourceTypeById(res_id));
 	}
-	public virtual void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
-		rtype = ResourceType.GetResourceTypeById(int.Parse(s.Substring(18,3)));
-	}
-	// --------------------------------------------------------
+	#endregion
 }

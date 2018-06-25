@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class WorkBuildingSerializer {
+	public BuildingSerializer buildingSerializer;
+	public float workflow, workSpeed, workflowToProcees;
+	public int workersCount;
+}
+
 public abstract class WorkBuilding : Building {
 	public float workflow {get;protected set;} 
-	protected float workSpeed = 0;
+	public float workSpeed {get;protected set;}
 	public float workflowToProcess{get; protected set;}
-	public int maxWorkers = 8;
-	public int workersCount {get; protected set;}
+	public int maxWorkers = 8; // fixed by asset
+	public int workersCount {get; protected set;} 
 	const float WORKFLOW_GAIN = 1;
-	public float workflowToProcess_setValue = 1;
+	public float workflowToProcess_setValue = 1;//fixed by asset
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -63,34 +70,42 @@ public abstract class WorkBuilding : Building {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData();
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorkBuildingSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveWorkBuildingData() {
-		string s = "";
-		if (workflow < 0) workflow = 0;
-		s += string.Format("{0:d3}",(int)(workflow /workflowToProcess * 100));
-		s += string.Format("{0:d3}", workersCount );
-		return s;
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		WorkBuildingSerializer wbs = new WorkBuildingSerializer();
+		GameMaster.DeserializeByteArray<WorkBuildingSerializer>(ss.specificData, ref wbs);
+		LoadWorkBuildingData(wbs);
+	}
+	protected void LoadWorkBuildingData (WorkBuildingSerializer wbs) {
+		LoadBuildingData(wbs.buildingSerializer);
+		workersCount = wbs.workersCount;
+		workflow = wbs.workflow;
+		workSpeed = wbs.workSpeed;
+		workflowToProcess = wbs.workflowToProcees;
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
+	public WorkBuildingSerializer GetWorkBuildingSerializer() {
+		WorkBuildingSerializer wbs = new WorkBuildingSerializer();
+		wbs.buildingSerializer = GetBuildingSerializer();
+		wbs.workflow = workflow;
+		wbs.workSpeed = workSpeed;
+		wbs.workflowToProcees = wbs.workflowToProcees;
+		wbs.workersCount = workersCount;
+		return wbs;
 	}
-	//---------------------------------------------------------------------------------------------------	
+		
+	#endregion
 
 	override protected float GUI_UpgradeButton( Rect rr) {
 		GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
@@ -106,7 +121,9 @@ public abstract class WorkBuilding : Building {
 				workersCount = 0;
 				Quaternion originalRotation = transform.rotation;
 				upgraded.SetBasement(basement, setPos);
-				if ( !upgraded.isBasement ) upgraded.transform.localRotation = originalRotation;
+				if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
+					upgraded.transform.localRotation = originalRotation;
+				}
 				upgraded.AddWorkers(workers);
 			}
 			else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);

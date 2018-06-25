@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 
-public class GameMaster : MonoBehaviour {
+public sealed class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
 
@@ -25,7 +26,6 @@ public class GameMaster : MonoBehaviour {
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
 	public  LineRenderer systemDrawLR;
-	static string path;
 
 	public const int START_LIFEPOWER = 100000;
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
@@ -106,9 +106,8 @@ public class GameMaster : MonoBehaviour {
 		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
 		pm.Load();
 
-		path = Application.dataPath + '/';
 		string saveName = "default.sav";
-		if (generateChunk || !LoadGame( path + saveName) ) {
+		if (generateChunk ) {
 			byte standartSize = 16; // cannot be bigger than 99, cause I say Limited
 			Chunk.SetChunkSize( standartSize );
 			constructor.ConstructChunk( standartSize );
@@ -324,7 +323,6 @@ public class GameMaster : MonoBehaviour {
 		}
 	}
 
-
 	void LateUpdate() {
 		if (moveCamToLookPoint) {
 			camBasis.position = Vector3.MoveTowards(camBasis.position, camLookPoint, CAM_LOOK_SPEED * Time.deltaTime);
@@ -336,41 +334,6 @@ public class GameMaster : MonoBehaviour {
 		if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
 		if (g != null) cameraUpdateBroadcast.Add(g);
 	}
-
-
-	public static void Save2DMatrix (float[,] arr, string fileName ) {
-		// Не совсем правильный вывод, поправить
-		using (StreamWriter sw = File.CreateText(path + '/' + fileName+".txt")) 
-		{
-			for (int i = arr.GetLength(0) - 1; i >= 0; i--) {
-				string s = "";
-				for (int j = 0; j< arr.GetLength(1); j++) {
-					string ts = arr[i,j].ToString();
-					if (ts.Length > 5) ts = ts.Substring(0,5); else {
-						switch (ts.Length) {
-						case 1: ts += ".000"; break;
-						case 3: ts +="00";break;
-						}
-					}
-					s += ts + ' ';
-				}
-				sw.WriteLine(s);
-			}
-		}	
-	}
-	public static void Save2DMatrix (bool[,] arr, string fileName ) {
-		// Не совсем правильный вывод, поправить
-		using (StreamWriter sw = File.CreateText(path + '/' + fileName+".txt")) 
-		{
-			for (int i = arr.GetLength(1) - 1; i >= 0; i--) {
-				string s = "";
-				for (int j = 0; j< arr.GetLength(0); j++) {
-					if (arr[i,j] == true) s+=" 1"; else s+=" 0";
-					}
-				sw.WriteLine(s);
-				}
-			}
-		}	
 
 	public static float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
@@ -403,215 +366,109 @@ public class GameMaster : MonoBehaviour {
 		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 	}
 
-	public bool SaveGame( string name ) {
-		string fpath = path + "Saves/"+ name + ".txt";
-		using (StreamWriter sw = new StreamWriter(fpath,false, System.Text.Encoding.Unicode)) {
-			string[] dataString = mainChunk.SaveChunkData();
-			foreach (string ds in dataString) {
-				sw.WriteLine(ds);
-			}
-			sw.WriteLine("$");
-			dataString = mainChunk.SaveStructures();
-			if (dataString != null && dataString.Length > 0) {
-				foreach (string ds in dataString) {
-					sw.WriteLine(ds);
-				}
-			}
-			sw.WriteLine("$");
-			sw.WriteLine( string.Format("{0:d3}", (int)(Vector3.Angle(Vector3.forward, windVector))) +  string.Format("{0:d2}", (int)windVector.magnitude));
-			sw.WriteLine(Hospital.GetBirthrateModeIndex());
-			//trading operations
-			int i = 0;
-			string s = "";
-			while ( i < ResourceType.RTYPES_COUNT ) {
-				if (Dock.isForSale[i] == null) {
-					s += '0';
-				}
-				else {
-					if ( Dock.isForSale[i] == true ) s += '1'; else s += '2';
-					s += string.Format("{0:d4}", Dock.minValueForTrading[i]);
-				}
-				i++;
-			}
-			sw.WriteLine(s);
-			//immigration
-			s= "";
-			if ( Dock.immigrationEnabled ) s+= '1'; else s+='0'; 
-			if ( Dock.immigrationPlan < 0) s += '0'; else s+='1';
-			s += string.Format("{0:d3}", (int)(Dock.immigrationPlan * Mathf.Sign(Dock.immigrationPlan)));
-			sw.WriteLine(s);
-			//colony controller
-			sw.WriteLine(colonyController.Save());
-			// storage
-			sw.WriteLine(colonyController.storage.Save());
-			//worksites
-			s = "w";
-			if ( colonyController.worksites.Count > 0) {
-				foreach ( Worksite w in colonyController.worksites ) {
-					if (w == null) continue;
-					else s += w.Save() + ';';
-				}
-			}
-			sw.WriteLine(s);
-			// game data
-			sw.WriteLine( 'd' + day.ToString() + week.ToString() + string.Format("{0:d2}", month) + string.Format("{0:d3}", year) + millenium.ToString() );
-			// crews
-			s = "";
-			s += string.Format("{0:d3}", Crew.lastNumber);
-			string s2 = "";
-			int crewsCount = 0;
-			if (Crew.crewsList != null && Crew.crewsList.Count > 0) {
-				foreach (Crew cr in Crew.crewsList) {
-					if (cr == null) continue;
-					crewsCount++;
-					s2 += cr.Save() + ';';
-				}
-			}
-			s += string.Format("{0:d3}",crewsCount);
-			s += s2;
-			sw.WriteLine(s);
-		}
+	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
+		Time.timeScale = 0;
+		GameMasterSerializer gms = new GameMasterSerializer();
+		#region gms mainPartFilling
+		gms.gameSpeed = gameSpeed;
+		gms.lifeGrowCoefficient = lifeGrowCoefficient;
+		gms.demolitionLossesPercent = demolitionLossesPercent;
+		gms.lifepowerLossesPercent = lifepowerLossesPercent;
+		gms.luckCoefficient = LUCK_COEFFICIENT;
+		gms.sellPriceCoefficient = sellPriceCoefficient;
+		gms.tradeVesselsTrafficCoefficient = tradeVesselsTrafficCoefficient;
+		gms.upgradeDiscount = upgradeDiscount;
+		gms.environmentalConditions = environmentalConditions;
+		gms.warProximity = warProximity;
+		gms.difficulty = difficulty;
+		gms.startGameWith = startGameWith;
+		gms.prevCutHeight = prevCutHeight;
+		gms.diggingSpeed = diggingSpeed;
+		gms.pouringSpeed = pouringSpeed;
+		gms.manufacturingSpeed = manufacturingSpeed;
+		gms.clearingSpeed = clearingSpeed;
+		gms.gatheringSpeed = gatheringSpeed;
+		gms.miningSpeed = miningSpeed;
+		gms.machineConstructingSpeed = machineConstructingSpeed;
+		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
+		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
+		gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
+		gms.sunlightIntensity = sunlightIntensity;
+		gms.gameAnnouncements_string = gameAnnouncements_string;
+		gms.announcementTimer = announcementTimer;
+		gms.recruiting_hireCost = RecruitingCenter.hireCost;
+		#endregion
+		gms.chunkSerializer = mainChunk.SaveChunkData();
+		gms.colonyControllerSerializer = colonyController.Save();
+		gms.dockStaticSerializer = Dock.SaveStaticDockData();
+		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
+		gms.crewStaticSerializer = Crew.SaveStaticData();
+		gms.questStaticSerializer = Quest.SaveStaticData();
+		gms.expeditionCorpusStaticSerializer = ExpeditionCorpus.SaveStaticData();
+		FileStream fs = File.Create(Application.dataPath + "/Saves/save.txt");
+		BinaryFormatter bf = new BinaryFormatter();
+		bf.Serialize(fs, gms);
+		fs.Close();
+		Time.timeScale = 1;
 		return true;
 	}
 
 	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
-		string fpath = path + "Saves/" + name + ".txt";
-		if ( !File.Exists ( fpath ) ) {
-			print ("file not exist");
-			return false;
+		if(File.Exists(Application.dataPath + "/Saves/save.txt")) {
+			BinaryFormatter bf = new BinaryFormatter();
+			FileStream file = File.Open(Application.dataPath + "/Saves/save.txt", FileMode.Open);
+			Time.timeScale = 0; GameMaster.gameSpeed = 0;
+			GameMasterSerializer gms = (GameMasterSerializer) bf.Deserialize(file);
+			#region gms mainPartLoading
+			gameSpeed =  gms.gameSpeed;
+			lifeGrowCoefficient = gms.lifeGrowCoefficient;
+			demolitionLossesPercent = gms.demolitionLossesPercent;
+			lifepowerLossesPercent = gms.lifepowerLossesPercent;
+			LUCK_COEFFICIENT = gms.luckCoefficient;
+			sellPriceCoefficient = gms.sellPriceCoefficient;
+			tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient ;
+			upgradeDiscount = gms.upgradeDiscount;
+			environmentalConditions = gms.environmentalConditions ;
+			warProximity = gms.warProximity;
+			difficulty = gms.difficulty ;
+			startGameWith = gms.startGameWith ;
+			prevCutHeight = gms.prevCutHeight;
+			diggingSpeed = gms.diggingSpeed ;
+			pouringSpeed = gms.pouringSpeed ;
+			manufacturingSpeed =gms.manufacturingSpeed ;
+			clearingSpeed = gms.clearingSpeed;
+			gatheringSpeed = gms.gatheringSpeed ;
+			miningSpeed = gms.miningSpeed ;
+			machineConstructingSpeed = gms.machineConstructingSpeed ;
+			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
+			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
+			maxWindPower = gms.maxWindPower ;windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
+			sunlightIntensity = gms.sunlightIntensity;
+			gameAnnouncements_string = gms.gameAnnouncements_string ;
+			announcementTimer = gms.announcementTimer;
+			RecruitingCenter.hireCost = gms.recruiting_hireCost;
+			#endregion
+			Destroy (mainChunk.gameObject);
+			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
+			QuantumTransmitter.Reset();Hangar.Reset();UI.current.Reset();
+
+			Crew.LoadStaticData(gms.crewStaticSerializer);
+			Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
+
+			GameObject g = new GameObject("chunk");
+			mainChunk = g.AddComponent<Chunk>();
+			mainChunk.LoadChunkData(gms.chunkSerializer);
+			colonyController.Load(gms.colonyControllerSerializer);
+
+			Dock.LoadStaticData(gms.dockStaticSerializer);
+			Quest.LoadStaticData(gms.questStaticSerializer);
+			ExpeditionCorpus.LoadStaticData(gms.expeditionCorpusStaticSerializer);
+
+			file.Close();
+			Time.timeScale = 1;
+			return true;
 		}
-		using (StreamReader sr = new StreamReader( fpath, System.Text.Encoding.Unicode))
-		{
-			string line;
-			line = sr.ReadLine();
-			int size = 0;
-			if ( !int.TryParse(line, out size) ) {
-				print ("length parsing failed");
-				return false;
-			}
-			else { 
-				string[] data = new string[ size * size];
-				int k = 0; line = sr.ReadLine();
-				while ( k < data.Length && line != null ) {
-					data[k] = line;
-					line = sr.ReadLine();
-					k++;
-				}
-				if (k < data.Length) {
-					print ("not all data here");
-					return false;
-				}
-
-				Chunk nchunk = new GameObject("chunk").AddComponent<Chunk>();
-				bool creatingChunkSuccess = nchunk.LoadChunk(data, size);
-				if ( !creatingChunkSuccess ) {
-					print ("chunk creating failed");
-					return false;
-				}
-				Destroy(mainChunk.gameObject);
-				mainChunk = nchunk;
-
-				//-----all correct, loading other
-				//--resetting all static data
-				Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
-				QuantumTransmitter.Reset();Hangar.Reset();
-
-				if (line == "$") {
-					List<string> str_data = new List<string>();
-					line = sr.ReadLine();
-					while ( line != "$" & !sr.EndOfStream) {
-						str_data.Add(line);
-						line = sr.ReadLine();
-					}
-					mainChunk.LoadStructures(str_data);
-				}
-				//wind vector
-				line = sr.ReadLine();
-				Vector3 savedVector = windVector;
-				savedVector = Quaternion.AngleAxis( int.Parse(line.Substring(0,3)) , Vector3.up) * Vector3.forward * int.Parse(line.Substring(3,2));
-				windVector = savedVector;
-				windTimer = windChangeTime * (0.5f + Random.value * 0.5f);
-				foreach (Component c in windUpdateList) { c.BroadcastMessage("WindUpdate", windVector, SendMessageOptions.DontRequireReceiver);}
-				// hospital birthrate
-				Hospital.SetBirthrateMode( int.Parse(sr.ReadLine()));
-				// trade operations
-				line = sr.ReadLine();
-				int i = 0, p =0;
-				while ( i < ResourceType.RTYPES_COUNT ) {
-					if (p >= line.Length) break;
-					if ( line[p] == '0' ) p++;
-					else {
-						if ( line[p] == '1' ) Dock.MakeLot(i, false, int.Parse( line.Substring(p+1,4) ));
-						else Dock.MakeLot(i, true, int.Parse( line.Substring(p+1,4) ));
-						p += 5;
-					}
-					i++;
-				}
-				//immigration
-				line = sr.ReadLine();
-				if ( line[1] == '0') Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)) * (-1) );
-				else Dock.SetImmigrationStatus( line[0] == '1', int.Parse( line.Substring(2,3)));
-				//colony controller
-				colonyController.Load( sr.ReadLine() );
-				// storage
-				colonyController.storage.Load( sr.ReadLine() );
-				//worksites
-				line = sr.ReadLine();
-				if (line != null) {
-					if (line[0] == 'w') {
-						if (line.Length > 1) {
-							p = line.IndexOf(';', 1);
-							int p2 = 1;
-							while (p != -1 & p2 < line.Length ) {
-								int x = int.Parse(line.Substring(p2 + 12, 2)), y = int.Parse(line.Substring(p2 + 14, 2)), z =int.Parse(line.Substring(p2 + 16, 2));
-								switch ( line[p2] ) {
-								case '1':
-									GatherSite gs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<GatherSite>();
-									gs.Load(line.Substring(p2, p - p2));
-									break;
-								case '2':
-									DigSite ds = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<DigSite>();
-									ds.Load(line.Substring(p2, p - p2));
-									break;
-								case '3':
-									CleanSite cs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<CleanSite>();
-									cs.Load(line.Substring(p2, p - p2));
-									break;
-								case '4':
-									TunnelBuildingSite tbs = mainChunk.GetBlock(x,y,z).gameObject.AddComponent<TunnelBuildingSite>();
-									tbs.Load(line.Substring(p2, p - p2));
-									break;
-								}
-								p2 = p + 1;
-								p = line.IndexOf(';', p+1);
-							}
-						}
-					}
-				}
-				//game data
-				line = sr.ReadLine();
-				if (line != null && line[0] == 'd') {
-					day = uint.Parse(line[1].ToString());
-					week = uint.Parse(line[2].ToString());
-					month = uint.Parse(line.Substring(3,2));
-					year = uint.Parse(line.Substring(5,3));
-					millenium = uint.Parse(line[7].ToString());
-				}
-				//crews
-				line = sr.ReadLine();
-				if (line != null) {
-					Crew.SetLastNumber(int.Parse(line.Substring(0,3)));
-					int crewsCount = int.Parse(line.Substring(3,3));
-					if (crewsCount > 0) {
-						Crew.Load(line.Substring(6, line.Length - 6), crewsCount);
-					}
-				}
-				//end
-				colonyController.RecalculatePowerGrid();
-				colonyController.RecalculateHousing();
-			}
-		}
-		return true;
+		else return false;
 	}
 
 	void OnGUI() {
@@ -679,4 +536,40 @@ public class GameMaster : MonoBehaviour {
 			GUI.color = Color.white;
 		}
 	}
+
+	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
+		using (MemoryStream stream = new MemoryStream(data))
+		{
+			output = (T)System.Convert.ChangeType(new BinaryFormatter().Deserialize(stream), typeof(T));
+		}
+	}
+}
+
+[System.Serializable]
+class GameMasterSerializer {
+	public float gameSpeed;
+	public float lifeGrowCoefficient, demolitionLossesPercent, lifepowerLossesPercent, luckCoefficient, sellPriceCoefficient,
+	tradeVesselsTrafficCoefficient, upgradeDiscount, upgradeCostIncrease, environmentalConditions, warProximity;
+	public Difficulty difficulty;
+	public GameStart startGameWith;
+	public int prevCutHeight = 16;
+	public float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
+	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
+	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
+	public float windVector_x,windVector_y,windVector_z;
+	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
+	public float sunlightIntensity;
+	public List<string> gameAnnouncements_string; 
+	public float announcementTimer;
+
+	public ChunkSerializer chunkSerializer;
+	public ColonyControllerSerializer colonyControllerSerializer;
+	public DockStaticSerializer dockStaticSerializer;
+	public CrewStaticSerializer crewStaticSerializer;
+	public ShuttleStaticSerializer shuttleStaticSerializer;
+	public QuestStaticSerializer questStaticSerializer;
+	public ExpeditionCorpusStaticSerializer expeditionCorpusStaticSerializer;
+	public float recruiting_hireCost;
+
+	// все, что можно - в классы - сериализаторы
 }

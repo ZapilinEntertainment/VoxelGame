@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class HangarSerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public bool constructing;
+	public int shuttle_id;
+}
+
 public class Hangar : WorkBuilding {
 	static int hangarsCount = 0;
 	public Shuttle shuttle{get; private set;}
@@ -160,12 +167,44 @@ public class Hangar : WorkBuilding {
 				} 
 			}
 			else { // shuttle is building
-				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.width * (workflow / workflowToProcess), rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-				GUI.Label(rr, Localization.ui_assemblyInProgress + " (" + ((int)(workflow / workflowToProcess * 100)).ToString() + "%)" );
-				rr.y += rr.height;
+				if (workflow > 0) 
+				{
+					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.width * (workflow / workflowToProcess), rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+					GUI.Label(rr, Localization.ui_assemblyInProgress + " (" + ((int)(workflow / workflowToProcess * 100)).ToString() + "%)" );
+					rr.y += rr.height;
+				}
 			}
 		}
 	}
+
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHangarSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
+	}
+
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		HangarSerializer hs = new HangarSerializer();
+		GameMaster.DeserializeByteArray<HangarSerializer>(ss.specificData, ref hs);
+		constructing = hs.constructing;
+		LoadWorkBuildingData(hs.workBuildingSerializer);
+		shuttle = Shuttle.GetShuttle(hs.shuttle_id);
+	}
+
+	HangarSerializer GetHangarSerializer() {
+		HangarSerializer hs = new HangarSerializer();
+		hs.workBuildingSerializer = GetWorkBuildingSerializer();
+		hs.constructing = constructing;
+		hs.shuttle_id = (shuttle == null ? -1 : shuttle.ID);
+		return hs;
+	}
+	#endregion
 
 	void OnDestroy() {
 		PrepareWorkbuildingForDestruction();

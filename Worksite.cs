@@ -2,6 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class WorksiteSerializer {
+	public WorksiteType type;
+	public ChunkPos workObjectPos;
+	public int maxWorkers,workersCount;
+	public float workflow, labourTimer, workSpeed;
+	public byte[] specificData;
+}
+
+public enum WorksiteType {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
+
 public abstract class Worksite : MonoBehaviour {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
@@ -13,7 +24,7 @@ public abstract class Worksite : MonoBehaviour {
 
 	void Awake () {
 		labourTimer = 0; workflow = 0;
-		workersCount = 0;
+		workersCount = 0; 
 	}
 
 	public int AddWorkers ( int x) {
@@ -39,23 +50,33 @@ public abstract class Worksite : MonoBehaviour {
 	}
 	protected abstract void RecalculateWorkspeed() ;
 
-	//---------SAVE   SYSTEM----------------
-	public virtual string Save() {
-		return '0' + SaveWorksite();
+	#region save-load system
+	virtual public WorksiteSerializer Save() {
+		WorksiteSerializer ws = GetWorksiteSerializer();
+		ws.type = WorksiteType.Abstract;
+		return ws;
 	}
-	protected string SaveWorksite() {
-		string s = "";
-		s += string.Format("{0:d3}", workersCount);
-		s += string.Format("{0:d4}", (int)(workflow * 100));
-		s += string.Format("{0:d4}", (int)(labourTimer * 100));
-		return s;
+	virtual public void Load(WorksiteSerializer ws) {
+		LoadWorksiteData(ws);
 	}
-	public virtual void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
+
+	protected WorksiteSerializer GetWorksiteSerializer() {
+		WorksiteSerializer ws = new WorksiteSerializer();
+		ws.maxWorkers = maxWorkers;
+		ws.workersCount = workersCount;
+		ws.labourTimer = labourTimer;
+		ws.workflow = workflow;
+		ws.workSpeed = workSpeed;
+		return ws;
 	}
-	// --------------------------------------------------------
+	protected void LoadWorksiteData(WorksiteSerializer ws) {
+		maxWorkers = ws.maxWorkers;
+		workersCount = ws.workersCount;
+		labourTimer = ws.labourTimer;
+		workflow = ws.workflow;
+		workSpeed = ws.workSpeed;
+	}
+	#endregion
 
 	void OnGUI () {
 		if (showOnGUI == false) return;
@@ -78,6 +99,8 @@ public abstract class Worksite : MonoBehaviour {
 		if ( workersCount != maxWorkers &&GUI.Button (new Rect( rr.xMax - p, rr.y, p, p ), PoolMaster.plusX10Button_tx)) { GameMaster.colonyController.SendWorkers(maxWorkers - workersCount,this, WorkersDestination.ForWorksite);}
 		rr.y += p;
 		GUI.Label ( new Rect (rr.x , rr.y, rr.width , rr.height), actionLabel, PoolMaster.GUIStyle_CenterOrientedLabel );
+		rr.y += rr.height;
+		GUI.Label ( new Rect (rr.x , rr.y, rr.width , rr.height), string.Format("{0:0.##}",workSpeed) + ' ' + Localization.ui_points_sec, PoolMaster.GUIStyle_CenterOrientedLabel );
 		rr.y += rr.height;
 
 		if (GUI.Button ( rr, Localization.ui_stopWork) ) { Destroy(this); return; }

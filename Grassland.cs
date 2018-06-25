@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public struct PixelPosByte {
 	public byte x, y;
 	public bool exists;
-	public static PixelPosByte Empty, zero, one;
+	public static readonly PixelPosByte Empty, zero, one;
 	public PixelPosByte (byte xpos, byte ypos) {x = xpos; y = ypos; exists = true;}
 	public PixelPosByte (int xpos, int ypos) {
 		if (xpos < 0) xpos = 0; if (ypos < 0) ypos = 0;
@@ -36,6 +37,12 @@ public struct PixelPosByte {
 		if (exists) return x * y;
 		else return x* y * (-1);
 	}
+}
+
+[System.Serializable]
+public class GrasslandSerializer {
+	public float progress = 0, lifeTimer = 0, growTimer = 0, lifepower;
+	public int prevStage = 0;
 }
 
 public class Grassland : MonoBehaviour {
@@ -254,5 +261,23 @@ public class Grassland : MonoBehaviour {
 		myBlock.myChunk.AddLifePower((int)lifepower);
 		myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
 		Destroy(this);
+	}
+
+	public GrasslandSerializer Save() {
+		GrasslandSerializer gs = new GrasslandSerializer();
+		gs.progress = progress; 
+		gs.lifeTimer = lifeTimer;
+		gs.growTimer = growTimer = 0;
+		gs.lifepower = lifepower;
+		gs.prevStage = prevStage;
+		return gs;
+	}
+
+	public void Load( GrasslandSerializer gs) {
+		SetLifepower(gs.lifepower);
+		progress = gs.progress;
+		lifeTimer = gs.lifeTimer;
+		growTimer = gs.growTimer;
+		prevStage = gs.prevStage;
 	}
 }

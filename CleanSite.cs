@@ -90,30 +90,23 @@ public class CleanSite : Worksite {
 		GameMaster.colonyController.AddWorksite(this);
 	}
 
-	//---------SAVE   SYSTEM----------------
-	public override string Save() {
-		return '3' + SaveWorksite() + SaveCleanSite();
+	#region save-load mission
+	override public WorksiteSerializer Save() {
+		if (workObject == null) {
+			Destroy(this);
+			return null;
+		}
+		WorksiteSerializer ws = GetWorksiteSerializer();
+		ws.type = WorksiteType.CleanSite;
+		ws.workObjectPos = workObject.pos;
+		if (diggingMission) ws.specificData = new byte[1]{1};
+		else ws.specificData = new byte[1]{0};
+		return ws;
 	}
-	protected string SaveCleanSite() {
-		string s = "";
-		s += string.Format("{0:00}",workObject.pos.x) + string.Format("{0:00}",workObject.pos.y) + string.Format("{0:00}",workObject.pos.z); 
-		if (diggingMission) s += '1'; else s+='0';
-		return s;
+	override public void Load(WorksiteSerializer ws) {
+		LoadWorksiteData(ws);
+		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ws.specificData[0] == 1);
 	}
-	public override void Load(string s) {
-		workersCount = int.Parse(s.Substring(1,3));
-		workflow = int.Parse(s.Substring(4,4)) / 100f;
-		labourTimer = int.Parse(s.Substring(8,4)) / 100f;
-		// position
-		workObject = GameMaster.mainChunk.GetBlock(int.Parse(s.Substring(12,2)), int.Parse(s.Substring(14,2)), int.Parse(s.Substring(16,2)) ) as SurfaceBlock;
-		//clean site part
-		diggingMission = (s[18] == '1');
-		if (workObject.grassland != null) {Destroy(workObject.grassland);}
-		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
-		sign.worksite = this;
-		sign.transform.position = workObject.transform.position;
-		GameMaster.colonyController.AddWorksite(this);
-	}
-	// --------------------------------------------------------
+	#endregion
 			
 }

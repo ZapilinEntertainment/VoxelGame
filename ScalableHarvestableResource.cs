@@ -32,32 +32,32 @@ public class ScalableHarvestableResource : Structure {
 		return volume - addingVolume;
 	}
 
-	//--------SAVE  SYSTEM-------------
-	public override string Save() {
-		return SaveStructureData() + SaveScalableContainerData();
+	#region save-load system
+	override public  StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHarvestableResourceSerializer());
+			ss.specificData =  stream.ToArray();
+		}
+		return ss;
 	}
 
-	protected string SaveScalableContainerData() {
-		string s = string.Format("{0:d3}", mainResource.ID);
-		s += string.Format("{0:d4}", count1 / MAX_VOLUME * 1000);
-		return s;
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
+		GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
+		mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
+		count1 = hrs.count;
 	}
 
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
-		// container part:
-		//print (int.Parse(s_data.Substring(11,3)));
-		mainResource =  ResourceType.GetResourceTypeById(int.Parse(s_data.Substring(11,3)));
-		count1 = int.Parse( s_data.Substring(14,4)) / 1000f * MAX_VOLUME;
-		myRenderer.sharedMaterial = mainResource.material;
-		transform.localScale = new Vector3(1, count1/MAX_VOLUME, 1);
+	protected HarvestableResourceSerializer GetHarvestableResourceSerializer() {
+		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
+		hrs.mainResource_id = mainResource.ID;
+		hrs.count = count1;
+		return hrs;
 	}
-	// ------------------------------------------
+	#endregion
 	override public void Annihilate( bool forced ) { // for pooling
 		if (forced) basement = null;
 		else GameMaster.colonyController.storage.AddResource(mainResource, count1);

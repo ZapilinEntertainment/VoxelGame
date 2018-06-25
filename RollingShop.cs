@@ -2,7 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum RollingShopMode {NoActivity, GearsUpgrade, BoatParts}
+public enum RollingShopMode {NoActivity, GearsUpgrade}
+
+[System.Serializable]
+public class RollingShopSerializer {
+	public WorkBuildingSerializer workBuildingSerializer;
+	public RollingShopMode mode;
+}
+
 public class RollingShop : WorkBuilding {
 	RollingShopMode mode;
 	bool showModes = false;
@@ -21,60 +28,38 @@ public class RollingShop : WorkBuilding {
 
 	override protected void LabourResult() {
 		switch (mode) {
-		case RollingShopMode.BoatParts:
-			break;
 		case RollingShopMode.GearsUpgrade:
 			if (GameMaster.colonyController.gears_coefficient < GEARS_UP_LIMIT) GameMaster.colonyController.ImproveGearsCoefficient(GEARS_UPGRADE_STEP * workflow / workflowToProcess);
 			break;
 		}
 	}
 
-	public int GetActivityModeIndex() {
-		switch (mode) {
-		case RollingShopMode.NoActivity: return 0;
-		case RollingShopMode.GearsUpgrade: return 1;
-		case RollingShopMode.BoatParts: return 2;
-		default: return 0;
+
+	#region save-load system
+	override public StructureSerializer Save() {
+		StructureSerializer ss = GetStructureSerializer();
+		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+		{
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetRollingShopSerializer());
+			ss.specificData =  stream.ToArray();
 		}
+		return ss;
+	}
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		RollingShopSerializer rss = new RollingShopSerializer();
+		GameMaster.DeserializeByteArray<RollingShopSerializer>(ss.specificData, ref rss);
+		LoadWorkBuildingData(rss.workBuildingSerializer);
+		mode = rss.mode;
 	}
 
-	public void SetMode(int i) {
-		switch (i) {
-		case 0: mode = RollingShopMode.NoActivity;break;
-		case 1: mode = RollingShopMode.GearsUpgrade;break;
-		case 2: mode = RollingShopMode.BoatParts;break;
-		default: mode = RollingShopMode.NoActivity;break;
-		}
+	protected RollingShopSerializer GetRollingShopSerializer() {
+		RollingShopSerializer rss = new RollingShopSerializer();
+		rss.workBuildingSerializer = GetWorkBuildingSerializer();
+		rss.mode = mode;
+		return rss;
 	}
-
-	//---------------------                   SAVING       SYSTEM-------------------------------
-	public override string Save() {
-		return SaveStructureData() + SaveBuildingData() + SaveWorkBuildingData()+SaveRollingShopData();
-	}
-
-	protected string SaveRollingShopData() {
-		string s = "";
-		s +=string.Format("{0:d1}", GetActivityModeIndex());
-		return s;
-	}
-
-	public override void Load(string s_data, Chunk c, SurfaceBlock surface) {
-		byte x = byte.Parse(s_data.Substring(0,2));
-		byte z = byte.Parse(s_data.Substring(2,2));
-		Prepare();
-		SetBasement(surface, new PixelPosByte(x,z));
-		//workbuilding class part
-		workflow = int.Parse(s_data.Substring(12,3)) / 100f;
-		AddWorkers(int.Parse(s_data.Substring(15,3)));
-		//rollingshop class part
-		SetMode( int.Parse(s_data[18].ToString()) );
-		//building class part
-		SetActivationStatus(s_data[11] == '1');     
-		//--
-		transform.localRotation = Quaternion.Euler(0, 45 * int.Parse(s_data[7].ToString()), 0);
-		hp = int.Parse(s_data.Substring(8,3)) / 100f * maxHp;
-	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	void OnDestroy() {
 		GameMaster.colonyController.RemoveRollingShop(this);
@@ -97,11 +82,7 @@ public class RollingShop : WorkBuilding {
 				mode = RollingShopMode.GearsUpgrade; 
 			}
 				rr.y += rr.height;
-			if (GUI.Button(rr, Localization.rollingShop_boatPartsProduction)) {
-				showModes = false;
-				mode = RollingShopMode.BoatParts;  
-			}
-				rr.y += rr.height;
+
 		}
 		switch (mode) {
 		case RollingShopMode.NoActivity:
@@ -111,9 +92,6 @@ public class RollingShop : WorkBuilding {
 			GUI.Label( rr, Localization.ui_currentMode + " : " + Localization.rollingShop_gearsProduction, PoolMaster.GUIStyle_CenterOrientedLabel);
 			rr.y += rr.height;
 			GUI.Label( rr, Localization.info_gearsCoefficient + " : " + string.Format("{0:0.###}", GameMaster.colonyController.gears_coefficient));
-			break;
-		case RollingShopMode.BoatParts:
-			GUI.Label( rr, Localization.ui_currentMode + " : " + Localization.rollingShop_boatPartsProduction, PoolMaster.GUIStyle_CenterOrientedLabel);
 			break;
 		}
 	}
