@@ -104,7 +104,7 @@ public class Ship : MonoBehaviour {
 		}
 	}
 
-	//---------------------------------------------------- SAVE   SYSTEM
+	#region save-load system
 	public ShipSerializer GetShipSerializer() {
 		ShipSerializer ss = new ShipSerializer();
 		ss.destinationPos = destination_pos;
@@ -120,9 +120,18 @@ public class Ship : MonoBehaviour {
 	}
 
 	public void Load(ShipSerializer ss, Dock d) {
-		
+		destination = d;
+		destination_pos = ss.destinationPos;
+		docked = ss.docked;
+		transform.position = new Vector3(ss.xpos, ss.ypos,ss.zpos);
+		transform.rotation = new Quaternion(ss.xrot, ss.yrot, ss.zrot,ss.wrot);
+		speed= ss.speed;
+		unloaded = ss.unloaded;
+		xAxisMoving = ss.xAxisMoving;
+		level = ss.level;
+		type = ss.type;
 	}
-	//-----------------------------------------------------
+	#endregion
 
 	public void Undock() {
 		docked = false;

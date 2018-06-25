@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class QuantumTransmitter : Building {
 	public static List<QuantumTransmitter> transmittersList{get;private set;}
 	public Expedition tracingExpedition{get;private set;}

@@ -666,6 +666,7 @@ public sealed class Chunk : MonoBehaviour {
 		}
 	}
 
+	public Block GetBlock (ChunkPos cpos) {return GetBlock(cpos.x,cpos.y,cpos.z);}
 	public Block GetBlock (int x, int y, int z) {
 		int size = blocks.GetLength(0);
 		if (x < 0 ||x > size - 1 || y < 0 || y > size - 1 || z < 0 || z > size - 1) return null;

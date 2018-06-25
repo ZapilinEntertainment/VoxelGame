@@ -84,7 +84,7 @@ public class RecruitingCenter : WorkBuilding {
 		}
 	}
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
+	#region save-load system
 	override public StructureSerializer Save() {
 		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
@@ -93,6 +93,15 @@ public class RecruitingCenter : WorkBuilding {
 			ss.specificData =  stream.ToArray();
 		}
 		return ss;
+	}
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		RecruitingCenterSerializer rcs = new RecruitingCenterSerializer();
+		GameMaster.DeserializeByteArray<RecruitingCenterSerializer>(ss.specificData, ref rcs);
+		LoadWorkBuildingData(rcs.workBuildingSerializer);
+		backupSpeed = rcs.backupSpeed;
+		finding = rcs.finding;
+		progress = rcs.progress;
 	}
 
 	protected RecruitingCenterSerializer GetRecruitingCenterSerializer() {
@@ -103,7 +112,7 @@ public class RecruitingCenter : WorkBuilding {
 		rcs.progress = progress;
 		return rcs;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 	void OnDestroy() {
 		PrepareWorkbuildingForDestruction();
 		Crew.RemoveCrewSlots(CREW_SLOTS_FOR_BUILDING);

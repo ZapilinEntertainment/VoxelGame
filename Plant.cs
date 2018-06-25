@@ -96,7 +96,7 @@ public class Plant : Structure {
 		lifepower = p; 
 		if (lifepower < maxLifepower) full = false; else full = true;
 	}
-	//---------------------                   SAVING       SYSTEM-------------------------------
+	#region save-load system
 	override public StructureSerializer Save() {
 		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
@@ -127,7 +127,7 @@ public class Plant : Structure {
 		ps.lifepower = lifepower;
 		return ps;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	public override void Annihilate( bool forced ) {
 		if (basement != null && !forced ) {

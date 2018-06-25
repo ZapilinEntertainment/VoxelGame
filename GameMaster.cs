@@ -400,10 +400,11 @@ public sealed class GameMaster : MonoBehaviour {
 		#endregion
 		gms.dockStaticSerializer = Dock.SaveStaticDockData();
 		gms.colonyControllerSerializer = colonyController.Save();
-		gms.CrewsData = Crew.SaveStaticData();
-		gms.ShuttlesData = Shuttle.SaveStaticData();
-		gms.QuestsData = Quest.SaveStaticData();
-		gms.ExpeditionCorpusData = ExpeditionCorpus.SaveStaticData();
+
+		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
+		gms.crewStaticSerializer = Crew.SaveStaticData();
+		gms.questStaticSerializer = Quest.SaveStaticData();
+		gms.expeditionCorpusStaticSerializer = ExpeditionCorpus.SaveStaticData();
 		FileStream fs = File.Create(Application.dataPath + "/Saves/save.txt");
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
@@ -451,11 +452,16 @@ public sealed class GameMaster : MonoBehaviour {
 			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
 			QuantumTransmitter.Reset();Hangar.Reset();
 
+			Crew.LoadStaticData(gms.crewStaticSerializer);
+			Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
+
 			GameObject g = new GameObject("chunk");
 			mainChunk = g.AddComponent<Chunk>();
 			mainChunk.LoadChunkData(gms.chunkSerializer);
 
 			Dock.LoadStaticData(gms.dockStaticSerializer);
+			Quest.LoadStaticData(gms.questStaticSerializer);
+			ExpeditionCorpus.LoadStaticData(gms.expeditionCorpusStaticSerializer);
 
 			file.Close();
 			Time.timeScale = 1;
@@ -558,7 +564,11 @@ class GameMasterSerializer {
 	public ChunkSerializer chunkSerializer;
 	public DockStaticSerializer dockStaticSerializer;
 	public ColonyControllerSerializer colonyControllerSerializer;
+	public CrewStaticSerializer crewStaticSerializer;
+	public ShuttleStaticSerializer shuttleStaticSerializer;
+	public QuestStaticSerializer questStaticSerializer;
+	public ExpeditionCorpusStaticSerializer expeditionCorpusStaticSerializer;
 	public float recruiting_hireCost;
-	public string[]  CrewsData,ShuttlesData, QuestsData, ExpeditionCorpusData;
+
 	// все, что можно - в классы - сериализаторы
 }

@@ -3,27 +3,44 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Quest  {
-	public string name{get;private set;}
-	public string description{get;private set;}
-	public Texture poster{get;private set;}
-	public float cost{get;private set;}
+	public string name{get;private set;} 
+	public string description{get;private set;} 
+	public Texture poster{get;private set;} 
+	public float cost{get;private set;} 
 	public bool picked = false;
 	public bool useTimerBeforeTaking{get;private set;}
 	public bool useTimerAfterTaking{get;private set;}
 	public float questLifeTimer {get;private set;}
 	public float questRealizationTimer {get;private set;}
-	public int vesselsRequired{get;private set;}
+	public int shuttlesRequired{get;private set;}
 	public int crewsRequired{get;private set;}
 	public Expedition expedition{get;private set;}
-	public int id{get;private set;}
+	public int ID{get;private set;}
 	public const int FIRST_COMMUNICATOR_SET_ID = 1;
 	public const int TOTAL_QUESTS_COUNT = 2;
 
+	public static List<Quest> questsList;
+
 	public bool CanBePicked() {
 		if (cost > GameMaster.colonyController.energyCrystalsCount) return false;
+		else	return true;
+	}
+
+	public static Quest GetQuest(int id) {
+		if (questsList.Count == 0) return null;
 		else {
-			GameMaster.colonyController.GetEnergyCrystals(cost);
-			return true;
+			int i =0;
+			while (i<questsList.Count) {
+				if (questsList[i] == null) {
+					questsList.RemoveAt(i);
+					continue;
+				}
+				else {
+					if (questsList[i].ID == id) return questsList[i];
+					i++;
+				}
+			}
+			return null;
 		}
 	}
 
@@ -50,13 +67,75 @@ public class Quest  {
 		Quest q = new Quest();
 		q.poster = PoolMaster.quest_defaultIcon;
 		q.name = "default quest";
-		q.vesselsRequired = 1;
+		q.shuttlesRequired = 1;
 		q.crewsRequired = 1;
+		questsList.Add(q);
 		return q;
 	} 
-
-	public static string[] SaveStaticData() {
-		List<string> result = new List<string>();
-		return result.ToArray();
+	#region save-load system
+	public static QuestStaticSerializer SaveStaticData() {
+		QuestStaticSerializer qss = new QuestStaticSerializer();
+		qss.quests = new List<QuestSerializer>();
+		if (questsList != null) {
+		int i =0;
+		while (i < questsList.Count) {
+			if (questsList[i] == null) {
+				questsList.RemoveAt(i);
+				continue;
+			}
+			else {
+				qss.quests.Add(questsList[i].Save());
+				i++;
+			}
+		}
+		}
+		return qss;
 	}
+	public static void LoadStaticData(QuestStaticSerializer qss) {
+		questsList = new List<Quest>();
+		if (qss.quests.Count > 0) {
+			for (int i = 0; i < qss.quests.Count; i++) {
+				questsList.Add(new Quest().Load(null, qss.quests[i]));
+			}
+		}
+	}
+
+	public QuestSerializer Save() {
+		QuestSerializer qs = new QuestSerializer();
+		qs.name = name;
+		qs.description = description;
+		qs.cost = cost;
+		qs.picked = picked;
+		qs.useTimerBeforeTaking = useTimerBeforeTaking;
+		qs.useTimerAfterTaking = useTimerAfterTaking;
+		qs.shuttlesRequired = shuttlesRequired;
+		qs.crewsRequired = crewsRequired;
+		return qs;
+	}
+	public Quest Load(Expedition e, QuestSerializer qs) {
+		name = qs.name;
+		description = qs.description;
+		cost =qs.cost;
+		picked = qs.picked;
+		useTimerAfterTaking = qs.useTimerAfterTaking;
+		useTimerBeforeTaking = qs.useTimerBeforeTaking;
+		shuttlesRequired = qs.shuttlesRequired;
+		crewsRequired = qs.crewsRequired;
+		expedition = e;
+		return this;
+	}
+	#endregion
 }
+
+[System.Serializable]
+public class QuestSerializer {
+	public string name,description;
+	public bool picked,useTimerBeforeTaking, useTimerAfterTaking;
+	public float questLifeTimer,questRealizationTimer, cost;
+	public int shuttlesRequired,crewsRequired, ID;
+}
+[System.Serializable]
+public class QuestStaticSerializer {
+	public List<QuestSerializer> quests;
+}
+

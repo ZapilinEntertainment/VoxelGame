@@ -35,7 +35,7 @@ public class RollingShop : WorkBuilding {
 	}
 
 
-	//---------------------                   SAVING       SYSTEM-------------------------------
+	#region save-load system
 	override public StructureSerializer Save() {
 		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
@@ -45,6 +45,13 @@ public class RollingShop : WorkBuilding {
 		}
 		return ss;
 	}
+	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
+		LoadStructureData(ss, sblock);
+		RollingShopSerializer rss = new RollingShopSerializer();
+		GameMaster.DeserializeByteArray<RollingShopSerializer>(ss.specificData, ref rss);
+		LoadWorkBuildingData(rss.workBuildingSerializer);
+		mode = rss.mode;
+	}
 
 	protected RollingShopSerializer GetRollingShopSerializer() {
 		RollingShopSerializer rss = new RollingShopSerializer();
@@ -52,7 +59,7 @@ public class RollingShop : WorkBuilding {
 		rss.mode = mode;
 		return rss;
 	}
-	//---------------------------------------------------------------------------------------------------	
+	#endregion
 
 	void OnDestroy() {
 		GameMaster.colonyController.RemoveRollingShop(this);
