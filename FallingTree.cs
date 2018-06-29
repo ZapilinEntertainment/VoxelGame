@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class FallingTree : MonoBehaviour {
 	Quaternion fallRotation;
+	public List<GameObject> containList;
 	float timer = 10;
 	void Awake() {
 		fallRotation = Quaternion.LookRotation(Vector3.up, new Vector3(Random.value, 0, Random.value));
@@ -17,7 +18,8 @@ public class FallingTree : MonoBehaviour {
 		timer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (timer <= 0) {
 			Destroy(this);
-			PoolMaster.current.ReturnTreeToPool(gameObject);
+			containList.Add(gameObject);
+			gameObject.SetActive(false);
 		}
 	}
 }

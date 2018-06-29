@@ -49,45 +49,38 @@ public class GatherSite : Worksite {
 		if (destructionTimer <=0) Destroy(this);
 	}
 
-	void LabourResult() {
-			int i = 0;
-			bool resourcesFound = false;
-		while (i < workObject.surfaceObjects.Count & bufer.Equals(ResourceContainer.Empty)) {
-				if (workObject.surfaceObjects[i]== null) { workObject.RequestAnnihilationAtIndex(i); continue;}
-				Tree t = workObject.surfaceObjects[i].GetComponent<Tree>();
-				if ( t != null && t.enabled) {
-						resourcesFound = true;
-						if (t.hp < workflow) {
-							workflow -= t.hp;
-							float r = GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, t.CalculateLumberCount());
-							t.Chop();
-							if ( r > 0) bufer = new ResourceContainer(ResourceType.Lumber, r);
-							i++;
-							break;
-						}
-						else {i++; continue;}
+void LabourResult() {
+	int i = 0;
+	bool resourcesFound = false;
+	List<Structure> strs = workObject.surfaceObjects;
+	while (i < strs.Count & bufer.Equals(ResourceContainer.Empty)) {
+		if (strs[i]== null) { workObject.RequestAnnihilationAtIndex(i); continue;}
+			if ( strs[i].id == Structure.PLANT_ID) {
+				resourcesFound = true;
+				Plant p = strs[i] as Plant;
+				p.Harvest();
+			}
+			else {
+				HarvestableResource hr = workObject.surfaceObjects[i].GetComponent<HarvestableResource>();
+				if (hr == null) {i++; continue;}
+				else {
+					resourcesFound = true;
+					if (workflow > hr.count1) {
+						GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
+						workflow -= hr.count1;
+						Destroy(hr.gameObject);
+						break;
 					}
 					else {
-						HarvestableResource hr = workObject.surfaceObjects[i].GetComponent<HarvestableResource>();
-						if (hr == null) {i++; continue;}
-						else {
-							resourcesFound = true;
-							if (workflow > hr.count1) {
-								GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
-								workflow -= hr.count1;
-								Destroy(hr.gameObject);
-								break;
-							}
-							else {
-								GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
-								hr.count1 -= Mathf.FloorToInt(workflow); workflow = 0;
-								break;
-							}
-						}
+						GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
+						hr.count1 -= Mathf.FloorToInt(workflow); workflow = 0;
+						break;
 					}
 				}
-			if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
-	}
+			}
+		}
+	if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
+}
 
 	protected override void RecalculateWorkspeed() {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Gathering);

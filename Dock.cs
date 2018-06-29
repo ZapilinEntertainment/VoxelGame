@@ -26,7 +26,6 @@ public class Dock : WorkBuilding {
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;
 		if (isForSale == null) {
 			Reset();

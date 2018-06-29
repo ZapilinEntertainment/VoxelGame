@@ -24,6 +24,7 @@ public class UI : MonoBehaviour {
 	Structure chosenStructure;
 	Worksite chosenWorksite;
 	Crew showingCrew; bool showCrewsOrVesselsList = false, dissmissConfirmation = false;
+	bool showGraphicSettings = false;
 	Vector2 mousePos, buildingsScrollViewPos = Vector2.zero;
 	GameObject quadSelector, structureFrame;
 
@@ -533,7 +534,7 @@ public class UI : MonoBehaviour {
 										chosenBuildingIndex = buildingIndex;
 										showBuildingCreateInfo = true;
 										bufferedResources = ResourcesCost.GetCost(bd.id);
-										if (chosenStructure.type != StructureType.MainStructure ) argument = 4; else argument = 3;
+										if ( !chosenStructure.fullCover ) argument = 4; else argument = 3;
 										break;
 									}
 									else { // уже выбрано
@@ -573,7 +574,7 @@ public class UI : MonoBehaviour {
 								buildingsListLength += rr.height;
 							}
 							//для крупных структур:
-							if (chosenStructure.type == StructureType.MainStructure) {
+								if (chosenStructure.fullCover) {
 									bool pass = true;
 									if (chosenBuilding.borderOnlyConstruction) { 
 										if ( !chosenSurfaceBlockIsBorderBlock ) {
@@ -640,11 +641,10 @@ public class UI : MonoBehaviour {
 						while ( n < chosenSurfaceBlock.surfaceObjects.Count) {
 							if (chosenSurfaceBlock.surfaceObjects[n] == null) {chosenSurfaceBlock.RequestAnnihilationAtIndex(n); n++; continue;}
 							Texture t = PoolMaster.quadSelector_tx;
-							switch (chosenSurfaceBlock.surfaceObjects[n].type) {
-							case StructureType.HarvestableResources: t = PoolMaster.orangeSquare_tx;break;
-							case StructureType.MainStructure: t = whiteSpecial_tx;break;
-							case StructureType.Plant: t = greenSquare_tx;break;
-							case StructureType.Structure : t = whiteSquare_tx;break;
+							switch (chosenSurfaceBlock.surfaceObjects[n].id) {
+							case Structure.CONTAINER_ID: t = PoolMaster.orangeSquare_tx;break;
+							case Structure.PLANT_ID: t = greenSquare_tx;break; // + иконку
+							default : t = whiteSquare_tx;break; // + иконку
 							}
 							SurfaceRect sr= chosenSurfaceBlock.surfaceObjects[n].innerPosition;
 							GUI.DrawTexture(new Rect(buildingGridRect.x + sr.x * p, buildingGridRect.y + buildingGridRect.height -  (sr.z+ sr.z_size) * p , p * sr.x_size, p * sr.z_size), t, ScaleMode.StretchToFill);
@@ -858,6 +858,17 @@ public class UI : MonoBehaviour {
 				if (GUI.Button(rr, Localization.menu_load)) {
 					if (GameMaster.realMaster.LoadGame("newsave"))	GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.GameLoaded));
 					else GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.LoadingFailed));
+				}
+				rr.y += rr.height;
+				if (GUI.Button(rr, Localization.ui_graphic_settings)) showGraphicSettings = !showGraphicSettings;
+				rr.y += rr.height;
+				rr.width *= 0.9f; rr.x += rr.width * 0.1f;
+				if (showGraphicSettings) {
+					int currentLevel = QualitySettings.GetQualityLevel();
+					for (int i = 0; i < 6; i++) {
+						if (i == currentLevel) GUI.DrawTexture(rr, PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+						if (GUI.Button(rr, "Quality level "+i.ToString())) QualitySettings.SetQualityLevel(i);
+					}
 				}
 				break;
 			}

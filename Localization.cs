@@ -17,7 +17,7 @@ public static class Localization {
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
 	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode,
 	ui_changeMaterial, ui_heightBlocked, ui_buildOnSideOnly, ui_freeSlots, ui_recruitmentInProgress, ui_showCrewCard, ui_showCrewsList, ui_noShip,
-	ui_assemblyInProgress, ui_showVesselsList, ui_points_sec;
+	ui_assemblyInProgress, ui_showVesselsList, ui_points_sec, ui_graphic_settings;
 	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
 	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
 	info_birthrate;
@@ -77,10 +77,7 @@ public static class Localization {
 			rtype_graphonium_name = "Graphonium"; rtype_graphonium_descr = "Superstructured material, wrapping reality nearby";
 			rtype_supplies_name = "Supplies"; rtype_supplies_descr = "Well-packed food, medicaments and another life-support goods.";
 
-			structureName[Structure.TREE_SAPLING_ID] = "Sapling"; 
-			structureName[Structure.TREE_ID] = "Tree"; 
-			structureName[Structure.DEAD_TREE_ID] = "Dead tree"; 
-			structureName[Structure.TREE_SAPLING_ID] = "Wheat crop"; 
+			structureName[Structure.PLANT_ID] = "Some plant"; 
 			structureName[Structure.LANDED_ZEPPELIN_ID] = "Landed Zeppelin"; 
 			structureName[Structure.STORAGE_0_ID] = "Primary storage";
 			structureName[Structure.STORAGE_1_ID] = "Storage (level 1)"; 
@@ -168,6 +165,7 @@ public static class Localization {
 			ui_noShip = "No ship";
 			ui_assemblyInProgress = "Assembly in progress"; // shuttle assembling
 			ui_points_sec = "points/sec";
+			ui_graphic_settings = "Graphic settings";
 
 			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
 			menu_save = "Save game"; menu_load = "Load game";

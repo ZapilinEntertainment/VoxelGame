@@ -5,7 +5,7 @@ using UnityEngine;
 public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
 	public Material[] grassland_ready_25, grassland_ready_50;
-	public Material dryingLeaves_material, leaves_material;
+	public Material dryingLeaves_material, leaves_material, dead_tree_material;
 	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static GameObject mineElevator_pref {get;private set;}
@@ -18,12 +18,11 @@ public class PoolMaster : MonoBehaviour {
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
-	List<GameObject> treesPool, saplingsPool, lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
+	List<GameObject>  lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
 		lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные
 	const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
 	const int SHIPS_BUFFER_SIZE = 5;
-	public int treesPool_buffer_size =16, grassPool_buffer_size = 16;
-	float treeClearTimer = 0, grassClearTimer = 0, shipsClearTimer = 0,clearTime = 30;
+	float  shipsClearTimer = 0,clearTime = 30;
 
 	public void Load() {
 		if (current != null) return;
@@ -75,13 +74,12 @@ public class PoolMaster : MonoBehaviour {
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
 		glass_material = Resources.Load<Material>("Materials/Glass");
 		glass_offline_material = Resources.Load<Material>("Materials/OfflineGlass");
+		dead_tree_material = Resources.Load<Material>("Materials/DeadTree");
 		dryingLeaves_material = Resources.Load<Material>("Materials/DryingLeaves");
 		leaves_material = Resources.Load<Material>("Materials/Leaves");
 		grass_material = Resources.Load<Material>("Materials/Grass");
 
 		mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-		treesPool = new List<GameObject>();
-		saplingsPool = new List<GameObject>();
 
 		Material dirtMaterial = ResourceType.GetMaterialById(ResourceType.DIRT_ID);
 		grassland_ready_25 = new Material[4]; grassland_ready_50 = new Material[4];
@@ -107,26 +105,6 @@ public class PoolMaster : MonoBehaviour {
 	}
 
 	void Update() {
-		if (treesPool.Count > treesPool_buffer_size) {
-			treeClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (treeClearTimer <= 0) {
-				GameObject tree = treesPool[treesPool.Count - 1];
-				treesPool.RemoveAt(treesPool.Count - 1);
-				Destroy(tree);
-				if (treesPool.Count > treesPool_buffer_size) treeClearTimer = clearTime;
-				else treeClearTimer = 0;
-			}
-		}
-		if (saplingsPool.Count > grassPool_buffer_size) {
-			grassClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (grassClearTimer <= 0) {
-				GameObject grass= saplingsPool[saplingsPool.Count - 1];
-				saplingsPool.RemoveAt(saplingsPool.Count - 1);
-				Destroy(grass);
-				if (saplingsPool.Count > grassPool_buffer_size) grassClearTimer = clearTime;
-				else grassClearTimer = 0;
-			}
-		}
 
 		int docksCount = GameMaster.colonyController.docks.Count;
 		if (shipsClearTimer > 0) {
@@ -151,68 +129,6 @@ public class PoolMaster : MonoBehaviour {
 				shipsClearTimer = clearTime;
 			}
 		}
-	}
-
-	public Tree GetTree() {
-		GameObject tree = null;
-		if (treesPool.Count == 0)	tree = Structure.GetNewStructure(Structure.TREE_ID).gameObject;
-		else {
-			if (treesPool[0] == null) tree = Structure.GetNewStructure(Structure.TREE_ID).gameObject;
-			else {tree = treesPool[0]; treeClearTimer = clearTime;}
-			treesPool.RemoveAt(0);
-			if (tree.GetComponent<Tree>() == null) tree.gameObject.AddComponent<Tree>();
-		}
-		return tree.GetComponent<Tree>();
-	}
-	public void ReturnTreeToPool(Tree t) {
-		if (t == null) return;
-		if (t.basement != null) t.UnsetBasement();
-		t.hp = t.maxHp;
-		t.SetLifepower(0);
-		t.SetGrowth(0);
-		t.transform.parent = transform;
-		if (t.GetComponent<FallingTree>() != null) {
-			Destroy(t.GetComponent<FallingTree>());
-			t.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
-		}
-		t.gameObject.SetActive(false);
-		t.enabled = true;
-		treesPool.Add(t.gameObject);
-	}
-	public void ReturnTreeToPool(GameObject g) {
-		if ( g == null) return;
-		if (g.GetComponent<FallingTree>() != null) {
-			Destroy(g.GetComponent<FallingTree>());
-			g.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
-		}
-		treeClearTimer = clearTime;
-		g.transform.parent = null;
-		g.SetActive(false);
-		treesPool.Add(g);
-	}
-	public TreeSapling GetSapling() {
-		GameObject grass = null;
-		if (saplingsPool.Count == 0) grass = Structure.GetNewStructure(Structure.TREE_SAPLING_ID).gameObject;
-		else {
-			if (saplingsPool[0] == null) {
-				grass =  Structure.GetNewStructure(Structure.TREE_SAPLING_ID).gameObject;
-			}
-			else {
-				grass = saplingsPool[0];			
-				grassClearTimer = clearTime;
-			}
-			saplingsPool.RemoveAt(0);
-		}
-		return grass.GetComponent<TreeSapling>();
-	}
-	public void ReturnSaplingToPool(TreeSapling sapling) {
-		if (sapling == null) return;
-		if (sapling.basement != null) sapling.UnsetBasement();
-		sapling.hp = sapling.maxHp;
-		sapling.SetLifepower(0);
-		sapling.transform.parent = transform;
-		sapling.gameObject.SetActive(false);
-		saplingsPool.Add(sapling.gameObject);
 	}
 
 	public Ship GetShip(byte level, ShipType type) {

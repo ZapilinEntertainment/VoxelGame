@@ -96,7 +96,7 @@ public class SurfaceBlock : Block {
 			}
 		return map;
 	}
-	protected void CellsStatusUpdate() {
+	public void CellsStatusUpdate() {
 		map = GetBooleanMap();
 		bool empty = true, full = true; 
 		bool emptyCheckFailed = false, fullCheckFailed = false;
@@ -209,7 +209,7 @@ public class SurfaceBlock : Block {
 				if ( surfaceObjects[i] == null) {surfaceObjects.RemoveAt(i); continue;}
 				SurfaceRect sr = surfaceObjects[i].innerPosition;
 				if (sr.x <= pos.x && sr.z <= pos.y && sr.x + sr.x_size >= pos.x && sr.z+ sr.z_size >= pos.y) {
-					if ( surfaceObjects[i].undestructible || (surfaceObjects[i].type == StructureType.MainStructure && s.type != StructureType.MainStructure))
+					if ( surfaceObjects[i].undestructible)
 					{	
 						s.Annihilate( true);
 						return;

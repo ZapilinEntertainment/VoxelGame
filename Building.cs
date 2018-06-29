@@ -9,7 +9,7 @@ public class BuildingSerializer {
 }
 
 public class Building : Structure {
-	public int upgradedIndex = -1; // fixed by asset
+	public int upgradedIndex {get;private set;} // fixed by id
 	public bool canBePowerSwitched = true; // fixed by asset
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
@@ -19,7 +19,7 @@ public class Building : Structure {
 	public int requiredBasementMaterialId = -1; // fixed by asset
 	public byte level{get;protected set;} // fixed by id (except for mine)
 	[SerializeField]
-	protected List<Renderer> myRenderers; // fixed by asset
+	protected List<Renderer> myRenderers; // preparing inside
 	protected static ResourceContainer[] requiredResources;
 
 	override public void Prepare() {PrepareBuilding();}
@@ -98,8 +98,7 @@ public class Building : Structure {
 		case SWITCH_TOWER_ID:
 		case QUANTUM_ENERGY_TRANSMITTER_ID:
 			level = 5;
-			break;			
-
+			break;		
 		}
 	}
 		

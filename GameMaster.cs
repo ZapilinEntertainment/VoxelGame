@@ -20,6 +20,7 @@ public sealed class GameMaster : MonoBehaviour {
 	const float CAM_STANDART_DISTANCE = 3;
 
 	List<GameObject> cameraUpdateBroadcast;
+	public List<GameObject> standartSpritesList, mastSpritesList;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	public static Chunk mainChunk; 
@@ -87,6 +88,12 @@ public sealed class GameMaster : MonoBehaviour {
 	void Awake() {
 		gameSpeed = 1;
 		cameraUpdateBroadcast = new List<GameObject>();
+		standartSpritesList = new List<GameObject>();
+
+		mastSpritesList = new List<GameObject>();
+		GameObject[] msprites =  GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
+		if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
+		msprites = null;
 
 		everydayUpdateList = new List<Component>();
 		everyYearUpdateList = new List<Component>();
@@ -222,6 +229,35 @@ public sealed class GameMaster : MonoBehaviour {
 					if (cameraUpdateBroadcast[c] == null) cameraUpdateBroadcast.RemoveAt(c);
 					else cameraUpdateBroadcast[c].SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
 					c--;
+				}
+				if (standartSpritesList.Count > 0) {
+					int i = 0;
+					while (i < standartSpritesList.Count) {
+						if (standartSpritesList[i] == null) {
+							standartSpritesList.RemoveAt(i);
+							continue;
+						}
+						else {
+							standartSpritesList[i].transform.LookAt(camPos);
+							i++;
+						}
+					}
+				}
+				if (mastSpritesList.Count > 0) {
+					int i = 0;
+					while (i < mastSpritesList.Count) {
+						if (mastSpritesList[i] == null) {
+							mastSpritesList.RemoveAt(i);
+							continue;
+						}
+						else {
+							Transform obj = mastSpritesList[i].transform;
+							i++;
+							Vector3 dir = camPos - obj.position;
+							dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
+							obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
+						}
+					}
 				}
 				cameraHasMoved = false;
 				cameraTimer = cameraUpdateTime;

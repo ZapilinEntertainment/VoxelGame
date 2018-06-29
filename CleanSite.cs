@@ -45,33 +45,19 @@ public class CleanSite : Worksite {
 	void LabourResult() {
 		Structure s = workObject.surfaceObjects[0];
 		if (s == null || !s.gameObject.activeSelf) {workObject.RequestAnnihilationAtIndex(0);return;}
-			Plant p = s.GetComponent<Plant>();
-			if (p != null) {
-			if (p is Tree) {
-					Tree t = s.GetComponent<Tree>();
-					if (t != null) {
-						float lumberDelta= t.CalculateLumberCount(); 
-						GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, lumberDelta * 0.9f);
-						t.Chop();
-						workflow -= lumberDelta;
-					}
-				}
-			else {
-				p.Annihilate( false );
-				workflow--;
-			}
-			}
-			else {
+		if (s.id != Structure.PLANT_ID) {
+			(s as Plant).Harvest();
+		}
+		else {
 				HarvestableResource hr = s.GetComponent<HarvestableResource>();
 				if (hr != null) {
 					GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
-					Destroy(hr.gameObject);
+					hr.Annihilate( false );
 				}
 				else {
 					s.ApplyDamage(workflow);
 				}
-			}
-		workObject.surfaceObjects[0].Annihilate( false );
+		}
 		actionLabel = Localization.ui_clean_in_progress + " (" + workObject.surfaceObjects.Count.ToString() +' '+ Localization.objects_left +")" ;
 	}
 

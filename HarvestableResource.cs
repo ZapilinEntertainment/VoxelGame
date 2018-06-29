@@ -46,7 +46,7 @@ public class HarvestableResource : Structure {
 			model.transform.parent = transform;
 			model.transform.localPosition = Vector3.zero;
 			model.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
-			model.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
+			//model.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
 			myRenderer = model.transform.GetChild(0).GetComponent<MeshRenderer>();
 			myRenderer.sharedMaterial = ResourceType.GetMaterialById(resType.ID);
 		}

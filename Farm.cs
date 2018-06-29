@@ -4,13 +4,11 @@ using UnityEngine;
 
 public class Farm : WorkBuilding {
 	protected float farmFertility = 1;
-	int lifepowerToEveryCrop = 2;
-	int MAX_CROPS = 256;
-	List<Plant> unusedCrops;
+	public int crop_id = -1;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		unusedCrops = new List<Plant>();
+		if (crop_id == -1) crop_id = Plant.CROP_CORN_ID;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -18,7 +16,6 @@ public class Farm : WorkBuilding {
 		b.ClearSurface();
 		SetBuildingData(b, pos);
 		b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
-		MAX_CROPS = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION - innerPosition.x_size * innerPosition.z_size;
 	}
 
 	override protected void RecalculateWorkspeed() {
@@ -38,63 +35,45 @@ public class Farm : WorkBuilding {
 	}
 
 	override protected void LabourResult() {
-		int i = 0;
+		int i = 0, totalCost = 0;
 		float lifepowerCost = 0;
-		if (basement.cellsStatus != 0) {			
-			float harvest = 0;
-			while ( i < basement.surfaceObjects.Count ) {
-				if ( basement.surfaceObjects[i] == null ) {
+		List<Structure> structures = basement.surfaceObjects;
+		Chunk c = basement.myChunk;
+		if (basement.cellsStatus != 0) {	
+			while (i < structures.Count) {
+				if (structures[i] == null ) {
 					basement.RequestAnnihilationAtIndex(i);
 					continue;
 				}
 				else {
-					Plant p = basement.surfaceObjects[i] as Plant;
-					if ( p != null && p.plantType == PlantType.Crop  ) {
-						if ( !p.full ) 	{
-							p.AddLifepower( lifepowerToEveryCrop );
-							lifepowerCost += lifepowerToEveryCrop;
-						}
-						else {
-							if (p.growth >= 1) {
-								harvest += farmFertility;
-								p.Annihilate(false);
+					if (structures[i].id == Structure.PLANT_ID) {
+						Plant p = structures[i] as Plant;
+						if (p.plant_ID == crop_id) {
+							if (p.stage >= p.harvestableStage & p.growth >= 1) 	p.Harvest();
+							else {
+								if (p.lifepower < p.lifepowerToGrow) 	{
+									p.AddLifepower(p.maxLifeTransfer);
+									totalCost += p.maxLifeTransfer;
+								}
 							}
 						}
 					}
+					i++;
 				}
-				i++;
-			}
-			if ( harvest > 0 ) {
-				GameMaster.colonyController.storage.AddResource(ResourceType.Food, harvest);
 			}
 		}
-		if (i < MAX_CROPS) {
-			List<PixelPosByte> positions = basement.GetRandomCells(i);
-			i = positions.Count - 1;
-			while ( i >= 0 ) {
-				Structure s = null;
-				if ( unusedCrops.Count > 0 ) {
-					s = unusedCrops[0];
-					s.gameObject.SetActive(true);
-					unusedCrops.RemoveAt(0);
-				}
-				else s = Structure.GetNewStructure(Structure.WHEAT_CROP_ID);
-				s.SetBasement(basement, positions[i]);
-				(s as Plant).AddLifepower(lifepowerToEveryCrop);
-				lifepowerCost += lifepowerToEveryCrop;
-				i--;
+		if (basement.cellsStatus != 1) {
+			PixelPosByte pos = basement.GetRandomCell();
+			int cost = Plant.GetCreateCost(crop_id);
+			if (pos != PixelPosByte.Empty & c.lifePower > cost ) {
+				Plant p = Plant.GetNewPlant(crop_id);
+				p.Prepare();
+				p.SetBasement(basement, pos);
+				c.TakeLifePowerWithForce(cost);
+				totalCost += cost;
 			}
 		}
-		if (lifepowerCost > 0) basement.myChunk.TakeLifePowerWithForce(Mathf.RoundToInt(lifepowerCost));
-	}
-
-	public void ReturnCropToPool (Plant c) {
-		if (c != null ) {
-			c.SetLifepower(0);
-			c.SetGrowth(0);
-			c.gameObject.SetActive(false);
-			unusedCrops.Add(c);
-		}
+		if (totalCost > 0) c.TakeLifePowerWithForce(totalCost);
 	}
 	void OnDestroy() {
 		if (basement != null) {
