@@ -6,21 +6,24 @@ public enum PlantType {Tree, Crop}
 
 [System.Serializable]
 public class PlantSerializer {
-	public float lifepower, growth, maxLifeTransfer, growSpeed;
+	public int id;
+	public float lifepower, growth, growSpeed;
+	public byte stage;
 }
 
 public class Plant : Structure {
 	public int plant_ID{get;protected set;}
 	public float lifepower;
 	public float lifepowerToGrow {get;protected set;}  // fixed by id
-	public int maxLifeTransfer{get;protected set;} 
+	public int maxLifeTransfer{get;protected set;}  // fixed by id
 	protected float growSpeed, decaySpeed; // fixed by id
 	public float growth;
 	public byte stage;
-	protected byte maxStage;
 	public byte harvestableStage{get;protected set;}
 
 	public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2;
+
+	public static byte maxStage{get;protected set;}
 
 	public static Plant GetNewPlant(int id) {
 		Plant p = null;
@@ -38,7 +41,6 @@ public class Plant : Structure {
 		lifepowerToGrow = 1;
 		stage = 0;
 		growth = 0;
-		maxStage = stage;
 	}
 
 	override public void Prepare() {		
@@ -93,7 +95,7 @@ public class Plant : Structure {
 	public virtual void SetGrowth(float t) {
 		growth = t;
 	}
-	virtual protected void SetStage( byte newStage) {
+	public virtual void SetStage( byte newStage) {
 		if (newStage == stage) return;
 		stage = newStage;
 		growth = 0;
@@ -111,22 +113,31 @@ public class Plant : Structure {
 		return ss;
 	}
 
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss,sblock);
+	public static void Load(StructureSerializer ss, SurfaceBlock sblock) {
 		PlantSerializer ps = new PlantSerializer();
 		GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
+		Plant p = GetNewPlant(ps.id);
+		p.Load(ss, sblock, ps);
+	}
+	protected void Load(StructureSerializer ss, SurfaceBlock sblock, PlantSerializer ps) {
+		LoadStructureData(ss,sblock);
 		LoadPlantData(ps);
 	}
 
 	protected void LoadPlantData(PlantSerializer ps) {
+		growSpeed = ps.growSpeed;
 		lifepower = ps.lifepower;
-		SetGrowth(ps.growth);
+		SetStage(ps.stage);
+		growth = growth;
 	}
 
 	protected PlantSerializer GetPlantSerializer() {
 		PlantSerializer ps = new PlantSerializer();
-		ps.growth = growth;
+		ps.id = plant_ID;
 		ps.lifepower = lifepower;
+		ps.growth = growth;
+		ps.growSpeed = growSpeed;
+		ps.stage = stage;
 		return ps;
 	}
 	#endregion

@@ -18,7 +18,7 @@ public class ScalableHarvestableResource : Structure {
 	public float AddResource( ResourceType type, float volume) {
 		if (mainResource == ResourceType.Nothing) {
 			mainResource = type;
-			myRenderer.sharedMaterial = type.material;
+			myRenderers[0].sharedMaterial = type.material;
 		}
 		else{
 			if (type != mainResource) {

@@ -537,8 +537,11 @@ public class SurfaceBlock : Block {
 		LoadSurfaceBlockData(sbs);
 		if (sbs.haveStructures) {
 			foreach (StructureSerializer ss in sbs.structuresList) {
-				Structure s = Structure.GetNewStructure(ss.id);
-				s.Load(ss,this);
+				if (ss.id != Structure.PLANT_ID) {
+					Structure s = Structure.GetNewStructure(ss.id);
+					if (s!=null)	s.Load(ss,this);
+				}
+				else 	Plant.Load(ss, this);
 			}
 		}
 	}

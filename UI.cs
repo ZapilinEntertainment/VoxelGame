@@ -160,7 +160,7 @@ public class UI : MonoBehaviour {
 											break;
 										}
 										quadSelector.SetActive(true);
-										GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
+									GameMaster.realMaster.SetLookPoint (chosenCubeBlock.transform.position);
 									}	
 								break;
 							}
@@ -759,7 +759,8 @@ public class UI : MonoBehaviour {
 				}
 				#region cubeBlockPanel
 				if (faceIndex != 10) { 
-							if (GUI.Button(rr, Localization.ui_dig_block)) {
+					if (GUI.Button(rr, Localization.ui_dig_block)) {
+						if (faceIndex != 4 ) {
 								TunnelBuildingSite tbs = chosenCubeBlock.GetComponent<TunnelBuildingSite>();
 								if (tbs == null) {
 									tbs = chosenCubeBlock.gameObject.AddComponent<TunnelBuildingSite>();
@@ -770,6 +771,11 @@ public class UI : MonoBehaviour {
 								mode = UIMode.WorksitePanel;
 								ChangeArgument(1);
 								return;
+						}
+						else {
+							DigSite ds =  chosenCubeBlock.gameObject.AddComponent<DigSite>();
+							ds.Set(chosenCubeBlock, true);
+						}
 						}
 				}
 
@@ -868,6 +874,7 @@ public class UI : MonoBehaviour {
 					for (int i = 0; i < 6; i++) {
 						if (i == currentLevel) GUI.DrawTexture(rr, PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 						if (GUI.Button(rr, "Quality level "+i.ToString())) QualitySettings.SetQualityLevel(i);
+						rr.y += rr.height;
 					}
 				}
 				break;

@@ -22,7 +22,10 @@ public class HarvestableResource : Structure {
 	public void SetResources(ResourceType resType, float f_count1) {
 		mainResource = resType;
 		count1 = f_count1;
-		if (myRenderer != null) Destroy(myRenderer.gameObject);
+		if (myRenderers!= null & myRenderers.Count> 0 ) {
+			if (myRenderers[0] != null) Destroy(myRenderers[0]);
+			myRenderers.RemoveAt(0);
+		}
 		GameObject model = null;
 		switch (resType.ID) {
 		case ResourceType.STONE_ID:
@@ -47,8 +50,9 @@ public class HarvestableResource : Structure {
 			model.transform.localPosition = Vector3.zero;
 			model.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 			//model.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
-			myRenderer = model.transform.GetChild(0).GetComponent<MeshRenderer>();
-			myRenderer.sharedMaterial = ResourceType.GetMaterialById(resType.ID);
+			if (myRenderers == null) myRenderers = new List<Renderer>();
+			myRenderers.Add( model.transform.GetChild(0).GetComponent<MeshRenderer>());
+			myRenderers[0].sharedMaterial = ResourceType.GetMaterialById(resType.ID);
 		}
 	}
 

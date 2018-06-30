@@ -27,6 +27,11 @@ public abstract class Worksite : MonoBehaviour {
 		workersCount = 0; 
 	}
 
+	/// <summary>
+	/// return workers residue
+	/// </summary>
+	/// <returns>The workers.</returns>
+	/// <param name="x">The x coordinate.</param>
 	public int AddWorkers ( int x) {
 		if (workersCount == maxWorkers) return 0;
 		else {
@@ -42,6 +47,7 @@ public abstract class Worksite : MonoBehaviour {
 		}
 	}
 
+	public void FreeWorkers() {FreeWorkers(workersCount);}
 	public void FreeWorkers(int x) {
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;

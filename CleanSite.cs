@@ -25,8 +25,8 @@ public class CleanSite : Worksite {
 				else {
 					DigSite ds =  basement.gameObject.AddComponent<DigSite>();
 					ds.Set(basement as CubeBlock, true);
-					ds.AddWorkers(workersCount);
-					workersCount = 0;
+					workersCount = ds.AddWorkers(workersCount);
+					if (workersCount > 0) FreeWorkers();
 				}
 			}
 			Destroy(this);
@@ -45,7 +45,7 @@ public class CleanSite : Worksite {
 	void LabourResult() {
 		Structure s = workObject.surfaceObjects[0];
 		if (s == null || !s.gameObject.activeSelf) {workObject.RequestAnnihilationAtIndex(0);return;}
-		if (s.id != Structure.PLANT_ID) {
+		if (s.id == Structure.PLANT_ID) {
 			(s as Plant).Harvest();
 		}
 		else {

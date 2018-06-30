@@ -213,6 +213,12 @@ public class PoolMaster : MonoBehaviour {
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
 	}
 
+	public static GameObject GetRooftop(Structure s) {
+		GameObject g = null;
+		g = GameObject.Instantiate(Resources.Load<GameObject>("Prefs/blockRooftop")) as GameObject;
+		return g;
+	}
+
 	public static void BuildSplashEffect(Structure s) {
 		//заготовка
 	}

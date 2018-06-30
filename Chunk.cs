@@ -81,31 +81,57 @@ public sealed class Chunk : MonoBehaviour {
 							if (b != null) {
 								{
 									int x = b.pos.x; int z = b.pos.z;
-									List<ChunkPos> candidats = new List<ChunkPos>();
+									List<SurfaceBlock> candidats = new List<SurfaceBlock>();
 									bool rightSide = false, leftSide = false;
-									if (x + 1 < CHUNK_SIZE) {candidats.Add(new ChunkPos(x + 1, GetSurfaceBlock(x,z).pos.y ,z)); rightSide = true;}
-									if (x - 1 >= 0) {candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z).pos.y, z));leftSide = true;}
+									SurfaceBlock candidateSurface = null;
+									if (x + 1 < CHUNK_SIZE) {
+										candidateSurface = GetSurfaceBlock(x+1,z);
+										if (candidateSurface != null) {
+											candidats.Add(candidateSurface); 
+											rightSide = true;
+										}
+									}
+									if (x - 1 >= 0) {
+										candidateSurface = GetSurfaceBlock(x-1,z);
+										if (candidateSurface != null) {
+											candidats.Add(candidateSurface); 
+											rightSide = true;
+										}
+									}
 									if (z + 1 < CHUNK_SIZE) {
-										candidats.Add(new ChunkPos(x, GetSurfaceBlock(x,z+1).pos.y, z+1));
-										if (rightSide) candidats.Add(new ChunkPos(x+1, GetSurfaceBlock(x+1,z+1).pos.y, z+1));
-										if (leftSide) candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z+1).pos.y, z+1));
+										candidateSurface = GetSurfaceBlock(x,z+1);
+										if (candidateSurface != null) candidats.Add(candidateSurface); 
+										if (rightSide) {
+											candidateSurface = GetSurfaceBlock(x + 1,z+1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
+										if (leftSide) {
+											candidateSurface = GetSurfaceBlock(x - 1,z+1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
 									}
 									if (z - 1 >= 0) {
-										candidats.Add(new ChunkPos(x, GetSurfaceBlock(x,z-1).pos.y, z-1));
-										if (rightSide) candidats.Add(new ChunkPos(x+1, GetSurfaceBlock(x+1,z-1).pos.y, z-1));
-										if (leftSide) candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z-1).pos.y, z-1));
+										candidateSurface = GetSurfaceBlock(x,z-1);
+										if (candidateSurface != null) candidats.Add(candidateSurface); 
+										if (rightSide) {
+											candidateSurface = GetSurfaceBlock(x + 1,z-1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
+										if (leftSide) {
+											candidateSurface = GetSurfaceBlock(x - 1,z-1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
 									}
-									foreach (ChunkPos p in candidats) {
-										SurfaceBlock n = GetSurfaceBlock(p.x, p.z);
-											if (n == null ) continue;
-											if (n.material_id == ResourceType.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland== null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
+									foreach (SurfaceBlock n in candidats) {
+										if (n == null | n.grassland != null ) continue;
+										if (n.material_id == ResourceType.DIRT_ID & !dirt_for_grassland.Contains(n) & Mathf.Abs(b.pos.y - n.pos.y) < 2) dirt_for_grassland.Add(n);
 									}
 								}
-									b.AddGrassland();
-									int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
-									if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
-									else {b.grassland.AddLifepower((int)lifePower); lifePower = 0;}
-									grassland_blocks.Add(b.grassland);
+								b.AddGrassland();
+								int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+								if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
+								else {b.grassland.AddLifepower((int)lifePower); lifePower = 0;}
+								grassland_blocks.Add(b.grassland);
 							}
 							else dirt_for_grassland.RemoveAt(pos);
 						}
@@ -756,7 +782,7 @@ public sealed class Chunk : MonoBehaviour {
 	}
 
 	public void BlockByStructure(byte x, byte y, byte z, Structure s) {
-		if (x > CHUNK_SIZE || y > CHUNK_SIZE || z > CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
+		if (x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
 		Block b = GetBlock(x,y,z);
 		if (b != null) { ReplaceBlock( new ChunkPos(x,y,z), BlockType.Shapeless, 0, false); }
 		else blocks[x,y,z] = new GameObject().AddComponent<Block>();

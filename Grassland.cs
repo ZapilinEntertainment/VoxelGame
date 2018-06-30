@@ -180,7 +180,8 @@ public class Grassland : MonoBehaviour {
 	/// </summary>
 	public void AddLifepowerAndCalculate(int count) {
 		if (count > 2 * LIFEPOWER_TO_PREPARE) {
-			float freeEnergy = count - 2 * LIFEPOWER_TO_PREPARE;
+			lifepower = 2 * LIFEPOWER_TO_PREPARE;
+			float freeEnergy = count - lifepower; 
 			int treesCount = (int)(Random.value * 10 + 4);
 			int i = 0;
 			List<PixelPosByte> positions = myBlock.GetRandomCells(treesCount);
@@ -189,14 +190,22 @@ public class Grassland : MonoBehaviour {
 			if (treesCount != 0) {
 				while ( i < treesCount & freeEnergy > 0 & myBlock.cellsStatus != 1 ) {
 					int plantID = Plant.TREE_OAK_ID;
+					int ld  = (int)(lifepowerDosis * (0.3f + Random.value));
+					if (ld > freeEnergy) {lifepower+=freeEnergy; break;}
+					float maxEnergy = OakTree.GetLifepowerLevelForStage(OakTree.maxStage);
+					byte getStage = (byte)(ld / maxEnergy * OakTree.maxStage);
+					if (getStage > OakTree.maxStage) getStage = OakTree.maxStage;
+					if (getStage == OakTree.maxStage & Random.value > 0.7f) getStage--;
+
 					Plant p = Plant.GetNewPlant(plantID);
 					p.SetBasement(myBlock, positions[i]);
-					p.AddLifepowerAndCalculate(lifepowerDosis);
-					freeEnergy -= (Plant.GetCreateCost(plantID) + lifepowerDosis);
+					p.AddLifepower(ld);
+					p.SetStage(getStage);
+					freeEnergy -= (Plant.GetCreateCost(plantID) + ld);
 					i++;
 				}
 			}
-			lifepower += freeEnergy;
+			lifepower = freeEnergy + 2 * LIFEPOWER_TO_PREPARE;
 		}
 		else 	lifepower = count;
 
