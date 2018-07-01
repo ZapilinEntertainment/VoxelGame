@@ -24,6 +24,7 @@ public class UI : MonoBehaviour {
 	Structure chosenStructure;
 	Worksite chosenWorksite;
 	Crew showingCrew; bool showCrewsOrVesselsList = false, dissmissConfirmation = false;
+	bool showGraphicSettings = false;
 	Vector2 mousePos, buildingsScrollViewPos = Vector2.zero;
 	GameObject quadSelector, structureFrame;
 
@@ -78,6 +79,11 @@ public class UI : MonoBehaviour {
 		float side = p * SurfaceBlock.INNER_RESOLUTION;
 		buildingGridRect = new Rect(rightPanelBox.x - side - 2 * p, Screen.height/2f - side/2f, side, side);
 	}
+	public void Reset() {
+		bufferedResources = null;
+		DropFocus();
+	}
+
 	void Update() {
 		mousePos = Input.mousePosition;
 		mousePos.y = Screen.height - mousePos.y;
@@ -154,7 +160,7 @@ public class UI : MonoBehaviour {
 											break;
 										}
 										quadSelector.SetActive(true);
-										GameMaster.realMaster.SetLookPoint (quadSelector.transform.position);
+									GameMaster.realMaster.SetLookPoint (chosenCubeBlock.transform.position);
 									}	
 								break;
 							}
@@ -337,7 +343,7 @@ public class UI : MonoBehaviour {
 			showingCrew.name = GUI.TextField(new Rect(left + 2 * a,  up, 7 * a, a), showingCrew.name);
 			GUI.Label(new Rect(left + 9 * a, up, a,a), showingCrew.level.ToString());
 			GUI.DrawTexture(new Rect(left + 2 * a, up + a, 8 * a, a), whiteSquare_tx, ScaleMode.StretchToFill);
-			GUI.DrawTexture(new Rect(left + a * a, up + a, 8*a * showingCrew.experience / showingCrew.nextExperienceLimit,a), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+			if (showingCrew.experience > 0) GUI.DrawTexture(new Rect(left + a * a, up + a, 8*a * showingCrew.experience / showingCrew.nextExperienceLimit,a), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 			GUI.Label(new Rect(left, up + 2 *a, 5 * a, a), Localization.vessel + " :");
 			GUI.Label(new Rect(left, up + 3 * a, 8 * a, a), showingCrew.shuttle.name);
 			if (Shuttle.shuttlesList.Count != 0) {
@@ -528,7 +534,7 @@ public class UI : MonoBehaviour {
 										chosenBuildingIndex = buildingIndex;
 										showBuildingCreateInfo = true;
 										bufferedResources = ResourcesCost.GetCost(bd.id);
-										if (chosenStructure.type != StructureType.MainStructure ) argument = 4; else argument = 3;
+										if ( !chosenStructure.fullCover ) argument = 4; else argument = 3;
 										break;
 									}
 									else { // уже выбрано
@@ -568,7 +574,7 @@ public class UI : MonoBehaviour {
 								buildingsListLength += rr.height;
 							}
 							//для крупных структур:
-							if (chosenStructure.type == StructureType.MainStructure) {
+								if (chosenStructure.fullCover) {
 									bool pass = true;
 									if (chosenBuilding.borderOnlyConstruction) { 
 										if ( !chosenSurfaceBlockIsBorderBlock ) {
@@ -635,11 +641,10 @@ public class UI : MonoBehaviour {
 						while ( n < chosenSurfaceBlock.surfaceObjects.Count) {
 							if (chosenSurfaceBlock.surfaceObjects[n] == null) {chosenSurfaceBlock.RequestAnnihilationAtIndex(n); n++; continue;}
 							Texture t = PoolMaster.quadSelector_tx;
-							switch (chosenSurfaceBlock.surfaceObjects[n].type) {
-							case StructureType.HarvestableResources: t = PoolMaster.orangeSquare_tx;break;
-							case StructureType.MainStructure: t = whiteSpecial_tx;break;
-							case StructureType.Plant: t = greenSquare_tx;break;
-							case StructureType.Structure : t = whiteSquare_tx;break;
+							switch (chosenSurfaceBlock.surfaceObjects[n].id) {
+							case Structure.CONTAINER_ID: t = PoolMaster.orangeSquare_tx;break;
+							case Structure.PLANT_ID: t = greenSquare_tx;break; // + иконку
+							default : t = whiteSquare_tx;break; // + иконку
 							}
 							SurfaceRect sr= chosenSurfaceBlock.surfaceObjects[n].innerPosition;
 							GUI.DrawTexture(new Rect(buildingGridRect.x + sr.x * p, buildingGridRect.y + buildingGridRect.height -  (sr.z+ sr.z_size) * p , p * sr.x_size, p * sr.z_size), t, ScaleMode.StretchToFill);
@@ -754,51 +759,23 @@ public class UI : MonoBehaviour {
 				}
 				#region cubeBlockPanel
 				if (faceIndex != 10) { 
-							if (GUI.Button(rr, Localization.ui_dig_block)) {
+					if (GUI.Button(rr, Localization.ui_dig_block)) {
+						if (faceIndex != 4 ) {
 								TunnelBuildingSite tbs = chosenCubeBlock.GetComponent<TunnelBuildingSite>();
 								if (tbs == null) {
 									tbs = chosenCubeBlock.gameObject.AddComponent<TunnelBuildingSite>();
 									tbs.Set(chosenCubeBlock);
 								}
-								WorksiteSign sign = null;
-								switch (faceIndex) {
-								case 0:
-								if ((tbs.signsMask & 1) == 0) {
-									sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-									sign.transform.position = chosenCubeBlock.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
-									tbs.signsMask += 1;
-								}	
-								break;
-								case 1:
-								if ((tbs.signsMask & 2 )== 0) {
-										sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-										sign.transform.position = chosenCubeBlock.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
-										sign.transform.rotation = Quaternion.Euler(0,90,0);
-										tbs.signsMask += 2;
-									}
-									break;
-								case 2:
-								if ((tbs.signsMask & 4 )== 0) {
-										sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-										sign.transform.position = chosenCubeBlock.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
-										sign.transform.rotation = Quaternion.Euler(0,180,0);
-										tbs.signsMask += 4;
-									}
-									break;
-								case 3:
-								if ((tbs.signsMask & 8) == 0) {
-									sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-									sign.transform.position = chosenCubeBlock.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
-									sign.transform.rotation = Quaternion.Euler(0,-90,0);
-									tbs.signsMask += 8;
-								}
-									break;
-								}
-								if (sign != null) sign.worksite = tbs;
+								tbs.CreateSign(faceIndex);
 								chosenWorksite = tbs;
 								mode = UIMode.WorksitePanel;
 								ChangeArgument(1);
 								return;
+						}
+						else {
+							DigSite ds =  chosenCubeBlock.gameObject.AddComponent<DigSite>();
+							ds.Set(chosenCubeBlock, true);
+						}
 						}
 				}
 
@@ -872,6 +849,8 @@ public class UI : MonoBehaviour {
 						if ( wb.workersCount != wb.maxWorkers && GUI.Button (new Rect( rr.xMax - 2 *p, rr.y, p, p ), PoolMaster.plusButton_tx) ) { GameMaster.colonyController.SendWorkers(1,wb, WorkersDestination.ForWorkBuilding);}
 						if ( wb.workersCount != wb.maxWorkers &&GUI.Button (new Rect( rr.xMax - p, rr.y, p, p ), PoolMaster.plusX10Button_tx)) { GameMaster.colonyController.SendWorkers(wb.maxWorkers - wb.workersCount,wb, WorkersDestination.ForWorkBuilding);}
 						rr.y += p;
+						GUI.Label ( new Rect (rr.x , rr.y, rr.width , rr.height), string.Format("{0:0.##}",wb.workSpeed) + ' ' + Localization.ui_points_sec, PoolMaster.GUIStyle_CenterOrientedLabel );
+						rr.y += rr.height;
 					}
 				}
 				chosenStructure.gui_ypos = rr.y;
@@ -885,6 +864,18 @@ public class UI : MonoBehaviour {
 				if (GUI.Button(rr, Localization.menu_load)) {
 					if (GameMaster.realMaster.LoadGame("newsave"))	GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.GameLoaded));
 					else GameMaster.realMaster.AddAnnouncement(Localization.GetGameMessage(GameMessage.LoadingFailed));
+				}
+				rr.y += rr.height;
+				if (GUI.Button(rr, Localization.ui_graphic_settings)) showGraphicSettings = !showGraphicSettings;
+				rr.y += rr.height;
+				rr.width *= 0.9f; rr.x += rr.width * 0.1f;
+				if (showGraphicSettings) {
+					int currentLevel = QualitySettings.GetQualityLevel();
+					for (int i = 0; i < 6; i++) {
+						if (i == currentLevel) GUI.DrawTexture(rr, PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+						if (GUI.Button(rr, "Quality level "+i.ToString())) QualitySettings.SetQualityLevel(i);
+						rr.y += rr.height;
+					}
 				}
 				break;
 			}
