@@ -20,6 +20,7 @@ public sealed class GameMaster : MonoBehaviour {
 	const float CAM_STANDART_DISTANCE = 3;
 
 	List<GameObject> cameraUpdateBroadcast;
+	public List<GameObject> standartSpritesList, mastSpritesList;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	public static Chunk mainChunk; 
@@ -87,6 +88,12 @@ public sealed class GameMaster : MonoBehaviour {
 	void Awake() {
 		gameSpeed = 1;
 		cameraUpdateBroadcast = new List<GameObject>();
+		standartSpritesList = new List<GameObject>();
+
+		mastSpritesList = new List<GameObject>();
+		GameObject[] msprites =  GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
+		if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
+		msprites = null;
 
 		everydayUpdateList = new List<Component>();
 		everyYearUpdateList = new List<Component>();
@@ -199,9 +206,8 @@ public sealed class GameMaster : MonoBehaviour {
 			colonyController.storage.AddResource(ResourceType.Plastics,100);
 			colonyController.storage.AddResource(ResourceType.Food, 200);
 
-			UI ui = gameObject.AddComponent<UI>();
-			ui.lineDrawer = systemDrawLR;
-			//ui.lineDrawer.gameObject.layer = 5;
+			//UI ui = gameObject.AddComponent<UI>();
+			//ui.lineDrawer = systemDrawLR;
 			break;
 		}
 	}
@@ -222,6 +228,35 @@ public sealed class GameMaster : MonoBehaviour {
 					if (cameraUpdateBroadcast[c] == null) cameraUpdateBroadcast.RemoveAt(c);
 					else cameraUpdateBroadcast[c].SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
 					c--;
+				}
+				if (standartSpritesList.Count > 0) {
+					int i = 0;
+					while (i < standartSpritesList.Count) {
+						if (standartSpritesList[i] == null) {
+							standartSpritesList.RemoveAt(i);
+							continue;
+						}
+						else {
+							standartSpritesList[i].transform.LookAt(camPos);
+							i++;
+						}
+					}
+				}
+				if (mastSpritesList.Count > 0) {
+					int i = 0;
+					while (i < mastSpritesList.Count) {
+						if (mastSpritesList[i] == null) {
+							mastSpritesList.RemoveAt(i);
+							continue;
+						}
+						else {
+							Transform obj = mastSpritesList[i].transform;
+							i++;
+							Vector3 dir = camPos - obj.position;
+							dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
+							obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
+						}
+					}
 				}
 				cameraHasMoved = false;
 				cameraTimer = cameraUpdateTime;
@@ -398,9 +433,9 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.announcementTimer = announcementTimer;
 		gms.recruiting_hireCost = RecruitingCenter.hireCost;
 		#endregion
-		gms.dockStaticSerializer = Dock.SaveStaticDockData();
+		gms.chunkSerializer = mainChunk.SaveChunkData();
 		gms.colonyControllerSerializer = colonyController.Save();
-
+		gms.dockStaticSerializer = Dock.SaveStaticDockData();
 		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
 		gms.crewStaticSerializer = Crew.SaveStaticData();
 		gms.questStaticSerializer = Quest.SaveStaticData();
@@ -451,6 +486,7 @@ public sealed class GameMaster : MonoBehaviour {
 			Destroy (mainChunk.gameObject);
 			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
 			QuantumTransmitter.Reset();Hangar.Reset();
+			//UI.current.Reset();
 
 			Crew.LoadStaticData(gms.crewStaticSerializer);
 			Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
@@ -458,6 +494,7 @@ public sealed class GameMaster : MonoBehaviour {
 			GameObject g = new GameObject("chunk");
 			mainChunk = g.AddComponent<Chunk>();
 			mainChunk.LoadChunkData(gms.chunkSerializer);
+			colonyController.Load(gms.colonyControllerSerializer);
 
 			Dock.LoadStaticData(gms.dockStaticSerializer);
 			Quest.LoadStaticData(gms.questStaticSerializer);
@@ -539,7 +576,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
 		using (MemoryStream stream = new MemoryStream(data))
 		{
-			output=  (T)(new BinaryFormatter().Deserialize(stream));
+			output = (T)System.Convert.ChangeType(new BinaryFormatter().Deserialize(stream), typeof(T));
 		}
 	}
 }
@@ -562,8 +599,8 @@ class GameMasterSerializer {
 	public float announcementTimer;
 
 	public ChunkSerializer chunkSerializer;
-	public DockStaticSerializer dockStaticSerializer;
 	public ColonyControllerSerializer colonyControllerSerializer;
+	public DockStaticSerializer dockStaticSerializer;
 	public CrewStaticSerializer crewStaticSerializer;
 	public ShuttleStaticSerializer shuttleStaticSerializer;
 	public QuestStaticSerializer questStaticSerializer;

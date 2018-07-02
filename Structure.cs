@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum StructureType {NotAssigned, Plant, HarvestableResources, Structure, MainStructure}
 [System.Serializable]
 public class StructureSerializer {
 	public PixelPosByte pos;
@@ -15,22 +14,24 @@ public class StructureSerializer {
 
 public class Structure : MonoBehaviour {
 	public SurfaceBlock basement{get;protected set;}
-	public SurfaceRect innerPosition;
+	public SurfaceRect innerPosition{get;protected set;}
 	public bool borderOnlyConstruction{get;protected set;}  // fixed in ID
 	public bool isArtificial {get;protected set;} // fixed in ID
 	public bool isBasement{get;protected set;} // fixed in ID
+	public bool fullCover{get;protected set;} // fixed in ID
 	public bool undestructible = false; // fixed in asset
-	public StructureType type {get;protected set;} // fixed in ID
-	public float hp = 1;
+	public float hp {get;protected set;}
 	public float maxHp = 1; // fixed in asset
 	public bool randomRotation = false, rotate90only = true; // fixed in asset
+
 	public bool showOnGUI{get; protected set;}
 	public float gui_ypos = 0;
-	public int id {get; private set;}
-	[SerializeField]
-	protected Renderer myRenderer; // fixed in asset
+
+	public int id {get; protected set;}
+	public List<Renderer> myRenderers; // preparing inside
 	public bool visible {get;protected set;}
-	public const int TREE_SAPLING_ID = 1,  TREE_ID = 2, DEAD_TREE_ID = 3, WHEAT_CROP_ID = 4, LANDED_ZEPPELIN_ID = 5,
+
+	public const int  PLANT_ID = 1, DRYED_PLANT_ID = 2, LANDED_ZEPPELIN_ID = 5,
 	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, HOUSE_0_ID = 11, 
 	DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19, 
 	WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
@@ -44,13 +45,12 @@ public class Structure : MonoBehaviour {
 	public const int TOTAL_STRUCTURES_COUNT = 67;
 	static Structure[] prefs;
 	static List<Building> allConstructableBuildingsList;
+	static UIStructureObserver structureObserver;
 
 	public static void LoadPrefs() {
 		prefs = new Structure[TOTAL_STRUCTURES_COUNT];
-		prefs[TREE_SAPLING_ID] = Resources.Load<Structure>("Lifeforms/TreeSapling");
-		prefs[TREE_ID] = Resources.Load<Structure>("Lifeforms/Tree");
-		prefs[DEAD_TREE_ID] = Resources.Load<Structure>("Lifeforms/DeadTree");
-		prefs[WHEAT_CROP_ID] = Resources.Load<Structure>("Lifeforms/wheatCrop");
+		prefs[PLANT_ID] = new GameObject().AddComponent<Plant>();
+		prefs[DRYED_PLANT_ID] = Resources.Load<Structure>("Structures/dryedPlant");
 		prefs[LANDED_ZEPPELIN_ID] = Resources.Load<Structure>("Structures/ZeppelinBasement");
 		prefs[TREE_OF_LIFE_ID] = Resources.Load<Structure>("Structures/Tree of Life");
 		prefs[STORAGE_0_ID] = Resources.Load<Structure>("Structures/Storage_level_0");
@@ -153,9 +153,9 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(GRPH_REACTOR_4_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add (GetNewStructure(SHUTTLE_HANGAR_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add (GetNewStructure(RECRUITING_CENTER_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
-		allConstructableBuildingsList.Add( GetNewStructure(CHEMICAL_FACTORY_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add(GetNewStructure(EXPEDITION_CORPUS_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add(GetNewStructure(QUANTUM_TRANSMITTER_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+		allConstructableBuildingsList.Add( GetNewStructure(CHEMICAL_FACTORY_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 
 		allConstructableBuildingsList.Add( GetNewStructure(STORAGE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(HOUSE_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
@@ -187,14 +187,8 @@ public class Structure : MonoBehaviour {
 	protected void PrepareStructure() {
 		hp = maxHp;
 		isBasement = false; isArtificial = true; borderOnlyConstruction = false;
+		fullCover = false;
 		switch ( id ) {
-		case WHEAT_CROP_ID:
-		case TREE_SAPLING_ID:
-		case TREE_ID: 
-			innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.Plant;
-			break;		
-		case DEAD_TREE_ID: innerPosition = SurfaceRect.one;isArtificial = false; type = StructureType.Structure; 
-			break;
 		case LIFESTONE_ID:
 		case TREE_OF_LIFE_ID:
 		case LANDED_ZEPPELIN_ID: 
@@ -211,88 +205,98 @@ public class Structure : MonoBehaviour {
 		case MINI_GRPH_REACTOR_ID:
 		case EXPEDITION_CORPUS_ID:
 		case QUANTUM_TRANSMITTER_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+		case RECRUITING_CENTER_ID:
+		case STORAGE_0_ID:
+			innerPosition = SurfaceRect.full;  
 			break;		
 		case DOCK_ID:
 		case SHUTTLE_HANGAR_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
-			borderOnlyConstruction = true;
+			innerPosition = SurfaceRect.full; 
+			borderOnlyConstruction = true; 
 			break;		
-		case RECRUITING_CENTER_ID:
-		case STORAGE_0_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; break;
 		case STORAGE_1_ID:
 		case SWITCH_TOWER_ID:
-			innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.Structure; break;
+			innerPosition = new SurfaceRect(0,0,4,4);  break;
 		case STORAGE_2_ID:
 		case STORAGE_3_ID:
-			innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; break;
+			innerPosition = new SurfaceRect(0,0,6,6); break;
 		case STORAGE_5_ID: 
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
+			innerPosition = SurfaceRect.full;  isBasement = true; break;
 		case CONTAINER_ID :	
-			innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.HarvestableResources; 
+			innerPosition = SurfaceRect.one; isArtificial = false; 
 			break;
-		case MINE_ELEVATOR_ID: innerPosition = new SurfaceRect(0,0,4,4); isBasement = true; type = StructureType.Structure; break;
-		case HOUSE_0_ID:		innerPosition = SurfaceRect.one; type = StructureType.Structure; break;
-		case HOUSE_1_ID: innerPosition = new SurfaceRect( 0, 0, 4,4); type = StructureType.Structure;break;
+		case MINE_ELEVATOR_ID: innerPosition = new SurfaceRect(0,0,4,4); isBasement = true; break;
+		case HOUSE_0_ID:		innerPosition = SurfaceRect.one;  break;
+		case HOUSE_1_ID: innerPosition = new SurfaceRect( 0, 0, 4,4); break;
 		case HOUSE_2_ID:
-		case HOUSE_3_ID: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.Structure; break;
-		case HOUSE_5_ID: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
-		case ENERGY_CAPACITOR_1_ID: innerPosition = new SurfaceRect (0,0, 2, 4); type = StructureType.Structure; break;
+		case HOUSE_3_ID: innerPosition = new SurfaceRect(0,0,6,6);  break;
+		case HOUSE_5_ID: innerPosition = SurfaceRect.full;  isBasement = true; break;
+		case ENERGY_CAPACITOR_1_ID: innerPosition = new SurfaceRect (0,0, 2, 4); break;
 		case ENERGY_CAPACITOR_2_ID:
-		case ENERGY_CAPACITOR_3_ID: innerPosition = new SurfaceRect (0,0,4,8);type = StructureType.Structure; break;
-		case FARM_1_ID: innerPosition = new SurfaceRect(0,0,4,4); type = StructureType.MainStructure; break;
-		case FARM_2_ID: innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.MainStructure; break;
-		case FARM_3_ID: innerPosition = new SurfaceRect(0,0,8,8); type = StructureType.MainStructure; break;
+		case ENERGY_CAPACITOR_3_ID: innerPosition = new SurfaceRect (0,0,4,8); break;
+		case FARM_1_ID: innerPosition = new SurfaceRect(0,0,4,4); break;
+		case FARM_2_ID: innerPosition = new SurfaceRect(0,0,6,6);  break;
+		case FARM_3_ID: innerPosition = new SurfaceRect(0,0,8,8);  break;
 		case FARM_4_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			innerPosition = SurfaceRect.full; ;
 			break;
 		case FARM_5_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true;
+			innerPosition = SurfaceRect.full;  isBasement = true;
 			break;
 		case LUMBERMILL_1_ID:
 		case LUMBERMILL_2_ID:
 		case LUMBERMILL_3_ID:
-			innerPosition = new SurfaceRect(0,0,6,6); type = StructureType.MainStructure;
+			innerPosition = new SurfaceRect(0,0,6,6);
 			break;
 		case LUMBERMILL_4_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			innerPosition = SurfaceRect.full; 
 			break;
 		case LUMBERMILL_5_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true;
+			innerPosition = SurfaceRect.full; fullCover = true;  isBasement = true;
 			break;
-		case PLASTICS_FACTORY_3_ID:	innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
-		case FOOD_FACTORY_4_ID:		innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
-		case FOOD_FACTORY_5_ID: innerPosition = SurfaceRect.full; type = StructureType.MainStructure; isBasement = true; break;
+		case PLASTICS_FACTORY_3_ID:	innerPosition = SurfaceRect.full; 	break;
+		case FOOD_FACTORY_4_ID:		innerPosition = SurfaceRect.full; 	break;
+		case FOOD_FACTORY_5_ID: innerPosition = SurfaceRect.full;  isBasement = true; break;
 		case SMELTERY_1_ID:
 		case SMELTERY_2_ID:
 		case SMELTERY_3_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
+			innerPosition = SurfaceRect.full;	break;
 		case SMELTERY_5_ID:
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;
+			innerPosition = SurfaceRect.full; 
 			isBasement = true; borderOnlyConstruction = true;
 		break;
 		case HQ_2_ID:
 		case HQ_3_ID: 
 		case HQ_4_ID: 
-			innerPosition = SurfaceRect.full; type = StructureType.MainStructure;	break;
+			innerPosition = SurfaceRect.full;	break;
 		case BIOGENERATOR_2_ID:
-			innerPosition = new SurfaceRect(0,0,4,10); type = StructureType.Structure;
+			innerPosition = new SurfaceRect(0,0,4,10); 
 			break;
 		case HOSPITAL_2_ID:
-			innerPosition = new SurfaceRect(0,0,8,8); type = StructureType.Structure;
+			innerPosition = new SurfaceRect(0,0,8,8); 
 			break;
 		case MINERAL_POWERPLANT_2_ID:
-			innerPosition = new SurfaceRect(0,0,10,10); type = StructureType.Structure;
+			innerPosition = new SurfaceRect(0,0,10,10); 
 			break;
 		case RESOURCE_STICK_ID:
-			innerPosition = new SurfaceRect(0,0,2,2); type = StructureType.Structure;
+			innerPosition = new SurfaceRect(0,0,2,2); 
 			break;		
 		case COLUMN_ID:
-			innerPosition = new SurfaceRect(0,0,2,2); type = StructureType.Structure;isBasement = true;
+			innerPosition = new SurfaceRect(0,0,2,2); isBasement = true;
 			break;		
+		case DRYED_PLANT_ID:
+			innerPosition = SurfaceRect.one;
+			break;
 		}
+		if (innerPosition == SurfaceRect.full) fullCover = true;
 		visible = true;
+		if (id != PLANT_ID) {
+			myRenderers = new List<Renderer>();
+			Renderer[] rrs =  transform.GetComponentsInChildren<Renderer>();
+			if (rrs != null & rrs.Length > 0) {
+				myRenderers.AddRange(rrs);
+			}
+		}
 	}
 
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -305,10 +309,23 @@ public class Structure : MonoBehaviour {
 		innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.x_size, innerPosition.z_size);
 		b.AddStructure(this);
 		if (isBasement) {
+			if (basement is CaveBlock) {
+				basement.myChunk.ReplaceBlock(basement.pos, BlockType.Surface, basement.material_id, false);
+			}
 			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {
 				ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
 				Block upperBlock = basement.myChunk.GetBlock(npos.x, npos.y, npos.z);
 				if ( upperBlock == null ) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.CONCRETE_ID, false);
+			}
+			else {
+				GameObject g = PoolMaster.GetRooftop(this);
+				MeshRenderer mr =g.transform.GetChild(0).GetComponent <MeshRenderer>();
+				g.transform.parent = basement.transform;
+				g.transform.localPosition = Vector3.up * Block.QUAD_SIZE/2f;
+				g.name = "block ceiling";
+				mr.enabled = true;
+				Building bscript = gameObject.GetComponent<Building>();
+				myRenderers.Add(mr);
 			}
 		}
 	} 
@@ -330,7 +347,6 @@ public class Structure : MonoBehaviour {
 		transform.parent = null;
 	}
 
-
 	public void ApplyDamage(float d) {
 		hp -= d;
 		if ( hp <= 0 ) Annihilate(false);
@@ -348,7 +364,9 @@ public class Structure : MonoBehaviour {
 		if (x == visible) return;
 		else {
 			visible = x;
-			myRenderer.enabled = x;
+			foreach (Renderer r in myRenderers) {
+				r.enabled = x;
+			}
 			Collider c = gameObject.GetComponent<Collider>();
 			if ( c != null ) c.enabled = x;
 		}
@@ -386,6 +404,21 @@ public class Structure : MonoBehaviour {
 		if (x != showOnGUI) {
 			showOnGUI = x;
 		}
+	}
+	public virtual UIObserver ShowOnGUI() {
+		if (structureObserver == null) structureObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/StructureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
+		else structureObserver.gameObject.SetActive(true);
+		structureObserver.SetObservingStructure(this);
+		return structureObserver;
+	}
+
+		/// <summary>
+	/// Костыль для мертвых деревьев
+	/// </summary>
+	/// <param name="sr">Sr.</param>
+	public void ChangeInnerPosition(SurfaceRect sr) { 
+		if (basement != null) return;
+		else innerPosition = sr;
 	}
 
 	public static List<Building> GetApplicableBuildingsList(byte s_level, SurfaceBlock sblock) {

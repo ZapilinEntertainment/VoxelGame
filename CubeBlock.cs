@@ -13,7 +13,7 @@ public class CubeBlockSerializer {
 public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public float naturalFossils = 0;
-	byte excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
+	byte excavatingStatus = 0, prevDrawMask = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
 	public int volume ;
 	public static readonly int MAX_VOLUME;
 	public bool career{get;private set;} // изменена ли верхняя поверхность на котлован?
@@ -82,47 +82,30 @@ public class CubeBlock : Block{
 	}
 
 	override public void SetRenderBitmask(byte x) {
-		if (renderMask != x) {
-			renderMask = x;
-			if (visibilityMask == 0) return;
-			for (int i = 0; i< 6; i++) {
-				if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) {
-					if (faces != null && faces[i]!= null) faces[i].enabled = true;
-					else CreateFace(i);
-				}
-				else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
-			}
-		}
+		renderMask = x;
+		ChangeFacesStatus();
 	}
 
 	override public void SetVisibilityMask (byte x) {
-		if ( x == visibilityMask) return;
-		byte prevVisibility = visibilityMask;
 		visibilityMask = x;
-		if (visibilityMask == 0) {
-			if (faces != null) {
-				for (int i = 0; i < 5; i++) {
-					if (faces[i] == null) continue;
-					else {
-						faces[i].enabled = false;
-						faces[i].GetComponent<MeshCollider>().enabled = false;
-					}
-				}
+		ChangeFacesStatus();
+	}
+
+	void ChangeFacesStatus () {
+		byte mask = (byte)(renderMask&visibilityMask);
+		if (mask == prevDrawMask) return;
+		else prevDrawMask = mask;
+		byte[] arr = new byte[]{1,2,4,8,16,32};
+		if (faces == null) faces = new MeshRenderer[6];
+		for (int i = 0; i < 6; i++) {
+			if (faces[i] == null) CreateFace(i);
+			if (((mask & arr[i]) == 0)) {
+				faces[i].enabled = false;
+				faces[i].GetComponent<Collider>().enabled = false;
 			}
-		}
-		else {
-			if (prevVisibility == 0 && faces != null) {
-				for (int i = 0; i < 5; i++) {
-					if (faces[i] != null) faces[i].GetComponent<MeshCollider>().enabled = true;
-				}
-			}
-			if (renderMask == 0) return;
-			for (int i = 0; i< 6; i++) {
-				if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) {
-					if (faces != null && faces[i]!= null) faces[i].enabled = true;
-					else CreateFace(i);
-				}
-				else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
+			else {
+				faces[i].enabled = true;
+				faces[i].GetComponent<Collider>().enabled = true;
 			}
 		}
 	}
@@ -131,6 +114,7 @@ public class CubeBlock : Block{
 		if (faces == null) faces =new MeshRenderer[6];
 		else {if (faces[i] != null) return;}
 		GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
+		g.tag = "BlockCollider";
 		faces[i] =g.GetComponent <MeshRenderer>();
 		g.transform.parent = transform;
 		switch (i) {
@@ -147,7 +131,7 @@ public class CubeBlock : Block{
 			faces[i].transform.localRotation = Quaternion.Euler(-90, 0, 0); 
 			faces[i].name = "bottom_plane"; 
 			faces[i].transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
-			GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
+			//GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
 			break;
 		}
 		faces[i].material = ResourceType.GetMaterialById(material_id);
@@ -199,7 +183,7 @@ public class CubeBlock : Block{
 		BlockSerializer bs = GetBlockSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, bs);
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetCubeBlockSerializer());
 			bs.specificData =  stream.ToArray();
 		}
 		return bs;

@@ -96,7 +96,7 @@ public class SurfaceBlock : Block {
 			}
 		return map;
 	}
-	protected void CellsStatusUpdate() {
+	public void CellsStatusUpdate() {
 		map = GetBooleanMap();
 		bool empty = true, full = true; 
 		bool emptyCheckFailed = false, fullCheckFailed = false;
@@ -209,7 +209,7 @@ public class SurfaceBlock : Block {
 				if ( surfaceObjects[i] == null) {surfaceObjects.RemoveAt(i); continue;}
 				SurfaceRect sr = surfaceObjects[i].innerPosition;
 				if (sr.x <= pos.x && sr.z <= pos.y && sr.x + sr.x_size >= pos.x && sr.z+ sr.z_size >= pos.y) {
-					if ( surfaceObjects[i].undestructible || (surfaceObjects[i].type == StructureType.MainStructure && s.type != StructureType.MainStructure))
+					if ( surfaceObjects[i].undestructible)
 					{	
 						s.Annihilate( true);
 						return;
@@ -284,6 +284,7 @@ public class SurfaceBlock : Block {
 			g.transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
 			g.transform.localRotation = Quaternion.Euler(90, 0, 0);
 			g.name = "upper_plane"; 
+			g.tag = "BlockCollider";
 		}
 		surfaceRenderer.material = ResourceType.GetMaterialById(material_id);
 		if (visibilityMask != 0) surfaceRenderer.enabled = true;
@@ -535,18 +536,21 @@ public class SurfaceBlock : Block {
 		SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();
 		GameMaster.DeserializeByteArray<SurfaceBlockSerializer>(bs.specificData, ref sbs);
 		LoadSurfaceBlockData(sbs);
+		if (sbs.haveStructures) {
+			foreach (StructureSerializer ss in sbs.structuresList) {
+				if (ss.id != Structure.PLANT_ID) {
+					Structure s = Structure.GetNewStructure(ss.id);
+					if (s!=null)	s.Load(ss,this);
+				}
+				else 	Plant.Load(ss, this);
+			}
+		}
 	}
 
 	protected void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) {
 		if (sbs.haveGrassland) {
 			AddGrassland();
 			grassland.Load(sbs.grasslandSerializer);
-		}
-		if (sbs.haveStructures) {
-			foreach (StructureSerializer ss in sbs.structuresList) {
-				Structure s = Structure.GetNewStructure(ss.id);
-				s.Load(ss,this);
-			}
 		}
 	}
 
