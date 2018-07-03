@@ -52,7 +52,7 @@ public class Hangar : WorkBuilding {
 		}
 	}
 
-	protected virtual void LabourResult() {
+	override protected void LabourResult() {
 		shuttle = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
 		shuttle.FirstSet(this);
 		constructing = false;
@@ -167,9 +167,12 @@ public class Hangar : WorkBuilding {
 				} 
 			}
 			else { // shuttle is building
-				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.width * (workflow / workflowToProcess), rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-				GUI.Label(rr, Localization.ui_assemblyInProgress + " (" + ((int)(workflow / workflowToProcess * 100)).ToString() + "%)" );
-				rr.y += rr.height;
+				if (workflow > 0) 
+				{
+					GUI.DrawTexture(new Rect(rr.x, rr.y, rr.width * (workflow / workflowToProcess), rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
+					GUI.Label(rr, Localization.ui_assemblyInProgress + " (" + ((int)(workflow / workflowToProcess * 100)).ToString() + "%)" );
+					rr.y += rr.height;
+				}
 			}
 		}
 	}

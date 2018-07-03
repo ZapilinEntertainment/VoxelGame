@@ -6,7 +6,6 @@ public enum ShipStatus {InPort, Leaving, Arriving, OnMission}
 
 public class Shuttle : MonoBehaviour {
 	const float START_VOLUME = 20, STANDART_COST = 700, STANDART_FUEL_CAPACITY = 100;
-	public string name{get;private set;}
 	public float volume{get;private set;}
 	public float cost{get;private set;}
 	public float fuelReserves{get;private set;}

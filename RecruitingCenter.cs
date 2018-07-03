@@ -57,7 +57,7 @@ public class RecruitingCenter : WorkBuilding {
 		}
 	}
 
-	virtual protected void RecalculateWorkspeed() {
+	override protected void RecalculateWorkspeed() {
 		workSpeed = (float)workersCount / (float)maxWorkers;
 	}
 

@@ -2,100 +2,106 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PlantType {TreeSapling, Tree, Crop}
+public enum PlantType {Tree, Crop}
 
 [System.Serializable]
 public class PlantSerializer {
-	public float lifepower, growth;
-	public bool full;
+	public int id;
+	public float lifepower, growth, growSpeed;
+	public byte stage;
 }
 
 public class Plant : Structure {
+	public int plant_ID{get;protected set;}
 	public float lifepower;
-	public float maxLifepower {get;protected set;}  // fixed by id
-	[SerializeField]
-	protected float startSize = 0.05f; // fixed by asset
-	public float maxTall {get; protected set;} //fixed by id
-	public bool full {get;protected set;}
-	protected float growSpeed = 0.1f; // fixed by id
+	public float lifepowerToGrow {get;protected set;}  // fixed by id
+	public int maxLifeTransfer{get;protected set;}  // fixed by id
+	protected float growSpeed, decaySpeed; // fixed by id
 	public float growth;
-	public PlantType plantType{get;protected set;} // fixed by id
+	public byte stage;
+	public byte harvestableStage{get;protected set;}
 
-	override public void Prepare() {
-		innerPosition = SurfaceRect.one; isArtificial = false; type = StructureType.Plant;
-		full = false;
-		switch ( id ) {
-		case WHEAT_CROP_ID:
-			plantType = PlantType.Crop;
-			lifepower = 1;
-			maxLifepower = 10;
-			growth = 0;
-			growSpeed = 0.01f;
-			GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
-			break;
-		case TREE_SAPLING_ID:
-			plantType = PlantType.TreeSapling;
-			lifepower = 1;
-			maxLifepower = TreeSapling.MAXIMUM_LIFEPOWER;
-			maxTall = 0.1f;
-			growSpeed = 0.03f;
-			break;
-		case TREE_ID: 
-			plantType = PlantType.Tree;
-			lifepower = 10;
-			maxLifepower = Tree.MAXIMUM_LIFEPOWER;
-			maxTall = 0.4f + Random.value * 0.1f;
-			maxHp = maxTall * 1000;
-			growSpeed = 0.05f;
-			break;	
+	public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2;
+
+	public static byte maxStage{get;protected set;}
+
+	public static Plant GetNewPlant(int id) {
+		Plant p = null;
+		switch (id) {
+		case CROP_CORN_ID: p = new GameObject().AddComponent<Corn>(); break;
+		case TREE_OAK_ID: p = new GameObject().AddComponent<OakTree>();break;
 		}
+		p.id = PLANT_ID;
+		p.Prepare();
+		return p;
+	}
+
+	virtual public void Reset() {
+		lifepower = GetCreateCost(id);
+		lifepowerToGrow = 1;
+		stage = 0;
 		growth = 0;
 	}
 
+	override public void Prepare() {		
+		PrepareStructure();
+		innerPosition = SurfaceRect.one; isArtificial = false; 
+		lifepower = GetCreateCost(id);
+		growth = 0;
+	}
+
+	public static int GetCreateCost(int id) {
+		switch (id) {
+		case CROP_CORN_ID: return Corn.CREATE_COST; 
+		case TREE_OAK_ID: return OakTree.CREATE_COST; 
+		default: return 1;
+		}
+	}
+	static public float GetLifepowerLevelForStage(byte st) {
+		return 1;
+	}
+
 	void Update() {
-		if (GameMaster.gameSpeed == 0) return;
-		float theoreticalGrowth = lifepower / maxLifepower;
-		growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * GameMaster.lifeGrowCoefficient * Time.deltaTime);
+		float t= GameMaster.gameSpeed * Time.deltaTime;
+		if (t == 0) return;
+		float theoreticalGrowth = lifepower / lifepowerToGrow;
+		if (growth < theoreticalGrowth) {
+			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * t);
+		}
+		else {
+			lifepower -= decaySpeed * t;
+			if (lifepower == 0) Dry();
+		}
+		if (growth >= 1 & stage < maxStage) SetStage((byte)(stage+1));
 	}	
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (b == null) return;
-		SetStructureData(b,pos);
+	#region lifepower operations
+	public virtual void AddLifepower(int life) {
+		lifepower += life;
 	}
-
-	public virtual void AddLifepower(float life) {
-		if (full) return;
-		lifepower += (int)life;
-		if (lifepower >= maxLifepower) full = true;  else full =false;
+	public virtual void AddLifepowerAndCalculate(int life) {
+		lifepower += life;
+		growth = lifepower / lifepowerToGrow;
 	}
-	public virtual void AddLifepowerAndCalculate(float life) {
-		lifepower += (int) life;
-		if (lifepower >= maxLifepower) full = true;  else full =false;
-		SetGrowth( lifepower / maxLifepower);
+	public virtual int TakeLifepower(int life) {
+		int lifeTransfer = life;
+		if (life > lifepower) {if (lifepower >= 0) lifeTransfer = (int)lifepower; else lifeTransfer = 0;}
+		lifepower -= lifeTransfer;
+		return lifeTransfer;
+	}
+	virtual public void SetLifepower(float p) {
+		lifepower = p; 
 	}
 	public virtual void SetGrowth(float t) {
 		growth = t;
 	}
-		
-	public virtual int TakeLifepower(float life) {
-		float lifeTransfer = life;
-		if (life > lifepower) {if (lifepower >= 0) lifeTransfer = lifepower; else lifeTransfer = 0;}
-		lifepower -= lifeTransfer;
-		if (lifepower < maxLifepower) {
-			full = false;
-			if (lifepower <= 0) Dry();
-		}
-		return (int)lifeTransfer;
+	public virtual void SetStage( byte newStage) {
+		if (newStage == stage) return;
+		stage = newStage;
+		growth = 0;
 	}
+	#endregion
 
-	virtual protected void Dry() {
-		Annihilate( false );
-	}
-
-	virtual public void SetLifepower(float p) {
-		lifepower = p; 
-		if (lifepower < maxLifepower) full = false; else full = true;
-	}
 	#region save-load system
 	override public StructureSerializer Save() {
 		StructureSerializer ss = GetStructureSerializer();
@@ -107,27 +113,42 @@ public class Plant : Structure {
 		return ss;
 	}
 
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss,sblock);
+	public static void StaticLoad(StructureSerializer ss, SurfaceBlock sblock) {
 		PlantSerializer ps = new PlantSerializer();
 		GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
+		Plant p = GetNewPlant(ps.id);
+		p.LoadPlant(ss, sblock, ps);
+	}
+	protected void LoadPlant (StructureSerializer ss, SurfaceBlock sblock, PlantSerializer ps) {
+		LoadStructureData(ss,sblock);
 		LoadPlantData(ps);
 	}
 
 	protected void LoadPlantData(PlantSerializer ps) {
+		growSpeed = ps.growSpeed;
 		lifepower = ps.lifepower;
-		full = ps.full;
-		SetGrowth(ps.growth);
+		SetStage(ps.stage);
+		growth = ps.growth;
 	}
 
 	protected PlantSerializer GetPlantSerializer() {
 		PlantSerializer ps = new PlantSerializer();
-		ps.full = full;
-		ps.growth = growth;
+		ps.id = plant_ID;
 		ps.lifepower = lifepower;
+		ps.growth = growth;
+		ps.growSpeed = growSpeed;
+		ps.stage = stage;
 		return ps;
 	}
 	#endregion
+
+	virtual public void Dry() {
+		Annihilate(false);
+	}
+
+	virtual public void Harvest() {
+		// аннигиляция со сбором ресурсов
+	}
 
 	public override void Annihilate( bool forced ) {
 		if (basement != null && !forced ) {

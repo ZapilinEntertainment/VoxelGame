@@ -100,8 +100,8 @@ override protected void LabourResult() {
 	}
 
 	protected void LoadMineData(MineSerializer ms) {
-		LoadWorkBuildingData(ms.workBuildingSerializer);
 		level = ms.level;
+		LoadWorkBuildingData(ms.workBuildingSerializer);
 		elevators = new List<Structure>();
 		if (level > 1 & ms.haveElevators) {
 			for (int i = 0; i < ms.elevators.Count; i++) {
@@ -143,7 +143,7 @@ override protected void LabourResult() {
 		GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
 		if (nextModel != null) {
 			GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
-			if (myRenderer != null) Destroy(myRenderer.gameObject);
+			if (myRenderers[0] != null) Destroy(myRenderers[0].gameObject);
 			if (myRenderers != null) {for (int n =0; n < myRenderers.Count; n++) Destroy( myRenderers[n].gameObject );}
 			myRenderers = new List<Renderer>();
 			for (int n = 0; n < newModelGO.transform.childCount; n++) {
@@ -153,6 +153,7 @@ override protected void LabourResult() {
 			if ( !isActive || !energySupplied ) ChangeRenderersView(false);
 		}
 		level = f_level;
+		Rename();
 	}
 
 	void OnGUI() {

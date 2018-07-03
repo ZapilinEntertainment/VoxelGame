@@ -5,13 +5,13 @@ using UnityEngine;
 [System.Serializable]
 public class WorkBuildingSerializer {
 	public BuildingSerializer buildingSerializer;
-	public float workflow, workSpeed, workflowToProcees;
+	public float workflow, workSpeed, workflowToProcess;
 	public int workersCount;
 }
 
 public abstract class WorkBuilding : Building {
 	public float workflow {get;protected set;} 
-	protected float workSpeed = 0;
+	public float workSpeed {get;protected set;}
 	public float workflowToProcess{get; protected set;}
 	public int maxWorkers = 8; // fixed by asset
 	public int workersCount {get; protected set;} 
@@ -92,7 +92,7 @@ public abstract class WorkBuilding : Building {
 		workersCount = wbs.workersCount;
 		workflow = wbs.workflow;
 		workSpeed = wbs.workSpeed;
-		workflowToProcess = wbs.workflowToProcees;
+		workflowToProcess = wbs.workflowToProcess;
 	}
 
 	public WorkBuildingSerializer GetWorkBuildingSerializer() {
@@ -100,7 +100,7 @@ public abstract class WorkBuilding : Building {
 		wbs.buildingSerializer = GetBuildingSerializer();
 		wbs.workflow = workflow;
 		wbs.workSpeed = workSpeed;
-		wbs.workflowToProcees = wbs.workflowToProcees;
+		wbs.workflowToProcess = workflowToProcess;
 		wbs.workersCount = workersCount;
 		return wbs;
 	}
@@ -121,7 +121,9 @@ public abstract class WorkBuilding : Building {
 				workersCount = 0;
 				Quaternion originalRotation = transform.rotation;
 				upgraded.SetBasement(basement, setPos);
-				if ( !upgraded.isBasement ) upgraded.transform.localRotation = originalRotation;
+				if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
+					upgraded.transform.localRotation = originalRotation;
+				}
 				upgraded.AddWorkers(workers);
 			}
 			else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);

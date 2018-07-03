@@ -9,7 +9,7 @@ public class BuildingSerializer {
 }
 
 public class Building : Structure {
-	public int upgradedIndex = -1; // fixed by asset
+	public int upgradedIndex {get;private set;} // fixed by id
 	public bool canBePowerSwitched = true; // fixed by asset
 	public bool isActive {get;protected set;}
 	public bool energySupplied {get;protected set;} // подключение, контролирующееся Colony Controller'ом
@@ -18,9 +18,9 @@ public class Building : Structure {
 	public  bool connectedToPowerGrid {get; protected set;}// установлено ли подключение к электросети
 	public int requiredBasementMaterialId = -1; // fixed by asset
 	public byte level{get;protected set;} // fixed by id (except for mine)
-	[SerializeField]
-	protected List<Renderer> myRenderers; // fixed by asset
 	protected static ResourceContainer[] requiredResources;
+
+	public static UIBuildingObserver buildingObserver;
 
 	override public void Prepare() {PrepareBuilding();}
 
@@ -98,8 +98,7 @@ public class Building : Structure {
 		case SWITCH_TOWER_ID:
 		case QUANTUM_ENERGY_TRANSMITTER_ID:
 			level = 5;
-			break;			
-
+			break;		
 		}
 	}
 		
@@ -115,6 +114,7 @@ public class Building : Structure {
 			GameMaster.colonyController.AddToPowerGrid(this);
 			connectedToPowerGrid = true;
 		}
+		Rename();
 	}
 	virtual public void SetActivationStatus(bool x) {
 		isActive = x;
@@ -129,42 +129,58 @@ public class Building : Structure {
 	}
 
 	protected void ChangeRenderersView(bool setOnline) {
+		if (myRenderers == null | myRenderers.Count == 0)  return;
 		if (setOnline == false) {
-			if (myRenderers != null) {
 				for (int i = 0; i < myRenderers.Count; i++) {
+					if (myRenderers[i].sharedMaterials.Length > 1) {
+						bool replacing = false;
+						Material[] newMaterials = new Material[myRenderers[i].sharedMaterials.Length];
+						for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++) {
+							Material m= myRenderers[i].sharedMaterials[j];
+							if (m == PoolMaster.glass_material) {m = PoolMaster.glass_offline_material; replacing = true;}
+							else {
+								if (m == PoolMaster.colored_material) {m = PoolMaster.colored_offline_material; replacing = true;}
+								else {
+										if (m == PoolMaster.energy_material ) {m = PoolMaster.energy_offline_material; replacing = true;}
+										}
+							}
+						newMaterials[j] = m;
+						}
+					if (replacing) myRenderers[i].sharedMaterials = newMaterials;
+					}
+					else {
 						Material m= myRenderers[i].sharedMaterial;
 						bool replacing = false;
 						if (m == PoolMaster.glass_material) {m = PoolMaster.glass_offline_material; replacing = true;}
 						else {
 							if (m == PoolMaster.colored_material) {m = PoolMaster.colored_offline_material; replacing = true;}
 							else {
-									if (m == PoolMaster.energy_material ) {m = PoolMaster.energy_offline_material; replacing = true;}
-									}
-						}
-					if (replacing) myRenderers[i].sharedMaterial = m;
-				}
-			}
-			if (myRenderer != null) {
-				Material[] allMaterials = myRenderer.sharedMaterials;
-				int j =0;
-				while (j < allMaterials.Length) {
-					if (allMaterials[j] == PoolMaster.glass_material) allMaterials[j] = PoolMaster.glass_offline_material;
-					else {
-						if (allMaterials[j] == PoolMaster.colored_material) allMaterials[j] = PoolMaster.colored_offline_material;
-						else {
-							if (allMaterials[j].name == PoolMaster.energy_material.name ) {
-								allMaterials[j] = PoolMaster.energy_offline_material;
+								if (m == PoolMaster.energy_material ) {m = PoolMaster.energy_offline_material; replacing = true;}
 							}
 						}
+						if (replacing) myRenderers[i].sharedMaterial = m;
 					}
-					j++;
 				}
-				myRenderer.sharedMaterials = allMaterials;
-			}
 		}
-		else {
-			if (myRenderers != null) {
+		else { // Включение
 				for (int i = 0; i < myRenderers.Count; i++) {
+					if (myRenderers[i].sharedMaterials.Length > 1) {
+					bool replacing = false;
+					Material[] newMaterials = new Material[myRenderers[i].sharedMaterials.Length];
+						for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++) {
+							Material m = myRenderers[i].sharedMaterials[j];
+							if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true;}
+							else {
+								if (m == PoolMaster.colored_offline_material) {m = PoolMaster.colored_material;replacing = true;}
+								else {
+									if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material;replacing = true;}
+								}
+							}
+						newMaterials[j] = m;
+					}
+					if (replacing) myRenderers[i].sharedMaterials = newMaterials;
+					}
+					else {
 						Material m = myRenderers[i].sharedMaterial;
 						bool replacing = false;
 						if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true;}
@@ -172,26 +188,11 @@ public class Building : Structure {
 							if (m == PoolMaster.colored_offline_material) {m = PoolMaster.colored_material;replacing = true;}
 							else {
 								if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material;replacing = true;}
-									}
+							}
 						}
 						if (replacing) myRenderers[i].sharedMaterial = m;
-				}
-			}
-			if (myRenderer != null) {
-				int j = 0;
-				Material[] allMaterials = myRenderer.sharedMaterials;
-				while (j < allMaterials.Length) {
-					if (allMaterials[j] == PoolMaster.glass_offline_material) allMaterials[j] = PoolMaster.glass_material;
-					else {
-						if (allMaterials[j] == PoolMaster.colored_offline_material) allMaterials[j] = PoolMaster.colored_material;
-						else {
-							if (allMaterials[j] == PoolMaster.energy_offline_material) allMaterials[j] = PoolMaster.energy_material;
-						}
 					}
-					j++;
 				}
-				myRenderer.sharedMaterials = allMaterials;
-			}
 		}
 	}
 
@@ -199,7 +200,7 @@ public class Building : Structure {
 		if (x == visible) return;
 		else {
 			visible = x;
-			if (myRenderers != null) {
+			if (myRenderers != null & myRenderers.Count > 0) {
 				foreach (Renderer r in myRenderers) {
 					r.enabled = x;
 					if (r is SpriteRenderer) {
@@ -209,12 +210,6 @@ public class Building : Structure {
 				if (isBasement) {
 					BlockRendererController brc = gameObject.GetComponent<BlockRendererController>();
 					if (brc != null) brc.SetVisibility(x);
-				}
-			}
-			if (myRenderer != null) {
-				myRenderer.enabled = x;
-				if (myRenderer is SpriteRenderer) {
-					if (myRenderer.GetComponent<MastSpriter>() != null) myRenderer.GetComponent<MastSpriter>().SetVisibility(x);
 				}
 			}
 		}
@@ -275,6 +270,17 @@ public class Building : Structure {
 		}
 	}
 
+	override public void Rename() {
+		name = Localization.GetName(id) + " (" + Localization.GetWord(LocalizationKey.Level) + ' '+level.ToString() +')';
+	}
+
+	public override UIObserver ShowOnGUI() {
+		if (buildingObserver == null) buildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
+		else buildingObserver.gameObject.SetActive(true);
+		buildingObserver.SetObservingBuilding(this);
+		return buildingObserver;
+	}
+
 	void OnGUI() {
 		//sync with hospital.cs, rollingShop.cs
 		if ( !showOnGUI ) return;
@@ -296,7 +302,9 @@ public class Building : Structure {
 					if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
 					Quaternion originalRotation = transform.rotation;
 					upgraded.SetBasement(basement, setPos);
-					if ( !upgraded.isBasement ) upgraded.transform.localRotation = originalRotation;
+					if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
+						upgraded.transform.localRotation = originalRotation;
+					}
 				}
 				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 			}

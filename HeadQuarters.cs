@@ -130,7 +130,7 @@ public class HeadQuarters : House {
 										rooftop.transform.parent = transform;
 									}
 									rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;
-									level++;
+								level++; Rename();
 							}
 							else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 						}

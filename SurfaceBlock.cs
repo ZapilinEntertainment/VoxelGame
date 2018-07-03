@@ -542,7 +542,7 @@ public class SurfaceBlock : Block {
 					Structure s = Structure.GetNewStructure(ss.id);
 					if (s!=null)	s.Load(ss,this);
 				}
-				else 	Plant.Load(ss, this);
+				else 	Plant.StaticLoad(ss, this);
 			}
 		}
 	}

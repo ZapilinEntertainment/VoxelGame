@@ -413,6 +413,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.sellPriceCoefficient = sellPriceCoefficient;
 		gms.tradeVesselsTrafficCoefficient = tradeVesselsTrafficCoefficient;
 		gms.upgradeDiscount = upgradeDiscount;
+		gms.upgradeCostIncrease = upgradeCostIncrease;
 		gms.environmentalConditions = environmentalConditions;
 		gms.warProximity = warProximity;
 		gms.difficulty = difficulty;
@@ -463,6 +464,7 @@ public sealed class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = gms.sellPriceCoefficient;
 			tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient ;
 			upgradeDiscount = gms.upgradeDiscount;
+			upgradeCostIncrease = gms.upgradeCostIncrease;
 			environmentalConditions = gms.environmentalConditions ;
 			warProximity = gms.warProximity;
 			difficulty = gms.difficulty ;

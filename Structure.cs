@@ -45,7 +45,7 @@ public class Structure : MonoBehaviour {
 	public const int TOTAL_STRUCTURES_COUNT = 67;
 	static Structure[] prefs;
 	static List<Building> allConstructableBuildingsList;
-	static UIStructureObserver structureObserver;
+	public static UIStructureObserver structureObserver;
 
 	public static void LoadPrefs() {
 		prefs = new Structure[TOTAL_STRUCTURES_COUNT];
@@ -307,6 +307,7 @@ public class Structure : MonoBehaviour {
 	protected void SetStructureData(SurfaceBlock b, PixelPosByte pos) {
 		basement = b;
 		innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.x_size, innerPosition.z_size);
+		Rename();
 		b.AddStructure(this);
 		if (isBasement) {
 			if (basement is CaveBlock) {
@@ -324,7 +325,6 @@ public class Structure : MonoBehaviour {
 				g.transform.localPosition = Vector3.up * Block.QUAD_SIZE/2f;
 				g.name = "block ceiling";
 				mr.enabled = true;
-				Building bscript = gameObject.GetComponent<Building>();
 				myRenderers.Add(mr);
 			}
 		}
@@ -393,7 +393,7 @@ public class Structure : MonoBehaviour {
 		ss.pos = new PixelPosByte(innerPosition.x, innerPosition.z);
 		ss.undestructible = undestructible;
 		ss.hp = hp;
-		ss.maxHp = ss.maxHp;
+		ss.maxHp = maxHp;
 		ss.xrot = transform.rotation.x;ss.yrot = transform.rotation.y;ss.zrot = transform.rotation.z;ss.wrot = transform.rotation.w;
 		ss.id = id;
 		return ss;
@@ -406,7 +406,7 @@ public class Structure : MonoBehaviour {
 		}
 	}
 	public virtual UIObserver ShowOnGUI() {
-		if (structureObserver == null) structureObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/StructureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
+		if (structureObserver == null) structureObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
 		else structureObserver.gameObject.SetActive(true);
 		structureObserver.SetObservingStructure(this);
 		return structureObserver;
@@ -460,6 +460,10 @@ public class Structure : MonoBehaviour {
 			}
 		}
 		Destroy(gameObject);
+	}
+
+	virtual public void Rename() {
+		name = Localization.GetName(id);
 	}
 
 	void OnDestroy() {

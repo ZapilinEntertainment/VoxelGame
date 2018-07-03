@@ -13,7 +13,7 @@ public class CaveBlock : SurfaceBlock {
 		[SerializeField]
 		MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west
 		[SerializeField]
-		MeshRenderer ceilingRenderer, _surfaceRenderer;
+		MeshRenderer ceilingRenderer, _surfaceRenderer; // fiti
 
 	void Awake() 
 	{

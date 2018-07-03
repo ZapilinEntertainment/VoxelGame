@@ -46,7 +46,6 @@ public class GrasslandSerializer {
 }
 
 public class Grassland : MonoBehaviour {
-	public const int MAX_LIFEFORMS_COUNT= 8;
 	public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22;
 
 	public SurfaceBlock myBlock {get;private set;}
@@ -64,49 +63,34 @@ public class Grassland : MonoBehaviour {
 		if (lifeTimer > 0) {
 			lifeTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (lifeTimer <=0) {				
-				bool noActivity = true;
 				List<Plant> plants = new List<Plant>();
 				foreach (Structure s in myBlock.surfaceObjects) {
-					if (s != null && s.type == StructureType.Plant && s.gameObject.activeSelf) plants.Add(s as Plant);
+					if (s != null && s.id == Structure.PLANT_ID && s.gameObject.activeSelf) plants.Add(s as Plant);
 				}
+				Chunk c = myBlock.myChunk;
 				if (lifepower > 2 * LIFEPOWER_TO_PREPARE) {
 					int stage = CheckGrasslandStage();
-					float lifepowerTransfer = lifepower - 2 * LIFEPOWER_TO_PREPARE;
-					float lifepowerToSinglePlant = GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient;
-					if (stage > 2 & plants.Count > 0) {
-						float lifepowerToShare = plants.Count * lifepowerToSinglePlant;
-						if (lifepowerToShare > lifepowerTransfer) {
-								for (int i = 0; i < plants.Count; i++) {	
-								if ( !plants[i].full ) 	{
-									plants[i].AddLifepower( TakeLifepower(lifepowerToSinglePlant));
-									noActivity = false;
-								}
+					if (stage > 2) {						
+						int i = 0;
+						while (i < plants.Count & lifepower > 2 * LIFEPOWER_TO_PREPARE) {
+							Plant p = plants[i];
+							if (p.lifepower < p.lifepowerToGrow) p.AddLifepower(TakeLifepower(p.maxLifeTransfer));
+							i++;
+						}
+						if (lifepower > 2 * LIFEPOWER_TO_PREPARE & myBlock.cellsStatus != 1) {
+							PixelPosByte pos = myBlock.GetRandomCell();
+							if (pos != PixelPosByte.Empty) {
+								Plant p = Plant.GetNewPlant(Plant.TREE_OAK_ID);
+								p.SetBasement(myBlock, pos);
+								TakeLifepower(Plant.GetCreateCost(Plant.TREE_OAK_ID));
 							}
 						}
-						lifepowerTransfer = lifepower - 2 * LIFEPOWER_TO_PREPARE;
-					}
-
-					if ( lifepowerTransfer > lifepowerToSinglePlant & plants.Count < MAX_LIFEFORMS_COUNT & growTimer <= 0) {
-						PixelPosByte pos = myBlock.GetRandomCell();
-						if (pos != PixelPosByte.Empty) {
-							Plant p = PoolMaster.current.GetSapling();
-							p.gameObject.SetActive(true);
-							p.SetBasement(myBlock, pos);
-							p.AddLifepower(lifepowerToSinglePlant);
-							lifepower -= lifepowerToSinglePlant;	
-							noActivity = false;
-							growTimer = LIFE_CREATION_TIMER;
-						}
-					}
-					if ( noActivity ) {
-						if (lifepowerTransfer > GameMaster.MAX_LIFEPOWER_TRANSFER) lifepowerTransfer = GameMaster.MAX_LIFEPOWER_TRANSFER;
-						myBlock.myChunk.AddLifePower( TakeLifepower( lifepowerTransfer ) );
 					}
 				}
 				else { // lifepower falls down
 					if (lifepower < LIFEPOWER_TO_PREPARE & plants.Count > 0) {
 					float lifepowerNeeded = Mathf.Abs(lifepower) + LIFEPOWER_TO_PREPARE + 2;
-					float lifepowerFromSinglePlant = lifepowerNeeded / (float)plants.Count;
+					int lifepowerFromSinglePlant = Mathf.RoundToInt(lifepowerNeeded / (float)plants.Count);
 					while (lifepower <= LIFEPOWER_TO_PREPARE & plants.Count > 0) {
 							int i = (int)(Random.value * (plants.Count - 1));
 							lifepower += plants[i].TakeLifepower(lifepowerFromSinglePlant);
@@ -195,39 +179,32 @@ public class Grassland : MonoBehaviour {
 	/// </summary>
 	public void AddLifepowerAndCalculate(int count) {
 		if (count > 2 * LIFEPOWER_TO_PREPARE) {
-			float freeEnergy = count - 2 * LIFEPOWER_TO_PREPARE;
-			int plants_count = MAX_LIFEFORMS_COUNT;
-			if (freeEnergy < MAX_LIFEFORMS_COUNT)  plants_count = (int)(MAX_LIFEFORMS_COUNT - freeEnergy); 
-			List<PixelPosByte> positions = myBlock.GetRandomCells(plants_count);
-			float[] lifepowers = new float[plants_count];
-			float total = 0;
-			for (int i =0; i< plants_count; i++) {
-				lifepowers[i] = Random.value;
-				total += lifepowers[i];
-			}
-			float lifePiece = count; lifePiece /= total * 2;
-
-			for (int i =0; i< plants_count; i++) {
-				float energy = lifepowers[i] * lifePiece;
-				if (energy >  TreeSapling.MAXIMUM_LIFEPOWER) {
-					Tree t = PoolMaster.current.GetTree();
-					t.gameObject.SetActive(true);
-					int pos = (int) (Random.value * (positions.Count - 1));
-					t.SetBasement(myBlock, positions[pos]);
-					t.SetLifepower(energy);
-					positions.RemoveAt(pos);
-				}
-				else {
-					TreeSapling pl = PoolMaster.current.GetSapling();
-					pl.gameObject.SetActive(true);
-					int pos = (int) (Random.value * (positions.Count - 1));
-					pl.SetBasement(myBlock, positions[pos]);
-					pl.SetLifepower(energy);
-					positions.RemoveAt(pos);
-				}
-			}
-
 			lifepower = 2 * LIFEPOWER_TO_PREPARE;
+			float freeEnergy = count - lifepower; 
+			int treesCount = (int)(Random.value * 10 + 4);
+			int i = 0;
+			List<PixelPosByte> positions = myBlock.GetRandomCells(treesCount);
+			if (treesCount > positions.Count) treesCount = positions.Count;
+			int lifepowerDosis = (int)(freeEnergy / treesCount);
+			if (treesCount != 0) {
+				while ( i < treesCount & freeEnergy > 0 & myBlock.cellsStatus != 1 ) {
+					int plantID = Plant.TREE_OAK_ID;
+					int ld  = (int)(lifepowerDosis * (0.3f + Random.value));
+					if (ld > freeEnergy) {lifepower+=freeEnergy; break;}
+					float maxEnergy = OakTree.GetLifepowerLevelForStage(OakTree.maxStage);
+					byte getStage = (byte)(ld / maxEnergy * OakTree.maxStage);
+					if (getStage > OakTree.maxStage) getStage = OakTree.maxStage;
+					if (getStage == OakTree.maxStage & Random.value > 0.7f) getStage--;
+
+					Plant p = Plant.GetNewPlant(plantID);
+					p.SetBasement(myBlock, positions[i]);
+					p.AddLifepower(ld);
+					p.SetStage(getStage);
+					freeEnergy -= (Plant.GetCreateCost(plantID) + ld);
+					i++;
+				}
+			}
+			lifepower = freeEnergy + 2 * LIFEPOWER_TO_PREPARE;
 		}
 		else 	lifepower = count;
 

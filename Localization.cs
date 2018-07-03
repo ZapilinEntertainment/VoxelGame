@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum Language{English, Russian};
 public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
+public enum LocalizationKey{Level, Offline}
 
 public static class Localization {
 	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
@@ -338,18 +339,22 @@ public static class Localization {
 	public static string NameCrew() { // waiting for креатив
 		switch (currentLanguage) {
 		default:
-		case Language.English:
-			return "crew " + Crew.lastNumber.ToString();
-			break;
+		case Language.English:		return "crew " + Crew.lastNumber.ToString();
 		}
 	}
 
 	public static string NameShuttle() { // waiting for креатив
 		switch (currentLanguage) {
 		default:
-		case Language.English:
-			return "shuttle "+ Shuttle.lastIndex.ToString();
-			break;
+		case Language.English:		return "shuttle "+ Shuttle.lastIndex.ToString();
+		}
+	}
+
+	public static string GetWord(LocalizationKey key) {
+		switch (key) {
+		case LocalizationKey.Level: return "level"; 
+		case LocalizationKey.Offline: return "offline";
+		default: return "...";
 		}
 	}
 }
