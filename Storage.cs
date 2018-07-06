@@ -167,6 +167,15 @@ public class Storage : MonoBehaviour {
 	/// <param name="index">Index.</param>
 	/// <param name="val">Value.</param>
 
+	public bool CheckSpendPossibility (ResourceContainer[] cost) {
+		if (GameMaster.realMaster.weNeedNoResources) return true;
+		if (cost == null || cost.Length == 0) return true;
+		foreach (ResourceContainer rc in cost) {
+			if (standartResources[rc.type.ID] < rc.volume) return false;
+		}
+		return true;
+	}
+
 	public bool CheckBuildPossibilityAndCollectIfPossible (ResourceContainer[] resourcesContain) {
 		//TEST ZONE
 		if (GameMaster.realMaster.weNeedNoResources) return true;
@@ -213,13 +222,16 @@ public class Storage : MonoBehaviour {
 		}
 		return true;
 	}
-	//---------------------------------------------SAVE         SYSTEM
+	#region save-load system
 	public StorageSerializer Save() {
 		StorageSerializer ss = new StorageSerializer();
 		ss.standartResources = standartResources;
 		return ss;
 	}
-	//------------------------------------------------------------------
+	public void Load(StorageSerializer ss) {
+		standartResources = ss.standartResources;
+	}
+	#endregion
 	void OnGUI () {
 		if (showStorage) {
 			GUI.skin = GameMaster.mainGUISkin;

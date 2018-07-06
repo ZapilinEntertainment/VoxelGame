@@ -10,7 +10,8 @@ public sealed class UISurfacePanelController : UIObserver {
 	SurfaceBlock surface;
 	bool status_gatherEnabled = true, status_gatherOrdered = false, status_digOrdered = false;
 	byte savedHqLevel = 0;
-	int constructingBuildingID = -1, selectedBuildingButton = -1;
+	int  selectedBuildingButton = -1;
+	Structure chosenBuilding = null;
 	public byte constructingLevel = 1;
 	SurfacePanelMode mode;
 	public Toggle[] buildingsLevelToggles; // fiti
@@ -167,9 +168,15 @@ public sealed class UISurfacePanelController : UIObserver {
 		buildingsLevelToggles[0].transform.parent.gameObject.SetActive(working);
 		returnButton.gameObject.SetActive( working );
 		availableBuildingsButtons[0].transform.parent.gameObject.SetActive( working ); 
-		name.gameObject.SetActive( working );
-		description.gameObject.SetActive( working );
-		innerBuildButton.gameObject.SetActive( working );
+		if (!working) {
+			name.gameObject.SetActive( false );
+			description.gameObject.SetActive( false);
+			innerBuildButton.gameObject.SetActive( false );
+			resourcesCostImage[0].transform.parent.gameObject.SetActive(false);
+			selectedBuildingButton = -1;
+			chosenBuilding = null;
+			innerBuildButton.gameObject.SetActive(false);
+		}
 	}
 
 	void SetActionPanelStatus ( bool working ) {
@@ -185,22 +192,54 @@ public sealed class UISurfacePanelController : UIObserver {
 			blockCreateButton.enabled = ( savedHqLevel> 3);
 			columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
 			changeMaterialButton.enabled = (GameMaster.colonyController.gears_coefficient >=2);
+			UIController.current.closePanelButton.gameObject.SetActive(true);
 		}
 		else {
 			if (changeMaterialButton.gameObject.activeSelf) changeMaterialButton.gameObject.SetActive( false ) ;
 			if (blockCreateButton.gameObject.activeSelf) blockCreateButton.gameObject.SetActive( false  );
 			if (columnCreateButton.gameObject.activeSelf) columnCreateButton.gameObject.SetActive( false  );
+			UIController.current.closePanelButton.gameObject.SetActive(false);
 		}
 	}
 
-	public void SelectBuildingForConstruction (int id, int buttonIndex) {
-		constructingBuildingID = id;
+	public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
+		chosenBuilding = building;
 		availableBuildingsButtons[buttonIndex].image.overrideSprite =overridingSprite; 
-		if (selectedBuildingButton > 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
+		if (selectedBuildingButton >= 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
 		selectedBuildingButton = buttonIndex;
 
-		name.text = Localization.GetStructureName(id); name.gameObject.SetActive(true);
-		description.text = Localization.GetStructureDescription(id); description.gameObject.SetActive(true);
+		name.text = Localization.GetStructureName(chosenBuilding.id); name.gameObject.SetActive(true);
+		description.text = Localization.GetStructureDescription(chosenBuilding.id); description.gameObject.SetActive(true);
+
+		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
+		ResourceContainer[] cost = ResourcesCost.GetCost(chosenBuilding.id);
+		for (int i = 0; i < resourcesCostImage.Length; i++) {
+			if ( i < cost.Length) {
+				resourcesCostImage[i].uvRect = ResourceType.GetTextureRect(cost[i].type.ID);
+				resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
+				resourcesCostImage[i].gameObject.SetActive(true);
+			}
+			else {
+				resourcesCostImage[i].gameObject.SetActive(false);
+			}
+		}
+		innerBuildButton.gameObject.SetActive(true);
+	}
+
+	public void CreateSelectedBuilding() {
+		if (selectedBuildingButton == -1 | chosenBuilding == null) return;
+		ResourceContainer[] cost = ResourcesCost.GetCost(chosenBuilding.id);
+		// make checks!
+		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
+			if ( surface.IsAnyBuildingInArea(chosenBuilding.innerPosition) == false) {
+				Structure s = Structure.GetNewStructure(chosenBuilding.id);
+				s.gameObject.SetActive(true);
+				s.SetBasement(surface, PixelPosByte.zero);
+			}
+		}
+		else {
+			GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+		}
 	}
 
 	public void SetConstructingLevel (int l) {
@@ -212,6 +251,8 @@ public sealed class UISurfacePanelController : UIObserver {
 	}
 
 	void RewriteBuildingButtons () {
+		// поправка на материал
+		// поправка на side-only
 		List<Building> abuildings = Structure.GetApplicableBuildingsList(constructingLevel);
 		for (int n = 0; n < availableBuildingsButtons.Length; n++) {
 			if (n < abuildings.Count) {
@@ -220,12 +261,9 @@ public sealed class UISurfacePanelController : UIObserver {
 				Vector2 txPos = Structure.GetTexturePosition(abuildings[n].id);
 				rimage.uvRect = new Rect(txPos.x, txPos.y, 0.125f, 0.125f);
 				availableBuildingsButtons[n].onClick.RemoveAllListeners();
-				int sid = new int();
-				sid = abuildings[n].id;
-				int bid = new int();
-				bid = n;
+				int bid = n;
 				availableBuildingsButtons[n].onClick.AddListener(() => {
-					this.SelectBuildingForConstruction(sid, bid);
+					this.SelectBuildingForConstruction(abuildings[bid], bid);
 				});
 			}
 			else {

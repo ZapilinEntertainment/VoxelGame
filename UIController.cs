@@ -11,7 +11,7 @@ sealed public class UIController : MonoBehaviour {
 	public RectTransform[] questButtons; // fill in Inspector
 	public GameObject returnToQuestList_button; // fill in Inspector
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
-	public Button touchZone; // fill in the Inspector
+	public Button touchZone, closePanelButton; // fill in the Inspector
 
 	GUIMode mode;
 	byte submode = 0;

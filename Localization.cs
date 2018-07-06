@@ -5,6 +5,7 @@ using UnityEngine;
 public enum Language{English, Russian};
 public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
 public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather}
+public enum GameAnnouncements{NotEnoughResources};
 
 public static class Localization {
 	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
@@ -324,6 +325,44 @@ public static class Localization {
 	public static string GetStructureDescription(int id) {
 		return "no descriptions yet";
 	}
+	public static string GetResourceName(int id) {
+		switch (id) {
+		default: return "Unregistered resource";
+		case 0: return "Nothing"; 
+		case ResourceType.DIRT_ID: return "Dirt"; 
+		case ResourceType.FOOD_ID: return "Food"; 
+		case ResourceType.LUMBER_ID : return "Wood";
+		case ResourceType.STONE_ID : return "Stone";
+		case ResourceType.METAL_K_ID : return "Metal K ";
+		case ResourceType.METAL_M_ID : return "Metal K ";
+		case ResourceType.METAL_E_ID : return "Metal K ";
+		case ResourceType.METAL_N_ID : return "Metal K ";
+		case ResourceType.METAL_P_ID : return "Metal K ";
+		case ResourceType.METAL_S_ID : return "Metal K ";
+		case ResourceType.METAL_K_ORE_ID : return "Metal K (ore)";
+		case ResourceType.METAL_M_ORE_ID : return "Metal M (ore)";
+		case ResourceType.METAL_E_ORE_ID : return "Metal E (ore)";
+		case ResourceType.METAL_N_ORE_ID : return "Metal N (ore)";
+		case ResourceType.METAL_P_ORE_ID : return "Metal P (ore)";
+		case ResourceType.METAL_S_ORE_ID : return "Metal S (ore)";
+		case ResourceType.MINERAL_F_ID : return "Mineral F";
+		case ResourceType.MINERAL_L_ID : return "Mineral L";
+		case ResourceType.PLASTICS_ID : return "Plastic";
+		case ResourceType.CONCRETE_ID : return "L-Concrete";
+		case ResourceType.FERTILE_SOIL_ID : return "Fertile soil";
+		case ResourceType.FUEL_ID : return "Fuel";
+		case ResourceType.GRAPHONIUM_ID : return "Graphonium";
+		case ResourceType.SUPPLIES_ID : return "Supplies";			
+		}
+	}
+
+	public static string GetAnnouncementString( GameAnnouncements announce) {
+		switch (announce) {
+		default: return "<announcement not found>";
+		case GameAnnouncements.NotEnoughResources : return "Not enough resources!";
+		}
+	}
+
 
 	public static string CostInCoins(float count) {
 		switch (currentLanguage) {

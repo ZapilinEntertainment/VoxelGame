@@ -31,6 +31,14 @@ public class Structure : MonoBehaviour {
 	public List<Renderer> myRenderers; // preparing inside
 	public bool visible {get;protected set;}
 
+	//проверь при добавлении
+	//- ID
+	// load pref - загрузка
+	// prepare - установка inner position
+	// - localization - name & description
+	// - texture rect
+
+
 	public const int  PLANT_ID = 1, DRYED_PLANT_ID = 2, LANDED_ZEPPELIN_ID = 5,
 	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, HOUSE_0_ID = 11, 
 	DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19, 
