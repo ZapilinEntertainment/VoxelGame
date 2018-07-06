@@ -121,7 +121,7 @@ public class UI : MonoBehaviour {
 									if (chosenSurfaceBlock.pos.x == 0 || chosenSurfaceBlock.pos.x == Chunk.CHUNK_SIZE - 1 || chosenSurfaceBlock.pos.z == 0 || chosenSurfaceBlock.pos.z == Chunk.CHUNK_SIZE - 1)
 									chosenSurfaceBlockIsBorderBlock = true; else chosenSurfaceBlockIsBorderBlock = false;
 									// подборка зданий
-								if (showingBuildingsLevel != 0) showingBuildingsList = Structure.GetApplicableBuildingsList(showingBuildingsLevel, chosenSurfaceBlock);
+								if (showingBuildingsLevel != 0) showingBuildingsList = Structure.GetApplicableBuildingsList(showingBuildingsLevel);
 								break;
 							case BlockType.Cube:
 								chosenCubeBlock = b.GetComponent<CubeBlock>();
@@ -515,7 +515,7 @@ public class UI : MonoBehaviour {
 						for (byte bl = 1; bl <= GameMaster.colonyController.hq.level; bl++) {
 							if (GUI.Button(new Rect(rr.x + (bl - 1) * rr.height, rr.y, rr.height, rr.height), bl.ToString())) {
 								showingBuildingsLevel = (byte)bl;
-								showingBuildingsList = Structure.GetApplicableBuildingsList(bl, chosenSurfaceBlock);
+								showingBuildingsList = Structure.GetApplicableBuildingsList(bl);
 								ChangeArgument(3);
 							}
 						}

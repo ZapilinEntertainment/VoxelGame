@@ -18,7 +18,7 @@ public class ScalableHarvestableResource : Structure {
 	public float AddResource( ResourceType type, float volume) {
 		if (mainResource == ResourceType.Nothing) {
 			mainResource = type;
-			myRenderer.sharedMaterial = type.material;
+			myRenderers[0].sharedMaterial = type.material;
 		}
 		else{
 			if (type != mainResource) {
@@ -30,6 +30,10 @@ public class ScalableHarvestableResource : Structure {
 		count1 += addingVolume;
 		transform.localScale = new Vector3(1,count1/MAX_VOLUME,1);
 		return volume - addingVolume;
+	}
+	public void Harvest() {
+		count1 -= GameMaster.colonyController.storage.AddResource(mainResource,count1);
+		if (count1 == 0) Annihilate(false);
 	}
 
 	#region save-load system
@@ -47,13 +51,13 @@ public class ScalableHarvestableResource : Structure {
 		LoadStructureData(ss, sblock);
 		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
 		GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
-		mainResource = hrs.mainResource;
+		mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
 		count1 = hrs.count;
 	}
 
 	protected HarvestableResourceSerializer GetHarvestableResourceSerializer() {
 		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
-		hrs.mainResource = mainResource;
+		hrs.mainResource_id = mainResource.ID;
 		hrs.count = count1;
 		return hrs;
 	}

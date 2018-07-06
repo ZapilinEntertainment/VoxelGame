@@ -52,6 +52,8 @@ public class SurfaceBlock : Block {
 	public BlockRendererController structureBlock;
 	public int freeCells = 0;
 
+	public static UISurfacePanelController surfaceObserver;
+
 	void Awake() 
 	{
 		cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
@@ -518,6 +520,13 @@ public class SurfaceBlock : Block {
 				}
 			}
 		}
+	}
+
+	public UIObserver ShowOnGUI() {
+		if (surfaceObserver == null) surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+		else surfaceObserver.gameObject.SetActive(true);
+		surfaceObserver.SetObservingSurface(this);
+		return surfaceObserver;
 	}
 
 	#region save-load system

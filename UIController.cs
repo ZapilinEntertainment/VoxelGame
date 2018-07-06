@@ -13,9 +13,6 @@ sealed public class UIController : MonoBehaviour {
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone; // fill in the Inspector
 
-	public Text selected_nameField; //fiti
-	public Button selected_demolishButton;//fiti
-
 	GUIMode mode;
 	byte submode = 0;
 	bool transformingRectInProgress = false, showMenuWindow = false;
@@ -26,9 +23,10 @@ sealed public class UIController : MonoBehaviour {
 	float coinsCount, energyCount, energyMax;
 	int citizenCount, freeWorkersCount, livespaceCount;
 
-	SurfaceBlock chosenSurface;
+	public SurfaceBlock chosenSurface{get;private set;}
 	CubeBlock chosenCube; byte faceIndex = 10;
-	Structure chosenStructure; UIObserver workingObserver;
+	Structure chosenStructure; 
+	UIObserver workingObserver;
 	Worksite chosenWorksite;
 	ChosenObjectType chosenObjectType;
 	Transform selectionFrame; Material selectionFrameMaterial;
@@ -131,6 +129,7 @@ sealed public class UIController : MonoBehaviour {
 
 		if (newChosenType == ChosenObjectType.None) {
 			rightPanel.SetActive(false);
+			menuButton.SetActive(true);
 			selectionFrame.gameObject.SetActive(false);
 			chosenObjectType = ChosenObjectType.None;
 		}
@@ -138,6 +137,7 @@ sealed public class UIController : MonoBehaviour {
 			chosenObjectType = newChosenType;
 			rightPanel.transform.SetAsLastSibling();
 			rightPanel.SetActive(true);
+			menuButton.SetActive(false);
 
 			selectionFrame.gameObject.SetActive(true);
 			if (showMenuWindow) {
@@ -158,6 +158,7 @@ sealed public class UIController : MonoBehaviour {
 			selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
 			sframeColor = new Vector3(140f/255f, 1,1);
 			selectionFrame.gameObject.SetActive(true);
+			workingObserver = chosenSurface.ShowOnGUI();
 			break;
 		case ChosenObjectType.Cube:
 			selectionFrame.position = chosenCube.faces[faceIndex].transform.position;

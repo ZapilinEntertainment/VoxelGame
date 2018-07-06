@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum Language{English, Russian};
 public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
-public enum LocalizationKey{Level, Offline}
+public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather}
 
 public static class Localization {
 	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
@@ -318,8 +318,11 @@ public static class Localization {
 		return s;
 	}
 
-	public static string GetName(int id ) {
+	public static string GetStructureName(int id ) {
 		return structureName[id];
+	}
+	public static string GetStructureDescription(int id) {
+		return "no descriptions yet";
 	}
 
 	public static string CostInCoins(float count) {
@@ -354,6 +357,11 @@ public static class Localization {
 		switch (key) {
 		case LocalizationKey.Level: return "level"; 
 		case LocalizationKey.Offline: return "offline";
+		case LocalizationKey.PointsSec: return "points/sec";
+		case LocalizationKey.Dig : return "Dig";
+		case LocalizationKey.StopDig: return "Stop digging";
+		case LocalizationKey.Gather: return "Gather";
+		case LocalizationKey.StopGather: return "Stop gathering";
 		default: return "...";
 		}
 	}

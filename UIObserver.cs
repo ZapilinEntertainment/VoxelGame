@@ -10,12 +10,14 @@ public abstract class UIObserver : MonoBehaviour {
 	/// Call from outside
 	/// </summary>
 	virtual public void ShutOff() {
+		isObserving = false;
 		gameObject.SetActive(false);
 	}
 	/// <summary>
 	/// Call from inheritors
 	/// </summary>
 	virtual public void SelfShutOff() {
+		isObserving = false;
 		gameObject.SetActive(false);
 	}
 
@@ -29,5 +31,9 @@ public abstract class UIObserver : MonoBehaviour {
 
 	protected virtual void StatusUpdate() {
 		
+	}
+
+	void OnEnable() {
+		transform.SetAsLastSibling();
 	}
 }

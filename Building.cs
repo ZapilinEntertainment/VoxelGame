@@ -271,7 +271,7 @@ public class Building : Structure {
 	}
 
 	override public void Rename() {
-		name = Localization.GetName(id) + " (" + Localization.GetWord(LocalizationKey.Level) + ' '+level.ToString() +')';
+		name = Localization.GetStructureName(id) + " (" + Localization.GetWord(LocalizationKey.Level) + ' '+level.ToString() +')';
 	}
 
 	public override UIObserver ShowOnGUI() {

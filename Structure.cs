@@ -34,13 +34,14 @@ public class Structure : MonoBehaviour {
 	public const int  PLANT_ID = 1, DRYED_PLANT_ID = 2, LANDED_ZEPPELIN_ID = 5,
 	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, HOUSE_0_ID = 11, 
 	DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19, 
-	WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
+	WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, 	MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
 	ROLLING_SHOP_ID = 25, MINI_GRPH_REACTOR_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
 	FOOD_FACTORY_4_ID = 30, GRPH_ENRICHER_ID = 31, XSTATION_ID = 32, QUANTUM_ENERGY_TRANSMITTER_ID = 33, CHEMICAL_FACTORY_ID = 34,
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
 	LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, FOOD_FACTORY_5_ID = 53, SMELTERY_2_ID = 54, 
-	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, RESOURCE_STICK_ID = 60, COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_ID = 63,
+	SMELTERY_3_ID = 55,  SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, 
+	RESOURCE_STICK_ID = 60, COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_ID = 63,
 	RECRUITING_CENTER_ID = 64, EXPEDITION_CORPUS_ID = 65, QUANTUM_TRANSMITTER_ID = 66;
 	public const int TOTAL_STRUCTURES_COUNT = 67;
 	static Structure[] prefs;
@@ -298,6 +299,74 @@ public class Structure : MonoBehaviour {
 			}
 		}
 	}
+	public static Vector2 GetTexturePosition(int f_id) {
+		float p = 0.125f;
+		switch (f_id) {
+		default: return Vector2.zero;
+		case DRYED_PLANT_ID:
+		case PLANT_ID : return new Vector2(p, 7 * p);
+		case HQ_4_ID:
+		case HQ_3_ID:
+		case HQ_2_ID:
+		case LANDED_ZEPPELIN_ID : return new Vector2(3 * p, 7*p);
+		case LIFESTONE_ID :
+		case TREE_OF_LIFE_ID : return new Vector2(2 * p, 7 *p);
+		case STORAGE_1_ID :
+		case STORAGE_2_ID :
+		case STORAGE_3_ID :
+		case STORAGE_5_ID :
+		case STORAGE_0_ID : return new Vector2(5 * p, 7 *p);
+		case CONTAINER_ID :return new Vector2( 4 * p, 7 *p);
+		case MINE_ID:
+		case MINE_ELEVATOR_ID : return new Vector2( 6 * p, 7 * p);
+		case HOUSE_1_ID :
+		case HOUSE_2_ID :
+		case HOUSE_3_ID :
+		case HOUSE_5_ID :
+		case HOUSE_0_ID : return new Vector2( 7 * p, 7* p);
+		case DOCK_ID : return new Vector2(0, 6 *p);
+		case ENERGY_CAPACITOR_3_ID:
+		case ENERGY_CAPACITOR_2_ID:
+		case ENERGY_CAPACITOR_1_ID : return new Vector2(p, 6*p);
+		case FARM_2_ID :
+		case FARM_3_ID :
+		case FARM_4_ID :
+		case FARM_5_ID :
+		case FARM_1_ID : return new Vector2(2 * p, 6 * p);
+		case LUMBERMILL_2_ID :
+		case LUMBERMILL_3_ID :
+		case LUMBERMILL_4_ID :
+		case LUMBERMILL_5_ID :
+		case LUMBERMILL_1_ID : return new Vector2( 3 *p, 6 *p);
+		case SMELTERY_2_ID :
+		case	 SMELTERY_3_ID :
+		case SMELTERY_5_ID :
+		case  SMELTERY_1_ID : return new Vector2( 4 *p, 6 *p);
+		case WIND_GENERATOR_1_ID : return new Vector2( 5 * p, 6 *p); 
+		case BIOGENERATOR_2_ID : return new Vector2( 6 * p, 6 *p);
+		case HOSPITAL_2_ID : return new Vector2( 7 *p, 6 *p);
+		case MINERAL_POWERPLANT_2_ID :return new Vector2(0, 5 *p);
+		case ORE_ENRICHER_2_ID : return new Vector2( p, 5 *p);
+		case ROLLING_SHOP_ID : return new Vector2(2 * p, 5 *p);
+		case MINI_GRPH_REACTOR_ID : return new Vector2( 3 * p, 5 *p);
+		case FUEL_FACILITY_3_ID : return new Vector2( 4 * p, 5 *p);
+		case GRPH_REACTOR_4_ID : return new Vector2( 5 * p, 5 *p);
+		case PLASTICS_FACTORY_3_ID : return new Vector2( 6 * p, 5 *p);
+		case FOOD_FACTORY_5_ID:
+		case FOOD_FACTORY_4_ID : return new Vector2( 7 *p, 5 *p);
+		case GRPH_ENRICHER_ID : return new Vector2(0, 4 *p);
+		case XSTATION_ID : return new Vector2(p, 4 *p);
+		case QUANTUM_ENERGY_TRANSMITTER_ID : return new Vector2( 2 * p, 4 *p);
+		case CHEMICAL_FACTORY_ID : return new Vector2(3 *p, 4 *p);
+		case RESOURCE_STICK_ID : return new Vector2(4 * p, 4 *p);
+		case COLUMN_ID : return new Vector2(5 *p, 4 *p);
+		case SWITCH_TOWER_ID : return new Vector2( 6 * p, 4 *p);
+		case SHUTTLE_HANGAR_ID : return new Vector2(7 *p, 4 *p);
+		case RECRUITING_CENTER_ID : return new Vector2(0, 3*p);
+		case EXPEDITION_CORPUS_ID : return new Vector2(p, 3 *p);
+		case QUANTUM_TRANSMITTER_ID : return new Vector2(2 *p, 3 *p);
+		}
+	}
 
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
@@ -421,7 +490,7 @@ public class Structure : MonoBehaviour {
 		else innerPosition = sr;
 	}
 
-	public static List<Building> GetApplicableBuildingsList(byte s_level, SurfaceBlock sblock) {
+	public static List<Building> GetApplicableBuildingsList(byte s_level) {
 		List<Building> buildingsList = new List<Building>();
 		foreach (Building b in allConstructableBuildingsList) {
 			if (b == null ) continue;
@@ -463,7 +532,7 @@ public class Structure : MonoBehaviour {
 	}
 
 	virtual public void Rename() {
-		name = Localization.GetName(id);
+		name = Localization.GetStructureName(id);
 	}
 
 	void OnDestroy() {

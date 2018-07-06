@@ -29,7 +29,10 @@ public class UIBuildingObserver : UIObserver {
 		if (status_connectedToPowerGrid) {
 			showingEnergySurplus = b.energySurplus;
 			status_energySupplied = b.energySupplied;
-			if (status_energySupplied)	energyValue.text = string.Format("{0,0:F}", showingEnergySurplus);
+			if (status_energySupplied)	{
+				if (showingEnergySurplus <=0 ) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+				else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+			}
 			else energyValue.text = Localization.GetWord(LocalizationKey.Offline);
 			energyValue.enabled = true;
 			energyImage.enabled = true;
@@ -62,7 +65,10 @@ public class UIBuildingObserver : UIObserver {
 				if (status_connectedToPowerGrid) {
 					showingEnergySurplus = observingBuilding.energySurplus;
 					status_energySupplied = observingBuilding.energySupplied;
-					if (status_energySupplied)	energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+					if (status_energySupplied)	{
+						if (showingEnergySurplus <=0 ) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+						else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+					}
 					else energyValue.text = Localization.GetWord(LocalizationKey.Offline);
 					energyValue.enabled = true;
 					energyImage.enabled = true;
@@ -77,14 +83,16 @@ public class UIBuildingObserver : UIObserver {
 					status_energySupplied = observingBuilding.energySupplied;
 					if (status_energySupplied)	{			
 						showingEnergySurplus = observingBuilding.energySurplus;
-						energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+						if (showingEnergySurplus <=0 ) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+						else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
 					}
 					else energyValue.text = Localization.GetWord(LocalizationKey.Offline);
 				}
 				else {
 					if (showingEnergySurplus != observingBuilding.energySurplus) {
 						showingEnergySurplus = observingBuilding.energySurplus;
-						energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+						if (showingEnergySurplus <=0 ) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+						else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
 					}
 				}
 			}

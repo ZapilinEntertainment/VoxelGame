@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CleanSite : Worksite {
-	bool diggingMission = false;
+	public bool diggingMission {get;protected set;}
 	SurfaceBlock workObject;
 	const int START_WORKERS_COUNT = 10;
 
@@ -25,8 +25,8 @@ public class CleanSite : Worksite {
 				else {
 					DigSite ds =  basement.gameObject.AddComponent<DigSite>();
 					ds.Set(basement as CubeBlock, true);
-					ds.AddWorkers(workersCount);
-					workersCount = 0;
+					workersCount = ds.AddWorkers(workersCount);
+					if (workersCount > 0) FreeWorkers();
 				}
 			}
 			Destroy(this);
@@ -45,33 +45,19 @@ public class CleanSite : Worksite {
 	void LabourResult() {
 		Structure s = workObject.surfaceObjects[0];
 		if (s == null || !s.gameObject.activeSelf) {workObject.RequestAnnihilationAtIndex(0);return;}
-			Plant p = s.GetComponent<Plant>();
-			if (p != null) {
-			if (p is Tree) {
-					Tree t = s.GetComponent<Tree>();
-					if (t != null) {
-						float lumberDelta= t.CalculateLumberCount(); 
-						GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, lumberDelta * 0.9f);
-						t.Chop();
-						workflow -= lumberDelta;
-					}
-				}
-			else {
-				p.Annihilate( false );
-				workflow--;
-			}
-			}
-			else {
+		if (s.id == Structure.PLANT_ID) {
+			(s as Plant).Harvest();
+		}
+		else {
 				HarvestableResource hr = s.GetComponent<HarvestableResource>();
 				if (hr != null) {
 					GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
-					Destroy(hr.gameObject);
+					hr.Annihilate( false );
 				}
 				else {
 					s.ApplyDamage(workflow);
 				}
-			}
-		workObject.surfaceObjects[0].Annihilate( false );
+		}
 		actionLabel = Localization.ui_clean_in_progress + " (" + workObject.surfaceObjects.Count.ToString() +' '+ Localization.objects_left +")" ;
 	}
 
@@ -90,23 +76,23 @@ public class CleanSite : Worksite {
 		GameMaster.colonyController.AddWorksite(this);
 	}
 
-	//---------SAVE   SYSTEM----------------
-	override public WorksiteBasisSerializer Save() {
+	#region save-load mission
+	override public WorksiteSerializer Save() {
 		if (workObject == null) {
 			Destroy(this);
 			return null;
 		}
-		WorksiteBasisSerializer wbs = new WorksiteBasisSerializer();
-		wbs.type = WorksiteType.CleanSite;
-		wbs.bool1 = diggingMission;
-		wbs.workObjectPos = workObject.pos;
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorksiteSerializer());
-			wbs.data = stream.ToArray();
-		}
-		return wbs;
+		WorksiteSerializer ws = GetWorksiteSerializer();
+		ws.type = WorksiteType.CleanSite;
+		ws.workObjectPos = workObject.pos;
+		if (diggingMission) ws.specificData = new byte[1]{1};
+		else ws.specificData = new byte[1]{0};
+		return ws;
 	}
-	// --------------------------------------------------------
+	override public void Load(WorksiteSerializer ws) {
+		LoadWorksiteData(ws);
+		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ws.specificData[0] == 1);
+	}
+	#endregion
 			
 }
