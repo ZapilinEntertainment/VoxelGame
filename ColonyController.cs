@@ -12,7 +12,7 @@ public sealed class ColonyControllerSerializer{
 
 	public float energyStored,energyCrystalsCount;
 	public bool haveWorksites;
-	public List<WorksiteBasisSerializer> worksites;
+	public List<WorksiteSerializer> worksites;
 
 	public int freeWorkers, citizenCount,deathCredit;
 	public float peopleSurplus = 0, housingTimer = 0,starvationTimer, starvationTime = 600, real_birthrate = 0;
@@ -64,7 +64,7 @@ public sealed class ColonyController : MonoBehaviour {
 		hospitals_coefficient = 0;
 		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
 		docksLevel = 0;
-		energyCrystalsCount = 100;
+		energyCrystalsCount = 1000;
 
 		houses = new List<House>();
 		powerGrid = new List<Building>();
@@ -541,6 +541,7 @@ public sealed class ColonyController : MonoBehaviour {
 		return v;
 	}
 
+	#region save-load system
 	public ColonyControllerSerializer Save() {
 		ColonyControllerSerializer ccs = new ColonyControllerSerializer();
 		ccs.storageSerializer = storage.Save();
@@ -555,10 +556,10 @@ public sealed class ColonyController : MonoBehaviour {
 		if (worksites.Count == 0) ccs.haveWorksites = false;
 		else {
 			int realCount = 0;
-			ccs.worksites = new List<WorksiteBasisSerializer>();
+			ccs.worksites = new List<WorksiteSerializer>();
 			foreach (Worksite w in worksites) {
 				if (w == null) continue;
-				WorksiteBasisSerializer wbs = w.Save();
+				WorksiteSerializer wbs = w.Save();
 				if (wbs == null) continue;
 				ccs.worksites.Add(wbs);
 				realCount++;
@@ -575,16 +576,63 @@ public sealed class ColonyController : MonoBehaviour {
 		ccs.real_birthrate = real_birthrate;
 		return ccs;
 	}
+	public void Load(ColonyControllerSerializer ccs) {
+		if (storage == null) storage = gameObject.AddComponent<Storage>();
+		storage.Load(ccs.storageSerializer);
+		gears_coefficient = ccs.gears_coefficient;
+		labourEfficientcy_coefficient = ccs.labourEfficientcy_coefficient;
+		happiness_coefficient = ccs.happiness_coefficient;
+		health_coefficient = ccs.health_coefficient;
+		birthrateCoefficient = ccs.birthrateCoefficient;
+
+		energyStored = ccs.energyStored;
+		energyCrystalsCount = ccs.energyCrystalsCount;
+		if (ccs.haveWorksites) {
+			foreach (WorksiteSerializer ws in ccs.worksites) {
+				Worksite w = null;
+				Block b = GameMaster.mainChunk.GetBlock(ws.workObjectPos);
+				if (b == null) continue;
+				switch (ws.type) {
+				case WorksiteType.Abstract : 
+					w = b.gameObject.AddComponent<Worksite>();
+					break;
+				case WorksiteType.BlockBuildingSite:
+					w= b.gameObject.AddComponent<BlockBuildingSite>();
+					break;
+				case WorksiteType.CleanSite:
+					w = b.gameObject.AddComponent<CleanSite>();
+					break;
+				case WorksiteType.DigSite:
+					w = b.gameObject.AddComponent<DigSite>();
+					break;
+				case WorksiteType.GatherSite:
+					w = b.gameObject.AddComponent<GatherSite>();
+					break;
+				case WorksiteType.TunnelBuildingSite:
+					w = b.gameObject.AddComponent<TunnelBuildingSite>();
+					break;
+				}
+				w.Load(ws);
+			}
+		}
+		freeWorkers =ccs.freeWorkers;
+		citizenCount = ccs.citizenCount;
+		deathCredit = ccs.deathCredit;
+		peopleSurplus = ccs.peopleSurplus;
+		housingTimer = ccs.housingTimer;
+		starvationTimer = ccs.starvationTimer;
+		starvationTime = ccs.starvationTime;
+		real_birthrate = ccs.real_birthrate;
+	}
+	#endregion
 
 	void OnDestroy() {
 		GameMaster.realMaster.everydayUpdateList.Remove(this);
 	}
 
-	void OnGUI () {
+	void OLDOnGUI () {
 		float k = GameMaster.guiPiece;
 		if (showColonyInfo) {
-			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, 5*k);
-			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, 5 * k);
 			GUI.Box(myRect, GUIContent.none);
 			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
 			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);

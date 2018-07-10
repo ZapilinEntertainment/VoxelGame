@@ -66,10 +66,10 @@ public class RollingShop : WorkBuilding {
 		PrepareBuildingForDestruction();
 	}
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		//based on building.cs
 		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		// rolling shop functional
 		if (GUI.Button(rr, Localization.ui_setMode)) showModes = !showModes; rr.y += rr.height;
 		if (showModes) {

@@ -61,10 +61,10 @@ public class RecruitingCenter : WorkBuilding {
 		workSpeed = (float)workersCount / (float)maxWorkers;
 	}
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		//sync with hospital.cs, rollingShop.cs
 		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		GUI.Label(rr, Localization.ui_freeSlots + " : " + Crew.crewSlots.ToString(), Crew.crewSlots == 0 ? PoolMaster.GUIStyle_COLabel_red : PoolMaster.GUIStyle_CenterOrientedLabel);
 		rr.y += rr.height;
 		if ( !finding) {

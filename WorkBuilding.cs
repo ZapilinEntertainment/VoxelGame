@@ -17,6 +17,7 @@ public abstract class WorkBuilding : Building {
 	public int workersCount {get; protected set;} 
 	const float WORKFLOW_GAIN = 1;
 	public float workflowToProcess_setValue = 1;//fixed by asset
+    public static UIWorkbuildingObserver workbuildingObserver;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -104,47 +105,37 @@ public abstract class WorkBuilding : Building {
 		wbs.workersCount = workersCount;
 		return wbs;
 	}
-		
-	#endregion
 
-	override protected float GUI_UpgradeButton( Rect rr) {
-		GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-		if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-			if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-			{
-				WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
-				PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
-				byte bzero = (byte)0;
-				if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-				if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
-				int workers = workersCount;
-				workersCount = 0;
-				Quaternion originalRotation = transform.rotation;
-				upgraded.SetBasement(basement, setPos);
-				if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
-					upgraded.transform.localRotation = originalRotation;
-				}
-				upgraded.AddWorkers(workers);
-			}
-			else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
-		}
+    #endregion
 
-		if ( requiredResources.Length > 0) {
-			Storage storage = GameMaster.colonyController.storage;
-			rr.y += rr.height;
-			for (int i = 0; i < requiredResources.Length; i++) {
-				if (requiredResources[i].volume > storage.standartResources[requiredResources[i].type.ID]) GUI.color = Color.red;
-				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
-				GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), requiredResources[i].volume.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-				rr.y += rr.height;
-				GUI.color = Color.white;
-			}
-		}
-		return rr.y;
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        return workbuildingObserver;
+    }
 
-	protected void PrepareWorkbuildingForDestruction() {
+    override public void LevelUp(bool returnToUI)
+    {
+        WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
+        PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
+        byte bzero = (byte)0;
+        if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+        if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+        int workers = workersCount;
+        workersCount = 0;
+        Quaternion originalRotation = transform.rotation;
+        upgraded.SetBasement(basement, setPos);
+        if (!upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only))
+        {
+            upgraded.transform.localRotation = originalRotation;
+        }
+        upgraded.AddWorkers(workers);
+        if (returnToUI) upgraded.ShowOnGUI();
+    }
+
+    protected void PrepareWorkbuildingForDestruction() {
 		PrepareBuildingForDestruction();
 		if (workersCount != 0) GameMaster.colonyController.AddWorkers(workersCount);
 	}

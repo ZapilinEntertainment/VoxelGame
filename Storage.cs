@@ -232,7 +232,7 @@ public class Storage : MonoBehaviour {
 		standartResources = ss.standartResources;
 	}
 	#endregion
-	void OnGUI () {
+	void OLDOnGUI () {
 		if (showStorage) {
 			GUI.skin = GameMaster.mainGUISkin;
 			float k = GameMaster.guiPiece;
@@ -243,8 +243,7 @@ public class Storage : MonoBehaviour {
 			positionsCount ++; // для total
 			if (customResources != null) positionsCount += customResources.Count;
 
-			if (UI.current.mode != UIMode.View) myRect =new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k , k * 0.75f * positionsCount);
-			else myRect =new Rect(Screen.width - 12 *k, UI.current.upPanelBox.height, 8*k , k * 0.75f * positionsCount);
+			myRect =new Rect(0,0,0,0);
 
 			GUI.Box(myRect, GUIContent.none);
 			Rect r_image = new Rect(myRect.x, myRect.y, k *0.75f, k*0.75f);

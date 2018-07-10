@@ -31,7 +31,6 @@ public class Factory : WorkBuilding {
 		SetBuildingData(b, pos);
 		storage = GameMaster.colonyController.storage;
 		SetRecipe(Recipe.NoRecipe);
-		UI.current.AddFactoryToList(this);
 	}
 
 	void Update() {
@@ -123,12 +122,12 @@ public class Factory : WorkBuilding {
 	}
 	#endregion
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		if ( !showOnGUI ) return;
 		//upgrading
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		if (upgradedIndex != -1 && level < GameMaster.colonyController.hq.level) {
-			rr.y = GUI_UpgradeButton(rr);
+			//rr.y = GUI_UpgradeButton(rr);
 		}
 		//factory actions
 		if (gui_showRecipesList) {
@@ -157,7 +156,7 @@ public class Factory : WorkBuilding {
 			rr.y += rr.height;
 		}
 		GUI.DrawTexture( new Rect(rr.x, rr.y, rr.height * 2, rr.height * 2), recipe.input.icon, ScaleMode.StretchToFill );
-		GUI.DrawTexture( new Rect(rr.x + rr.width / 3f, rr.y, rr.height* 2, rr.height* 2), UI.current.rightArrow_tx, ScaleMode.StretchToFill );
+		GUI.DrawTexture( new Rect(rr.x + rr.width / 3f, rr.y, rr.height* 2, rr.height* 2), null, ScaleMode.StretchToFill );
 		GUI.DrawTexture( new Rect (rr.xMax - rr.height * 2, rr.y, rr.height* 2, rr.height* 2), recipe.output.icon, ScaleMode.StretchToFill );
 		rr.y += rr.height * 2;
 		GUI.Label( new Rect(rr.x, rr.y, rr.height, rr.height), ((int)inputResourcesBuffer).ToString() + '/' + recipe.inputValue.ToString(), PoolMaster.GUIStyle_CenterOrientedLabel );
@@ -167,6 +166,5 @@ public class Factory : WorkBuilding {
 
 	void OnDestroy() {
 		PrepareWorkbuildingForDestruction();
-		UI.current.RemoveFromFactoriesList(this);
 	}
 }

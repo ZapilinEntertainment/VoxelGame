@@ -4,16 +4,21 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class UIStructureObserver : UIObserver {
-	Structure observingStructure;
-	public Text nameField;
-	public Button demolishButton;
+    Structure observingStructure;
+    [SerializeField] 
+	Text nameField, sizeField;
+    [SerializeField]
+    Button demolishButton;
+
 
 	public void SetObservingStructure(Structure s) {
 		if (s == null) {SelfShutOff();return;}
 		else {
-			observingStructure = s; isObserving = true;
+            if (observingStructure != null) observingStructure.showOnGUI = false;
+			observingStructure = s; isObserving = true; observingStructure.showOnGUI = true;
 			nameField.text = s.name;
 			demolishButton.gameObject.SetActive(!s.undestructible);
+            sizeField.text = s.innerPosition.x_size.ToString() + " x " + s.innerPosition.z_size.ToString();
 		}
 	}
 
@@ -29,7 +34,8 @@ public class UIStructureObserver : UIObserver {
 	}
 
 	override public void ShutOff() {
-		observingStructure = null;
+        if (observingStructure != null) observingStructure.showOnGUI = false;
+        observingStructure = null;
 		isObserving = false;
 		gameObject.SetActive(false);
 	}
@@ -37,4 +43,7 @@ public class UIStructureObserver : UIObserver {
 	public void Demolish() {
 		observingStructure.Annihilate(false);
 	}
+    public void CheckName() {
+        nameField.text = observingStructure.name;
+    }
 }

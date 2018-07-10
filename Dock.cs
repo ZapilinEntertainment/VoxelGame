@@ -26,7 +26,6 @@ public class Dock : WorkBuilding {
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;
 		if (isForSale == null) {
 			Reset();
@@ -295,18 +294,18 @@ public class Dock : WorkBuilding {
 		ds.workBuildingSerializer = GetWorkBuildingSerializer();
 		ds.correctLocation = correctLocation;
 		ds.maintainingShip = maintainingShip;
-		ds.loadingShip = loadingShip.GetShipSerializer();
+		if (maintainingShip) ds.loadingShip =  loadingShip.GetShipSerializer();
 		ds.loadingTimer = loadingTimer;
 		ds.shipArrivingTimer = shipArrivingTimer;
 		return ds;
 	}
 	#endregion
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		if (!showOnGUI) return;
 		GUI.skin = GameMaster.mainGUISkin;
 		float k =GameMaster.guiPiece;
-		Rect r = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect r = new Rect(0,0,0,0);
 		//trade
 		if ( !gui_tradeGoodTabActive ) GUI.DrawTexture(new Rect(r.x, r.y, r.width / 2f, r.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 		else GUI.DrawTexture(new Rect(r.x + r.width/2f, r.y, r.width/2f, r.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
@@ -323,11 +322,10 @@ public class Dock : WorkBuilding {
 			r.y += r.height;
 			if (GUI.Button(r, '<' + Localization.ui_add_transaction + '>')) {
 				gui_addTransactionMenu = !gui_addTransactionMenu;
-				UI.current.touchscreenTemporarilyBlocked = gui_addTransactionMenu;
+
 			}
 			r.y += r.height;
 			if (gui_addTransactionMenu) {  // Настройка торговой операции
-				GUI.Box(new Rect(2 *k, 2*k, Screen.width - 2 *k - UI.current.rightPanelBox.width,Screen.height - 4 *k), GUIContent.none);
 				float resQuad_k = 10 * k / ResourceType.RTYPE_ARRAY_ROWS;
 				float resQuad_leftBorder = 2 * k ;
 				Rect resrect = new Rect(  resQuad_leftBorder, 2 *k , resQuad_k, resQuad_k);
@@ -381,13 +379,11 @@ public class Dock : WorkBuilding {
 				ypos += 2 * qsize;
 				if (GUI.Button(new Rect(xpos + 3 * qsize, ypos, 2 * qsize, qsize), Localization.ui_close)) {
 					gui_addTransactionMenu = false;
-					UI.current.touchscreenTemporarilyBlocked = false;
 				}
 				if (GUI.Button(new Rect(xpos + 6 * qsize, ypos, 2 * qsize, qsize), Localization.ui_reset)) {
 					minValueForTrading[preparingResourceIndex] = 0;
 					isForSale [preparingResourceIndex] = null;
 					gui_addTransactionMenu = false;
-					UI.current.touchscreenTemporarilyBlocked = false;
 				}
 				PoolMaster.GUIStyle_CenterOrientedLabel.fontSize = fb;
 				GUI.skin.button.fontSize = fb_b;

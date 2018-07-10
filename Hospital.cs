@@ -45,10 +45,10 @@ public class Hospital : House {
 		}
 	}
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		//from building.cs
 		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		byte p = (byte)birthrateMode;
 		GUI.DrawTexture(new Rect(rr.x, rr.y + p * rr.height, rr.width, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
 		if (GUI.Button(rr, Localization.lowered_birthrate + " (" + string.Format("{0:0.##}", loweredCoefficient)  + "%)")) {

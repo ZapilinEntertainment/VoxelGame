@@ -63,20 +63,11 @@ public class Hangar : WorkBuilding {
 		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.MachineConstructing);
 	}
 
-	public override void SetGUIVisible (bool x) {
-		if (x) {
-			showOnGUI = true;
-		}
-		else {
-			showOnGUI = false;
-			UI.current.HideCrewCard();
-		}
-	}
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		//based on building.cs
 		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		Color ncolor = GUI.color;
 		if (shuttle != null) {
 			Shuttle.GUI_DrawShuttleIcon(shuttle, rr);
@@ -114,7 +105,7 @@ public class Hangar : WorkBuilding {
 			if (shuttle.crew != null) {
 				GUI.Label(new Rect(rr.x + rr.height, rr.y, rr.width - rr.height, rr.height), shuttle.crew.name); rr.y += rr.height;
 				GUI.Label(rr, Localization.hangar_readiness + ":   " + ((int)(shuttle.crew.stamina * 100)).ToString() + '%');rr.y += rr.height;
-				if (GUI.Button(rr, Localization.ui_showCrewCard)) UI.current.ShowCrewCard(shuttle.crew); rr.y += rr.height;
+				if (GUI.Button(rr, Localization.ui_showCrewCard)) {}
 			}
 			else 	GUI.Label(rr, Localization.hangar_noCrew); rr.y += rr.height;
 
@@ -130,10 +121,10 @@ public class Hangar : WorkBuilding {
 						if (GUI.Button(new Rect(rr.x + rr.height, rr.y, rr.width - 2 * rr.height, rr.height), c.name + " (" + (c.shuttle != null ? c.shuttle.name : Localization.ui_noShip) + ')')) {
 							c.ChangeShip(shuttle);
 							showCrews = false;
-							UI.current.HideCrewCard();
+							//UI.current.HideCrewCard();
 						}
 						if (GUI.Button(new Rect(rr.xMax - rr.height, rr.y, rr.height,rr.height), "i")) {
-							UI.current.ShowCrewCard(c);
+							//UI.current.ShowCrewCard(c);
 						}
 						rr.y += rr.height;
 					}
@@ -152,7 +143,7 @@ public class Hangar : WorkBuilding {
 					if (storage.CheckBuildPossibilityAndCollectIfPossible(shuttleCost)) {
 						constructing = true;
 					}
-					else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
+					//else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
 				}
 				rr.y += rr.height;
 				foreach ( ResourceContainer rc in shuttleCost ) {

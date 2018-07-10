@@ -4,8 +4,10 @@ using UnityEngine;
 
 public enum Language{English, Russian};
 public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
-public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather}
+public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather, RequiredSurface, Upgrade, UpgradeCost, Cancel}
 public enum GameAnnouncements{NotEnoughResources};
+public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
+public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow }
 
 public static class Localization {
 	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
@@ -27,8 +29,6 @@ public static class Localization {
 	announcement_stillWind;
 	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade, empty, vessel, change,cost;
 	public static string[] structureName;
-	public static string hq_refuse_reason_1, hq_refuse_reason_2, hq_refuse_reason_3,hq_refuse_reason_4,hq_refuse_reason_5,hq_refuse_reason_6, 
-	hq_upgrade_warning, hq_upper_surface_blocked;
 	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity, block,resources,coins;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
 	public static string hangar_noShuttle, hangar_noCrew, hangar_hireCrew, hangar_hireCost, hangar_crewSalary, hangar_repairFor, hangar_readiness,
@@ -82,9 +82,9 @@ public static class Localization {
 			structureName[Structure.PLANT_ID] = "Some plant"; 
 			structureName[Structure.LANDED_ZEPPELIN_ID] = "Landed Zeppelin"; 
 			structureName[Structure.STORAGE_0_ID] = "Primary storage";
-			structureName[Structure.STORAGE_1_ID] = "Storage (level 1)"; 
-			structureName[Structure.STORAGE_2_ID] = "Storage (level 2)"; 
-			structureName[Structure.STORAGE_3_ID] = "Storage (level 3)"; 
+			structureName[Structure.STORAGE_1_ID] = "Storage"; 
+			structureName[Structure.STORAGE_2_ID] = "Storage"; 
+			structureName[Structure.STORAGE_3_ID] = "Storage"; 
 			structureName[Structure.STORAGE_5_ID] = "Storage"; 
 			structureName[Structure.CONTAINER_ID] = "Container"; 
 			structureName[Structure.MINE_ELEVATOR_ID] = "Mine elevator"; 
@@ -95,27 +95,27 @@ public static class Localization {
 			structureName[Structure.HOUSE_3_ID] = "Advanced house";
 			structureName[Structure.HOUSE_5_ID] = "Residential Block";
 			structureName[Structure.DOCK_ID] = "Basic dock"; 
-			structureName[Structure.ENERGY_CAPACITOR_1_ID] = "Power capacitor (lvl 1)"; 
-			structureName[Structure.ENERGY_CAPACITOR_2_ID] = "Power capacitor (lvl 2)"; 
-			structureName[Structure.ENERGY_CAPACITOR_3_ID] = "Power capacitor (lvl 3)"; 
+			structureName[Structure.ENERGY_CAPACITOR_1_ID] = "Power capacitor"; 
+			structureName[Structure.ENERGY_CAPACITOR_2_ID] = "Power capacitor"; 
+			structureName[Structure.ENERGY_CAPACITOR_3_ID] = "Power capacitor"; 
 			structureName[Structure.FARM_1_ID] = "Farm (lvl 1)"; 
 			structureName[Structure.FARM_2_ID] = "Farm (lvl 2)"; 
 			structureName[Structure.FARM_3_ID] = "Farm (lvl 3)"; 
-			structureName[Structure.FARM_4_ID] = "Covered farm (lvl 4)"; 
-			structureName[Structure.FARM_5_ID] = "Farm Block (lvl 5)"; 
-			structureName[Structure.HQ_2_ID] = "HeadQuarters (lvl 2)"; 
-			structureName[Structure.HQ_3_ID] = "HeadQuarters (lvl 3)"; 
+			structureName[Structure.FARM_4_ID] = "Covered farm "; 
+			structureName[Structure.FARM_5_ID] = "Farm Block "; 
+			structureName[Structure.HQ_2_ID] = "HeadQuarters"; 
+			structureName[Structure.HQ_3_ID] = "HeadQuarters"; 
 			structureName[Structure.HQ_4_ID] = "HeadQuarters"; 
-			structureName[Structure.LUMBERMILL_1_ID] = "Lumbermill (lvl 1)"; 
-			structureName[Structure.LUMBERMILL_2_ID] = "Lumbermill (lvl 2)"; 
-			structureName[Structure.LUMBERMILL_3_ID] = "Lumbermill (lvl 3)"; 
-			structureName[Structure.LUMBERMILL_4_ID] = "Covered lumbermill (lvl 4)"; 
-			structureName[Structure.LUMBERMILL_5_ID] = "Lumbermill Block(lvl 5)"; 
+			structureName[Structure.LUMBERMILL_1_ID] = "Lumbermill"; 
+			structureName[Structure.LUMBERMILL_2_ID] = "Lumbermill"; 
+			structureName[Structure.LUMBERMILL_3_ID] = "Lumbermill"; 
+			structureName[Structure.LUMBERMILL_4_ID] = "Covered lumbermill"; 
+			structureName[Structure.LUMBERMILL_5_ID] = "Lumbermill Block"; 
 			structureName[Structure.MINE_ID] = "Mine Entrance";
-			structureName[Structure.SMELTERY_1_ID] = "Smeltery (lvl 1)"; 
-			structureName[Structure.SMELTERY_2_ID] = "Smeltery (lvl 2)"; 
-			structureName[Structure.SMELTERY_3_ID] = "Smelting Facility (lvl 3)"; 
-			structureName[Structure.SMELTERY_5_ID] = "Smeltery Block (lvl 5)"; 
+			structureName[Structure.SMELTERY_1_ID] = "Smeltery"; 
+			structureName[Structure.SMELTERY_2_ID] = "Smeltery"; 
+			structureName[Structure.SMELTERY_3_ID] = "Smelting Facility"; 
+			structureName[Structure.SMELTERY_5_ID] = "Smeltery Block"; 
 			structureName[Structure.WIND_GENERATOR_1_ID] = "Wind generator"; 
 			structureName[Structure.BIOGENERATOR_2_ID] = "Biogenerator";
 			structureName[Structure.HOSPITAL_2_ID] = "Hospital";
@@ -233,15 +233,6 @@ public static class Localization {
 
 			rollingShop_gearsProduction = "Gears production";
 			rollingShop_boatPartsProduction = "Boat parts production";
-
-			hq_refuse_reason_1 = "No docks built";
-			hq_refuse_reason_2 = "No rolling shops built";
-			hq_refuse_reason_3 = "No graphonium enrichers built";
-			hq_refuse_reason_4 = "No chemical factories";
-			hq_refuse_reason_5 = string.Empty;
-			hq_refuse_reason_6 = string.Empty;
-			hq_upgrade_warning = "All buildings on the top will be deconstructed!";
-			hq_upper_surface_blocked = "Impossible : upper surface blocked";
 
 			currentLanguage = Language.English;
 			break;
@@ -363,6 +354,14 @@ public static class Localization {
 		}
 	}
 
+	public static string GetRestrictionPhrase(RestrictionKey rkey ) {
+		switch (rkey) {
+		default : return "Action not possible";
+		case RestrictionKey.SideConstruction: return "Can be built only on side blocks";
+		case RestrictionKey.UnacceptableSurfaceMaterial: return "Unacceptable surface material";
+		}
+	}
+
 
 	public static string CostInCoins(float count) {
 		switch (currentLanguage) {
@@ -394,14 +393,34 @@ public static class Localization {
 
 	public static string GetWord(LocalizationKey key) {
 		switch (key) {
-		case LocalizationKey.Level: return "level"; 
-		case LocalizationKey.Offline: return "offline";
-		case LocalizationKey.PointsSec: return "points/sec";
-		case LocalizationKey.Dig : return "Dig";
-		case LocalizationKey.StopDig: return "Stop digging";
-		case LocalizationKey.Gather: return "Gather";
-		case LocalizationKey.StopGather: return "Stop gathering";
+		    case LocalizationKey.Level: return "level"; 
+		    case LocalizationKey.Offline: return "offline";
+		    case LocalizationKey.PointsSec: return "points/sec";
+		    case LocalizationKey.Dig : return "Dig";
+		    case LocalizationKey.StopDig: return "Stop digging";
+		    case LocalizationKey.Gather: return "Gather";
+		    case LocalizationKey.StopGather: return "Stop gathering";
+		    case LocalizationKey.RequiredSurface : return "Required surface";
+            case LocalizationKey.UpgradeCost: return "Upgrade cost";
+            case LocalizationKey.Upgrade:return "Upgrade";
+            case LocalizationKey.Cancel: return "Cancel";
 		default: return "...";
 		}
 	}
+
+    public static string GetRefusalReason(RefusalReason rr) {
+        switch (rr) {
+            default: return "bad developer guy prohibits it"; break;
+            case RefusalReason.Unavailable: return "Unavailable";break;
+            case RefusalReason.MaxLevel: return "Maximum level reached";break;
+            case RefusalReason.HQ_RR1: return "No docks built";break;
+            case RefusalReason.HQ_RR2: return "No rolling shops built";break;
+            case RefusalReason.HQ_RR3: return "No graphonium enrichers built";break;
+            case RefusalReason.HQ_RR4: return "No chemical factories";break;
+            case RefusalReason.HQ_RR5: return "No reason, just prohibited;"; break;
+            case RefusalReason.HQ_RR6: return "No reason, just prohibited;"; break;
+            case RefusalReason.SpaceAboveBlocked: return "Space above blocked";break;
+            case RefusalReason.NoBlockBelow: return "No block below";break;
+        }
+    }
 }

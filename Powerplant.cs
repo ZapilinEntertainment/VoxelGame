@@ -91,9 +91,9 @@ public class Powerplant : WorkBuilding {
 	}
 	#endregion
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), fuel.icon, ScaleMode.StretchToFill);
 		if (energySurplus > 0) {
 			GUI.DrawTexture(new Rect(rr.x + rr.height, rr.y, (Screen.width - rr.x - rr.height) * ftimer /fuelBurnTime, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);

@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class SwitchTower : Building {
 
-	public override void SetGUIVisible (bool x) {
+	public  void SetGUIVisible (bool x) {
 		if (x == true ) {
 			if (showOnGUI == false) {
 				if (GameMaster.layerCutHeight != basement.pos.y) {
 					GameMaster.layerCutHeight = basement.pos.y ;
 					basement.myChunk.LayersCut();
-					UI.current.showLayerCutButtons = true;
+					//UI.current.showLayerCutButtons = true;
 				}
 			}
 		}

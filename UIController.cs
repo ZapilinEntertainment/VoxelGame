@@ -159,6 +159,7 @@ sealed public class UIController : MonoBehaviour {
 			sframeColor = new Vector3(140f/255f, 1,1);
 			selectionFrame.gameObject.SetActive(true);
 			workingObserver = chosenSurface.ShowOnGUI();
+			FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
 			break;
 		case ChosenObjectType.Cube:
 			selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
@@ -172,6 +173,7 @@ sealed public class UIController : MonoBehaviour {
 			}
 			selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
 			sframeColor = new Vector3(140f/255f, 1,0.9f);
+			FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
 			break;
 		case ChosenObjectType.Structure:
 			faceIndex = 10;
@@ -180,6 +182,7 @@ sealed public class UIController : MonoBehaviour {
 			selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
 			sframeColor = new Vector3(1,0,1);
 			workingObserver = chosenStructure.ShowOnGUI();
+			FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
 			break;
 		}
 

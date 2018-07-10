@@ -156,40 +156,61 @@ override protected void LabourResult() {
 		Rename();
 	}
 
-	void OnGUI() {
-		if ( !showOnGUI ) return;
-		GUI.skin = GameMaster.mainGUISkin;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		GUI.Label(rr, actionLabel); 
-		if (workFinished && !awaitingElevatorBuilding) {
-			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
-			if (b != null && b.type == BlockType.Cube) {
-				rr.y += rr.height;
-				GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-					if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-						if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-						{
-							workObject = b as CubeBlock;
-							lastWorkObjectPos = b.pos;
-							workFinished = false;
-							ChangeModel((byte)(level +1));
-						}
-						else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
-					}
-				if ( requiredResources.Length > 0) {
-						rr.y += rr.height;
-					for (int i = 0; i < requiredResources.Length; i++) {
-						GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
-						GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-						GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-							rr.y += rr.height;
-						}
-					}
-			}
-		}
-	}
+    override public bool IsLevelUpPossible(ref string refusalReason)
+    {
+        if (workFinished && !awaitingElevatorBuilding)
+        {
+            Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
+            if (b != null && b.type == BlockType.Cube) return true;
+            else
+            {
+                refusalReason = Localization.GetRefusalReason(RefusalReason.NoBlockBelow);
+                return false;
+            }
+        }
+        else return false;
+    }
 
-	void OnDestroy() {
+    override public void LevelUp(bool returnToUI)
+    {
+        Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
+        if (b != null && b.type == BlockType.Cube)
+        {
+            if (!GameMaster.realMaster.weNeedNoResources)
+            {
+                ResourceContainer[] cost = ResourcesCost.GetCost(id);
+                if (cost != null && cost.Length != 0)
+                {
+                    for (int i = 0; i < cost.Length; i++)
+                    {
+                        cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - GameMaster.upgradeDiscount));
+                    }
+                    if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+                    {
+                        GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                        return;
+                    }
+                }
+            }
+            workObject = b as CubeBlock;
+            lastWorkObjectPos = b.pos;
+            workFinished = false;
+            ChangeModel((byte)(level + 1));
+            Rename();
+        }        
+    }
+    override public ResourceContainer[] GetUpgradeCost()
+    {
+        ResourceContainer[] cost = ResourcesCost.GetCost(upgradedIndex);
+        float discount = GameMaster.upgradeCostIncrease + level - 1;
+        for (int i = 0; i < cost.Length; i++)
+        {
+            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
+        }
+        return cost;
+    }
+
+    void OnDestroy() {
 		PrepareWorkbuildingForDestruction();
 		if (elevators.Count > 0) {
 			foreach (Structure s in elevators) {

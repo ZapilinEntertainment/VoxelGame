@@ -83,7 +83,7 @@ public class SurfaceBlock : Block {
 						while (i < sr.x_size ) {
 								map[ sr.x + i, sr.z + j ] = true;
 								i++;
-						}
+							}
 						i = 0; // обнуляй переменные !
 						j++;
 					}
@@ -136,6 +136,7 @@ public class SurfaceBlock : Block {
 					if (gs.isBasement) savedBasementForNow = gs;
 					else gs.Annihilate(true);
 				}
+				if (surfaceRenderer != null) surfaceRenderer.GetComponent<Collider>().enabled = false;
 			}
 			else {
 				while (i < surfaceObjects.Count) {
@@ -244,7 +245,12 @@ public class SurfaceBlock : Block {
 			if (surfaceObjects[i] == s) {
 				if (s.isArtificial) artificialStructures--;	if (artificialStructures < 0) artificialStructures = 0;
 				surfaceObjects.RemoveAt(i);
-				if (surfaceObjects.Count == 0) cellsStatus = 0;
+				if (surfaceObjects.Count == 0) {
+					cellsStatus = 0;
+					if (s.innerPosition == SurfaceRect.full) {
+						if (surfaceRenderer != null) surfaceRenderer.GetComponent<Collider>().enabled = true;
+					}
+				}
 				else CellsStatusUpdate();
 				break;
 			}
@@ -523,7 +529,10 @@ public class SurfaceBlock : Block {
 	}
 
 	public UIObserver ShowOnGUI() {
-		if (surfaceObserver == null) surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+		if (surfaceObserver == null) {
+			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+			surfaceObserver.transform.localPosition = Vector3.zero;
+		}
 		else surfaceObserver.gameObject.SetActive(true);
 		surfaceObserver.SetObservingSurface(this);
 		return surfaceObserver;

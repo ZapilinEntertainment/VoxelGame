@@ -18,7 +18,6 @@ public class Building : Structure {
 	public  bool connectedToPowerGrid {get; protected set;}// установлено ли подключение к электросети
 	public int requiredBasementMaterialId = -1; // fixed by asset
 	public byte level{get;protected set;} // fixed by id (except for mine)
-	protected static ResourceContainer[] requiredResources;
 
 	public static UIBuildingObserver buildingObserver;
 
@@ -30,6 +29,7 @@ public class Building : Structure {
 		energySupplied = false;
 		borderOnlyConstruction = false;
 		connectedToPowerGrid = false;
+        upgradedIndex = -1;
 		switch (id) {
 		case LANDED_ZEPPELIN_ID: upgradedIndex = HQ_2_ID; level = 1; break;
 		case STORAGE_0_ID: level = 0; break;
@@ -51,7 +51,7 @@ public class Building : Structure {
 		case SMELTERY_3_ID: upgradedIndex = SMELTERY_5_ID;  level = 3;break;
 		case HQ_3_ID: upgradedIndex = HQ_4_ID;  level = 3;break;
 			
-		case MINE_ID:
+		case MINE_ID: level = 1; upgradedIndex = -2; break;
 		case WIND_GENERATOR_1_ID:
 		case STORAGE_1_ID:
 		case ENERGY_CAPACITOR_1_ID:	
@@ -80,6 +80,8 @@ public class Building : Structure {
 			break;
 		case GRPH_REACTOR_4_ID:
 		case HQ_4_ID:
+                level = 4; upgradedIndex = -2;
+                break;
 		case CHEMICAL_FACTORY_ID:
 		case RECRUITING_CENTER_ID:
 		case EXPEDITION_CORPUS_ID:
@@ -256,19 +258,6 @@ public class Building : Structure {
 		PrepareBuildingForDestruction();
 	}
 
-	override public void SetGUIVisible (bool x) {
-		if (x != showOnGUI) {
-			showOnGUI = x;
-			if ( showOnGUI) {
-				requiredResources = ResourcesCost.GetCost(id);
-				if (requiredResources.Length > 0) {
-					for (int i = 0; i < requiredResources.Length; i++) {
-						requiredResources[i] = new ResourceContainer(requiredResources[i].type, requiredResources[i].volume * GameMaster.upgradeDiscount);
-					}
-				}
-			}
-		}
-	}
 
 	override public void Rename() {
 		name = Localization.GetStructureName(id) + " (" + Localization.GetWord(LocalizationKey.Level) + ' '+level.ToString() +')';
@@ -281,45 +270,53 @@ public class Building : Structure {
 		return buildingObserver;
 	}
 
-	void OnGUI() {
-		//sync with hospital.cs, rollingShop.cs
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		if (upgradedIndex != -1 && level < GameMaster.colonyController.hq.level) {
-			rr.y = GUI_UpgradeButton(rr);
-		}
-	}
-
-	virtual protected float GUI_UpgradeButton( Rect rr) {
-			GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-			if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-				if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-				{
-					Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
-					PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
-					byte bzero = (byte)0;
-					if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-					if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
-					Quaternion originalRotation = transform.rotation;
-					upgraded.SetBasement(basement, setPos);
-					if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
-						upgraded.transform.localRotation = originalRotation;
-					}
-				}
-				else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
-			}
-		if ( requiredResources.Length > 0) {
-			rr.y += rr.height;
-			Storage storage = GameMaster.colonyController.storage;
-			for (int i = 0; i < requiredResources.Length; i++) {
-				if (requiredResources[i].volume> storage.standartResources[requiredResources[i].type.ID]) GUI.color = Color.red;
-				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
-				GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), requiredResources[i].volume.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-				GUI.color = Color.white;
-				rr.y += rr.height;
-			}
-		}
-		return rr.y;
-		}
+	
+    public virtual bool IsLevelUpPossible(ref string refusalReason) {
+        if (level < GameMaster.colonyController.hq.level) return true;
+        else
+        {
+            refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
+            return false;
+        }
+    }
+    public virtual void LevelUp( bool returnToUI) {
+        if (upgradedIndex == -1) return;
+        if ( !GameMaster.realMaster.weNeedNoResources )
+        {
+            ResourceContainer[] cost = ResourcesCost.GetCost(id);
+            if (cost != null && cost.Length != 0) 
+            {
+                for (int i = 0; i < cost.Length; i++)
+                {
+                    cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - GameMaster.upgradeDiscount));
+                }
+                if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+                {
+                    GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                    return;
+                }
+            }
+        }
+        Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
+        PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
+        byte bzero = (byte)0;
+        if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+        if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+        Quaternion originalRotation = transform.rotation;
+        upgraded.SetBasement(basement, setPos);
+        if (!upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only))
+        {
+            upgraded.transform.localRotation = originalRotation;
+        }
+        if (returnToUI) upgraded.ShowOnGUI();
+    }
+    public virtual ResourceContainer[] GetUpgradeCost() {
+        if (upgradedIndex == -1) return null; 
+        ResourceContainer[] cost = ResourcesCost.GetCost(upgradedIndex);
+        float discount = GameMaster.upgradeDiscount;
+        for (int i = 0; i < cost.Length; i++) {
+            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
+        }
+        return cost;
+    }
 }

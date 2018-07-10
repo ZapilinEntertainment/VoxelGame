@@ -24,7 +24,7 @@ public class Structure : MonoBehaviour {
 	public float maxHp = 1; // fixed in asset
 	public bool randomRotation = false, rotate90only = true; // fixed in asset
 
-	public bool showOnGUI{get; protected set;}
+    public bool showOnGUI;
 	public float gui_ypos = 0;
 
 	public int id {get; protected set;}
@@ -477,11 +477,6 @@ public class Structure : MonoBehaviour {
 	}
 	#endregion
 
-	public virtual void SetGUIVisible (bool x) {
-		if (x != showOnGUI) {
-			showOnGUI = x;
-		}
-	}
 	public virtual UIObserver ShowOnGUI() {
 		if (structureObserver == null) structureObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
 		else structureObserver.gameObject.SetActive(true);

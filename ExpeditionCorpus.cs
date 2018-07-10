@@ -10,6 +10,11 @@ public class ExpeditionCorpus : WorkBuilding {
 	const int MAX_AVAILABLE_QUESTS = 9;
 	static bool[] questAccessibilityMap, questsCompletenessMap;
 	bool showSuitableShuttlesList = false;
+	static bool staticFirstSet = false;
+
+	void Awake() {
+		if (!staticFirstSet) { Reset();staticFirstSet = true;}
+	}
 
 	public static void Reset() {
 		currentExpeditions = new List<Expedition>();
@@ -28,13 +33,7 @@ public class ExpeditionCorpus : WorkBuilding {
 		quests = new Quest[MAX_AVAILABLE_QUESTS];
 		delayedQuests = new List<Quest>();
 		suitableShuttles = new List<Shuttle>();
-	}
-
-	override public void SetGUIVisible (bool x) {
-		if (x != showOnGUI) {
-			showOnGUI = x;
-			UI.current.touchscreenTemporarilyBlocked = showOnGUI;
-		}
+		staticFirstSet = true;
 	}
 
 	public static void InitializeQuest(int id) {
@@ -52,10 +51,10 @@ public class ExpeditionCorpus : WorkBuilding {
 		if ( !questSet ) delayedQuests.Add(q);
 	}
 
-	void OnGUI() {
+	void OLDOnGUI() {
 		// base on buiding.cs
 		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
+		Rect rr = new Rect(0,0,0,0);
 		int freeVessels = 0;
 		if (Shuttle.shuttlesList.Count > 0) {
 			foreach (Shuttle s in Shuttle.shuttlesList) {
@@ -82,7 +81,7 @@ public class ExpeditionCorpus : WorkBuilding {
 		GUI.Label(rr, Localization.quests_transmittersAvailable + ": " + freeTransmitters.ToString() ); rr.y += rr.height;
 
 		//quests window
-		Rect qw = new Rect(UI.current.leftPanelWidth, UI.current.upPanelBox.height, Screen.width - UI.current.leftPanelWidth - UI.current.rightPanelBox.width, Screen.height - UI.current.upPanelBox.height);
+		Rect qw = new Rect(0,0,0,0);
 		GUI.Box(qw, GUIContent.none);
 		float h = qw.height / 3f;
 		if (qw.width / 3f < h) h = qw.width/3f;
@@ -157,10 +156,7 @@ public class ExpeditionCorpus : WorkBuilding {
 		return 0;
 	}
 
-	void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-		if (showOnGUI) UI.current.touchscreenTemporarilyBlocked = false;
-	}
+
 
 	#region save-load system
 	public static ExpeditionCorpusStaticSerializer SaveStaticData() {
