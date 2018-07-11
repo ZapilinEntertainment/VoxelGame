@@ -229,15 +229,15 @@ public class Dock : WorkBuilding {
 		colony.storage.AddResource(rt, volume);
 	}
 
-	public static void MakeLot( int index, bool forSale, int minValue ) {
-		isForSale[index] = forSale;
-		minValueForTrading[index] = minValue;
-	}
-
 	public static void SetImmigrationStatus ( bool x, int count) {
 		immigrationEnabled = x;
 		immigrationPlan = count;
 	}
+
+    public static void ChangeMinValue(int index, int val)
+    {
+        minValueForTrading[index] = val;
+    }
 
 	#region save-load system
 	public static DockStaticSerializer SaveStaticDockData() {
@@ -326,12 +326,12 @@ public class Dock : WorkBuilding {
 			}
 			r.y += r.height;
 			if (gui_addTransactionMenu) {  // Настройка торговой операции
-				float resQuad_k = 10 * k / ResourceType.RTYPE_ARRAY_ROWS;
+				float resQuad_k = 10 * k / 5;
 				float resQuad_leftBorder = 2 * k ;
 				Rect resrect = new Rect(  resQuad_leftBorder, 2 *k , resQuad_k, resQuad_k);
 				int index = 1; resrect.x += resrect.width;
-				for (int i = 0; i < ResourceType.RTYPE_ARRAY_ROWS; i++) {
-					for (int j =0; j < ResourceType.RTYPE_ARRAY_COLUMNS; j++) {
+				for (int i = 0; i < 5; i++) {
+					for (int j =0; j < 6; j++) {
 						if (ResourceType.resourceTypesArray[index] == null) {
 							index++;
 							resrect.x += resrect.width;

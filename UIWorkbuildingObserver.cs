@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class UIWorkbuildingObserver : UIObserver {
 	public Button minusAllButton, minusButton, plusButton, plusAllButton; // fiti
 	public Slider slider; // fiti
-	public Text workersCountField, workSpeedField; // fiti
+	public Text workersCountField, workSpeedField, actionLabel; // fiti
 	int showingWorkersCount, showingWorkersMaxCount;
 	float showingWorkspeed;
 
@@ -45,6 +45,7 @@ public class UIWorkbuildingObserver : UIObserver {
 			minusButton.enabled = false;
 		}
 		workSpeedField.enabled = (showingWorkspeed > 0);
+        actionLabel.enabled = false;
 
 		STATUS_UPDATE_TIME = 0.5f; timer = STATUS_UPDATE_TIME;
 	}
@@ -170,4 +171,10 @@ public class UIWorkbuildingObserver : UIObserver {
 		Building.buildingObserver.ShutOff();
 		gameObject.SetActive(false);
 	}
+
+    public void SetActionLabel(string s)
+    {
+        actionLabel.text = s;
+        actionLabel.enabled = true;
+    }
 }

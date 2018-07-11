@@ -22,7 +22,7 @@ public abstract class UIObserver : MonoBehaviour {
 	}
 
 	void Update() {
-		timer -= Time.deltaTime;
+		timer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (timer <= 0) {
 			StatusUpdate();
 			timer = STATUS_UPDATE_TIME;

@@ -81,31 +81,57 @@ public sealed class Chunk : MonoBehaviour {
 							if (b != null) {
 								{
 									int x = b.pos.x; int z = b.pos.z;
-									List<ChunkPos> candidats = new List<ChunkPos>();
+									List<SurfaceBlock> candidats = new List<SurfaceBlock>();
 									bool rightSide = false, leftSide = false;
-									if (x + 1 < CHUNK_SIZE) {candidats.Add(new ChunkPos(x + 1, GetSurfaceBlock(x,z).pos.y ,z)); rightSide = true;}
-									if (x - 1 >= 0) {candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z).pos.y, z));leftSide = true;}
+									SurfaceBlock candidateSurface = null;
+									if (x + 1 < CHUNK_SIZE) {
+										candidateSurface = GetSurfaceBlock(x+1,z);
+										if (candidateSurface != null) {
+											candidats.Add(candidateSurface); 
+											rightSide = true;
+										}
+									}
+									if (x - 1 >= 0) {
+										candidateSurface = GetSurfaceBlock(x-1,z);
+										if (candidateSurface != null) {
+											candidats.Add(candidateSurface); 
+											rightSide = true;
+										}
+									}
 									if (z + 1 < CHUNK_SIZE) {
-										candidats.Add(new ChunkPos(x, GetSurfaceBlock(x,z+1).pos.y, z+1));
-										if (rightSide) candidats.Add(new ChunkPos(x+1, GetSurfaceBlock(x+1,z+1).pos.y, z+1));
-										if (leftSide) candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z+1).pos.y, z+1));
+										candidateSurface = GetSurfaceBlock(x,z+1);
+										if (candidateSurface != null) candidats.Add(candidateSurface); 
+										if (rightSide) {
+											candidateSurface = GetSurfaceBlock(x + 1,z+1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
+										if (leftSide) {
+											candidateSurface = GetSurfaceBlock(x - 1,z+1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
 									}
 									if (z - 1 >= 0) {
-										candidats.Add(new ChunkPos(x, GetSurfaceBlock(x,z-1).pos.y, z-1));
-										if (rightSide) candidats.Add(new ChunkPos(x+1, GetSurfaceBlock(x+1,z-1).pos.y, z-1));
-										if (leftSide) candidats.Add(new ChunkPos(x-1, GetSurfaceBlock(x-1,z-1).pos.y, z-1));
+										candidateSurface = GetSurfaceBlock(x,z-1);
+										if (candidateSurface != null) candidats.Add(candidateSurface); 
+										if (rightSide) {
+											candidateSurface = GetSurfaceBlock(x + 1,z-1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
+										if (leftSide) {
+											candidateSurface = GetSurfaceBlock(x - 1,z-1);
+											if (candidateSurface != null) candidats.Add(candidateSurface); 
+										}
 									}
-									foreach (ChunkPos p in candidats) {
-										SurfaceBlock n = GetSurfaceBlock(p.x, p.z);
-											if (n == null ) continue;
-											if (n.material_id == ResourceType.DIRT_ID && !dirt_for_grassland.Contains(n) &&n.grassland== null && Mathf.Abs(b.pos.y - p.y) < 2) dirt_for_grassland.Add(n);
+									foreach (SurfaceBlock n in candidats) {
+										if (n == null | n.grassland != null ) continue;
+										if (n.material_id == ResourceType.DIRT_ID & !dirt_for_grassland.Contains(n) & Mathf.Abs(b.pos.y - n.pos.y) < 2) dirt_for_grassland.Add(n);
 									}
 								}
-									b.AddGrassland();
-									int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
-									if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
-									else {b.grassland.AddLifepower((int)lifePower); lifePower = 0;}
-									grassland_blocks.Add(b.grassland);
+								b.AddGrassland();
+								int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+								if (lifePower > lifeTransfer) {b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer;}
+								else {b.grassland.AddLifepower((int)lifePower); lifePower = 0;}
+								grassland_blocks.Add(b.grassland);
 							}
 							else dirt_for_grassland.RemoveAt(pos);
 						}
@@ -276,7 +302,8 @@ public sealed class Chunk : MonoBehaviour {
 			surfaceBlocks.Add(sb);
 			b = sb;
 			blocks[x,y,z] = sb;
-			if (blocks[x,y-1,z].type != BlockType.Surface & blocks[x,y-1,z].type != BlockType.Cave) influenceMask = 31;
+                Block blockBelow = GetBlock(x, y - 1, z);
+			if (blockBelow != null && (blockBelow.type != BlockType.Surface & blockBelow.type != BlockType.Cave)) influenceMask = 31;
 			else influenceMask = 63;
 			if (originalBlock.type == BlockType.Cave) {
 				CaveBlock originalSurface = originalBlock as CaveBlock;
@@ -756,7 +783,7 @@ public sealed class Chunk : MonoBehaviour {
 	}
 
 	public void BlockByStructure(byte x, byte y, byte z, Structure s) {
-		if (x > CHUNK_SIZE || y > CHUNK_SIZE || z > CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
+		if (x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
 		Block b = GetBlock(x,y,z);
 		if (b != null) { ReplaceBlock( new ChunkPos(x,y,z), BlockType.Shapeless, 0, false); }
 		else blocks[x,y,z] = new GameObject().AddComponent<Block>();
@@ -799,20 +826,26 @@ public sealed class Chunk : MonoBehaviour {
 		}
 	}
 
+	#region save-load system
 	public ChunkSerializer SaveChunkData() {
 		ChunkSerializer cs = new ChunkSerializer();
 		cs.blocksData = new List<BlockSerializer>();
 		for ( int x = 0; x < CHUNK_SIZE; x ++) {
 			for (int y = 0; y < CHUNK_SIZE; y++) {		
 				for (int z = 0; z < CHUNK_SIZE; z++) {
+					if (blocks[x,y,z] == null) continue;
 					cs.blocksData.Add(blocks[x,y,z].Save());
 				}
 			}
 		}
+		cs.chunkSize = CHUNK_SIZE;
+		cs.lifepower = lifePower;
+		cs.lifepowerTimer = lifepower_timer;
 		return cs;
 	}
 
 	public void LoadChunkData( ChunkSerializer cs ) {
+		if (cs == null) print ("chunk serialization failed!");
 		CHUNK_SIZE = cs.chunkSize;
 		blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
 		foreach (BlockSerializer bs in cs.blocksData) {
@@ -822,7 +855,7 @@ public sealed class Chunk : MonoBehaviour {
 		lifePower = cs.lifepower;
 		lifepower_timer = cs.lifepowerTimer;
 	}
-
+	#endregion
 
 	public void BlockRow (int index, int side) {
 			sideBlockingMap[index, side] = true;

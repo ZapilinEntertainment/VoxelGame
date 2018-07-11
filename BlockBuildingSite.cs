@@ -65,7 +65,7 @@ public class BlockBuildingSite : Worksite {
 		}
 
 		if ( placesToWork == 0 ) {
-			actionLabel = "Block completed";
+            actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
 			workObject.ClearSurface();
 			workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
 			Destroy(this);
@@ -94,12 +94,15 @@ public class BlockBuildingSite : Worksite {
 								shr.SetBasement(workObject, new PixelPosByte(a * 2, b * 2));
 							}
 							count = GameMaster.colonyController.storage.GetResources(rtype, count);
-							if (count == 0) actionLabel = Localization.announcement_notEnoughResources + ' ';
-							else 
-							{
-								totalResources += count;
-								shr.AddResource(rtype, count);
-							}
+                            if (count == 0)
+                            {
+                               // if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources);
+                            }
+                            else
+                            {
+                                totalResources += count;
+                                shr.AddResource(rtype, count);
+                            }
 							actionLabel += string.Format("{0:0.##}", totalResources / (float)CubeBlock.MAX_VOLUME * 100f)+ '%';	
 							return;
 						} 
@@ -116,7 +119,7 @@ public class BlockBuildingSite : Worksite {
 	public void Set(SurfaceBlock block, ResourceType type) {
 		workObject = block;
 		rtype = type;
-		actionLabel = Localization.structureName[Structure.RESOURCE_STICK_ID];
+		actionLabel = Localization.GetStructureName( Structure.RESOURCE_STICK_ID );
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
 		GameMaster.colonyController.AddWorksite(this);
 
@@ -131,26 +134,27 @@ public class BlockBuildingSite : Worksite {
 	}
 
 
-	//---------SAVE   SYSTEM----------------
-	override public WorksiteBasisSerializer Save() {
+	#region save-load system
+	override public WorksiteSerializer Save() {
 		if (workObject == null) {
 			Destroy(this);
 			return null;
 		}
-		WorksiteBasisSerializer wbs = new WorksiteBasisSerializer();
-		wbs.type = WorksiteType.BlockBuildingSite;
-		wbs.workObjectPos = workObject.pos;
-		DigSiteSerializer dss = new DigSiteSerializer();
-		dss.worksiteSerializer = GetWorksiteSerializer();
-		dss.resourceTypeID = rtype.ID;
+		WorksiteSerializer ws = GetWorksiteSerializer();
+		ws.type = WorksiteType.BlockBuildingSite;
+		ws.workObjectPos = workObject.pos;
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, dss);
-			wbs.data = stream.ToArray();
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, rtype.ID);
+			ws.specificData = stream.ToArray();
 		}
-		return wbs;
+		return ws;
 	}
-
-
-	// --------------------------------------------------------
+	override public void Load(WorksiteSerializer ws) {
+		LoadWorksiteData(ws);
+		int res_id = 0;
+		GameMaster.DeserializeByteArray<int>(ws.specificData, ref res_id);
+		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ResourceType.GetResourceTypeById(res_id));
+	}
+	#endregion
 }

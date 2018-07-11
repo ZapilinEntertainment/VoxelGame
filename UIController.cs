@@ -13,9 +13,16 @@ sealed public class UIController : MonoBehaviour {
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
+    [SerializeField] GameObject colonyPanel, tradePanel;
+    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText;
+    float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
+    float colonyTimer;
+    const float COLONY_UPDATE_TIME = 2;
+
+
 	GUIMode mode;
 	byte submode = 0;
-	bool transformingRectInProgress = false, showMenuWindow = false;
+	bool transformingRectInProgress = false, showMenuWindow = false, showColonyInfo = false;
 	float rectTransformingSpeed = 0.8f, transformingProgress;
 	RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
 	int openedQuest = -1;
@@ -49,14 +56,76 @@ sealed public class UIController : MonoBehaviour {
 				transformingProgress = 0;
 				transformingRectInProgress = false;
 			}
-		}			
+		}
+        if (showColonyInfo) {
+            colonyTimer -= Time.deltaTime * GameMaster.gameSpeed;
+            if (colonyTimer <= 0) {
+                colonyTimer = COLONY_UPDATE_TIME;
+                ColonyController colony = GameMaster.colonyController;
+                if (colony != null)
+                {
+                    if (showingGearsCf != colony.gears_coefficient)
+                    {
+                        showingGearsCf = colony.gears_coefficient;
+                        gearsText.text = string.Format("{0:0.###}", showingGearsCf);
+                    }
+                    if (showingHappinessCf != colony.happiness_coefficient)
+                    {
+                        showingHappinessCf = colony.happiness_coefficient;
+                        happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
+                    }
+                    if (showingBirthrate != colony.birthrateCoefficient)
+                    {
+                        showingBirthrate = colony.birthrateCoefficient;
+                        birthrateText.text = showingBirthrate > 0 ? '+' + showingBirthrate.ToString() : showingBirthrate.ToString();
+                    }
+                    if (showingHospitalCf != colony.hospitals_coefficient)
+                    {
+                        showingHospitalCf = colony.hospitals_coefficient;
+                        hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
+                    }
+                    if (showingHealthCf != colony.health_coefficient)
+                    {
+                        showingHealthCf = colony.health_coefficient;
+                        healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
+                    }
+                }
+            }
+        }
 	}
 
-	#region menu panel
+	#region up panel
+    public void ColonyButton()
+    {
+        showColonyInfo = !showColonyInfo;
+        if (showColonyInfo) {
+            if (showMenuWindow) MenuButton();
+            colonyPanel.SetActive(true);
+            ColonyController colony = GameMaster.colonyController;
+            if (colony == null) return;
+            showingGearsCf = colony.gears_coefficient;
+            showingHappinessCf = colony.happiness_coefficient;
+            showingBirthrate = colony.birthrateCoefficient;
+            showingHospitalCf = colony.hospitals_coefficient;
+            showingHealthCf = colony.health_coefficient;
+            gearsText.text = string.Format("{0:0.###}", showingGearsCf);
+            happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
+            birthrateText.text = showingBirthrate > 0 ? '+' + showingBirthrate.ToString() : showingBirthrate.ToString();
+            hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
+            healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
+            colonyTimer = COLONY_UPDATE_TIME;
+        }
+        else
+        {
+            colonyPanel.SetActive(false);
+        }
+    }
+
 	public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
 		if (showMenuWindow) {
 			if (rightPanel.activeSelf) rightPanel.SetActive(false);
+            if (showColonyInfo) ColonyButton();
 			menuPanel.SetActive(true);
 		}
 		else {

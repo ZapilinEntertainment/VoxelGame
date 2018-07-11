@@ -17,7 +17,6 @@ public class MineSerializer {
 public class Mine : WorkBuilding {
 	CubeBlock workObject;
 	bool workFinished = false;
-	string actionLabel = "";
 	ChunkPos lastWorkObjectPos;
 	public List<Structure> elevators;
 	public bool awaitingElevatorBuilding = false;
@@ -44,7 +43,7 @@ public class Mine : WorkBuilding {
 					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.z_size/2));
 					elevators.Add(s);
 					awaitingElevatorBuilding = false;
-					GameMaster.realMaster.AddAnnouncement(Localization.mine_levelFinished);
+					GameMaster.realMaster.AddAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
 				}
 			}
 		}
@@ -66,13 +65,13 @@ override protected void LabourResult() {
 		production = workObject.Dig(x, false);
 		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
 		if ( workObject!=null & workObject.volume != 0) {
-			int percent = (int)((1 - (float)workObject.volume / (float) CubeBlock.MAX_VOLUME) * 100);
-			actionLabel = percent.ToString() + "% " + Localization.extracted; 
+		    float percent = workObject.volume / (float) CubeBlock.MAX_VOLUME;
+			if (showOnGUI) WorkBuilding.workbuildingObserver.SetActionLabel( string.Format("{0:0.##}", (1 - percent) * 100) + "% " + Localization.GetActionLabel(LocalizationActionLabels.Extracted)); 
 			workflow -= production;	
 		}
 		else {
 			workFinished = true;
-			actionLabel = Localization.work_has_stopped;
+            if (showOnGUI) WorkBuilding.workbuildingObserver.SetActionLabel(Localization.GetActionLabel(LocalizationActionLabels.WorkStopped));
 			awaitingElevatorBuilding = true;
 		}			
 	}
@@ -168,7 +167,11 @@ override protected void LabourResult() {
                 return false;
             }
         }
-        else return false;
+        else
+        {
+            refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
+            return false;
+        }
     }
 
     override public void LevelUp(bool returnToUI)
@@ -210,12 +213,29 @@ override protected void LabourResult() {
         return cost;
     }
 
-    void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-		if (elevators.Count > 0) {
-			foreach (Structure s in elevators) {
-				if (s != null)	s.Annihilate(false);
-			}
-		}
-	}
+    override public void Annihilate(bool forced)
+    { 
+        SurfaceBlock lastBasement = basement;
+        if (forced) UnsetBasement();
+        else
+        {
+            ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
+            if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1)
+            {
+                for (int i = 0; i < resourcesLeft.Length; i++)
+                {
+                    resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
+                }
+                GameMaster.colonyController.storage.AddResources(resourcesLeft);
+            }
+        }
+        if (elevators.Count > 0)
+        {
+            foreach (Structure s in elevators)
+            {
+                if (s != null) s.Annihilate(false);
+            }
+        }
+        Destroy(gameObject);
+    }
 }

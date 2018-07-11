@@ -91,7 +91,7 @@ public class RollingShop : WorkBuilding {
 		case RollingShopMode.GearsUpgrade:
 			GUI.Label( rr, Localization.ui_currentMode + " : " + Localization.rollingShop_gearsProduction, PoolMaster.GUIStyle_CenterOrientedLabel);
 			rr.y += rr.height;
-			GUI.Label( rr, Localization.info_gearsCoefficient + " : " + string.Format("{0:0.###}", GameMaster.colonyController.gears_coefficient));
+			//GUI.Label( rr, Localization.info_gearsCoefficient + " : " + string.Format("{0:0.###}", GameMaster.colonyController.gears_coefficient));
 			break;
 		}
 	}

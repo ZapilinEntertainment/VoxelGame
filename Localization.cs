@@ -1,34 +1,22 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public enum Language{English, Russian};
+﻿public enum Language{English, Russian};
 public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
-public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather, RequiredSurface, Upgrade, UpgradeCost, Cancel}
+public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather, RequiredSurface, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price}
+public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
 public enum GameAnnouncements{NotEnoughResources};
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
-public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow }
+public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow}
 
 public static class Localization {
-	public static string rtype_nothing_name, rtype_nothing_descr, rtype_lumber_name, rtype_lumber_descr, rtype_stone_name, rtype_stone_descr,
-	rtype_dirt_name, rtype_dirt_descr, rtype_food_name, rtype_food_descr, rtype_metalK_ore_name, rtype_metalK_descr, rtype_metalM_ore_name, rtype_metalM_descr,
-	rtype_metalE_ore_name, rtype_metalE_descr, rtype_metalN_ore_name, rtype_metalN_descr, rtype_metalP_ore_name, rtype_metalP_descr,
-	rtype_metalS_ore_name, rtype_metalS_descr, rtype_mineralF_descr, rtype_mineralL_descr, rtype_plastics_descr, rtype_concrete_name, rtype_concrete_descr,
-	rtype_fertileSoil_name, rtype_fertileSoil_descr, rtype_fuel_name, rtype_fuel_descr, rtype_graphonium_name, rtype_graphonium_descr,
-	rtype_supplies_name, rtype_supplies_descr;
+
 	public static string ui_build, ui_dig_block, ui_pourIn, ui_clear, ui_storage_name, ui_stopWork, 
 	ui_accept_destruction_on_clearing, ui_accept, ui_decline, ui_choose_block_action, ui_toPlain, ui_toGather, ui_cancelGathering, ui_workers, 
 	ui_dig_in_progress, ui_clean_in_progress, ui_gather_in_progress, ui_pouring_in_progress, ui_activeSelf, ui_immigration, ui_trading, ui_buy, ui_sell,
 	ui_selectResource, ui_immigrationEnabled, ui_immigrationDisabled, ui_immigrationPlaces, ui_close, ui_reset, ui_add_transaction, ui_setMode, ui_currentMode,
 	ui_changeMaterial, ui_heightBlocked, ui_buildOnSideOnly, ui_freeSlots, ui_recruitmentInProgress, ui_showCrewCard, ui_showCrewsList, ui_noShip,
 	ui_assemblyInProgress, ui_showVesselsList, ui_points_sec, ui_graphic_settings;
-	public static string menu_colonyInfo, menu_gameMenuButton, menu_cancel, menu_save, menu_load;
-	public static string info_housing, info_population, info_level, info_gearsCoefficient, info_hospitalsCoverage, info_happiness, info_health,
-	info_birthrate;
 	public static string announcement_powerFailure, announcement_starvation, announcement_peopleArrived, announcement_notEnoughResources,
 	announcement_stillWind;
-	public static string objects_left, extracted, work_has_stopped, sales_volume, min_value_to_trade, empty, vessel, change,cost;
-	public static string[] structureName;
+	public static string objects_left,  sales_volume, min_value_to_trade, empty, vessel, change,cost;
 	public static string lowered_birthrate, normal_birthrate, improved_birthrate, material_required, no_activity, block,resources,coins;
 	public static string rollingShop_gearsProduction, rollingShop_boatPartsProduction;
 	public static string hangar_noShuttle, hangar_noCrew, hangar_hireCrew, hangar_hireCost, hangar_crewSalary, hangar_repairFor, hangar_readiness,
@@ -37,108 +25,16 @@ public static class Localization {
 	crew_successfulMissions, crew_totalMissions;
 	public static string quests_vesselsAvailable, quests_transmittersAvailable, quests_crewsAvailable, quests_vesselsRequired, quests_crewsRequired,
 	quests_no_suitable_vessels;
-	public static string mine_levelFinished;
 	public static Language currentLanguage;
 
 	static Localization() {
-		structureName = new string[Structure.TOTAL_STRUCTURES_COUNT];
 		ChangeLanguage(Language.English);
 	}
 
 	public static void ChangeLanguage(Language lan ) {
 		switch (lan) {
-		case Language.English:
-			rtype_nothing_name = "Nothing";
-			rtype_nothing_descr = "You shouldn't see this, it's a bug(";
-			rtype_dirt_name = "Dirt";
-			rtype_dirt_descr = "Organic cover of floating islands.";
-			rtype_food_name = "Food";
-			rtype_food_descr = "Organic fuel for your citizens.";
-			rtype_lumber_name = "Wood";
-			rtype_lumber_descr = "Different elastic wood, growing only in Last Sector Dominion. Used for building and sometimes decorating.";
-			rtype_stone_name = "Stone";
-			rtype_stone_descr = "Nature material used in construction. Processing into L-Concrete.";
-			rtype_metalK_ore_name = "Metal K (ore)";
-			rtype_metalK_descr = "Used in construction.";
-			rtype_metalM_ore_name = "Metal M (ore)";
-			rtype_metalM_descr = "Used in  machinery building.";
-			rtype_metalE_ore_name = "Metal E (ore)";
-			rtype_metalE_descr = "Used in electronic components production.";
-			rtype_metalN_ore_name = "Metal N (ore)";
-			rtype_metalN_descr = "Rare and expensive metal.";
-			rtype_metalP_ore_name = "Metal P (ore)";
-			rtype_metalP_descr = "Used in mass-production.";
-			rtype_metalS_ore_name = "Metal S (ore)";
-			rtype_metalS_descr = "Used in ship building.";
-			rtype_mineralF_descr = "Used as fuel.";
-			rtype_mineralL_descr = "Used to create plastic mass.";
-			rtype_plastics_descr = "Easy-forming by special influence relatively tough material, used for building and manufacturing";
-			rtype_concrete_name = "L-Concrete"; rtype_concrete_descr = "Comfortable and easy-forming building material.";
-			rtype_fertileSoil_name = "Fertile Soil"; rtype_fertileSoil_descr = "Soil, appliable for growing edibles.";
-			rtype_fuel_name = "Fuel"; rtype_fuel_descr = "Standart fuel for spaceship engine";
-			rtype_graphonium_name = "Graphonium"; rtype_graphonium_descr = "Superstructured material, wrapping reality nearby";
-			rtype_supplies_name = "Supplies"; rtype_supplies_descr = "Well-packed food, medicaments and another life-support goods.";
-
-			structureName[Structure.PLANT_ID] = "Some plant"; 
-			structureName[Structure.LANDED_ZEPPELIN_ID] = "Landed Zeppelin"; 
-			structureName[Structure.STORAGE_0_ID] = "Primary storage";
-			structureName[Structure.STORAGE_1_ID] = "Storage"; 
-			structureName[Structure.STORAGE_2_ID] = "Storage"; 
-			structureName[Structure.STORAGE_3_ID] = "Storage"; 
-			structureName[Structure.STORAGE_5_ID] = "Storage"; 
-			structureName[Structure.CONTAINER_ID] = "Container"; 
-			structureName[Structure.MINE_ELEVATOR_ID] = "Mine elevator"; 
-			structureName[Structure.LIFESTONE_ID] = "Life stone"; 
-			structureName[Structure.HOUSE_0_ID] = "Tent"; 
-			structureName[Structure.HOUSE_1_ID] = "Small house";
-			structureName[Structure.HOUSE_2_ID] = "House";
-			structureName[Structure.HOUSE_3_ID] = "Advanced house";
-			structureName[Structure.HOUSE_5_ID] = "Residential Block";
-			structureName[Structure.DOCK_ID] = "Basic dock"; 
-			structureName[Structure.ENERGY_CAPACITOR_1_ID] = "Power capacitor"; 
-			structureName[Structure.ENERGY_CAPACITOR_2_ID] = "Power capacitor"; 
-			structureName[Structure.ENERGY_CAPACITOR_3_ID] = "Power capacitor"; 
-			structureName[Structure.FARM_1_ID] = "Farm (lvl 1)"; 
-			structureName[Structure.FARM_2_ID] = "Farm (lvl 2)"; 
-			structureName[Structure.FARM_3_ID] = "Farm (lvl 3)"; 
-			structureName[Structure.FARM_4_ID] = "Covered farm "; 
-			structureName[Structure.FARM_5_ID] = "Farm Block "; 
-			structureName[Structure.HQ_2_ID] = "HeadQuarters"; 
-			structureName[Structure.HQ_3_ID] = "HeadQuarters"; 
-			structureName[Structure.HQ_4_ID] = "HeadQuarters"; 
-			structureName[Structure.LUMBERMILL_1_ID] = "Lumbermill"; 
-			structureName[Structure.LUMBERMILL_2_ID] = "Lumbermill"; 
-			structureName[Structure.LUMBERMILL_3_ID] = "Lumbermill"; 
-			structureName[Structure.LUMBERMILL_4_ID] = "Covered lumbermill"; 
-			structureName[Structure.LUMBERMILL_5_ID] = "Lumbermill Block"; 
-			structureName[Structure.MINE_ID] = "Mine Entrance";
-			structureName[Structure.SMELTERY_1_ID] = "Smeltery"; 
-			structureName[Structure.SMELTERY_2_ID] = "Smeltery"; 
-			structureName[Structure.SMELTERY_3_ID] = "Smelting Facility"; 
-			structureName[Structure.SMELTERY_5_ID] = "Smeltery Block"; 
-			structureName[Structure.WIND_GENERATOR_1_ID] = "Wind generator"; 
-			structureName[Structure.BIOGENERATOR_2_ID] = "Biogenerator";
-			structureName[Structure.HOSPITAL_2_ID] = "Hospital";
-			structureName[Structure.MINERAL_POWERPLANT_2_ID] = "Mineral F powerplant";
-			structureName[Structure.ORE_ENRICHER_2_ID] = "Ore enricher";
-			structureName[Structure.ROLLING_SHOP_ID] = "Rolling shop";
-			structureName[Structure.MINI_GRPH_REACTOR_ID] = "Small Graphonum reactor";
-			structureName[Structure.FUEL_FACILITY_3_ID] = "Fuel facility";
-			structureName[Structure.GRPH_REACTOR_4_ID] = "Graphonium reactor";
-			structureName[Structure.PLASTICS_FACTORY_3_ID] = "Plastics factory";
-			structureName[Structure.FOOD_FACTORY_4_ID] = "Food factory";
-			structureName[Structure.FOOD_FACTORY_5_ID] = "Food factory Block";
-			structureName[Structure.GRPH_ENRICHER_ID] = "Graphonium enricher";
-			structureName[Structure.XSTATION_ID] = "Experimental station";
-			structureName[Structure.QUANTUM_ENERGY_TRANSMITTER_ID] = "Quantum energy transmitter";
-			structureName[Structure.CHEMICAL_FACTORY_ID] = "Chemical factory";
-			structureName[Structure.RESOURCE_STICK_ID] = "Constructing block...";
-			structureName[Structure.COLUMN_ID] = "Column";
-			structureName[Structure.SWITCH_TOWER_ID] = "Switch tower";
-			structureName[Structure.SHUTTLE_HANGAR_ID] = "Shuttle hangar";
-			structureName[Structure.RECRUITING_CENTER_ID] = "Recruiting Center";
-			structureName[Structure.EXPEDITION_CORPUS_ID] = "Expedition Corpus";
-			structureName[Structure.QUANTUM_TRANSMITTER_ID] = "Quantum transmitter";
+		case Language.English:			
+		
 
 			ui_build = "Build"; ui_clear = "Clear"; ui_dig_block = "Dig block"; ui_pourIn = "Pour in";
 			ui_storage_name = "Storage"; 
@@ -169,17 +65,6 @@ public static class Localization {
 			ui_points_sec = "points/sec";
 			ui_graphic_settings = "Graphic settings";
 
-			menu_colonyInfo = "Colony info"; menu_gameMenuButton = "Game menu"; menu_cancel = "Cancel";
-			menu_save = "Save game"; menu_load = "Load game";
-			info_housing = "Housing";
-			info_population = "Population";
-			info_level = " lvl.";
-			info_gearsCoefficient = "Gears";
-			info_happiness = "Happiness";
-			info_hospitalsCoverage = "Hospitals coverage";
-			info_health = "Health situation";
-			info_birthrate = "Birthrate";
-
 			announcement_powerFailure = "Power Failure";
 			announcement_starvation = "People are starving!";
 			announcement_peopleArrived = "New colonists arrived";
@@ -187,8 +72,6 @@ public static class Localization {
 			announcement_stillWind = "No wind! All wind generators stopped";
 
 			objects_left = "objects left";
-			extracted = "extracted";
-			work_has_stopped = "Work has stopped";
 			sales_volume = "Sales volume";
 			min_value_to_trade = "Limit";
 			lowered_birthrate = "Low birthrate";
@@ -199,8 +82,6 @@ public static class Localization {
 			block = "block";
 			vessel = "vessel";
 			change = "change"; cost ="cost";
-
-			mine_levelFinished = "Mine has finished new level";
 
 			hangar_noShuttle = "No shuttle";
 			hangar_noCrew = "No crew";
@@ -255,11 +136,6 @@ public static class Localization {
 			ui_close = "Закрыть"; ui_reset = "Сброс";
 			ui_setMode = "Изменить режим"; ui_currentMode = "Текущий режим";
 
-			menu_colonyInfo = "Состояние";
-			info_housing = "Свободное жильё";
-			info_population = "Население"; info_level = " ур.";
-			info_gearsCoefficient = "Техническое оснащение";
-			menu_gameMenuButton = "Меню"; menu_cancel = "Отмена";
 
 			announcement_powerFailure = "Энергоснабжение нарушено!";
 			announcement_starvation = "Закончилась провизия!";
@@ -268,8 +144,6 @@ public static class Localization {
 			announcement_stillWind = "Безветрие! Все ветрогенераторы остановились";
 
 			objects_left = "осталось";
-			extracted = "извлечено";
-			work_has_stopped = "Работы остановлены";
 			sales_volume = "Объём продажи";
 			min_value_to_trade = "Ограничение";
 			no_activity = "Бездействует"; // not a developer status!!!
@@ -310,9 +184,71 @@ public static class Localization {
 		return s;
 	}
 
-	public static string GetStructureName(int id ) {
-		return structureName[id];
-	}
+    public static string GetStructureName(int id) {
+        switch (id) {
+            default: return "Unknown building";
+            case Structure.PLANT_ID: return "Some plant";
+            case Structure.LANDED_ZEPPELIN_ID: return "Landed Zeppelin";
+            case Structure.STORAGE_0_ID: return "Primary storage";
+            case Structure.STORAGE_1_ID: return "Storage";
+            case Structure.STORAGE_2_ID: return "Storage";
+            case Structure.STORAGE_3_ID: return "Storage";
+            case Structure.STORAGE_5_ID: return "Storage";
+            case Structure.CONTAINER_ID: return "Container";
+            case Structure.MINE_ELEVATOR_ID: return "Mine elevator";
+            case Structure.LIFESTONE_ID: return "Life stone";
+            case Structure.HOUSE_0_ID: return "Tent";
+            case Structure.HOUSE_1_ID: return "Small house";
+            case Structure.HOUSE_2_ID: return "House";
+            case Structure.HOUSE_3_ID: return "Advanced house";
+            case Structure.HOUSE_5_ID: return "Residential Block";
+            case Structure.DOCK_ID: return "Basic dock";
+            case Structure.ENERGY_CAPACITOR_1_ID: return "Power capacitor";
+            case Structure.ENERGY_CAPACITOR_2_ID: return "Power capacitor";
+            case Structure.ENERGY_CAPACITOR_3_ID: return "Power capacitor";
+            case Structure.FARM_1_ID: return "Farm (lvl 1)";
+            case Structure.FARM_2_ID: return "Farm (lvl 2)";
+            case Structure.FARM_3_ID: return "Farm (lvl 3)";
+            case Structure.FARM_4_ID: return "Covered farm ";
+            case Structure.FARM_5_ID: return "Farm Block ";
+            case Structure.HQ_2_ID: return "HeadQuarters";
+            case Structure.HQ_3_ID: return "HeadQuarters";
+            case Structure.HQ_4_ID: return "HeadQuarters";
+            case Structure.LUMBERMILL_1_ID: return "Lumbermill";
+            case Structure.LUMBERMILL_2_ID: return "Lumbermill";
+            case Structure.LUMBERMILL_3_ID: return "Lumbermill";
+            case Structure.LUMBERMILL_4_ID: return "Covered lumbermill";
+            case Structure.LUMBERMILL_5_ID: return "Lumbermill Block";
+            case Structure.MINE_ID: return "Mine Entrance";
+            case Structure.SMELTERY_1_ID: return "Smeltery";
+            case Structure.SMELTERY_2_ID: return "Smeltery";
+            case Structure.SMELTERY_3_ID: return "Smelting Facility";
+            case Structure.SMELTERY_5_ID: return "Smeltery Block";
+            case Structure.WIND_GENERATOR_1_ID: return "Wind generator";
+            case Structure.BIOGENERATOR_2_ID: return "Biogenerator";
+            case Structure.HOSPITAL_2_ID: return "Hospital";
+            case Structure.MINERAL_POWERPLANT_2_ID: return "Mineral F powerplant";
+            case Structure.ORE_ENRICHER_2_ID: return "Ore enricher";
+            case Structure.ROLLING_SHOP_ID: return "Rolling shop";
+            case Structure.MINI_GRPH_REACTOR_ID: return "Small Graphonum reactor";
+            case Structure.FUEL_FACILITY_3_ID: return "Fuel facility";
+            case Structure.GRPH_REACTOR_4_ID: return "Graphonium reactor";
+            case Structure.PLASTICS_FACTORY_3_ID: return "Plastics factory";
+            case Structure.FOOD_FACTORY_4_ID: return "Food factory";
+            case Structure.FOOD_FACTORY_5_ID: return "Food factory Block";
+            case Structure.GRPH_ENRICHER_ID: return "Graphonium enricher";
+            case Structure.XSTATION_ID: return "Experimental station";
+            case Structure.QUANTUM_ENERGY_TRANSMITTER_ID: return "Quantum energy transmitter";
+            case Structure.CHEMICAL_FACTORY_ID: return "Chemical factory";
+            case Structure.RESOURCE_STICK_ID: return "Constructing block...";
+            case Structure.COLUMN_ID: return "Column";
+            case Structure.SWITCH_TOWER_ID: return "Switch tower";
+            case Structure.SHUTTLE_HANGAR_ID: return "Shuttle hangar";
+            case Structure.RECRUITING_CENTER_ID: return "Recruiting Center";
+            case Structure.EXPEDITION_CORPUS_ID: return "Expedition Corpus";
+            case Structure.QUANTUM_TRANSMITTER_ID: return "Quantum transmitter";
+        }
+    }
 	public static string GetStructureDescription(int id) {
 		return "no descriptions yet";
 	}
@@ -346,6 +282,53 @@ public static class Localization {
 		case ResourceType.SUPPLIES_ID : return "Supplies";			
 		}
 	}
+    public static string GetResourcesDescription(int id)
+    {
+        switch (id)
+        {
+            default: return "No description";
+            case 0: return "Nothing";
+            case ResourceType.DIRT_ID: return "Organic cover of floating islands.";
+            case ResourceType.FOOD_ID: return "Organic fuel for your citizens.";
+            case ResourceType.LUMBER_ID:
+                return "Different elastic wood, growing only in Last Sector Dominion. Used for building and sometimes decorating.";
+            case ResourceType.STONE_ID:
+                return "Nature material used in construction. Processing into L-Concrete.";
+            case ResourceType.METAL_K_ID:
+            case ResourceType.METAL_K_ORE_ID:
+                return "Used in construction.";
+            case ResourceType.METAL_M_ID:
+            case ResourceType.METAL_M_ORE_ID:
+                return  "Used in  machinery building.";
+            case ResourceType.METAL_E_ID:
+            case ResourceType.METAL_E_ORE_ID:
+                return "Used in electronic components production.";
+            case ResourceType.METAL_N_ID:
+            case ResourceType.METAL_N_ORE_ID:
+                return "Rare and expensive metal.";
+            case ResourceType.METAL_P_ID:
+            case ResourceType.METAL_P_ORE_ID:
+                return "Used in mass-production.";
+            case ResourceType.METAL_S_ID:
+            case ResourceType.METAL_S_ORE_ID:
+                return "Used in ship building.";
+            case ResourceType.MINERAL_L_ID:
+                return "Used to create plastic mass.";
+            case ResourceType.MINERAL_F_ID:
+                return "Very effective as fuel.";
+            case ResourceType.PLASTICS_ID:
+                return "Easy-forming by special influence relatively tough material, used for building and manufacturing";
+            case ResourceType.CONCRETE_ID:
+                return "Comfortable and easy-forming building material.";
+            case ResourceType.FERTILE_SOIL_ID:
+                return "Soil, appliable for growing edibles.";
+            case ResourceType.FUEL_ID:
+                return "Standart fuel for spaceship engine";
+            case ResourceType.GRAPHONIUM_ID:
+                return "Superstructured material, wrapping reality nearby";
+            case ResourceType.SUPPLIES_ID: return "Well-packed food, medicaments and another life-support goods.";
+        }
+    }
 
 	public static string GetAnnouncementString( GameAnnouncements announce) {
 		switch (announce) {
@@ -404,23 +387,40 @@ public static class Localization {
             case LocalizationKey.UpgradeCost: return "Upgrade cost";
             case LocalizationKey.Upgrade:return "Upgrade";
             case LocalizationKey.Cancel: return "Cancel";
+            case LocalizationKey.Buy: return "Buy";
+            case LocalizationKey.Sell: return "Sell";
+            case LocalizationKey.Limit: return "Limit";
+            case LocalizationKey.Demand: return "Demand";
+            case LocalizationKey.Price: return "Price";
 		default: return "...";
 		}
 	}
 
     public static string GetRefusalReason(RefusalReason rr) {
         switch (rr) {
-            default: return "bad developer guy prohibits it"; break;
-            case RefusalReason.Unavailable: return "Unavailable";break;
-            case RefusalReason.MaxLevel: return "Maximum level reached";break;
-            case RefusalReason.HQ_RR1: return "No docks built";break;
-            case RefusalReason.HQ_RR2: return "No rolling shops built";break;
-            case RefusalReason.HQ_RR3: return "No graphonium enrichers built";break;
-            case RefusalReason.HQ_RR4: return "No chemical factories";break;
-            case RefusalReason.HQ_RR5: return "No reason, just prohibited;"; break;
-            case RefusalReason.HQ_RR6: return "No reason, just prohibited;"; break;
-            case RefusalReason.SpaceAboveBlocked: return "Space above blocked";break;
-            case RefusalReason.NoBlockBelow: return "No block below";break;
+            default: return "bad developer guy prohibits it"; 
+            case RefusalReason.Unavailable: return "Unavailable";
+            case RefusalReason.MaxLevel: return "Maximum level reached";
+            case RefusalReason.HQ_RR1: return "No docks built";
+            case RefusalReason.HQ_RR2: return "No rolling shops built";
+            case RefusalReason.HQ_RR3: return "No graphonium enrichers built";
+            case RefusalReason.HQ_RR4: return "No chemical factories";
+            case RefusalReason.HQ_RR5: return "No reason, just prohibited;";
+            case RefusalReason.HQ_RR6: return "No reason, just prohibited;"; 
+            case RefusalReason.SpaceAboveBlocked: return "Space above blocked";
+            case RefusalReason.NoBlockBelow: return "No block below";
+        }
+    }
+
+    public static string GetActionLabel(LocalizationActionLabels label)
+    {
+        switch (label)
+        {
+            default: return "No activity";
+            case LocalizationActionLabels.Extracted: return "extracted";
+            case LocalizationActionLabels.WorkStopped: return "Work has stopped";
+            case LocalizationActionLabels.BlockCompleted: return "Block completed";
+            case LocalizationActionLabels.MineLevelFinished: return "Mine level finished";
         }
     }
 }

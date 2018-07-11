@@ -110,7 +110,7 @@ public abstract class Worksite : MonoBehaviour {
 
 		if (GUI.Button ( rr, Localization.ui_stopWork) ) { Destroy(this); return; }
 		rr.y += rr.height;
-		if (GUI.Button ( rr, Localization.menu_cancel) ) { showOnGUI = false; }
+		//if (GUI.Button ( rr, Localization.menu_cancel) ) { showOnGUI = false; }
 	}
 
 	void OnDestroy() {

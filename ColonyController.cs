@@ -629,28 +629,4 @@ public sealed class ColonyController : MonoBehaviour {
 	void OnDestroy() {
 		GameMaster.realMaster.everydayUpdateList.Remove(this);
 	}
-
-	void OLDOnGUI () {
-		float k = GameMaster.guiPiece;
-		if (showColonyInfo) {
-			GUI.Box(myRect, GUIContent.none);
-			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
-			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);
-
-			GUI.Label(leftPart, Localization.info_gearsCoefficient);
-			GUI.Label(rightPart, string.Format("{0:0.##}", gears_coefficient) );
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_happiness);
-			GUI.Label(rightPart,  string.Format("{0:0.##}", happiness_coefficient * 100) + '%');
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_birthrate);
-			GUI.Label(rightPart, string.Format("{0:0.######}", real_birthrate) );
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_hospitalsCoverage);
-			GUI.Label(rightPart, string.Format("{0:0.##}", hospitals_coefficient * 100) + '%' );
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_health);
-			GUI.Label(rightPart, string.Format("{0:0.##}", health_coefficient * 100) + '%' );
-		}
-	}
 }
