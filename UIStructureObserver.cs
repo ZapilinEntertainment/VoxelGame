@@ -28,14 +28,18 @@ public class UIStructureObserver : UIObserver {
 	}
 
 	override public void SelfShutOff() {
-		isObserving = false;
+        if (observingStructure != null) observingStructure.showOnGUI = false;
+        isObserving = false;
 		UIController.current.SelectedObjectLost();
 		gameObject.SetActive(false);
 	}
 
 	override public void ShutOff() {
-        if (observingStructure != null) observingStructure.showOnGUI = false;
-        observingStructure = null;
+        if (observingStructure != null)
+        {
+            observingStructure.showOnGUI = false;
+            observingStructure = null;
+        }
 		isObserving = false;
 		gameObject.SetActive(false);
 	}

@@ -6,10 +6,11 @@ using UnityEngine.UI;
 public class UITradeWindow : UIObserver {
     [SerializeField] GameObject[] resourcesButtons;
     [SerializeField] GameObject resourceInfoPanel;
-    [SerializeField] Text resourceName, buyButtonText, sellButtonText, limitText, limitPlaceholderText, priceText, demandText, descriptionText;
+    [SerializeField] Text resourceName, buyButtonText, sellButtonText, limitText, priceText, demandText, descriptionText;
     [SerializeField] InputField limitInputField;
     [SerializeField] Sprite overridingButtonSprite;
     [SerializeField] RawImage resourcePicture;
+    [SerializeField] Texture redArrow_tx, greenArrow_tx;
 
     int chosenResourceID = -1, chosenButtonIndex = -1, showingLimit;
     float showingPrice = 0, showingDemand = 0;
@@ -27,15 +28,14 @@ public class UITradeWindow : UIObserver {
             ResourceType.FUEL_ID,  ResourceType.GRAPHONIUM_ID,  ResourceType.SUPPLIES_ID
         };
         LocalizeButtonTitles();
-        limitPlaceholderText.text = "0";
     }
 
     public void LocalizeButtonTitles() {
-        buyButtonText.text = Localization.GetWord(LocalizationKey.Buy);
-        sellButtonText.text = Localization.GetWord(LocalizationKey.Sell);
-        limitText.text = Localization.GetWord(LocalizationKey.Limit);
-        priceText.text = Localization.GetWord(LocalizationKey.Price);
-        demandText.text = Localization.GetWord(LocalizationKey.Demand);
+        buyButtonText.text = Localization.GetWord(LocalizedWord.Buy);
+        sellButtonText.text = Localization.GetWord(LocalizedWord.Sell);
+        limitText.text = Localization.GetWord(LocalizedWord.Limit);
+        priceText.text = Localization.GetWord(LocalizedWord.Price);
+        demandText.text = Localization.GetWord(LocalizedWord.Demand);
     }
 
     override protected void StatusUpdate()
@@ -47,25 +47,39 @@ public class UITradeWindow : UIObserver {
                 isObserving = false;
                 return;
             }
-            if (showingPrice != ResourceType.prices[chosenResourceID])
-            {
-                showingPrice = ResourceType.prices[chosenResourceID];
-                priceText.text = string.Format("{0:0.###}", showingPrice);
-            }
-            if (showingLimit != Dock.minValueForTrading[chosenResourceID])
-            {
-                showingLimit = Dock.minValueForTrading[chosenResourceID];
-                limitPlaceholderText.text = showingLimit.ToString();
-            }
-            if (showingDemand != ResourceType.demand[chosenResourceID])
-            {
-                showingDemand = ResourceType.demand[chosenResourceID];
-                demandText.text = string.Format("{0:0.###}", showingDemand);
-            }
             if (resourceIsForSale != Dock.isForSale[chosenResourceID])
             {
                 ChangeSellStatus(Dock.isForSale[chosenResourceID]);
             }
+            if (resourceIsForSale != null)
+            {
+                bool selling = (resourceIsForSale == true);
+                if (selling)
+                {
+                    if (showingPrice != ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient)
+                    {
+                        showingPrice = ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient;
+                        priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
+                    }
+                }
+                else { 
+                    if (showingPrice != ResourceType.prices[chosenResourceID])
+                    {
+                        showingPrice = ResourceType.prices[chosenResourceID];
+                        priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
+                    }
+                }
+                if (showingLimit != Dock.minValueForTrading[chosenResourceID])
+                {
+                    showingLimit = Dock.minValueForTrading[chosenResourceID];
+                    limitInputField.text = showingLimit.ToString();
+                }
+                if (showingDemand != ResourceType.demand[chosenResourceID])
+                {
+                    showingDemand = ResourceType.demand[chosenResourceID];
+                    demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
+                }
+            }           
         }
     }
 
@@ -81,36 +95,60 @@ public class UITradeWindow : UIObserver {
         descriptionText.text = Localization.GetResourcesDescription(chosenResourceID);
         resourcePicture.uvRect = ResourceType.GetTextureRect(chosenResourceID);
         ChangeSellStatus(Dock.isForSale[chosenResourceID]);
-       
+
+        resourceIsForSale = Dock.isForSale[resourceID];
+        if (resourceIsForSale != null)
+        {
+            bool selling = (resourceIsForSale == true);
+            showingPrice = selling ? ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient : ResourceType.prices[chosenResourceID];
+            priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
+            limitText.transform.parent.gameObject.SetActive(true);
+            showingLimit = Dock.minValueForTrading[chosenResourceID];
+            limitInputField.text = showingLimit.ToString();
+            showingDemand = ResourceType.demand[chosenResourceID];
+            demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
+            RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
+            ri.enabled = true;
+            ri.texture = selling ? redArrow_tx : greenArrow_tx;
+        }
+        else
+        {
+            limitInputField.transform.parent.gameObject.SetActive(false);
+        }
         isObserving = true;
         timer = STATUS_UPDATE_TIME;
     }
     public void ChangeSellStatus( bool? isForSale)
     {
         if (chosenResourceID == -1) return;
-        resourceIsForSale = isForSale;
-        if ( resourceIsForSale != null)
-        {
+        
+        if (isForSale != null)
+        {           
+            resourceIsForSale = isForSale;
             bool selling = (resourceIsForSale == true);
             buyButtonText.transform.parent.GetComponent<Image>().overrideSprite = selling ? null : overridingButtonSprite;
             sellButtonText.transform.parent.GetComponent<Image>().overrideSprite = selling ? overridingButtonSprite : null;
-            priceText.enabled = true;
             showingPrice = selling ? ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient : ResourceType.prices[chosenResourceID];
-            priceText.text = string.Format("{0:0.###}", showingPrice);
-            limitText.transform.parent.gameObject.SetActive( true );
+            priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
+            limitInputField.transform.parent.gameObject.SetActive(true);
             showingLimit = Dock.minValueForTrading[chosenResourceID];
-            limitPlaceholderText.text = showingLimit.ToString();
-            demandText.enabled = true;
+            limitInputField.text = showingLimit.ToString();
             showingDemand = ResourceType.demand[chosenResourceID];
-            demandText.text = string.Format("{0:0.###}", showingDemand);
+            demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
+            RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
+            ri.enabled = true;
+            ri.texture = selling ? redArrow_tx : greenArrow_tx;            
         }
         else
         {
-            priceText.enabled = false;
+            resourceIsForSale = null;
+            showingPrice = 0;
+            showingLimit = 0;
+            showingDemand = 0;
             limitText.transform.parent.gameObject.SetActive(false);
-            demandText.enabled = false;
             buyButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
             sellButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
+            resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>().enabled = false;
         }
     }
     public void ChangeLimit(int val)
@@ -120,6 +158,9 @@ public class UITradeWindow : UIObserver {
         x += val;
         if (x < 0) x = 0;
         Dock.ChangeMinValue(chosenResourceID, x);
+        showingLimit = x;
+        limitInputField.text = showingLimit.ToString();
+        showingLimit = x;
     } 
     public void ChangeLimit()
     {
@@ -129,6 +170,7 @@ public class UITradeWindow : UIObserver {
             if (x < 0) x = 0;
             Dock.ChangeMinValue(chosenResourceID, x);
             limitInputField.text = x.ToString();
+            showingLimit = x;
         }
     }
     public void UpdateResourceButtons()
@@ -161,13 +203,35 @@ public class UITradeWindow : UIObserver {
         }
     }
     public void BuyButton() {
-        if (resourceIsForSale != false) ChangeSellStatus(false);
-        else ChangeSellStatus(null);
+        if (resourceIsForSale != false)
+        { 
+            Dock.ChangeSaleStatus(chosenResourceID, false);
+            ChangeSellStatus(false);
+        }
+        else
+        {
+            Dock.ChangeSaleStatus(chosenResourceID, null);
+            ChangeSellStatus(null);
+        }
     }
     public void SellButton()
     {
-        if (resourceIsForSale == true)  ChangeSellStatus(null);
-        else ChangeSellStatus(true);
+        if (resourceIsForSale == true)
+        {
+            ChangeSellStatus(null);
+            Dock.ChangeSaleStatus(chosenResourceID, null);
+        }
+        else
+        {
+            ChangeSellStatus(true);
+            Dock.ChangeSaleStatus(chosenResourceID, true);
+        }
+    }
+
+    void OnEnable()
+    {
+        transform.SetAsLastSibling();
+        UpdateResourceButtons();
     }
 
     public override void SelfShutOff() {

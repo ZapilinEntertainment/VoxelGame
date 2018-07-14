@@ -49,7 +49,7 @@ public class UIBuildingObserver : UIObserver {
             }
             else
             {
-                energyValue.text = Localization.GetWord(LocalizationKey.Offline);
+                energyValue.text = Localization.GetWord(LocalizedWord.Offline);
                 energyButton.GetComponent<RawImage>().texture = powerOff_tx;
             }
 			energyValue.enabled = true;
@@ -102,7 +102,7 @@ public class UIBuildingObserver : UIObserver {
                     }
                     else
                     {
-                        energyValue.text = Localization.GetWord(LocalizationKey.Offline);
+                        energyValue.text = Localization.GetWord(LocalizedWord.Offline);
                         energyButton.GetComponent<RawImage>().texture = powerOff_tx;
                     }
                     energyValue.enabled = true;
@@ -128,7 +128,7 @@ public class UIBuildingObserver : UIObserver {
                     }
                     else
                     {
-                        energyValue.text = Localization.GetWord(LocalizationKey.Offline);
+                        energyValue.text = Localization.GetWord(LocalizedWord.Offline);
                         energyButton.GetComponent<RawImage>().texture = powerOff_tx;
                     }
                 }
@@ -159,7 +159,7 @@ public class UIBuildingObserver : UIObserver {
                 if (answer != s) {
                     if (answer == string.Empty)
                     {
-                        upgradeButtonText.text = Localization.GetWord(LocalizationKey.Upgrade);
+                        upgradeButtonText.text = Localization.GetWord(LocalizedWord.Upgrade);
                         upgradeButtonText.color = Color.white;
                     }
                     else {
@@ -241,7 +241,7 @@ public class UIBuildingObserver : UIObserver {
             {
                 if (answer == string.Empty)
                 {
-                    upgradeButtonText.text = Localization.GetWord(LocalizationKey.Upgrade);
+                    upgradeButtonText.text = Localization.GetWord(LocalizedWord.Upgrade);
                     upgradeButtonText.color = Color.white;
                 }
                 else

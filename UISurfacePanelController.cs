@@ -70,11 +70,11 @@ public sealed class UISurfacePanelController : UIObserver {
 					check = surface.GetComponent<GatherSite>();
 					if (check != status_gatherOrdered) {
 						status_gatherOrdered = check;
-						gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( status_gatherOrdered ? LocalizationKey.StopGather : LocalizationKey.Gather);
-					}
+						gatherButton.transform.GetChild(0).GetComponent<Text>().text = (status_gatherOrdered ? Localization.GetPhrase(LocalizedPhrase.StopGather) : Localization.GetWord(LocalizedWord.Gather));
+                        }
 				}
 				else {
-					gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( LocalizationKey.Gather );
+					gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( LocalizedWord.Gather );
 					gatherButton.interactable = status_gatherEnabled;
 				}
 			}
@@ -82,13 +82,13 @@ public sealed class UISurfacePanelController : UIObserver {
 				check = surface.GetComponent<GatherSite>();
 				if (check != status_gatherOrdered) {
 					status_gatherOrdered = check;
-					gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( status_gatherOrdered ? LocalizationKey.StopGather : LocalizationKey.Gather);
+					gatherButton.transform.GetChild(0).GetComponent<Text>().text = (status_gatherOrdered ? Localization.GetPhrase(  LocalizedPhrase.StopGather) : Localization.GetWord( LocalizedWord.Gather) );
 				}
 			}
 			check = (surface.GetComponent<CleanSite>() != null && surface.GetComponent<CleanSite>().diggingMission);
 			if (status_digOrdered != check) {
 				status_digOrdered = check;
-				digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( status_digOrdered == true ? LocalizationKey.StopDig : LocalizationKey.Dig);
+				digButton.transform.GetChild(0).GetComponent<Text>().text = (status_digOrdered == true ? Localization.GetPhrase(  LocalizedPhrase.StopDig) : Localization.GetWord(LocalizedWord.Dig));
 			}
 			if (savedHqLevel != hq.level) {
 				savedHqLevel = hq.level;
@@ -219,7 +219,7 @@ public sealed class UISurfacePanelController : UIObserver {
 			status_gatherEnabled = (surface.cellsStatus != 1);
 			gatherButton.interactable = status_gatherEnabled;
 			status_digOrdered = (surface.GetComponent<CleanSite>() != null && surface.GetComponent<CleanSite>().diggingMission);
-			digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( status_digOrdered ? LocalizationKey.StopDig : LocalizationKey.Dig);
+			digButton.transform.GetChild(0).GetComponent<Text>().text = (status_digOrdered ? Localization.GetPhrase(  LocalizedPhrase.StopDig) : Localization.GetWord( LocalizedWord.Dig));
 			savedHqLevel = hq.level;
 			blockCreateButton.enabled = ( savedHqLevel> 3);
 			columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
@@ -309,7 +309,7 @@ public sealed class UISurfacePanelController : UIObserver {
 				}
 				int n = resourcesCostImage.Length - 1;
 				t = resourcesCostImage[n].transform.GetChild(0).GetComponent<Text>();
-				t.text = Localization.GetWord(LocalizationKey.RequiredSurface) + " : " + Localization.GetResourceName(bd.requiredBasementMaterialId);
+				t.text = Localization.GetPhrase(LocalizedPhrase.RequiredSurface) + " : " + Localization.GetResourceName(bd.requiredBasementMaterialId);
 				resourcesCostImage[n].uvRect = ResourceType.GetTextureRect(bd.requiredBasementMaterialId);
 				resourcesCostImage[n].gameObject.SetActive(true);
 				t.color = Color.yellow;

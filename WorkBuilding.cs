@@ -113,6 +113,7 @@ public abstract class WorkBuilding : Building {
         if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
+        showOnGUI = true;
         return workbuildingObserver;
     }
 

@@ -258,6 +258,15 @@ sealed public class UIController : MonoBehaviour {
 		selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
 	}
 
+    public void ActivateTradePanel()
+    {
+        tradePanel.SetActive(true);
+    }
+    public void CloseTradePanel()
+    {
+        tradePanel.SetActive(false);
+    }
+
 	#region right panel
 	public void SelectedObjectLost() {
 		if (chosenObjectType == ChosenObjectType.None) return;

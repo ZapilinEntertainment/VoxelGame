@@ -1,6 +1,7 @@
 ﻿public enum Language{English, Russian};
 public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
-public enum LocalizationKey{Level, Offline, PointsSec, Dig,StopDig,Gather,StopGather, RequiredSurface, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price}
+public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration}
+public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec }
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
 public enum GameAnnouncements{NotEnoughResources};
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
@@ -374,27 +375,40 @@ public static class Localization {
 		}
 	}
 
-	public static string GetWord(LocalizationKey key) {
-		switch (key) {
-		    case LocalizationKey.Level: return "level"; 
-		    case LocalizationKey.Offline: return "offline";
-		    case LocalizationKey.PointsSec: return "points/sec";
-		    case LocalizationKey.Dig : return "Dig";
-		    case LocalizationKey.StopDig: return "Stop digging";
-		    case LocalizationKey.Gather: return "Gather";
-		    case LocalizationKey.StopGather: return "Stop gathering";
-		    case LocalizationKey.RequiredSurface : return "Required surface";
-            case LocalizationKey.UpgradeCost: return "Upgrade cost";
-            case LocalizationKey.Upgrade:return "Upgrade";
-            case LocalizationKey.Cancel: return "Cancel";
-            case LocalizationKey.Buy: return "Buy";
-            case LocalizationKey.Sell: return "Sell";
-            case LocalizationKey.Limit: return "Limit";
-            case LocalizationKey.Demand: return "Demand";
-            case LocalizationKey.Price: return "Price";
+	public static string GetWord(LocalizedWord word) {
+		switch (word) {
+		    case LocalizedWord.Level: return "level"; 
+		    case LocalizedWord.Offline: return "offline";		    
+		    case LocalizedWord.Dig : return "Dig";		   
+		    case LocalizedWord.Gather: return "Gather";		    
+            case LocalizedWord.UpgradeCost: return "Upgrade cost";
+            case LocalizedWord.Upgrade:return "Upgrade";
+            case LocalizedWord.Cancel: return "Cancel";
+            case LocalizedWord.Buy: return "Buy";
+            case LocalizedWord.Sell: return "Sell";
+            case LocalizedWord.Limit: return "Limit";
+            case LocalizedWord.Demand: return "Demand";
+            case LocalizedWord.Price: return "Price";
+            case LocalizedWord.Trading: return "Trading";
+            case LocalizedWord.Immigration: return "Immigration";
+            
 		default: return "...";
 		}
 	}
+    public static string GetPhrase(LocalizedPhrase lp)
+    {
+        switch (lp)
+        {
+            default: return "<...>";
+            case LocalizedPhrase.PointsSec: return "points/sec";
+            case LocalizedPhrase.StopDig:return "Stop digging";
+            case LocalizedPhrase.StopGather: return "Stop gathering";
+            case LocalizedPhrase.RequiredSurface:return "Required surface";
+            case LocalizedPhrase.ImmigrationEnabled: return "Immigration enabled";
+            case LocalizedPhrase.ImmigrationDisabled:  return "Immigration disabled";
+            case LocalizedPhrase.TicketsLeft: return "Tickets left";
+        }
+    }
 
     public static string GetRefusalReason(RefusalReason rr) {
         switch (rr) {

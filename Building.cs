@@ -260,13 +260,14 @@ public class Building : Structure {
 
 
 	override public void Rename() {
-		name = Localization.GetStructureName(id) + " (" + Localization.GetWord(LocalizationKey.Level) + ' '+level.ToString() +')';
+		name = Localization.GetStructureName(id) + " (" + Localization.GetWord(LocalizedWord.Level) + ' '+level.ToString() +')';
 	}
 
 	public override UIObserver ShowOnGUI() {
 		if (buildingObserver == null) buildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
 		else buildingObserver.gameObject.SetActive(true);
 		buildingObserver.SetObservingBuilding(this);
+        showOnGUI = true;
 		return buildingObserver;
 	}
 

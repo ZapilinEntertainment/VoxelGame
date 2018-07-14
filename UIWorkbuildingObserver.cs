@@ -34,7 +34,7 @@ public class UIWorkbuildingObserver : UIObserver {
 		slider.minValue = 0; 
 		slider.maxValue = showingWorkersMaxCount;
 		workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetWord(LocalizationKey.PointsSec);
+		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
 
 		if (showingWorkersCount > 0) {
 			minusAllButton.enabled = true;
@@ -88,7 +88,7 @@ public class UIWorkbuildingObserver : UIObserver {
 				showingWorkspeed = observingWorkbuilding.workSpeed;
 				if (showingWorkspeed == 0) workSpeedField.enabled = false;
 				else {
-					workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetWord(LocalizationKey.PointsSec);
+					workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
 					workSpeedField.enabled = true;
 				}
 			}
