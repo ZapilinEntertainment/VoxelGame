@@ -262,11 +262,11 @@ public static class Localization {
 		case ResourceType.LUMBER_ID : return "Wood";
 		case ResourceType.STONE_ID : return "Stone";
 		case ResourceType.METAL_K_ID : return "Metal K ";
-		case ResourceType.METAL_M_ID : return "Metal K ";
-		case ResourceType.METAL_E_ID : return "Metal K ";
-		case ResourceType.METAL_N_ID : return "Metal K ";
-		case ResourceType.METAL_P_ID : return "Metal K ";
-		case ResourceType.METAL_S_ID : return "Metal K ";
+		case ResourceType.METAL_M_ID : return "Metal M ";
+		case ResourceType.METAL_E_ID : return "Metal E ";
+		case ResourceType.METAL_N_ID : return "Metal N ";
+		case ResourceType.METAL_P_ID : return "Metal P ";
+		case ResourceType.METAL_S_ID : return "Metal S ";
 		case ResourceType.METAL_K_ORE_ID : return "Metal K (ore)";
 		case ResourceType.METAL_M_ORE_ID : return "Metal M (ore)";
 		case ResourceType.METAL_E_ORE_ID : return "Metal E (ore)";

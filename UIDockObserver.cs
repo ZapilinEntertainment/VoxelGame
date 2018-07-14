@@ -14,15 +14,7 @@ public class UIDockObserver : UIObserver
     Dock observingDock;
     const float START_Y = -16, OPERATION_PANEL_HEIGHT = 32;
     const int MIN_VALUE_CHANGING_STEP = 5, SELL_STATUS_ICON_INDEX = 0, NAME_INDEX = 1, MINUS_BUTTON_INDEX = 2, LIMIT_VALUE_INDEX = 3, PLUS_BUTTON_INDEX = 4, DELETE_BUTTON_INDEX = 5;
-    List<int> showingTradeLimits;
-    List<bool> showingSellStatus;
     int showingImmigrationLimit = 0;
-
-    void Awake() {
-        showingTradeLimits = new List<int>(); showingTradeLimits.Add(0);
-        showingSellStatus = new List<bool>(); showingSellStatus.Add(false);
-
-    }
 
      public void SetObservingDock(Dock d)
     {
@@ -106,36 +98,7 @@ public class UIDockObserver : UIObserver
         {
             if (tradingListPanel.activeSelf)
             {
-
-                if (showingSellStatus.Count > 0)
-                {
-                    int i = 0;
-                    bool?[] realSellStatuses = Dock.isForSale;
-                    int[] realLimits = Dock.minValueForTrading;
-                    return;
-                    while (i < showingSellStatus.Count)
-                    {
-                        if (showingSellStatus[i] != realSellStatuses[i])
-                        {
-                            if (realSellStatuses[i] != null)
-                            {
-                                showingSellStatus[i] = (realSellStatuses[i] == true);
-                                tradingPanelContent.transform.GetChild(i).GetChild(SELL_STATUS_ICON_INDEX).GetComponent<RawImage>().texture = (showingSellStatus[i] ? redArrow_tx : greenArrow_tx);
-                            }
-                            else
-                            {
-                                tradingPanelContent.transform.GetChild(i).GetChild(DELETE_BUTTON_INDEX).GetComponent<Button>().onClick.Invoke();
-                                continue;
-                            }
-                        }
-                        if (showingTradeLimits[i] != realLimits[i])
-                        {
-                            showingTradeLimits[i] = realLimits[i];
-                            tradingPanelContent.transform.GetChild(i).GetChild(LIMIT_VALUE_INDEX).GetComponent<Text>().text = showingTradeLimits[i].ToString();
-                        }
-                        i++;
-                    }
-                }
+                RecalculateTradingPanelContent();
             }
             else
             {
@@ -153,17 +116,7 @@ public class UIDockObserver : UIObserver
                 }
             }
         }
-    }
-
-    public void LimitChangeButton(int buttonIndex,int resourceID, bool plus)
-    {
-        int x = Dock.minValueForTrading[resourceID];
-        x += MIN_VALUE_CHANGING_STEP * (plus ? 1 : -1);
-        if (x < 0) x = 0;
-        Dock.ChangeMinValue(resourceID, x);
-        tradingListPanel.transform.GetChild(buttonIndex).GetChild(LIMIT_VALUE_INDEX).GetComponent<Text>().text = x.ToString();
-        showingTradeLimits[buttonIndex] = x;
-    }
+    } 
 
     public void ImmigrationToggleButton()
     {
@@ -187,119 +140,78 @@ public class UIDockObserver : UIObserver
     }
 
 
-    #region trade operations list
-    public void AddLot(int resourceID)
-    {        
-        if (Dock.isForSale[resourceID] == null) return;
-        Transform tpanel = tradingPanelContent.transform;
-        int operationsCount = tpanel.childCount;
-        int foundedIndex = -1;
-        Transform button = null;
-        for (int i = 0; i < operationsCount; i++)
-        {
-            button = tpanel.GetChild(i);
-            if (button.gameObject.activeSelf) continue;
-            else
-            {
-                foundedIndex = i;
-                break;
-            }
-        }
-        if ( foundedIndex == -1)
-        {
-            button = Instantiate(tpanel.transform.GetChild(0).gameObject, tpanel.transform).transform;
-            foundedIndex = operationsCount++;
-        }
-        SetLotData(button, resourceID, foundedIndex);
-    }
-
-    void SetLotData(Transform gt, int resourceID, int buttonIndex)
+    #region trade operations list    
+    public void LimitChangeButton(int resourceID, bool plus)
     {
-        bool? forSale = Dock.isForSale[resourceID];
-        gt.gameObject.SetActive(true);
-        gt.transform.localPosition = new Vector3(gt.localPosition.x, START_Y + (-1) * buttonIndex * OPERATION_PANEL_HEIGHT, gt.localPosition.z);
-        gt.GetChild(SELL_STATUS_ICON_INDEX).GetComponent<RawImage>().texture = (forSale == true) ? redArrow_tx : greenArrow_tx;
-        if (showingSellStatus.Count > buttonIndex) showingSellStatus[buttonIndex] = (forSale == true);
-        else showingSellStatus.Add(forSale == true);
-        gt.GetChild(NAME_INDEX).GetComponent<Text>().text = Localization.GetResourceName(resourceID);
-        gt.GetChild(MINUS_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
-            this.LimitChangeButton(buttonIndex, resourceID, false);
-        });
-
-        if (showingTradeLimits.Count > buttonIndex) showingTradeLimits[buttonIndex] = Dock.minValueForTrading[resourceID];
-        else showingTradeLimits.Add(Dock.minValueForTrading[resourceID]);
-
-        gt.GetChild(LIMIT_VALUE_INDEX).GetComponent<Text>().text = showingTradeLimits[buttonIndex].ToString();
-        gt.GetChild(PLUS_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
-            this.LimitChangeButton(buttonIndex, resourceID, true);
-        });
-        gt.GetChild(DELETE_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
-            this.RemoveTradeOperation(buttonIndex, resourceID);
-        });
+        int x = Dock.minValueForTrading[resourceID];
+        x += MIN_VALUE_CHANGING_STEP * (plus ? 1 : -1);
+        if (x < 0) x = 0;
+        Dock.ChangeMinValue(resourceID, x);
+        RecalculateTradingPanelContent();
+        timer = STATUS_UPDATE_TIME / 2f;
     }
 
     void RecalculateTradingPanelContent()
     {
         Transform tpanel = tradingPanelContent.transform;
-        int buttonsCount = tpanel.childCount, lastButtonIndex = 0;
-        bool?[] saleStatus = Dock.isForSale;        
-
+        bool?[] saleStatus = Dock.isForSale;
+        int buttonsCount = tpanel.childCount;
+        List<int> realOperations = new List<int>();
         for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
         {
-            if (saleStatus[i] != null)
-            {
-                if (lastButtonIndex < buttonsCount)
-                {
-                    SetLotData(tpanel.GetChild(lastButtonIndex), i, lastButtonIndex);
-                    lastButtonIndex++;
-                }
-                else
-                {
-                    Transform t = Instantiate(tpanel.transform.GetChild(0).gameObject, tpanel.transform).transform;
-                    SetLotData(t, i, lastButtonIndex);
-                    lastButtonIndex++;
-                }
-            }
-            else
-            {
-                continue;
-            }
+            if (saleStatus[i] != null) realOperations.Add(i);
         }
-        if (lastButtonIndex < buttonsCount)
+        if (realOperations.Count > 0)
         {
-            for (int i = lastButtonIndex; i < buttonsCount; i++)
+            int i = 0;
+            for (; i < realOperations.Count; i++)
             {
-                tpanel.GetChild(i).gameObject.SetActive(false);
+                Transform t = null;
+                int resID = realOperations[i];
+                if (i < buttonsCount) t = tpanel.GetChild(i);
+                else t = Instantiate(tpanel.GetChild(0).gameObject, tpanel).transform;
+                t.gameObject.SetActive(true);
+                t.transform.localPosition = new Vector3(t.localPosition.x, START_Y + (-1) * i * OPERATION_PANEL_HEIGHT, t.localPosition.z);
+                t.GetChild(SELL_STATUS_ICON_INDEX).GetComponent<RawImage>().texture = (saleStatus[resID] == true) ? redArrow_tx : greenArrow_tx;
+                t.GetChild(NAME_INDEX).GetComponent<Text>().text = Localization.GetResourceName(resID);
+                int x = new int();
+                x = resID;
+                t.GetChild(MINUS_BUTTON_INDEX).GetComponent<Button>().onClick.RemoveAllListeners();
+                t.GetChild(MINUS_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
+                    this.LimitChangeButton(x, false);
+                });
+                t.GetChild(LIMIT_VALUE_INDEX).GetComponent<Text>().text = Dock.minValueForTrading[resID].ToString();
+                t.GetChild(PLUS_BUTTON_INDEX).GetComponent<Button>().onClick.RemoveAllListeners();
+                t.GetChild(PLUS_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
+                    this.LimitChangeButton(x, true);
+                });
+                t.GetChild(DELETE_BUTTON_INDEX).GetComponent<Button>().onClick.RemoveAllListeners();
+                t.GetChild(DELETE_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
+                    this.RemoveTradeOperation(x);
+                });
             }
-        }
-    }
-
-        public void RemoveTradeOperation(int buttonIndex, int resourceID)
-    {
-        int i = buttonIndex, count = tradingPanelContent.transform.childCount;
-        if (i == count - 1)
-        {
-            tradingPanelContent.transform.GetChild(i).gameObject.SetActive(false);
+            if (i < buttonsCount)
+            {
+                for (int j = i; j < buttonsCount; j++)
+                {
+                    tpanel.GetChild(j).gameObject.SetActive(false);
+                }
+            }
+            if (!tpanel.gameObject.activeSelf) tpanel.gameObject.SetActive(true);
         }
         else
         {
-            i++;
-            int positionsDown = 0;
-            while (i < count)
-            {
-                Transform t = tradingPanelContent.transform.GetChild(i).transform;
-                t.localPosition = new Vector3(t.localPosition.x, t.localPosition.y + OPERATION_PANEL_HEIGHT, t.localPosition.z);
-                positionsDown++;
-                i++;
-            }
-            RectTransform deleting = tradingPanelContent.transform.GetChild(buttonIndex) as RectTransform;
-            deleting.SetAsLastSibling();
-            deleting.localPosition = new Vector3(deleting.localPosition.x, deleting.localPosition.y - positionsDown * OPERATION_PANEL_HEIGHT, deleting.localPosition.z);
-            deleting.gameObject.SetActive(false);
-            showingTradeLimits.RemoveAt(buttonIndex);
-            showingSellStatus.RemoveAt(buttonIndex);
+            if (tpanel.gameObject.activeSelf) tpanel.gameObject.SetActive(false);
         }
+        RectTransform rt = tpanel as RectTransform;
+        rt.sizeDelta = new Vector2(rt.sizeDelta.x, OPERATION_PANEL_HEIGHT * realOperations.Count);
+    }
+
+    public void RemoveTradeOperation(int resourceID)
+    {
         Dock.ChangeSaleStatus(resourceID, null);
+        RecalculateTradingPanelContent();
+        timer = STATUS_UPDATE_TIME / 2f;
     }
     #endregion
 

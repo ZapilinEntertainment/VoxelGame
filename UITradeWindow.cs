@@ -47,6 +47,7 @@ public class UITradeWindow : UIObserver {
                 isObserving = false;
                 return;
             }
+            UpdateSaleMarkers();
             if (resourceIsForSale != Dock.isForSale[chosenResourceID])
             {
                 ChangeSellStatus(Dock.isForSale[chosenResourceID]);
@@ -80,6 +81,29 @@ public class UITradeWindow : UIObserver {
                     demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
                 }
             }           
+        }
+    }
+
+    void UpdateSaleMarkers()
+    {
+        bool?[] saleStatus = Dock.isForSale;
+        for (int i = 0; i < resourcesButtons.Length; i++)
+        {
+            if (i < tradableResources.Count)
+            {
+                int index = tradableResources[i];
+                RawImage saleStatusMarker = resourcesButtons[i].transform.GetChild(2).GetComponent<RawImage>();
+                if (saleStatus[index] == null) saleStatusMarker.enabled = false;
+                else
+                {
+                    if (saleStatus[index] == true) saleStatusMarker.texture = redArrow_tx;
+                    else saleStatusMarker.texture = greenArrow_tx;
+                }
+            }
+            else
+            {
+                resourcesButtons[i].SetActive(false);
+            }
         }
     }
 
@@ -189,11 +213,11 @@ public class UITradeWindow : UIObserver {
                     this.SelectResource(index, id);
                 });
                 RawImage saleStatusMarker = res.transform.GetChild(2).GetComponent<RawImage>();
-                if (saleStatus[i] == null) saleStatusMarker.enabled = false;
+                if (saleStatus[tradableResources[i]] == null) saleStatusMarker.enabled = false;
                 else
                 {
-                    if (saleStatus[i] == true) saleStatusMarker.texture = sellButtonText.transform.parent.GetChild(0).GetComponent<RawImage>().texture;
-                    else saleStatusMarker.texture = buyButtonText.transform.parent.GetChild(0).GetComponent<RawImage>().texture;
+                    if (saleStatus[tradableResources[i]] == true) saleStatusMarker.texture = redArrow_tx;
+                    else saleStatusMarker.texture = greenArrow_tx;
                 }
             }
             else
