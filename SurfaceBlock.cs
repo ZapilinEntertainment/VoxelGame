@@ -273,7 +273,7 @@ public class SurfaceBlock : Block {
 			grassland.Annihilation();
 			CellsStatusUpdate();
 		}
-		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
+		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
 	}
 
 	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) {
@@ -294,7 +294,7 @@ public class SurfaceBlock : Block {
 			g.name = "upper_plane"; 
 			g.tag = "BlockCollider";
 		}
-		surfaceRenderer.material = ResourceType.GetMaterialById(material_id);
+		surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
 		if (visibilityMask != 0) surfaceRenderer.enabled = true;
 
 		type = BlockType.Surface; isTransparent = false;

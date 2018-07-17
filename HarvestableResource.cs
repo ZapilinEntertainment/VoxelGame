@@ -52,7 +52,7 @@ public class HarvestableResource : Structure {
 			//model.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
 			if (myRenderers == null) myRenderers = new List<Renderer>();
 			myRenderers.Add( model.transform.GetChild(0).GetComponent<MeshRenderer>());
-			myRenderers[0].sharedMaterial = ResourceType.GetMaterialById(resType.ID);
+			myRenderers[0].sharedMaterial = ResourceType.GetMaterialById(resType.ID, myRenderers[0].GetComponent<MeshFilter>());
 		}
 	}
 

@@ -141,7 +141,7 @@ public class Building : Structure {
 							Material m= myRenderers[i].sharedMaterials[j];
 							if (m == PoolMaster.glass_material) {m = PoolMaster.glass_offline_material; replacing = true;}
 							else {
-								if (m == PoolMaster.colored_material) {m = PoolMaster.colored_offline_material; replacing = true;}
+								if (m == PoolMaster.basic_material) {m = PoolMaster.basic_offline_material; replacing = true;}
 								else {
 										if (m == PoolMaster.energy_material ) {m = PoolMaster.energy_offline_material; replacing = true;}
 										}
@@ -155,7 +155,7 @@ public class Building : Structure {
 						bool replacing = false;
 						if (m == PoolMaster.glass_material) {m = PoolMaster.glass_offline_material; replacing = true;}
 						else {
-							if (m == PoolMaster.colored_material) {m = PoolMaster.colored_offline_material; replacing = true;}
+							if (m == PoolMaster.basic_material) {m = PoolMaster.basic_offline_material; replacing = true;}
 							else {
 								if (m == PoolMaster.energy_material ) {m = PoolMaster.energy_offline_material; replacing = true;}
 							}
@@ -173,7 +173,7 @@ public class Building : Structure {
 							Material m = myRenderers[i].sharedMaterials[j];
 							if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true;}
 							else {
-								if (m == PoolMaster.colored_offline_material) {m = PoolMaster.colored_material;replacing = true;}
+								if (m == PoolMaster.basic_offline_material) {m = PoolMaster.basic_material;replacing = true;}
 								else {
 									if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material;replacing = true;}
 								}
@@ -187,7 +187,7 @@ public class Building : Structure {
 						bool replacing = false;
 						if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true;}
 						else {
-							if (m == PoolMaster.colored_offline_material) {m = PoolMaster.colored_material;replacing = true;}
+							if (m == PoolMaster.basic_offline_material) {m = PoolMaster.basic_material;replacing = true;}
 							else {
 								if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material;replacing = true;}
 							}

@@ -106,30 +106,13 @@ public class Grassland : MonoBehaviour {
 
 	int CheckGrasslandStage() {
 		progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
-		int stage = 0; 
-		if (progress > 0.5f) {if (progress == 1) stage = 3; else stage = 2;}
-		else { if (progress > 0.25f) stage = 1;}
+        int stage = Mathf.RoundToInt(progress / 0.2f);
 		if (Mathf.Abs(stage - prevStage) > 1) {
 			if (stage > prevStage) stage = prevStage+1;
 			else stage =  prevStage - 1;
 		}
 		if (stage != prevStage) {
-			switch (stage) {
-			case 0: 						
-				myBlock.surfaceRenderer.sharedMaterial = ResourceType.Dirt.material;
-				break;
-			case 1:
-				int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_25[index1];
-				break;
-			case 2:
-				int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_50[index2];
-				break;
-			case 3:
-				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.grass_material;
-				break;
-			}
+            SetGrassTexture(stage);
 			prevStage = stage;
 		}
 		return stage;
@@ -154,25 +137,34 @@ public class Grassland : MonoBehaviour {
 		if (progress > 0.5f) {if (progress == 1) stage = 3; else stage = 2;}
 		else { if (progress > 0.25f) stage = 1;}
 		if (stage != prevStage) {
-			switch (stage) {
-			case 0: 						
-				myBlock.surfaceRenderer.sharedMaterial = ResourceType.Dirt.material;
-				break;
-			case 1:
-				int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_25[index1];
-				break;
-			case 2:
-				int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.current.grassland_ready_50[index2];
-				break;
-			case 3:
-				myBlock.surfaceRenderer.sharedMaterial = PoolMaster.grass_material;
-				break;
-			}
+            SetGrassTexture(stage);
 			prevStage = stage;
 		}
 	}
+    void SetGrassTexture(int stage)
+    {
+        switch (stage)
+        {
+            case 0:
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), true);
+                break;
+            case 1:
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass20, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                break;
+            case 2:
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass40, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                break;
+            case 3:
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass60, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                break;
+            case 4:
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass80, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                break;
+            case 5:
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass100, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                break;
+        }
+    }
 
 	/// <summary>
 	/// Use this only on pre-gen
@@ -212,23 +204,8 @@ public class Grassland : MonoBehaviour {
 			byte stage = 0; 
 			if (progress > 0.5f) {if (progress == 1) stage = 3; else stage = 2;}
 			else { if (progress > 0.25f) stage = 1;}
-			switch (stage) {
-				case 0: 						
-					myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
-					break;
-				case 1:
-					int index1 = (int)(Random.value * (PoolMaster.current.grassland_ready_25.Length - 1));
-					myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_25[index1];
-					break;
-				case 2:
-					int index2 = (int)(Random.value * (PoolMaster.current.grassland_ready_50.Length - 1));
-					myBlock.surfaceRenderer.material = PoolMaster.current.grassland_ready_50[index2];
-					break;
-				case 3:
-					myBlock.surfaceRenderer.material = PoolMaster.grass_material;
-					break;
-				}
-				prevStage = stage;
+        SetGrassTexture(stage);
+			prevStage = stage;
 		if (lifepower != 0 && lifeTimer == 0 ) lifeTimer = GameMaster.LIFEPOWER_TICK;
 	}
 
@@ -236,7 +213,7 @@ public class Grassland : MonoBehaviour {
 
 	public void Annihilation() {
 		myBlock.myChunk.AddLifePower((int)lifepower);
-		myBlock.surfaceRenderer.material = ResourceType.Dirt.material;
+		myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), true);
 		Destroy(this);
 	}
 

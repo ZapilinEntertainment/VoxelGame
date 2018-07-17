@@ -30,7 +30,8 @@ public class FollowingCamera : MonoBehaviour {
 
 	void LateUpdate () {
 		if (cam == null ) return;
-		Vector3 mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        Vector3 mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+         
 		if (Input.GetKey(KeyCode.Space)) mv.y = 1;
 		else {
 			if (Input.GetKey(KeyCode.LeftControl)) mv.y = -1;
@@ -99,6 +100,7 @@ public class FollowingCamera : MonoBehaviour {
 			if (a==false && b== false) rotationSmoothCoefficient = 0;
 		}
 
+
 		delta = Input.GetAxis("Mouse ScrollWheel");
 		if (delta != 0) {
 			#region dropping camera auto moving
@@ -149,4 +151,18 @@ public class FollowingCamera : MonoBehaviour {
             if (d / optimalDistance > 1 | d/optimalDistance < 0.5f) changingCamZoom = true;
         }
 	}
+
+    private void OnGUI()
+    {
+        float k = Screen.height / 20f;
+        Rect r = new Rect(0, Screen.height / 2f - 2 * k, k, k);
+        if ( GUI.RepeatButton(r, "<")) transform.RotateAround(transform.position, Vector3.up, rotationSpeed * Time.deltaTime);
+        r.y += k;
+        if (GUI.RepeatButton(r, "+")) cam.transform.Translate((cam.transform.position - transform.position) * zoomSpeed/98f * Time.deltaTime * (-1), Space.World);
+        r.y += k;
+        if (GUI.RepeatButton(r, "-")) cam.transform.Translate((cam.transform.position - transform.position) * zoomSpeed/98f * Time.deltaTime, Space.World);
+        r.y += k;
+        if (GUI.RepeatButton(r, ">")) transform.RotateAround(transform.position, Vector3.up, rotationSpeed * (-1)* Time.deltaTime);
+        r.y += k;
+    }
 }

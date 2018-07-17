@@ -35,12 +35,11 @@ public class CaveBlock : SurfaceBlock {
 			grassland.Annihilation();
 			CellsStatusUpdate();
 		}
-		Material m = ResourceType.GetMaterialById(newId);
 		foreach (MeshRenderer mr in faces) {
 			if (mr == null) continue;
-			else mr.material = m;
+			else mr.sharedMaterial = ResourceType.GetMaterialById(newId, mr.GetComponent<MeshFilter>()); 
 		}
-		surfaceRenderer.material =  m;
+		surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
 	}
 
 	public void CaveBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id) {
@@ -50,14 +49,13 @@ public class CaveBlock : SurfaceBlock {
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = f_up_material_id;
-		Material m = ResourceType.GetMaterialById(material_id);
 		foreach (MeshRenderer mr in faces) {
 				if (mr == null) continue;
-				else mr.material = m;
-		}
+				else mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>()); ;
+        }
 		if (ceilingRenderer == null) print ("no ceiling renderer!");
-		ceilingRenderer.material= ResourceType.GetMaterialById(material_id);
-		surfaceRenderer.material =  ResourceType.GetMaterialById(f_down_material_id);
+		ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, ceilingRenderer.GetComponent<MeshFilter>());
+		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(f_down_material_id, surfaceRenderer.GetComponent<MeshFilter>());
 
 		type = BlockType.Cave; isTransparent = false;
 		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();

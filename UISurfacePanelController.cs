@@ -342,7 +342,10 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
 
-	public void CreateSelectedBuilding () {CreateSelectedBuilding (0,0);}
+	public void CreateSelectedBuilding () {
+        if (chosenBuilding.fullCover) CreateSelectedBuilding(0, 0);
+        else CreateSelectedBuilding((byte)(SurfaceBlock.INNER_RESOLUTION / 2 - chosenBuilding.innerPosition.x_size/2), (byte)(SurfaceBlock.INNER_RESOLUTION / 2 - chosenBuilding.innerPosition.z_size/2));
+    }
 	public void CreateSelectedBuilding (byte x, byte z) {
 		if (selectedBuildingButton == -1 | chosenBuilding == null) return;
 		if (chosenBuilding.innerPosition != SurfaceRect.full) surfaceGridToggle.Select();

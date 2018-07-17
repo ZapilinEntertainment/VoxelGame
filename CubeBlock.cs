@@ -72,11 +72,10 @@ public class CubeBlock : Block{
 
 	public override void ReplaceMaterial(int newId) {
 		material_id = newId;
-		Material m = ResourceType.GetMaterialById(material_id);
 		if (faces != null) {
 			foreach (MeshRenderer mr in faces) {
 				if (mr == null) continue;
-				else mr.material = m;
+				else mr.material = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>());
 			}
 		}
 	}
@@ -134,8 +133,10 @@ public class CubeBlock : Block{
 			//GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
 			break;
 		}
-		faces[i].material = ResourceType.GetMaterialById(material_id);
+		faces[i].material = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>());
 		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+        faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
 		//if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
 		faces[i].enabled = true;
 	}
