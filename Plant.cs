@@ -62,18 +62,24 @@ public class Plant : Structure {
 	}
 
 	void Update() {
-		float t= GameMaster.gameSpeed * Time.deltaTime;
-		if (t == 0) return;
-		float theoreticalGrowth = lifepower / lifepowerToGrow;
-		if (growth < theoreticalGrowth) {
-			growth = Mathf.MoveTowards(growth, theoreticalGrowth,  growSpeed * t);
-		}
-		else {
-			lifepower -= decaySpeed * t;
-			if (lifepower == 0) Dry();
-		}
-		if (growth >= 1 & stage < maxStage) SetStage((byte)(stage+1));
-	}	
+        float t = GameMaster.gameSpeed * Time.deltaTime;
+        if (t == 0) return;
+        PlantUpdate(t);
+	}
+
+    protected void PlantUpdate(float t) {       
+        float theoreticalGrowth = lifepower / lifepowerToGrow;
+        if (growth < theoreticalGrowth)
+        {
+            growth = Mathf.MoveTowards(growth, theoreticalGrowth, growSpeed * t);
+        }
+        else
+        {
+            lifepower -= decaySpeed * t;
+            if (lifepower == 0) Dry();
+        }
+        if (growth >= 1 & stage < maxStage) SetStage((byte)(stage + 1));
+    }
 
 	#region lifepower operations
 	public virtual void AddLifepower(int life) {

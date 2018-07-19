@@ -3,52 +3,60 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class LODSpriteMaker : MonoBehaviour {
+    public static LODSpriteMaker current {get; private set;}
     [SerializeField]
     GameObject objToShot;
     Camera cam;
     [SerializeField]
-    Texture showing;
+    Texture2D lastResult;
 
-    private void Start()
+    private void Awake()
     {
-        cam = GetComponent<Camera>();
-        MakeSpriteLODs(objToShot, new Vector3(0, -0.222f, 0.48f));
+        current = this;  
+        cam = GetComponent<Camera>();        
     }
 
-    public GameObject MakeSpriteLODs(GameObject g, Vector3 correctionVector) {
-        Vector3 savedPosition = g.transform.position;
-        Quaternion savedRotation = g.transform.rotation;
+    public Texture2D MakeSpriteLODs(GameObject g, Vector3[] positions, Vector3[] angles) {
         int savedLayer = g.layer;
-        g.transform.position = transform.position + cam.transform.TransformDirection(correctionVector);
-        g.transform.rotation = Quaternion.identity;
         var layerNumber = 8;
         gameObject.layer = layerNumber;
         ChangeLayerRecursively(g.transform, layerNumber);   
         
         cam.enabled = true;
-        RenderTexture m_RenderTexture = new RenderTexture(128, 128, 8, RenderTextureFormat.ARGB32);
-        m_RenderTexture.Create();
-        cam.targetTexture = m_RenderTexture;
-        cam.Render();
+        int spriteSize = 64;       
+        RenderTexture m_RenderTexture = new RenderTexture(spriteSize, spriteSize, 8, RenderTextureFormat.ARGB32);
+        Texture2D[] spriteBlanks = new Texture2D[positions.Length];
+            
+        
+
+        ChangeLayerRecursively(g.transform, savedLayer);       
+        for (int i = 0; i < positions.Length; i++)
+            {
+                cam.transform.localPosition = positions[i];
+                cam.transform.localRotation = Quaternion.Euler(angles[i]);
+                m_RenderTexture.Create();
+                cam.targetTexture = m_RenderTexture;
+                cam.Render();
+                RenderTexture.active = m_RenderTexture;
+                spriteBlanks[i] = new Texture2D(spriteSize, spriteSize);
+                spriteBlanks[i].ReadPixels(new Rect(0,0, spriteSize, spriteSize), 0, 0);
+                spriteBlanks[i].Apply();
+        }
         cam.enabled = false;
-
-        ChangeLayerRecursively(g.transform, savedLayer);
-        g.transform.position = savedPosition;
-        g.transform.rotation = savedRotation;
-
-        showing = m_RenderTexture;
-        RenderTexture.active = m_RenderTexture;
-        Texture2D spriteBlank = new Texture2D(m_RenderTexture.width, m_RenderTexture.height);
-        spriteBlank.ReadPixels(new Rect(0, 0, spriteBlank.width, spriteBlank.height), 0, 0);
-        spriteBlank.Apply();
         RenderTexture.active = null;
-        GameObject spr = new GameObject("lod");
-        SpriteRenderer sr = spr.AddComponent<SpriteRenderer>();
-        sr.sprite = Sprite.Create(spriteBlank, new Rect(0,0, spriteBlank.width, spriteBlank.height), Vector2.one * 0.5f, 256);
 
-        return null;
+
+
+
+        //GameObject spr = new GameObject("lod");        
+        // SpriteRenderer sr = spr.AddComponent<SpriteRenderer>();
+        // sr.sprite = Sprite.Create(spriteBlank, new Rect(0,0, spriteBlank.width, spriteBlank.height), Vector2.one * 0.5f, 128);
+        Texture2D atlas = new Texture2D(2 * spriteSize, 2 * spriteSize);
+        lastResult = atlas;
+        atlas.PackTextures(spriteBlanks, 0, 2 * spriteSize, false);
+        return atlas;
     }
-
+    
     void ChangeLayerRecursively(Transform t, int layerNumber)
     {        
         for ( int i = 0; i < t.childCount; i++)

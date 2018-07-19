@@ -92,7 +92,7 @@ public class FollowingCamera : MonoBehaviour {
 					rotationSmoothCoefficient = 0;
 				}
 				#endregion
-				transform.RotateAround(transform.position, transform.TransformDirection(Vector3.left), rspeed * delta);
+				cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
 				rotationSmoothCoefficient += rotationSmoothAcceleration;
 				b = true;
 			}

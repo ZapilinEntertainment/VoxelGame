@@ -19,7 +19,7 @@ public sealed class GameMaster : MonoBehaviour {
 	bool moveCamToLookPoint = false;
 	const float CAM_STANDART_DISTANCE = 3;
 
-	List<GameObject> cameraUpdateBroadcast;
+	public List<GameObject> cameraUpdateBroadcast;
 	public List<GameObject> standartSpritesList, mastSpritesList;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
@@ -221,23 +221,29 @@ public sealed class GameMaster : MonoBehaviour {
 				prevCamPos = camTransform.position;
 				prevCamRot = camTransform.rotation;
 			}
-			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;
-			if (cameraTimer <= 0 && cameraHasMoved) { 
-				int c = cameraUpdateBroadcast.Count - 1;
+			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;            
+            if (cameraTimer <= 0 && cameraHasMoved) {
+                GameObject receiver = null;
+                int c = cameraUpdateBroadcast.Count - 1;
 				while (c >= 0) {
-					if (cameraUpdateBroadcast[c] == null) cameraUpdateBroadcast.RemoveAt(c);
-					else cameraUpdateBroadcast[c].SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
-					c--;
+                    receiver = cameraUpdateBroadcast[c];
+                    if (receiver == null) cameraUpdateBroadcast.RemoveAt(c);
+                    else
+                    {
+                        if (receiver.activeSelf) receiver.SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
+                        c--;
+                    }
 				}
 				if (standartSpritesList.Count > 0) {
 					int i = 0;
 					while (i < standartSpritesList.Count) {
-						if (standartSpritesList[i] == null) {
+                        receiver = standartSpritesList[i];
+						if (receiver == null) {
 							standartSpritesList.RemoveAt(i);
 							continue;
 						}
 						else {
-							standartSpritesList[i].transform.LookAt(camPos);
+							if (receiver.activeSelf) receiver.transform.LookAt(camPos);
 							i++;
 						}
 					}
@@ -245,17 +251,21 @@ public sealed class GameMaster : MonoBehaviour {
 				if (mastSpritesList.Count > 0) {
 					int i = 0;
 					while (i < mastSpritesList.Count) {
-						if (mastSpritesList[i] == null) {
+                        receiver = mastSpritesList[i];
+						if (receiver == null) {
 							mastSpritesList.RemoveAt(i);
 							continue;
 						}
 						else {
-							Transform obj = mastSpritesList[i].transform;
-							i++;
-							Vector3 dir = camPos - obj.position;
-							dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
-							obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
-						}
+                            if (receiver.activeSelf)
+                            {
+                                Transform obj = receiver.transform;
+                                Vector3 dir = camPos - obj.position;
+                                dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
+                                obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
+                            }
+                            i++;
+                        }
 					}
 				}
 				cameraHasMoved = false;
@@ -365,12 +375,14 @@ public sealed class GameMaster : MonoBehaviour {
 		}
 	}
 
-	public void AddToCameraUpdateBroadcast(GameObject g) {
-		if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
-		if (g != null) cameraUpdateBroadcast.Add(g);
-	}
+    public void AddToCameraUpdateBroadcast(GameObject g)
+    {
+        if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
+        if (g != null) cameraUpdateBroadcast.Add(g);
+    }
 
-	public static float CalculateWorkspeed(int workersCount, WorkType type) {
+
+    public static float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
 		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
 		switch (type) {
@@ -507,72 +519,6 @@ public sealed class GameMaster : MonoBehaviour {
 			return true;
 		}
 		else return false;
-	}
-
-	void OnGUI() {
-		if (!fontSize_set) {
-			mainGUISkin = Resources.Load<GUISkin>("MainSkin");
-			mainGUISkin.GetStyle("Label").fontSize = (int)(guiPiece/2f);
-			mainGUISkin.GetStyle("Button").fontSize = (int)(guiPiece/2f);
-
-			GUIStyle rightOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			rightOrientedLabel.alignment = TextAnchor.UpperRight;
-			rightOrientedLabel.normal.textColor = Color.white;
-			PoolMaster.GUIStyle_RightOrientedLabel = rightOrientedLabel;
-			GUIStyle rightBottomLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			rightBottomLabel.alignment = TextAnchor.LowerRight;
-			rightBottomLabel.normal.textColor = Color.white;
-			PoolMaster.GUIStyle_RightBottomLabel = rightBottomLabel;
-
-			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			centerOrientedLabel.alignment = TextAnchor.MiddleCenter;
-			centerOrientedLabel.normal.textColor = Color.white;
-			PoolMaster.GUIStyle_CenterOrientedLabel = centerOrientedLabel;
-			PoolMaster.GUIStyle_COLabel_red = new GUIStyle(centerOrientedLabel);
-			PoolMaster.GUIStyle_COLabel_red.normal.textColor = Color.red;
-
-			GUIStyleState withoutImageStyle = new GUIStyleState();
-			withoutImageStyle.background = null;
-			withoutImageStyle.textColor = Color.white;
-			GUIStyle borderlessButton = new GUIStyle(mainGUISkin.GetStyle("Button"));
-			borderlessButton.normal = withoutImageStyle;
-			borderlessButton.onHover = withoutImageStyle;
-			PoolMaster.GUIStyle_BorderlessButton= borderlessButton;
-			GUIStyle borderlessLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			borderlessLabel.normal = withoutImageStyle;
-			borderlessLabel.onHover = withoutImageStyle;
-			PoolMaster.GUIStyle_BorderlessLabel = borderlessLabel;
-			GUIStyle systemAlert = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			systemAlert.normal = withoutImageStyle;
-			systemAlert.normal.textColor = Color.red;
-			systemAlert.fontSize = (int)guiPiece;
-			systemAlert.alignment = TextAnchor.MiddleCenter;
-			PoolMaster.GUIStyle_SystemAlert = systemAlert;
-
-			PoolMaster.GUIStyle_Button_red = new GUIStyle(GUI.skin.button);
-			PoolMaster.GUIStyle_Button_red.normal.textColor = Color.red;
-			PoolMaster.GUIStyle_Button_red.active.textColor = Color.red;
-			PoolMaster.GUIStyle_Button_red.hover.textColor = Color.red;
-
-			fontSize_set = true;
-		}
-		GUI.skin = mainGUISkin;
-
-		int sh = Screen.height;
-		//if (GUI.Button(new Rect(0, sh - 3 *guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
-		//if (GUI.Button(new Rect(0, sh - 2 *guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
-		//if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
-		GUI.Label(new Rect(guiPiece, sh - guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
-
-		if (gameAnnouncements_string.Count > 0) {
-			Rect anr = new Rect(0, sh - 3 * guiPiece - gameAnnouncements_string.Count * guiPiece * 0.75f, 10 * guiPiece, 0.75f * guiPiece);
-			GUI.color = Color.black;
-			foreach (string announcement in gameAnnouncements_string) {
-				GUI.Label(anr, announcement);
-				anr.y += anr.height;
-			}
-			GUI.color = Color.white;
-		}
 	}
 
 	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
