@@ -498,8 +498,9 @@ public sealed class GameMaster : MonoBehaviour {
 			RecruitingCenter.hireCost = gms.recruiting_hireCost;
 			#endregion
 			Destroy (mainChunk.gameObject);
+
 			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
-			QuantumTransmitter.Reset();Hangar.Reset();
+			QuantumTransmitter.Reset();Hangar.Reset(); 
 			//UI.current.Reset();
 
 			Crew.LoadStaticData(gms.crewStaticSerializer);

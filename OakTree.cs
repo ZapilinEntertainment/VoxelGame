@@ -7,6 +7,8 @@ public class OakTree : Plant {
 	static Mesh trunk_stage4, trunk_stage5, trunk_stage6, crones_stage4, crones_stage5, crones_stage6;
 	static GameObject container;
 	static List<GameObject> treeBlanks;
+    static LODController modelsLodController;
+    static short oak4spritesIndex = -1, oak5spritesIndex = -1, oak6spritesIndex = -1;
 	//const int MAX_INACTIVE_BUFFERED = 25;
 	// myRenderers : 0 -sprite, 1 - crone, 2 - trunk
 
@@ -16,10 +18,11 @@ public class OakTree : Plant {
 	void Awake() {
 		if (container == null) {
 			stageSprites = Resources.LoadAll<Sprite>("Textures/Plants/oakTree");
-			container = new GameObject("oakTreesContainer");
+			container = new GameObject("oakTreesContainer");            
 
 			treeBlanks = new List<GameObject>();
-			GameObject trunkPref = LoadNewModel(4);
+            modelsLodController = LODController.GetCurrent();
+            GameObject trunkPref = LoadNewModel(4);
 			crones_stage4 = trunkPref.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh;
 			trunk_stage4 = trunkPref.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh;
 			trunkPref.SetActive(false);
@@ -34,8 +37,8 @@ public class OakTree : Plant {
 			trunk_stage6 = trunkPref.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh;
 			trunkPref.SetActive(false);
 
-			maxStage = MAX_STAGE;
-		}
+			maxStage = MAX_STAGE;            
+        }
 	}
 
 	override public void Reset() {
@@ -78,8 +81,8 @@ public class OakTree : Plant {
 		}
 	}
 
-	#region lifepower operations
-	public override void AddLifepowerAndCalculate(int life) {
+    #region lifepower operations
+    public override void AddLifepowerAndCalculate(int life) {
 		lifepower += life;
 		byte nstage = 0;
 		float lpg = FIRST_LIFEPOWER_TO_GROW;
@@ -243,23 +246,27 @@ public class OakTree : Plant {
 			}
 			else 	break;
 		}
-		if (model == null) {	model = LoadNewModel(stage); i =0;}
-		switch (stage) {
-		case 4:
-			model.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage4;
-			model.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage4;
-			break;
-		case 5:
-			model.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage5;
-			model.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage5;
-			break;
-		case 6:
-			model.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage6;
-			model.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage6;
-			break;
-		}
-		model.transform.GetChild(0).GetComponent<MeshRenderer>().enabled = true;
-		model.transform.GetChild(1).GetComponent<MeshRenderer>().enabled = true;
+        if (model == null) { model = LoadNewModel(stage); i = 0; }
+        short packIndex = -1;
+        switch (stage)
+        {
+            case 4:
+                model.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage4;
+                model.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage4;
+                packIndex = oak4spritesIndex;
+                break;
+            case 5:
+                model.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage5;
+                model.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage5;
+                packIndex = oak5spritesIndex;
+                break;
+            case 6:
+                model.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage6;
+                model.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage6;
+                packIndex = oak6spritesIndex;
+                break;
+        }
+        modelsLodController.ChangeModelSpritePack(model.transform.GetChild(2), packIndex);
 		model.transform.parent = container.transform;
 		treeBlanks.RemoveAt(i);
 		return model;
@@ -269,8 +276,67 @@ public class OakTree : Plant {
 		GameObject model = null;
 		model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
 		if (model == null) print ("Error : oak model not loaded");
-		treeBlanks.Add(model);
-		model.transform.parent = container.transform;
+        else
+        {
+            short modelSpritePack = 0;
+            switch (stage)
+            {
+                case 4:
+                    if (oak4spritesIndex == -1)
+                    {
+                        Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
+                        Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles);
+                        Sprite[] lodSprites = new Sprite[4];
+                        int size = spritesAtlas.width / 2;
+
+                        lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+                        oak4spritesIndex = LODController.AddSpritePack(lodSprites);
+                    }
+                    modelSpritePack = oak4spritesIndex;
+                    break;
+                case 5:
+                    if (oak5spritesIndex == -1)
+                    {
+                        Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
+                        Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles);
+                        Sprite[] lodSprites = new Sprite[4];
+                        int size = spritesAtlas.width / 2;
+
+                        lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+                        oak5spritesIndex = LODController.AddSpritePack(lodSprites);
+                    }
+                    modelSpritePack = oak5spritesIndex;
+                    break;
+                case 6:
+                    if (oak6spritesIndex == -1)
+                    {
+                        Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
+                        Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles);
+                        Sprite[] lodSprites = new Sprite[4];
+                        int size = spritesAtlas.width / 2;
+
+                        lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
+                        lodSprites[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+                        oak6spritesIndex = LODController.AddSpritePack(lodSprites);
+                    }
+                    modelSpritePack = oak6spritesIndex;
+                    break;
+                }
+            modelsLodController.AddObject(model.transform.GetChild(2), modelSpritePack);
+            treeBlanks.Add(model);
+            model.transform.parent = container.transform;
+        }               
 		return model;
 	}
 

@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class LODSpriteMaker : MonoBehaviour {
     public static LODSpriteMaker current {get; private set;}
-    [SerializeField]
-    GameObject objToShot;
     Camera cam;
     [SerializeField]
     Texture2D lastResult;
@@ -20,16 +18,14 @@ public class LODSpriteMaker : MonoBehaviour {
         int savedLayer = g.layer;
         var layerNumber = 8;
         gameObject.layer = layerNumber;
-        ChangeLayerRecursively(g.transform, layerNumber);   
+        ChangeLayerRecursively(g.transform, layerNumber);     
         
-        cam.enabled = true;
         int spriteSize = 64;       
         RenderTexture m_RenderTexture = new RenderTexture(spriteSize, spriteSize, 8, RenderTextureFormat.ARGB32);
         Texture2D[] spriteBlanks = new Texture2D[positions.Length];
-            
-        
-
-        ChangeLayerRecursively(g.transform, savedLayer);       
+        cam.transform.parent = g.transform;
+        cam.enabled = true;
+              
         for (int i = 0; i < positions.Length; i++)
             {
                 cam.transform.localPosition = positions[i];
@@ -43,6 +39,8 @@ public class LODSpriteMaker : MonoBehaviour {
                 spriteBlanks[i].Apply();
         }
         cam.enabled = false;
+        cam.transform.parent = null;
+        ChangeLayerRecursively(g.transform, savedLayer);
         RenderTexture.active = null;
 
 
