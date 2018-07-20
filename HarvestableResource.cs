@@ -11,15 +11,19 @@ public class HarvestableResourceSerializer {
 public class HarvestableResource : Structure {
 	public ResourceType mainResource {get;protected set;}
 	public float count1;
+    static Dictionary<ResourceType, short> materialBasedLods = new Dictionary<ResourceType, short>();
+    static LODController modelController;
 
 	override public void Prepare() {
 		PrepareStructure();
 		mainResource = ResourceType.Nothing; 
 		hp = maxHp;
 		count1 = 0;
+        if (modelController == null) modelController = LODController.GetCurrent();
 	}
 
 	public void SetResources(ResourceType resType, float f_count1) {
+        ResourceType prevResType = mainResource;
 		mainResource = resType;
 		count1 = f_count1;
 		if (myRenderers!= null & myRenderers.Count> 0 ) {
@@ -53,6 +57,30 @@ public class HarvestableResource : Structure {
 			if (myRenderers == null) myRenderers = new List<Renderer>();
 			myRenderers.Add( model.transform.GetChild(0).GetComponent<MeshRenderer>());
 			myRenderers[0].sharedMaterial = ResourceType.GetMaterialById(resType.ID, myRenderers[0].GetComponent<MeshFilter>());
+
+            short packIndex = -1;
+            if (!materialBasedLods.TryGetValue(resType, out packIndex))
+            {
+                Vector3[] positions = new Vector3[] { new Vector3(0, 0.084f, -0.063f)};
+                Vector3[] angles = new Vector3[] { new Vector3(45,0,0) };
+                Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.06f);
+                Sprite[] lodSprites = new Sprite[1];
+
+                lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, spritesAtlas.width, spritesAtlas.height), new Vector2(0.5f, 0.5f), 512);
+                packIndex = LODController.AddSpritePack(lodSprites);
+                materialBasedLods.Add(resType, packIndex);
+            }
+            if (prevResType == ResourceType.Nothing)
+            {                
+                modelController.AddObject(model.transform, ModelType.Boulder, packIndex);
+            }
+            else
+            {
+                if (prevResType != resType)
+                {
+                    LODController.GetCurrent().ChangeModelSpritePack(transform, ModelType.Boulder, packIndex);
+                }
+            }
 		}
 	}
 

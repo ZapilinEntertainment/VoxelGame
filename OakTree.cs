@@ -266,7 +266,7 @@ public class OakTree : Plant {
                 packIndex = oak6spritesIndex;
                 break;
         }
-        modelsLodController.ChangeModelSpritePack(model.transform.GetChild(2), packIndex);
+        modelsLodController.ChangeModelSpritePack(model.transform.GetChild(2), ModelType.Tree, packIndex);
 		model.transform.parent = container.transform;
 		treeBlanks.RemoveAt(i);
 		return model;
@@ -286,7 +286,7 @@ public class OakTree : Plant {
                     {
                         Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
                         Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles);
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles,0.25f);
                         Sprite[] lodSprites = new Sprite[4];
                         int size = spritesAtlas.width / 2;
 
@@ -303,7 +303,7 @@ public class OakTree : Plant {
                     {
                         Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
                         Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles);
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles,0.25f);
                         Sprite[] lodSprites = new Sprite[4];
                         int size = spritesAtlas.width / 2;
 
@@ -320,7 +320,7 @@ public class OakTree : Plant {
                     {
                         Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
                         Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles);
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.25f);
                         Sprite[] lodSprites = new Sprite[4];
                         int size = spritesAtlas.width / 2;
 
@@ -333,7 +333,7 @@ public class OakTree : Plant {
                     modelSpritePack = oak6spritesIndex;
                     break;
                 }
-            modelsLodController.AddObject(model.transform.GetChild(2), modelSpritePack);
+            modelsLodController.AddObject(model.transform.GetChild(2), ModelType.Tree, modelSpritePack);
             treeBlanks.Add(model);
             model.transform.parent = container.transform;
         }               

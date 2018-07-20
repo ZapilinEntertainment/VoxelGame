@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ModelType { Tree, Boulder}
+
 public class ModelWithLOD
 {
     public Transform transform;
     public bool spriteIsActive;
     public byte drawingSpriteIndex;
     public short lodPackIndex;
+    public ModelType type;
 
-    public ModelWithLOD(Transform i_transform, bool i_spriteIsActive, byte i_drawingSpriteIndex, short i_lodPackIndex)
+    public ModelWithLOD(Transform i_transform, ModelType i_type, bool i_spriteIsActive, byte i_drawingSpriteIndex, short i_lodPackIndex)
     {
         transform = i_transform;
+        type = i_type;
         spriteIsActive = i_spriteIsActive;
         drawingSpriteIndex = i_drawingSpriteIndex;
         lodPackIndex = i_lodPackIndex;
@@ -45,12 +49,25 @@ public class LODController : MonoBehaviour {
     public void CameraUpdate(Transform cam)
     {  
         camPos = cam.transform.position;
-
         if (models.Count > 0)
         {
-            for (int i = 0; i < models.Count; i++)
+            int i = 0;
+            while (i < models.Count)
             {
-                if (models[i].transform.parent.gameObject.activeSelf) TreeCheck(i);               
+                if (models[i].transform == null)
+                {
+                    models.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    switch (models[i].type)
+                    {
+                        case ModelType.Tree: TreeCheck(i); break;
+                        case ModelType.Boulder: BoulderCheck(i);break;
+                    }
+                    i++;
+                }
             }
         }
     }
@@ -109,14 +126,45 @@ public class LODController : MonoBehaviour {
             }
         }
     }
+    void BoulderCheck(int index)
+    {
+        ModelWithLOD m = models[index];
+        Vector3 pos = m.transform.position;
+        if ((camPos - pos).magnitude > lodDistance)
+        {
+            if ( !m.spriteIsActive )
+            {
+                m.transform.GetChild(1).gameObject.SetActive(true);
+                m.transform.GetChild(0).gameObject.SetActive(false);
+                m.spriteIsActive = true;
+            }
+            m.transform.GetChild(1).LookAt(camPos);
+        }
+        else
+        {
+            if (m.spriteIsActive)
+            {
+                m.transform.GetChild(1).gameObject.SetActive(false);
+                m.transform.GetChild(0).gameObject.SetActive(true);
+                m.spriteIsActive = false;
+            }
+        }
+    }
 
-    public void AddObject(Transform t, short lodPackIndex)
+    public void AddObject(Transform t, ModelType type, short lodPackIndex)
     {
         if (t == null) return;
-        ModelWithLOD newTree = new ModelWithLOD(t, false, 0, lodPackIndex);
+        ModelWithLOD newModel = new ModelWithLOD(t, type, false, 0, lodPackIndex);
         //GameMaster.realMaster.standartSpritesList.Add(t.gameObject);
-        models.Add(newTree);
-        TreeCheck(models.Count - 1);        
+        models.Add(newModel);
+        switch (type)
+        {
+            case ModelType.Tree: TreeCheck(models.Count - 1); break;
+            case ModelType.Boulder:
+                newModel.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = lodPacks[lodPackIndex][0];
+                BoulderCheck(models.Count - 1);
+                break;
+        }               
     }
 
     public static short AddSpritePack(Sprite[] sprites)
@@ -125,7 +173,7 @@ public class LODController : MonoBehaviour {
         return (short)(lodPacks.Count - 1);
     }
     
-    public void ChangeModelSpritePack(Transform t, short newPackIndex)
+    public void ChangeModelSpritePack(Transform t, ModelType ftype, short newPackIndex)
     {
         if (models.Count == 0) return;
         else
@@ -141,12 +189,16 @@ public class LODController : MonoBehaviour {
                 }
                 else
                 {
-                    if (mt == t)
+                    if (models[i].type == ftype)
                     {
-                        if (models[i].lodPackIndex != newPackIndex)
+                        if (mt == t)
                         {
-                            models[i].lodPackIndex = newPackIndex;
-                            TreeCheck(i);
+                            if (models[i].lodPackIndex != newPackIndex)
+                            {
+                                models[i].lodPackIndex = newPackIndex;
+                                TreeCheck(i);
+                                return;
+                            }
                         }
                     }
                     i++;

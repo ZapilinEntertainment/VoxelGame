@@ -11,10 +11,11 @@ public class LODSpriteMaker : MonoBehaviour {
     private void Awake()
     {
         current = this;  
-        cam = GetComponent<Camera>();        
+        cam = GetComponent<Camera>();
     }
 
-    public Texture2D MakeSpriteLODs(GameObject g, Vector3[] positions, Vector3[] angles) {
+    public Texture2D MakeSpriteLODs(GameObject g, Vector3[] positions, Vector3[] angles, float cameraSize) {
+        cam.orthographicSize = cameraSize;
         int savedLayer = g.layer;
         var layerNumber = 8;
         gameObject.layer = layerNumber;
@@ -37,6 +38,7 @@ public class LODSpriteMaker : MonoBehaviour {
                 spriteBlanks[i] = new Texture2D(spriteSize, spriteSize);
                 spriteBlanks[i].ReadPixels(new Rect(0,0, spriteSize, spriteSize), 0, 0);
                 spriteBlanks[i].Apply();
+            if (positions.Length == 1) lastResult = spriteBlanks[i];
         }
         cam.enabled = false;
         cam.transform.parent = null;
@@ -49,10 +51,19 @@ public class LODSpriteMaker : MonoBehaviour {
         //GameObject spr = new GameObject("lod");        
         // SpriteRenderer sr = spr.AddComponent<SpriteRenderer>();
         // sr.sprite = Sprite.Create(spriteBlank, new Rect(0,0, spriteBlank.width, spriteBlank.height), Vector2.one * 0.5f, 128);
-        Texture2D atlas = new Texture2D(2 * spriteSize, 2 * spriteSize);
-        lastResult = atlas;
-        atlas.PackTextures(spriteBlanks, 0, 2 * spriteSize, false);
-        return atlas;
+        if (positions.Length == 4)
+        {
+            Texture2D atlas = new Texture2D(2 * spriteSize, 2 * spriteSize);
+            //lastResult = atlas;
+            atlas.PackTextures(spriteBlanks, 0, 2 * spriteSize, false);
+            return atlas;
+        }
+        else
+        {
+            //lastResult = spriteBlanks[0];
+            return spriteBlanks[0];
+        }
+       
     }
     
     void ChangeLayerRecursively(Transform t, int layerNumber)
