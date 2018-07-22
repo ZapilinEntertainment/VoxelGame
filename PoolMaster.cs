@@ -27,9 +27,22 @@ public class PoolMaster : MonoBehaviour {
 	const int SHIPS_BUFFER_SIZE = 5;
 	float  shipsClearTimer = 0,clearTime = 30;
 
+    [SerializeField]
+    Vector3 sunDirection, sunNextPosition, prevSunDirection;
+    [SerializeField]
+    float sunSpeed = 0.03f, lightMapUpdateTimer = 0;
+    const float LIGHTMAP_UPDATE_TIME = 1, LIGHTMAP_VISUAL_CHANGE_THRESHOLD = 1f;
+    const int lightmapResolution = 128;
+    Color sunColor = Color.white;
+    [SerializeField]
+    Texture lastLightmap;
+    Material testMaterial;
+
 	public void Load() {
 		if (current != null) return;
 		current = this;
+
+        testMaterial = Resources.Load<Material>("Materials/TestMaterial");
 
 		lightPassengerShip_pref = Resources.Load<GameObject>("Prefs/lightPassengerShip");
 		lightCargoShip_pref = Resources.Load<GameObject>("Prefs/lightCargoShip");
@@ -82,7 +95,9 @@ public class PoolMaster : MonoBehaviour {
 
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-		Structure.LoadPrefs();
+        sunDirection = Random.onUnitSphere; if (sunDirection.y < 0) sunDirection = new Vector3(sunDirection.x, sunDirection.y * (-1), sunDirection.z);
+        sunNextPosition = Random.onUnitSphere; if (sunNextPosition.y < 0) sunNextPosition = new Vector3(sunNextPosition.x, sunNextPosition.y * (-1), sunNextPosition.z);
+        Structure.LoadPrefs();
 	}
 
 	void Update() {
@@ -109,10 +124,69 @@ public class PoolMaster : MonoBehaviour {
 				}
 				shipsClearTimer = clearTime;
 			}
-		}
+		}       
 	}
 
-	public Ship GetShip(byte level, ShipType type) {
+    private void LateUpdate()
+    {
+            lightMapUpdateTimer -= Time.deltaTime;
+            if (lightMapUpdateTimer <= 0 )
+            {
+                lightMapUpdateTimer = LIGHTMAP_UPDATE_TIME;
+                Texture2D lightmap = new Texture2D(lightmapResolution, lightmapResolution,TextureFormat.RGBA32, false);
+                byte[] pixels = new byte[lightmapResolution * lightmapResolution * 4];
+                int pixelNumber = 0;
+            float center = lightmapResolution / 2f;
+
+                for (int i = 0; i < lightmapResolution; i++)
+                {
+                    for (int j = 0; j < lightmapResolution; j++)
+                    {
+                        float realX = j + 0.5f;
+                        float realY = i + 0.5f;
+                        int realNumber = 4 * pixelNumber;
+                        float radiusSqr = (center - realX) * (center - realX) + (center - realY) * (center - realY);
+                        float radius = Mathf.Sqrt(radiusSqr);
+                        if (radius > center + 1)
+                        {
+                            pixels[realNumber] = (byte)(0);
+                            pixels[realNumber + 1] = (byte)(0);
+                            pixels[realNumber + 2] = (byte)(0);
+                            pixels[realNumber + 3] = (byte)(0);
+                        }
+                        else
+                        {
+                            Vector2 ndir = new Vector2(realX - center, realY - center);
+                            ndir.Normalize();
+                            float sf = Vector2.Angle(ndir, Vector2.down) * Mathf.Deg2Rad; // small f angle
+                            float bf = (center - Mathf.Sqrt(radiusSqr)) / (center);
+                            float sinbf = Mathf.Sin(bf);
+                            Vector3 virtualNormal = Vector3.up;
+                            virtualNormal.x = Mathf.Sin((realX - center) / center * Mathf.PI / 2f);
+                            virtualNormal.y = Mathf.Cos(radius/center * Mathf.PI/2f );
+                            virtualNormal.z = Mathf.Sin((realY - center) / center * Mathf.PI / 2f);
+                            float dot = Vector3.Dot(virtualNormal, sunDirection);
+                            
+                            pixels[realNumber] = (byte)((virtualNormal.x+ 1)/2f * 255);
+                            pixels[realNumber + 1] = (byte)((virtualNormal.y + 1) / 2f * 255);
+                        pixels[realNumber + 2] = (byte)((virtualNormal.z + 1) / 2f * 255); ;
+                            pixels[realNumber + 3] = (byte)(255);
+                        //Mathf.Acos(dot) / Mathf.PI * 255
+                    }
+                    pixelNumber++;
+                    }
+                }
+                lightmap.LoadRawTextureData(pixels);
+                lightmap.Apply();
+                lastLightmap = lightmap as Texture;
+                lastLightmap.filterMode = FilterMode.Point;
+                Shader.SetGlobalTexture("_GlobalLightmap", lastLightmap);
+                testMaterial.SetTexture("_MainTex", lastLightmap);
+                prevSunDirection = sunDirection;
+            }
+    }
+
+    public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;
 		List<GameObject> searchList = null;
 		GameObject pref = null;

@@ -61,9 +61,6 @@ public sealed class GameMaster : MonoBehaviour {
 	public Vector3 windVector {get; private set;}
 	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
 
-	public static float sunlightIntensity {get; private set;}
-	public Light sun;
-
 	bool fontSize_set = false;
 	public static float guiPiece {get;private set;}
 	public static GUISkin mainGUISkin {get;private set;}
@@ -78,9 +75,10 @@ public sealed class GameMaster : MonoBehaviour {
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
 	public bool generateChunk = true;
-	//---------
+    [SerializeField] byte chunkSize = 16;// cannot be bigger than 99, cause I say Limited
+                                         
 
-	public GameMaster () {
+    public GameMaster () {
 		if (realMaster != null) realMaster = null;
 		realMaster = this;
 	}
@@ -115,13 +113,13 @@ public sealed class GameMaster : MonoBehaviour {
 
 		string saveName = "default.sav";
 		if (generateChunk ) {
-			byte standartSize = 16; // cannot be bigger than 99, cause I say Limited
-			Chunk.SetChunkSize( standartSize );
-			constructor.ConstructChunk( standartSize );
+			Chunk.SetChunkSize( chunkSize );
+			constructor.ConstructChunk( chunkSize );
 		}
 		else { // loading data
 			
 		}
+        camBasis.transform.position = Vector3.one * chunkSize / 2f;
 	}
 
 	void Start() {
@@ -273,9 +271,6 @@ public sealed class GameMaster : MonoBehaviour {
 			}
 			camPos = camTransform.position;
 		}
-
-		sunlightIntensity = 0.7f +Mathf.PerlinNoise(0.1f, Time.time * gameSpeed / 200f) * 0.3f;
-		sun.intensity = sunlightIntensity;
 
 		if (gameSpeed == 0) return;
 		t += Time.deltaTime * gameSpeed;
@@ -441,7 +436,6 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
 		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
 		gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
-		gms.sunlightIntensity = sunlightIntensity;
 		gms.gameAnnouncements_string = gameAnnouncements_string;
 		gms.announcementTimer = announcementTimer;
 		gms.recruiting_hireCost = RecruitingCenter.hireCost;
@@ -492,7 +486,6 @@ public sealed class GameMaster : MonoBehaviour {
 			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
 			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
 			maxWindPower = gms.maxWindPower ;windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
-			sunlightIntensity = gms.sunlightIntensity;
 			gameAnnouncements_string = gms.gameAnnouncements_string ;
 			announcementTimer = gms.announcementTimer;
 			RecruitingCenter.hireCost = gms.recruiting_hireCost;
