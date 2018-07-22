@@ -26,7 +26,7 @@ public class LODController : MonoBehaviour {
     List<ModelWithLOD> models = new List<ModelWithLOD>();
     static List<Sprite[]> lodPacks = new List<Sprite[]>(); // not destroying between loads
     static LODController current; // singleton
-    float lodDistance = 5;
+    float lodDistance = 10;
     Vector3 camPos;
 
     private void Awake()

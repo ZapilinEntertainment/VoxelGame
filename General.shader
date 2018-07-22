@@ -29,8 +29,6 @@
 	float4 _MainTex_ST;
 	uniform sampler2D _GlobalLightmap;
 
-	float minLight = 0.3f;
-
 	v2f vert(appdata_base v)
 	{
 		v2f o;
@@ -47,8 +45,8 @@
 
 	fixed4 frag(v2f i) : SV_Target
 	{
-
-		return i.col;
+		fixed4 texcol = tex2D(_MainTex, i.uv) ; 
+		return texcol * (0.3f + i.col.w * 0.7f);
 	}
 		ENDCG
 	}

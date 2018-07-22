@@ -37,12 +37,16 @@ public class PoolMaster : MonoBehaviour {
     [SerializeField]
     Texture lastLightmap;
     Material testMaterial;
+    Transform sun;
 
 	public void Load() {
 		if (current != null) return;
 		current = this;
 
         testMaterial = Resources.Load<Material>("Materials/TestMaterial");
+        sun = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
+        sun.position = Vector3.one * 8 + Vector3.up * 10;
+        sun.gameObject.name = "HE SUN.THE SUN.THE SUN. T";
 
 		lightPassengerShip_pref = Resources.Load<GameObject>("Prefs/lightPassengerShip");
 		lightCargoShip_pref = Resources.Load<GameObject>("Prefs/lightCargoShip");
@@ -129,15 +133,16 @@ public class PoolMaster : MonoBehaviour {
 
     private void LateUpdate()
     {
+            sunDirection =  (Vector3.one * 8 - sun.position).normalized;
             lightMapUpdateTimer -= Time.deltaTime;
-            if (lightMapUpdateTimer <= 0 )
+            if (lightMapUpdateTimer <= 0 && sunDirection != prevSunDirection)
             {
-                lightMapUpdateTimer = LIGHTMAP_UPDATE_TIME;
+            prevSunDirection = sunDirection;
+            lightMapUpdateTimer = LIGHTMAP_UPDATE_TIME;
                 Texture2D lightmap = new Texture2D(lightmapResolution, lightmapResolution,TextureFormat.RGBA32, false);
                 byte[] pixels = new byte[lightmapResolution * lightmapResolution * 4];
                 int pixelNumber = 0;
             float center = lightmapResolution / 2f;
-
                 for (int i = 0; i < lightmapResolution; i++)
                 {
                     for (int j = 0; j < lightmapResolution; j++)
@@ -165,12 +170,16 @@ public class PoolMaster : MonoBehaviour {
                             virtualNormal.x = Mathf.Sin((realX - center) / center * Mathf.PI / 2f);
                             virtualNormal.y = Mathf.Cos(radius/center * Mathf.PI/2f );
                             virtualNormal.z = Mathf.Sin((realY - center) / center * Mathf.PI / 2f);
+                        virtualNormal.Normalize();
                             float dot = Vector3.Dot(virtualNormal, sunDirection);
+                        dot -= 1;
+                        dot /= -2f;
+                        dot = Mathf.Clamp(dot, 0.1f, 1);
                             
-                            pixels[realNumber] = (byte)((virtualNormal.x+ 1)/2f * 255);
-                            pixels[realNumber + 1] = (byte)((virtualNormal.y + 1) / 2f * 255);
-                        pixels[realNumber + 2] = (byte)((virtualNormal.z + 1) / 2f * 255); ;
-                            pixels[realNumber + 3] = (byte)(255);
+                            pixels[realNumber] = (byte)(sunColor.r * 255);
+                            pixels[realNumber + 1] = (byte)(sunColor.g * 255);
+                            pixels[realNumber + 2] = (byte)(sunColor.b * 255); ;
+                            pixels[realNumber + 3] = (byte)(dot * 255);
                         //Mathf.Acos(dot) / Mathf.PI * 255
                     }
                     pixelNumber++;
@@ -181,8 +190,7 @@ public class PoolMaster : MonoBehaviour {
                 lastLightmap = lightmap as Texture;
                 lastLightmap.filterMode = FilterMode.Point;
                 Shader.SetGlobalTexture("_GlobalLightmap", lastLightmap);
-                testMaterial.SetTexture("_MainTex", lastLightmap);
-                prevSunDirection = sunDirection;
+                testMaterial.SetTexture("_MainTex", lastLightmap);                
             }
     }
 
