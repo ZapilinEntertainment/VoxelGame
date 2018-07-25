@@ -530,7 +530,7 @@ public class SurfaceBlock : Block {
 
 	public UIObserver ShowOnGUI() {
 		if (surfaceObserver == null) {
-			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.rightPanel.transform).GetComponent<UISurfacePanelController>();
 			surfaceObserver.transform.localPosition = Vector3.zero;
 		}
 		else surfaceObserver.gameObject.SetActive(true);

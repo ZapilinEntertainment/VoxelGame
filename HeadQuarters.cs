@@ -47,22 +47,21 @@ public class HeadQuarters : House {
 
 	void Update() {
 		if ( showOnGUI && colony != null) {
-			switch (level) {
-			case 1:  
-				nextStageConditionMet = (colony.docks.Count != 0); 
-				break;
-			case 2:  
-				nextStageConditionMet = (colony.rollingShops.Count != 0);
-				break;		
-			case 3:
-				nextStageConditionMet = (colony.graphoniumEnrichers.Count != 0);
-				break;
-			case 4:
-				nextStageConditionMet = (colony.chemicalFactories.Count != 0);
-				break;
-			}
+            nextStageConditionMet = CheckUpgradeCondition();
 		}
 	}
+
+    bool CheckUpgradeCondition()
+    {
+        switch (level)
+        {
+            default: return false;
+            case 1: return (colony.docks.Count != 0);
+            case 2: return (colony.rollingShops.Count != 0);
+            case 3: return (colony.graphoniumEnrichers.Count != 0);
+            case 4: return (colony.chemicalFactories.Count != 0);
+        }
+    }
 
 	#region save-load system
 	override public StructureSerializer Save() {
@@ -208,5 +207,15 @@ public class HeadQuarters : House {
             }
             return cost;
         }
+    }
+
+    public override UIObserver ShowOnGUI()
+    {
+        if (buildingObserver == null) buildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
+        else buildingObserver.gameObject.SetActive(true);
+        nextStageConditionMet = CheckUpgradeCondition();
+        buildingObserver.SetObservingBuilding(this);
+        showOnGUI = true;
+        return buildingObserver;
     }
 }

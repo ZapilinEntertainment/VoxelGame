@@ -1,9 +1,8 @@
 ﻿public enum Language{English, Russian};
-public enum GameMessage{GameSaved,GameLoaded, LoadingFailed}
-public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration}
-public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec }
+public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered}
+public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable }
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
-public enum GameAnnouncements{NotEnoughResources};
+public enum GameAnnouncements{NotEnoughResources, GameSaved, GameLoaded, SavingFailed, LoadingFailed };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow}
 
@@ -157,33 +156,6 @@ public static class Localization {
 		}
 	}
 
-	public static string GetGameMessage( GameMessage m) {
-		string s = "";
-		switch (m) {
-		case GameMessage.GameSaved: 
-			switch ( currentLanguage ) {
-			case Language.English : s = "Game successfully saved"; break;
-			case Language.Russian: s = "Игра сохранена"; break;
-			}
-			break;
-		case GameMessage.GameLoaded:
-			switch ( currentLanguage ) {
-			case Language.English : s = "Game loaded"; break;
-			case Language.Russian: s = "Игра загружена"; break;
-			}
-			break;
-		case GameMessage.LoadingFailed:
-			switch ( currentLanguage ) {
-			case Language.English : s = "Loading failed"; break;
-			case Language.Russian: s = "Не удалось загрузить"; break;
-			}
-			break;
-		default:
-			s = "...?";
-			break;
-		}
-		return s;
-	}
 
     public static string GetStructureName(int id) {
         switch (id) {
@@ -335,6 +307,10 @@ public static class Localization {
 		switch (announce) {
 		default: return "<announcement not found>";
 		case GameAnnouncements.NotEnoughResources : return "Not enough resources!";
+            case GameAnnouncements.GameSaved: return "Game saved";
+            case GameAnnouncements.GameLoaded: return "Load successful";
+            case GameAnnouncements.SavingFailed: return "Saving failed";
+            case GameAnnouncements.LoadingFailed: return "Loading failed";
 		}
 	}
 
@@ -390,7 +366,10 @@ public static class Localization {
             case LocalizedWord.Demand: return "Demand";
             case LocalizedWord.Price: return "Price";
             case LocalizedWord.Trading: return "Trading";
-            case LocalizedWord.Immigration: return "Immigration";
+            case LocalizedWord.Immigration: return "Immigration";            
+            case LocalizedWord.Normal: return "Normal"; // birthrate
+            case LocalizedWord.Improved: return "Improved"; // birthrate
+            case LocalizedWord.Lowered:return "Lowered";//birthrate
             
 		default: return "...";
 		}
@@ -407,6 +386,10 @@ public static class Localization {
             case LocalizedPhrase.ImmigrationEnabled: return "Immigration enabled";
             case LocalizedPhrase.ImmigrationDisabled:  return "Immigration disabled";
             case LocalizedPhrase.TicketsLeft: return "Tickets left";
+            case LocalizedPhrase.BirthrateMode: return "Birthrate mode";
+            case LocalizedPhrase.ShuttlesAvailable: return "Shuttles available";
+            case LocalizedPhrase.CrewsAvailable: return "Crews available";
+            case LocalizedPhrase.TransmittersAvailable: return "Transmitters available";
         }
     }
 

@@ -51,7 +51,18 @@ public class ExpeditionCorpus : WorkBuilding {
 		if ( !questSet ) delayedQuests.Add(q);
 	}
 
-	void OLDOnGUI() {
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        showOnGUI = true;
+        UIController.current.OpenQuestWindow();
+        UIController.current.ActivateExpeditionCorpusPanel();
+        return workbuildingObserver;
+    }
+
+    void OLDOnGUI() {
 		// base on buiding.cs
 		if ( !showOnGUI ) return;
 		Rect rr = new Rect(0,0,0,0);

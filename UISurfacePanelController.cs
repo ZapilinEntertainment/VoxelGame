@@ -54,76 +54,106 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
 
-	protected override void StatusUpdate() {
-		if ( surface == null) {
-			SelfShutOff();
-			return;
-		}
-		switch ( mode) {
-		case SurfacePanelMode.SelectAction:
-			hq = GameMaster.colonyController.hq;
-			bool check = false;
-			check = surface.cellsStatus != 1;
-			if (status_gatherEnabled != check) {
-				status_gatherEnabled = check;
-				if (status_gatherEnabled) {
-					check = surface.GetComponent<GatherSite>();
-					if (check != status_gatherOrdered) {
-						status_gatherOrdered = check;
-						gatherButton.transform.GetChild(0).GetComponent<Text>().text = (status_gatherOrdered ? Localization.GetPhrase(LocalizedPhrase.StopGather) : Localization.GetWord(LocalizedWord.Gather));
+    protected override void StatusUpdate()
+    {
+        if (surface == null)
+        {
+            SelfShutOff();
+            return;
+        }
+        switch (mode)
+        {
+            case SurfacePanelMode.SelectAction:
+                hq = GameMaster.colonyController.hq;
+
+                bool check = false;
+                if (surface.GetComponent<GatherSite>() != null)
+                {
+                    if (status_gatherOrdered == false)
+                    {
+                        status_gatherOrdered = true;
+                        status_gatherEnabled = true;
+                        gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopGather);
+                        gatherButton.interactable = true;
+                    }
+                }
+                else
+                {
+                    if (status_gatherOrdered == true)
+                    {
+                        status_gatherOrdered = false;
+                        gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Gather);
+                        if (surface.cellsStatus != 0)
+                        {
+                            status_gatherEnabled = true;
+                            gatherButton.interactable = true;
                         }
-				}
-				else {
-					gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord( LocalizedWord.Gather );
-					gatherButton.interactable = status_gatherEnabled;
-				}
-			}
-			else {
-				check = surface.GetComponent<GatherSite>();
-				if (check != status_gatherOrdered) {
-					status_gatherOrdered = check;
-					gatherButton.transform.GetChild(0).GetComponent<Text>().text = (status_gatherOrdered ? Localization.GetPhrase(  LocalizedPhrase.StopGather) : Localization.GetWord( LocalizedWord.Gather) );
-				}
-			}
-			check = (surface.GetComponent<CleanSite>() != null && surface.GetComponent<CleanSite>().diggingMission);
-			if (status_digOrdered != check) {
-				status_digOrdered = check;
-				digButton.transform.GetChild(0).GetComponent<Text>().text = (status_digOrdered == true ? Localization.GetPhrase(  LocalizedPhrase.StopDig) : Localization.GetWord(LocalizedWord.Dig));
-			}
-			if (savedHqLevel != hq.level) {
-				savedHqLevel = hq.level;
-				blockCreateButton.enabled = ( savedHqLevel> 3);
-				columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
-			}
-			changeMaterialButton.enabled = (GameMaster.colonyController.gears_coefficient >=2);
-			break;
+                        else
+                        {
+                            status_gatherEnabled = false;
+                            gatherButton.interactable = false;
+                        }
+                    }
+                    else
+                    {
+                        check = (surface.cellsStatus != 0);
+                        if (check != status_gatherEnabled)
+                        {
+                            status_gatherEnabled = check;
+                            gatherButton.interactable = status_gatherEnabled;
+                        }
+                    }
+                }
 
-		case SurfacePanelMode.Build:
-			if (chosenBuilding != null) {
-				switch (buildingCreateMode) {
-				case BuildingCreateInfoMode.Acceptable:
-					float[] onStorage = GameMaster.colonyController.storage.standartResources;
-					for (int i = 0; i < resourcesCostImage.Length; i++) {
-						if (onStorage[i] != showingResourcesCount[i].y) {
-							int rid = (int)showingResourcesCount[i].x;
-							resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>().color = onStorage[rid] < showingResourcesCount[i].y ? Color.red : Color.white;
-							showingResourcesCount[i].y = onStorage[rid];
-						}
-					}
-					break;
-				case BuildingCreateInfoMode.Unacceptable_Material:
-					if ((chosenBuilding as Building).requiredBasementMaterialId == surface.material_id) {
-						SelectBuildingForConstruction (chosenBuilding, selectedBuildingButton);
-					}
-					break;
-				}
-				//rotating window
-			}
-			break;
-		}
-	}
+                CleanSite cs = surface.GetComponent<CleanSite>();
+                check = (cs != null && cs.diggingMission);
+                if (check != status_digOrdered)
+                {
+                    status_digOrdered = check;
+                    digButton.transform.GetChild(0).GetComponent<Text>().text = status_digOrdered ? Localization.GetPhrase(LocalizedPhrase.StopDig) : Localization.GetWord(LocalizedWord.Dig);
+                }
 
-	public void BuildButton() {
+
+                if (savedHqLevel != hq.level)
+                {
+                    savedHqLevel = hq.level;
+                    blockCreateButton.enabled = (savedHqLevel > 3);
+                    columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
+                }
+                changeMaterialButton.enabled = (GameMaster.colonyController.gears_coefficient >= 2);
+                break;
+
+            case SurfacePanelMode.Build:
+                if (chosenBuilding != null)
+                {
+                    switch (buildingCreateMode)
+                    {
+                        case BuildingCreateInfoMode.Acceptable:
+                            float[] onStorage = GameMaster.colonyController.storage.standartResources;
+                            for (int i = 0; i < resourcesCostImage.Length; i++)
+                            {
+                                if (onStorage[i] != showingResourcesCount[i].y)
+                                {
+                                    int rid = (int)showingResourcesCount[i].x;
+                                    resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>().color = onStorage[rid] < showingResourcesCount[i].y ? Color.red : Color.white;
+                                    showingResourcesCount[i].y = onStorage[rid];
+                                }
+                            }
+                            break;
+                        case BuildingCreateInfoMode.Unacceptable_Material:
+                            if ((chosenBuilding as Building).requiredBasementMaterialId == surface.material_id)
+                            {
+                                SelectBuildingForConstruction(chosenBuilding, selectedBuildingButton);
+                            }
+                            break;
+                    }
+                    //rotating window
+                }
+                break;
+        }
+    }
+
+    public void BuildButton() {
 		ChangeMode( SurfacePanelMode.Build );
 	}
 	public void BlockBuildingButton() {}
@@ -216,11 +246,42 @@ public sealed class UISurfacePanelController : UIObserver {
 		gatherButton.gameObject.SetActive( working  );
 		digButton.gameObject.SetActive( working  );
 		if (working) {
-			status_gatherEnabled = (surface.cellsStatus != 1);
-			gatherButton.interactable = status_gatherEnabled;
-			status_digOrdered = (surface.GetComponent<CleanSite>() != null && surface.GetComponent<CleanSite>().diggingMission);
-			digButton.transform.GetChild(0).GetComponent<Text>().text = (status_digOrdered ? Localization.GetPhrase(  LocalizedPhrase.StopDig) : Localization.GetWord( LocalizedWord.Dig));
-			savedHqLevel = hq.level;
+            if (surface.GetComponent<GatherSite>() != null)
+            {
+                status_gatherOrdered = true;
+                status_gatherEnabled = true;
+                gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopGather);
+                gatherButton.interactable = true;
+            }
+            else
+            {
+                status_gatherOrdered = false;
+                gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Gather);
+                if (surface.cellsStatus != 0)
+                {
+                    status_gatherEnabled = true;
+                    gatherButton.interactable = true;
+                }
+                else
+                {
+                    status_gatherEnabled = false;
+                    gatherButton.interactable = false;
+                }
+            }
+
+            CleanSite cs = surface.GetComponent<CleanSite>();
+            if (cs != null && cs.diggingMission)
+            {
+
+                status_digOrdered = true;
+                digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopDig);
+            }
+            else
+            {
+                status_digOrdered = false;
+                digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
+            }
+            savedHqLevel = hq.level;
 			blockCreateButton.enabled = ( savedHqLevel> 3);
 			columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
 			changeMaterialButton.enabled = (GameMaster.colonyController.gears_coefficient >=2);

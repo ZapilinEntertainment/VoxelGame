@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class UIWorkbuildingObserver : UIObserver {
 	public Button minusAllButton, minusButton, plusButton, plusAllButton; // fiti
 	public Slider slider; // fiti
-	public Text workersCountField, workSpeedField, actionLabel; // fiti
+    public Text workersCountField, workSpeedField, actionLabel; // fiti
 	int showingWorkersCount, showingWorkersMaxCount;
 	float showingWorkspeed;
 

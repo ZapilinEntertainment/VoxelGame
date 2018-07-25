@@ -84,46 +84,50 @@ public sealed class GameMaster : MonoBehaviour {
 	}
 
 	void Awake() {
-		gameSpeed = 1;
-		cameraUpdateBroadcast = new List<GameObject>();
-		standartSpritesList = new List<GameObject>();
-
-		mastSpritesList = new List<GameObject>();
-		GameObject[] msprites =  GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
-		if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
-		msprites = null;
-
-		everydayUpdateList = new List<Component>();
-		everyYearUpdateList = new List<Component>();
-		everyMonthUpdateList = new List<Component>();
-		windUpdateList = new List<Component>();
-		gameAnnouncements_string = new List<string>();
-
-		lifeGrowCoefficient = 1;
-		//Localization.ChangeLanguage(Language.English);
-		geologyModule = gameObject.AddComponent<GeologyModule>();
-		difficulty = Difficulty.Normal;
-		guiPiece = Screen.height / 24f;
-		warProximity = 0.01f;
-		layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
-		colonyController = gameObject.AddComponent<ColonyController>();
-		colonyController.CreateStorage();
-		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
-		pm.Load();
-
-		string saveName = "default.sav";
-		if (generateChunk ) {
-			Chunk.SetChunkSize( chunkSize );
-			constructor.ConstructChunk( chunkSize );
-		}
-		else { // loading data
-			
-		}
-        camBasis.transform.position = Vector3.one * chunkSize / 2f;
+		
 	}
 
 	void Start() {
-		if (camTransform == null) camTransform = Camera.main.transform;
+        gameSpeed = 1;
+        cameraUpdateBroadcast = new List<GameObject>();
+        standartSpritesList = new List<GameObject>();
+
+        mastSpritesList = new List<GameObject>();
+        GameObject[] msprites = GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
+        if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
+        msprites = null;
+
+        everydayUpdateList = new List<Component>();
+        everyYearUpdateList = new List<Component>();
+        everyMonthUpdateList = new List<Component>();
+        windUpdateList = new List<Component>();
+        gameAnnouncements_string = new List<string>();
+
+        lifeGrowCoefficient = 1;
+        //Localization.ChangeLanguage(Language.English);
+        geologyModule = gameObject.AddComponent<GeologyModule>();
+        difficulty = Difficulty.Normal;
+        guiPiece = Screen.height / 24f;
+        warProximity = 0.01f;
+        layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
+        colonyController = gameObject.AddComponent<ColonyController>();
+        colonyController.CreateStorage();
+        PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+        pm.Load();
+
+        string saveName = "default.sav";
+        if (generateChunk)
+        {
+            Chunk.SetChunkSize(chunkSize);
+            constructor.ConstructChunk(chunkSize);
+        }
+        else
+        { // loading data
+
+        }
+        camBasis.transform.position = Vector3.one * chunkSize / 2f;
+
+        if (camTransform == null) camTransform = Camera.main.transform;
 		prevCamPos = camTransform.position * (-1);
 
 		switch (difficulty) {
@@ -222,17 +226,22 @@ public sealed class GameMaster : MonoBehaviour {
 			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;            
             if (cameraTimer <= 0 && cameraHasMoved) {
                 GameObject receiver = null;
-                int c = cameraUpdateBroadcast.Count - 1;
-				while (c >= 0) {
+                int c = 0;
+                while (c < cameraUpdateBroadcast.Count)
+                {
                     receiver = cameraUpdateBroadcast[c];
-                    if (receiver == null) cameraUpdateBroadcast.RemoveAt(c);
+                    if (receiver == null)
+                    {
+                        cameraUpdateBroadcast.RemoveAt(c);
+                        continue;
+                    }
                     else
                     {
                         if (receiver.activeSelf) receiver.SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
-                        c--;
+                        c++;
                     }
-				}
-				if (standartSpritesList.Count > 0) {
+                }
+                if (standartSpritesList.Count > 0) {
 					int i = 0;
 					while (i < standartSpritesList.Count) {
                         receiver = standartSpritesList[i];

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-enum GUIMode{ViewMode, QuestsWindow}
 public enum ChosenObjectType{None,Surface, Cube, Structure, Worksite}
 
 sealed public class UIController : MonoBehaviour {
@@ -13,14 +12,13 @@ sealed public class UIController : MonoBehaviour {
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
-    [SerializeField] GameObject colonyPanel, tradePanel;
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText;
     float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
-    float colonyTimer;
-    const float COLONY_UPDATE_TIME = 2;
+    float updateTimer;
+    const float DATA_UPDATE_TIME = 2;
 
 
-	GUIMode mode;
 	byte submode = 0;
 	bool transformingRectInProgress = false, showMenuWindow = false, showColonyInfo = false;
 	float rectTransformingSpeed = 0.8f, transformingProgress;
@@ -29,6 +27,7 @@ sealed public class UIController : MonoBehaviour {
 
 	float coinsCount, energyCount, energyMax;
 	int citizenCount, freeWorkersCount, livespaceCount;
+    int hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount;
 
 	public SurfaceBlock chosenSurface{get;private set;}
 	CubeBlock chosenCube; byte faceIndex = 10;
@@ -38,29 +37,31 @@ sealed public class UIController : MonoBehaviour {
 	ChosenObjectType chosenObjectType;
 	Transform selectionFrame; Material selectionFrameMaterial;
 
+
 	public static UIController current;
 
 	void Awake() {
 		current = this;
+        LocalizeButtonTitles();
 		selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
 		selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
 		selectionFrame.gameObject.SetActive(false);
 	}
 
-	void Update() {
-		if (transformingRectInProgress) {
-			transformingProgress = Mathf.MoveTowards(transformingProgress, 1, rectTransformingSpeed * Time.deltaTime);
-			transformingRect.anchorMin = Vector2.Lerp (transformingRect.anchorMin, resultingAnchorMin, transformingProgress);
-			transformingRect.anchorMax = Vector2.Lerp (transformingRect.anchorMax, resultingAnchorMax, transformingProgress);
-			if (transformingProgress == 1) {
-				transformingProgress = 0;
-				transformingRectInProgress = false;
-			}
-		}
-        if (showColonyInfo) {
-            colonyTimer -= Time.deltaTime * GameMaster.gameSpeed;
-            if (colonyTimer <= 0) {
-                colonyTimer = COLONY_UPDATE_TIME;
+    void Update() {
+        if (transformingRectInProgress) {
+            transformingProgress = Mathf.MoveTowards(transformingProgress, 1, rectTransformingSpeed * Time.deltaTime);
+            transformingRect.anchorMin = Vector2.Lerp(transformingRect.anchorMin, resultingAnchorMin, transformingProgress);
+            transformingRect.anchorMax = Vector2.Lerp(transformingRect.anchorMax, resultingAnchorMax, transformingProgress);
+            if (transformingProgress == 1) {
+                transformingProgress = 0;
+                transformingRectInProgress = false;
+            }
+        }
+        updateTimer -= Time.deltaTime;
+        if (updateTimer <= 0) {
+            updateTimer = DATA_UPDATE_TIME;
+            if (showColonyInfo) {
                 ColonyController colony = GameMaster.colonyController;
                 if (colony != null)
                 {
@@ -91,8 +92,43 @@ sealed public class UIController : MonoBehaviour {
                     }
                 }
             }
+            if (hospitalPanel.activeSelf)
+            {
+                int nhm = Hospital.GetBirthrateModeIndex();
+                if (nhm != hospitalPanel_savedMode)
+                {
+                    switch (nhm)
+                    {
+                        case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
+                        case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
+                        case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+                    }
+                    hospitalPanel_savedMode = nhm;
+                }
         }
-	}
+            if (expeditionCorpusPanel.activeSelf)
+            {
+                int x = Shuttle.shuttlesList.Count;
+                if (exCorpus_savedShuttlesCount != x)
+                {
+                    exCorpus_savedShuttlesCount = x;
+                    expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
+                }
+                x = Crew.crewsList.Count;
+                if (x != exCorpus_savedCrewsCount)
+                {
+                    exCorpus_savedCrewsCount = x;
+                    expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
+                }
+                x = QuantumTransmitter.transmittersList.Count;
+                if (x != exCorpus_savedTransmittersCount)
+                {
+                    exCorpus_savedTransmittersCount = x;
+                    expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
+                }
+            }
+        }
+    }
 
 	#region up panel
     public void ColonyButton()
@@ -113,7 +149,6 @@ sealed public class UIController : MonoBehaviour {
             birthrateText.text = showingBirthrate > 0 ? '+' + showingBirthrate.ToString() : showingBirthrate.ToString();
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
             healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
-            colonyTimer = COLONY_UPDATE_TIME;
         }
         else
         {
@@ -124,7 +159,7 @@ sealed public class UIController : MonoBehaviour {
 	public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
 		if (showMenuWindow) {
-			if (rightPanel.activeSelf) rightPanel.SetActive(false);
+			if (rightPanel.activeSelf) rightPanel.SetActive(false);            
             if (showColonyInfo) ColonyButton();
 			menuPanel.SetActive(true);
 		}
@@ -135,8 +170,14 @@ sealed public class UIController : MonoBehaviour {
 			menuPanel.SetActive(false);
 		}
 	}
-	public void SaveButton() {GameMaster.realMaster.SaveGame("newsave");}
-	public void LoadButton(){GameMaster.realMaster.LoadGame("newsave");}
+	public void SaveButton() {
+         bool success = GameMaster.realMaster.SaveGame("newsave");
+        GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameSaved : GameAnnouncements.SavingFailed));
+    }
+	public void LoadButton(){
+        bool success = GameMaster.realMaster.LoadGame("newsave");
+        GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameLoaded : GameAnnouncements.LoadingFailed));
+    }
 	#endregion
 
 	public void Raycasting() {
@@ -197,8 +238,11 @@ sealed public class UIController : MonoBehaviour {
 		if (workingObserver != null) workingObserver.ShutOff();
 
 		if (newChosenType == ChosenObjectType.None) {
-			rightPanel.SetActive(false);
-			menuButton.SetActive(true);
+            if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
+            else {
+                if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
+            }
+            rightPanel.SetActive(false);
 			selectionFrame.gameObject.SetActive(false);
 			chosenObjectType = ChosenObjectType.None;
 		}
@@ -206,7 +250,6 @@ sealed public class UIController : MonoBehaviour {
 			chosenObjectType = newChosenType;
 			rightPanel.transform.SetAsLastSibling();
 			rightPanel.SetActive(true);
-			menuButton.SetActive(false);
 
 			selectionFrame.gameObject.SetActive(true);
 			if (showMenuWindow) {
@@ -250,13 +293,55 @@ sealed public class UIController : MonoBehaviour {
 			selectionFrame.rotation = chosenStructure.transform.rotation;
 			selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
 			sframeColor = new Vector3(1,0,1);
-			workingObserver = chosenStructure.ShowOnGUI();
+                if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
+                else
+                {
+                    if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
+                }
+                workingObserver = chosenStructure.ShowOnGUI();
 			FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
 			break;
 		}
 
 		selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
 	}
+
+    #region auxiliary panels
+    public void ActivateExpeditionCorpusPanel()
+    {
+        expeditionCorpusPanel.SetActive(true);
+        exCorpus_savedShuttlesCount = Shuttle.shuttlesList.Count;
+        expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
+        exCorpus_savedCrewsCount = Crew.crewsList.Count;
+        expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
+        exCorpus_savedTransmittersCount = QuantumTransmitter.transmittersList.Count;
+        expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
+    }
+    public void DeactivateExpeditionCorpusPanel()
+    {
+        expeditionCorpusPanel.SetActive(false);
+    }
+
+    public void ActivateHospitalPanel()
+    {
+        int hm = Hospital.GetBirthrateModeIndex();
+        switch (hm)
+        {
+            case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
+            case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
+            case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+        }
+        hospitalPanel_savedMode = hm;
+        hospitalPanel.SetActive(true);
+    }
+    public void DeactivateHospitalPanel()
+    {
+        hospitalPanel.SetActive(false);
+    }
+    public void Hospital_SetBirthrateMode(int i)
+    {
+        if (i != Hospital.GetBirthrateModeIndex())   Hospital.SetBirthrateMode(i);
+    }
 
     public void ActivateTradePanel()
     {
@@ -266,9 +351,18 @@ sealed public class UIController : MonoBehaviour {
     {
         tradePanel.SetActive(false);
     }
+    #endregion
 
-	#region right panel
-	public void SelectedObjectLost() {
+    public void LocalizeButtonTitles()
+    {
+        hospitalPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase (LocalizedPhrase.BirthrateMode ) + " :";
+        hospitalPanel.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
+        hospitalPanel.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
+        hospitalPanel.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
+    }
+
+    #region right panel
+    public void SelectedObjectLost() {
 		if (chosenObjectType == ChosenObjectType.None) return;
 		ChangeChosenObject(ChosenObjectType.None);
 	}
@@ -276,9 +370,12 @@ sealed public class UIController : MonoBehaviour {
 
 	#region quest window
 	public void OpenQuestWindow() {
-		mode = GUIMode.QuestsWindow;
 		questPanel.gameObject.SetActive(true);
 	}
+    public void CloseQuestWindow()
+    {
+        questPanel.gameObject.SetActive(false);
+    }
 
 	public void QuestButton_OpenQuest(int index) {
 		transformingRect = questButtons[index];

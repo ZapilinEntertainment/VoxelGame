@@ -96,12 +96,12 @@ public class Building : Structure {
 		case FARM_5_ID:
 		case LUMBERMILL_5_ID:
 		case FOOD_FACTORY_5_ID:
-		case SMELTERY_5_ID:
-		case SWITCH_TOWER_ID:
+		case SMELTERY_5_ID:		
 		case QUANTUM_ENERGY_TRANSMITTER_ID:
 			level = 5;
-			break;		
-		}
+			break;
+            case SWITCH_TOWER_ID: level = 6; break;
+        }
 	}
 		
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {

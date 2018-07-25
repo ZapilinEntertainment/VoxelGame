@@ -4,16 +4,18 @@ using UnityEngine;
 
 public class SwitchTower : Building {
 
-	public  void SetGUIVisible (bool x) {
-		if (x == true ) {
-			if (showOnGUI == false) {
-				if (GameMaster.layerCutHeight != basement.pos.y) {
-					GameMaster.layerCutHeight = basement.pos.y ;
-					basement.myChunk.LayersCut();
-					//UI.current.showLayerCutButtons = true;
-				}
-			}
-		}
-		showOnGUI = x;
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (buildingObserver == null) buildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
+        else buildingObserver.gameObject.SetActive(true);
+        buildingObserver.SetObservingBuilding(this);
+        showOnGUI = true;
+        if (GameMaster.layerCutHeight != basement.pos.y)
+        {
+            GameMaster.layerCutHeight = basement.pos.y;
+            basement.myChunk.LayersCut();
+            //UI.current.showLayerCutButtons = true;
+        }
+        return buildingObserver;
+    }
 }

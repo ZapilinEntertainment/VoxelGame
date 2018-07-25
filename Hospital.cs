@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum BirthrateMode {Normal, Improved, Lowered}
-public class Hospital : House {
+public class Hospital : WorkBuilding {
 	[SerializeField]
 	int _coverage = 100;
 	public int coverage {get;private set;}
@@ -17,23 +17,55 @@ public class Hospital : House {
 
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
-		PrepareHouse(b,pos);
-		coverage = _coverage;
+        SetBuildingData(b, pos);
+        coverage = _coverage;
 		GameMaster.colonyController.AddHospital(this);
 	}
 
-	override public void SetActivationStatus(bool x) {
+    void Update()
+    {
+        return;
+    }
+
+    override public int AddWorkers(int x)
+    {
+        if (workersCount == maxWorkers) return 0;
+        else
+        {
+            if (x > maxWorkers - workersCount)
+            {
+                x -= (maxWorkers - workersCount);
+                workersCount = maxWorkers;
+            }
+            else
+            {
+                workersCount += x;
+            }
+            coverage = (int)(_coverage * ((float)workersCount / (float)maxWorkers));
+            GameMaster.colonyController.RecalculateHospitals();
+            return x;
+        }
+    }
+    override public void FreeWorkers(int x)
+    {
+        if (x > workersCount) x = workersCount;
+        workersCount -= x;
+        GameMaster.colonyController.AddWorkers(x);
+        coverage = (int)(_coverage * ((float)workersCount / (float)maxWorkers));
+        GameMaster.colonyController.RecalculateHospitals();
+    }
+
+    override public void SetActivationStatus(bool x) {
 		if (isActive == x) return;
 		isActive = x;
-		GameMaster.colonyController.RecalculateHousing();
 		GameMaster.colonyController.RecalculateHospitals();
 	}
 
 	public static void SetBirthrateMode(int x) {
 		switch (x) {
-		case 0: birthrateMode = BirthrateMode.Normal;break;
-		case 1: birthrateMode = BirthrateMode.Improved;break;
-		case 2: birthrateMode = BirthrateMode.Lowered;break;
+		case 0: birthrateMode = BirthrateMode.Normal; hospital_birthrate_coefficient = 1; break;
+		case 1: birthrateMode = BirthrateMode.Improved; hospital_birthrate_coefficient = improvedCoefficient; break;
+		case 2: birthrateMode = BirthrateMode.Lowered; hospital_birthrate_coefficient = loweredCoefficient; break;
 		}
 	}
 	public static int GetBirthrateModeIndex() {
@@ -45,25 +77,13 @@ public class Hospital : House {
 		}
 	}
 
-	void OLDOnGUI() {
-		//from building.cs
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(0,0,0,0);
-		byte p = (byte)birthrateMode;
-		GUI.DrawTexture(new Rect(rr.x, rr.y + p * rr.height, rr.width, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-		if (GUI.Button(rr, Localization.lowered_birthrate + " (" + string.Format("{0:0.##}", loweredCoefficient)  + "%)")) {
-			birthrateMode = BirthrateMode.Lowered; 
-			hospital_birthrate_coefficient = loweredCoefficient;
-		}
-		rr.y += rr.height;
-		if (GUI.Button(rr, Localization.normal_birthrate + " (100%)")) {
-			birthrateMode = BirthrateMode.Normal; 
-			hospital_birthrate_coefficient = 1;
-		}
-			rr.y += rr.height;
-		if (GUI.Button(rr, Localization.improved_birthrate + " (" + string.Format("{0:0.##}", improvedCoefficient)  + "%)")) {
-			birthrateMode = BirthrateMode.Improved; 
-			hospital_birthrate_coefficient = improvedCoefficient;
-		}
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        UIController.current.ActivateHospitalPanel();
+        showOnGUI = true;
+        return workbuildingObserver;
+    }
 }

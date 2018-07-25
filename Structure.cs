@@ -37,6 +37,7 @@ public class Structure : MonoBehaviour {
 	// prepare - установка inner position
 	// - localization - name & description
 	// - texture rect
+    // список построек
 
 
 	public const int  PLANT_ID = 1, DRYED_PLANT_ID = 2, LANDED_ZEPPELIN_ID = 5,
@@ -173,6 +174,7 @@ public class Structure : MonoBehaviour {
 		allConstructableBuildingsList.Add( GetNewStructure(SMELTERY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(FOOD_FACTORY_5_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		allConstructableBuildingsList.Add( GetNewStructure(QUANTUM_ENERGY_TRANSMITTER_ID) as Building ); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
+
 		allConstructableBuildingsList.Add(GetNewStructure(SWITCH_TOWER_ID) as Building); allConstructableBuildingsList[allConstructableBuildingsList.Count - 1].gameObject.SetActive(false);
 		foreach (Building b in allConstructableBuildingsList) {
 			b.transform.parent = GameMaster.realMaster.transform;

@@ -58,7 +58,6 @@ public class Grassland : MonoBehaviour {
 	}
 
 	void Update() {
-		if (lifepower == 0) return;
 		if (growTimer > 0) growTimer -=Time.deltaTime * GameMaster.gameSpeed;
 		if (lifeTimer > 0) {
 			lifeTimer -= Time.deltaTime * GameMaster.gameSpeed;
@@ -228,10 +227,11 @@ public class Grassland : MonoBehaviour {
 	}
 
 	public void Load( GrasslandSerializer gs) {
-		SetLifepower(gs.lifepower);
+        prevStage = gs.prevStage;
+        SetLifepower(gs.lifepower);
 		progress = gs.progress;
 		lifeTimer = gs.lifeTimer;
 		growTimer = gs.growTimer;
-		prevStage = gs.prevStage;
+		
 	}
 }
