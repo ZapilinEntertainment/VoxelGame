@@ -34,19 +34,11 @@ public class PoolMaster : MonoBehaviour {
     const float LIGHTMAP_UPDATE_TIME = 1, LIGHTMAP_VISUAL_CHANGE_THRESHOLD = 1f;
     const int lightmapResolution = 128;
     Color sunColor = Color.white;
-    [SerializeField]
-    Texture lastLightmap;
-    Material testMaterial;
     Transform sun;
 
 	public void Load() {
 		if (current != null) return;
 		current = this;
-
-        testMaterial = Resources.Load<Material>("Materials/TestMaterial");
-        sun = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
-        sun.position = Vector3.one * 8 + Vector3.up * 10;
-        sun.gameObject.name = "HE SUN.THE SUN.THE SUN. T";
 
 		lightPassengerShip_pref = Resources.Load<GameObject>("Prefs/lightPassengerShip");
 		lightCargoShip_pref = Resources.Load<GameObject>("Prefs/lightCargoShip");
@@ -84,9 +76,10 @@ public class PoolMaster : MonoBehaviour {
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
-        quad_pref = Resources.Load<GameObject>("Prefs/quadPref");
-		quad_pref.GetComponent<MeshRenderer>().enabled =false;
-		default_material = Resources.Load<Material>("Materials/Default");
+        quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
+        quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
+        quad_pref.GetComponent<MeshRenderer>().enabled = false;
+        default_material = Resources.Load<Material>("Materials/Default");
 
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
@@ -131,68 +124,7 @@ public class PoolMaster : MonoBehaviour {
 		}       
 	}
 
-    private void LateUpdate()
-    {
-            sunDirection =  (Vector3.one * 8 - sun.position).normalized;
-            lightMapUpdateTimer -= Time.deltaTime;
-            if (lightMapUpdateTimer <= 0 && sunDirection != prevSunDirection)
-            {
-            prevSunDirection = sunDirection;
-            lightMapUpdateTimer = LIGHTMAP_UPDATE_TIME;
-                Texture2D lightmap = new Texture2D(lightmapResolution, lightmapResolution,TextureFormat.RGBA32, false);
-                byte[] pixels = new byte[lightmapResolution * lightmapResolution * 4];
-                int pixelNumber = 0;
-            float center = lightmapResolution / 2f;
-                for (int i = 0; i < lightmapResolution; i++)
-                {
-                    for (int j = 0; j < lightmapResolution; j++)
-                    {
-                        float realX = j + 0.5f;
-                        float realY = i + 0.5f;
-                        int realNumber = 4 * pixelNumber;
-                        float radiusSqr = (center - realX) * (center - realX) + (center - realY) * (center - realY);
-                        float radius = Mathf.Sqrt(radiusSqr);
-                        if (radius > center + 1)
-                        {
-                            pixels[realNumber] = (byte)(0);
-                            pixels[realNumber + 1] = (byte)(0);
-                            pixels[realNumber + 2] = (byte)(0);
-                            pixels[realNumber + 3] = (byte)(0);
-                        }
-                        else
-                        {
-                            Vector2 ndir = new Vector2(realX - center, realY - center);
-                            ndir.Normalize();
-                            float sf = Vector2.Angle(ndir, Vector2.down) * Mathf.Deg2Rad; // small f angle
-                            float bf = (center - Mathf.Sqrt(radiusSqr)) / (center);
-                            float sinbf = Mathf.Sin(bf);
-                            Vector3 virtualNormal = Vector3.up;
-                            virtualNormal.x = Mathf.Sin((realX - center) / center * Mathf.PI / 2f);
-                            virtualNormal.y = Mathf.Cos(radius/center * Mathf.PI/2f );
-                            virtualNormal.z = Mathf.Sin((realY - center) / center * Mathf.PI / 2f);
-                        virtualNormal.Normalize();
-                            float dot = Vector3.Dot(virtualNormal, sunDirection);
-                        dot -= 1;
-                        dot /= -2f;
-                        dot = Mathf.Clamp(dot, 0.1f, 1);
-                            
-                            pixels[realNumber] = (byte)(sunColor.r * 255);
-                            pixels[realNumber + 1] = (byte)(sunColor.g * 255);
-                            pixels[realNumber + 2] = (byte)(sunColor.b * 255); ;
-                            pixels[realNumber + 3] = (byte)(dot * 255);
-                        //Mathf.Acos(dot) / Mathf.PI * 255
-                    }
-                    pixelNumber++;
-                    }
-                }
-                lightmap.LoadRawTextureData(pixels);
-                lightmap.Apply();
-                lastLightmap = lightmap as Texture;
-                lastLightmap.filterMode = FilterMode.Point;
-                Shader.SetGlobalTexture("_GlobalLightmap", lastLightmap);
-                testMaterial.SetTexture("_MainTex", lastLightmap);                
-            }
-    }
+ 
 
     public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;
@@ -311,14 +243,15 @@ public class PoolMaster : MonoBehaviour {
                 break;
         }
         // крутим развертку, если это квад, иначе просто перетаскиваем 
-        bool correctUV = (quad.uv.Length != 4);
-        if (!correctUV)
+        bool isQuad = (quad.uv.Length == 4);
+        Vector2[] uvEditing = quad.uv;
+        if (isQuad)
         {
-            float seed = Random.value;
-
+            borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+            float seed = Random.value;            
                 if (seed > 0.5f)
                 {
-                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0] , borders[2], borders[3], borders[1] };
                     else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
                 }
                 else
@@ -329,19 +262,17 @@ public class PoolMaster : MonoBehaviour {
 
 
             // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
-            Vector2[] uvs = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-            quad.uv = uvs;
+            uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
         }
         else
-        {
-            Vector2[] uvEditing = quad.uv;
+        {            
             for (int i = 0; i < uvEditing.Length; i++)
             {
                 uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
                 uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
-            }
-            quad.uv = uvEditing;
+            }            
         }
+        quad.uv = uvEditing;
         return green_material;
     }
     public static Material GetMetalMaterial(MetalMaterial mtype, MeshFilter mf)
@@ -373,13 +304,36 @@ public class PoolMaster : MonoBehaviour {
                     borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
                     break;
             }
-                Vector2[] uvEditing = quad.uv;
+            bool isQuad = (quad.uv.Length == 4);
+            Vector2[] uvEditing = quad.uv;
+            if (isQuad)
+            {
+                float seed = Random.value;
+                borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+                if (seed > 0.5f)
+                {
+                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                }
+                else
+                {
+                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                }
+
+
+                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
+                uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
+            else
+            {
                 for (int i = 0; i < uvEditing.Length; i++)
                 {
                     uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
                     uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
                 }
-                quad.uv = uvEditing;
+            }
+            quad.uv = uvEditing;
         }
         return metal_material;
     }
@@ -390,6 +344,8 @@ public class PoolMaster : MonoBehaviour {
         {
             float piece = 0.25f;
             Vector2[] borders;
+            // 1 2
+            // 0 3
             switch (mtype)
             {
                 default:
@@ -409,7 +365,7 @@ public class PoolMaster : MonoBehaviour {
                     borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
                     break;
                 case BasicMaterial.Dirt:
-                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
                     break;
                 case BasicMaterial.Farmland:
                     borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
@@ -421,13 +377,33 @@ public class PoolMaster : MonoBehaviour {
                     borders = new Vector2[] { new Vector2(2 * piece, 3 *piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
                     break;
             }
-                Vector2[] uvEditing = quad.uv;
+            bool isQuad = (quad.uv.Length == 4);
+            Vector2[] uvEditing = quad.uv;
+            if (isQuad)
+            {
+                float seed = Random.value;
+                borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+                if (seed > 0.5f)
+                {
+                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                }
+                else
+                {
+                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                }               
+                uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
+            else
+            {
                 for (int i = 0; i < uvEditing.Length; i++)
                 {
                     uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
                     uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
                 }
-                quad.uv = uvEditing;
+            }
+            quad.uv = uvEditing;
         }
         return basic_material;
     }
