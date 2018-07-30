@@ -11,8 +11,8 @@ public class BlockBuildingSite : Worksite {
 	void Update () {
 		if (GameMaster.gameSpeed == 0) return;
 		if (workObject ==null) {
-			Destroy(this);
-		}
+            StopWork();
+        }
 		if (workersCount  > 0) {
 			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
@@ -68,8 +68,8 @@ public class BlockBuildingSite : Worksite {
             actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
 			workObject.ClearSurface();
 			workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
-			Destroy(this);
-		}
+            StopWork();
+        }
 		else {
 			int pos = (int)(placesToWork * Random.value);
 			int n = 0;

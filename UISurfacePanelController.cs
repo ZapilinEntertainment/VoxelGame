@@ -169,8 +169,9 @@ public sealed class UISurfacePanelController : UIObserver {
 			if (gs == null) {
 				gs = surface.gameObject.AddComponent<GatherSite>();
 				gs.Set(surface);
+                UIController.current.ShowWorksite(gs);
 			}
-			else Destroy(gs);
+			else gs.StopWork();
 			StatusUpdate(); timer = STATUS_UPDATE_TIME;
 		}
 	}
@@ -184,9 +185,10 @@ public sealed class UISurfacePanelController : UIObserver {
 			if (cs == null) {
 				cs = surface.gameObject.AddComponent<CleanSite>();
 				cs.Set(surface, true);
-			}
+                UIController.current.ShowWorksite(cs);
+            }
 			else {
-				if (cs.diggingMission) Destroy(cs);
+				if (cs.diggingMission) cs.StopWork();
 			}
 			StatusUpdate(); timer = STATUS_UPDATE_TIME;
 		}
@@ -254,19 +256,11 @@ public sealed class UISurfacePanelController : UIObserver {
                 gatherButton.interactable = true;
             }
             else
-            {
+            {                
                 status_gatherOrdered = false;
                 gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Gather);
-                if (surface.cellsStatus != 0)
-                {
-                    status_gatherEnabled = true;
-                    gatherButton.interactable = true;
-                }
-                else
-                {
-                    status_gatherEnabled = false;
-                    gatherButton.interactable = false;
-                }
+                status_gatherEnabled = (surface.cellsStatus != 0);
+                gatherButton.interactable = status_gatherEnabled ;
             }
 
             CleanSite cs = surface.GetComponent<CleanSite>();
@@ -294,9 +288,10 @@ public sealed class UISurfacePanelController : UIObserver {
 			UIController.current.closePanelButton.gameObject.SetActive(false);
 		}
 	}
-	#endregion
+    #endregion
 
-	public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
+    #region building construction 
+    public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
 		chosenBuilding = building;
 		availableBuildingsButtons[buttonIndex].image.overrideSprite =overridingSprite; 
 		if (selectedBuildingButton >= 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
@@ -427,7 +422,6 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
 
-
 	public void SetConstructingLevel (int l) {
 		constructingLevel = (byte)l;
 		
@@ -455,5 +449,5 @@ public sealed class UISurfacePanelController : UIObserver {
 			}
 		}
 	}
-		
+    #endregion
 }

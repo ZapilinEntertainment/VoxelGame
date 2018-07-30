@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Dock : WorkBuilding {
+public sealed class Dock : WorkBuilding {
 	bool correctLocation = false;
-	bool gui_tradeGoodTabActive = false, gui_sellResourcesTabActive = false, gui_addTransactionMenu = false;
 	public static bool?[] isForSale{get; private set;}
 	public static int[] minValueForTrading{get; private set;}
 	ColonyController colony;
@@ -244,15 +243,6 @@ public class Dock : WorkBuilding {
         if (isForSale[index] == val) return;
         else
         {
-            if (isForSale[index] == null)
-            {
-                if (dockObserver != null)
-                {
-                    isForSale[index] = val;
-                    dockObserver.AddLot(index);
-                    return;
-                }
-            }
             isForSale[index] = val;
         }
     }
@@ -293,7 +283,7 @@ public class Dock : WorkBuilding {
 		GameMaster.DeserializeByteArray<DockSerializer>(ss.specificData, ref ds);
 		LoadDockData(ds);
 	}
-	protected void LoadDockData(DockSerializer ds) {
+	void LoadDockData(DockSerializer ds) {
 		LoadWorkBuildingData(ds.workBuildingSerializer);
 		correctLocation = ds.correctLocation;
 		maintainingShip =ds.maintainingShip;
@@ -307,12 +297,12 @@ public class Dock : WorkBuilding {
 		shipArrivingTimer = ds.shipArrivingTimer;
 	} 
 
-	protected DockSerializer GetDockSerializer() {
+	DockSerializer GetDockSerializer() {
 		DockSerializer ds = new DockSerializer();
 		ds.workBuildingSerializer = GetWorkBuildingSerializer();
 		ds.correctLocation = correctLocation;
 		ds.maintainingShip = maintainingShip;
-		if (maintainingShip) ds.loadingShip =  loadingShip.GetShipSerializer();
+		if (maintainingShip && loadingShip != null) ds.loadingShip =  loadingShip.GetShipSerializer();
 		ds.loadingTimer = loadingTimer;
 		ds.shipArrivingTimer = shipArrivingTimer;
 		return ds;
@@ -321,20 +311,24 @@ public class Dock : WorkBuilding {
 
     public override UIObserver ShowOnGUI()
     {
-        if (dockObserver == null) dockObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/dockObserver"), UIController.current.rightPanel.transform).GetComponent<UIDockObserver>();
+        if (dockObserver == null) dockObserver = UIDockObserver.InitializeDockObserverScript();
         else dockObserver.gameObject.SetActive(true);
         dockObserver.SetObservingDock(this);
         showOnGUI = true;
         return dockObserver;
     }
 
-    void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-		GameMaster.colonyController.RemoveDock(this);
-		if (blockedHeight != -1 & blockedSide != -1) {
-			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
-		}
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareWorkbuildingForDestruction();
+        GameMaster.colonyController.RemoveDock(this);
+        if (blockedHeight != -1 & blockedSide != -1)
+        {
+            GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
+        }
+        Destroy(gameObject);
+    }
 }
 
 [System.Serializable]

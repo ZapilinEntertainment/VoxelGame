@@ -63,7 +63,7 @@ public class HarvestableResource : Structure {
             {
                 Vector3[] positions = new Vector3[] { new Vector3(0, 0.084f, -0.063f)};
                 Vector3[] angles = new Vector3[] { new Vector3(45,0,0) };
-                Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.06f);
+                Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.06f, Color.grey);
                 Sprite[] lodSprites = new Sprite[1];
 
                 lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, spritesAtlas.width, spritesAtlas.height), new Vector2(0.5f, 0.5f), 512);
@@ -85,8 +85,8 @@ public class HarvestableResource : Structure {
 	}
 
 	public void Harvest() {
-		count1 -= GameMaster.colonyController.storage.AddResource(mainResource,count1);
-		if (count1 == 0) Annihilate(false);
+		count1 = GameMaster.colonyController.storage.AddResource(mainResource,count1);
+		if (count1 <= 0) Annihilate(false);
 	}
 
 	#region save-load system

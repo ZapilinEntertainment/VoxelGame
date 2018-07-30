@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum ChosenObjectType{None,Surface, Cube, Structure, Worksite}
+public enum Icons {  GreenArrow, PowerOff, PowerOn, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon  }
+public enum ProgressPanelMode { Offline, Powerplant, Hangar}
 
 sealed public class UIController : MonoBehaviour {
 	public RectTransform questPanel; // fill in Inspector
@@ -12,22 +14,27 @@ sealed public class UIController : MonoBehaviour {
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel; // fiti
-    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText;
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel; // fiti
+    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString;
+    [SerializeField] Text[] announcementStrings;
+    [SerializeField] Image colonyToggleButton, storageToggleButton;
+    public Sprite overridingSprite;
+    [SerializeField] Transform storagePanelContent;
+    public Texture iconsTexture { get; private set; }
+    public Texture resourcesTexture { get; private set; }
     float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
-    float updateTimer;
-    const float DATA_UPDATE_TIME = 2;
+    float updateTimer, announcementTimer;
+    const float DATA_UPDATE_TIME = 2, ANNOUNCEMENT_TIME = 2;
 
-
-	byte submode = 0;
-	bool transformingRectInProgress = false, showMenuWindow = false, showColonyInfo = false;
+	bool transformingRectInProgress = false, showMenuWindow = false, showColonyInfo = false, showStorageInfo = false;
 	float rectTransformingSpeed = 0.8f, transformingProgress;
 	RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
 	int openedQuest = -1;
 
-	float coinsCount, energyCount, energyMax;
-	int citizenCount, freeWorkersCount, livespaceCount;
-    int hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount;
+	float saved_energySurplus;
+	int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount,saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
+        hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber;
+    ProgressPanelMode progressPanelMode;
 
 	public SurfaceBlock chosenSurface{get;private set;}
 	CubeBlock chosenCube; byte faceIndex = 10;
@@ -37,7 +44,6 @@ sealed public class UIController : MonoBehaviour {
 	ChosenObjectType chosenObjectType;
 	Transform selectionFrame; Material selectionFrameMaterial;
 
-
 	public static UIController current;
 
 	void Awake() {
@@ -46,7 +52,9 @@ sealed public class UIController : MonoBehaviour {
 		selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
 		selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
 		selectionFrame.gameObject.SetActive(false);
-	}
+        iconsTexture = Resources.Load<Texture>("Textures/Icons");
+        resourcesTexture = Resources.Load<Texture>("Textures/ResourcesIcons");
+    }
 
     void Update() {
         if (transformingRectInProgress) {
@@ -61,8 +69,8 @@ sealed public class UIController : MonoBehaviour {
         updateTimer -= Time.deltaTime;
         if (updateTimer <= 0) {
             updateTimer = DATA_UPDATE_TIME;
+            ColonyController colony = GameMaster.colonyController;
             if (showColonyInfo) {
-                ColonyController colony = GameMaster.colonyController;
                 if (colony != null)
                 {
                     if (showingGearsCf != colony.gears_coefficient)
@@ -92,40 +100,132 @@ sealed public class UIController : MonoBehaviour {
                     }
                 }
             }
-            if (hospitalPanel.activeSelf)
+            else
             {
-                int nhm = Hospital.GetBirthrateModeIndex();
-                if (nhm != hospitalPanel_savedMode)
+                if (showStorageInfo)
                 {
-                    switch (nhm)
+                    if (lastStorageOperationNumber != colony.storage.operationsDone)
                     {
-                        case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
-                        case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
-                        case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+                        RecalculateStoragePanel();
                     }
-                    hospitalPanel_savedMode = nhm;
                 }
-        }
-            if (expeditionCorpusPanel.activeSelf)
+            }
+
+            if (progressPanel.activeSelf) {
+                switch (progressPanelMode)
+                {
+                    case ProgressPanelMode.Powerplant:
+                        UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
+                        if (uwb == null || !uwb.gameObject.activeSelf)
+                        {
+                            DeactivateProgressPanel();
+                            return;
+                        }
+                        else
+                        {
+                            Powerplant pp = uwb.observingWorkbuilding as Powerplant;
+                            RawImage ri = progressPanel.transform.GetChild(0).GetComponent<RawImage>();
+                            ri.texture = resourcesTexture;
+                            ri.uvRect = ResourceType.GetTextureRect(pp.GetFuelResourseID());
+                            Transform t = progressPanel.transform.GetChild(1);
+                            RectTransform rt = t.GetChild(0).GetComponent<RectTransform>();
+                            rt.offsetMax = new Vector2((pp.fuelLeft - 1) * rt.rect.width, 0);
+                            t.GetChild(1).GetComponent<Text>().text = string.Format("{0:0.###}", pp.fuelLeft * 100) + '%';
+                        }
+                        break;
+                }
+            }
+            else
             {
-                int x = Shuttle.shuttlesList.Count;
-                if (exCorpus_savedShuttlesCount != x)
+                if (hospitalPanel.activeSelf)
                 {
-                    exCorpus_savedShuttlesCount = x;
-                    expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
+                    int nhm = Hospital.GetBirthrateModeIndex();
+                    if (nhm != hospitalPanel_savedMode)
+                    {
+                        switch (nhm)
+                        {
+                            case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
+                            case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
+                            case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+                        }
+                        hospitalPanel_savedMode = nhm;
+                    }
                 }
-                x = Crew.crewsList.Count;
-                if (x != exCorpus_savedCrewsCount)
+                else
                 {
-                    exCorpus_savedCrewsCount = x;
-                    expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
+                    if (expeditionCorpusPanel.activeSelf)
+                    {
+                        int x = Shuttle.shuttlesList.Count;
+                        if (exCorpus_savedShuttlesCount != x)
+                        {
+                            exCorpus_savedShuttlesCount = x;
+                            expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
+                        }
+                        x = Crew.crewsList.Count;
+                        if (x != exCorpus_savedCrewsCount)
+                        {
+                            exCorpus_savedCrewsCount = x;
+                            expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
+                        }
+                        x = QuantumTransmitter.transmittersList.Count;
+                        if (x != exCorpus_savedTransmittersCount)
+                        {
+                            exCorpus_savedTransmittersCount = x;
+                            expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
+                        }
+                    }
                 }
-                x = QuantumTransmitter.transmittersList.Count;
-                if (x != exCorpus_savedTransmittersCount)
-                {
-                    exCorpus_savedTransmittersCount = x;
-                    expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
-                }
+            }
+
+            bool valuesChanged = false;            
+            if (saved_freeWorkersCount != colony.freeWorkers)
+            {
+                saved_freeWorkersCount = colony.freeWorkers;
+                valuesChanged = true;
+            }
+            if (saved_citizenCount != colony.citizenCount)
+            {
+                saved_citizenCount = colony.citizenCount;
+                valuesChanged = true;
+            }           
+            if (saved_livespaceCount != colony.totalLivespace)
+            {
+                saved_livespaceCount = colony.totalLivespace;
+                valuesChanged = true;
+            }
+            if (valuesChanged)
+            {
+                citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
+            }
+
+            valuesChanged = false;
+            if (saved_energyCount != colony.energyStored)
+            {
+                saved_energyCount = (int)colony.energyStored;
+                valuesChanged = true;
+            }
+            if (saved_energyMax != colony.totalEnergyCapacity)
+            {
+                saved_energyMax = (int)colony.totalEnergyCapacity;
+                valuesChanged = true;
+            }
+            float es = (int)(colony.energySurplus * 10) / 10;
+            if (saved_energySurplus != es)
+            {
+                saved_energySurplus = es;
+                valuesChanged = true;
+            }
+            if (valuesChanged)
+            {
+                string surplus = es.ToString();
+                if (es > 0) surplus = '+' + surplus;
+                energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')'; 
+            }
+
+            if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
+            {
+                saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
+                energyCrystalsString.text = saved_energyCrystalsCount.ToString();
             }
         }
     }
@@ -135,8 +235,9 @@ sealed public class UIController : MonoBehaviour {
     {
         showColonyInfo = !showColonyInfo;
         if (showColonyInfo) {
-            if (showMenuWindow) MenuButton();
+            if (showStorageInfo) StorageButton();
             colonyPanel.SetActive(true);
+            colonyToggleButton.overrideSprite = overridingSprite;
             ColonyController colony = GameMaster.colonyController;
             if (colony == null) return;
             showingGearsCf = colony.gears_coefficient;
@@ -153,30 +254,98 @@ sealed public class UIController : MonoBehaviour {
         else
         {
             colonyPanel.SetActive(false);
+            colonyToggleButton.overrideSprite = null;
         }
     }
 
-	public void MenuButton() {
+    public void StorageButton()
+    {
+        showStorageInfo = !showStorageInfo;
+        if (showStorageInfo)
+        {
+            if (showColonyInfo) ColonyButton();
+            storageToggleButton.overrideSprite = overridingSprite;
+            storagePanel.SetActive(true);
+            RecalculateStoragePanel();
+        }
+        else
+        {
+            storageToggleButton.overrideSprite = null;
+            storagePanel.SetActive(false);
+        }
+    }
+
+    void RecalculateStoragePanel()
+    {
+        Storage st = GameMaster.colonyController.storage;
+        float[] resources = st.standartResources;
+        int i = 0, b = 0, buttonsCount = storagePanelContent.childCount;
+        while (i < resources.Length)
+        {
+            if (resources[i] != 0)
+            {
+                Transform t;
+                if (b < buttonsCount) t = storagePanelContent.GetChild(b);
+                else
+                {
+                    t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
+                    RectTransform rt = (t as RectTransform);
+                    t.localPosition += Vector3.down * b * rt.rect.height;
+                }
+                t.gameObject.SetActive(true);
+                b++;
+                t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(i);
+                t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(i);
+                t.GetChild(2).GetComponent<Text>().text = ((int)(resources[i] * 10) / 10f).ToString(); // why not format? I think no need
+            }
+            i++;
+        }
+        {
+            RectTransform rt = storagePanel.transform.GetChild(0) as RectTransform;
+            float listSize = b * (storagePanelContent.GetChild(0) as RectTransform).rect.height;
+            float freeSpace = Screen.height - upPanel.GetComponent<RectTransform>().rect.height * 0.7f;
+            if (listSize < freeSpace)
+            {
+                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
+            }
+            else
+            {
+                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, freeSpace);
+            }
+            (storagePanelContent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
+            //rt.offsetMin = new Vector2(rt.offsetMin.x, rt.offsetMax.y -  b * (storagePanelContent.GetChild(0) as RectTransform).rect.height);
+        }
+        lastStorageOperationNumber = st.operationsDone;
+        if (b < buttonsCount)
+        {
+            for (; b< buttonsCount; b++)
+            {
+                storagePanelContent.GetChild(b).gameObject.SetActive(false);
+            }
+        }
+    } 
+
+    public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
 		if (showMenuWindow) {
-			if (rightPanel.activeSelf) rightPanel.SetActive(false);            
+			if (rightPanel.activeSelf) rightPanel.SetActive(false);
+            if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
+            if (showStorageInfo) StorageButton();
 			menuPanel.SetActive(true);
+            //menuButton.transform.SetAsLastSibling();
 		}
 		else {
-			if (chosenObjectType != ChosenObjectType.None) {
-				rightPanel.SetActive(true);
-			}
 			menuPanel.SetActive(false);
 		}
 	}
 	public void SaveButton() {
          bool success = GameMaster.realMaster.SaveGame("newsave");
-        GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameSaved : GameAnnouncements.SavingFailed));
+        MakeAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameSaved : GameAnnouncements.SavingFailed));
     }
 	public void LoadButton(){
         bool success = GameMaster.realMaster.LoadGame("newsave");
-        GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameLoaded : GameAnnouncements.LoadingFailed));
+        MakeAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameLoaded : GameAnnouncements.LoadingFailed));
     }
 	#endregion
 
@@ -233,15 +402,26 @@ sealed public class UIController : MonoBehaviour {
 		else SelectedObjectLost();
 	}
 
+    public void ShowWorksite(Worksite ws)
+    {
+        chosenWorksite = ws;
+        ChangeChosenObject(ChosenObjectType.Worksite);
+    }
+
 	public void ChangeChosenObject(ChosenObjectType newChosenType ) {
 		//отключение предыдущего observer
 		if (workingObserver != null) workingObserver.ShutOff();
 
-		if (newChosenType == ChosenObjectType.None) {
-            if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
-            else {
-                if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
+        if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
+        else
+        {
+            if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
+            else
+            {
+                if (rollingShopPanel.activeSelf) DeactivateRollingShopPanel();
             }
+        }
+        if (newChosenType == ChosenObjectType.None) {          
             rightPanel.SetActive(false);
 			selectionFrame.gameObject.SetActive(false);
 			chosenObjectType = ChosenObjectType.None;
@@ -273,6 +453,7 @@ sealed public class UIController : MonoBehaviour {
 			workingObserver = chosenSurface.ShowOnGUI();
 			FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
 			break;
+
 		case ChosenObjectType.Cube:
 			selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
 			switch (faceIndex) {
@@ -287,26 +468,110 @@ sealed public class UIController : MonoBehaviour {
 			sframeColor = new Vector3(140f/255f, 1,0.9f);
 			FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
 			break;
+
 		case ChosenObjectType.Structure:
 			faceIndex = 10;
 			selectionFrame.position = chosenStructure.transform.position;
 			selectionFrame.rotation = chosenStructure.transform.rotation;
 			selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
 			sframeColor = new Vector3(1,0,1);
-                if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
-                else
-                {
-                    if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
-                }
                 workingObserver = chosenStructure.ShowOnGUI();
 			FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
 			break;
+
+            case ChosenObjectType.Worksite:
+                faceIndex = 10;
+                selectionFrame.gameObject.SetActive(false);
+                workingObserver = chosenWorksite.ShowOnGUI();
+                FollowingCamera.main.SetLookPoint(chosenWorksite.transform.position);
+                break;
 		}
 
 		selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
 	}
 
     #region auxiliary panels
+    public void ActivateProgressPanel(ProgressPanelMode mode)
+    {        
+        switch (mode)
+        {
+            case ProgressPanelMode.Powerplant:
+                UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
+                if (uwb == null || !uwb.gameObject.activeSelf)
+                {
+                    DeactivateProgressPanel();
+                    return;
+                }
+                else
+                {
+                    Powerplant pp = uwb.observingWorkbuilding as Powerplant;
+                    Transform t = progressPanel.transform;
+                    RawImage ri = t.GetChild(0).GetComponent<RawImage>();
+                    ri.texture = resourcesTexture;
+                    int resourceID = pp.GetFuelResourseID();
+                    ri.uvRect = ResourceType.GetTextureRect(resourceID);
+                    ri.transform.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(resourceID);
+                    t = t.GetChild(1);
+                    RectTransform rt = t.GetChild(0).GetComponent<RectTransform>();
+                    rt.offsetMax = new Vector2((Mathf.Clamp(pp.fuelLeft,0,1) - 1) * rt.rect.width, 0);
+                    t.GetChild(1).GetComponent<Text>().text = string.Format("{0:0.###}", pp.fuelLeft) + '%';
+
+                    progressPanel.SetActive(true);
+                    progressPanelMode = mode;
+                }
+                break;
+        }
+    }
+    public void DeactivateProgressPanel()
+    {
+        progressPanel.SetActive(false);
+        progressPanelMode = ProgressPanelMode.Offline;
+    }
+
+    public void ActivateRollingShopPanel()
+    {
+        UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
+        if (wbo != null && wbo.gameObject.activeSelf)
+        { // уу, костыли!
+            RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
+            if (rs != null)
+            {
+                rollingShopPanel.SetActive(true);
+                rollingShopPanel.transform.GetChild(rs.GetModeIndex()).GetComponent<Toggle>().isOn = true;
+            }
+        }
+        rollingShopPanel.SetActive(true);
+    }
+    public void DeactivateRollingShopPanel()
+    {
+        rollingShopPanel.SetActive(false);
+    }
+    public void RollingShop_SetActivity(int x)
+    {
+        UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
+        if (wbo == null | !wbo.gameObject.activeSelf)
+        {
+            DeactivateRollingShopPanel();
+            return;
+        }
+        else { // уу, костыли!
+            RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
+            if (rs == null)
+            {
+                DeactivateRollingShopPanel();
+                return;
+            }
+            else
+            {
+                if (rs.GetModeIndex() != x)
+                {
+                    rs.SetMode(x);
+                    rollingShopPanel.transform.GetChild(x).GetComponent<Toggle>().isOn = true;
+                }
+            }
+        }
+    }
+
     public void ActivateExpeditionCorpusPanel()
     {
         expeditionCorpusPanel.SetActive(true);
@@ -353,12 +618,41 @@ sealed public class UIController : MonoBehaviour {
     }
     #endregion
 
+    public static Rect GetTextureUV (Icons i)
+    {
+        float p = 0.125f;
+        switch (i)
+        {
+            default: return Rect.zero;
+            case Icons.GreenArrow: return new Rect(6 * p, 7 *p, p,p);
+            case Icons.PowerOff: return new Rect(2 * p, 7 *p, p,p);
+            case Icons.PowerOn: return new Rect(3 * p, 7 * p, p, p);
+            case Icons.RedArrow: return new Rect(2 * p, 6 *p,p,p);
+            case Icons.CrewBadIcon: return new Rect(p, 5 *p,p,p);
+            case Icons.CrewNormalIcon: return new Rect(2 * p, 5 * p, p, p);
+            case Icons.CrewGoodIcon: return new Rect(3 * p, 5 *p, p,p);
+            case Icons.ShuttleBadIcon: return new Rect(4 *p, 5 *p,p,p);
+            case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
+            case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
+        }
+    }
+
+    public void MakeAnnouncement(string s)
+    {
+
+    }
+
     public void LocalizeButtonTitles()
     {
-        hospitalPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase (LocalizedPhrase.BirthrateMode ) + " :";
-        hospitalPanel.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
-        hospitalPanel.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
-        hospitalPanel.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
+        Transform t = hospitalPanel.transform;
+        t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase (LocalizedPhrase.BirthrateMode ) + " :";
+        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
+        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
+
+        t = rollingShopPanel.transform;
+        t.GetChild(0).GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoActivity);
+        t.GetChild(1).GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ImproveGears);
     }
 
     #region right panel

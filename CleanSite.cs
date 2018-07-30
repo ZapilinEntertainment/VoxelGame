@@ -10,7 +10,7 @@ public class CleanSite : Worksite {
 	void Update () {
 		if (GameMaster.gameSpeed == 0) return;
 		if (workObject ==null) {
-			Destroy(this);
+            StopWork();
 			return;
 		}
 		if (workObject.surfaceObjects.Count == 0) {
@@ -29,7 +29,7 @@ public class CleanSite : Worksite {
 					if (workersCount > 0) FreeWorkers();
 				}
 			}
-			Destroy(this);
+            StopWork();
 			return;
 		}
 		if (workersCount  > 0) {
@@ -67,7 +67,7 @@ public class CleanSite : Worksite {
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
 		workObject = block;
-		if (block.grassland != null) {Destroy(block.grassland);}
+		if (block.grassland != null) block.grassland.Annihilation(true); 
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.worksite = this;
 		sign.transform.position = workObject.transform.position;
@@ -79,7 +79,7 @@ public class CleanSite : Worksite {
 	#region save-load mission
 	override public WorksiteSerializer Save() {
 		if (workObject == null) {
-			Destroy(this);
+            StopWork();
 			return null;
 		}
 		WorksiteSerializer ws = GetWorksiteSerializer();

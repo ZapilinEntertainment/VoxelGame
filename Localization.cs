@@ -1,10 +1,11 @@
 ﻿public enum Language{English, Russian};
-public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered}
-public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable }
+public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss}
+public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
+ImproveGears, NoActivity, CrewSlots, HireNewCrew}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
-public enum GameAnnouncements{NotEnoughResources, GameSaved, GameLoaded, SavingFailed, LoadingFailed };
+public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
-public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow}
+public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots}
 
 public static class Localization {
 
@@ -305,8 +306,9 @@ public static class Localization {
 
 	public static string GetAnnouncementString( GameAnnouncements announce) {
 		switch (announce) {
-		default: return "<announcement not found>";
-		case GameAnnouncements.NotEnoughResources : return "Not enough resources!";
+		    default: return "<announcement not found>";
+		    case GameAnnouncements.NotEnoughResources : return "Not enough resources!";
+            case GameAnnouncements.NotEnoughEnergyCrystals: return "Not enough energy crystals";
             case GameAnnouncements.GameSaved: return "Game saved";
             case GameAnnouncements.GameLoaded: return "Load successful";
             case GameAnnouncements.SavingFailed: return "Saving failed";
@@ -370,6 +372,7 @@ public static class Localization {
             case LocalizedWord.Normal: return "Normal"; // birthrate
             case LocalizedWord.Improved: return "Improved"; // birthrate
             case LocalizedWord.Lowered:return "Lowered";//birthrate
+            case LocalizedWord.Dismiss: return "Dismiss";
             
 		default: return "...";
 		}
@@ -390,6 +393,10 @@ public static class Localization {
             case LocalizedPhrase.ShuttlesAvailable: return "Shuttles available";
             case LocalizedPhrase.CrewsAvailable: return "Crews available";
             case LocalizedPhrase.TransmittersAvailable: return "Transmitters available";
+            case LocalizedPhrase.ImproveGears: return "Improve gears";
+            case LocalizedPhrase.NoActivity: return "No activity";
+            case LocalizedPhrase.CrewSlots: return "Crew slots";
+            case LocalizedPhrase.HireNewCrew: return "Hire new crew";
         }
     }
 
@@ -406,6 +413,7 @@ public static class Localization {
             case RefusalReason.HQ_RR6: return "No reason, just prohibited;"; 
             case RefusalReason.SpaceAboveBlocked: return "Space above blocked";
             case RefusalReason.NoBlockBelow: return "No block below";
+            case RefusalReason.NotEnoughSlots: return "Not enough slots";
         }
     }
 

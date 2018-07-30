@@ -49,7 +49,7 @@ public sealed class GameMaster : MonoBehaviour {
 
 	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
+	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 
 
 	float t;
@@ -60,16 +60,6 @@ public sealed class GameMaster : MonoBehaviour {
 	public List <Component> windUpdateList;
 	public Vector3 windVector {get; private set;}
 	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
-
-	bool fontSize_set = false;
-	public static float guiPiece {get;private set;}
-	public static GUISkin mainGUISkin {get;private set;}
-
-	public string startResources_string;
-
-	List<string> gameAnnouncements_string; 
-	const byte ANNOUNCEMENT_LOG_LENGTH = 10;
-	float announcementTimer; const float ANNOUNCEMENT_CLEAR_TIME = 10f;
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
@@ -101,13 +91,11 @@ public sealed class GameMaster : MonoBehaviour {
         everyYearUpdateList = new List<Component>();
         everyMonthUpdateList = new List<Component>();
         windUpdateList = new List<Component>();
-        gameAnnouncements_string = new List<string>();
 
         lifeGrowCoefficient = 1;
         //Localization.ChangeLanguage(Language.English);
         geologyModule = gameObject.AddComponent<GeologyModule>();
         difficulty = Difficulty.Normal;
-        guiPiece = Screen.height / 24f;
         warProximity = 0.01f;
         layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
         colonyController = gameObject.AddComponent<ColonyController>();
@@ -350,23 +338,13 @@ public sealed class GameMaster : MonoBehaviour {
 			windVector = Random.onUnitSphere * (maxWindPower * Random.value);
 			windVector += Vector3.down * windVector.y;
 			windTimer = windChangeTime + Random.value * windChangeTime;
-			if (windVector.magnitude == 0) AddAnnouncement( Localization.announcement_stillWind );
+			if (windVector.magnitude == 0) UIController.current.MakeAnnouncement( Localization.announcement_stillWind );
 			if (windUpdateList.Count != 0) {
 				int i = 0;
 				while (i < windUpdateList.Count) {
 					Component c = windUpdateList[i];
 					if (c == null) {windUpdateList.RemoveAt(i); continue;}
 					else	{c.SendMessage("WindUpdate", windVector,SendMessageOptions.DontRequireReceiver); i++;}
-				}
-			}
-		}
-		//   GAME   ANNOUNCEMENTS
-		if (announcementTimer > 0 ) {
-			announcementTimer -= Time.deltaTime * gameSpeed;
-			if (announcementTimer <= 0) {
-				if (gameAnnouncements_string.Count > 0) {
-					gameAnnouncements_string.RemoveAt(0);
-					if (gameAnnouncements_string.Count > 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
 				}
 			}
 		}
@@ -409,14 +387,6 @@ public sealed class GameMaster : MonoBehaviour {
 		if (Vector3.Distance(point, camBasis.transform.position) > CAM_STANDART_DISTANCE) moveCamToLookPoint = true;
 	}
 
-	public void AddAnnouncement(string s) {
-		if (gameAnnouncements_string.Count >= ANNOUNCEMENT_LOG_LENGTH) {
-			gameAnnouncements_string.RemoveAt(0);
-		}
-		gameAnnouncements_string.Add(s);
-		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
-	}
-
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
 		Time.timeScale = 0;
 		GameMasterSerializer gms = new GameMasterSerializer();
@@ -445,9 +415,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
 		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
 		gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
-		gms.gameAnnouncements_string = gameAnnouncements_string;
-		gms.announcementTimer = announcementTimer;
-		gms.recruiting_hireCost = RecruitingCenter.hireCost;
+		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
 		#endregion
 		gms.chunkSerializer = mainChunk.SaveChunkData();
 		gms.colonyControllerSerializer = colonyController.Save();
@@ -495,14 +463,13 @@ public sealed class GameMaster : MonoBehaviour {
 			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
 			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
 			maxWindPower = gms.maxWindPower ;windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
-			gameAnnouncements_string = gms.gameAnnouncements_string ;
-			announcementTimer = gms.announcementTimer;
-			RecruitingCenter.hireCost = gms.recruiting_hireCost;
+			RecruitingCenter.SetHireCost( gms.recruiting_hireCost);
 			#endregion
 			Destroy (mainChunk.gameObject);
 
 			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
-			QuantumTransmitter.Reset();Hangar.Reset(); 
+			QuantumTransmitter.Reset();Hangar.Reset();
+            Grassland.ScriptReset();
 			//UI.current.Reset();
 
 			Crew.LoadStaticData(gms.crewStaticSerializer);
@@ -546,8 +513,6 @@ class GameMasterSerializer {
 	public float windVector_x,windVector_y,windVector_z;
 	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
 	public float sunlightIntensity;
-	public List<string> gameAnnouncements_string; 
-	public float announcementTimer;
 
 	public ChunkSerializer chunkSerializer;
 	public ColonyControllerSerializer colonyControllerSerializer;

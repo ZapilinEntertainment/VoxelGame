@@ -15,9 +15,6 @@ public class PoolMaster : MonoBehaviour {
     public static Material default_material, lr_red_material, lr_green_material, basic_material, basic_offline_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
     static Material metal_material, green_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
-	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
-	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx, shuttle_good_icon, shuttle_normal_icon, shuttle_bad_icon, 
-	crew_good_icon, crew_normal_icon, crew_bad_icon, quest_defaultIcon, quest_unacceptableIcon;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
@@ -27,14 +24,6 @@ public class PoolMaster : MonoBehaviour {
 	const int SHIPS_BUFFER_SIZE = 5;
 	float  shipsClearTimer = 0,clearTime = 30;
 
-    [SerializeField]
-    Vector3 sunDirection, sunNextPosition, prevSunDirection;
-    [SerializeField]
-    float sunSpeed = 0.03f, lightMapUpdateTimer = 0;
-    const float LIGHTMAP_UPDATE_TIME = 1, LIGHTMAP_VISUAL_CHANGE_THRESHOLD = 1f;
-    const int lightmapResolution = 128;
-    Color sunColor = Color.white;
-    Transform sun;
 
 	public void Load() {
 		if (current != null) return;
@@ -48,26 +37,6 @@ public class PoolMaster : MonoBehaviour {
 		lightCargoShips = new List<GameObject>();
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
-
-		quest_unacceptableIcon = Resources.Load<Texture>("Textures/questUnacceptableIcon");
-		quest_defaultIcon = Resources.Load<Texture>("Textures/questDefaultIcon");
-		crew_good_icon = Resources.Load<Texture>("Textures/crew_good_icon");
-		crew_normal_icon = Resources.Load<Texture>("Textures/crew_normal_icon");
-		crew_bad_icon = Resources.Load<Texture>("Textures/crew_bad_icon");
-		shuttle_good_icon = Resources.Load<Texture>("Textures/shuttle_good_icon");
-		shuttle_normal_icon = Resources.Load<Texture>("Textures/shuttle_normal_icon");
-		shuttle_bad_icon = Resources.Load<Texture>("Textures/shuttle_bad_icon");
-		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
-		empty_tx = Resources.Load<Texture>("Textures/resource_empty");
-		redArrow_tx = Resources.Load<Texture>("Textures/redArrow");
-		greenArrow_tx = Resources.Load<Texture>("Textures/greenArrow");
-		orangeSquare_tx = Resources.Load<Texture>("Textures/orangeSquare");
-		quadSelector_tx = Resources.Load<Texture>("Textures/quadSelector");
-		minusX10Button_tx = Resources.Load<Texture>("Textures/minusX10Button");
-		minusButton_tx = Resources.Load<Texture>("Textures/minusButton");
-		plusX10Button_tx = Resources.Load<Texture>("Textures/plusX10Button");
-		plusButton_tx = Resources.Load<Texture>("Textures/plusButton");
-		twoButtonsDivider_tx = Resources.Load<Texture>("Textures/twoButton_divider");
 
 		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
@@ -92,8 +61,6 @@ public class PoolMaster : MonoBehaviour {
 
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-        sunDirection = Random.onUnitSphere; if (sunDirection.y < 0) sunDirection = new Vector3(sunDirection.x, sunDirection.y * (-1), sunDirection.z);
-        sunNextPosition = Random.onUnitSphere; if (sunNextPosition.y < 0) sunNextPosition = new Vector3(sunNextPosition.x, sunNextPosition.y * (-1), sunNextPosition.z);
         Structure.LoadPrefs();
 	}
 

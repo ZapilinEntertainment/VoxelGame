@@ -20,8 +20,8 @@ public class GatherSite : Worksite {
 	void Update () {
 		if (GameMaster.gameSpeed == 0) return;
 		if (workObject ==null || workObject.surfaceObjects.Count == 0) {
-			Destroy(this);
-		}
+            StopWork();
+        }
 		if (workersCount  > 0) {
 			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
 			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
@@ -33,8 +33,8 @@ public class GatherSite : Worksite {
 			}
 			
 		destructionTimer -= Time.deltaTime * GameMaster.gameSpeed; 
-		if (destructionTimer <=0) Destroy(this);
-	}
+		if (destructionTimer <=0) StopWork();
+    }
 
 void LabourResult() {
 	int i = 0;
@@ -96,7 +96,7 @@ void LabourResult() {
 	#region save-load system
 	override public WorksiteSerializer Save() {
 		if (workObject == null) {
-			Destroy(this);
+            StopWork();
 			return null;
 		}
 		WorksiteSerializer ws = GetWorksiteSerializer();
