@@ -152,17 +152,12 @@ public class FollowingCamera : MonoBehaviour {
         }
 	}
 
-    private void OnGUI()
+    public void RotateY(float val)
     {
-        float k = Screen.height / 20f;
-        Rect r = new Rect(0, Screen.height / 2f - 2 * k, k, k);
-        if ( GUI.RepeatButton(r, "<")) transform.RotateAround(transform.position, Vector3.up, rotationSpeed * Time.deltaTime);
-        r.y += k;
-        if (GUI.RepeatButton(r, "+")) cam.transform.Translate((cam.transform.position - transform.position) * zoomSpeed/98f * Time.deltaTime * (-1), Space.World);
-        r.y += k;
-        if (GUI.RepeatButton(r, "-")) cam.transform.Translate((cam.transform.position - transform.position) * zoomSpeed/98f * Time.deltaTime, Space.World);
-        r.y += k;
-        if (GUI.RepeatButton(r, ">")) transform.RotateAround(transform.position, Vector3.up, rotationSpeed * (-1)* Time.deltaTime);
-        r.y += k;
+        transform.rotation = Quaternion.Euler(0, val * 360, 0);
     }
+    public void RotateX(float val)
+    {
+        cam.localRotation = Quaternion.Euler(-45 +val * 135 ,0, 0);
+    }   
 }

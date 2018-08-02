@@ -149,7 +149,7 @@ public class HeadQuarters : House {
                 }
                 if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                 {
-                    GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                     return;
                 }
             }
@@ -211,7 +211,7 @@ public class HeadQuarters : House {
 
     public override UIObserver ShowOnGUI()
     {
-        if (buildingObserver == null) buildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
+        if (buildingObserver == null) buildingObserver = UIBuildingObserver.InitializeBuildingObserverScript();
         else buildingObserver.gameObject.SetActive(true);
         nextStageConditionMet = CheckUpgradeCondition();
         buildingObserver.SetObservingBuilding(this);

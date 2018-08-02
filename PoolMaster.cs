@@ -61,6 +61,7 @@ public class PoolMaster : MonoBehaviour {
 
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
+        Crew.PrepareList(); Shuttle.PrepareList(); QuantumTransmitter.PrepareList();
         Structure.LoadPrefs();
 	}
 

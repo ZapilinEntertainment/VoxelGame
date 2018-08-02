@@ -48,7 +48,7 @@ public class SurfaceBlock : Block {
 	public List<Structure> surfaceObjects{get;protected set;}
 	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures = 0;
-	public bool[,] map {get; protected set;}
+	public bool[,] map { get; protected set; }
 	public BlockRendererController structureBlock;
 	public int freeCells = 0;
 
@@ -65,6 +65,8 @@ public class SurfaceBlock : Block {
 		artificialStructures = 0;
 		isTransparent = false;
 	}
+
+    public void SetGrassland(Grassland g) { grassland = g; }
 
 
 	public bool[,] GetBooleanMap() {
@@ -130,13 +132,10 @@ public class SurfaceBlock : Block {
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
-			if (sr.x_size == INNER_RESOLUTION && sr.z_size == INNER_RESOLUTION) { // destroy everything there
-				foreach (Structure gs in surfaceObjects) {
-					if (gs == null) continue;
-					if (gs.isBasement) savedBasementForNow = gs;
-					else gs.Annihilate(true);
-				}
-				if (surfaceRenderer != null) surfaceRenderer.GetComponent<Collider>().enabled = false;
+			if (sr == SurfaceRect.full) { // destroy everything there
+                                          //print("fullscale");
+                ClearSurface(false); // false так как не нужна лишняя установка коллайдера
+				surfaceRenderer.GetComponent<Collider>().enabled = false;
 			}
 			else {
 				while (i < surfaceObjects.Count) {
@@ -181,13 +180,15 @@ public class SurfaceBlock : Block {
 		}
 	}
 
-	public void ClearSurface() {
+	public void ClearSurface(bool colliderCheck) {
 		if (surfaceObjects == null) return;
+        // is basement check and special conditions?
 		int i =0;
 		while ( i < surfaceObjects.Count) {
 			if (surfaceObjects[i] != null) surfaceObjects[i].Annihilate(true);
-			surfaceObjects.RemoveAt(i);
+            i++;
 		}
+        surfaceObjects.Clear();
 		cellsStatus = 0; artificialStructures = 0;
 		i = 0;
 		map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
@@ -196,6 +197,7 @@ public class SurfaceBlock : Block {
 				map[i,j] = false;
 			}
 		}
+        if (colliderCheck) surfaceRenderer.GetComponent<MeshCollider>().enabled = true;        
 		structureBlock = null;
 	}
 
@@ -239,16 +241,16 @@ public class SurfaceBlock : Block {
 	/// </summary>
 	/// <param name="so">So.</param>
 	public void RemoveStructure(Structure s) {
-		int count = surfaceObjects.Count;
+        int count = surfaceObjects.Count;
 		if (count == 0) return;
-		for ( int i = 0; i < count; i++) {
+        for ( int i = 0; i < count; i++) {
 			if (surfaceObjects[i] == s) {
 				if (s.isArtificial) artificialStructures--;	if (artificialStructures < 0) artificialStructures = 0;
 				surfaceObjects.RemoveAt(i);
 				if (surfaceObjects.Count == 0) {
 					cellsStatus = 0;
 					if (s.innerPosition == SurfaceRect.full) {
-						if (surfaceRenderer != null) surfaceRenderer.GetComponent<Collider>().enabled = true;
+						surfaceRenderer.GetComponent<Collider>().enabled = true;
 					}
 				}
 				else CellsStatusUpdate();
@@ -257,14 +259,6 @@ public class SurfaceBlock : Block {
 		}
 		BlockRendererController brc = s.GetComponent<BlockRendererController>();
 		if (brc != null) structureBlock = null;
-	}
-
-	public Grassland AddGrassland() {
-		if (grassland == null)  {
-			grassland = gameObject.AddComponent<Grassland>();
-			grassland.SetBlock(this);
-		}
-		return grassland;
 	}
 
 	public override void ReplaceMaterial( int newId) {
@@ -530,8 +524,7 @@ public class SurfaceBlock : Block {
 
 	public UIObserver ShowOnGUI() {
 		if (surfaceObserver == null) {
-			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.rightPanel.transform).GetComponent<UISurfacePanelController>();
-			surfaceObserver.transform.localPosition = Vector3.zero;
+			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
 		}
 		else surfaceObserver.gameObject.SetActive(true);
 		surfaceObserver.SetObservingSurface(this);
@@ -567,7 +560,7 @@ public class SurfaceBlock : Block {
 
 	protected void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) {
 		if (sbs.haveGrassland) {
-			AddGrassland();
+            grassland = Grassland.Create(this);
 			grassland.Load(sbs.grasslandSerializer);
 		}
 	}

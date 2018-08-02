@@ -87,7 +87,7 @@ public sealed class ColonyController : MonoBehaviour {
 		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 		else {
 			if (energyStored < 0) { // отключение потребителей энергии до выравнивания
-				GameMaster.realMaster.AddAnnouncement(Localization.announcement_powerFailure);
+                UIController.current.MakeAnnouncement(Localization.announcement_powerFailure);
 				energyStored = 0;
 				int i = powerGrid.Count - 1;
 				while ( i >= 0 && energySurplus < 0) {
@@ -302,8 +302,8 @@ public sealed class ColonyController : MonoBehaviour {
 		housesLevel = 0;
 		if (houses.Count == 0) return;
 		int i = 0, normalLivespace = 0;
-		List<int> tents = new List<int>();
-		while (i <houses.Count) {
+		List<int> tents = new List<int>();       
+		while (i < houses.Count) {
 			if (houses[i] == null || !houses[i].gameObject.activeSelf) {houses.RemoveAt(i); continue;}
 			if ( houses[i].isActive) {
 				totalLivespace += houses[i].housing;
@@ -313,12 +313,15 @@ public sealed class ColonyController : MonoBehaviour {
 			}
 			i++;
 		}
-		if (tents.Count > 0 && normalLivespace > citizenCount) {
+        if (tents.Count > 0 & normalLivespace > citizenCount) {
 			i = 0;
-			while ( i < tents.Count && normalLivespace > citizenCount) {
-				if (normalLivespace - citizenCount >= houses[tents[i]].housing) {
-					normalLivespace -= houses[tents[i]].housing;
-					houses[tents[i]].Annihilate(false);
+            int tentIndexDelta = 0; // смещение индексов влево из-за удаления
+			while ( i < tents.Count & normalLivespace > citizenCount) {
+                int realIndex = tents[i] + tentIndexDelta;
+                if (normalLivespace - citizenCount >= houses[realIndex].housing) {                    
+					normalLivespace -= houses[realIndex].housing;
+					houses[realIndex].Annihilate(false);
+                    tentIndexDelta--;
 				}
 				else break;
 				i++;
@@ -535,6 +538,12 @@ public sealed class ColonyController : MonoBehaviour {
 		if (v <=0) return;
 		energyCrystalsCount += v;
 	}
+
+    /// <summary>
+    /// returns the available residue of asked sum
+    /// </summary>
+    /// <param name="v"></param>
+    /// <returns></returns>
 	public float GetEnergyCrystals(float v) {
 		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
 		else energyCrystalsCount -= v;

@@ -246,26 +246,13 @@ public class Building : Structure {
 	}
 	#endregion
 
-	protected void PrepareBuildingForDestruction() {
-		if (basement != null) {
-			basement.RemoveStructure(this);
-			basement.artificialStructures --;
-		}
-		if (connectedToPowerGrid) GameMaster.colonyController.DisconnectFromPowerGrid(this);
-	}
-
-	void OnDestroy() {
-		PrepareBuildingForDestruction();
-	}
-
-
 	override public void Rename() {
 		name = Localization.GetStructureName(id) + " (" + Localization.GetWord(LocalizedWord.Level) + ' '+level.ToString() +')';
 	}
 
 	public override UIObserver ShowOnGUI() {
-		if (buildingObserver == null) buildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
-		else buildingObserver.gameObject.SetActive(true);
+        if (buildingObserver == null) buildingObserver = UIBuildingObserver.InitializeBuildingObserverScript();
+        else buildingObserver.gameObject.SetActive(true);
 		buildingObserver.SetObservingBuilding(this);
         showOnGUI = true;
 		return buildingObserver;
@@ -293,7 +280,7 @@ public class Building : Structure {
                 }
                 if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                 {
-                    GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                     return;
                 }
             }
@@ -319,5 +306,17 @@ public class Building : Structure {
             cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
         }
         return cost;
+    }
+
+    protected bool PrepareBuildingForDestruction()
+    {
+        if (connectedToPowerGrid) GameMaster.colonyController.DisconnectFromPowerGrid(this);
+        return PrepareStructureForDestruction();        
+    }
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareBuildingForDestruction();
+        Destroy(gameObject);
     }
 }

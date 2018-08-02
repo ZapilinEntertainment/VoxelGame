@@ -43,7 +43,7 @@ public class Mine : WorkBuilding {
 					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.z_size/2));
 					elevators.Add(s);
 					awaitingElevatorBuilding = false;
-					GameMaster.realMaster.AddAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
+                    UIController.current.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
 				}
 			}
 		}
@@ -190,7 +190,7 @@ override protected void LabourResult() {
                     }
                     if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                     {
-                        GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                         return;
                     }
                 }

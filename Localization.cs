@@ -1,7 +1,7 @@
 ﻿public enum Language{English, Russian};
-public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss}
+public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, HireNewCrew}
+ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
 public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
@@ -220,7 +220,7 @@ public static class Localization {
             case Structure.SHUTTLE_HANGAR_ID: return "Shuttle hangar";
             case Structure.RECRUITING_CENTER_ID: return "Recruiting Center";
             case Structure.EXPEDITION_CORPUS_ID: return "Expedition Corpus";
-            case Structure.QUANTUM_TRANSMITTER_ID: return "Quantum transmitter";
+            case Structure.QUANTUM_TRANSMITTER_ID: return "Long-range transmitter";
         }
     }
 	public static string GetStructureDescription(int id) {
@@ -373,6 +373,9 @@ public static class Localization {
             case LocalizedWord.Improved: return "Improved"; // birthrate
             case LocalizedWord.Lowered:return "Lowered";//birthrate
             case LocalizedWord.Dismiss: return "Dismiss";
+            case LocalizedWord.Disassemble: return "Disassemble";
+            case LocalizedWord.Total: return "Total"; // storage volume string
+            case LocalizedWord.Repair: return "Repair";
             
 		default: return "...";
 		}
@@ -397,6 +400,9 @@ public static class Localization {
             case LocalizedPhrase.NoActivity: return "No activity";
             case LocalizedPhrase.CrewSlots: return "Crew slots";
             case LocalizedPhrase.HireNewCrew: return "Hire new crew";
+            case LocalizedPhrase.ConstructShuttle: return "Construct shuttle";
+            case LocalizedPhrase.ShuttleRepaired: return "A shuttle has been repaired";
+            case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
         }
     }
 

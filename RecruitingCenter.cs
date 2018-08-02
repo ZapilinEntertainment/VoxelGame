@@ -17,7 +17,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
 	static float hireCost = -1;
     public static UIRecruitingCenterObserver rcenterObserver;
-    const float FIND_SPEED = 100;
+    const float FIND_SPEED = 5;
 
 	public static void Reset() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
@@ -60,7 +60,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 					Crew.crewsList.Add(ncrew);
 					progress = 0;
 					finding = false;
-					GameMaster.realMaster.AddAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
+                    UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
 					hireCost = hireCost * (1 + GameMaster.HIRE_COST_INCREASE);
 					hireCost = ((int)(hireCost * 100)) / 100f;
                     if (showOnGUI) rcenterObserver.SelectCrew(ncrew);

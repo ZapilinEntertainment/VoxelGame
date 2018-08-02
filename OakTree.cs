@@ -14,6 +14,7 @@ public class OakTree : Plant {
 
 	const byte MAX_STAGE = 6;
 	public const int CREATE_COST = 10, LUMBER = 100, FIRST_LIFEPOWER_TO_GROW = 10;
+    float timer;
 
 	void Awake() {
 		if (container == null) {
@@ -39,6 +40,7 @@ public class OakTree : Plant {
 
 			maxStage = MAX_STAGE;            
         }
+        name = "Oak tree";
 	}
 
 	override public void Reset() {
@@ -81,6 +83,36 @@ public class OakTree : Plant {
 		}
 	}
 
+    void Update()
+    {
+        float t = GameMaster.gameSpeed * Time.deltaTime;
+        if (t == 0) return;
+
+        timer -= t;
+
+            float theoreticalGrowth = lifepower / lifepowerToGrow;
+            if (growth < theoreticalGrowth)
+            {
+                growth = Mathf.MoveTowards(growth, theoreticalGrowth, growSpeed * t);
+            }
+            else
+            {
+                lifepower -= decaySpeed * t;
+                if (lifepower == 0) Dry();
+            }
+        if (timer <= 0)
+        {
+            if (growth >= 1 & stage < maxStage)
+            {
+                byte nextStage = stage;
+                nextStage++;
+                if (CanGrowAround(nextStage)) SetStage(nextStage);
+            }
+            timer = stage;
+        }
+    }
+
+
     #region lifepower operations
     public override void AddLifepowerAndCalculate(int life) {
 		lifepower += life;
@@ -112,17 +144,15 @@ public class OakTree : Plant {
 			(myRenderers[0] as SpriteRenderer).sprite = stageSprites[stage];
 			if (myRenderers.Count > 1) ReturnModelToPool();
 		}
-		else {
-			myRenderers[0].enabled = false; // standart sprite
-			if (CanGrowAround(stage)) {
-				if (myRenderers.Count == 1) {
+		else {			
+			if (myRenderers.Count == 1) {
+                myRenderers[0].enabled = false;
 					GameObject myModel = GetModel(stage);
 					myModel.transform.rotation = transform.rotation;
 					myModel.transform.position = transform.position;
 					myRenderers.Add(myModel.transform.GetChild(0).GetComponent<MeshRenderer>());
 					myRenderers.Add(myModel.transform.GetChild(1).GetComponent<MeshRenderer>());
 					myModel.SetActive(true);
-				}
 			}
 		}	
 		lifepowerToGrow = GetLifepowerLevelForStage(stage);
@@ -218,23 +248,17 @@ public class OakTree : Plant {
 		}
 	}
 
-	public override void Annihilate( bool forced ) {
-		if (basement != null && !forced ) {
-			basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
-			basement.RemoveStructure(this);
-		}
-		if (myRenderers.Count > 1) ReturnModelToPool();
-		Destroy(gameObject);
-	}
+    override public void Annihilate(bool forced)
+    {
+        //print("oak annihilation");
+        if (myRenderers.Count > 1) ReturnModelToPool();
+        if (forced) { UnsetBasement(); }
+        PreparePlantForDestruction();
+        
+        Destroy(gameObject);
+    }
 
-	void OnDestroy() {
-		if (basement != null) {
-			basement.RemoveStructure(this);
-		}
-		if (myRenderers.Count > 1) ReturnModelToPool();
-	}
-
-	public static GameObject GetModel(byte stage) {
+    public static GameObject GetModel(byte stage) {
 		if (stage < 4 | stage > 6) stage = 4;
 		GameObject model = null;
 		int i =0;
@@ -286,7 +310,7 @@ public class OakTree : Plant {
                     {
                         Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
                         Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles,0.25f);
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles,0.25f, Color.green);
                         Sprite[] lodSprites = new Sprite[4];
                         int size = spritesAtlas.width / 2;
 
@@ -303,7 +327,7 @@ public class OakTree : Plant {
                     {
                         Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
                         Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles,0.25f);
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles,0.25f, Color.green);
                         Sprite[] lodSprites = new Sprite[4];
                         int size = spritesAtlas.width / 2;
 
@@ -320,7 +344,7 @@ public class OakTree : Plant {
                     {
                         Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
                         Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.25f);
+                        Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.25f, Color.green);
                         Sprite[] lodSprites = new Sprite[4];
                         int size = spritesAtlas.width / 2;
 
@@ -341,14 +365,22 @@ public class OakTree : Plant {
 	}
 
 	void ReturnModelToPool () {
-		if (myRenderers[1] == null) return;
 		GameObject myModel = myRenderers[1].transform.parent.gameObject;
-		if (myModel == null) return;
+        if (myModel == null)  return; 
 		treeBlanks.Add(myModel);
 		myModel.SetActive(false);
 		myRenderers.RemoveAt(2);
 		myRenderers.RemoveAt(1);
 	}
 
+    private void OnDestroy() // правильное использование onDestroy
+    {
+        if ( !GameMaster.applicationStopWorking & myRenderers.Count > 1)
+        {
+            GameObject myModel = myRenderers[1].transform.parent.gameObject;
+            treeBlanks.Add(myModel);
+            myModel.SetActive(false);
+        }
+    }
 }
 

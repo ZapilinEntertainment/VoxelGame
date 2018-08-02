@@ -50,7 +50,6 @@ public class WindGenerator : Building {
 				if (connectedToPowerGrid) GameMaster.colonyController.RecalculatePowerGrid();
 			}
 			height_coefficient = (float)basement.pos.y / 8f;
-			energySurplus = maxSurplus * height_coefficient * direction.magnitude / GameMaster.realMaster.maxWindPower;
 			if (transform.forward != windDirection) rotateHead = true; else rotateHead = false;
 		}
 	}

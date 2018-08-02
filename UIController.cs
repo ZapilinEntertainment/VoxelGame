@@ -10,7 +10,6 @@ public enum ProgressPanelMode { Offline, Powerplant, Hangar}
 sealed public class UIController : MonoBehaviour {
 	public RectTransform questPanel; // fill in Inspector
 	public RectTransform[] questButtons; // fill in Inspector
-	public GameObject returnToQuestList_button; // fill in Inspector
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
@@ -23,16 +22,16 @@ sealed public class UIController : MonoBehaviour {
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
     float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
-    float updateTimer, announcementTimer;
-    const float DATA_UPDATE_TIME = 2, ANNOUNCEMENT_TIME = 2;
+    float updateTimer;
+    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
 
-	bool transformingRectInProgress = false, showMenuWindow = false, showColonyInfo = false, showStorageInfo = false;
+    bool transformingRectInProgress = false, showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false;
 	float rectTransformingSpeed = 0.8f, transformingProgress;
 	RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
 	int openedQuest = -1;
 
 	float saved_energySurplus;
-	int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount,saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
+    int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber;
     ProgressPanelMode progressPanelMode;
 
@@ -228,6 +227,35 @@ sealed public class UIController : MonoBehaviour {
                 energyCrystalsString.text = saved_energyCrystalsCount.ToString();
             }
         }
+        if (activeAnnouncements)
+        {
+            Text t = announcementStrings[0];
+            Color c = t.color;
+            c.a = Mathf.Lerp(c.a, 0, DISSAPPEAR_SPEED * Time.deltaTime * GameMaster.gameSpeed * (2 - c.a) * (2- c.a));
+            if (c.a > 0.05f)  t.color = c;
+            else
+            {                
+                if (announcementStrings[1].enabled)
+                {
+                    int lastIndex = 1;
+                    t.color = Color.black;
+                    int i = 1;
+                    while (i < announcementStrings.Length)
+                    {
+                        if (!announcementStrings[i].enabled) break;
+                        else lastIndex = i;
+                        announcementStrings[i - 1].text = announcementStrings[i].text;
+                        i++;                        
+                    }
+                    announcementStrings[lastIndex].enabled = false;
+                }
+                else
+                {
+                    t.enabled = false;
+                    activeAnnouncements = false;
+                }
+            }
+        }
     }
 
 	#region up panel
@@ -294,12 +322,30 @@ sealed public class UIController : MonoBehaviour {
                 }
                 t.gameObject.SetActive(true);
                 b++;
+                t.GetChild(0).GetComponent<RawImage>().enabled = true;
                 t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(i);
                 t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(i);
                 t.GetChild(2).GetComponent<Text>().text = ((int)(resources[i] * 10) / 10f).ToString(); // why not format? I think no need
             }
             i++;
         }
+        // "Total" string
+        {
+            Transform t;
+            if (b < buttonsCount) t = storagePanelContent.GetChild(b);
+            else
+            {
+                t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
+                RectTransform rt = (t as RectTransform);
+                t.localPosition += Vector3.down * b * rt.rect.height;
+            }
+            t.gameObject.SetActive(true);
+            b++;
+            t.GetChild(0).GetComponent<RawImage>().enabled = false;
+            t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
+            t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString() ;
+        }
+
         {
             RectTransform rt = storagePanel.transform.GetChild(0) as RectTransform;
             float listSize = b * (storagePanelContent.GetChild(0) as RectTransform).rect.height;
@@ -408,9 +454,7 @@ sealed public class UIController : MonoBehaviour {
         ChangeChosenObject(ChosenObjectType.Worksite);
     }
 
-	public void ChangeChosenObject(ChosenObjectType newChosenType ) {
-		//отключение предыдущего observer
-		if (workingObserver != null) workingObserver.ShutOff();
+	public void ChangeChosenObject(ChosenObjectType newChosenType ) {		
 
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
         else
@@ -421,6 +465,9 @@ sealed public class UIController : MonoBehaviour {
                 if (rollingShopPanel.activeSelf) DeactivateRollingShopPanel();
             }
         }
+
+        //отключение предыдущего observer
+		if (workingObserver != null) workingObserver.ShutOff();
         if (newChosenType == ChosenObjectType.None) {          
             rightPanel.SetActive(false);
 			selectionFrame.gameObject.SetActive(false);
@@ -639,7 +686,28 @@ sealed public class UIController : MonoBehaviour {
 
     public void MakeAnnouncement(string s)
     {
-
+        int lastIndex = 0, len = announcementStrings.Length;
+        for (int i = 0; i < len; i++)
+        {
+            lastIndex = i;
+            if (announcementStrings[i].enabled == false) break;
+        }
+        if (lastIndex == len - 1)
+        { // сдвигаем все на одну позицию назад
+            for (int i = 1; i < len; i++)
+            {
+                announcementStrings[i - 1].text = announcementStrings[i].text;
+            }
+            announcementStrings[len - 1].text = s;
+        }
+        else
+        {
+            Text t = announcementStrings[lastIndex];
+            t.enabled = true;
+            t.text = s;
+            t.color = Color.black;
+        }
+        activeAnnouncements = true;
     }
 
     public void LocalizeButtonTitles()
@@ -668,7 +736,8 @@ sealed public class UIController : MonoBehaviour {
 	}
     public void CloseQuestWindow()
     {
-        questPanel.gameObject.SetActive(false);
+        if (openedQuest == -1) questPanel.gameObject.SetActive(false);
+        else QuestButton_ReturnToQuestList();
     }
 
 	public void QuestButton_OpenQuest(int index) {
@@ -684,7 +753,6 @@ sealed public class UIController : MonoBehaviour {
 			}
 		}
 		openedQuest = index;
-		returnToQuestList_button.SetActive(true);
 	}
 
 	public void QuestButton_ReturnToQuestList() {

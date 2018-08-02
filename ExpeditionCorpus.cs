@@ -53,7 +53,7 @@ public class ExpeditionCorpus : WorkBuilding {
 
     public override UIObserver ShowOnGUI()
     {
-        if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;
@@ -62,49 +62,7 @@ public class ExpeditionCorpus : WorkBuilding {
         return workbuildingObserver;
     }
 
-    void OLDOnGUI() {
-		// base on buiding.cs
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(0,0,0,0);
-		int freeVessels = 0;
-		if (Shuttle.shuttlesList.Count > 0) {
-			foreach (Shuttle s in Shuttle.shuttlesList) {
-				if (s == null) return;
-				if (s.status == ShipStatus.InPort) freeVessels++;
-			}
-		}
-		GUI.Label(rr, Localization.quests_vesselsAvailable + ": " + freeVessels.ToString() ); rr.y += rr.height;
-		int freeCrews = 0;
-		if (Crew.crewsList.Count > 0) {
-			foreach (Crew c in Crew.crewsList) {
-				if (c == null) return;
-				if ( c.status == CrewStatus.Idle_noShip ) freeCrews++;
-			}
-		}
-		GUI.Label(rr, Localization.quests_crewsAvailable + ": " + freeCrews.ToString() ); rr.y += rr.height;
-		int freeTransmitters = 0;
-		if (QuantumTransmitter.transmittersList.Count > 0) {
-			foreach (QuantumTransmitter qt in QuantumTransmitter.transmittersList) {
-				if (qt == null) return;
-				if (qt.tracingExpedition == null ) freeTransmitters++;
-			}
-		}
-		GUI.Label(rr, Localization.quests_transmittersAvailable + ": " + freeTransmitters.ToString() ); rr.y += rr.height;
-
-		//quests window
-		Rect qw = new Rect(0,0,0,0);
-		GUI.Box(qw, GUIContent.none);
-		float h = qw.height / 3f;
-		if (qw.width / 3f < h) h = qw.width/3f;
-		for (int i = 0; i < MAX_AVAILABLE_QUESTS; i++) {
-			Rect qr = new Rect(qw.x + (i %3) * h, qw.y + (i / 3 )* h, h,  h);
-			if (quests[i] != null) GUI_QuestWindow(quests[i], qr);
-			else GUI.Box(qr, PoolMaster.quest_unacceptableIcon);
-		}
-	}
-
 	float GUI_QuestWindow(Quest q, Rect r) {
-		GUI.skin = GameMaster.mainGUISkin;
 		GUI.DrawTexture(r, q.poster);
 		float p = r.height / 6f;
 		GUI.Label(new Rect(r.x, r.y, r.width - 2 * p, p), q.name);
@@ -117,9 +75,9 @@ public class ExpeditionCorpus : WorkBuilding {
 				if (q.expedition != null) {
 					int i = 0;
 					while (i < q.expedition.shuttles.Count) {
-						if (GUI.Button(new Rect(r2.x, r2.y, p,p), PoolMaster.minusButton_tx) | q.expedition.shuttles[i] == null) {
-							q.expedition.shuttles.RemoveAt(i);continue;
-						}
+						//if (GUI.Button(new Rect(r2.x, r2.y, p,p), PoolMaster.minusButton_tx) | q.expedition.shuttles[i] == null) {
+						//	q.expedition.shuttles.RemoveAt(i);continue;
+						//}
 						GUI.Label(r2, "\"" + q.expedition.shuttles[i].name + "\""); // как выводить инфо?
 						if (q.expedition.shuttles[i].crew != null) {
 							GUI.Label(r3,q.expedition.shuttles[i].crew.name);
@@ -139,7 +97,7 @@ public class ExpeditionCorpus : WorkBuilding {
 							continue;
 						}
 						if (suitableShuttles[i].assignedToExpedition == null) {
-							Shuttle.GUI_DrawShuttleIcon(suitableShuttles[i], new Rect(r2.x - p/2f, r2.y + p/4f, p/2f, p/2f));
+							//Shuttle.GUI_DrawShuttleIcon(suitableShuttles[i], new Rect(r2.x - p/2f, r2.y + p/4f, p/2f, p/2f));
 							if (GUI.Button(r2, suitableShuttles[i].name)) {
 								if (q.expedition == null) q.InitializeExpedition();
 								q.expedition.AssignShuttle(suitableShuttles[i]);
@@ -156,13 +114,13 @@ public class ExpeditionCorpus : WorkBuilding {
 			GUI.Label(new Rect(r.x, r.y + p, r.width - 3 * p,  p), Localization.quests_vesselsRequired + ": " + q.shuttlesRequired);
 			GUI.Label(new Rect(r.x, r.y + 2 *p, r.width - 3 *p, p), Localization.quests_crewsRequired + ": " + q.crewsRequired);
 			GUI.Label(new Rect(r.x, r.yMax - 3 *p, r.width, 3 *p), q.description);
-			if (GUI.Button(new Rect(r.xMax - 3 *p, r.y + p, 3 *p, 3*p), PoolMaster.plusButton_tx)) {
-				if (q.CanBePicked() == true) {
-					q.picked = true;
-					suitableShuttles = q.PickSuitableShuttles();
-				}
-			}
-			GUI.Label(new Rect(r.xMax - 3 *p,r.y + 3 *p, 3*p,p), Localization.cost + ": "+ Localization.CostInCoins(q.cost));
+			//if (GUI.Button(new Rect(r.xMax - 3 *p, r.y + p, 3 *p, 3*p), PoolMaster.plusButton_tx)) {
+			//	if (q.CanBePicked() == true) {
+			//		q.picked = true;
+			//		suitableShuttles = q.PickSuitableShuttles();
+			//	}
+			//}
+			//GUI.Label(new Rect(r.xMax - 3 *p,r.y + 3 *p, 3*p,p), Localization.cost + ": "+ Localization.CostInCoins(q.cost));
 		}
 		return 0;
 	}

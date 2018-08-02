@@ -217,7 +217,7 @@ public sealed class Dock : WorkBuilding {
 		shipArrivingTimer /= f;
 
 		int newPeople = peopleBefore - immigrationPlan;
-		if (newPeople > 0) GameMaster.realMaster.AddAnnouncement(Localization.announcement_peopleArrived + " (" + newPeople.ToString() + ')');
+		if (newPeople > 0) UIController.current.MakeAnnouncement(Localization.announcement_peopleArrived + " (" + newPeople.ToString() + ')');
 	}
 
 	void SellResource(ResourceType rt, float volume) {

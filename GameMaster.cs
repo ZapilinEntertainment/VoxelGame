@@ -18,6 +18,7 @@ public sealed class GameMaster : MonoBehaviour {
 	Vector3 camLookPoint; 
 	bool moveCamToLookPoint = false;
 	const float CAM_STANDART_DISTANCE = 3;
+    public static bool applicationStopWorking { get; protected set; }
 
 	public List<GameObject> cameraUpdateBroadcast;
 	public List<GameObject> standartSpritesList, mastSpritesList;
@@ -59,7 +60,7 @@ public sealed class GameMaster : MonoBehaviour {
 
 	public List <Component> windUpdateList;
 	public Vector3 windVector {get; private set;}
-	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
+	public float windTimer = 0, windChangeTime = 120;
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
@@ -69,12 +70,11 @@ public sealed class GameMaster : MonoBehaviour {
                                          
 
     public GameMaster () {
-		if (realMaster != null) realMaster = null;
-		realMaster = this;
-	}
-
-	void Awake() {
-		
+        if (realMaster != null)
+        {
+            Destroy(realMaster);
+        }
+        realMaster = this;
 	}
 
 	void Start() {
@@ -213,58 +213,7 @@ public sealed class GameMaster : MonoBehaviour {
 			}
 			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;            
             if (cameraTimer <= 0 && cameraHasMoved) {
-                GameObject receiver = null;
-                int c = 0;
-                while (c < cameraUpdateBroadcast.Count)
-                {
-                    receiver = cameraUpdateBroadcast[c];
-                    if (receiver == null)
-                    {
-                        cameraUpdateBroadcast.RemoveAt(c);
-                        continue;
-                    }
-                    else
-                    {
-                        if (receiver.activeSelf) receiver.SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
-                        c++;
-                    }
-                }
-                if (standartSpritesList.Count > 0) {
-					int i = 0;
-					while (i < standartSpritesList.Count) {
-                        receiver = standartSpritesList[i];
-						if (receiver == null) {
-							standartSpritesList.RemoveAt(i);
-							continue;
-						}
-						else {
-							if (receiver.activeSelf) receiver.transform.LookAt(camPos);
-							i++;
-						}
-					}
-				}
-				if (mastSpritesList.Count > 0) {
-					int i = 0;
-					while (i < mastSpritesList.Count) {
-                        receiver = mastSpritesList[i];
-						if (receiver == null) {
-							mastSpritesList.RemoveAt(i);
-							continue;
-						}
-						else {
-                            if (receiver.activeSelf)
-                            {
-                                Transform obj = receiver.transform;
-                                Vector3 dir = camPos - obj.position;
-                                dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
-                                obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
-                            }
-                            i++;
-                        }
-					}
-				}
-				cameraHasMoved = false;
-				cameraTimer = cameraUpdateTime;
+                AllCameraFollowersUpdate();
 			}
 			camPos = camTransform.position;
 		}
@@ -335,7 +284,7 @@ public sealed class GameMaster : MonoBehaviour {
 
 		windTimer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (windTimer <= 0) {
-			windVector = Random.onUnitSphere * (maxWindPower * Random.value);
+			windVector = Random.onUnitSphere;
 			windVector += Vector3.down * windVector.y;
 			windTimer = windChangeTime + Random.value * windChangeTime;
 			if (windVector.magnitude == 0) UIController.current.MakeAnnouncement( Localization.announcement_stillWind );
@@ -387,6 +336,70 @@ public sealed class GameMaster : MonoBehaviour {
 		if (Vector3.Distance(point, camBasis.transform.position) > CAM_STANDART_DISTANCE) moveCamToLookPoint = true;
 	}
 
+    void AllCameraFollowersUpdate()
+    {
+        GameObject receiver = null;
+        int c = 0;
+        while (c < cameraUpdateBroadcast.Count)
+        {
+            receiver = cameraUpdateBroadcast[c];
+            if (receiver == null)
+            {
+                cameraUpdateBroadcast.RemoveAt(c);
+                continue;
+            }
+            else
+            {
+                if (receiver.activeSelf) receiver.SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
+                c++;
+            }
+        }
+        if (standartSpritesList.Count > 0)
+        {
+            int i = 0;
+            while (i < standartSpritesList.Count)
+            {
+                receiver = standartSpritesList[i];
+                if (receiver == null)
+                {
+                    standartSpritesList.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    if (receiver.activeSelf) receiver.transform.LookAt(camPos);
+                    i++;
+                }
+            }
+        }
+        if (mastSpritesList.Count > 0)
+        {
+            int i = 0;
+            while (i < mastSpritesList.Count)
+            {
+                receiver = mastSpritesList[i];
+                if (receiver == null)
+                {
+                    mastSpritesList.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    if (receiver.activeSelf)
+                    {
+                        Transform obj = receiver.transform;
+                        Vector3 dir = camPos - obj.position;
+                        dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
+                        obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
+                    }
+                    i++;
+                }
+            }
+        }
+        cameraHasMoved = false;
+        cameraTimer = cameraUpdateTime;
+    }
+
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
 		Time.timeScale = 0;
 		GameMasterSerializer gms = new GameMasterSerializer();
@@ -414,7 +427,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.machineConstructingSpeed = machineConstructingSpeed;
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
 		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
-		gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
+		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
 		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
 		#endregion
 		gms.chunkSerializer = mainChunk.SaveChunkData();
@@ -432,11 +445,12 @@ public sealed class GameMaster : MonoBehaviour {
 		return true;
 	}
 
+
 	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
 		if(File.Exists(Application.dataPath + "/Saves/save.txt")) {
 			BinaryFormatter bf = new BinaryFormatter();
 			FileStream file = File.Open(Application.dataPath + "/Saves/save.txt", FileMode.Open);
-			Time.timeScale = 0; GameMaster.gameSpeed = 0;
+            Time.timeScale = 0; GameMaster.gameSpeed = 0;
 			GameMasterSerializer gms = (GameMasterSerializer) bf.Deserialize(file);
 			#region gms mainPartLoading
 			gameSpeed =  gms.gameSpeed;
@@ -462,14 +476,14 @@ public sealed class GameMaster : MonoBehaviour {
 			machineConstructingSpeed = gms.machineConstructingSpeed ;
 			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
 			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
-			maxWindPower = gms.maxWindPower ;windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
+			windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
 			RecruitingCenter.SetHireCost( gms.recruiting_hireCost);
-			#endregion
-			Destroy (mainChunk.gameObject);
+            #endregion      
+			Destroy (mainChunk.gameObject);            
 
-			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
+            Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
 			QuantumTransmitter.Reset();Hangar.Reset();
-            Grassland.ScriptReset();
+            Grassland.ScriptReset(); 
 			//UI.current.Reset();
 
 			Crew.LoadStaticData(gms.crewStaticSerializer);
@@ -485,8 +499,11 @@ public sealed class GameMaster : MonoBehaviour {
 			ExpeditionCorpus.LoadStaticData(gms.expeditionCorpusStaticSerializer);
 
 			file.Close();
-			Time.timeScale = 1;
-			return true;
+			Time.timeScale = 1; GameMaster.gameSpeed = 1;
+            AllCameraFollowersUpdate();
+            prevCamPos = camTransform.position;
+            prevCamRot = camTransform.rotation;
+            return true;
 		}
 		else return false;
 	}
@@ -497,6 +514,11 @@ public sealed class GameMaster : MonoBehaviour {
 			output = (T)System.Convert.ChangeType(new BinaryFormatter().Deserialize(stream), typeof(T));
 		}
 	}
+
+    private void OnApplicationQuit()
+    {
+        applicationStopWorking = true;
+    }
 }
 
 [System.Serializable]
@@ -511,7 +533,7 @@ class GameMasterSerializer {
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
 	public float windVector_x,windVector_y,windVector_z;
-	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
+	public float windTimer = 0, windChangeTime = 120;
 	public float sunlightIntensity;
 
 	public ChunkSerializer chunkSerializer;

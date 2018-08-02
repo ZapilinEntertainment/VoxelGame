@@ -66,7 +66,7 @@ public class BlockBuildingSite : Worksite {
 
 		if ( placesToWork == 0 ) {
             actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
-			workObject.ClearSurface();
+			workObject.ClearSurface(false); // false так как все равно его удаляем
 			workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
             StopWork();
         }

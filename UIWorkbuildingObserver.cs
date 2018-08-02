@@ -68,7 +68,6 @@ public sealed class UIWorkbuildingObserver : UIObserver {
             SelfShutOff();
             return;
         }
-        print("here");
         observingWorksite = ws; isObserving = true;
 
         showingWorkersCount = ws.workersCount;

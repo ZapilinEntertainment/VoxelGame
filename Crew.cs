@@ -38,8 +38,12 @@ public class Crew {
 		crewSlots = 0;
 		lastNumber = 0;
 	}
+    public static void PrepareList()
+    {
+        if (crewsList == null) crewsList = new List<Crew>();
+    }
 
-	public void SetCrew (ColonyController home, float hireCost) {
+    public void SetCrew (ColonyController home, float hireCost) {
 		level = 0;
 		name = Localization.NameCrew();
 		ID = lastNumber;	lastNumber ++;
@@ -59,12 +63,13 @@ public class Crew {
 		crewSlots --;
 	}
 
-	public void ChangeShip(Shuttle s) {
-		if (s == null || (shuttle!= null & s == shuttle)) return;
-		if (s.SetCrew(this) == false) return;
+	public bool AssignToShip(Shuttle s) {
+		if (s == null || (shuttle!= null & s == shuttle)) return false;
+		if (s.AddCrew(this) == false) return false;
 		shuttle = s;
 		stamina -= 0.1f;
 		if (stamina < 0) stamina = 0;
+        return true;
 	}
 
 	public static void AddCrewSlots(int x) {
@@ -139,8 +144,7 @@ public class Crew {
 		nextExperienceLimit = cs.nextExperienceLimit;
 		experience = cs.experience;
 		name = cs.name;
-		ID = cs.ID;
-		ChangeShip(cs.shuttleID == -1 ? null : Shuttle.GetShuttle(cs.shuttleID));
+		ID = cs.ID;        
 		status = cs.status;
 		perception = cs.perception;
 		persistence = cs.persistence;
@@ -152,7 +156,12 @@ public class Crew {
 		stamina = cs.stamina;
 		successfulOperations = cs.successfulOperations;
 		totalOperations=cs.totalOperations;
-		return this;
+        if (cs.shuttleID != -1)
+        {
+            shuttle = Shuttle.GetShuttle(cs.shuttleID);
+            shuttle.AddCrew(this);
+        }
+        return this;
 	}
 		
 	#endregion
@@ -164,20 +173,30 @@ public class Crew {
 	public void DismissMember() {}
 	public void AddMember() {}
 
-	public void Delete() {
+	public void Dismiss() {
 		GameMaster.colonyController.AddWorkers(count);
-		if (shuttle != null) {
-			shuttle.SetCrew(null);
-		}
-		int i =0;
-		while (i < crewsList.Count) {
-			if (crewsList[i] == this) {
-				crewsList.RemoveAt(i);
-				crewSlots++;
-			}
-			else	i++;
-		}
-	}
+        count = 0;
+        if (status != CrewStatus.onMission)
+        {
+            crewsList.Remove(this);
+            crewSlots++;
+        }
+        if (shuttle != null)
+        {
+            Shuttle s = shuttle;
+            shuttle = null;
+            s.DismissCrew(this);
+        }
+    }
+
+    public void Annihilate()
+    {
+        if (status != CrewStatus.onMission)
+        {
+            crewsList.Remove(this);
+            crewSlots++;
+        }
+    }
 
     public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
     {

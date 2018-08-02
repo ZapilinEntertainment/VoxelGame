@@ -13,7 +13,7 @@ public class Farm : WorkBuilding {
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
-		b.ClearSurface();
+		b.ClearSurface( !(innerPosition == SurfaceRect.full) ); 
 		SetBuildingData(b, pos);
 		b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
 	}
@@ -74,10 +74,14 @@ public class Farm : WorkBuilding {
 		}
 		if (totalCost > 0) c.TakeLifePowerWithForce(totalCost);
 	}
-	void OnDestroy() {
-		if (basement != null) {
-			if (basement.material_id == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
-		}
-		PrepareWorkbuildingForDestruction();
-	}
+
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        if (PrepareWorkbuildingForDestruction())
+        {
+            if (basement.material_id == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
+        }
+        Destroy(gameObject);
+    }
 }

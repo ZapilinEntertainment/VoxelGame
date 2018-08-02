@@ -132,9 +132,9 @@ public sealed class UISurfacePanelController : UIObserver {
                             float[] onStorage = GameMaster.colonyController.storage.standartResources;
                             for (int i = 0; i < resourcesCostImage.Length; i++)
                             {
-                                if (onStorage[i] != showingResourcesCount[i].y)
-                                {
-                                    int rid = (int)showingResourcesCount[i].x;
+                                int rid = (int)showingResourcesCount[i].x;
+                                if (onStorage[rid] != showingResourcesCount[i].y)
+                                {                                    
                                     resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>().color = onStorage[rid] < showingResourcesCount[i].y ? Color.red : Color.white;
                                     showingResourcesCount[i].y = onStorage[rid];
                                 }
@@ -292,8 +292,9 @@ public sealed class UISurfacePanelController : UIObserver {
 
     #region building construction 
     public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
+        if (selectedBuildingButton == buttonIndex) { DeselectBuildingButton();return; }
 		chosenBuilding = building;
-		availableBuildingsButtons[buttonIndex].image.overrideSprite =overridingSprite; 
+		availableBuildingsButtons[buttonIndex].image.overrideSprite = overridingSprite; 
 		if (selectedBuildingButton >= 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
 		selectedBuildingButton = buttonIndex;
 
@@ -397,6 +398,13 @@ public sealed class UISurfacePanelController : UIObserver {
 			}
 		}
 	}
+    void DeselectBuildingButton()
+    {
+        chosenBuilding = null;
+        if (selectedBuildingButton >= 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
+        selectedBuildingButton = -1;
+        infoPanel.SetActive(false);
+    }
 
 	public void CreateSelectedBuilding () {
         if (chosenBuilding.fullCover) CreateSelectedBuilding(0, 0);
@@ -418,14 +426,17 @@ public sealed class UISurfacePanelController : UIObserver {
 			}
 		}
 		else {
-			GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+            UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
 		}
 	}
 
 	public void SetConstructingLevel (int l) {
-		constructingLevel = (byte)l;
-		
-		RewriteBuildingButtons();
+        if (constructingLevel != l)
+        {
+            constructingLevel = (byte)l;
+            DeselectBuildingButton();
+            RewriteBuildingButtons();
+        }
 	}
 
 	void RewriteBuildingButtons () {

@@ -411,15 +411,7 @@ public class Structure : MonoBehaviour {
 
 	public void UnsetBasement() {
 		if ( isBasement ) {
-			int i = 0;
-			List <Component> clist = basement.myChunk.chunkUpdateSubscribers;
-			while ( i < clist.Count ) {
-				if (clist[i] == this) {
-					clist.RemoveAt(i);
-					continue;
-				}
-				i++;
-			}
+            basement.myChunk.chunkUpdateSubscribers.Remove(this);			
 		}
 		basement = null;
 		innerPosition = new SurfaceRect(0,0,innerPosition.x_size, innerPosition.z_size);
@@ -480,8 +472,8 @@ public class Structure : MonoBehaviour {
 	#endregion
 
 	public virtual UIObserver ShowOnGUI() {
-		if (structureObserver == null) structureObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
-		else structureObserver.gameObject.SetActive(true);
+        if (structureObserver == null) structureObserver = UIStructureObserver.InitializeStructureObserverScript();
+        else structureObserver.gameObject.SetActive(true);
 		structureObserver.SetObservingStructure(this);
 		return structureObserver;
 	}
@@ -507,42 +499,53 @@ public class Structure : MonoBehaviour {
 		return buildingsList;
 	}
 
+    protected bool PrepareStructureForDestruction( )
+    {
+        ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
+        if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1)
+        {
+            for (int i = 0; i < resourcesLeft.Length; i++)
+            {
+                resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
+            }
+            GameMaster.colonyController.storage.AddResources(resourcesLeft);
+        }
+        bool haveBasement = (basement != null);
+        if (haveBasement)
+        {            
+            basement.RemoveStructure(this);
+            if (isArtificial) basement.artificialStructures--;
+
+            SurfaceBlock lastBasement = basement;
+            if (isBasement)
+            {
+                Block ub = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
+                if (ub != null)
+                {
+                    if (lastBasement.myChunk.CalculateSupportPoints(lastBasement.pos.x, lastBasement.pos.y, lastBasement.pos.z) < 1)
+                    {
+                        lastBasement.myChunk.DeleteBlock(ub.pos);
+
+                    }
+                    else lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, ub.material_id, false);
+                }
+            }
+        }
+        return haveBasement;
+    }
+
 	/// <summary>
 	/// forced means that this object will be deleted without basement-linked actions
 	/// </summary>
 	/// <param name="forced">If set to <c>true</c> forced.</param>
-	virtual public void Annihilate( bool forced ) { // for pooling
-		SurfaceBlock lastBasement = basement;
-		if (forced) UnsetBasement();
-		else {
-			ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
-			if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1) {
-				for (int i =0; i< resourcesLeft.Length; i++) {
-					resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
-				}
-				GameMaster.colonyController.storage.AddResources(resourcesLeft);
-			}
-		}
-		if (isBasement) {
-			Block ub = lastBasement.myChunk.GetBlock(lastBasement.pos.x , lastBasement.pos.y+1, lastBasement.pos.z);
-			if ( ub != null ) {
-				if ( lastBasement.myChunk.CalculateSupportPoints(lastBasement.pos.x, lastBasement.pos.y, lastBasement.pos.z) < 1 )	{
-					lastBasement.myChunk.DeleteBlock(ub.pos);
-
-				}
-				else lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, ub.material_id, false);
-			}
-		}
+    /// 
+	virtual public void Annihilate( bool forced ) {// for pooling	        
+        if (forced) { UnsetBasement(); }
+        PrepareStructureForDestruction();		
 		Destroy(gameObject);
 	}
 
 	virtual public void Rename() {
 		name = Localization.GetStructureName(id);
-	}
-
-	void OnDestroy() {
-		if (basement != null) {
-			basement.RemoveStructure(this);
-		}
 	}
 }

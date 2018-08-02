@@ -40,7 +40,7 @@ public class UIRecruitingCenterObserver : UIObserver {
         observingRCenter = rc; isObserving = true;
         uwb.SetObservingWorkBuilding(rc);
 
-        PrepareCrewsWindow(Crew.crewsList.Count != 0);
+        PrepareCrewsWindow();
 
         STATUS_UPDATE_TIME = 1f; timer = STATUS_UPDATE_TIME;
     }
@@ -72,12 +72,14 @@ public class UIRecruitingCenterObserver : UIObserver {
         }
     }
 
-    public void PrepareCrewsWindow( bool haveCrews)
+    public void PrepareCrewsWindow()
     {
         showingCrew = null;
         crewNameTextField.gameObject.SetActive(false);
+        hireButton.gameObject.SetActive(true);
+        hireButton.GetComponent<Image>().overrideSprite = (observingRCenter.finding) ? UIController.current.overridingSprite : null;
         mainCrewIcon.enabled = false;
-        if ( !haveCrews )
+        if ( Crew.crewsList.Count == 0 )
         {
             dismissButton.gameObject.SetActive(false);              
             crewListDropdown.interactable = false;
@@ -95,33 +97,30 @@ public class UIRecruitingCenterObserver : UIObserver {
 
     public void PrepareCrewsDropdown()
     {
-        //print(crewListDropdown.transform.childCount);
-        if (crewListDropdown.transform.childCount == 4)
+        List<Dropdown.OptionData> crewButtons = new List<Dropdown.OptionData>();
+        crewButtons.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost() + ')'));
+        var crews = Crew.crewsList;
+        print("crews count : " + crews.Count.ToString());
+        if (crews != null && crews.Count > 0)
         {
-            List<Dropdown.OptionData> crewButtons = new List<Dropdown.OptionData>();
-            crewButtons.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost() + ')'));
-            var crews = Crew.crewsList;
-            if (crews != null && crews.Count > 0)
+            for (int i = 0; i < crews.Count; i++)
             {
-                for (int i = 0; i < crews.Count; i++)
-                {
-                    crewButtons.Add(new Dropdown.OptionData(crews[i].name));
-                }                
+                crewButtons.Add(new Dropdown.OptionData('\"' + crews[i].name + '\"'));
             }
-            crewListDropdown.options = crewButtons;
         }
+        crewListDropdown.options = crewButtons;
     }
 
     public void SelectCrew(int i)
     {
         if (i == 0) // hire button
         {
-            StartHiring();
+            PrepareCrewsWindow();
         }
         else
         {            
             i--;
-            SelectCrew(Crew.crewsList[i]);
+            SelectCrew(Crew.crewsList[i]);            
         }
     }
 
@@ -129,8 +128,10 @@ public class UIRecruitingCenterObserver : UIObserver {
     {
         showingCrew = c;        
         hireButton.gameObject.SetActive(false);
+        crewListDropdown.interactable = true;
+        crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + Crew.crewSlots.ToString();
         crewNameTextField.gameObject.SetActive(true);
-        crewNameTextField.text = showingCrew.name;
+        crewNameTextField.text = '\"' + showingCrew.name + '\"';
 
         mainCrewIcon.enabled = true;
         showingCrew.DrawCrewIcon(mainCrewIcon);
@@ -161,13 +162,13 @@ public class UIRecruitingCenterObserver : UIObserver {
                 }
                 else
                 {
-                    GameMaster.realMaster.AddAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
+                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
                     hireButton.GetComponent<Image>().overrideSprite = null;
                 }
             }
             else
             {
-                GameMaster.realMaster.AddAnnouncement(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
+                UIController.current.MakeAnnouncement(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
             }
         }
     }
@@ -178,8 +179,8 @@ public class UIRecruitingCenterObserver : UIObserver {
     }
     public void Dismiss()
     {
-        showingCrew.Delete();
-        PrepareCrewsWindow(Crew.crewsList.Count != 0);
+        showingCrew.Dismiss();
+        PrepareCrewsWindow();
     }
 
 
