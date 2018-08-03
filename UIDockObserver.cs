@@ -16,6 +16,13 @@ public class UIDockObserver : UIObserver
     const int MIN_VALUE_CHANGING_STEP = 5, SELL_STATUS_ICON_INDEX = 0, NAME_INDEX = 1, MINUS_BUTTON_INDEX = 2, LIMIT_VALUE_INDEX = 3, PLUS_BUTTON_INDEX = 4, DELETE_BUTTON_INDEX = 5;
     int showingImmigrationLimit = 0;
 
+    public static UIDockObserver InitializeDockObserverScript()
+    {
+        UIDockObserver udo = Instantiate(Resources.Load<GameObject>("UIPrefs/dockObserver"), UIController.current.rightPanel.transform).GetComponent<UIDockObserver>();
+        Dock.dockObserver = udo;
+        return udo;
+    }
+
      public void SetObservingDock(Dock d)
     {
         if (d == null)
@@ -27,11 +34,7 @@ public class UIDockObserver : UIObserver
         {
             observingDock = d; isObserving = true;
             UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
-            if (uwb == null)
-            {
-                uwb = Instantiate(Resources.Load<GameObject>("UIPrefs/workBuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
-                WorkBuilding.workbuildingObserver = uwb;
-            }
+            if (uwb == null) uwb = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
             else uwb.gameObject.SetActive(true);
             uwb.SetObservingWorkBuilding(observingDock);
             if (tradingListPanel.activeSelf) PrepareTradingPanel();

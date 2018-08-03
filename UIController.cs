@@ -13,7 +13,7 @@ sealed public class UIController : MonoBehaviour {
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton;
@@ -371,6 +371,7 @@ sealed public class UIController : MonoBehaviour {
         }
     } 
 
+
     public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
 		if (showMenuWindow) {
@@ -382,6 +383,7 @@ sealed public class UIController : MonoBehaviour {
             //menuButton.transform.SetAsLastSibling();
 		}
 		else {
+            optionsPanel.SetActive(false);
 			menuPanel.SetActive(false);
 		}
 	}
@@ -392,6 +394,14 @@ sealed public class UIController : MonoBehaviour {
 	public void LoadButton(){
         bool success = GameMaster.realMaster.LoadGame("newsave");
         MakeAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameLoaded : GameAnnouncements.LoadingFailed));
+    }
+    public void OptionsButton() {
+        optionsPanel.SetActive(!optionsPanel.activeSelf);
+    }
+    public void ExitButton()
+    {
+        // запрос на сохранение?
+        Application.Quit();
     }
 	#endregion
 
@@ -721,6 +731,13 @@ sealed public class UIController : MonoBehaviour {
         t = rollingShopPanel.transform;
         t.GetChild(0).GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoActivity);
         t.GetChild(1).GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ImproveGears);
+
+        t = menuPanel.transform;
+        t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
+        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Options);
+        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
+
     }
 
     #region right panel

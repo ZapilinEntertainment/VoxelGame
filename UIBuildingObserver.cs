@@ -16,13 +16,18 @@ public class UIBuildingObserver : UIObserver {
     [SerializeField] GameObject upgradeInfoPanel; // fiti
     [SerializeField] GameObject[] resourceCostIndicator; // fiti
     [SerializeField] Button energyButton; // fiti
-    [SerializeField] Texture powerOn_tx, powerOff_tx; //fiti
 
     private void Awake()
     {
         savedResourcesValues = new Vector2[resourceCostIndicator.Length];
     }
 
+    public static UIBuildingObserver InitializeBuildingObserverScript()
+    {
+        UIBuildingObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
+        Building.buildingObserver = ub;
+        return ub;
+    }
 
     public void SetObservingBuilding(Building b) {
 		if (b == null) {
@@ -30,11 +35,8 @@ public class UIBuildingObserver : UIObserver {
 			return;
 		}
 		UIStructureObserver us = Structure.structureObserver;
-		if (us == null) {
-			us = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
-			Structure.structureObserver = us;
-		}
-		else us.gameObject.SetActive(true);
+        if (us == null) us = UIStructureObserver.InitializeStructureObserverScript();
+        else us.gameObject.SetActive(true);
 		observingBuilding = b; isObserving = true;
 		us.SetObservingStructure(observingBuilding);
 		status_connectedToPowerGrid = b.connectedToPowerGrid;
@@ -43,14 +45,14 @@ public class UIBuildingObserver : UIObserver {
 			status_energySupplied = b.energySupplied;
             if (status_energySupplied)
             {
-                energyButton.GetComponent<RawImage>().texture = observingBuilding.isActive ? powerOn_tx : powerOff_tx;
+                energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV( observingBuilding.isActive? Icons.PowerOn : Icons.PowerOff);
                 if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
                 else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
             }
             else
             {
                 energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                energyButton.GetComponent<RawImage>().texture = powerOff_tx;
+                energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
             }
 			energyValue.enabled = true;
 			energyImage.enabled = true;
@@ -98,12 +100,12 @@ public class UIBuildingObserver : UIObserver {
                     {
                         if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
                         else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                        energyButton.GetComponent<RawImage>().texture = observingBuilding.isActive ? powerOn_tx : powerOff_tx;
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
                     }
                     else
                     {
                         energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                        energyButton.GetComponent<RawImage>().texture = powerOff_tx;
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
                     }
                     energyValue.enabled = true;
                     energyImage.enabled = true;
@@ -124,12 +126,12 @@ public class UIBuildingObserver : UIObserver {
                         showingEnergySurplus = observingBuilding.energySurplus;
                         if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
                         else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                        energyButton.GetComponent<RawImage>().texture = observingBuilding.isActive ? powerOn_tx : powerOff_tx;
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
                     }
                     else
                     {
                         energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                        energyButton.GetComponent<RawImage>().texture = powerOff_tx;
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
                     }
                 }
                 else
@@ -139,7 +141,7 @@ public class UIBuildingObserver : UIObserver {
                         showingEnergySurplus = observingBuilding.energySurplus;
                         if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
                         else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                        energyButton.GetComponent<RawImage>().texture = observingBuilding.isActive ? powerOn_tx : powerOff_tx;
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
                     }
                 }
             }
@@ -294,12 +296,12 @@ public class UIBuildingObserver : UIObserver {
             if ( !observingBuilding.canBePowerSwitched ) return;
             if (!observingBuilding.isActive)
             {
-                energyButton.GetComponent<RawImage>().texture = powerOn_tx;
+                energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOn);
                 observingBuilding.SetActivationStatus(true);                
             }
             else
             {
-                energyButton.GetComponent<RawImage>().texture = powerOff_tx;
+                energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
                 observingBuilding.SetActivationStatus(false);
             }
             StatusUpdate();

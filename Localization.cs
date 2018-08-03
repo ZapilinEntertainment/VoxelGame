@@ -1,10 +1,11 @@
 ﻿public enum Language{English, Russian};
-public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair}
+public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
+Save, Load, Options, Exit, Build}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
 public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed };
-public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial}
+public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots}
 
 public static class Localization {
@@ -318,9 +319,10 @@ public static class Localization {
 
 	public static string GetRestrictionPhrase(RestrictionKey rkey ) {
 		switch (rkey) {
-		default : return "Action not possible";
-		case RestrictionKey.SideConstruction: return "Can be built only on side blocks";
-		case RestrictionKey.UnacceptableSurfaceMaterial: return "Unacceptable surface material";
+		    default : return "Action not possible";
+		    case RestrictionKey.SideConstruction: return "Can be built only on side blocks";
+		    case RestrictionKey.UnacceptableSurfaceMaterial: return "Unacceptable surface material";
+            case RestrictionKey.HeightBlocked: return "Height blocked";
 		}
 	}
 
@@ -376,7 +378,11 @@ public static class Localization {
             case LocalizedWord.Disassemble: return "Disassemble";
             case LocalizedWord.Total: return "Total"; // storage volume string
             case LocalizedWord.Repair: return "Repair";
-            
+            case LocalizedWord.Save: return "Save";
+            case LocalizedWord.Load: return "Load";
+            case LocalizedWord.Options: return "Options";
+            case LocalizedWord.Exit: return "Exit";
+            case LocalizedWord.Build: return "Build";
 		default: return "...";
 		}
 	}

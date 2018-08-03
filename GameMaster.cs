@@ -15,9 +15,6 @@ public sealed class GameMaster : MonoBehaviour {
 	public Constructor constructor;
 	public Transform camTransform, camBasis;
 	public static Vector3 camPos{get;private set;}
-	Vector3 camLookPoint; 
-	bool moveCamToLookPoint = false;
-	const float CAM_STANDART_DISTANCE = 3;
     public static bool applicationStopWorking { get; protected set; }
 
 	public List<GameObject> cameraUpdateBroadcast;
@@ -39,16 +36,18 @@ public sealed class GameMaster : MonoBehaviour {
 	public static float upgradeCostIncrease{get;private set;}
 	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
-	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
-	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f;
 
-	public static Difficulty difficulty {get;private set;}
+    public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
+    START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
+    public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
+
+    public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 	public static float sellPriceCoefficient = 0.75f;
 	public static int layerCutHeight = 16, prevCutHeight = 16;
 
-	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
+	
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 
@@ -299,13 +298,6 @@ public sealed class GameMaster : MonoBehaviour {
 		}
 	}
 
-	void LateUpdate() {
-		if (moveCamToLookPoint) {
-			camBasis.position = Vector3.MoveTowards(camBasis.position, camLookPoint, CAM_LOOK_SPEED * Time.deltaTime);
-			if (Vector3.Distance(camBasis.position, camLookPoint) == 0) moveCamToLookPoint = false;
-		}
-	}
-
     public void AddToCameraUpdateBroadcast(GameObject g)
     {
         if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
@@ -328,12 +320,6 @@ public sealed class GameMaster : MonoBehaviour {
 		case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed;break;
 		}
 		return workspeed ;
-	}
-
-	public void SetLookPoint(Vector3 point) {
-		// при двойном касании - перенос без условия
-		camLookPoint = point;
-		if (Vector3.Distance(point, camBasis.transform.position) > CAM_STANDART_DISTANCE) moveCamToLookPoint = true;
 	}
 
     void AllCameraFollowersUpdate()
@@ -437,7 +423,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.crewStaticSerializer = Crew.SaveStaticData();
 		gms.questStaticSerializer = Quest.SaveStaticData();
 		gms.expeditionCorpusStaticSerializer = ExpeditionCorpus.SaveStaticData();
-		FileStream fs = File.Create(Application.dataPath + "/Saves/save.txt");
+		FileStream fs = File.Create(Application.persistentDataPath + "/save.txt");
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
 		fs.Close();
@@ -449,7 +435,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
 		if(File.Exists(Application.dataPath + "/Saves/save.txt")) {
 			BinaryFormatter bf = new BinaryFormatter();
-			FileStream file = File.Open(Application.dataPath + "/Saves/save.txt", FileMode.Open);
+			FileStream file = File.Open(Application.persistentDataPath + "/save.txt", FileMode.Open);
             Time.timeScale = 0; GameMaster.gameSpeed = 0;
 			GameMasterSerializer gms = (GameMasterSerializer) bf.Deserialize(file);
 			#region gms mainPartLoading

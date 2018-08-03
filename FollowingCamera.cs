@@ -17,9 +17,10 @@ public class FollowingCamera : MonoBehaviour {
 	public Vector3 camPoint = new Vector3(0,5,-5);
 
 	Vector3 lookPoint;
-	bool changingBasePos = false, changingCamZoom = false;
+	bool changingBasePos = false, changingCamZoom = false, zoom_oneChangeIgnore = false;
 	float optimalDistance = 5;
     [SerializeField] bool useAutoZooming = true;
+    [SerializeField] UnityEngine.UI.Slider zoomSlider; // fiti
 
 	void Start() {
 		if (main != null & main != this) Destroy(main);
@@ -115,7 +116,24 @@ public class FollowingCamera : MonoBehaviour {
 			#endregion
 			float zspeed = zoomSpeed * Time.deltaTime * ( 1 + zoomSmoothCoefficient) * delta * (-1);
 			cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World );
-			zoomSmoothCoefficient += zoomSmoothAcceleration;
+            float dist = cam.transform.localPosition.magnitude;
+            if (dist > zoomSlider.maxValue) {
+                dist = zoomSlider.maxValue;
+            }
+            else
+            {
+                if (dist < zoomSlider.minValue)
+                {
+                    dist = zoomSlider.minValue;
+                }
+            }
+            if (dist != cam.localPosition.magnitude)
+            {
+                cam.transform.localPosition = cam.transform.localPosition.normalized * dist;
+                zoom_oneChangeIgnore = true;
+                zoomSlider.value = dist;
+            }
+            zoomSmoothCoefficient += zoomSmoothAcceleration;
 		}
 		else zoomSmoothCoefficient = 0;
 
@@ -131,11 +149,17 @@ public class FollowingCamera : MonoBehaviour {
 			Vector3 endPoint =  cam.localPosition.normalized * optimalDistance;
 			cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, endPoint, zoomSpeed/5f * Time.deltaTime * ( 1 + zoomSmoothCoefficient));
 			cam.transform.LookAt(transform.position);
-			if ( cam.transform.localPosition.magnitude / endPoint.magnitude == 1 )	{
-				changingCamZoom = false;
-				zoomSmoothCoefficient =0;
-			}
-			else zoomSmoothCoefficient = zoomSmoothAcceleration * zoomSmoothAcceleration * zoomSmoothAcceleration ;
+            if (cam.transform.localPosition.magnitude / endPoint.magnitude == 1)
+            {
+                changingCamZoom = false;
+                zoomSmoothCoefficient = 0;
+            }
+            else
+            {
+                zoomSmoothCoefficient = zoomSmoothAcceleration * zoomSmoothAcceleration * zoomSmoothAcceleration;
+                zoom_oneChangeIgnore = true;
+                zoomSlider.value = cam.transform.localPosition.magnitude;                
+            }
 		}
 			
 		//if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
@@ -160,4 +184,17 @@ public class FollowingCamera : MonoBehaviour {
     {
         cam.localRotation = Quaternion.Euler(-45 +val * 135 ,0, 0);
     }   
+    public void Zoom(float x)
+    {
+        if (zoom_oneChangeIgnore)
+        {
+            zoom_oneChangeIgnore = false;
+            return;
+        }
+        cam.transform.localPosition = cam.transform.localPosition.normalized * x;
+    }
+    public void SetOptimalDistance(float d)
+    {
+        optimalDistance = d;
+    }
 }

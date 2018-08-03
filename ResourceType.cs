@@ -14,7 +14,7 @@ public class ResourceType {
 	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, PLASTICS_ID = 13, FOOD_ID = 14,
 	CONCRETE_ID = 15, METAL_K_ORE_ID = 16, METAL_M_ORE_ID = 17, METAL_E_ORE_ID = 18, METAL_N_ORE_ID = 19, METAL_P_ORE_ID = 20,
 	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25;
-	public static readonly ResourceType[] resourceTypesArray, materialsForCovering;
+	public static readonly ResourceType[] resourceTypesArray, materialsForCovering, blockMaterials;
 	public static float[] prices, demand;
     public const int RTYPES_COUNT = 26; 
 
@@ -94,8 +94,11 @@ public class ResourceType {
 		Supplies = new ResourceType( SUPPLIES_ID, 0.1f, 0.1f);
 		prices[SUPPLIES_ID] = prices[FOOD_ID] * 2; demand[SUPPLIES_ID] = demand[FOOD_ID] * 0.95f;
 
-		materialsForCovering = new ResourceType[] {ResourceType.Concrete, ResourceType.Dirt, ResourceType.metal_K, ResourceType.metal_S, ResourceType.Stone};
-	}
+		materialsForCovering = new ResourceType[] {Concrete, Dirt, metal_K, metal_S, Stone};
+        blockMaterials = new ResourceType[] {
+           Concrete, Dirt, Lumber, metal_E, metal_K, metal_M, metal_N, metal_P, metal_S, mineral_F, mineral_L, Plastics, Stone
+        };
+    }
 
 	public static ResourceType GetResourceTypeById(int f_id) {
 		if (f_id > resourceTypesArray.Length || f_id < 0) {
@@ -182,6 +185,13 @@ public struct ResourceContainer {
 		if (f_volume < 0) f_volume = 0;
 		volume = f_volume;
 	}
+    public ResourceContainer(int i_id, float i_volume)
+    {
+        type = ResourceType.GetResourceTypeById(i_id);
+        if (i_volume < 0) i_volume = 0;
+        volume = i_volume;
+    }
+
 	static ResourceContainer() {
 		Empty = new ResourceContainer (ResourceType.resourceTypesArray[0], 0);
 	}

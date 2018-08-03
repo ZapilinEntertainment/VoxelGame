@@ -10,6 +10,12 @@ public class UIStructureObserver : UIObserver {
     [SerializeField]
     Button demolishButton;
 
+    public static UIStructureObserver InitializeStructureObserverScript()
+    {
+        UIStructureObserver us = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
+        Structure.structureObserver = us;
+        return us;
+    }
 
 	public void SetObservingStructure(Structure s) {
 		if (s == null) {SelfShutOff();return;}

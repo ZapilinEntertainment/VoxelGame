@@ -30,7 +30,7 @@ public sealed class ColonyController : MonoBehaviour {
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
-	public bool showColonyInfo = false;
+    public bool  accumulateEnergy = true;
 
 	public float energyStored {get;private set;}
 	public float energySurplus {get;private set;}
@@ -38,7 +38,6 @@ public sealed class ColonyController : MonoBehaviour {
 	public float energyCrystalsCount {get;private set;}
 	List<Building> powerGrid;
 	public List<Dock> docks{get;private set;}
-	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
 	public List<GraphoniumEnricher> graphoniumEnrichers{get;private set;}
 	public List<ChemicalFactory>chemicalFactories{get;private set;}
 	public List<Worksite> worksites{get;private set;}
@@ -69,7 +68,6 @@ public sealed class ColonyController : MonoBehaviour {
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
-		rollingShops = new List<RollingShop>();
 		graphoniumEnrichers = new List<GraphoniumEnricher>();
 		chemicalFactories = new List<ChemicalFactory>();
 		worksites = new List<Worksite>();
@@ -82,20 +80,29 @@ public sealed class ColonyController : MonoBehaviour {
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
 
-		// ENERGY CONSUMPTION
-		energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
-		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
-		else {
-			if (energyStored < 0) { // отключение потребителей энергии до выравнивания
+        // ENERGY CONSUMPTION
+        if (energySurplus > 0)
+        {
+            if (accumulateEnergy)
+            {
+                energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
+                if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+            }
+        }
+        else {
+            energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
+            if (energyStored < 0)
+            { // отключение потребителей энергии до выравнивания
                 UIController.current.MakeAnnouncement(Localization.announcement_powerFailure);
-				energyStored = 0;
-				int i = powerGrid.Count - 1;
-				while ( i >= 0 && energySurplus < 0) {
-					if (powerGrid[i].energySurplus < 0) ElementPowerSwitch(i, false);
-					i--;
-				}
-			}
-		}
+                energyStored = 0;
+                int i = powerGrid.Count - 1;
+                while (i >= 0 && energySurplus < 0)
+                {
+                    if (powerGrid[i].energySurplus < 0) ElementPowerSwitch(i, false);
+                    i--;
+                }
+            }
+        }
 			
 		//   STARVATION PROBLEM
 		float foodSupplyHappiness = 1;
@@ -249,7 +256,8 @@ public sealed class ColonyController : MonoBehaviour {
 			energySurplus -= powerGrid[index].energySurplus;
 			totalEnergyCapacity -= powerGrid[index].energyCapacity;
 		}
-	}
+        if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+    }
 
 	#region AddingToLists
 	public void AddWorksite( Worksite w ) {
@@ -422,6 +430,7 @@ public sealed class ColonyController : MonoBehaviour {
 			}
 			i++;
 		}
+        if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 	}
 
 	public void AddDock( Dock d ) {
@@ -446,32 +455,6 @@ public sealed class ColonyController : MonoBehaviour {
 		}
 	}
 
-	public void AddRollingShop( RollingShop rs ) {
-		if ( rs == null ) return;
-		int i = 0;
-		while ( i < rollingShops.Count ) {
-			if (rollingShops[i] == null) {
-				rollingShops.RemoveAt(i);
-				continue;
-			}
-			else {
-				if (rollingShops[i] == rs) return;
-				else i++;
-			}
-		}
-		rollingShops.Add(rs);
-	}
-	public void RemoveRollingShop( RollingShop rs) {
-		if ( rs == null || rollingShops.Count == 0) return;
-		int i = 0;
-		while (i < rollingShops.Count) {
-			if ( rollingShops[i] == null || rollingShops[i] == rs) {
-				rollingShops.RemoveAt(i);
-				continue;
-			}
-			else i++;
-		}
-	}
 	public void AddGraphoniumEnricher( GraphoniumEnricher ge ) {
 		if ( ge == null ) return;
 		int i = 0;

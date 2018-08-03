@@ -10,7 +10,6 @@ public class UITradeWindow : UIObserver {
     [SerializeField] InputField limitInputField;
     [SerializeField] Sprite overridingButtonSprite;
     [SerializeField] RawImage resourcePicture;
-    [SerializeField] Texture redArrow_tx, greenArrow_tx;
 
     int chosenResourceID = -1, chosenButtonIndex = -1, showingLimit;
     float showingPrice = 0, showingDemand = 0;
@@ -96,8 +95,7 @@ public class UITradeWindow : UIObserver {
                 if (saleStatus[index] == null) saleStatusMarker.enabled = false;
                 else
                 {
-                    if (saleStatus[index] == true) saleStatusMarker.texture = redArrow_tx;
-                    else saleStatusMarker.texture = greenArrow_tx;
+                    saleStatusMarker.uvRect = UIController.GetTextureUV((saleStatus[index] == true) ? Icons.RedArrow : Icons.GreenArrow);
                 }
             }
             else
@@ -133,7 +131,7 @@ public class UITradeWindow : UIObserver {
             demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
             RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
             ri.enabled = true;
-            ri.texture = selling ? redArrow_tx : greenArrow_tx;
+            ri.uvRect = UIController.GetTextureUV(selling ? Icons.RedArrow : Icons.GreenArrow);
         }
         else
         {
@@ -161,7 +159,7 @@ public class UITradeWindow : UIObserver {
             demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
             RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
             ri.enabled = true;
-            ri.texture = selling ? redArrow_tx : greenArrow_tx;            
+            ri.uvRect = UIController.GetTextureUV(selling ? Icons.RedArrow : Icons.GreenArrow);
         }
         else
         {
@@ -216,8 +214,7 @@ public class UITradeWindow : UIObserver {
                 if (saleStatus[tradableResources[i]] == null) saleStatusMarker.enabled = false;
                 else
                 {
-                    if (saleStatus[tradableResources[i]] == true) saleStatusMarker.texture = redArrow_tx;
-                    else saleStatusMarker.texture = greenArrow_tx;
+                    saleStatusMarker.uvRect = UIController.GetTextureUV((saleStatus[tradableResources[i]] == true) ? Icons.RedArrow : Icons.GreenArrow);
                 }
             }
             else
