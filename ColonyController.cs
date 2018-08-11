@@ -30,7 +30,7 @@ public sealed class ColonyController : MonoBehaviour {
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
 	public float health_coefficient{get;private set;}
-	public bool showColonyInfo = false;
+    public bool  accumulateEnergy = true;
 
 	public float energyStored {get;private set;}
 	public float energySurplus {get;private set;}
@@ -38,9 +38,6 @@ public sealed class ColonyController : MonoBehaviour {
 	public float energyCrystalsCount {get;private set;}
 	List<Building> powerGrid;
 	public List<Dock> docks{get;private set;}
-	public List<RollingShop> rollingShops{get;private set;} // прокатный цех
-	public List<GraphoniumEnricher> graphoniumEnrichers{get;private set;}
-	public List<ChemicalFactory>chemicalFactories{get;private set;}
 	public List<Worksite> worksites{get;private set;}
 	public byte docksLevel{get; private set;}
 	public byte housesLevel{get; private set;}
@@ -64,14 +61,11 @@ public sealed class ColonyController : MonoBehaviour {
 		hospitals_coefficient = 0;
 		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
 		docksLevel = 0;
-		energyCrystalsCount = 100;
+		energyCrystalsCount = 1000;
 
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
-		rollingShops = new List<RollingShop>();
-		graphoniumEnrichers = new List<GraphoniumEnricher>();
-		chemicalFactories = new List<ChemicalFactory>();
 		worksites = new List<Worksite>();
 	}
 
@@ -82,20 +76,29 @@ public sealed class ColonyController : MonoBehaviour {
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
 
-		// ENERGY CONSUMPTION
-		energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
-		if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
-		else {
-			if (energyStored < 0) { // отключение потребителей энергии до выравнивания
-				GameMaster.realMaster.AddAnnouncement(Localization.announcement_powerFailure);
-				energyStored = 0;
-				int i = powerGrid.Count - 1;
-				while ( i >= 0 && energySurplus < 0) {
-					if (powerGrid[i].energySurplus < 0) ElementPowerSwitch(i, false);
-					i--;
-				}
-			}
-		}
+        // ENERGY CONSUMPTION
+        if (energySurplus > 0)
+        {
+            if (accumulateEnergy)
+            {
+                energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
+                if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+            }
+        }
+        else {
+            energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
+            if (energyStored < 0)
+            { // отключение потребителей энергии до выравнивания
+                UIController.current.MakeAnnouncement(Localization.announcement_powerFailure);
+                energyStored = 0;
+                int i = powerGrid.Count - 1;
+                while (i >= 0 && energySurplus < 0)
+                {
+                    if (powerGrid[i].energySurplus < 0) ElementPowerSwitch(i, false);
+                    i--;
+                }
+            }
+        }
 			
 		//   STARVATION PROBLEM
 		float foodSupplyHappiness = 1;
@@ -249,7 +252,8 @@ public sealed class ColonyController : MonoBehaviour {
 			energySurplus -= powerGrid[index].energySurplus;
 			totalEnergyCapacity -= powerGrid[index].energyCapacity;
 		}
-	}
+        if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+    }
 
 	#region AddingToLists
 	public void AddWorksite( Worksite w ) {
@@ -302,8 +306,8 @@ public sealed class ColonyController : MonoBehaviour {
 		housesLevel = 0;
 		if (houses.Count == 0) return;
 		int i = 0, normalLivespace = 0;
-		List<int> tents = new List<int>();
-		while (i <houses.Count) {
+		List<int> tents = new List<int>();       
+		while (i < houses.Count) {
 			if (houses[i] == null || !houses[i].gameObject.activeSelf) {houses.RemoveAt(i); continue;}
 			if ( houses[i].isActive) {
 				totalLivespace += houses[i].housing;
@@ -313,12 +317,15 @@ public sealed class ColonyController : MonoBehaviour {
 			}
 			i++;
 		}
-		if (tents.Count > 0 && normalLivespace > citizenCount) {
+        if (tents.Count > 0 & normalLivespace > citizenCount) {
 			i = 0;
-			while ( i < tents.Count && normalLivespace > citizenCount) {
-				if (normalLivespace - citizenCount >= houses[tents[i]].housing) {
-					normalLivespace -= houses[tents[i]].housing;
-					houses[tents[i]].Annihilate(false);
+            int tentIndexDelta = 0; // смещение индексов влево из-за удаления
+			while ( i < tents.Count & normalLivespace > citizenCount) {
+                int realIndex = tents[i] + tentIndexDelta;
+                if (normalLivespace - citizenCount >= houses[realIndex].housing) {                    
+					normalLivespace -= houses[realIndex].housing;
+					houses[realIndex].Annihilate(false);
+                    tentIndexDelta--;
 				}
 				else break;
 				i++;
@@ -419,6 +426,7 @@ public sealed class ColonyController : MonoBehaviour {
 			}
 			i++;
 		}
+        if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 	}
 
 	public void AddDock( Dock d ) {
@@ -442,85 +450,6 @@ public sealed class ColonyController : MonoBehaviour {
 			i++;
 		}
 	}
-
-	public void AddRollingShop( RollingShop rs ) {
-		if ( rs == null ) return;
-		int i = 0;
-		while ( i < rollingShops.Count ) {
-			if (rollingShops[i] == null) {
-				rollingShops.RemoveAt(i);
-				continue;
-			}
-			else {
-				if (rollingShops[i] == rs) return;
-				else i++;
-			}
-		}
-		rollingShops.Add(rs);
-	}
-	public void RemoveRollingShop( RollingShop rs) {
-		if ( rs == null || rollingShops.Count == 0) return;
-		int i = 0;
-		while (i < rollingShops.Count) {
-			if ( rollingShops[i] == null || rollingShops[i] == rs) {
-				rollingShops.RemoveAt(i);
-				continue;
-			}
-			else i++;
-		}
-	}
-	public void AddGraphoniumEnricher( GraphoniumEnricher ge ) {
-		if ( ge == null ) return;
-		int i = 0;
-		while (i < graphoniumEnrichers.Count) {
-			if (graphoniumEnrichers[i] == null) {
-				graphoniumEnrichers.RemoveAt(i);
-				continue;
-			}
-			else {
-				if ( graphoniumEnrichers[i] == ge) return;
-				else i++;
-			}
-		}
-		graphoniumEnrichers.Add(ge);
-	}
-	public void RemoveGraphoniumEnricher ( GraphoniumEnricher ge) {
-		if ( ge == null || graphoniumEnrichers.Count == 0) return;
-		int i = 0;
-		while (i < graphoniumEnrichers.Count) {
-			if (graphoniumEnrichers[i] == null || graphoniumEnrichers[i] == ge) {
-				graphoniumEnrichers.RemoveAt(i);
-				continue;
-			}
-			else i++;
-		}
-	}
-	public void AddChemicalFactory( ChemicalFactory cf ) {
-		if ( cf == null ) return;
-		int i = 0;
-		while ( i < chemicalFactories.Count) {
-			if ( chemicalFactories[i] == null) {
-				chemicalFactories.RemoveAt(i);
-				continue;
-			}
-			else {
-				if (chemicalFactories[i] == cf) return;
-				else i++;
-			}
-		}
-		chemicalFactories.Add(cf);
-	}
-	public void RemoveChemicalFactory( ChemicalFactory cf) {
-		if ( cf == null || chemicalFactories.Count == 0) return;
-		int i = 0;
-		while (i < chemicalFactories.Count) {
-			if (chemicalFactories[i] == null || chemicalFactories[i] == cf) {
-				chemicalFactories.RemoveAt(i);
-				continue;
-			}
-			else i++;
-		}
-	}
 	#endregion
 
 	public void SetHQ (HeadQuarters new_hq) {
@@ -535,6 +464,12 @@ public sealed class ColonyController : MonoBehaviour {
 		if (v <=0) return;
 		energyCrystalsCount += v;
 	}
+
+    /// <summary>
+    /// returns the available residue of asked sum
+    /// </summary>
+    /// <param name="v"></param>
+    /// <returns></returns>
 	public float GetEnergyCrystals(float v) {
 		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
 		else energyCrystalsCount -= v;
@@ -628,31 +563,5 @@ public sealed class ColonyController : MonoBehaviour {
 
 	void OnDestroy() {
 		GameMaster.realMaster.everydayUpdateList.Remove(this);
-	}
-
-	void OnGUI () {
-		float k = GameMaster.guiPiece;
-		if (showColonyInfo) {
-			if (UI.current.mode != UIMode.View) myRect = new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k, 5*k);
-			else myRect = new Rect(Screen.width - 8 *k, UI.current.upPanelBox.height, 8*k, 5 * k);
-			GUI.Box(myRect, GUIContent.none);
-			Rect leftPart = new Rect(myRect.x, myRect.y, myRect.width * 0.75f, k);
-			Rect rightPart = new Rect(myRect.x + myRect.width/2f, myRect.y,myRect.width/2, leftPart.height);
-
-			GUI.Label(leftPart, Localization.info_gearsCoefficient);
-			GUI.Label(rightPart, string.Format("{0:0.##}", gears_coefficient) );
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_happiness);
-			GUI.Label(rightPart,  string.Format("{0:0.##}", happiness_coefficient * 100) + '%');
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_birthrate);
-			GUI.Label(rightPart, string.Format("{0:0.######}", real_birthrate) );
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_hospitalsCoverage);
-			GUI.Label(rightPart, string.Format("{0:0.##}", hospitals_coefficient * 100) + '%' );
-			leftPart.y += leftPart.height; rightPart.y += leftPart.height;
-			GUI.Label(leftPart, Localization.info_health);
-			GUI.Label(rightPart, string.Format("{0:0.##}", health_coefficient * 100) + '%' );
-		}
 	}
 }

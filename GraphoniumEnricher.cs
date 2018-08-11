@@ -3,15 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GraphoniumEnricher : WorkBuilding {
+    public static GraphoniumEnricher current {get;private set;}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		GameMaster.colonyController.AddGraphoniumEnricher(this);
+        if (current != null & current != this) current.Annihilate(false);
+        current = this;
 	}
 
-	void OnDestroy() {
-		GameMaster.colonyController.RemoveGraphoniumEnricher(this);
-		PrepareBuildingForDestruction();
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareWorkbuildingForDestruction();
+        if (current == this) current = null;
+        Destroy(gameObject);
+    }
 }

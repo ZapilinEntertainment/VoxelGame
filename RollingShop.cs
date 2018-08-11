@@ -13,6 +13,7 @@ public class RollingShopSerializer {
 public class RollingShop : WorkBuilding {
 	RollingShopMode mode;
 	bool showModes = false;
+    public static RollingShop current;
 	const float GEARS_UP_LIMIT = 3, GEARS_UPGRADE_STEP = 0.1f;
 
 	override public void Prepare() {
@@ -23,17 +24,49 @@ public class RollingShop : WorkBuilding {
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		GameMaster.colonyController.AddRollingShop(this);
+        if (current != null & current != this) current.Annihilate(false);
+        current = this;
 	}
 
-	override protected void LabourResult() {
+    void Update()
+    {
+        if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
+        if (workersCount > 0)
+        {
+            workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
+            if (workflow >= workflowToProcess)
+            {
+                LabourResult();
+            }
+        }
+    }
+
+    override protected void LabourResult() {
+        int steps = (int)(workflow / workflowToProcess);
+        if (steps == 0) return;
 		switch (mode) {
 		case RollingShopMode.GearsUpgrade:
-			if (GameMaster.colonyController.gears_coefficient < GEARS_UP_LIMIT) GameMaster.colonyController.ImproveGearsCoefficient(GEARS_UPGRADE_STEP * workflow / workflowToProcess);
+                float total = GEARS_UPGRADE_STEP * steps;
+                float ck = GameMaster.colonyController.gears_coefficient;
+                if (ck < GEARS_UP_LIMIT)
+                {
+                    if (ck + total > GEARS_UP_LIMIT) total = GEARS_UP_LIMIT - ck;
+                    GameMaster.colonyController.ImproveGearsCoefficient(total);
+                }
 			break;
 		}
+        workflow -= workflowToProcess;
 	}
 
+    public int GetModeIndex()
+    {
+        return (int)mode;
+    }
+    public void SetMode(int x)
+    {
+        if (RollingShopMode.IsDefined(typeof(RollingShopMode), x)) mode = (RollingShopMode)x;
+    }
+    public void SetMode (RollingShopMode rsm) { mode = rsm; }
 
 	#region save-load system
 	override public StructureSerializer Save() {
@@ -61,38 +94,21 @@ public class RollingShop : WorkBuilding {
 	}
 	#endregion
 
-	void OnDestroy() {
-		GameMaster.colonyController.RemoveRollingShop(this);
-		PrepareBuildingForDestruction();
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareWorkbuildingForDestruction();
+        if (current == this) current = null; // на случай, если все-таки переделаю из behaviour в обычные, тогда еще и OnDestroy
+        Destroy(gameObject);
+    }
 
-	void OnGUI() {
-		//based on building.cs
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		// rolling shop functional
-		if (GUI.Button(rr, Localization.ui_setMode)) showModes = !showModes; rr.y += rr.height;
-		if (showModes) {
-			if ( GUI.Button(rr, Localization.no_activity) ) {
-				showModes = false;
-				mode = RollingShopMode.NoActivity; 
-			} rr.y += rr.height;
-			if (GUI.Button(rr, Localization.rollingShop_gearsProduction)) {
-				showModes = false;
-				mode = RollingShopMode.GearsUpgrade; 
-			}
-				rr.y += rr.height;
-
-		}
-		switch (mode) {
-		case RollingShopMode.NoActivity:
-			GUI.Label( rr, Localization.ui_currentMode + " : " + Localization.no_activity, PoolMaster.GUIStyle_CenterOrientedLabel);
-			break;
-		case RollingShopMode.GearsUpgrade:
-			GUI.Label( rr, Localization.ui_currentMode + " : " + Localization.rollingShop_gearsProduction, PoolMaster.GUIStyle_CenterOrientedLabel);
-			rr.y += rr.height;
-			GUI.Label( rr, Localization.info_gearsCoefficient + " : " + string.Format("{0:0.###}", GameMaster.colonyController.gears_coefficient));
-			break;
-		}
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        showOnGUI = true;
+        UIController.current.ActivateRollingShopPanel();
+        return workbuildingObserver;
+    }
 }

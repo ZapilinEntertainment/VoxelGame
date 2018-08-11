@@ -15,11 +15,10 @@ public sealed class GameMaster : MonoBehaviour {
 	public Constructor constructor;
 	public Transform camTransform, camBasis;
 	public static Vector3 camPos{get;private set;}
-	Vector3 camLookPoint; 
-	bool moveCamToLookPoint = false;
-	const float CAM_STANDART_DISTANCE = 3;
+    public static bool applicationStopWorking { get; protected set; }
 
-	List<GameObject> cameraUpdateBroadcast;
+	public List<GameObject> cameraUpdateBroadcast;
+	public List<GameObject> standartSpritesList, mastSpritesList;
 	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
 	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	public static Chunk mainChunk; 
@@ -37,18 +36,20 @@ public sealed class GameMaster : MonoBehaviour {
 	public static float upgradeCostIncrease{get;private set;}
 	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
-	public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
-	START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f;
 
-	public static Difficulty difficulty {get;private set;}
+    public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
+    START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
+    public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
+
+    public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
 	public static float sellPriceCoefficient = 0.75f;
 	public static int layerCutHeight = 16, prevCutHeight = 16;
 
-	public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16;
+	
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
+	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 
 
 	float t;
@@ -58,67 +59,62 @@ public sealed class GameMaster : MonoBehaviour {
 
 	public List <Component> windUpdateList;
 	public Vector3 windVector {get; private set;}
-	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
-
-	public static float sunlightIntensity {get; private set;}
-	public Light sun;
-
-	bool fontSize_set = false;
-	public static float guiPiece {get;private set;}
-	public static GUISkin mainGUISkin {get;private set;}
-
-	public string startResources_string;
-
-	List<string> gameAnnouncements_string; 
-	const byte ANNOUNCEMENT_LOG_LENGTH = 10;
-	float announcementTimer; const float ANNOUNCEMENT_CLEAR_TIME = 10f;
+	public float windTimer = 0, windChangeTime = 120;
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
 	public bool generateChunk = true;
-	//---------
+    [SerializeField] byte chunkSize = 16;// cannot be bigger than 99, cause I say Limited
+                                         
 
-	public GameMaster () {
-		if (realMaster != null) realMaster = null;
-		realMaster = this;
-	}
-
-	void Awake() {
-		gameSpeed = 1;
-		cameraUpdateBroadcast = new List<GameObject>();
-
-		everydayUpdateList = new List<Component>();
-		everyYearUpdateList = new List<Component>();
-		everyMonthUpdateList = new List<Component>();
-		windUpdateList = new List<Component>();
-		gameAnnouncements_string = new List<string>();
-
-		lifeGrowCoefficient = 1;
-		//Localization.ChangeLanguage(Language.English);
-		geologyModule = gameObject.AddComponent<GeologyModule>();
-		difficulty = Difficulty.Normal;
-		guiPiece = Screen.height / 24f;
-		warProximity = 0.01f;
-		layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
-		colonyController = gameObject.AddComponent<ColonyController>();
-		colonyController.CreateStorage();
-		PoolMaster pm = gameObject.AddComponent<PoolMaster>();
-		pm.Load();
-
-		string saveName = "default.sav";
-		if (generateChunk ) {
-			byte standartSize = 16; // cannot be bigger than 99, cause I say Limited
-			Chunk.SetChunkSize( standartSize );
-			constructor.ConstructChunk( standartSize );
-		}
-		else { // loading data
-			
-		}
+    public GameMaster () {
+        if (realMaster != null)
+        {
+            Destroy(realMaster);
+        }
+        realMaster = this;
 	}
 
 	void Start() {
-		if (camTransform == null) camTransform = Camera.main.transform;
+        gameSpeed = 1;
+        cameraUpdateBroadcast = new List<GameObject>();
+        standartSpritesList = new List<GameObject>();
+
+        mastSpritesList = new List<GameObject>();
+        GameObject[] msprites = GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
+        if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
+        msprites = null;
+
+        everydayUpdateList = new List<Component>();
+        everyYearUpdateList = new List<Component>();
+        everyMonthUpdateList = new List<Component>();
+        windUpdateList = new List<Component>();
+
+        lifeGrowCoefficient = 1;
+        //Localization.ChangeLanguage(Language.English);
+        geologyModule = gameObject.AddComponent<GeologyModule>();
+        difficulty = Difficulty.Normal;
+        warProximity = 0.01f;
+        layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
+        colonyController = gameObject.AddComponent<ColonyController>();
+        colonyController.CreateStorage();
+        PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+        pm.Load();
+
+        string saveName = "default.sav";
+        if (generateChunk)
+        {
+            Chunk.SetChunkSize(chunkSize);
+            constructor.ConstructChunk(chunkSize);
+        }
+        else
+        { // loading data
+
+        }
+        camBasis.transform.position = Vector3.one * chunkSize / 2f;
+
+        if (camTransform == null) camTransform = Camera.main.transform;
 		prevCamPos = camTransform.position * (-1);
 
 		switch (difficulty) {
@@ -199,9 +195,8 @@ public sealed class GameMaster : MonoBehaviour {
 			colonyController.storage.AddResource(ResourceType.Plastics,100);
 			colonyController.storage.AddResource(ResourceType.Food, 200);
 
-			UI ui = gameObject.AddComponent<UI>();
-			ui.lineDrawer = systemDrawLR;
-			//ui.lineDrawer.gameObject.layer = 5;
+			//UI ui = gameObject.AddComponent<UI>();
+			//ui.lineDrawer = systemDrawLR;
 			break;
 		}
 	}
@@ -215,22 +210,12 @@ public sealed class GameMaster : MonoBehaviour {
 				prevCamPos = camTransform.position;
 				prevCamRot = camTransform.rotation;
 			}
-			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;
-			if (cameraTimer <= 0 && cameraHasMoved) { 
-				int c = cameraUpdateBroadcast.Count - 1;
-				while (c >= 0) {
-					if (cameraUpdateBroadcast[c] == null) cameraUpdateBroadcast.RemoveAt(c);
-					else cameraUpdateBroadcast[c].SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
-					c--;
-				}
-				cameraHasMoved = false;
-				cameraTimer = cameraUpdateTime;
+			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;            
+            if (cameraTimer <= 0 && cameraHasMoved) {
+                AllCameraFollowersUpdate();
 			}
 			camPos = camTransform.position;
 		}
-
-		sunlightIntensity = 0.7f +Mathf.PerlinNoise(0.1f, Time.time * gameSpeed / 200f) * 0.3f;
-		sun.intensity = sunlightIntensity;
 
 		if (gameSpeed == 0) return;
 		t += Time.deltaTime * gameSpeed;
@@ -298,10 +283,10 @@ public sealed class GameMaster : MonoBehaviour {
 
 		windTimer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (windTimer <= 0) {
-			windVector = Random.onUnitSphere * (maxWindPower * Random.value);
+			windVector = Random.onUnitSphere;
 			windVector += Vector3.down * windVector.y;
 			windTimer = windChangeTime + Random.value * windChangeTime;
-			if (windVector.magnitude == 0) AddAnnouncement( Localization.announcement_stillWind );
+			if (windVector.magnitude == 0) UIController.current.MakeAnnouncement( Localization.announcement_stillWind );
 			if (windUpdateList.Count != 0) {
 				int i = 0;
 				while (i < windUpdateList.Count) {
@@ -311,31 +296,16 @@ public sealed class GameMaster : MonoBehaviour {
 				}
 			}
 		}
-		//   GAME   ANNOUNCEMENTS
-		if (announcementTimer > 0 ) {
-			announcementTimer -= Time.deltaTime * gameSpeed;
-			if (announcementTimer <= 0) {
-				if (gameAnnouncements_string.Count > 0) {
-					gameAnnouncements_string.RemoveAt(0);
-					if (gameAnnouncements_string.Count > 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
-				}
-			}
-		}
 	}
 
-	void LateUpdate() {
-		if (moveCamToLookPoint) {
-			camBasis.position = Vector3.MoveTowards(camBasis.position, camLookPoint, CAM_LOOK_SPEED * Time.deltaTime);
-			if (Vector3.Distance(camBasis.position, camLookPoint) == 0) moveCamToLookPoint = false;
-		}
-	}
+    public void AddToCameraUpdateBroadcast(GameObject g)
+    {
+        if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
+        if (g != null) cameraUpdateBroadcast.Add(g);
+    }
 
-	public void AddToCameraUpdateBroadcast(GameObject g) {
-		if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
-		if (g != null) cameraUpdateBroadcast.Add(g);
-	}
 
-	public static float CalculateWorkspeed(int workersCount, WorkType type) {
+    public static float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
 		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
 		switch (type) {
@@ -352,19 +322,69 @@ public sealed class GameMaster : MonoBehaviour {
 		return workspeed ;
 	}
 
-	public void SetLookPoint(Vector3 point) {
-		// при двойном касании - перенос без условия
-		camLookPoint = point;
-		if (Vector3.Distance(point, camBasis.transform.position) > CAM_STANDART_DISTANCE) moveCamToLookPoint = true;
-	}
-
-	public void AddAnnouncement(string s) {
-		if (gameAnnouncements_string.Count >= ANNOUNCEMENT_LOG_LENGTH) {
-			gameAnnouncements_string.RemoveAt(0);
-		}
-		gameAnnouncements_string.Add(s);
-		if (announcementTimer <= 0) announcementTimer = ANNOUNCEMENT_CLEAR_TIME;
-	}
+    void AllCameraFollowersUpdate()
+    {
+        GameObject receiver = null;
+        int c = 0;
+        while (c < cameraUpdateBroadcast.Count)
+        {
+            receiver = cameraUpdateBroadcast[c];
+            if (receiver == null)
+            {
+                cameraUpdateBroadcast.RemoveAt(c);
+                continue;
+            }
+            else
+            {
+                if (receiver.activeSelf) receiver.SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
+                c++;
+            }
+        }
+        if (standartSpritesList.Count > 0)
+        {
+            int i = 0;
+            while (i < standartSpritesList.Count)
+            {
+                receiver = standartSpritesList[i];
+                if (receiver == null)
+                {
+                    standartSpritesList.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    if (receiver.activeSelf) receiver.transform.LookAt(camPos);
+                    i++;
+                }
+            }
+        }
+        if (mastSpritesList.Count > 0)
+        {
+            int i = 0;
+            while (i < mastSpritesList.Count)
+            {
+                receiver = mastSpritesList[i];
+                if (receiver == null)
+                {
+                    mastSpritesList.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    if (receiver.activeSelf)
+                    {
+                        Transform obj = receiver.transform;
+                        Vector3 dir = camPos - obj.position;
+                        dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
+                        obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
+                    }
+                    i++;
+                }
+            }
+        }
+        cameraHasMoved = false;
+        cameraTimer = cameraUpdateTime;
+    }
 
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
 		Time.timeScale = 0;
@@ -378,6 +398,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.sellPriceCoefficient = sellPriceCoefficient;
 		gms.tradeVesselsTrafficCoefficient = tradeVesselsTrafficCoefficient;
 		gms.upgradeDiscount = upgradeDiscount;
+		gms.upgradeCostIncrease = upgradeCostIncrease;
 		gms.environmentalConditions = environmentalConditions;
 		gms.warProximity = warProximity;
 		gms.difficulty = difficulty;
@@ -392,11 +413,8 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.machineConstructingSpeed = machineConstructingSpeed;
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
 		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
-		gms.maxWindPower = maxWindPower; gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
-		gms.sunlightIntensity = sunlightIntensity;
-		gms.gameAnnouncements_string = gameAnnouncements_string;
-		gms.announcementTimer = announcementTimer;
-		gms.recruiting_hireCost = RecruitingCenter.hireCost;
+		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
+		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
 		#endregion
 		gms.chunkSerializer = mainChunk.SaveChunkData();
 		gms.colonyControllerSerializer = colonyController.Save();
@@ -405,7 +423,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.crewStaticSerializer = Crew.SaveStaticData();
 		gms.questStaticSerializer = Quest.SaveStaticData();
 		gms.expeditionCorpusStaticSerializer = ExpeditionCorpus.SaveStaticData();
-		FileStream fs = File.Create(Application.dataPath + "/Saves/save.txt");
+		FileStream fs = File.Create(Application.persistentDataPath + "/save.txt");
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
 		fs.Close();
@@ -413,11 +431,12 @@ public sealed class GameMaster : MonoBehaviour {
 		return true;
 	}
 
+
 	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
 		if(File.Exists(Application.dataPath + "/Saves/save.txt")) {
 			BinaryFormatter bf = new BinaryFormatter();
-			FileStream file = File.Open(Application.dataPath + "/Saves/save.txt", FileMode.Open);
-			Time.timeScale = 0; GameMaster.gameSpeed = 0;
+			FileStream file = File.Open(Application.persistentDataPath + "/save.txt", FileMode.Open);
+            Time.timeScale = 0; GameMaster.gameSpeed = 0;
 			GameMasterSerializer gms = (GameMasterSerializer) bf.Deserialize(file);
 			#region gms mainPartLoading
 			gameSpeed =  gms.gameSpeed;
@@ -428,6 +447,7 @@ public sealed class GameMaster : MonoBehaviour {
 			sellPriceCoefficient = gms.sellPriceCoefficient;
 			tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient ;
 			upgradeDiscount = gms.upgradeDiscount;
+			upgradeCostIncrease = gms.upgradeCostIncrease;
 			environmentalConditions = gms.environmentalConditions ;
 			warProximity = gms.warProximity;
 			difficulty = gms.difficulty ;
@@ -442,15 +462,15 @@ public sealed class GameMaster : MonoBehaviour {
 			machineConstructingSpeed = gms.machineConstructingSpeed ;
 			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
 			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
-			maxWindPower = gms.maxWindPower ;windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
-			sunlightIntensity = gms.sunlightIntensity;
-			gameAnnouncements_string = gms.gameAnnouncements_string ;
-			announcementTimer = gms.announcementTimer;
-			RecruitingCenter.hireCost = gms.recruiting_hireCost;
-			#endregion
-			Destroy (mainChunk.gameObject);
-			Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();ExpeditionCorpus.Reset();
-			QuantumTransmitter.Reset();Hangar.Reset();UI.current.Reset();
+			windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
+			RecruitingCenter.SetHireCost( gms.recruiting_hireCost);
+            #endregion      
+			Destroy (mainChunk.gameObject);            
+
+            Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();
+			QuantumTransmitter.Reset();Hangar.Reset();
+            Grassland.ScriptReset(); 
+			//UI.current.Reset();
 
 			Crew.LoadStaticData(gms.crewStaticSerializer);
 			Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
@@ -465,76 +485,13 @@ public sealed class GameMaster : MonoBehaviour {
 			ExpeditionCorpus.LoadStaticData(gms.expeditionCorpusStaticSerializer);
 
 			file.Close();
-			Time.timeScale = 1;
-			return true;
+			Time.timeScale = 1; GameMaster.gameSpeed = 1;
+            AllCameraFollowersUpdate();
+            prevCamPos = camTransform.position;
+            prevCamRot = camTransform.rotation;
+            return true;
 		}
 		else return false;
-	}
-
-	void OnGUI() {
-		if (!fontSize_set) {
-			mainGUISkin = Resources.Load<GUISkin>("MainSkin");
-			mainGUISkin.GetStyle("Label").fontSize = (int)(guiPiece/2f);
-			mainGUISkin.GetStyle("Button").fontSize = (int)(guiPiece/2f);
-
-			GUIStyle rightOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			rightOrientedLabel.alignment = TextAnchor.UpperRight;
-			rightOrientedLabel.normal.textColor = Color.white;
-			PoolMaster.GUIStyle_RightOrientedLabel = rightOrientedLabel;
-			GUIStyle rightBottomLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			rightBottomLabel.alignment = TextAnchor.LowerRight;
-			rightBottomLabel.normal.textColor = Color.white;
-			PoolMaster.GUIStyle_RightBottomLabel = rightBottomLabel;
-
-			GUIStyle centerOrientedLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			centerOrientedLabel.alignment = TextAnchor.MiddleCenter;
-			centerOrientedLabel.normal.textColor = Color.white;
-			PoolMaster.GUIStyle_CenterOrientedLabel = centerOrientedLabel;
-			PoolMaster.GUIStyle_COLabel_red = new GUIStyle(centerOrientedLabel);
-			PoolMaster.GUIStyle_COLabel_red.normal.textColor = Color.red;
-
-			GUIStyleState withoutImageStyle = new GUIStyleState();
-			withoutImageStyle.background = null;
-			withoutImageStyle.textColor = Color.white;
-			GUIStyle borderlessButton = new GUIStyle(mainGUISkin.GetStyle("Button"));
-			borderlessButton.normal = withoutImageStyle;
-			borderlessButton.onHover = withoutImageStyle;
-			PoolMaster.GUIStyle_BorderlessButton= borderlessButton;
-			GUIStyle borderlessLabel = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			borderlessLabel.normal = withoutImageStyle;
-			borderlessLabel.onHover = withoutImageStyle;
-			PoolMaster.GUIStyle_BorderlessLabel = borderlessLabel;
-			GUIStyle systemAlert = new GUIStyle(mainGUISkin.GetStyle("Label"));
-			systemAlert.normal = withoutImageStyle;
-			systemAlert.normal.textColor = Color.red;
-			systemAlert.fontSize = (int)guiPiece;
-			systemAlert.alignment = TextAnchor.MiddleCenter;
-			PoolMaster.GUIStyle_SystemAlert = systemAlert;
-
-			PoolMaster.GUIStyle_Button_red = new GUIStyle(GUI.skin.button);
-			PoolMaster.GUIStyle_Button_red.normal.textColor = Color.red;
-			PoolMaster.GUIStyle_Button_red.active.textColor = Color.red;
-			PoolMaster.GUIStyle_Button_red.hover.textColor = Color.red;
-
-			fontSize_set = true;
-		}
-		GUI.skin = mainGUISkin;
-
-		int sh = Screen.height;
-		//if (GUI.Button(new Rect(0, sh - 3 *guiPiece, guiPiece, guiPiece), "x1")) newGameSpeed = 1;
-		//if (GUI.Button(new Rect(0, sh - 2 *guiPiece, guiPiece, guiPiece), "x2")) newGameSpeed = 2;
-		//if (GUI.Button(new Rect(0, sh - guiPiece, guiPiece, guiPiece), "x10")) newGameSpeed = 10;
-		GUI.Label(new Rect(guiPiece, sh - guiPiece, 10 * guiPiece, guiPiece), "day : "+day.ToString() + " week: " + week.ToString() + ", month: " + month.ToString() + " year: " + year.ToString());
-
-		if (gameAnnouncements_string.Count > 0) {
-			Rect anr = new Rect(0, sh - 3 * guiPiece - gameAnnouncements_string.Count * guiPiece * 0.75f, 10 * guiPiece, 0.75f * guiPiece);
-			GUI.color = Color.black;
-			foreach (string announcement in gameAnnouncements_string) {
-				GUI.Label(anr, announcement);
-				anr.y += anr.height;
-			}
-			GUI.color = Color.white;
-		}
 	}
 
 	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
@@ -543,6 +500,11 @@ public sealed class GameMaster : MonoBehaviour {
 			output = (T)System.Convert.ChangeType(new BinaryFormatter().Deserialize(stream), typeof(T));
 		}
 	}
+
+    private void OnApplicationQuit()
+    {
+        applicationStopWorking = true;
+    }
 }
 
 [System.Serializable]
@@ -557,10 +519,8 @@ class GameMasterSerializer {
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
 	public float windVector_x,windVector_y,windVector_z;
-	public float maxWindPower = 10, windTimer = 0, windChangeTime = 120;
+	public float windTimer = 0, windChangeTime = 120;
 	public float sunlightIntensity;
-	public List<string> gameAnnouncements_string; 
-	public float announcementTimer;
 
 	public ChunkSerializer chunkSerializer;
 	public ColonyControllerSerializer colonyControllerSerializer;
