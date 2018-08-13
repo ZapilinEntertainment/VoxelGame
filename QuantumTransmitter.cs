@@ -7,9 +7,18 @@ public class QuantumTransmitter : Building {
 	public static List<QuantumTransmitter> transmittersList{get;private set;}
 	public Expedition tracingExpedition{get;private set;}
 
+    static QuantumTransmitter()
+    {
+        transmittersList = new List<QuantumTransmitter>();
+    }
+
 	public static void Reset() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
+    public static void PrepareList()
+    {
+        if (transmittersList == null) transmittersList = new List<QuantumTransmitter>();
+    }
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
@@ -81,8 +90,11 @@ public class QuantumTransmitter : Building {
 		}
 	}
 
-	void OnDestroy() {
-		PrepareBuildingForDestruction();
-		if (transmittersList != null) RemoveFromList(this);
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareBuildingForDestruction();
+        if (transmittersList != null && transmittersList.Count > 0) RemoveFromList(this);
+        Destroy(gameObject);
+    }
 }

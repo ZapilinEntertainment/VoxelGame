@@ -9,6 +9,7 @@ public enum QuestID
     Progress_Tier3, Progress_4MiniReactors, Progress_100Fuel, Progress_ExpStation, Progress_Tier4, Progress_CoveredFarm, Progress_CoveredLumbermill, 
     Progress_Reactor, Progress_FirstExpedition, Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor
 }
+// also add new in GetQuestTexture
 
 public class Quest  {
     public string name = string.Empty;
@@ -21,16 +22,34 @@ public class Quest  {
 	public int shuttlesRequired{get;private set;}
 	public int crewsRequired{get;private set;}
 	public Expedition expedition{get;private set;}
+    public List<Crew> crews { get; private set; }
     public QuestID ID { get; private set; }
 
 
 	public static List<Quest> questsList;
     static int progressQuestMask = int.MaxValue;
     const int PROGRESS_QUEST_COUNT = 19;
+    public const int PROGRESS_QUESTS_INDEX = 0;
 
-	static Quest () {
+    static Quest () {
 		questsList = new List<Quest>();
-	}       
+	}    
+
+    public Quest()
+    {
+        crews = new List<Crew>();
+    }
+
+    public void CheckQuestConditions()
+    {
+
+    }
+
+    public void RemoveCrew(int index)
+    {
+        if (crews.Count <= index) return;
+        else crews.RemoveAt(index);
+    }
 
     public void Stop()
     {
@@ -43,15 +62,40 @@ public class Quest  {
         return null;
     }
 
-    public Quest GetProgressQuest()
-    {
-        int lvl = GameMaster.colonyController.hq.level;
+    public static Quest GetProgressQuest()
+    {        
         List<QuestID> complementQuests = new List<QuestID>()
         {
-            QuestID.Progress_HousesToMax, QuestID.Progress_2Docks, QuestID.Progress_2Storages, QuestID.Progress_Tier2, QuestID.Progress_300Population, QuestID.Progress_OreRefiner, QuestID.Progress_HospitalCoverage,
-            QuestID.Progress_Tier3, QuestID.Progress_4MiniReactors, QuestID.Progress_100Fuel, QuestID.Progress_ExpStation, QuestID.Progress_Tier4, QuestID.Progress_CoveredFarm, QuestID.Progress_CoveredLumbermill,
-            QuestID.Progress_Reactor, QuestID.Progress_FirstExpedition, QuestID.Progress_Tier5, QuestID.Progress_FactoryComplex, QuestID.Progress_SecondFloor
+            QuestID.Progress_HousesToMax, QuestID.Progress_2Docks, QuestID.Progress_2Storages, QuestID.Progress_Tier2
         };
+        int lvl = GameMaster.colonyController.hq.level;
+        if (lvl > 1)
+        {
+            complementQuests.Add(QuestID.Progress_300Population);
+            complementQuests.Add(QuestID.Progress_OreRefiner);
+            complementQuests.Add(QuestID.Progress_HospitalCoverage);
+            complementQuests.Add(QuestID.Progress_Tier3);
+            if (lvl > 2)
+            {
+                complementQuests.Add(QuestID.Progress_4MiniReactors);
+                complementQuests.Add(QuestID.Progress_100Fuel);
+                complementQuests.Add(QuestID.Progress_ExpStation);
+                complementQuests.Add(QuestID.Progress_Tier4);
+                if (lvl > 3)
+                {
+                    complementQuests.Add(QuestID.Progress_CoveredFarm);
+                    complementQuests.Add(QuestID.Progress_CoveredLumbermill);
+                    complementQuests.Add(QuestID.Progress_Reactor);
+                    complementQuests.Add(QuestID.Progress_FirstExpedition);
+                    complementQuests.Add(QuestID.Progress_Tier5);
+                    if (lvl > 4)
+                    {
+                        complementQuests.Add(QuestID.Progress_FactoryComplex);
+                        complementQuests.Add(QuestID.Progress_SecondFloor);
+                    }
+                }
+            }
+        }
         int x = 1;
         for (int i = 0; i < complementQuests.Count; i++)
         {
@@ -69,33 +113,37 @@ public class Quest  {
         bool setByDefault = true;        
         switch (l)
         {
-            case 0: ID = QuestID.Progress_HousesToMax;  break;
-            case 1: ID = QuestID.Progress_2Docks;break;
-            case 2: ID = QuestID.Progress_2Storages;break;
-            case 3: ID = QuestID.Progress_Tier2;break;
-            case 4: ID = QuestID.Progress_300Population;break;
-            case 5: ID = QuestID.Progress_OreRefiner;break;
-            case 6: ID = QuestID.Progress_HospitalCoverage;break;
-            case 7: ID = QuestID.Progress_Tier3;break;
-            case 8: ID = QuestID.Progress_4MiniReactors;break;
-            case 9: ID = QuestID.Progress_100Fuel;break;
-            case 10: ID = QuestID.Progress_ExpStation;break;
-            case 11:ID = QuestID.Progress_Tier4;break;
-            case 12: ID = QuestID.Progress_CoveredFarm;break;
-            case 13: ID = QuestID.Progress_CoveredLumbermill;break;
-            case 14: ID = QuestID.Progress_Reactor;break;
-            case 15: ID = QuestID.Progress_FirstExpedition;break;
-            case 16: ID = QuestID.Progress_Tier5;break;
-            case 17: ID = QuestID.Progress_FactoryComplex;break;
-            case 18: ID = QuestID.Progress_SecondFloor;break;
+            case 0: q.ID = QuestID.Progress_HousesToMax;  break;
+            case 1: q.ID = QuestID.Progress_2Docks;break;
+            case 2: q.ID = QuestID.Progress_2Storages;break;
+            case 3: q.ID = QuestID.Progress_Tier2;break;
+            case 4: q.ID = QuestID.Progress_300Population;break;
+            case 5: q.ID = QuestID.Progress_OreRefiner;break;
+            case 6: q.ID = QuestID.Progress_HospitalCoverage;break;
+            case 7: q.ID = QuestID.Progress_Tier3;break;
+            case 8: q.ID = QuestID.Progress_4MiniReactors;break;
+            case 9: q.ID = QuestID.Progress_100Fuel;break;
+            case 10: q.ID = QuestID.Progress_ExpStation;break;
+            case 11: q.ID = QuestID.Progress_Tier4;break;
+            case 12: q.ID = QuestID.Progress_CoveredFarm;break;
+            case 13: q.ID = QuestID.Progress_CoveredLumbermill;break;
+            case 14: q.ID = QuestID.Progress_Reactor;break;
+            case 15:
+                q.ID = QuestID.Progress_FirstExpedition;
+                setByDefault = false;
+                q.steps = new string[4];
+                break;
+            case 16: q.ID = QuestID.Progress_Tier5;break;
+            case 17: q.ID = QuestID.Progress_FactoryComplex;break;
+            case 18: q.ID = QuestID.Progress_SecondFloor;break;
         }
         if (setByDefault)
         {
-            steps = new string[1];
-            shuttlesRequired = 0;
-            crewsRequired = 0;
-            questLifeTimer = -1;
-            questRealizationTimer = -1;
+            q.steps = new string[1];
+            q.shuttlesRequired = 0;
+            q.crewsRequired = 0;
+            q.questLifeTimer = -1;
+            q.questRealizationTimer = -1;
         }
         Localization.FillProgressQuest(q);
 
@@ -105,6 +153,121 @@ public class Quest  {
         return q;
     }
     #endregion
+
+    public static void SetQuestTexture(QuestID qid, UnityEngine.UI.RawImage ri)
+    {
+        Texture originalTexture = null, overlayingTexture = null;
+        Rect originalRect = Rect.zero, overlayingRect = Rect.zero;
+        switch (qid)
+        {
+            default:
+            case QuestID.Autogenerated: return null;
+            case QuestID.Progress_HousesToMax:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0,0,originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.HOUSE_1_ID);
+                break;
+            case QuestID.Progress_2Docks:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.DOCK_ID);
+                break;
+            case QuestID.Progress_2Storages:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.STORAGE_0_ID);
+                break;
+            case QuestID.Progress_Tier2:
+                originalTexture = UIController.current.buildingsTexture;
+                originalRect = Structure.GetTextureRect(Structure.HQ_2_ID);
+                break;
+            case QuestID.Progress_300Population:
+                originalTexture = UIController.current.iconsTexture;
+                originalRect = UIController.GetTextureUV(Icons.Citizen);
+                break;
+            case QuestID.Progress_OreRefiner:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.ORE_ENRICHER_2_ID);
+                break;
+            case QuestID.Progress_HospitalCoverage:
+                originalTexture = UIController.current.buildingsTexture;
+                originalRect = Structure.GetTextureRect(Structure.HOSPITAL_2_ID);
+                break;
+            case QuestID.Progress_Tier3:
+                originalTexture = UIController.current.buildingsTexture;
+                originalRect = Structure.GetTextureRect(Structure.HQ_2_ID);
+                break;
+            case QuestID.Progress_4MiniReactors:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.MINI_GRPH_REACTOR_ID);
+                break;
+            case QuestID.Progress_100Fuel:
+                originalTexture = QuestUI.questResourceBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.resourcesTexture;
+                overlayingRect = ResourceType.GetTextureRect(ResourceType.FUEL_ID);
+                break;
+            case QuestID.Progress_ExpStation:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.XSTATION_ID);
+                break;
+            case QuestID.Progress_Tier4:
+                originalTexture = UIController.current.buildingsTexture;
+                originalRect = Structure.GetTextureRect(Structure.HQ_3_ID);
+                break;
+            case QuestID.Progress_CoveredFarm:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.FARM_4_ID);
+                break;
+            case QuestID.Progress_CoveredLumbermill:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.LUMBERMILL_4_ID);
+                break;
+            case QuestID.Progress_Reactor:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.GRPH_REACTOR_4_ID);
+                break;
+            case QuestID.Progress_FirstExpedition:
+                originalTexture = QuestUI.questBlocked_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.iconsTexture;
+                overlayingRect = UIController.GetTextureUV(Icons.GuidingStar);
+                break;
+            case QuestID.Progress_Tier5:
+                originalTexture = UIController.current.buildingsTexture;
+                originalRect = Structure.GetTextureRect(Structure.HQ_4_ID);
+                break;
+            case QuestID.Progress_FactoryComplex:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.SMELTERY_5_ID);
+                break;
+            case QuestID.Progress_SecondFloor:
+                originalTexture = QuestUI.questBuildingBack_tx;
+                originalRect = new Rect(0, 0, originalTexture.width, originalTexture.height);
+                overlayingTexture = UIController.current.buildingsTexture;
+                overlayingRect = Structure.GetTextureRect(Structure.COLUMN_ID);
+                break;
+        }
+        Texture2D combined = new Texture2D(originalTexture.width, originalTexture.height);
+        //скомбинировать и вернуть
+    }
 
     #region save-load system
     public static QuestStaticSerializer SaveStaticData() {

@@ -5,10 +5,11 @@ using UnityEngine;
 public enum ShipStatus {InPort, Leaving, Arriving, OnMission}
 
 public class Shuttle : MonoBehaviour {
-	const float START_VOLUME = 20, STANDART_COST = 700, STANDART_FUEL_CAPACITY = 100;
-	public string name{get;private set;}
+	const float START_VOLUME = 20, STANDART_FUEL_CAPACITY = 100;
+    public const float STANDART_COST = 700;
 	public float volume{get;private set;}
 	public float cost{get;private set;}
+    public float maintenance { get; private set; }
 	public float fuelReserves{get;private set;}
 	public float fuelCapacity{get;private set;}
 	public int ID{get;private set;}
@@ -23,16 +24,21 @@ public class Shuttle : MonoBehaviour {
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
 
-	void Awake() {
-		if (shuttlesList == null) shuttlesList = new List<Shuttle>();
-	}
+    static Shuttle()
+    {
+        shuttlesList = new List<Shuttle>();
+    }
 
 	public static void Reset() {
 		shuttlesList = new List<Shuttle>();
 		lastIndex = 0;
 	}
+    public static void PrepareList()
+    {
+        if (shuttlesList == null) shuttlesList = new List<Shuttle>();
+    }
 
-	public void FirstSet(Hangar h) {
+    public void FirstSet(Hangar h) {
 		hangar = h;
 		transform.position = hangar.transform.position;
 		foreach (Renderer r in renderers) {
@@ -44,13 +50,20 @@ public class Shuttle : MonoBehaviour {
 		volume = START_VOLUME;
 		condition = 1;
 		cost =STANDART_COST;
+        maintenance = cost / 10f;
 		fuelCapacity = STANDART_FUEL_CAPACITY;
 		fuelReserves = GameMaster.colonyController.storage.GetResources(ResourceType.Fuel, fuelCapacity);
 		shuttlesList.Add(this);
 	}
 
 	public void RepairForResources() {}
-	public void RepairForCoins() {}
+	public void RepairForCoins() {
+        if (condition == 1) return;
+        float repairCost = (1 - condition) * cost;
+        float availableSum = GameMaster.colonyController.GetEnergyCrystals(repairCost);
+        condition += availableSum / repairCost * (1 - condition);
+        UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleRepaired) + ", " + Localization.GetWord(LocalizedWord.Price) + ": " + string.Format("{0:0.##}", availableSum));
+    }
 	public void Refuel() {
 		float shortage = fuelCapacity - fuelReserves;
 		if (shortage > 0) {
@@ -58,15 +71,18 @@ public class Shuttle : MonoBehaviour {
 		}
 	}
 
-	/// <summary>
-	/// Use only in crew.Change ship
-	/// </summary>
-	/// <returns><c>true</c>, if crew was set, <c>false</c> otherwise.</returns>
-	/// <param name="c">C.</param>
-	public bool SetCrew(Crew c) {
-		if (crew != null & c != null) return false;
-		else {crew = c;return true;}
+	public bool AddCrew(Crew c) {
+        if (crew != null) return false;
+        else
+        {
+            crew = c;
+            return true;
+        }
 	}
+    public void DismissCrew(Crew c)
+    {
+        if (crew == c) crew = null;
+    }
 
 	public static Shuttle GetShuttle( int id ) {
 		if (shuttlesList.Count == 0) return null;
@@ -91,8 +107,50 @@ public class Shuttle : MonoBehaviour {
 		assignedToExpedition = e;
 	}
 
-	#region save-load system
-	public static ShuttleStaticSerializer SaveStaticData() {
+    public void DrawShuttleIcon(UnityEngine.UI.RawImage ri)
+    {
+        ri.texture = UIController.current.iconsTexture;
+        ri.uvRect = UIController.GetTextureUV((condition < 0.5f) ? Icons.ShuttleBadIcon : ((condition > 0.85f) ? Icons.ShuttleGoodIcon : Icons.ShuttleNormalIcon));
+    }
+
+    /// <summary>
+    /// use only from hangar.deconstructShuttle
+    /// </summary>
+    public void Deconstruct()
+    {
+        float pc = GameMaster.demolitionLossesPercent;
+        if (pc != 1) {
+            ResourceContainer[] compensation = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
+            Storage s = GameMaster.colonyController.storage;
+            for (int i = 0; i < compensation.Length; i++)
+            {
+                s.AddResource(compensation[i].type, compensation[i].volume * GameMaster.demolitionLossesPercent);
+            }
+            GameMaster.colonyController.AddEnergyCrystals(cost * pc);
+         }
+        if (status == ShipStatus.InPort)
+        {
+            shuttlesList.Remove(this);
+        }
+        if (crew != null)
+        {
+            Crew c = crew;
+            crew = null;
+            c.Dismiss();
+        }
+    }
+
+    public void Annihilate()
+    {
+        if (crew != null) crew.Annihilate();
+        if (status == ShipStatus.InPort)
+        {
+            shuttlesList.Remove(this);            
+        }
+    }
+
+    #region save-load system
+    public static ShuttleStaticSerializer SaveStaticData() {
 		ShuttleStaticSerializer s3 = new ShuttleStaticSerializer();
 		s3.shuttlesList = new List<ShuttleSerializer>();
 		s3.haveShuttles = false;
@@ -151,13 +209,7 @@ public class Shuttle : MonoBehaviour {
 		transform.position = new Vector3(ss.xpos,ss.ypos,ss.zpos);
 		transform.rotation = new Quaternion(ss.xrotation, ss.yrotation,ss.zrotation,ss.wrotation);
 	}
-	#endregion
-
-	public static float GUI_DrawShuttleIcon(Shuttle sh, Rect rr) {
-		GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), sh.condition > 0.85f ? PoolMaster.shuttle_good_icon : ( sh.condition  < 0.5f ? PoolMaster.shuttle_bad_icon : PoolMaster.shuttle_normal_icon), ScaleMode.StretchToFill);
-		if (sh.crew != null) GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), sh.crew.stamina < 0.5f ? PoolMaster.crew_bad_icon : ( sh.crew.stamina > 0.85f ? PoolMaster.crew_good_icon : PoolMaster.crew_normal_icon), ScaleMode.StretchToFill );
-		return 0;
-	}
+	#endregion 
 }
 
 [System.Serializable]

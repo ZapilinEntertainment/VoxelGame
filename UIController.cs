@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum ChosenObjectType{None,Surface, Cube, Structure, Worksite}
-public enum Icons {  GreenArrow, PowerOff, PowerOn, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon  }
+public enum Icons {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon  }
 public enum ProgressPanelMode { Offline, Powerplant, Hangar}
 
 sealed public class UIController : MonoBehaviour {	
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton;
@@ -19,6 +19,7 @@ sealed public class UIController : MonoBehaviour {
     [SerializeField] Transform storagePanelContent;
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
+    public Texture buildingsTexture { get; private set; }
     float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
     float updateTimer;
 
@@ -52,7 +53,9 @@ sealed public class UIController : MonoBehaviour {
 		selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
 		selectionFrame.gameObject.SetActive(false);
         iconsTexture = Resources.Load<Texture>("Textures/Icons");
-        resourcesTexture = Resources.Load<Texture>("Textures/ResourcesIcons");
+        resourcesTexture = Resources.Load<Texture>("Textures/resourcesIcons");
+        buildingsTexture = Resources.Load<Texture>("Textures/buildingIcons");
+        questUI = _questUI;
     }
 
     void Update() {
@@ -673,8 +676,10 @@ sealed public class UIController : MonoBehaviour {
         {
             default: return Rect.zero;
             case Icons.GreenArrow: return new Rect(6 * p, 7 *p, p,p);
+            case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
             case Icons.PowerOff: return new Rect(2 * p, 7 *p, p,p);
             case Icons.PowerOn: return new Rect(3 * p, 7 * p, p, p);
+            case Icons.Citizen: return new Rect(2*p, 7*p,p,p);
             case Icons.RedArrow: return new Rect(2 * p, 6 *p,p,p);
             case Icons.CrewBadIcon: return new Rect(p, 5 *p,p,p);
             case Icons.CrewNormalIcon: return new Rect(2 * p, 5 * p, p, p);
@@ -713,7 +718,12 @@ sealed public class UIController : MonoBehaviour {
 
     public void ActivateQuestUI()
     {
-        questUI.gameObject.SetActive(true);
+        questUI.Activate();
+        leftPanel.SetActive(false);
+    }
+    public void ActivateLeftPanel()
+    {
+        leftPanel.SetActive(true);
     }
 
     public void LocalizeButtonTitles()

@@ -66,7 +66,7 @@ public sealed class ColonyController : MonoBehaviour {
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
-		worksites = new List<Worksite>();
+		worksites = new List<Worksite>();        
 	}
 
 	public void CreateStorage() { // call from game master
@@ -89,7 +89,7 @@ public sealed class ColonyController : MonoBehaviour {
             energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
             if (energyStored < 0)
             { // отключение потребителей энергии до выравнивания
-                UIController.current.MakeAnnouncement(Localization.announcement_powerFailure);
+                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.PowerFailure));
                 energyStored = 0;
                 int i = powerGrid.Count - 1;
                 while (i >= 0 && energySurplus < 0)
@@ -454,7 +454,8 @@ public sealed class ColonyController : MonoBehaviour {
 
 	public void SetHQ (HeadQuarters new_hq) {
 		if (new_hq != null) hq = new_hq;
-	}
+        UIController.current.questUI.CheckProgressQuest();
+    }
 
 	public void ImproveGearsCoefficient (float f) {
 		if (f > 0) gears_coefficient += f;

@@ -8,7 +8,7 @@ public class Crew {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
 	public static int lastNumber {get;private set;}
-	public static List<Crew> crewsList{get;private set;}
+	public static List<Crew> crewsList{ get ;private set;}
 	public static int crewSlots {get;private set;}
 
 	public float salary {get; private set;}
@@ -33,17 +33,18 @@ public class Crew {
 	public int successfulOperations{get;private set;}
 	public int totalOperations{get;private set;}
 
+    static Crew()
+    {
+        crewsList = new List<Crew>();
+    }
+
 	public static void Reset() {
 		crewsList = new List<Crew>();
 		crewSlots = 0;
 		lastNumber = 0;
 	}
 
-	void Awake() {
-		if (crewsList == null) crewsList = new List<Crew>();
-	}
-
-	public void SetCrew (ColonyController home, float hireCost) {
+    public void SetCrew (ColonyController home, float hireCost) {
 		level = 0;
 		name = Localization.NameCrew();
 		ID = lastNumber;	lastNumber ++;
@@ -63,12 +64,13 @@ public class Crew {
 		crewSlots --;
 	}
 
-	public void ChangeShip(Shuttle s) {
-		if (s == null || (shuttle!= null & s == shuttle)) return;
-		if (s.SetCrew(this) == false) return;
+	public bool AssignToShip(Shuttle s) {
+		if (s == null || (shuttle!= null & s == shuttle)) return false;
+		if (s.AddCrew(this) == false) return false;
 		shuttle = s;
 		stamina -= 0.1f;
 		if (stamina < 0) stamina = 0;
+        return true;
 	}
 
 	public static void AddCrewSlots(int x) {
@@ -107,6 +109,7 @@ public class Crew {
 				crewsList.Add(new Crew().Load(css.crewsList[i]));
 			}
 		}
+        crewSlots -= crewsList.Count;
 		lastNumber = css.lastNumber;
 	}
 
@@ -142,8 +145,7 @@ public class Crew {
 		nextExperienceLimit = cs.nextExperienceLimit;
 		experience = cs.experience;
 		name = cs.name;
-		ID = cs.ID;
-		ChangeShip(cs.shuttleID == -1 ? null : Shuttle.GetShuttle(cs.shuttleID));
+		ID = cs.ID;        
 		status = cs.status;
 		perception = cs.perception;
 		persistence = cs.persistence;
@@ -153,19 +155,17 @@ public class Crew {
 		survivalSkills = cs.survivalSkills;
 		teamWork = cs.teamWork;
 		stamina = cs.stamina;
-		successfulOperations =cs.successfulOperations;
+		successfulOperations = cs.successfulOperations;
 		totalOperations=cs.totalOperations;
-		return this;
+        if (cs.shuttleID != -1)
+        {
+            shuttle = Shuttle.GetShuttle(cs.shuttleID);
+            shuttle.AddCrew(this);
+        }
+        return this;
 	}
 		
 	#endregion
-
-
-	public static float GUI_DrawCrewIcon(Crew cw, Rect rr) {
-		if (cw.shuttle != null) GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), cw.shuttle.condition > 0.85f ? PoolMaster.shuttle_good_icon : ( cw.shuttle.condition  < 0.5f ? PoolMaster.shuttle_bad_icon : PoolMaster.shuttle_normal_icon), ScaleMode.StretchToFill);
-		GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), cw.stamina < 0.5f ? PoolMaster.crew_bad_icon : ( cw.stamina > 0.85f ? PoolMaster.crew_good_icon : PoolMaster.crew_normal_icon), ScaleMode.StretchToFill );
-		return 0;
-	}
 
 	static float CalculateExperienceLimit(byte f_level) {
 		return 2 * f_level;
@@ -174,20 +174,36 @@ public class Crew {
 	public void DismissMember() {}
 	public void AddMember() {}
 
-	public void Delete() {
+	public void Dismiss() {
 		GameMaster.colonyController.AddWorkers(count);
-		if (shuttle != null) {
-			shuttle.SetCrew(null);
-		}
-		int i =0;
-		while (i < crewsList.Count) {
-			if (crewsList[i] == this) {
-				crewsList.RemoveAt(i);
-				crewSlots++;
-			}
-			else	i++;
-		}
-	}
+        count = 0;
+        if (status != CrewStatus.onMission)
+        {
+            crewsList.Remove(this);
+            crewSlots++;
+        }
+        if (shuttle != null)
+        {
+            Shuttle s = shuttle;
+            shuttle = null;
+            s.DismissCrew(this);
+        }
+    }
+
+    public void Annihilate()
+    {
+        if (status != CrewStatus.onMission)
+        {
+            crewsList.Remove(this);
+            crewSlots++;
+        }
+    }
+
+    public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
+    {
+        ri.texture = UIController.current.iconsTexture;
+        ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
+    }
 }
 
 [System.Serializable]
@@ -206,5 +222,5 @@ public class CrewSerializer {
 public class CrewStaticSerializer {
 	public bool haveCrews;
 	public List<CrewSerializer> crewsList;
-	public int lastNumber;
+    public int lastNumber;
 }

@@ -54,7 +54,8 @@ public class ExpeditionCorpusStaticSerializer {
 }
 [System.Serializable]
 public class ExpeditionSerializer {
-	public int ID, quest_ID;
+	public int ID;
+    public QuestSerializer qs;
 	public List<int> shuttles_ID;
 	public float progress;
 	public bool haveTransmitter;
@@ -68,6 +69,11 @@ public class Expedition {
 	public float progress{get;private set;}
 	public QuantumTransmitter transmitter{get;private set;}
 	public int ID{get;private set;}
+
+    public Expedition()
+    {
+        shuttles = new List<Shuttle>();
+    }
 
 	public void Initialize(Quest q) {
 		shuttles = new List<Shuttle>();
@@ -101,6 +107,15 @@ public class Expedition {
 			i++;
 		}
 	}
+    public void DetachShuttle(int index)
+    {
+        if (shuttles.Count >= index) return;
+        else
+        {
+            shuttles[index].AssignTo(null);
+            shuttles.RemoveAt(index);
+        }
+    }
 
 	public ExpeditionSerializer Save() {
 		ExpeditionSerializer es = new ExpeditionSerializer();
@@ -130,7 +145,7 @@ public class Expedition {
 	}
 	public Expedition Load( ExpeditionSerializer es) {
 		ID = es.ID;
-		quest = ( es.quest_ID == -1 ? null : Quest.GetQuest(es.quest_ID));
+		quest = new Quest().Load(this, es.qs);
 		shuttles = new List<Shuttle>();
 		if (es.shuttles_ID.Count > 0) {
 			foreach (int i in es.shuttles_ID) {

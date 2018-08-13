@@ -2,28 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum GreenMaterial { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20}
+public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS}
+public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber}
+
 public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
-	public Material[] grassland_ready_25, grassland_ready_50;
-	public Material dryingLeaves_material, leaves_material;
 	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static GameObject mineElevator_pref {get;private set;}
-	public static Material	default_material, lr_red_material, lr_green_material, grass_material, 
-	glass_material, glass_offline_material, energy_material, energy_offline_material, colored_material, colored_offline_material;
-	public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
-	public static Texture twoButtonsDivider_tx, plusButton_tx, minusButton_tx, plusX10Button_tx, minusX10Button_tx, quadSelector_tx,  orangeSquare_tx,
-	greenArrow_tx, redArrow_tx, empty_tx, energyCrystal_icon_tx, shuttle_good_icon, shuttle_normal_icon, shuttle_bad_icon, 
-	crew_good_icon, crew_normal_icon, crew_bad_icon, quest_defaultIcon, quest_unacceptableIcon;
+    // не убирать basic из public, так как нужен для сравнения при включении/выключении
+    public static Material default_material, lr_red_material, lr_green_material, basic_material, basic_offline_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
+    static Material metal_material, green_material;
+    public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
-	List<GameObject> treesPool, saplingsPool, lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
+	List<GameObject>  lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
 		lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные
 	const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
 	const int SHIPS_BUFFER_SIZE = 5;
-	public int treesPool_buffer_size =16, grassPool_buffer_size = 16;
-	float treeClearTimer = 0, grassClearTimer = 0, shipsClearTimer = 0,clearTime = 30;
+	float  shipsClearTimer = 0,clearTime = 30;
+
 
 	public void Load() {
 		if (current != null) return;
@@ -38,26 +38,6 @@ public class PoolMaster : MonoBehaviour {
 		lightWarships = new List<GameObject>();
 		privateShips = new List<GameObject>();
 
-		quest_unacceptableIcon = Resources.Load<Texture>("Textures/questUnacceptableIcon");
-		quest_defaultIcon = Resources.Load<Texture>("Textures/questDefaultIcon");
-		crew_good_icon = Resources.Load<Texture>("Textures/crew_good_icon");
-		crew_normal_icon = Resources.Load<Texture>("Textures/crew_normal_icon");
-		crew_bad_icon = Resources.Load<Texture>("Textures/crew_bad_icon");
-		shuttle_good_icon = Resources.Load<Texture>("Textures/shuttle_good_icon");
-		shuttle_normal_icon = Resources.Load<Texture>("Textures/shuttle_normal_icon");
-		shuttle_bad_icon = Resources.Load<Texture>("Textures/shuttle_bad_icon");
-		energyCrystal_icon_tx = Resources.Load<Texture>("Textures/energyCrystal_icon");
-		empty_tx = Resources.Load<Texture>("Textures/resource_empty");
-		redArrow_tx = Resources.Load<Texture>("Textures/redArrow");
-		greenArrow_tx = Resources.Load<Texture>("Textures/greenArrow");
-		orangeSquare_tx = Resources.Load<Texture>("Textures/orangeSquare");
-		quadSelector_tx = Resources.Load<Texture>("Textures/quadSelector");
-		minusX10Button_tx = Resources.Load<Texture>("Textures/minusX10Button");
-		minusButton_tx = Resources.Load<Texture>("Textures/minusButton");
-		plusX10Button_tx = Resources.Load<Texture>("Textures/plusX10Button");
-		plusButton_tx = Resources.Load<Texture>("Textures/plusButton");
-		twoButtonsDivider_tx = Resources.Load<Texture>("Textures/twoButton_divider");
-
 		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
 		plane_excavated_075 = Resources.Load<Mesh>("Meshes/Plane_excavated_075");
@@ -65,68 +45,27 @@ public class PoolMaster : MonoBehaviour {
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
-		quad_pref = GameObject.CreatePrimitive(PrimitiveType.Quad);
-		quad_pref.GetComponent<MeshRenderer>().enabled =false;
-		default_material = Resources.Load<Material>("Materials/Default");
+        quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
+        quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
+        quad_pref.GetComponent<MeshRenderer>().enabled = false;
+        default_material = Resources.Load<Material>("Materials/Default");
 
-		colored_material = Resources.Load<Material>("Materials/Plastic");
-		colored_offline_material = new Material(colored_material); colored_offline_material.color = Color.black;
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
-		glass_material = Resources.Load<Material>("Materials/Glass");
-		glass_offline_material = Resources.Load<Material>("Materials/OfflineGlass");
-		dryingLeaves_material = Resources.Load<Material>("Materials/DryingLeaves");
-		leaves_material = Resources.Load<Material>("Materials/Leaves");
-		grass_material = Resources.Load<Material>("Materials/Grass");
+        basic_material = Resources.Load<Material>("Materials/Basic");
+        basic_offline_material = Resources.Load<Material>("Materials/BasicOffline");
+        glass_material = Resources.Load<Material>("Materials/Glass");
+        glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
+        metal_material = Resources.Load<Material>("Materials/Metal");
+        green_material = Resources.Load<Material>("Materials/Green");
 
-		mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-		treesPool = new List<GameObject>();
-		saplingsPool = new List<GameObject>();
 
-		Material dirtMaterial = ResourceType.GetMaterialById(ResourceType.DIRT_ID);
-		grassland_ready_25 = new Material[4]; grassland_ready_50 = new Material[4];
-		grassland_ready_25[0] = new Material(dirtMaterial ); grassland_ready_25[0].name ="grassland_25_0";
-		grassland_ready_25[0].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_25_0"));
-		grassland_ready_25[1] = new Material(dirtMaterial ); grassland_ready_25[1].name ="grassland_25_1";
-		grassland_ready_25[1].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_25_1"));
-		grassland_ready_25[2] = new Material(dirtMaterial ); grassland_ready_25[2].name ="grassland_25_2";
-		grassland_ready_25[2].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_25_2"));
-		grassland_ready_25[3] = new Material(dirtMaterial ); grassland_ready_25[3].name ="grassland_25_3";
-		grassland_ready_25[3].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_25_3"));
-
-		grassland_ready_50[0] = new Material(dirtMaterial ); grassland_ready_50[0].name ="grassland_50_0";
-		grassland_ready_50[0].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_0"));
-		grassland_ready_50[1] = new Material(dirtMaterial ); grassland_ready_50[1].name ="grassland_50_1";
-		grassland_ready_50[1].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_1"));
-		grassland_ready_50[2] = new Material(dirtMaterial ); grassland_ready_50[2].name ="grassland_50_2";
-		grassland_ready_50[2].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_2"));
-		grassland_ready_50[3] = new Material(dirtMaterial ); grassland_ready_50[3].name ="grassland_50_3";
-		grassland_ready_50[3].SetTexture("_MainTex", Resources.Load<Texture>("Textures/grassland_ready_50_3"));
-
-		Structure.LoadPrefs();
+        mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
+        Structure.LoadPrefs();
+        QuestUI.LoadTextures();
 	}
 
 	void Update() {
-		if (treesPool.Count > treesPool_buffer_size) {
-			treeClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (treeClearTimer <= 0) {
-				GameObject tree = treesPool[treesPool.Count - 1];
-				treesPool.RemoveAt(treesPool.Count - 1);
-				Destroy(tree);
-				if (treesPool.Count > treesPool_buffer_size) treeClearTimer = clearTime;
-				else treeClearTimer = 0;
-			}
-		}
-		if (saplingsPool.Count > grassPool_buffer_size) {
-			grassClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
-			if (grassClearTimer <= 0) {
-				GameObject grass= saplingsPool[saplingsPool.Count - 1];
-				saplingsPool.RemoveAt(saplingsPool.Count - 1);
-				Destroy(grass);
-				if (saplingsPool.Count > grassPool_buffer_size) grassClearTimer = clearTime;
-				else grassClearTimer = 0;
-			}
-		}
 
 		int docksCount = GameMaster.colonyController.docks.Count;
 		if (shipsClearTimer > 0) {
@@ -150,72 +89,12 @@ public class PoolMaster : MonoBehaviour {
 				}
 				shipsClearTimer = clearTime;
 			}
-		}
+		}       
 	}
 
-	public Tree GetTree() {
-		GameObject tree = null;
-		if (treesPool.Count == 0)	tree = Structure.GetNewStructure(Structure.TREE_ID).gameObject;
-		else {
-			if (treesPool[0] == null) tree = Structure.GetNewStructure(Structure.TREE_ID).gameObject;
-			else {tree = treesPool[0]; treeClearTimer = clearTime;}
-			treesPool.RemoveAt(0);
-			if (tree.GetComponent<Tree>() == null) tree.gameObject.AddComponent<Tree>();
-		}
-		return tree.GetComponent<Tree>();
-	}
-	public void ReturnTreeToPool(Tree t) {
-		if (t == null) return;
-		if (t.basement != null) t.UnsetBasement();
-		t.hp = t.maxHp;
-		t.SetLifepower(0);
-		t.SetGrowth(0);
-		t.transform.parent = transform;
-		if (t.GetComponent<FallingTree>() != null) {
-			Destroy(t.GetComponent<FallingTree>());
-			t.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
-		}
-		t.gameObject.SetActive(false);
-		t.enabled = true;
-		treesPool.Add(t.gameObject);
-	}
-	public void ReturnTreeToPool(GameObject g) {
-		if ( g == null) return;
-		if (g.GetComponent<FallingTree>() != null) {
-			Destroy(g.GetComponent<FallingTree>());
-			g.transform.localRotation = Quaternion.Euler(0,Random.value *  360,0);
-		}
-		treeClearTimer = clearTime;
-		g.transform.parent = null;
-		g.SetActive(false);
-		treesPool.Add(g);
-	}
-	public TreeSapling GetSapling() {
-		GameObject grass = null;
-		if (saplingsPool.Count == 0) grass = Structure.GetNewStructure(Structure.TREE_SAPLING_ID).gameObject;
-		else {
-			if (saplingsPool[0] == null) {
-				grass =  Structure.GetNewStructure(Structure.TREE_SAPLING_ID).gameObject;
-			}
-			else {
-				grass = saplingsPool[0];			
-				grassClearTimer = clearTime;
-			}
-			saplingsPool.RemoveAt(0);
-		}
-		return grass.GetComponent<TreeSapling>();
-	}
-	public void ReturnSaplingToPool(TreeSapling sapling) {
-		if (sapling == null) return;
-		if (sapling.basement != null) sapling.UnsetBasement();
-		sapling.hp = sapling.maxHp;
-		sapling.SetLifepower(0);
-		sapling.transform.parent = transform;
-		sapling.gameObject.SetActive(false);
-		saplingsPool.Add(sapling.gameObject);
-	}
+ 
 
-	public Ship GetShip(byte level, ShipType type) {
+    public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;
 		List<GameObject> searchList = null;
 		GameObject pref = null;
@@ -297,7 +176,207 @@ public class PoolMaster : MonoBehaviour {
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
 	}
 
-	public static void BuildSplashEffect(Structure s) {
+	public static GameObject GetRooftop(Structure s) {
+		GameObject g = null;
+		g = GameObject.Instantiate(Resources.Load<GameObject>("Prefs/blockRooftop")) as GameObject;
+		return g;
+	}
+
+    public static Material GetGreenMaterial(GreenMaterial mtype, MeshFilter mf)
+    {
+        Mesh quad = mf.mesh;
+        if (quad == null) return green_material;           
+        float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
+        Vector2[] borders;
+        switch (mtype)
+        {
+            default:
+            case GreenMaterial.Leaves:
+                borders = new Vector2[] { Vector2.zero, Vector2.up * piece, Vector2.one * piece, Vector2.right * piece};
+                break;
+            case GreenMaterial.Grass100:
+                borders = new Vector2[] { new Vector2(piece, 0), new Vector2(piece, piece), new Vector2(2 * piece, piece), new Vector2(2 * piece, 0) };
+                break;
+            case GreenMaterial.Grass80:
+                borders = new Vector2[] { new Vector2(2 * piece + add, 0), new Vector2(2 * piece + add, piece), new Vector2(3 * piece + add, piece), new Vector2(3 * piece + add, 0) };
+                break;
+            case GreenMaterial.Grass60:
+                borders = new Vector2[] { new Vector2(2 * piece + add, piece), new Vector2(2 * piece + add, 2 * piece), new Vector2(3 * piece + add, 2 * piece), new Vector2(3 * piece + add, piece) };
+                break;
+            case GreenMaterial.Grass40:
+                borders = new Vector2[] { new Vector2(2 * piece + add, 2 *piece), new Vector2(2 * piece + add, 3* piece), new Vector2(3 * piece + add, 3 * piece), new Vector2(3 * piece + add, 2 * piece) };
+                break;
+            case GreenMaterial.Grass20:
+                borders = new Vector2[] { new Vector2(2 * piece + add, 3 * piece), new Vector2(2 * piece + add, 4 * piece), new Vector2(3 * piece + add, 4 * piece), new Vector2(3 * piece + add, 3 * piece) };
+                break;
+        }
+        // крутим развертку, если это квад, иначе просто перетаскиваем 
+        bool isQuad = (quad.uv.Length == 4);
+        Vector2[] uvEditing = quad.uv;
+        if (isQuad)
+        {
+            borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+            float seed = Random.value;            
+                if (seed > 0.5f)
+                {
+                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0] , borders[2], borders[3], borders[1] };
+                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                }
+                else
+                {
+                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                }
+
+
+            // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
+            uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+        }
+        else
+        {            
+            for (int i = 0; i < uvEditing.Length; i++)
+            {
+                uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
+                uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
+            }            
+        }
+        quad.uv = uvEditing;
+        return green_material;
+    }
+    public static Material GetMetalMaterial(MetalMaterial mtype, MeshFilter mf)
+    {
+        Mesh quad = mf.mesh;
+        if (quad != null)
+        {
+            float piece = 0.25f;
+            Vector2[] borders;
+            switch (mtype)
+            {
+                default:
+                case MetalMaterial.MetalK:
+                    borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
+                    break;
+                case MetalMaterial.MetalM:
+                    borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
+                    break;
+                case MetalMaterial.MetalE:
+                    borders = new Vector2[] { new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
+                    break;
+                case MetalMaterial.MetalN:
+                    borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
+                    break;
+                case MetalMaterial.MetalP:
+                    borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
+                    break;
+                case MetalMaterial.MetalS:
+                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                    break;
+            }
+            bool isQuad = (quad.uv.Length == 4);
+            Vector2[] uvEditing = quad.uv;
+            if (isQuad)
+            {
+                float seed = Random.value;
+                borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+                if (seed > 0.5f)
+                {
+                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                }
+                else
+                {
+                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                }
+
+
+                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
+                uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
+            else
+            {
+                for (int i = 0; i < uvEditing.Length; i++)
+                {
+                    uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
+                    uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
+                }
+            }
+            quad.uv = uvEditing;
+        }
+        return metal_material;
+    }
+    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, bool online)
+    {
+        Mesh quad = mf.mesh;
+        if (quad != null)
+        {
+            float piece = 0.25f;
+            Vector2[] borders;
+            // 1 2
+            // 0 3
+            switch (mtype)
+            {
+                default:
+                case BasicMaterial.Concrete:
+                    borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
+                    break;
+                case BasicMaterial.Plastic:
+                    borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
+                    break;
+                case BasicMaterial.Stone:
+                    borders = new Vector2[] { new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(4 * piece, 3 * piece), new Vector2(4 * piece, 2 * piece) };
+                    break;
+                case BasicMaterial.MineralF:
+                    borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
+                    break;
+                case BasicMaterial.Lumber:
+                    borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
+                    break;
+                case BasicMaterial.Dirt:
+                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
+                    break;
+                case BasicMaterial.Farmland:
+                    borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                    break;
+                case BasicMaterial.MineralL:
+                    borders = new Vector2[] { new Vector2(0, piece), new Vector2(0, 2 * piece), new Vector2(piece, 2 * piece), new Vector2(piece, piece) };
+                    break;
+                case BasicMaterial.DeadLumber:
+                    borders = new Vector2[] { new Vector2(2 * piece, 3 *piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
+                    break;
+            }
+            bool isQuad = (quad.uv.Length == 4);
+            Vector2[] uvEditing = quad.uv;
+            if (isQuad)
+            {
+                float seed = Random.value;
+                borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+                if (seed > 0.5f)
+                {
+                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                }
+                else
+                {
+                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                }               
+                uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
+            else
+            {
+                for (int i = 0; i < uvEditing.Length; i++)
+                {
+                    uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
+                    uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
+                }
+            }
+            quad.uv = uvEditing;
+        }
+        return basic_material;
+    }
+
+    public static void BuildSplashEffect(Structure s) {
 		//заготовка
 	}
 }

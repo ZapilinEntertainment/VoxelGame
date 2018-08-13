@@ -713,8 +713,7 @@ public sealed class UISurfacePanelController : UIObserver {
 			if (n < abuildings.Count) {
 				availableBuildingsButtons[n].gameObject.SetActive(true);
 				RawImage rimage = availableBuildingsButtons[n].transform.GetChild(0).GetComponent<RawImage>();
-				Vector2 txPos = Structure.GetTexturePosition(abuildings[n].id);
-				rimage.uvRect = new Rect(txPos.x, txPos.y, 0.125f, 0.125f);
+                rimage.uvRect = Structure.GetTextureRect(abuildings[n].id);
 				availableBuildingsButtons[n].onClick.RemoveAllListeners();
 				int bid = n;
 				availableBuildingsButtons[n].onClick.AddListener(() => {

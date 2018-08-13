@@ -3,29 +3,52 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum QuestTexturesEnum { Blocked, Awaiting, UseBuildingIcon, UseResourceFrame}
+
 public sealed class QuestUI : MonoBehaviour {
     [SerializeField] RectTransform[] questButtons; // fiti
-    [SerializeField] GameObject questInfoPanel; // fiti
+    [SerializeField] GameObject questInfoPanel, shuttlesOrCrewsOptions; // fiti
+    [SerializeField] RectTransform stepsContainer, listContainer; // fiti
     [SerializeField] Text questName, questDescription, timer; // fiti    
     float rectTransformingSpeed = 0.8f, transformingProgress;
     RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
     int openedQuest = -1;
     bool transformingRectInProgress = false;
+    bool prepareCrewsList = false; // else prepare shuttles list
     Quest[] visibleQuests ;
     bool[] questAccessMap;
     float[] timers;
+    float questUpdateTimer = 0;
+    
 
-    const float QUEST_REFRESH_TIME = 60;
-    Texture questSlotBlocked_tx, questAwaiting_tx;
+    const float QUEST_REFRESH_TIME = 60, QUEST_UPDATE_TIME = 1;
+    public static Texture questBlocked_tx { get; private set; }
+    public static Texture questAwaiting_tx { get; private set; }
+    public static Texture questBuildingBack_tx { get; private set; }
+    public static Texture questResourceBack_tx { get; private set; }
+
+    public static void LoadTextures()
+    {
+        questBlocked_tx = Resources.Load<Texture>("Textures/questUnacceptableIcon");
+        questAwaiting_tx = Resources.Load<Texture>("Textures/questAwaiting"); 
+        questBuildingBack_tx = Resources.Load<Texture>("Textures/quest_buildingFrame");
+        questResourceBack_tx = Resources.Load<Texture>("Textures/quest_resourceFrame");
+    }
 
     private void Awake()
     {
         int l = questButtons.Length;
         visibleQuests = new Quest[l];
         questAccessMap = new bool[l];
-        timers = new float[l];
-        questSlotBlocked_tx = Resources.Load<Texture>("Textures/questUnacceptableIcon");
-       // questAwaiting_tx = Resources.Load<Texture>("Texture/questAwaiting");
+        CheckQuestSlots();
+        timers = new float[l];       
+        questUpdateTimer = QUEST_UPDATE_TIME;
+    }
+
+    public void Activate()
+    {
+        GetComponent<Image>().enabled = true;
+        PrepareBasicQuestWindow();
     }
 
     void Update()
@@ -39,11 +62,21 @@ public sealed class QuestUI : MonoBehaviour {
             {
                 transformingProgress = 0;
                 transformingRectInProgress = false;
-                transform.GetChild(0).gameObject.SetActive(false); // buttons container
-                questInfoPanel.SetActive(true);
+                if (openedQuest != -1)
+                { // окно квеста открылось
+                    transform.GetChild(0).gameObject.SetActive(false); // buttons container
+                    questInfoPanel.SetActive(true);
+                }
+                else
+                { // возврат ко всем квестам
+                    PrepareBasicQuestWindow();
+                }
             }
         }
         float f = 0, t = Time.deltaTime * GameMaster.gameSpeed;
+        questUpdateTimer -= t;
+        bool checkConditions = questUpdateTimer <= 0;
+        if (checkConditions) questUpdateTimer = QUEST_UPDATE_TIME;
         for (int i = 0; i < visibleQuests.Length;i ++)
         {
             Quest q = visibleQuests[i];
@@ -54,33 +87,42 @@ public sealed class QuestUI : MonoBehaviour {
             f -= t;
             if ( f <= 0 )
             {                
-                if (q.picked)  DropQuest(i);
+                if (q.picked)  DropQuest(i); //?????
                 else  SetNewQuest(i);
             } 
+            else
+            {
+               if (checkConditions) q.CheckQuestConditions();
+            }
         }
+        
+
     }
 
     private void PrepareBasicQuestWindow() // открыть окно всех квестов
     {
         openedQuest = -1;
-        transform.GetChild(0).gameObject.SetActive(true);
+        transform.GetChild(0).gameObject.SetActive(true); // quest buttons
+        transform.GetChild(1).gameObject.SetActive(false); // quest info
         for (int i = 0; i < questButtons.Length; i++)
         {
+            questButtons[i].gameObject.SetActive(true);
             RectTransform rt = questButtons[i];
             if (questAccessMap[i] == true)
             {
-                questButtons[i].GetComponent<Button>().interactable = true;
-                Quest q = visibleQuests[i];                
+                Quest q = visibleQuests[i];                                          
                 if (q != null)
                 {
-                    rt.GetChild(0).GetComponent<RawImage>().texture = q.poster;
+                    questButtons[i].GetComponent<Button>().interactable = true;
+                    rt.GetChild(0).GetComponent<RawImage>().texture = Quest.GetQuestTexture(q.ID);
                     Text t = rt.GetChild(1).GetComponent<Text>();
                     t.text = q.name;
                     t.color = (q.picked ? Color.cyan : Color.white);
                 }
                 else
                 {
-                    rt.GetChild(0).GetComponent<RawImage>().texture = questAwaiting_tx;
+                    questButtons[i].GetComponent<Button>().interactable = false;
+                    SetTexture(QuestTexturesEnum.Awaiting, rt.GetChild(0).GetComponent<RawImage>());
                     Text t = rt.GetChild(1).GetComponent<Text>();
                     t.text = "...";
                     t.color = Color.grey;
@@ -89,7 +131,7 @@ public sealed class QuestUI : MonoBehaviour {
             else
             {
                 questButtons[i].GetComponent<Button>().interactable = false;
-                rt.GetChild(0).GetComponent<RawImage>().texture = questSlotBlocked_tx;
+                SetTexture(QuestTexturesEnum.Blocked, rt.GetChild(0).GetComponent<RawImage>());
                 rt.GetChild(1).GetComponent<Text>().text = string.Empty;
             }
         }
@@ -114,10 +156,129 @@ public sealed class QuestUI : MonoBehaviour {
         Quest q = visibleQuests[openedQuest];
         questName.text = q.name;
         questDescription.text = q.description;
-        // таймер, цена
-        // требования шаттлов и команд
+        if (timers[index] != -1) timer.text = string.Format("{0:0.00}", timers[index]);
+        if (q.shuttlesRequired == 0)
+        {
+            if (q.crewsRequired == 0)
+            {
+                shuttlesOrCrewsOptions.SetActive(false);
+                stepsContainer.anchorMax = Vector2.one;
+            }
+            else
+            {
+                shuttlesOrCrewsOptions.SetActive(true);
+                stepsContainer.anchorMax = new Vector2(0.5f, 1);
+                shuttlesOrCrewsOptions.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Crews);
+                prepareCrewsList = true;
+            }
+        }
+        else
+        {
+            shuttlesOrCrewsOptions.SetActive(true);
+            stepsContainer.anchorMax = new Vector2(0.5f, 1);
+            shuttlesOrCrewsOptions.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Shuttles);
+            prepareCrewsList = false;
+        }
+        PrepareList();
+        // цена и кнопка запуска
     }
-
+    private void PrepareList()
+    {
+        Quest q = visibleQuests[openedQuest];
+        if (prepareCrewsList)
+        {
+            int count = q.crews.Count, i = 0;
+            if (count != 0)
+            {                
+                for (; i < count; i++)
+                {
+                    Transform t = listContainer.GetChild(i + 1);
+                    if (t == null)  t = Instantiate(listContainer.GetChild(1), listContainer).transform;
+                    t.GetComponent<Text>().text = '\"' +q.crews[i].name + '\"';
+                    int rindex = i;
+                    t.GetChild(0).GetComponent<Button>().onClick.AddListener(() => {
+                        this.RemoveItemFromList(rindex);
+                    });
+                }
+            }
+            count = listContainer.childCount;
+            if (i < count)
+            {
+                for (; i < count; i++)
+                {
+                    listContainer.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+        }
+        else
+        {
+            Expedition e = q.expedition;
+            int count = 0, i = 0;
+            if (e != null)
+            {
+                count = e.shuttles.Count;
+                if (count != 0)
+                {
+                    for (; i < count; i++)
+                    {
+                        Transform t = listContainer.GetChild(i + 1);
+                        if (t == null) t = Instantiate(listContainer.GetChild(1), listContainer).transform;
+                        t.GetComponent<Text>().text = '\"' + e.shuttles[i].name + '\"';
+                        int rindex = i;
+                        t.GetChild(0).GetComponent<Button>().onClick.AddListener(() =>
+                        {
+                            this.RemoveItemFromList(rindex);
+                        });
+                    }
+                }
+            }
+            count = listContainer.childCount;
+            if (i < count)
+            {
+                for (; i < count; i++)
+                {
+                    listContainer.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+        }
+    }
+    public void RemoveItemFromList(int index)
+    {
+        if (prepareCrewsList) visibleQuests[openedQuest].RemoveCrew(index);
+        else visibleQuests[openedQuest].expedition.DetachShuttle(index);
+    }
+    public void PrepareDropdown()
+    {
+        Quest q = visibleQuests[openedQuest];
+        List<Dropdown.OptionData> buttons = new List<Dropdown.OptionData>();
+        if (prepareCrewsList)
+        {
+            // готовить список команд            
+            var crews = q.crews;
+            if (crews.Count > 0)
+            {
+                for (int i = 0; i < crews.Count; i++)
+                {
+                    buttons.Add(new Dropdown.OptionData('\"' + crews[i].name + '\"'));
+                }
+            }
+        }
+        else
+        {
+            // готовить список челноков
+            var shuttles = q.expedition.shuttles;
+            if (shuttles.Count > 0)
+            {
+                for (int i = 0; i < shuttles.Count; i++)
+                {
+                    buttons.Add(new Dropdown.OptionData('\"' + shuttles[i].name + '\"'));
+                }
+            }            
+        }
+        Dropdown d = listContainer.GetChild(0).GetComponent<Dropdown>();
+        d.options = buttons;
+        d.RefreshShownValue();
+    }
 
 
     IEnumerator WaitForNewQuest(int i)
@@ -134,29 +295,33 @@ public sealed class QuestUI : MonoBehaviour {
     }
     private void SetNewQuest(int i)
     {
-        if (questAccessMap[i] == false) return;
+        if (questAccessMap[i] == false)
+        {
+            visibleQuests[i] = null;
+            return;
+        }
         // поиск подходящих среди отложенных
-       Quest q = new Quest();
+       Quest q ;
+        switch (i)
+        {
+            default: return;
+            case Quest.PROGRESS_QUESTS_INDEX: q = Quest.GetProgressQuest(); break;
+        }
         if (!q.picked) {
-            if (q.useTimerBeforeTaking) timers[i] = q.questLifeTimer;
-            else timers[i] = -1;
+            timers[i] = q.questLifeTimer;
         }
         else // autopicked quests
         {
-            if (q.useTimerAfterTaking) timers[i] = q.questRealizationTimer;
-            else timers[i] = -1;
+            timers[i] = q.questRealizationTimer;
         }
         visibleQuests[i] = q;
+        if (openedQuest == -1) PrepareBasicQuestWindow();
+        print("new quest set");
     }  
-
-    private void OnEnable()
-    {
-        PrepareBasicQuestWindow();
-    }
 
     private void CheckQuestSlots()
     {
-        questAccessMap[0] = true; // story and progress
+        questAccessMap[Quest.PROGRESS_QUESTS_INDEX] = true; // story and progress
         questAccessMap[1] = true; // trading
         questAccessMap[2] = true; // polytics
 
@@ -194,7 +359,12 @@ public sealed class QuestUI : MonoBehaviour {
 
     public void CloseQuestWindow()
     {
-        if (openedQuest == -1) gameObject.SetActive(false);
+        if (openedQuest == -1) {
+            GetComponent<Image>().enabled = false;
+            questButtons[0].transform.parent.gameObject.SetActive(false);
+            questInfoPanel.SetActive(false);
+            UIController.current.ActivateLeftPanel();
+        }
         else ReturnToQuestList();
     }   
 
@@ -249,4 +419,36 @@ public sealed class QuestUI : MonoBehaviour {
                 break;
         }
     }
+
+    #region quests checks
+    public void CheckProgressQuest()
+    {
+        if (visibleQuests[Quest.PROGRESS_QUESTS_INDEX] == null) SetNewQuest(Quest.PROGRESS_QUESTS_INDEX);
+    }
+    #endregion
+
+    public static void SetTexture(QuestTexturesEnum qte, RawImage ri)
+    {
+        switch (qte)
+        {
+            case QuestTexturesEnum.Awaiting:
+                ri.texture = questAwaiting_tx;
+                ri.uvRect = new Rect(0, 0, questAwaiting_tx.width, questAwaiting_tx.height);
+                break;
+            case QuestTexturesEnum.Blocked:
+                ri.texture = questBlocked_tx;
+                ri.uvRect = new Rect(0, 0, questBlocked_tx.width, questBlocked_tx.height);
+                break;
+            case QuestTexturesEnum.UseBuildingIcon:
+                ri.texture = questBuildingBack_tx;
+                ri.uvRect = new Rect(0, 0, questBuildingBack_tx.width, questBuildingBack_tx.height);
+                break;
+            case QuestTexturesEnum.UseResourceFrame:
+                ri.texture = questResourceBack_tx;
+                ri.uvRect = new Rect(0, 0, questResourceBack_tx.width, questResourceBack_tx.height);
+                break;
+        }
+        
+    }
 }
+
