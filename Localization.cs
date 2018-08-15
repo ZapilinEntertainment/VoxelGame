@@ -1,10 +1,10 @@
 ﻿public enum Language{English, Russian};
 public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build}
-public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed}
-public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished }
-public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed };
+Save, Load, Options, Exit, Build, Shuttles, Crews}
+public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
+ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft}
+public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress }
+public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots}
 
@@ -176,6 +176,7 @@ public static class Localization {
             case GameAnnouncements.GameLoaded: return "Load successful";
             case GameAnnouncements.SavingFailed: return "Saving failed";
             case GameAnnouncements.LoadingFailed: return "Loading failed";
+            case GameAnnouncements.PowerFailure: return "Power failure";
 		}
 	}
 
@@ -245,6 +246,8 @@ public static class Localization {
             case LocalizedWord.Options: return "Options";
             case LocalizedWord.Exit: return "Exit";
             case LocalizedWord.Build: return "Build";
+            case LocalizedWord.Shuttles: return "Shuttles";
+            case LocalizedWord.Crews: return "Crews";
 		default: return "...";
 		}
 	}
@@ -260,6 +263,7 @@ public static class Localization {
             case LocalizedPhrase.ImmigrationEnabled: return "Immigration enabled";
             case LocalizedPhrase.ImmigrationDisabled:  return "Immigration disabled";
             case LocalizedPhrase.TicketsLeft: return "Tickets left";
+            case LocalizedPhrase.ColonistsArrived: return "Colonists arrived";
             case LocalizedPhrase.BirthrateMode: return "Spawnrate mode";
             case LocalizedPhrase.ShuttlesAvailable: return "Shuttles available";
             case LocalizedPhrase.CrewsAvailable: return "Crews available";
@@ -271,6 +275,7 @@ public static class Localization {
             case LocalizedPhrase.ConstructShuttle: return "Construct shuttle";
             case LocalizedPhrase.ShuttleRepaired: return "A shuttle has been repaired";
             case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
+            case LocalizedPhrase.ObjectsLeft: return "Objects left";
         }
     }
 
@@ -300,6 +305,9 @@ public static class Localization {
             case LocalizationActionLabels.WorkStopped: return "Work has stopped";
             case LocalizationActionLabels.BlockCompleted: return "Block completed";
             case LocalizationActionLabels.MineLevelFinished: return "Mine level finished";
+            case LocalizationActionLabels.CleanInProgress: return "Clean in progress";
+            case LocalizationActionLabels.DigInProgress: return "Dig in progress";
+            case LocalizationActionLabels.GatherInProgress: return "Gather in progress";
         }
     }
 
@@ -369,7 +377,42 @@ public static class Localization {
                 q.steps[0] = "Headquarters upgraded ";
                 break;
             case QuestID.Progress_CoveredFarm:
-                q.name = "Covered biosphere"
+                q.name = "Covered field";
+                q.description = "Replace your old farm with new covered one";
+                q.steps[0] = "Covered farm built ";
+                break;
+            case QuestID.Progress_CoveredLumbermill:
+                q.name = "Covered forest";
+                q.description = "Replace your old lumbermills with new covered one";
+                q.steps[0] = "Covered lumbermill built ";
+                break;
+            case QuestID.Progress_Reactor:
+                q.name = "Power well";
+                q.description = "Built a massive graphonium reactor";
+                q.steps[0] = "Graphonium reactor built ";
+                break;
+            case QuestID.Progress_FirstExpedition:
+                q.name = "Brave explorers";
+                q.description = "Initialize and succeed your first expedition in the mysterious Last Sector. For that, you should assemble a team in the recruiting center, construct a shuttle for them and prepare the new expedition in the Expedition corpus.";
+                q.steps[0] = "Crew assembled ";
+                q.steps[1] = "Shuttle constructed";
+                q.steps[2] = "Expedition launched";
+                q.steps[3] = "Expedition success";
+                break;
+            case QuestID.Progress_Tier5:
+                q.name = "Technology progress IV";
+                q.description = "Upgrade your HQ to level 5";
+                q.steps[0] = "Headquarters upgraded ";
+                break;
+            case QuestID.Progress_FactoryComplex:
+                q.name = "Complex factory";
+                q.description = "Construct factory onto factory block to make a combined factory";
+                q.steps[0] = "Complex factory completed";
+                break;
+            case QuestID.Progress_SecondFloor:
+                q.name = "Second floor";
+                q.description = "Construct a building onto the column";
+                q.steps[0] = "Building on column surface completed";
                 break;
         }
     }

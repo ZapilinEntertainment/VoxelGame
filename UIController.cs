@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum ChosenObjectType{None,Surface, Cube, Structure, Worksite}
-public enum Icons {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon  }
+public enum Icons {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted  }
 public enum ProgressPanelMode { Offline, Powerplant, Hangar}
 
 sealed public class UIController : MonoBehaviour {	
@@ -679,7 +679,7 @@ sealed public class UIController : MonoBehaviour {
             case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
             case Icons.PowerOff: return new Rect(2 * p, 7 *p, p,p);
             case Icons.PowerOn: return new Rect(3 * p, 7 * p, p, p);
-            case Icons.Citizen: return new Rect(2*p, 7*p,p,p);
+            case Icons.Citizen: return new Rect(p, 6*p,p,p);
             case Icons.RedArrow: return new Rect(2 * p, 6 *p,p,p);
             case Icons.CrewBadIcon: return new Rect(p, 5 *p,p,p);
             case Icons.CrewNormalIcon: return new Rect(2 * p, 5 * p, p, p);
@@ -687,6 +687,8 @@ sealed public class UIController : MonoBehaviour {
             case Icons.ShuttleBadIcon: return new Rect(4 *p, 5 *p,p,p);
             case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
             case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
+            case Icons.TaskFrame: return new Rect(3 * p, 4 *p,p,p);
+            case Icons.TaskCompleted: return new Rect(4 * p, 4 *p,p,p);
         }
     }
 

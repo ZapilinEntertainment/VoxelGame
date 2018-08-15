@@ -318,9 +318,9 @@ public class Structure : MonoBehaviour {
 		case HQ_4_ID:
 		case HQ_3_ID:
 		case HQ_2_ID:
-		case LANDED_ZEPPELIN_ID : return new Rect(3 * p, 7*p, p, p);
+		case LANDED_ZEPPELIN_ID : return new Rect(2 * p, 7*p, p, p);
             case LIFESTONE_ID :
-		case TREE_OF_LIFE_ID : return new Rect(2 * p, 7 *p, p, p);
+		case TREE_OF_LIFE_ID : return new Rect(3 * p, 7 *p, p, p);
             case STORAGE_1_ID :
 		case STORAGE_2_ID :
 		case STORAGE_3_ID :

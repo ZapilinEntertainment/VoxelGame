@@ -36,11 +36,11 @@ public sealed class ColonyController : MonoBehaviour {
 	public float energySurplus {get;private set;}
 	public float totalEnergyCapacity {get;private set;}
 	public float energyCrystalsCount {get;private set;}
-	List<Building> powerGrid;
+	public List<Building> powerGrid { get; private set; }
 	public List<Dock> docks{get;private set;}
 	public List<Worksite> worksites{get;private set;}
 	public byte docksLevel{get; private set;}
-	public byte housesLevel{get; private set;}
+	public float housingLevel { get; private set; }
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
@@ -149,14 +149,18 @@ public sealed class ColonyController : MonoBehaviour {
 			housingTimer = HOUSING_TIME;
 		}
 		float housingHappiness = 1;
-		if ( housesLevel == 0) {
+		if ( housingLevel == 0) {
 			housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT;
 		}
 		else{
 			if (totalLivespace < citizenCount) {
 				float demand = citizenCount - totalLivespace;
-				housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT + (1 - HOUSE_PROBLEM_HAPPINESS_LIMIT) * demand / ((float)(citizenCount)) ;
+				housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT + (1 - HOUSE_PROBLEM_HAPPINESS_LIMIT) * ( 1 - demand / ((float)(citizenCount))) ;
 			}
+            else
+            {
+                housingHappiness = housingLevel / 5f;
+            }
 		}
 		//HEALTHCARE
 		if (health_coefficient < 1 && hospitals_coefficient > 0) {
@@ -301,39 +305,132 @@ public sealed class ColonyController : MonoBehaviour {
 			else i++;
 		}
 	}
-	public void RecalculateHousing() {
-		totalLivespace = 0;
-		housesLevel = 0;
-		if (houses.Count == 0) return;
-		int i = 0, normalLivespace = 0;
-		List<int> tents = new List<int>();       
-		while (i < houses.Count) {
-			if (houses[i] == null || !houses[i].gameObject.activeSelf) {houses.RemoveAt(i); continue;}
-			if ( houses[i].isActive) {
-				totalLivespace += houses[i].housing;
-				if (houses[i].level > housesLevel) housesLevel = housesLevel;
-				if (houses[i].level == 0) 	tents.Add(i);
-				else normalLivespace += houses[i].housing;
-			}
-			i++;
-		}
-        if (tents.Count > 0 & normalLivespace > citizenCount) {
-			i = 0;
+    public void RecalculateHousing()
+    {
+        totalLivespace = 0;
+        housingLevel = 0;
+        if (houses.Count == 0) return;
+        int i = 0, normalLivespace = 0;
+        List<int> tents = new List<int>();
+        float[] housingVolumes = new float[6];
+        while (i < houses.Count)
+        {
+            House h = houses[i];
+            if (h == null || !h.gameObject.activeSelf) { houses.RemoveAt(i); continue; }
+            if (h.isActive)
+            {
+                totalLivespace += h.housing;
+                if (h.level == 0) tents.Add(i);
+                else normalLivespace += h.housing;
+                housingVolumes[h.level] += h.housing;
+            }
+            i++;
+        }
+        if (tents.Count > 0 & normalLivespace > citizenCount)
+        {
+            i = 0;
             int tentIndexDelta = 0; // смещение индексов влево из-за удаления
-			while ( i < tents.Count & normalLivespace > citizenCount) {
+            while (i < tents.Count & normalLivespace > citizenCount)
+            {
                 int realIndex = tents[i] + tentIndexDelta;
-                if (normalLivespace - citizenCount >= houses[realIndex].housing) {                    
-					normalLivespace -= houses[realIndex].housing;
-					houses[realIndex].Annihilate(false);
+                House h = houses[realIndex];
+                if (normalLivespace - citizenCount >= h.housing)
+                {
+                    normalLivespace -= h.housing;
+                    housingVolumes[h.level] -= h.housing;
+                    h.Annihilate(false);
                     tentIndexDelta--;
-				}
-				else break;
-				i++;
-			}
-		}
-	}
+                }
+                else break;
+                i++;
+            }
+        }
+        float allLivespace = totalLivespace;
+        float usingLivespace = 0;
+        // принимается, что все расселены от максимального уровня к минимальному
+        if (housingVolumes[5] >= allLivespace)
+        {
+            housingLevel = 5;
+        }
+        else // можно и рекурсией
+        {
+            allLivespace -= housingVolumes[5];
+            usingLivespace += housingVolumes[5];
+            if (housingVolumes[4] >= allLivespace)
+            {
+                housingVolumes[4] = allLivespace;
+                usingLivespace += allLivespace;
+                allLivespace = 0;
+                housingVolumes[3] = 0;
+                housingVolumes[2] = 0;
+                housingVolumes[1] = 0;
+                housingVolumes[0] = 0;
+            }
+            else
+            {
+                allLivespace -= housingVolumes[4];
+                usingLivespace += housingVolumes[4];
 
-	public void AddHospital(Hospital h) {
+                if (housingVolumes[3] >= allLivespace)
+                {
+                    housingVolumes[3] = allLivespace;
+                    usingLivespace += allLivespace;
+                    allLivespace = 0;
+                    housingVolumes[2] = 0;
+                    housingVolumes[1] = 0;
+                    housingVolumes[0] = 0;
+                }
+                else
+                {
+                    allLivespace -= housingVolumes[3];
+                    usingLivespace += housingVolumes[3];
+
+                    if (housingVolumes[2] >= allLivespace)
+                    {
+                        housingVolumes[2] = allLivespace;
+                        usingLivespace += allLivespace;
+                        allLivespace = 0;
+                        housingVolumes[1] = 0;
+                        housingVolumes[0] = 0;
+                    }
+                    else
+                    {
+                        allLivespace -= housingVolumes[2];
+                        usingLivespace += housingVolumes[2];
+
+                        if (housingVolumes[1] >= allLivespace)
+                        {
+                            housingVolumes[1] = allLivespace;
+                            usingLivespace += allLivespace;
+                            allLivespace = 0;
+                            housingVolumes[0] = 0;
+                        }
+                        else
+                        {
+                            allLivespace -= housingVolumes[1];
+                            usingLivespace += housingVolumes[1];
+
+                            if (housingVolumes[0] >= allLivespace)
+                            {
+                                housingVolumes[0] = allLivespace;
+                                usingLivespace += allLivespace;
+                                allLivespace = 0;
+                            }
+                            else
+                            {
+                                allLivespace -= housingVolumes[0];
+                                usingLivespace += housingVolumes[0];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        housingLevel = housingVolumes[5] / usingLivespace * 5 + housingVolumes[4] / usingLivespace * 4 + housingVolumes[3] / usingLivespace * 3 + housingVolumes[2] / usingLivespace * 2 + housingVolumes[1] / usingLivespace;
+    }
+
+    public void AddHospital(Hospital h) {
 		if (h == null) return;
 		if (hospitals == null) hospitals = new List<Hospital>();
 		if ( hospitals.Count > 0) {

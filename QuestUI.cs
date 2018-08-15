@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum QuestTexturesEnum { Blocked, Awaiting, UseBuildingIcon, UseResourceFrame}
-
 public sealed class QuestUI : MonoBehaviour {
     [SerializeField] RectTransform[] questButtons; // fiti
-    [SerializeField] GameObject questInfoPanel, shuttlesOrCrewsOptions; // fiti
+    [SerializeField] GameObject questInfoPanel, shuttlesOrCrewsOptions, questStepsContainer; // fiti
     [SerializeField] RectTransform stepsContainer, listContainer; // fiti
     [SerializeField] Text questName, questDescription, timer; // fiti    
     float rectTransformingSpeed = 0.8f, transformingProgress;
@@ -22,17 +20,17 @@ public sealed class QuestUI : MonoBehaviour {
     
 
     const float QUEST_REFRESH_TIME = 60, QUEST_UPDATE_TIME = 1;
-    public static Texture questBlocked_tx { get; private set; }
-    public static Texture questAwaiting_tx { get; private set; }
-    public static Texture questBuildingBack_tx { get; private set; }
-    public static Texture questResourceBack_tx { get; private set; }
+    public static Sprite questBlocked_tx { get; private set; }
+    public static Sprite questAwaiting_tx { get; private set; }
+    public static Sprite questBuildingBack_tx { get; private set; }
+    public static Sprite questResourceBack_tx { get; private set; }
 
     public static void LoadTextures()
     {
-        questBlocked_tx = Resources.Load<Texture>("Textures/questUnacceptableIcon");
-        questAwaiting_tx = Resources.Load<Texture>("Textures/questAwaiting"); 
-        questBuildingBack_tx = Resources.Load<Texture>("Textures/quest_buildingFrame");
-        questResourceBack_tx = Resources.Load<Texture>("Textures/quest_resourceFrame");
+        questBlocked_tx = Resources.Load<Sprite>("Textures/questUnacceptableIcon");
+        questAwaiting_tx = Resources.Load<Sprite>("Textures/questAwaiting"); 
+        questBuildingBack_tx = Resources.Load<Sprite>("Textures/quest_buildingFrame");
+        questResourceBack_tx = Resources.Load<Sprite>("Textures/quest_resourceFrame");
     }
 
     private void Awake()
@@ -63,9 +61,9 @@ public sealed class QuestUI : MonoBehaviour {
                 transformingProgress = 0;
                 transformingRectInProgress = false;
                 if (openedQuest != -1)
-                { // окно квеста открылось
-                    transform.GetChild(0).gameObject.SetActive(false); // buttons container
+                { // окно квеста открылось                    
                     questInfoPanel.SetActive(true);
+                    questButtons[openedQuest].gameObject.SetActive(false);
                 }
                 else
                 { // возврат ко всем квестам
@@ -81,18 +79,22 @@ public sealed class QuestUI : MonoBehaviour {
         {
             Quest q = visibleQuests[i];
             if (q == null) continue;
-            f = timers[i];
-            if (f == -1) continue;
-            if (timer)
-            f -= t;
-            if ( f <= 0 )
-            {                
-                if (q.picked)  DropQuest(i); //?????
-                else  SetNewQuest(i);
-            } 
-            else
+
+            if (checkConditions & !q.completed) q.CheckQuestConditions();
+
+            if (openedQuest == i)
             {
-               if (checkConditions) q.CheckQuestConditions();
+                if (q.stepsInfoNeedsRefresh) PrepareStepsList(q);
+            }
+
+            f = timers[i];
+            if (f != -1)
+            {
+                f -= t;
+                if (f <= 0)
+                {
+                    //дропнуть квест, поставить следующий в очереди
+                }
             }
         }
         
@@ -106,23 +108,26 @@ public sealed class QuestUI : MonoBehaviour {
         transform.GetChild(1).gameObject.SetActive(false); // quest info
         for (int i = 0; i < questButtons.Length; i++)
         {
+            RectTransform btn = questButtons[i];
             questButtons[i].gameObject.SetActive(true);
             RectTransform rt = questButtons[i];
             if (questAccessMap[i] == true)
             {
-                Quest q = visibleQuests[i];                                          
+                Quest q = visibleQuests[i];               
                 if (q != null)
                 {
-                    questButtons[i].GetComponent<Button>().interactable = true;
-                    rt.GetChild(0).GetComponent<RawImage>().texture = Quest.GetQuestTexture(q.ID);
+                    btn.GetComponent<Button>().interactable = true;
+                    Quest.SetQuestTexture(q.ID, btn.GetComponent<Image>() ,rt.GetChild(0).GetComponent<RawImage>());
                     Text t = rt.GetChild(1).GetComponent<Text>();
                     t.text = q.name;
                     t.color = (q.picked ? Color.cyan : Color.white);
                 }
                 else
                 {
-                    questButtons[i].GetComponent<Button>().interactable = false;
-                    SetTexture(QuestTexturesEnum.Awaiting, rt.GetChild(0).GetComponent<RawImage>());
+                    
+                    btn.GetComponent<Button>().interactable = false;
+                    btn.GetComponent<Image>().overrideSprite = questAwaiting_tx;
+                    btn.GetChild(0).GetComponent<RawImage>().enabled = false;
                     Text t = rt.GetChild(1).GetComponent<Text>();
                     t.text = "...";
                     t.color = Color.grey;
@@ -130,8 +135,9 @@ public sealed class QuestUI : MonoBehaviour {
             }
             else
             {
-                questButtons[i].GetComponent<Button>().interactable = false;
-                SetTexture(QuestTexturesEnum.Blocked, rt.GetChild(0).GetComponent<RawImage>());
+                btn.GetComponent<Button>().interactable = false;
+                btn.GetComponent<Image>().overrideSprite = questBlocked_tx;
+                btn.GetChild(0).GetComponent<RawImage>().enabled = false;
                 rt.GetChild(1).GetComponent<Text>().text = string.Empty;
             }
         }
@@ -144,6 +150,7 @@ public sealed class QuestUI : MonoBehaviour {
         transformingProgress = 0;
         resultingAnchorMin = Vector2.zero;
         resultingAnchorMax = Vector2.one;
+        openedQuest = index;
         for (int i = 0; i < questButtons.Length; i++)
         {
             if (i == index) continue;
@@ -152,7 +159,7 @@ public sealed class QuestUI : MonoBehaviour {
                 questButtons[i].gameObject.SetActive(false);
             }
         }
-        openedQuest = index;
+
         Quest q = visibleQuests[openedQuest];
         questName.text = q.name;
         questDescription.text = q.description;
@@ -180,7 +187,25 @@ public sealed class QuestUI : MonoBehaviour {
             prepareCrewsList = false;
         }
         PrepareList();
+        PrepareStepsList(q);
         // цена и кнопка запуска
+
+    }
+    private void PrepareStepsList(Quest q)
+    {
+        int x = q.steps.Length;
+        int stepLabelsCount = stepsContainer.childCount;
+        for (int i = 0; i < stepLabelsCount; i++)
+        {
+            GameObject so = stepsContainer.GetChild(i).gameObject;
+            if (i < x)
+            {
+                so.SetActive(true);
+                so.GetComponent<Text>().text = q.steps[i];
+                so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetTextureUV(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
+            }
+            else so.SetActive(false);
+        }
     }
     private void PrepareList()
     {
@@ -315,7 +340,7 @@ public sealed class QuestUI : MonoBehaviour {
             timers[i] = q.questRealizationTimer;
         }
         visibleQuests[i] = q;
-        if (openedQuest == -1) PrepareBasicQuestWindow();
+        if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
         print("new quest set");
     }  
 
@@ -426,29 +451,5 @@ public sealed class QuestUI : MonoBehaviour {
         if (visibleQuests[Quest.PROGRESS_QUESTS_INDEX] == null) SetNewQuest(Quest.PROGRESS_QUESTS_INDEX);
     }
     #endregion
-
-    public static void SetTexture(QuestTexturesEnum qte, RawImage ri)
-    {
-        switch (qte)
-        {
-            case QuestTexturesEnum.Awaiting:
-                ri.texture = questAwaiting_tx;
-                ri.uvRect = new Rect(0, 0, questAwaiting_tx.width, questAwaiting_tx.height);
-                break;
-            case QuestTexturesEnum.Blocked:
-                ri.texture = questBlocked_tx;
-                ri.uvRect = new Rect(0, 0, questBlocked_tx.width, questBlocked_tx.height);
-                break;
-            case QuestTexturesEnum.UseBuildingIcon:
-                ri.texture = questBuildingBack_tx;
-                ri.uvRect = new Rect(0, 0, questBuildingBack_tx.width, questBuildingBack_tx.height);
-                break;
-            case QuestTexturesEnum.UseResourceFrame:
-                ri.texture = questResourceBack_tx;
-                ri.uvRect = new Rect(0, 0, questResourceBack_tx.width, questResourceBack_tx.height);
-                break;
-        }
-        
-    }
 }
 

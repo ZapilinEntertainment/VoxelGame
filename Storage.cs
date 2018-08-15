@@ -10,11 +10,12 @@ public class StorageSerializer {
 public class Storage : MonoBehaviour {
 	public float totalVolume = 0, maxVolume;
 	List<ResourceContainer> customResources;
-	List<StorageHouse> warehouses;
+	public List<StorageHouse> warehouses { get; private set; }
 	public bool showStorage = false;
 	public float[] standartResources{get;private set;}
 	Rect myRect;
 	const float MIN_VALUE_TO_SHOW = 0.001f;
+    public int operationsDone { get; private set; } // для UI
 
 	void Awake() {
 		totalVolume = 0;
@@ -79,6 +80,7 @@ public class Storage : MonoBehaviour {
 		}
 		else 	standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
+        operationsDone++;
 		return (count - loadedCount);
 	}
 	/// <summary>
@@ -123,7 +125,8 @@ public class Storage : MonoBehaviour {
 			}
 			i++;
 		}
-		totalVolume = maxVolume - freeSpace;
+        operationsDone++;
+        totalVolume = maxVolume - freeSpace;
 	}
 
 	public float GetResources(ResourceType rtype, float count) {
@@ -158,7 +161,8 @@ public class Storage : MonoBehaviour {
 				standartResources[rtype.ID] = 0;
 			}
 		}
-		return gainedCount;
+        operationsDone++;
+        return gainedCount;
 	}
 
 	/// <summary>
@@ -166,6 +170,15 @@ public class Storage : MonoBehaviour {
 	/// </summary>
 	/// <param name="index">Index.</param>
 	/// <param name="val">Value.</param>
+
+	public bool CheckSpendPossibility (ResourceContainer[] cost) {
+		if (GameMaster.realMaster.weNeedNoResources) return true;
+		if (cost == null || cost.Length == 0) return true;
+		foreach (ResourceContainer rc in cost) {
+			if (standartResources[rc.type.ID] < rc.volume) return false;
+		}
+		return true;
+	}
 
 	public bool CheckBuildPossibilityAndCollectIfPossible (ResourceContainer[] resourcesContain) {
 		//TEST ZONE
@@ -211,7 +224,8 @@ public class Storage : MonoBehaviour {
 			}
 			else 	standartResources[rc.type.ID] -= rc.volume;
 		}
-		return true;
+        operationsDone++;
+        return true;
 	}
 	#region save-load system
 	public StorageSerializer Save() {
@@ -223,49 +237,4 @@ public class Storage : MonoBehaviour {
 		standartResources = ss.standartResources;
 	}
 	#endregion
-	void OnGUI () {
-		if (showStorage) {
-			GUI.skin = GameMaster.mainGUISkin;
-			float k = GameMaster.guiPiece;
-			int positionsCount = 0;
-			foreach ( float f in standartResources ) {
-				if ( f > MIN_VALUE_TO_SHOW) positionsCount++;
-			}
-			positionsCount ++; // для total
-			if (customResources != null) positionsCount += customResources.Count;
-
-			if (UI.current.mode != UIMode.View) myRect =new Rect(Screen.width - 16 *k, UI.current.upPanelBox.height, 8*k , k * 0.75f * positionsCount);
-			else myRect =new Rect(Screen.width - 12 *k, UI.current.upPanelBox.height, 8*k , k * 0.75f * positionsCount);
-
-			GUI.Box(myRect, GUIContent.none);
-			Rect r_image = new Rect(myRect.x, myRect.y, k *0.75f, k*0.75f);
-			Rect r_name = new Rect (r_image.x + r_image.width, myRect.y, myRect.width * 0.7f, r_image.height);
-			Rect r_count = new Rect(myRect.x + r_name.width * 0.5f, myRect.y, myRect.width * 0.5f, r_name.height);
-			int i = 0;
-			if ( positionsCount != 0) {				
-				for (; i < standartResources.Length; i++) {
-					if (standartResources[i] > 0.001f) {
-						ResourceType rt =  ResourceType.resourceTypesArray[i];
-						GUI.DrawTexture(r_image, rt.icon, ScaleMode.ScaleToFit); r_image.y += r_image.height;
-						GUI.Label(r_name, rt.name); r_name.y += r_image.height;
-						if (standartResources[i] < 1000) GUI.Label(r_count, string.Format("{0:0.###}", standartResources[i]), PoolMaster.GUIStyle_RightOrientedLabel);
-						else GUI.Label(r_count, string.Format("{0:0.#}", standartResources[i]), PoolMaster.GUIStyle_RightOrientedLabel);
-						r_count.y += r_image.height;
-					}
-				}
-			}
-			if (customResources != null) {
-				i = 0;
-				for (; i < customResources.Count; i++) {
-					if (customResources[i].volume > 0.001f) {
-						GUI.DrawTexture(r_image, customResources[i].type.icon, ScaleMode.ScaleToFit); r_image.y += r_image.height;
-						GUI.Label(r_name, customResources[i].type.name); r_name.y += r_image.height;
-						GUI.Label(r_count, string.Format("{0:0.###}", customResources[i]), PoolMaster.GUIStyle_RightOrientedLabel);
-						r_count.y += r_image.height;
-					}
-				}
-			}
-			GUI.Label(r_name, "Total:"); GUI.Label(r_count, ((int)totalVolume).ToString() + " / " + ((int)maxVolume).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-		}
-	}
 }
