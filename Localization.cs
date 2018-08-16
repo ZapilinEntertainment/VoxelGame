@@ -203,6 +203,14 @@ public static class Localization {
 		case Language.English: return "crew \" " + name + "\" ready";
 		}
 	}
+    public static string AnnounceQuestCompleted (string name)
+    {
+        switch (currentLanguage)
+        {
+            default:
+            case Language.English: return "Quest \"" + name + "\" completed!";
+        }
+    }
 
 	public static string NameCrew() { // waiting for креатив
 		switch (currentLanguage) {
@@ -334,7 +342,7 @@ public static class Localization {
             case QuestID.Progress_Tier2:
                 q.name = "Techology progress I";
                 q.description = "It is time to grow your settlement up. Upgrade your HQ.";
-                q.steps[0] = "Headqurters upgraded ";
+                q.steps[0] = "Upgrade HQ to level 2";
                 break;
             case QuestID.Progress_300Population:
                 q.name = "First colonization wave";
@@ -344,7 +352,7 @@ public static class Localization {
             case QuestID.Progress_OreRefiner:
                 q.name = "Ore refining";
                 q.description = "Your mines produces too many waste. Build and launch new ore refining facility to get much more resources from the mine dumps";
-                q.steps[0] = "Ore enricher built" ;
+                q.steps[0] = "Build " + GetStructureName(Structure.ORE_ENRICHER_2_ID) ;
                 break;
             case QuestID.Progress_HospitalCoverage:
                 q.name = "Medical support";
@@ -354,7 +362,7 @@ public static class Localization {
             case QuestID.Progress_Tier3:
                 q.name = "Technology progress II";
                 q.description = "Upgrade your HQ to level 3";
-                q.steps[0] = "Headquarters upgraded ";
+                q.steps[0] = "Upgrade HQ to level 3";
                 break;
             case QuestID.Progress_4MiniReactors:
                 q.name = "Four-chambered heart";
@@ -364,32 +372,32 @@ public static class Localization {
             case QuestID.Progress_100Fuel:
                 q.name = "Space gas station";
                 q.description = "There is a lot of space travellers who will be were happy to refuel ships at your docks. Build fuel factory and produce 100 points of fuel to help exploring the Last Sector";
-                q.steps[0] = "Fuel facility built ";
+                q.steps[0] = "Collect 100 fuel ";
                 break;
             case QuestID.Progress_ExpStation:
                 q.name = "Experimental prognosis";
                 q.description = "The Last Sector is dangerous place. Organise your own meteorologist team to foresee threats";
-                q.steps[0] = "Experimental Station built ";
+                q.steps[0] = "Build " + GetStructureName(Structure.XSTATION_ID);
                 break;
             case QuestID.Progress_Tier4:
                 q.name = "Technology progress III";
                 q.description = "Upgrade your HQ to level 4";
-                q.steps[0] = "Headquarters upgraded ";
+                q.steps[0] = "Upgrade HQ to level 4";
                 break;
             case QuestID.Progress_CoveredFarm:
                 q.name = "Covered field";
                 q.description = "Replace your old farm with new covered one";
-                q.steps[0] = "Covered farm built ";
+                q.steps[0] = "Build " + GetStructureName(Structure.FARM_4_ID); ;
                 break;
             case QuestID.Progress_CoveredLumbermill:
                 q.name = "Covered forest";
                 q.description = "Replace your old lumbermills with new covered one";
-                q.steps[0] = "Covered lumbermill built ";
+                q.steps[0] = "Build " + GetStructureName(Structure.LUMBERMILL_4_ID); ;
                 break;
             case QuestID.Progress_Reactor:
                 q.name = "Power well";
                 q.description = "Built a massive graphonium reactor";
-                q.steps[0] = "Graphonium reactor built ";
+                q.steps[0] = "Build " + GetStructureName(Structure.GRPH_REACTOR_4_ID); ;
                 break;
             case QuestID.Progress_FirstExpedition:
                 q.name = "Brave explorers";
@@ -397,22 +405,24 @@ public static class Localization {
                 q.steps[0] = "Crew assembled ";
                 q.steps[1] = "Shuttle constructed";
                 q.steps[2] = "Expedition launched";
-                q.steps[3] = "Expedition success";
+                q.steps[3] = "Expedition succeed";
                 break;
             case QuestID.Progress_Tier5:
                 q.name = "Technology progress IV";
                 q.description = "Upgrade your HQ to level 5";
-                q.steps[0] = "Headquarters upgraded ";
+                q.steps[0] = "Upgrade HQ to level 5";
                 break;
             case QuestID.Progress_FactoryComplex:
                 q.name = "Complex factory";
                 q.description = "Construct factory onto factory block to make a combined factory";
-                q.steps[0] = "Complex factory completed";
+                q.steps[0] = "Factory block constructed ";
+                q.steps[1] = "Factory over it completed ";
                 break;
             case QuestID.Progress_SecondFloor:
                 q.name = "Second floor";
                 q.description = "Construct a building onto the column";
-                q.steps[0] = "Building on column surface completed";
+                q.steps[0] = "Column constructed ";
+                q.steps[1] = "Building over it completed ";
                 break;
         }
     }

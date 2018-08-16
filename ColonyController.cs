@@ -337,7 +337,7 @@ public sealed class ColonyController : MonoBehaviour {
                 if (normalLivespace - citizenCount >= h.housing)
                 {
                     normalLivespace -= h.housing;
-                    housingVolumes[h.level] -= h.housing;
+                    housingVolumes[0] -= h.housing;
                     h.Annihilate(false);
                     tentIndexDelta--;
                 }
@@ -345,6 +345,7 @@ public sealed class ColonyController : MonoBehaviour {
                 i++;
             }
         }
+        if (housingVolumes[0] < 0) housingVolumes[0] = 0;
         float allLivespace = totalLivespace;
         float usingLivespace = 0;
         // принимается, что все расселены от максимального уровня к минимальному

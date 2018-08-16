@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ExpeditionCorpus : WorkBuilding {
-	static List<Expedition> currentExpeditions;
-
-
     public override UIObserver ShowOnGUI()
     {
         if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
@@ -15,41 +12,11 @@ public class ExpeditionCorpus : WorkBuilding {
         UIController.current.ActivateQuestUI();
         UIController.current.ActivateExpeditionCorpusPanel();
         return workbuildingObserver;
-    }
-
-
-
-	#region save-load system
-	public static ExpeditionCorpusStaticSerializer SaveStaticData() {
-		ExpeditionCorpusStaticSerializer ess = new ExpeditionCorpusStaticSerializer();
-		ess.currentExpeditions = new List<ExpeditionSerializer>();
-		if (currentExpeditions != null && currentExpeditions.Count > 0 ) {
-			int i = 0;
-			while (i< currentExpeditions.Count) {
-				if (currentExpeditions[i] == null) {
-					currentExpeditions.RemoveAt(i);
-					continue;
-				}
-				else {
-					ess.currentExpeditions.Add(currentExpeditions[i].Save());
-				}
-				i++;
-			}
-		}
-		return ess;
-	}
-	public static void LoadStaticData( ExpeditionCorpusStaticSerializer ess ) {
-		int i = 0; currentExpeditions = new List<Expedition>();
-		while ( i< ess.currentExpeditions.Count) {
-			currentExpeditions.Add(new Expedition().Load(ess.currentExpeditions[i]));
-			i++;
-		}
-	}
-	#endregion
+    }	
 }
 
 [System.Serializable]
-public class ExpeditionCorpusStaticSerializer {
+public class ExpeditionStaticSerializer {
 	public List<ExpeditionSerializer> currentExpeditions;
 }
 [System.Serializable]
@@ -69,6 +36,20 @@ public class Expedition {
 	public float progress{get;private set;}
 	public QuantumTransmitter transmitter{get;private set;}
 	public int ID{get;private set;}
+
+    public static List<Expedition> expeditionsList { get; private set; }
+    public static int expeditionsFinished, expeditionsSucceed;
+
+    static Expedition ()
+    {
+        expeditionsList = new List<Expedition>();
+    }
+    public static void GameReset()
+    {
+        expeditionsList = new List<Expedition>();
+        expeditionsFinished = 0;
+        expeditionsSucceed = 0;
+    }
 
     public Expedition()
     {
@@ -117,7 +98,8 @@ public class Expedition {
         }
     }
 
-	public ExpeditionSerializer Save() {
+    #region save-load system
+    public ExpeditionSerializer Save() {
 		ExpeditionSerializer es = new ExpeditionSerializer();
 		es.ID = ID;
 		//es.quest_ID = (quest == null ? -1 : quest.ID);
@@ -166,5 +148,39 @@ public class Expedition {
 		else transmitter = null;
 		return this;
 	}
+    
+    public static ExpeditionStaticSerializer SaveStaticData()
+    {
+        ExpeditionStaticSerializer ess = new ExpeditionStaticSerializer();
+        ess.currentExpeditions = new List<ExpeditionSerializer>();
+        if (expeditionsList.Count > 0)
+        {
+            int i = 0;
+            while (i < expeditionsList.Count)
+            {
+                if (expeditionsList[i] == null)
+                {
+                    expeditionsList.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    ess.currentExpeditions.Add(expeditionsList[i].Save());
+                }
+                i++;
+            }
+        }
+        return ess;
+    }
+    public static void LoadStaticData(ExpeditionStaticSerializer ess)
+    {
+        int i = 0; expeditionsList = new List<Expedition>();
+        while (i < ess.currentExpeditions.Count)
+        {
+            expeditionsList.Add(new Expedition().Load(ess.currentExpeditions[i]));
+            i++;
+        }
+    }
+    #endregion
 }
 

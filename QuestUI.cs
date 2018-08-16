@@ -10,7 +10,7 @@ public sealed class QuestUI : MonoBehaviour {
     [SerializeField] Text questName, questDescription, timer; // fiti    
     float rectTransformingSpeed = 0.8f, transformingProgress;
     RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
-    int openedQuest = -1;
+    public sbyte openedQuest { get; private set; }
     bool transformingRectInProgress = false;
     bool prepareCrewsList = false; // else prepare shuttles list
     Quest[] visibleQuests ;
@@ -19,11 +19,12 @@ public sealed class QuestUI : MonoBehaviour {
     float questUpdateTimer = 0;
     
 
-    const float QUEST_REFRESH_TIME = 60, QUEST_UPDATE_TIME = 1;
+    const float QUEST_REFRESH_TIME = 20, QUEST_UPDATE_TIME = 1;
     public static Sprite questBlocked_tx { get; private set; }
     public static Sprite questAwaiting_tx { get; private set; }
     public static Sprite questBuildingBack_tx { get; private set; }
     public static Sprite questResourceBack_tx { get; private set; }
+    public static QuestUI current { get; private set; }
 
     public static void LoadTextures()
     {
@@ -35,12 +36,22 @@ public sealed class QuestUI : MonoBehaviour {
 
     private void Awake()
     {
+        openedQuest = -1;
         int l = questButtons.Length;
         visibleQuests = new Quest[l];
         questAccessMap = new bool[l];
         CheckQuestSlots();
         timers = new float[l];       
         questUpdateTimer = QUEST_UPDATE_TIME;
+        current = this;
+        for (int i = 0; i < questButtons.Length; i++)
+        {
+            Button b = questButtons[i].GetComponent<Button>();
+            sbyte index = (sbyte)i;
+            b.onClick.AddListener(() => {
+                this.QuestButton_OpenQuest(index);
+            });
+        }
     }
 
     public void Activate()
@@ -75,16 +86,22 @@ public sealed class QuestUI : MonoBehaviour {
         questUpdateTimer -= t;
         bool checkConditions = questUpdateTimer <= 0;
         if (checkConditions) questUpdateTimer = QUEST_UPDATE_TIME;
-        for (int i = 0; i < visibleQuests.Length;i ++)
+        for (sbyte i = 0; i < visibleQuests.Length;i ++)
         {
             Quest q = visibleQuests[i];
             if (q == null) continue;
-
-            if (checkConditions & !q.completed) q.CheckQuestConditions();
+            if (q.completed)
+            {
+                visibleQuests[i] = null;
+                if (GetComponent<Image>().enabled & (openedQuest == -1)) PrepareBasicQuestWindow();
+                StartCoroutine(WaitForNewQuest(i));
+                continue;
+            }
+            if (checkConditions ) q.CheckQuestConditions();
 
             if (openedQuest == i)
             {
-                if (q.stepsInfoNeedsRefresh) PrepareStepsList(q);
+               PrepareStepsList(q);
             }
 
             f = timers[i];
@@ -93,7 +110,7 @@ public sealed class QuestUI : MonoBehaviour {
                 f -= t;
                 if (f <= 0)
                 {
-                    //дропнуть квест, поставить следующий в очереди
+                    DropQuest(i);
                 }
             }
         }
@@ -101,7 +118,7 @@ public sealed class QuestUI : MonoBehaviour {
 
     }
 
-    private void PrepareBasicQuestWindow() // открыть окно всех квестов
+    public void PrepareBasicQuestWindow() // открыть окно всех квестов
     {
         openedQuest = -1;
         transform.GetChild(0).gameObject.SetActive(true); // quest buttons
@@ -124,7 +141,6 @@ public sealed class QuestUI : MonoBehaviour {
                 }
                 else
                 {
-                    
                     btn.GetComponent<Button>().interactable = false;
                     btn.GetComponent<Image>().overrideSprite = questAwaiting_tx;
                     btn.GetChild(0).GetComponent<RawImage>().enabled = false;
@@ -143,7 +159,7 @@ public sealed class QuestUI : MonoBehaviour {
         }
     }
 
-    public void QuestButton_OpenQuest(int index) 
+    public void QuestButton_OpenQuest(sbyte index) 
     {
         transformingRect = questButtons[index];
         transformingRectInProgress = true;
@@ -201,7 +217,7 @@ public sealed class QuestUI : MonoBehaviour {
             if (i < x)
             {
                 so.SetActive(true);
-                so.GetComponent<Text>().text = q.steps[i];
+                so.GetComponent<Text>().text = q.steps[i] + q.stepsAddInfo[i];
                 so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetTextureUV(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
             }
             else so.SetActive(false);
@@ -308,15 +324,19 @@ public sealed class QuestUI : MonoBehaviour {
 
     IEnumerator WaitForNewQuest(int i)
     {
+        timers[i] = -1;
         yield return new WaitForSeconds(QUEST_REFRESH_TIME);
-        SetNewQuest(i);
+        if (visibleQuests[i] == null) SetNewQuest(i);
     }
 
-    private void DropQuest(int i)
+    public void DropQuest(int i)
     {
+        if (visibleQuests[i] == null) return;
         visibleQuests[i].Stop();
         visibleQuests[i] = null;
-        timers[i] = 0;
+        if (openedQuest == -1 | openedQuest == i) PrepareBasicQuestWindow();
+        timers[i] = -1;
+        StartCoroutine(WaitForNewQuest(i));
     }
     private void SetNewQuest(int i)
     {

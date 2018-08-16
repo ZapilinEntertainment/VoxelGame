@@ -286,7 +286,6 @@ public sealed class GameMaster : MonoBehaviour {
 			windVector = Random.onUnitSphere;
 			windVector += Vector3.down * windVector.y;
 			windTimer = windChangeTime + Random.value * windChangeTime;
-			if (windVector.magnitude == 0) UIController.current.MakeAnnouncement( Localization.announcement_stillWind );
 			if (windUpdateList.Count != 0) {
 				int i = 0;
 				while (i < windUpdateList.Count) {
@@ -422,7 +421,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
 		gms.crewStaticSerializer = Crew.SaveStaticData();
 		gms.questStaticSerializer = Quest.SaveStaticData();
-		gms.expeditionCorpusStaticSerializer = ExpeditionCorpus.SaveStaticData();
+		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
 		FileStream fs = File.Create(Application.persistentDataPath + "/save.txt");
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
@@ -469,7 +468,8 @@ public sealed class GameMaster : MonoBehaviour {
 
             Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();
 			QuantumTransmitter.Reset();Hangar.Reset();
-            Grassland.ScriptReset(); 
+            Grassland.ScriptReset();
+            Expedition.GameReset();
 			//UI.current.Reset();
 
 			Crew.LoadStaticData(gms.crewStaticSerializer);
@@ -482,7 +482,7 @@ public sealed class GameMaster : MonoBehaviour {
 
 			Dock.LoadStaticData(gms.dockStaticSerializer);
 			Quest.LoadStaticData(gms.questStaticSerializer);
-			ExpeditionCorpus.LoadStaticData(gms.expeditionCorpusStaticSerializer);
+			Expedition.LoadStaticData(gms.expeditionStaticSerializer);
 
 			file.Close();
 			Time.timeScale = 1; GameMaster.gameSpeed = 1;
@@ -528,7 +528,7 @@ class GameMasterSerializer {
 	public CrewStaticSerializer crewStaticSerializer;
 	public ShuttleStaticSerializer shuttleStaticSerializer;
 	public QuestStaticSerializer questStaticSerializer;
-	public ExpeditionCorpusStaticSerializer expeditionCorpusStaticSerializer;
+	public ExpeditionStaticSerializer expeditionStaticSerializer;
 	public float recruiting_hireCost;
 
 	// все, что можно - в классы - сериализаторы
