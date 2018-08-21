@@ -24,10 +24,13 @@ public class PoolMaster : MonoBehaviour {
 	const int SHIPS_BUFFER_SIZE = 5;
 	float  shipsClearTimer = 0,clearTime = 30;
 
+    ParticleSystem buildEmitter;
 
 	public void Load() {
 		if (current != null) return;
 		current = this;
+
+        buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
 
 		lightPassengerShip_pref = Resources.Load<GameObject>("Prefs/lightPassengerShip");
 		lightCargoShip_pref = Resources.Load<GameObject>("Prefs/lightCargoShip");
@@ -92,7 +95,11 @@ public class PoolMaster : MonoBehaviour {
 		}       
 	}
 
- 
+    public void BuildSplash(Vector3 pos)
+    {
+        buildEmitter.transform.position = pos;
+        buildEmitter.Emit(20);
+    }
 
     public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;

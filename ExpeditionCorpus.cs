@@ -127,7 +127,7 @@ public class Expedition {
 	}
 	public Expedition Load( ExpeditionSerializer es) {
 		ID = es.ID;
-		quest = new Quest().Load(this, es.qs);
+		
 		shuttles = new List<Shuttle>();
 		if (es.shuttles_ID.Count > 0) {
 			foreach (int i in es.shuttles_ID) {

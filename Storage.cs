@@ -165,6 +165,20 @@ public class Storage : MonoBehaviour {
         return gainedCount;
 	}
 
+    public void GetResources(ResourceContainer[] cost)
+    {
+        if (cost == null || cost.Length == 0) return;
+        else
+        {
+            foreach (ResourceContainer rc in cost)
+            {
+                int rid = rc.type.ID;
+                if (standartResources[rid] < rc.volume) standartResources[rid] = 0;
+                else standartResources[rid] -= rc.volume;
+            }
+        }
+    }
+
 	/// <summary>
 	/// standart resources only
 	/// </summary>

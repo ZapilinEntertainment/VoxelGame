@@ -552,7 +552,7 @@ public sealed class ColonyController : MonoBehaviour {
 
 	public void SetHQ (HeadQuarters new_hq) {
 		if (new_hq != null) hq = new_hq;
-        UIController.current.questUI.CheckProgressQuest();
+        QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
     }
 
 	public void ImproveGearsCoefficient (float f) {
@@ -562,6 +562,7 @@ public sealed class ColonyController : MonoBehaviour {
 	public void AddEnergyCrystals(float v) {
 		if (v <=0) return;
 		energyCrystalsCount += v;
+        if (v > 1) UIController.current.MoneyChanging(v);
 	}
 
     /// <summary>
@@ -572,7 +573,8 @@ public sealed class ColonyController : MonoBehaviour {
 	public float GetEnergyCrystals(float v) {
 		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
 		else energyCrystalsCount -= v;
-		return v;
+        if (v > 1) UIController.current.MoneyChanging(-v);
+        return v;
 	}
 
 	#region save-load system

@@ -100,7 +100,7 @@ public class UIRecruitingCenterObserver : UIObserver {
         List<Dropdown.OptionData> crewButtons = new List<Dropdown.OptionData>();
         crewButtons.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost() + ')'));
         var crews = Crew.crewsList;
-        if (crews != null && crews.Count > 0)
+        if ( crews.Count > 0)
         {
             for (int i = 0; i < crews.Count; i++)
             {

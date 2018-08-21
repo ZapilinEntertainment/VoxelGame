@@ -4,6 +4,32 @@ using UnityEngine;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
+public struct GameStartSettings  {
+    public bool generateChunk;
+    public byte chunkSize;
+    public Difficulty difficulty;
+    public float terrainRoughness;
+    public static readonly GameStartSettings Empty;
+    static GameStartSettings()
+    {
+        Empty = new GameStartSettings(true, 16, Difficulty.Normal, 0.3f);
+    }
+    public GameStartSettings(bool i_generateChunk, byte i_chunkSize, Difficulty diff, float i_terrainRoughness)
+    {
+        generateChunk = i_generateChunk;
+        chunkSize = i_chunkSize;
+        difficulty = diff;
+        terrainRoughness = i_terrainRoughness;
+    }
+    public GameStartSettings(bool i_generateChunk)
+    {
+        generateChunk = i_generateChunk;
+        chunkSize = 8;
+        difficulty = Difficulty.Normal;
+        terrainRoughness = 0.3f;
+    }
+    }
+
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
@@ -41,6 +67,8 @@ public sealed class GameMaster : MonoBehaviour {
     START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
     public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
 
+    public static string savename = string.Empty;
+    public static GameStartSettings gss = GameStartSettings.Empty;
     public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
@@ -65,7 +93,6 @@ public sealed class GameMaster : MonoBehaviour {
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
 	public bool generateChunk = true;
-    [SerializeField] byte chunkSize = 16;// cannot be bigger than 99, cause I say Limited
                                          
 
     public GameMaster () {
@@ -94,7 +121,7 @@ public sealed class GameMaster : MonoBehaviour {
         lifeGrowCoefficient = 1;
         //Localization.ChangeLanguage(Language.English);
         geologyModule = gameObject.AddComponent<GeologyModule>();
-        difficulty = Difficulty.Normal;
+        difficulty = gss.difficulty;
         warProximity = 0.01f;
         layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
         colonyController = gameObject.AddComponent<ColonyController>();
@@ -102,17 +129,16 @@ public sealed class GameMaster : MonoBehaviour {
         PoolMaster pm = gameObject.AddComponent<PoolMaster>();
         pm.Load();
 
-        string saveName = "default.sav";
-        if (generateChunk)
+        if (gss.generateChunk)
         {
-            Chunk.SetChunkSize(chunkSize);
-            constructor.ConstructChunk(chunkSize);
+            Chunk.SetChunkSize(gss.chunkSize);
+            constructor.ConstructChunk(gss.chunkSize);
+            camBasis.transform.position = Vector3.one * gss.chunkSize / 2f;
         }
         else
         { // loading data
-
-        }
-        camBasis.transform.position = Vector3.one * chunkSize / 2f;
+            LoadGame(savename);
+        }        
 
         if (camTransform == null) camTransform = Camera.main.transform;
 		prevCamPos = camTransform.position * (-1);
@@ -420,9 +446,18 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.dockStaticSerializer = Dock.SaveStaticDockData();
 		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
 		gms.crewStaticSerializer = Crew.SaveStaticData();
-		gms.questStaticSerializer = Quest.SaveStaticData();
+		gms.questStaticSerializer = QuestUI.current.Save();
 		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
-		FileStream fs = File.Create(Application.persistentDataPath + "/save.txt");
+        string path = Application.persistentDataPath + "/Saves";
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        if (savename == string.Empty)
+        {
+            savename = "city" + Random.value.ToString() + ".sav";
+        }
+        FileStream fs = File.Create(savename);
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
 		fs.Close();
@@ -431,67 +466,73 @@ public sealed class GameMaster : MonoBehaviour {
 	}
 
 
-	public bool LoadGame( string name ) {  // отдельно функцию проверки и коррекции сейв-файла
-		if(File.Exists(Application.dataPath + "/Saves/save.txt")) {
-			BinaryFormatter bf = new BinaryFormatter();
-			FileStream file = File.Open(Application.persistentDataPath + "/save.txt", FileMode.Open);
+	public bool LoadGame( string fullname ) {  // отдельно функцию проверки и коррекции сейв-файла
+        if (true) // <- тут будет функция проверки
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream file = File.Open(fullname, FileMode.Open);
             Time.timeScale = 0; GameMaster.gameSpeed = 0;
-			GameMasterSerializer gms = (GameMasterSerializer) bf.Deserialize(file);
-			#region gms mainPartLoading
-			gameSpeed =  gms.gameSpeed;
-			lifeGrowCoefficient = gms.lifeGrowCoefficient;
-			demolitionLossesPercent = gms.demolitionLossesPercent;
-			lifepowerLossesPercent = gms.lifepowerLossesPercent;
-			LUCK_COEFFICIENT = gms.luckCoefficient;
-			sellPriceCoefficient = gms.sellPriceCoefficient;
-			tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient ;
-			upgradeDiscount = gms.upgradeDiscount;
-			upgradeCostIncrease = gms.upgradeCostIncrease;
-			environmentalConditions = gms.environmentalConditions ;
-			warProximity = gms.warProximity;
-			difficulty = gms.difficulty ;
-			startGameWith = gms.startGameWith ;
-			prevCutHeight = gms.prevCutHeight;
-			diggingSpeed = gms.diggingSpeed ;
-			pouringSpeed = gms.pouringSpeed ;
-			manufacturingSpeed =gms.manufacturingSpeed ;
-			clearingSpeed = gms.clearingSpeed;
-			gatheringSpeed = gms.gatheringSpeed ;
-			miningSpeed = gms.miningSpeed ;
-			machineConstructingSpeed = gms.machineConstructingSpeed ;
-			day = gms.day; week = gms.week;month =  gms.month ; year = gms.year ; millenium = gms.millenium ; t = gms.t ;
-			windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
-			windTimer= gms.windTimer ;windChangeTime = gms.windChangeTime ;
-			RecruitingCenter.SetHireCost( gms.recruiting_hireCost);
-            #endregion      
-			Destroy (mainChunk.gameObject);            
+            GameMasterSerializer gms = (GameMasterSerializer)bf.Deserialize(file);
+            #region gms mainPartLoading
+            gameSpeed = gms.gameSpeed;
+            lifeGrowCoefficient = gms.lifeGrowCoefficient;
+            demolitionLossesPercent = gms.demolitionLossesPercent;
+            lifepowerLossesPercent = gms.lifepowerLossesPercent;
+            LUCK_COEFFICIENT = gms.luckCoefficient;
+            sellPriceCoefficient = gms.sellPriceCoefficient;
+            tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient;
+            upgradeDiscount = gms.upgradeDiscount;
+            upgradeCostIncrease = gms.upgradeCostIncrease;
+            environmentalConditions = gms.environmentalConditions;
+            warProximity = gms.warProximity;
+            difficulty = gms.difficulty;
+            startGameWith = gms.startGameWith;
+            prevCutHeight = gms.prevCutHeight;
+            diggingSpeed = gms.diggingSpeed;
+            pouringSpeed = gms.pouringSpeed;
+            manufacturingSpeed = gms.manufacturingSpeed;
+            clearingSpeed = gms.clearingSpeed;
+            gatheringSpeed = gms.gatheringSpeed;
+            miningSpeed = gms.miningSpeed;
+            machineConstructingSpeed = gms.machineConstructingSpeed;
+            day = gms.day; week = gms.week; month = gms.month; year = gms.year; millenium = gms.millenium; t = gms.t;
+            windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
+            windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
+            RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
+            #endregion
+            Destroy(mainChunk.gameObject);
 
-            Crew.Reset(); Shuttle.Reset(); Hospital.Reset();Dock.Reset(); RecruitingCenter.Reset();
-			QuantumTransmitter.Reset();Hangar.Reset();
+            Crew.Reset(); Shuttle.Reset(); Hospital.Reset(); Dock.Reset(); RecruitingCenter.Reset();
+            QuantumTransmitter.Reset(); Hangar.Reset();
             Grassland.ScriptReset();
             Expedition.GameReset();
-			//UI.current.Reset();
+            //UI.current.Reset();
 
-			Crew.LoadStaticData(gms.crewStaticSerializer);
-			Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
+            Crew.LoadStaticData(gms.crewStaticSerializer);
+            Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
 
-			GameObject g = new GameObject("chunk");
-			mainChunk = g.AddComponent<Chunk>();
-			mainChunk.LoadChunkData(gms.chunkSerializer);
-			colonyController.Load(gms.colonyControllerSerializer);
+            GameObject g = new GameObject("chunk");
+            mainChunk = g.AddComponent<Chunk>();
+            mainChunk.LoadChunkData(gms.chunkSerializer);
+            colonyController.Load(gms.colonyControllerSerializer);
 
-			Dock.LoadStaticData(gms.dockStaticSerializer);
-			Quest.LoadStaticData(gms.questStaticSerializer);
-			Expedition.LoadStaticData(gms.expeditionStaticSerializer);
+            Dock.LoadStaticData(gms.dockStaticSerializer);
+            QuestUI.current.Load(gms.questStaticSerializer);
+            Expedition.LoadStaticData(gms.expeditionStaticSerializer);
 
-			file.Close();
-			Time.timeScale = 1; GameMaster.gameSpeed = 1;
+            file.Close();
+            Time.timeScale = 1; GameMaster.gameSpeed = 1;
             AllCameraFollowersUpdate();
             prevCamPos = camTransform.position;
             prevCamRot = camTransform.rotation;
+            savename = fullname;
             return true;
-		}
-		else return false;
+        }
+        else
+        {
+            UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed));
+            return false;
+        }
 	}
 
 	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {

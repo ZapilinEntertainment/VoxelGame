@@ -180,8 +180,6 @@ public sealed class UISurfacePanelController : UIObserver {
     public void BuildButton() {
 		ChangeMode( SurfacePanelMode.Build );
 	}
-	public void BlockBuildingButton() {}
-	public void ColumnBuildingButton() {}
 	public void GatherButton() {
 		if (surface == null) {
 			SelfShutOff();
@@ -438,6 +436,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         {
                             Structure s = Structure.GetNewStructure(Structure.COLUMN_ID);
                             s.SetBasement(surface, new PixelPosByte(7, 7));
+                            PoolMaster.current.BuildSplash(surface.transform.position);
                         }
                         else
                         {
@@ -683,10 +682,12 @@ public sealed class UISurfacePanelController : UIObserver {
 		// make checks!
 		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
 			if ( surface.IsAnyBuildingInArea(new SurfaceRect(x, z,chosenBuilding.innerPosition.x_size, chosenBuilding.innerPosition.z_size)) == false) {
-				Structure s = Structure.GetNewStructure(chosenBuilding.id);
+                GameMaster.colonyController.storage.GetResources(cost);
+                Structure s = Structure.GetNewStructure(chosenBuilding.id);
 				s.gameObject.SetActive(true);
 				s.SetBasement(surface, new PixelPosByte(x,z));
-			}
+                PoolMaster.current.BuildSplash(surface.transform.position);
+            }
 			else {
 				//вывести запрос на подтверждение
 			}

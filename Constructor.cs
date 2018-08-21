@@ -7,7 +7,7 @@ public class Constructor : MonoBehaviour {
 	public float TERRAIN_ROUGHNESS = 0.3f;
 	Chunk c;
 	public float seed = 1.1f;
-	public int lifepowerToGeneration = 50000;
+	int START_LIFEPOWER = 100;
 
 	// Use this for initialization
 	void Awake () {
@@ -17,6 +17,7 @@ public class Constructor : MonoBehaviour {
 
 	public void ConstructChunk( byte chunkSize ) {
 		seed += System.DateTime.Now.Second;
+        TERRAIN_ROUGHNESS = GameMaster.gss.terrainRoughness;
 		int size = chunkSize;
 		int[,,] dat = new int[size, size ,size ];
 		float radius = size * Mathf.Sqrt(2);
@@ -57,7 +58,7 @@ public class Constructor : MonoBehaviour {
 		x = (byte)(Chunk.CHUNK_SIZE / 2) ;z = (byte)(Chunk.CHUNK_SIZE/2);
 		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
-		chunk.GenerateNature(new PixelPosByte(x,z), lifepowerToGeneration);
+		chunk.GenerateNature(new PixelPosByte(x,z), START_LIFEPOWER * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
 
 		MultiblockStructure ms = null;
 		if (Random.value > 0.5f) ms = Structure.GetNewStructure(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;

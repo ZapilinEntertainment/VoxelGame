@@ -12,7 +12,7 @@ sealed public class UIController : MonoBehaviour {
 	public Button touchZone, closePanelButton; // fill in the Inspector
 
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
-    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString;
+    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton;
     public Sprite overridingSprite;
@@ -21,7 +21,8 @@ sealed public class UIController : MonoBehaviour {
     public Texture resourcesTexture { get; private set; }
     public Texture buildingsTexture { get; private set; }
     float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
-    float updateTimer;
+    float updateTimer, moneyFlySpeed = 0;
+    Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
     const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
 
@@ -56,6 +57,7 @@ sealed public class UIController : MonoBehaviour {
         resourcesTexture = Resources.Load<Texture>("Textures/resourcesIcons");
         buildingsTexture = Resources.Load<Texture>("Textures/buildingIcons");
         questUI = _questUI;
+        if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
     }
 
     void Update() {
@@ -247,6 +249,38 @@ sealed public class UIController : MonoBehaviour {
                 {
                     t.enabled = false;
                     activeAnnouncements = false;
+                }
+            }
+        }
+        if (moneyFlySpeed != 0)
+        {
+            Vector3 pos = moneyFlyingText.rectTransform.position;
+            if (moneyFlySpeed > 0)
+            {
+                moneyFlySpeed -= Time.deltaTime / 5f;
+                if (moneyFlySpeed < 0)
+                {
+                    moneyFlySpeed = 0;
+                    moneyFlyingText.enabled = false;
+                }
+                else
+                {
+                    moneyFlyingText.rectTransform.position = Vector3.Lerp(flyingMoneyOriginalPoint + 2 * Vector3.up, flyingMoneyOriginalPoint, moneyFlySpeed);
+                    moneyFlyingText.color = Color.Lerp(Color.green, new Color(0, 1, 0, 0), moneyFlySpeed);
+                }
+            }
+            else
+            {
+                moneyFlySpeed += Time.deltaTime/5f;
+                if (moneyFlySpeed < 1)
+                {
+                    moneyFlyingText.rectTransform.position = Vector3.Lerp(flyingMoneyOriginalPoint, flyingMoneyOriginalPoint + 2 * Vector3.up, moneyFlySpeed);
+                    moneyFlyingText.color = Color.Lerp(new Color(1, 0, 0, 0), Color.red,  moneyFlySpeed);
+                }
+                else
+                {
+                   moneyFlySpeed = 0;
+                    moneyFlyingText.enabled = false;
                 }
             }
         }
@@ -716,6 +750,24 @@ sealed public class UIController : MonoBehaviour {
             t.color = Color.black;
         }
         activeAnnouncements = true;
+    }
+    public void MoneyChanging(float f)
+    {
+        if (f > 0)
+        {
+            moneyFlyingText.color = Color.green;
+            moneyFlyingText.text = '+' + string.Format("{0:0.##}", f);
+            moneyFlySpeed = 1;
+            moneyFlyingText.rectTransform.position =flyingMoneyOriginalPoint - Vector3.up * 2; 
+        }
+        else
+        {
+            moneyFlyingText.color = new Color(1, 0, 0, 0);
+            moneyFlyingText.text = string.Format("{0:0.##}", f);
+            moneyFlySpeed = -1;
+            moneyFlyingText.rectTransform.position = flyingMoneyOriginalPoint;
+        }
+        moneyFlyingText.enabled = true;
     }
 
     public void ActivateQuestUI()
