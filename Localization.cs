@@ -1,8 +1,8 @@
 ﻿public enum Language{English, Russian};
 public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward}
+Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound}
+ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress }
 public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
@@ -229,35 +229,39 @@ public static class Localization {
 
 	public static string GetWord(LocalizedWord word) {
 		switch (word) {
-		    case LocalizedWord.Level: return "level"; 
-		    case LocalizedWord.Offline: return "offline";		    
+		    case LocalizedWord.Level: return "level"; // building technology level
+		    case LocalizedWord.Offline: return "offline"; // out of power		    
 		    case LocalizedWord.Dig : return "Dig";		   
-		    case LocalizedWord.Gather: return "Gather";		    
+		    case LocalizedWord.Gather: return "Gather";	// gather resources	    
             case LocalizedWord.UpgradeCost: return "Upgrade cost";
-            case LocalizedWord.Upgrade:return "Upgrade";
-            case LocalizedWord.Cancel: return "Cancel";
+            case LocalizedWord.Upgrade:return "Upgrade"; // upgrade building
+            case LocalizedWord.Cancel: return "Cancel"; // cancel work and cancel save
             case LocalizedWord.Buy: return "Buy";
             case LocalizedWord.Sell: return "Sell";
-            case LocalizedWord.Limit: return "Limit";
+            case LocalizedWord.Limit: return "Limit"; // trade count limit
             case LocalizedWord.Demand: return "Demand";
             case LocalizedWord.Price: return "Price";
             case LocalizedWord.Trading: return "Trading";
             case LocalizedWord.Immigration: return "Immigration";            
-            case LocalizedWord.Normal: return "Normal"; // birthrate
-            case LocalizedWord.Improved: return "Improved"; // birthrate
-            case LocalizedWord.Lowered:return "Lowered";//birthrate
-            case LocalizedWord.Dismiss: return "Dismiss";
-            case LocalizedWord.Disassemble: return "Disassemble";
+            case LocalizedWord.Normal: return "Normal"; // birthrate (spawnrate)
+            case LocalizedWord.Improved: return "Improved"; // birthrate (spawnrate)
+            case LocalizedWord.Lowered:return "Lowered";//birthrate (spawnrate)
+            case LocalizedWord.Dismiss: return "Dismiss"; // dismiss crew
+            case LocalizedWord.Disassemble: return "Disassemble"; // disassemble shuttle to resources
             case LocalizedWord.Total: return "Total"; // storage volume string
-            case LocalizedWord.Repair: return "Repair";
-            case LocalizedWord.Save: return "Save";
-            case LocalizedWord.Load: return "Load";
+            case LocalizedWord.Repair: return "Repair"; // repair shuttle
+            case LocalizedWord.Save: return "Save"; // save game
+            case LocalizedWord.Load: return "Load"; // load game
             case LocalizedWord.Options: return "Options";
-            case LocalizedWord.Exit: return "Exit";
-            case LocalizedWord.Build: return "Build";
+            case LocalizedWord.Exit: return "Exit"; // exit game
+            case LocalizedWord.Build: return "Build"; // switch to building mode
             case LocalizedWord.Shuttles: return "Shuttles";
             case LocalizedWord.Crews: return "Crews";
-            case LocalizedWord.Reward: return "Reward";
+            case LocalizedWord.Reward: return "Reward"; // reward in coins
+            case LocalizedWord.Delete: return "Delete"; // delete save
+            case LocalizedWord.Rewrite: return "Rewrite"; // rewrite save?
+            case LocalizedWord.Yes: return "Yes"; // rewrite - yes
+            case LocalizedWord.MainMenu: return "Main menu";
 		default: return "...";
 		}
 	}
@@ -287,6 +291,7 @@ public static class Localization {
             case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
             case LocalizedPhrase.ObjectsLeft: return "Objects left";
             case LocalizedPhrase.NoSavesFound: return "No saves found";
+            case LocalizedPhrase.CreateNewSave: return "Create new save";
         }
     }
 

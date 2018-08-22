@@ -67,7 +67,7 @@ public sealed class GameMaster : MonoBehaviour {
     START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
     public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
 
-    public static string savename = string.Empty;
+    public static string savename = "autosave";
     public static GameStartSettings gss = GameStartSettings.Empty;
     public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
@@ -137,7 +137,7 @@ public sealed class GameMaster : MonoBehaviour {
         }
         else
         { // loading data
-            LoadGame(savename);
+            LoadGame(Application.persistentDataPath + "/Saves/"+savename + ".sav");
         }        
 
         if (camTransform == null) camTransform = Camera.main.transform;
@@ -411,6 +411,7 @@ public sealed class GameMaster : MonoBehaviour {
         cameraTimer = cameraUpdateTime;
     }
 
+    public bool SaveGame() { return SaveGame("autosave"); }
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
 		Time.timeScale = 0;
 		GameMasterSerializer gms = new GameMasterSerializer();
@@ -448,16 +449,13 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.crewStaticSerializer = Crew.SaveStaticData();
 		gms.questStaticSerializer = QuestUI.current.Save();
 		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
-        string path = Application.persistentDataPath + "/Saves";
+        string path = Application.persistentDataPath + "/Saves/";
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
         }
-        if (savename == string.Empty)
-        {
-            savename = "city" + Random.value.ToString() + ".sav";
-        }
-        FileStream fs = File.Create(savename);
+        FileStream fs = File.Create(path + name + ".sav");
+        savename = name;
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
 		fs.Close();
@@ -466,6 +464,7 @@ public sealed class GameMaster : MonoBehaviour {
 	}
 
 
+    public bool LoadGame() { return LoadGame("autosave"); }
 	public bool LoadGame( string fullname ) {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
@@ -500,7 +499,7 @@ public sealed class GameMaster : MonoBehaviour {
             windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
             RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
             #endregion
-            Destroy(mainChunk.gameObject);
+            if (mainChunk != null)Destroy(mainChunk.gameObject);
 
             Crew.Reset(); Shuttle.Reset(); Hospital.Reset(); Dock.Reset(); RecruitingCenter.Reset();
             QuantumTransmitter.Reset(); Hangar.Reset();

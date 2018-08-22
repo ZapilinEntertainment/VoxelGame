@@ -23,6 +23,7 @@ public sealed class ColonyController : MonoBehaviour {
 	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
 	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
 
+    public string cityName { get; private set; }
 	public Storage storage{get;private set;}
 	public HeadQuarters hq{get;private set;}
 	public float gears_coefficient {get; private set;}
@@ -66,7 +67,9 @@ public sealed class ColonyController : MonoBehaviour {
 		houses = new List<House>();
 		powerGrid = new List<Building>();
 		docks = new List<Dock>();
-		worksites = new List<Worksite>();        
+		worksites = new List<Worksite>();
+
+        cityName = "default city"; // lol
 	}
 
 	public void CreateStorage() { // call from game master

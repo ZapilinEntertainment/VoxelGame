@@ -58,6 +58,8 @@ sealed public class UIController : MonoBehaviour {
         buildingsTexture = Resources.Load<Texture>("Textures/buildingIcons");
         questUI = _questUI;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
+
+        SaveSystemUI.Check(transform.root);
     }
 
     void Update() {
@@ -286,7 +288,7 @@ sealed public class UIController : MonoBehaviour {
         }
     }
 
-	#region up panel
+	#region up panel and menu
     public void ColonyButton()
     {
         showColonyInfo = !showColonyInfo;
@@ -416,15 +418,17 @@ sealed public class UIController : MonoBehaviour {
 		}
 	}
 	public void SaveButton() {
-         bool success = GameMaster.realMaster.SaveGame("newsave");
-        MakeAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameSaved : GameAnnouncements.SavingFailed));
+        SaveSystemUI.current.Activate(true);
     }
 	public void LoadButton(){
-        bool success = GameMaster.realMaster.LoadGame("newsave");
-        MakeAnnouncement(Localization.GetAnnouncementString(success ? GameAnnouncements.GameLoaded : GameAnnouncements.LoadingFailed));
+        SaveSystemUI.current.Activate(false);
     }
     public void OptionsButton() {
         optionsPanel.SetActive(!optionsPanel.activeSelf);
+    }
+    public void ToMainMenu()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
     public void ExitButton()
     {
@@ -796,7 +800,8 @@ sealed public class UIController : MonoBehaviour {
         t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Options);
-        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
+        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
+        t.GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
 
     }
 
