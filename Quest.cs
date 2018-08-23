@@ -401,108 +401,109 @@ public class Quest {
         {
             ColonyController colony = GameMaster.colonyController;
             int lvl = colony.hq.level;
-            int i = 0;
-            while (i < complementQuests.Count)
+            List<ProgressQuestID> acceptableQuest = new List<ProgressQuestID>();
+            for (int i = 0; i< complementQuests.Count;i++ )
             {
-                int ci = i; // страховка 
-                i++;
-                switch ((ProgressQuestID)ci)
+                switch ((ProgressQuestID)i)
                 {
-                    case ProgressQuestID.Progress_HousesToMax:   if (colony.housingLevel >= lvl) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_2Docks: if (colony.docks.Count >= 2) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_2Storages: if (colony.storage.warehouses.Count >= 2) complementQuests.RemoveAt(ci);break;
-                    case ProgressQuestID.Progress_Tier2: if (lvl > 1) complementQuests.RemoveAt(ci);break;
-                    case ProgressQuestID.Progress_300Population: if (colony.citizenCount > 290) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_OreRefiner: if (lvl != 2) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_HospitalCoverage: if (colony.hospitals_coefficient >= 1) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_Tier3: if (lvl != 2) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_4MiniReactors: if (lvl != 4) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_100Fuel: if (colony.storage.standartResources[ResourceType.FUEL_ID] > 90) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_XStation: if (lvl < 3 || XStation.current != null ) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_Tier4: if (lvl != 3) complementQuests.RemoveAt(ci); break;
+                    case ProgressQuestID.Progress_HousesToMax:   if (colony.housingLevel < lvl) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_2Docks: if (colony.docks.Count < 2) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_2Storages: if (colony.storage.warehouses.Count < 2) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_Tier2: if (lvl == 1) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_300Population: if (colony.citizenCount < 250) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_OreRefiner: if (lvl == 2) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_HospitalCoverage: if (colony.hospitals_coefficient < 1 & lvl > 1) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_Tier3: if (lvl == 2) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_4MiniReactors: if (lvl == 4) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_100Fuel: if (colony.storage.standartResources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(complementQuests[i]); break;
                     case ProgressQuestID.Progress_CoveredFarm: 
                     case ProgressQuestID.Progress_CoveredLumbermill:
                     case ProgressQuestID.Progress_Reactor: 
-                    case ProgressQuestID.Progress_FirstExpedition: 
-                    case ProgressQuestID.Progress_Tier5: if (lvl < 4) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_FactoryComplex: if (lvl < 5) complementQuests.RemoveAt(ci); break;
-                    case ProgressQuestID.Progress_SecondFloor: if (lvl < 3) complementQuests.RemoveAt(ci); break;
+                    case ProgressQuestID.Progress_FirstExpedition: if (lvl > 3) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_Tier5: if (lvl == 4) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_FactoryComplex: if (lvl > 4) acceptableQuest.Add(complementQuests[i]); break;
+                    case ProgressQuestID.Progress_SecondFloor: if (lvl > 2) acceptableQuest.Add(complementQuests[i]); break;
                 }
             }
-        }
-        else return null;
+            if (acceptableQuest.Count > 0)
+            {
+                ProgressQuestID pqi = acceptableQuest[(int)(Random.value * acceptableQuest.Count)];
+                Quest q = new Quest(QuestType.Progress, (byte)pqi);
+                bool setByDefault = true;
+                q.canBeDelayed = true;
+                switch (pqi)
+                {
+                    case ProgressQuestID.Progress_HousesToMax: q.reward = 250; break;
+                    case ProgressQuestID.Progress_2Docks: q.reward = 500; break;
+                    case ProgressQuestID.Progress_2Storages: q.reward = 100; break;
+                    case ProgressQuestID.Progress_Tier2: q.reward = 120; break;
+                    case ProgressQuestID.Progress_300Population: q.reward = 100; break;
+                    case ProgressQuestID.Progress_OreRefiner: q.reward = 200; break;
+                    case ProgressQuestID.Progress_HospitalCoverage: q.reward = 240; break;
+                    case ProgressQuestID.Progress_Tier3: q.reward = 240; break;
+                    case ProgressQuestID.Progress_4MiniReactors: q.reward = 800; break;
+                    case ProgressQuestID.Progress_100Fuel: q.reward = 210; break;
+                    case ProgressQuestID.Progress_XStation: q.reward = 120; break;
+                    case ProgressQuestID.Progress_Tier4: q.reward = 480; break;
+                    case ProgressQuestID.Progress_CoveredFarm: q.reward = 200; break;
+                    case ProgressQuestID.Progress_CoveredLumbermill: q.reward = 200; break;
+                    case ProgressQuestID.Progress_Reactor: q.reward = 220; break;
+                    case ProgressQuestID.Progress_FirstExpedition:
+                        setByDefault = false;
+                        q.steps = new string[4];
+                        q.stepsAddInfo = new string[4];
+                        q.stepsFinished = new bool[4];
+                        q.shuttlesRequired = 0;
+                        q.crewsRequired = 0;
+                        q.questLifeTimer = -1;
+                        q.questRealizationTimer = -1;
+                        q.reward = 400;
+                        break;
+                    case ProgressQuestID.Progress_Tier5: q.reward = 960; break;
+                    case ProgressQuestID.Progress_FactoryComplex:
+                        setByDefault = false;
+                        q.steps = new string[2];
+                        q.stepsAddInfo = new string[2];
+                        q.stepsFinished = new bool[2];
+                        q.shuttlesRequired = 0;
+                        q.crewsRequired = 0;
+                        q.questLifeTimer = -1;
+                        q.questRealizationTimer = -1;
+                        q.reward = 960;
+                        break;
+                    case ProgressQuestID.Progress_SecondFloor:
+                        setByDefault = false;
+                        q.steps = new string[2];
+                        q.stepsAddInfo = new string[2];
+                        q.stepsFinished = new bool[2];
+                        q.shuttlesRequired = 0;
+                        q.crewsRequired = 0;
+                        q.questLifeTimer = -1;
+                        q.questRealizationTimer = -1;
+                        q.reward = 420;
+                        break;
+                }
 
-        ProgressQuestID pqi = complementQuests[(int)(Random.value * complementQuests.Count)];
-        Quest q = new Quest(QuestType.Progress, (byte)pqi );
-        bool setByDefault = true;
-        q.canBeDelayed = true;
-        switch (pqi)
-        {
-            case ProgressQuestID.Progress_HousesToMax:q.reward = 250; break;
-            case ProgressQuestID.Progress_2Docks: q.reward = 500; break;
-            case ProgressQuestID.Progress_2Storages: q.reward = 100; break;
-            case ProgressQuestID.Progress_Tier2: q.reward = 120; break;
-            case ProgressQuestID.Progress_300Population: q.reward = 100; break;
-            case ProgressQuestID.Progress_OreRefiner: q.reward = 200;  break;
-            case ProgressQuestID.Progress_HospitalCoverage: q.reward = 240; break;
-            case ProgressQuestID.Progress_Tier3: q.reward = 240; break;
-            case ProgressQuestID.Progress_4MiniReactors: q.reward = 800; break;
-            case ProgressQuestID.Progress_100Fuel: q.reward = 210; break;
-            case ProgressQuestID.Progress_XStation: q.reward = 120;  break;
-            case ProgressQuestID.Progress_Tier4: q.reward = 480; break;
-            case ProgressQuestID.Progress_CoveredFarm: q.reward = 200;  break;
-            case ProgressQuestID.Progress_CoveredLumbermill: q.reward = 200; break;
-            case ProgressQuestID.Progress_Reactor: q.reward = 220; break;
-            case ProgressQuestID.Progress_FirstExpedition:
-                setByDefault = false;
-                q.steps = new string[4];
-                q.stepsAddInfo = new string[4];
-                q.stepsFinished = new bool[4];
-                q.shuttlesRequired = 0;
-                q.crewsRequired = 0;
-                q.questLifeTimer = -1;
-                q.questRealizationTimer = -1;
-                q.reward = 400;
-                break;
-            case ProgressQuestID.Progress_Tier5: q.reward = 960; break;
-            case ProgressQuestID.Progress_FactoryComplex:
-                setByDefault = false;
-                q.steps = new string[2];
-                q.stepsAddInfo = new string[2];
-                q.stepsFinished = new bool[2];
-                q.shuttlesRequired = 0;
-                q.crewsRequired = 0;
-                q.questLifeTimer = -1;
-                q.questRealizationTimer = -1;
-                q.reward = 960;
-                break;
-            case ProgressQuestID.Progress_SecondFloor:
-                setByDefault = false;
-                q.steps = new string[2];
-                q.stepsAddInfo = new string[2];
-                q.stepsFinished = new bool[2];
-                q.shuttlesRequired = 0;
-                q.crewsRequired = 0;
-                q.questLifeTimer = -1;
-                q.questRealizationTimer = -1;
-                q.reward = 420;
-                break;
+                if (setByDefault)
+                {
+                    q.steps = new string[1];
+                    q.stepsAddInfo = new string[1];
+                    q.stepsFinished = new bool[1];
+                    q.shuttlesRequired = 0;
+                    q.crewsRequired = 0;
+                    q.questLifeTimer = -1;
+                    q.questRealizationTimer = -1;
+                }
+                Localization.FillProgressQuest(q);
+                q.picked = true;
+                q.CheckQuestConditions();
+                return q;
+            }
+            else return null;
         }
-
-        if (setByDefault)
-        {
-            q.steps = new string[1];
-            q.stepsAddInfo = new string[1];
-            q.stepsFinished = new bool[1];
-            q.shuttlesRequired = 0;
-            q.crewsRequired = 0;
-            q.questLifeTimer = -1;
-            q.questRealizationTimer = -1;
-        }
-        Localization.FillProgressQuest(q);
-        q.picked = true;
-        q.CheckQuestConditions();        
-        return q;
+        else return null;        
     }
     #endregion
 

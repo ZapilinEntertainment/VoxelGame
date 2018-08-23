@@ -43,7 +43,7 @@ public class OakTree : Plant {
         name = "Oak tree";
 	}
 
-	override public void Reset() {
+	override public void ResetPlant() {
 		lifepower = CREATE_COST;
 		lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
 		stage = 0;

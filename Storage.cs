@@ -176,6 +176,7 @@ public class Storage : MonoBehaviour {
                 if (standartResources[rid] < rc.volume) standartResources[rid] = 0;
                 else standartResources[rid] -= rc.volume;
             }
+            operationsDone++;
         }
     }
 

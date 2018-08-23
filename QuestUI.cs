@@ -352,6 +352,11 @@ public sealed class QuestUI : MonoBehaviour
         }
         // поиск подходящих среди отложенных
         Quest q = Quest.GetProgressQuest(); 
+        if (q == null)
+        {
+            StartCoroutine(WaitForNewQuest(i));
+            return;
+        }
         if (!q.picked)
         {
             timers[i] = q.questLifeTimer;

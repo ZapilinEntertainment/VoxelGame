@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
 
-enum MenuSection { NoSelection, NewGame, Loading, Options}
+
 public class MenuUI : MonoBehaviour {
     int currentGraphicsLevel = 0, lastSelectedSaveButton = -1;
     [SerializeField] Image newGameButton, loadButton, optionsButton;
@@ -15,6 +15,7 @@ public class MenuUI : MonoBehaviour {
     [SerializeField] Sprite overridingSprite;
     [SerializeField] Text sizeSliderVal, roughSliderVal;
 
+    enum MenuSection { NoSelection, NewGame, Loading, Options }
     MenuSection currentSection = MenuSection.NoSelection;
 
     private void Start()
@@ -69,7 +70,10 @@ public class MenuUI : MonoBehaviour {
         }
         
     }
-
+    public void ExitButton()
+    {
+        Application.Quit();
+    }
 
     public void QualityDropdownChanged() {
       graphicsApplyButton.SetActive(qualityDropdown.value != currentGraphicsLevel);

@@ -100,7 +100,8 @@ public class SaveSystemUI : MonoBehaviour {
             for (; i < saveNames.Length; i++)
             {
                 string s = saveNames[i];
-                int lastSlashPos = s.LastIndexOf('\\');
+                int lastSlashPos = s.LastIndexOf('\\'); // в редакторе так
+                if (lastSlashPos == -1) lastSlashPos = s.LastIndexOf('/');
                 saveNames[i] = s.Substring(lastSlashPos + 1, s.Length - lastSlashPos - 5); //  от последнего слеша до ".sav"
                 Transform t;
                 if (i + 1 < c)

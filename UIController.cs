@@ -7,6 +7,7 @@ public enum ChosenObjectType{None,Surface, Cube, Structure, Worksite}
 public enum Icons {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted  }
 public enum ProgressPanelMode { Offline, Powerplant, Hangar}
 
+
 sealed public class UIController : MonoBehaviour {	
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button touchZone, closePanelButton; // fill in the Inspector
@@ -24,9 +25,12 @@ sealed public class UIController : MonoBehaviour {
     float updateTimer, moneyFlySpeed = 0;
     Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
+    enum MenuSection { NoSelection, Save, Load, Options }
+    MenuSection selectedMenuSection = MenuSection.NoSelection;
+
     const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
 
-    bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false;
+    bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false, localized = false;
 	
 
 	float saved_energySurplus;
@@ -47,6 +51,9 @@ sealed public class UIController : MonoBehaviour {
 
 	public static UIController current;
 
+    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, OPTIONS_CAMZOOM_SLIDER_INDEX = 0, 
+        OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 2, OPTIONS_QUALITY_DROPDOWN_INDEX = 4;
+
 	void Awake() {
 		current = this;
         LocalizeButtonTitles();
@@ -60,14 +67,18 @@ sealed public class UIController : MonoBehaviour {
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
 
         SaveSystemUI.Check(transform.root);
+
+        if (!localized) LocalizeButtonTitles();
     }
 
     void Update() {
         updateTimer -= Time.deltaTime;
-        if (updateTimer <= 0) {
+        if (updateTimer <= 0)
+        {
             updateTimer = DATA_UPDATE_TIME;
             ColonyController colony = GameMaster.colonyController;
-            if (showColonyInfo) {
+            if (showColonyInfo)
+            {
                 if (colony != null)
                 {
                     if (showingGearsCf != colony.gears_coefficient)
@@ -108,12 +119,13 @@ sealed public class UIController : MonoBehaviour {
                 }
             }
 
-            if (progressPanel.activeSelf) {
+            if (progressPanel.activeSelf)
+            {
                 switch (progressPanelMode)
                 {
                     case ProgressPanelMode.Powerplant:
                         UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
-                        if (uwb == null || !uwb.gameObject.activeSelf)
+                        if (uwb == null || (!uwb.gameObject.activeSelf | uwb.observingWorkbuilding.id != Structure.MINERAL_POWERPLANT_2_ID))
                         {
                             DeactivateProgressPanel();
                             return;
@@ -174,55 +186,58 @@ sealed public class UIController : MonoBehaviour {
                 }
             }
 
-            bool valuesChanged = false;            
-            if (saved_freeWorkersCount != colony.freeWorkers)
+            //up panel values:
             {
-                saved_freeWorkersCount = colony.freeWorkers;
-                valuesChanged = true;
-            }
-            if (saved_citizenCount != colony.citizenCount)
-            {
-                saved_citizenCount = colony.citizenCount;
-                valuesChanged = true;
-            }           
-            if (saved_livespaceCount != colony.totalLivespace)
-            {
-                saved_livespaceCount = colony.totalLivespace;
-                valuesChanged = true;
-            }
-            if (valuesChanged)
-            {
-                citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
-            }
+                bool valuesChanged = false;
+                if (saved_freeWorkersCount != colony.freeWorkers)
+                {
+                    saved_freeWorkersCount = colony.freeWorkers;
+                    valuesChanged = true;
+                }
+                if (saved_citizenCount != colony.citizenCount)
+                {
+                    saved_citizenCount = colony.citizenCount;
+                    valuesChanged = true;
+                }
+                if (saved_livespaceCount != colony.totalLivespace)
+                {
+                    saved_livespaceCount = colony.totalLivespace;
+                    valuesChanged = true;
+                }
+                if (valuesChanged)
+                {
+                    citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
+                }
 
-            valuesChanged = false;
-            if (saved_energyCount != colony.energyStored)
-            {
-                saved_energyCount = (int)colony.energyStored;
-                valuesChanged = true;
-            }
-            if (saved_energyMax != colony.totalEnergyCapacity)
-            {
-                saved_energyMax = (int)colony.totalEnergyCapacity;
-                valuesChanged = true;
-            }
-            float es = (int)(colony.energySurplus * 10) / 10;
-            if (saved_energySurplus != es)
-            {
-                saved_energySurplus = es;
-                valuesChanged = true;
-            }
-            if (valuesChanged)
-            {
-                string surplus = es.ToString();
-                if (es > 0) surplus = '+' + surplus;
-                energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')'; 
-            }
+                valuesChanged = false;
+                if (saved_energyCount != colony.energyStored)
+                {
+                    saved_energyCount = (int)colony.energyStored;
+                    valuesChanged = true;
+                }
+                if (saved_energyMax != colony.totalEnergyCapacity)
+                {
+                    saved_energyMax = (int)colony.totalEnergyCapacity;
+                    valuesChanged = true;
+                }
+                float es = (int)(colony.energySurplus * 10) / 10;
+                if (saved_energySurplus != es)
+                {
+                    saved_energySurplus = es;
+                    valuesChanged = true;
+                }
+                if (valuesChanged)
+                {
+                    string surplus = es.ToString();
+                    if (es > 0) surplus = '+' + surplus;
+                    energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
+                }
 
-            if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
-            {
-                saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
-                energyCrystalsString.text = saved_energyCrystalsCount.ToString();
+                if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
+                {
+                    saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
+                    energyCrystalsString.text = saved_energyCrystalsCount.ToString();
+                }
             }
         }
         if (activeAnnouncements)
@@ -288,7 +303,7 @@ sealed public class UIController : MonoBehaviour {
         }
     }
 
-	#region up panel and menu
+	#region up panel 
     public void ColonyButton()
     {
         showColonyInfo = !showColonyInfo;
@@ -399,41 +414,104 @@ sealed public class UIController : MonoBehaviour {
                 storagePanelContent.GetChild(b).gameObject.SetActive(false);
             }
         }
-    } 
+    }
+    #endregion
 
-
+    #region menu
     public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
-		if (showMenuWindow) {
+		if (showMenuWindow) { // on
 			if (rightPanel.activeSelf) rightPanel.SetActive(false);
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
             if (showStorageInfo) StorageButton();
 			menuPanel.SetActive(true);
             //menuButton.transform.SetAsLastSibling();
-		}
-		else {
+            menuButton.GetComponent<Image>().overrideSprite = overridingSprite;
+
+            optionsPanel.transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value = FollowingCamera.optimalDistance;
+            optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodDistance;
+            optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
+            optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
+        }
+		else { //off
             optionsPanel.SetActive(false);
 			menuPanel.SetActive(false);
-		}
+            SetMenuPanelSelection(MenuSection.NoSelection);
+            menuButton.GetComponent<Image>().overrideSprite = null;
+        }
 	}
 	public void SaveButton() {
         SaveSystemUI.current.Activate(true);
+        SetMenuPanelSelection(MenuSection.Save);
     }
 	public void LoadButton(){
         SaveSystemUI.current.Activate(false);
+        SetMenuPanelSelection(MenuSection.Load);
     }
     public void OptionsButton() {
-        optionsPanel.SetActive(!optionsPanel.activeSelf);
+        optionsPanel.SetActive(true);
+        SetMenuPanelSelection(MenuSection.Options);
     }
     public void ToMainMenu()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        SetMenuPanelSelection(MenuSection.NoSelection);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);        
     }
     public void ExitButton()
     {
+        SetMenuPanelSelection(MenuSection.NoSelection);
         // запрос на сохранение?
         Application.Quit();
+    }
+
+    void SetMenuPanelSelection(MenuSection ms)
+    {
+        if (ms == selectedMenuSection) return;
+        else
+        {
+            switch (selectedMenuSection)
+            {
+                case MenuSection.Save:
+                    menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
+                    SaveSystemUI.current.CloseButton();
+                    break;
+                case MenuSection.Load:
+                    menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
+                    SaveSystemUI.current.CloseButton();
+                    break;
+                case MenuSection.Options:
+                    menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
+                    optionsPanel.SetActive(false);
+                    break;
+            }
+            selectedMenuSection = ms;
+            switch (selectedMenuSection)
+            {
+                case MenuSection.Save: menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = overridingSprite; break;
+                case MenuSection.Load: menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = overridingSprite; break;
+                case MenuSection.Options: menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = overridingSprite; break;
+            }
+        }
+    }
+
+    public void Options_CamZoomChanged()
+    {
+        FollowingCamera.SetOptimalDistance(optionsPanel.transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value);
+    }
+    public void Options_LODdistChanged()
+    {
+        LODController.SetLODdistance(optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value);
+    }
+    public void Options_QualityLevelChanged()
+    {
+        int v = optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value ;
+        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(v != QualitySettings.GetQualityLevel());
+    }
+    public void Options_ApplyGraphicsChange()
+    {
+        QualitySettings.SetQualityLevel(optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value);
+        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).gameObject.SetActive(false);
     }
 	#endregion
 
@@ -496,7 +574,8 @@ sealed public class UIController : MonoBehaviour {
         ChangeChosenObject(ChosenObjectType.Worksite);
     }
 
-	public void ChangeChosenObject(ChosenObjectType newChosenType ) {		
+    public void ChangeChosenObject(ChosenObjectType newChosenType)
+    {
 
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
         else
@@ -509,64 +588,72 @@ sealed public class UIController : MonoBehaviour {
         }
 
         //отключение предыдущего observer
-		if (workingObserver != null) workingObserver.ShutOff();
-        if (newChosenType == ChosenObjectType.None) {          
+        if (workingObserver != null) workingObserver.ShutOff();
+        if (newChosenType == ChosenObjectType.None)
+        {
             rightPanel.SetActive(false);
-			selectionFrame.gameObject.SetActive(false);
-			chosenObjectType = ChosenObjectType.None;
-		}
-		else {
-			chosenObjectType = newChosenType;
-			rightPanel.transform.SetAsLastSibling();
-			rightPanel.SetActive(true);
+            selectionFrame.gameObject.SetActive(false);
+            chosenObjectType = ChosenObjectType.None;
+        }
+        else
+        {
+            chosenObjectType = newChosenType;
+            rightPanel.transform.SetAsLastSibling();
+            rightPanel.SetActive(true);
 
-			selectionFrame.gameObject.SetActive(true);
-			if (showMenuWindow) {
-				menuPanel.SetActive(false);
-				showMenuWindow = false;
-			}
-		}
+            selectionFrame.gameObject.SetActive(true);
+            if (showMenuWindow)
+            {
+                MenuButton();
+            }
+        }
 
-		Vector3 sframeColor = Vector3.one;
-		switch (chosenObjectType) {
-		case ChosenObjectType.None:
-			faceIndex = 10;
-			break;
-		case ChosenObjectType.Surface:
-			faceIndex = 10;
-			selectionFrame.position = chosenSurface.transform.position + Vector3.down * Block.QUAD_SIZE/2f;
-			selectionFrame.rotation = Quaternion.identity;
-			selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
-			sframeColor = new Vector3(140f/255f, 1,1);
-			selectionFrame.gameObject.SetActive(true);
-			workingObserver = chosenSurface.ShowOnGUI();
-			FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
-			break;
+        Vector3 sframeColor = Vector3.one;
+        switch (chosenObjectType)
+        {
+            case ChosenObjectType.None:
+                faceIndex = 10;
+                break;
+            case ChosenObjectType.Surface:
+                {
+                    faceIndex = 10;
+                    selectionFrame.position = chosenSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
+                    selectionFrame.rotation = Quaternion.identity;
+                    selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
+                    sframeColor = new Vector3(140f / 255f, 1, 1);
+                    selectionFrame.gameObject.SetActive(true);
+                    workingObserver = chosenSurface.ShowOnGUI();
+                    FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
+                }
+                break;
 
-		case ChosenObjectType.Cube:
-			selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
-			switch (faceIndex) {
-				case 0: selectionFrame.transform.rotation = Quaternion.Euler(90,0,0);break;
-				case 1: selectionFrame.transform.rotation = Quaternion.Euler(0,0,-90);break;
-				case 2: selectionFrame.transform.rotation = Quaternion.Euler(-90,0,0);break;
-				case 3: selectionFrame.transform.rotation = Quaternion.Euler(0,0,90);break;
-				case 4: selectionFrame.transform.rotation = Quaternion.identity;break;
-				case 5: selectionFrame.transform.rotation = Quaternion.Euler(-180,0,0);break;
-			}
-			selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
-			sframeColor = new Vector3(140f/255f, 1,0.9f);
-			FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
-			break;
+            case ChosenObjectType.Cube:
+                {
+                    selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
+                    switch (faceIndex)
+                    {
+                        case 0: selectionFrame.transform.rotation = Quaternion.Euler(90, 0, 0); break;
+                        case 1: selectionFrame.transform.rotation = Quaternion.Euler(0, 0, -90); break;
+                        case 2: selectionFrame.transform.rotation = Quaternion.Euler(-90, 0, 0); break;
+                        case 3: selectionFrame.transform.rotation = Quaternion.Euler(0, 0, 90); break;
+                        case 4: selectionFrame.transform.rotation = Quaternion.identity; break;
+                        case 5: selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0); break;
+                    }
+                    selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
+                    sframeColor = new Vector3(140f / 255f, 1, 0.9f);
+                    FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
+                }
+                break;
 
-		case ChosenObjectType.Structure:
-			faceIndex = 10;
-			selectionFrame.position = chosenStructure.transform.position;
-			selectionFrame.rotation = chosenStructure.transform.rotation;
-			selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
-			sframeColor = new Vector3(1,0,1);
+            case ChosenObjectType.Structure:
+                faceIndex = 10;
+                selectionFrame.position = chosenStructure.transform.position;
+                selectionFrame.rotation = chosenStructure.transform.rotation;
+                selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
+                sframeColor = new Vector3(1, 0, 1);
                 workingObserver = chosenStructure.ShowOnGUI();
-			FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
-			break;
+                FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
+                break;
 
             case ChosenObjectType.Worksite:
                 faceIndex = 10;
@@ -574,10 +661,10 @@ sealed public class UIController : MonoBehaviour {
                 workingObserver = chosenWorksite.ShowOnGUI();
                 FollowingCamera.main.SetLookPoint(chosenWorksite.transform.position);
                 break;
-		}
+        }
 
-		selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
-	}
+        selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
+    }
 
     #region auxiliary panels
     public void ActivateProgressPanel(ProgressPanelMode mode)
@@ -803,6 +890,12 @@ sealed public class UIController : MonoBehaviour {
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
         t.GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
 
+        optionsPanel.transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX+1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CameraZoom);
+        optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX+1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.LODdistance);
+        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 1).GetComponent<Text>().text= Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
+        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
+
+        localized = true;
     }
 
     #region right panel
@@ -810,5 +903,5 @@ sealed public class UIController : MonoBehaviour {
 		if (chosenObjectType == ChosenObjectType.None) return;
 		ChangeChosenObject(ChosenObjectType.None);
 	}
-	#endregion
+    #endregion
 }
