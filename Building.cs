@@ -272,23 +272,16 @@ public class Building : Structure {
         if (upgradedIndex == -1) return;
         if ( !GameMaster.realMaster.weNeedNoResources )
         {
-            ResourceContainer[] cost = ResourcesCost.GetCost(id);
-            if (cost != null && cost.Length != 0) 
+            ResourceContainer[] cost = GetUpgradeCost();
+            if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                for (int i = 0; i < cost.Length; i++)
-                {
-                    cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - GameMaster.upgradeDiscount));
-                }
-                if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
-                {
-                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
-                    return;
-                }
+                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                return;
             }
         }
         Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
         PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
-        byte bzero = (byte)0;
+        byte bzero = 0;
         if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
         if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
         Quaternion originalRotation = transform.rotation;
@@ -304,7 +297,7 @@ public class Building : Structure {
         ResourceContainer[] cost = ResourcesCost.GetCost(upgradedIndex);
         float discount = GameMaster.upgradeDiscount;
         for (int i = 0; i < cost.Length; i++) {
-            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
+            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 -discount));
         }
         return cost;
     }

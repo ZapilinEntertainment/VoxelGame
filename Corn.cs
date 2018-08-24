@@ -7,7 +7,7 @@ public class Corn : Plant {
 	const byte MAX_STAGE = 3;
 	public const int CREATE_COST = 1, GATHER = 5;
 
-	void Start() {
+	void Awake() {
 		if (stageSprites == null) {
 			stageSprites = Resources.LoadAll<Sprite>("Textures/Plants/corn"); // 4 images
 			maxStage = MAX_STAGE;

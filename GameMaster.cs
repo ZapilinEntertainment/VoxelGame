@@ -78,8 +78,7 @@ public sealed class GameMaster : MonoBehaviour {
 	
 	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
-
-
+    
 	float t;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
 	public const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
@@ -89,14 +88,16 @@ public sealed class GameMaster : MonoBehaviour {
 	public Vector3 windVector {get; private set;}
 	public float windTimer = 0, windChangeTime = 120;
 
+    bool firstSet = true;
+
 	// FOR TESTING
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
 	public bool generateChunk = true;
                                          
 
-    public GameMaster () {
-        if (realMaster != null)
+    private void Awake() {
+        if (realMaster != null & realMaster != this)
         {
             Destroy(realMaster);
         }
@@ -104,6 +105,7 @@ public sealed class GameMaster : MonoBehaviour {
 	}
 
 	void Start() {
+        if (!firstSet) return;
         gameSpeed = 1;
         cameraUpdateBroadcast = new List<GameObject>();
         standartSpritesList = new List<GameObject>();
@@ -111,7 +113,6 @@ public sealed class GameMaster : MonoBehaviour {
         mastSpritesList = new List<GameObject>();
         GameObject[] msprites = GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
         if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
-        msprites = null;
 
         everydayUpdateList = new List<Component>();
         everyYearUpdateList = new List<Component>();
@@ -120,111 +121,110 @@ public sealed class GameMaster : MonoBehaviour {
 
         lifeGrowCoefficient = 1;
         //Localization.ChangeLanguage(Language.English);
-        geologyModule = gameObject.AddComponent<GeologyModule>();
-        difficulty = gss.difficulty;
-        warProximity = 0.01f;
-        layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
-        colonyController = gameObject.AddComponent<ColonyController>();
-        colonyController.CreateStorage();
-        PoolMaster pm = gameObject.AddComponent<PoolMaster>();
-        pm.Load();
 
-        if (gss.generateChunk)
-        {
-            Chunk.SetChunkSize(gss.chunkSize);
-            constructor.ConstructChunk(gss.chunkSize);
-            camBasis.transform.position = Vector3.one * gss.chunkSize / 2f;
-        }
-        else
-        { // loading data
-            LoadGame(Application.persistentDataPath + "/Saves/"+savename + ".sav");
-        }        
+
+            geologyModule = gameObject.AddComponent<GeologyModule>();
+            difficulty = gss.difficulty;
+            colonyController = gameObject.AddComponent<ColonyController>();
+            colonyController.CreateStorage();
+            PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+            pm.Load();
+            if (gss.generateChunk)
+            {
+                Chunk.SetChunkSize(gss.chunkSize);
+                constructor.ConstructChunk(gss.chunkSize);
+                camBasis.transform.position = Vector3.one * gss.chunkSize / 2f;
+                switch (difficulty)
+                {
+                    case Difficulty.Utopia:
+                        LUCK_COEFFICIENT = 1;
+                        demolitionLossesPercent = 0;
+                        lifepowerLossesPercent = 0;
+                        sellPriceCoefficient = 1;
+                        tradeVesselsTrafficCoefficient = 0.2f;
+                        upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
+                        environmentalConditions = 1;
+                        break;
+                    case Difficulty.Easy:
+                        LUCK_COEFFICIENT = 0.7f;
+                        demolitionLossesPercent = 0.2f;
+                        lifepowerLossesPercent = 0.1f;
+                        sellPriceCoefficient = 0.9f;
+                        tradeVesselsTrafficCoefficient = 0.4f;
+                        upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
+                        environmentalConditions = 1;
+                        break;
+                    case Difficulty.Normal:
+                        LUCK_COEFFICIENT = 0.5f;
+                        demolitionLossesPercent = 0.4f;
+                        lifepowerLossesPercent = 0.3f;
+                        sellPriceCoefficient = 0.75f;
+                        tradeVesselsTrafficCoefficient = 0.5f;
+                        upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
+                        environmentalConditions = 0.95f;
+                        break;
+                    case Difficulty.Hard:
+                        LUCK_COEFFICIENT = 0.1f;
+                        demolitionLossesPercent = 0.7f;
+                        lifepowerLossesPercent = 0.5f;
+                        sellPriceCoefficient = 0.5f;
+                        tradeVesselsTrafficCoefficient = 0.75f;
+                        upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
+                        environmentalConditions = 0.9f;
+                        break;
+                    case Difficulty.Torture:
+                        LUCK_COEFFICIENT = 0.01f;
+                        demolitionLossesPercent = 1;
+                        lifepowerLossesPercent = 0.85f;
+                        sellPriceCoefficient = 0.33f;
+                        tradeVesselsTrafficCoefficient = 1;
+                        upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
+                        environmentalConditions = 0.8f;
+                        break;
+                }
+                warProximity = 0.01f;
+                layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
+                switch (startGameWith)
+                {
+                    case GameStart.Zeppelin:
+                        LandingUI lui = gameObject.AddComponent<LandingUI>();
+                        lui.lineDrawer = systemDrawLR;
+                        Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
+                        break;
+                    case GameStart.Headquarters:
+                        int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
+                        int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
+
+                        if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
+                        Structure s = Structure.GetNewStructure(Structure.LANDED_ZEPPELIN_ID);
+                        SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
+                        s.SetBasement(b, PixelPosByte.zero);
+                        b.MakeIndestructible(true);
+                        b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
+
+                        colonyController.AddCitizens(START_WORKERS_COUNT);
+                        colonyController.SetHQ(s.GetComponent<HeadQuarters>());
+
+                        if (xpos > 0) xpos--; else xpos++;
+                        StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
+                        firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos, zpos), PixelPosByte.zero);
+                        //start resources
+                        colonyController.storage.AddResource(ResourceType.metal_K, 100);
+                        colonyController.storage.AddResource(ResourceType.metal_M, 50);
+                        colonyController.storage.AddResource(ResourceType.metal_E, 20);
+                        colonyController.storage.AddResource(ResourceType.Plastics, 100);
+                        colonyController.storage.AddResource(ResourceType.Food, 200);
+
+                        //UI ui = gameObject.AddComponent<UI>();
+                        //ui.lineDrawer = systemDrawLR;
+                        break;
+                }
+            }
+            else LoadGame(Application.persistentDataPath + "/Saves/" + savename + ".sav");        
 
         if (camTransform == null) camTransform = Camera.main.transform;
 		prevCamPos = camTransform.position * (-1);
-
-		switch (difficulty) {
-		case Difficulty.Utopia: 
-			LUCK_COEFFICIENT = 1;	
-			demolitionLossesPercent = 0; 
-			lifepowerLossesPercent = 0;
-			sellPriceCoefficient = 1;
-			tradeVesselsTrafficCoefficient = 0.2f;
-			upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
-			environmentalConditions = 1;
-			break;
-		case Difficulty.Easy: 
-			LUCK_COEFFICIENT = 0.7f; 
-			demolitionLossesPercent = 0.2f;  
-			lifepowerLossesPercent = 0.1f;
-			sellPriceCoefficient = 0.9f;
-			tradeVesselsTrafficCoefficient = 0.4f;
-			upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
-			environmentalConditions = 1;
-			break;
-		case Difficulty.Normal: 
-			LUCK_COEFFICIENT = 0.5f; 
-			demolitionLossesPercent = 0.4f;  
-			lifepowerLossesPercent = 0.3f;
-			sellPriceCoefficient = 0.75f;
-			tradeVesselsTrafficCoefficient = 0.5f;
-			upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
-			environmentalConditions = 0.95f;
-			break;
-		case Difficulty.Hard: 
-			LUCK_COEFFICIENT = 0.1f; 
-			demolitionLossesPercent = 0.7f; 
-			lifepowerLossesPercent = 0.5f;
-			sellPriceCoefficient = 0.5f;
-			tradeVesselsTrafficCoefficient = 0.75f;
-			upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
-			environmentalConditions = 0.9f;
-			break;
-		case Difficulty.Torture: 
-			LUCK_COEFFICIENT = 0.01f; 
-			demolitionLossesPercent = 1; 
-			lifepowerLossesPercent = 0.85f;
-			sellPriceCoefficient = 0.33f;
-			tradeVesselsTrafficCoefficient = 1;
-			upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
-			environmentalConditions = 0.8f;
-			break;
-		}
-
-		switch (startGameWith) {
-		case GameStart.Zeppelin :
-			LandingUI lui = gameObject.AddComponent<LandingUI>();
-			lui.lineDrawer = systemDrawLR;
-			Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin")); 
-			break;
-		case GameStart.Headquarters : 
-			int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
-			int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
-
-			if (colonyController == null )colonyController = gameObject.AddComponent<ColonyController>();
-			Structure s = Structure.GetNewStructure(Structure.LANDED_ZEPPELIN_ID);
-			SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos,zpos);
-			s.SetBasement(b, PixelPosByte.zero);
-			b.MakeIndestructible(true);
-			b.myChunk.GetBlock(b.pos.x, b.pos.y -1, b.pos.z).MakeIndestructible(true);
-
-			colonyController.AddCitizens(START_WORKERS_COUNT);
-			colonyController.SetHQ(s.GetComponent<HeadQuarters>());
-
-			if (xpos > 0) xpos --; else xpos++;
-			StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
-			firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos,zpos), PixelPosByte.zero);
-			//start resources
-			colonyController.storage.AddResource(ResourceType.metal_K,100);
-			colonyController.storage.AddResource(ResourceType.metal_M,50);
-			colonyController.storage.AddResource(ResourceType.metal_E,20);
-			colonyController.storage.AddResource(ResourceType.Plastics,100);
-			colonyController.storage.AddResource(ResourceType.Food, 200);
-
-			//UI ui = gameObject.AddComponent<UI>();
-			//ui.lineDrawer = systemDrawLR;
-			break;
-		}
+        firstSet = false;
 	}
 
 	void Update() {

@@ -46,6 +46,77 @@ public class Quest {
         subIndex = subID;
         crews = new List<Crew>();
         completed = false;
+        bool setByDefault = true;
+        switch (i_type)
+        {
+            case QuestType.Progress:
+                switch ((ProgressQuestID)subIndex)
+                {
+                    case ProgressQuestID.Progress_HousesToMax: reward = 250; break;
+                    case ProgressQuestID.Progress_2Docks: reward = 500; break;
+                    case ProgressQuestID.Progress_2Storages: reward = 100; break;
+                    case ProgressQuestID.Progress_Tier2: reward = 120; break;
+                    case ProgressQuestID.Progress_300Population: reward = 100; break;
+                    case ProgressQuestID.Progress_OreRefiner: reward = 200; break;
+                    case ProgressQuestID.Progress_HospitalCoverage: reward = 240; break;
+                    case ProgressQuestID.Progress_Tier3: reward = 240; break;
+                    case ProgressQuestID.Progress_4MiniReactors: reward = 800; break;
+                    case ProgressQuestID.Progress_100Fuel: reward = 210; break;
+                    case ProgressQuestID.Progress_XStation: reward = 120; break;
+                    case ProgressQuestID.Progress_Tier4: reward = 480; break;
+                    case ProgressQuestID.Progress_CoveredFarm: reward = 200; break;
+                    case ProgressQuestID.Progress_CoveredLumbermill: reward = 200; break;
+                    case ProgressQuestID.Progress_Reactor: reward = 220; break;
+                    case ProgressQuestID.Progress_FirstExpedition:
+                        setByDefault = false;
+                        steps = new string[4];
+                        stepsAddInfo = new string[4];
+                        stepsFinished = new bool[4];
+                        shuttlesRequired = 0;
+                        crewsRequired = 0;
+                        questLifeTimer = -1;
+                        questRealizationTimer = -1;
+                        reward = 400;
+                        break;
+                    case ProgressQuestID.Progress_Tier5: reward = 960; break;
+                    case ProgressQuestID.Progress_FactoryComplex:
+                        setByDefault = false;
+                        steps = new string[2];
+                        stepsAddInfo = new string[2];
+                        stepsFinished = new bool[2];
+                        shuttlesRequired = 0;
+                        crewsRequired = 0;
+                        questLifeTimer = -1;
+                        questRealizationTimer = -1;
+                        reward = 960;
+                        break;
+                    case ProgressQuestID.Progress_SecondFloor:
+                        setByDefault = false;
+                        steps = new string[2];
+                        stepsAddInfo = new string[2];
+                        stepsFinished = new bool[2];
+                        shuttlesRequired = 0;
+                        crewsRequired = 0;
+                        questLifeTimer = -1;
+                        questRealizationTimer = -1;
+                        reward = 420;
+                        break;
+                }
+
+                if (setByDefault)
+                {
+                    steps = new string[1];
+                    stepsAddInfo = new string[1];
+                    stepsFinished = new bool[1];
+                    shuttlesRequired = 0;
+                    crewsRequired = 0;
+                    questLifeTimer = -1;
+                    questRealizationTimer = -1;
+                }
+                Localization.FillProgressQuest(this);
+                break;
+        }
+        canBeDelayed = true;
     }
     
     public void CheckQuestConditions()
@@ -430,73 +501,7 @@ public class Quest {
             if (acceptableQuest.Count > 0)
             {
                 ProgressQuestID pqi = acceptableQuest[(int)(Random.value * acceptableQuest.Count)];
-                Quest q = new Quest(QuestType.Progress, (byte)pqi);
-                bool setByDefault = true;
-                q.canBeDelayed = true;
-                switch (pqi)
-                {
-                    case ProgressQuestID.Progress_HousesToMax: q.reward = 250; break;
-                    case ProgressQuestID.Progress_2Docks: q.reward = 500; break;
-                    case ProgressQuestID.Progress_2Storages: q.reward = 100; break;
-                    case ProgressQuestID.Progress_Tier2: q.reward = 120; break;
-                    case ProgressQuestID.Progress_300Population: q.reward = 100; break;
-                    case ProgressQuestID.Progress_OreRefiner: q.reward = 200; break;
-                    case ProgressQuestID.Progress_HospitalCoverage: q.reward = 240; break;
-                    case ProgressQuestID.Progress_Tier3: q.reward = 240; break;
-                    case ProgressQuestID.Progress_4MiniReactors: q.reward = 800; break;
-                    case ProgressQuestID.Progress_100Fuel: q.reward = 210; break;
-                    case ProgressQuestID.Progress_XStation: q.reward = 120; break;
-                    case ProgressQuestID.Progress_Tier4: q.reward = 480; break;
-                    case ProgressQuestID.Progress_CoveredFarm: q.reward = 200; break;
-                    case ProgressQuestID.Progress_CoveredLumbermill: q.reward = 200; break;
-                    case ProgressQuestID.Progress_Reactor: q.reward = 220; break;
-                    case ProgressQuestID.Progress_FirstExpedition:
-                        setByDefault = false;
-                        q.steps = new string[4];
-                        q.stepsAddInfo = new string[4];
-                        q.stepsFinished = new bool[4];
-                        q.shuttlesRequired = 0;
-                        q.crewsRequired = 0;
-                        q.questLifeTimer = -1;
-                        q.questRealizationTimer = -1;
-                        q.reward = 400;
-                        break;
-                    case ProgressQuestID.Progress_Tier5: q.reward = 960; break;
-                    case ProgressQuestID.Progress_FactoryComplex:
-                        setByDefault = false;
-                        q.steps = new string[2];
-                        q.stepsAddInfo = new string[2];
-                        q.stepsFinished = new bool[2];
-                        q.shuttlesRequired = 0;
-                        q.crewsRequired = 0;
-                        q.questLifeTimer = -1;
-                        q.questRealizationTimer = -1;
-                        q.reward = 960;
-                        break;
-                    case ProgressQuestID.Progress_SecondFloor:
-                        setByDefault = false;
-                        q.steps = new string[2];
-                        q.stepsAddInfo = new string[2];
-                        q.stepsFinished = new bool[2];
-                        q.shuttlesRequired = 0;
-                        q.crewsRequired = 0;
-                        q.questLifeTimer = -1;
-                        q.questRealizationTimer = -1;
-                        q.reward = 420;
-                        break;
-                }
-
-                if (setByDefault)
-                {
-                    q.steps = new string[1];
-                    q.stepsAddInfo = new string[1];
-                    q.stepsFinished = new bool[1];
-                    q.shuttlesRequired = 0;
-                    q.crewsRequired = 0;
-                    q.questLifeTimer = -1;
-                    q.questRealizationTimer = -1;
-                }
-                Localization.FillProgressQuest(q);
+                Quest q = new Quest(QuestType.Progress, (byte)pqi);                              
                 q.picked = true;
                 q.CheckQuestConditions();
                 return q;

@@ -5,7 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class WorkBuildingSerializer {
 	public BuildingSerializer buildingSerializer;
-	public float workflow, workSpeed, workflowToProcees;
+	public float workflow, workSpeed, workflowToProcess;
 	public int workersCount;
 }
 
@@ -17,6 +17,7 @@ public abstract class WorkBuilding : Building {
 	public int workersCount {get; protected set;} 
 	const float WORKFLOW_GAIN = 1;
 	public float workflowToProcess_setValue = 1;//fixed by asset
+    public static UIWorkbuildingObserver workbuildingObserver;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -92,7 +93,8 @@ public abstract class WorkBuilding : Building {
 		workersCount = wbs.workersCount;
 		workflow = wbs.workflow;
 		workSpeed = wbs.workSpeed;
-		workflowToProcess = wbs.workflowToProcees;
+		workflowToProcess = wbs.workflowToProcess;
+        RecalculateWorkspeed();
 	}
 
 	public WorkBuildingSerializer GetWorkBuildingSerializer() {
@@ -100,56 +102,60 @@ public abstract class WorkBuilding : Building {
 		wbs.buildingSerializer = GetBuildingSerializer();
 		wbs.workflow = workflow;
 		wbs.workSpeed = workSpeed;
-		wbs.workflowToProcees = wbs.workflowToProcees;
+		wbs.workflowToProcess = workflowToProcess;
 		wbs.workersCount = workersCount;
 		return wbs;
 	}
-		
-	#endregion
 
-	override protected float GUI_UpgradeButton( Rect rr) {
-		GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-		if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-			if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-			{
-				WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
-				PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
-				byte bzero = (byte)0;
-				if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-				if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
-				int workers = workersCount;
-				workersCount = 0;
-				Quaternion originalRotation = transform.rotation;
-				upgraded.SetBasement(basement, setPos);
-				if ( !upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only)) {
-					upgraded.transform.localRotation = originalRotation;
-				}
-				upgraded.AddWorkers(workers);
-			}
-			else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
-		}
+    #endregion
 
-		if ( requiredResources.Length > 0) {
-			Storage storage = GameMaster.colonyController.storage;
-			rr.y += rr.height;
-			for (int i = 0; i < requiredResources.Length; i++) {
-				if (requiredResources[i].volume > storage.standartResources[requiredResources[i].type.ID]) GUI.color = Color.red;
-				GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
-				GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-				GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), requiredResources[i].volume.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-				rr.y += rr.height;
-				GUI.color = Color.white;
-			}
-		}
-		return rr.y;
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        showOnGUI = true;
+        return workbuildingObserver;
+    }
 
-	protected void PrepareWorkbuildingForDestruction() {
-		PrepareBuildingForDestruction();
+    override public void LevelUp(bool returnToUI)
+    {
+        if (upgradedIndex == -1) return;
+        if (!GameMaster.realMaster.weNeedNoResources)
+        {
+            ResourceContainer[] cost = GetUpgradeCost();
+            if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+            {
+                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                return;
+            }
+        }
+        WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
+        PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
+        byte bzero = (byte)0;
+        if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
+        if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+        int workers = workersCount;
+        workersCount = 0;
+        Quaternion originalRotation = transform.rotation;
+        upgraded.SetBasement(basement, setPos);
+        if (!upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only))
+        {
+            upgraded.transform.localRotation = originalRotation;
+        }
+        upgraded.AddWorkers(workers);
+        if (returnToUI) upgraded.ShowOnGUI();
+    }
+
+    protected bool PrepareWorkbuildingForDestruction() {		
 		if (workersCount != 0) GameMaster.colonyController.AddWorkers(workersCount);
-	}
+        return PrepareBuildingForDestruction();
+    }
 
-	void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareWorkbuildingForDestruction();
+        Destroy(gameObject);
+    }
 }

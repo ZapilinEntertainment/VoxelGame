@@ -7,24 +7,26 @@ public class WindGenerator : Building {
 	Vector3 windDirection;
 	bool rotateHead = false, rotateScrew = true;
 	const float HEAD_ROTATE_SPEED = 1, SCREW_ROTATE_SPEED = 20;
-	float maxSurplus, height_coefficient = 1;
+	float height_coefficient = 1;
+    const int STANDART_SURPLUS = 100;
 
 	override public void Prepare() {
 		PrepareBuilding();
-		maxSurplus = energySurplus;
 	}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
 		GameMaster.realMaster.windUpdateList.Add(this);
-		height_coefficient = (float)basement.pos.y / 8f;
+        float hf = Chunk.CHUNK_SIZE / 2f;
+		height_coefficient = (basement.pos.y - hf) / hf;
+        if (height_coefficient < 0) height_coefficient /= 4f;
 		WindUpdate(GameMaster.realMaster.windVector);
 	}
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
-		float t = Time.deltaTime * GameMaster.gameSpeed;
+		float t = Time.deltaTime * GameMaster.gameSpeed * energySurplus / (float)STANDART_SURPLUS;
 		if ( rotateHead ) {
 			head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDirection, HEAD_ROTATE_SPEED * t);
 			if (head.transform.forward == windDirection.normalized) rotateHead = false;
@@ -40,18 +42,23 @@ public class WindGenerator : Building {
 			if ( rotateScrew ) {
 				rotateScrew = false;
 				energySurplus = 0; 
-				if (connectedToPowerGrid) GameMaster.colonyController.RecalculatePowerGrid();
+				GameMaster.colonyController.RecalculatePowerGrid();
 				}
 			rotateHead = false;
 		}
 		else {
 			if (rotateScrew == false) {
-				rotateScrew = true; 
-				if (connectedToPowerGrid) GameMaster.colonyController.RecalculatePowerGrid();
+				rotateScrew = true;                
+				GameMaster.colonyController.RecalculatePowerGrid();
 			}
-			height_coefficient = (float)basement.pos.y / 8f;
-			energySurplus = maxSurplus * height_coefficient * direction.magnitude / GameMaster.realMaster.maxWindPower;
-			if (transform.forward != windDirection) rotateHead = true; else rotateHead = false;
+            float newSurplus = windDirection.magnitude * (STANDART_SURPLUS * (1 + height_coefficient));
+            if (newSurplus != energySurplus)
+            {
+                energySurplus = newSurplus;
+                GameMaster.colonyController.RecalculatePowerGrid();
+            }
+            else energySurplus = newSurplus;
+            if (transform.forward != windDirection) rotateHead = true; else rotateHead = false;
 		}
 	}
 }

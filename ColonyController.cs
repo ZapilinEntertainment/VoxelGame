@@ -8,7 +8,7 @@ public enum WorkersDestination {ForWorksite, ForWorkBuilding}
 public sealed class ColonyControllerSerializer{
 	public StorageSerializer storageSerializer;
 	public float gears_coefficient, labourEfficientcy_coefficient,
-	happiness_coefficient, health_coefficient,birthrateCoefficient;
+	happiness_coefficient, health_coefficient, birthrateCoefficient, realBirthrate;
 
 	public float energyStored,energyCrystalsCount;
 	public bool haveWorksites;
@@ -45,32 +45,36 @@ public sealed class ColonyController : MonoBehaviour {
 
 	public int freeWorkers{get;private set;}
 	public int citizenCount {get; private set;}
-	public float birthrateCoefficient{get;private set;}
+    float birthrateCoefficient;
+    public float realBirthrate { get; private set; }
 	public int deathCredit{get;private set;}
 	float peopleSurplus = 0, housingTimer = 0;
 	public int totalLivespace{get;private set;}
 	List<House> houses; List<Hospital> hospitals;
 	Rect myRect;
-	float starvationTimer, starvationTime = 600, real_birthrate = 0;
+    float starvationTimer, starvationTime = 600;
+    bool thisIsFirstSet = true;
 
 	void Awake() {
-		GameMaster.realMaster.everydayUpdateList.Add(this);
-		GameMaster.realMaster.everyYearUpdateList.Add(this);
-		gears_coefficient = 1;
-		labourEfficientcy_coefficient = 1;
-		health_coefficient = 1;
-		hospitals_coefficient = 0;
-		birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
-		docksLevel = 0;
-		energyCrystalsCount = 1000;
+        if (thisIsFirstSet)
+        {
+            GameMaster.realMaster.everydayUpdateList.Add(this);
+            GameMaster.realMaster.everyYearUpdateList.Add(this);
+            gears_coefficient = 1;
+            labourEfficientcy_coefficient = 1;
+            health_coefficient = 1;
+            hospitals_coefficient = 0;
+            birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
+            docksLevel = 0;
+            energyCrystalsCount = 1000;          
 
-		houses = new List<House>();
-		powerGrid = new List<Building>();
-		docks = new List<Dock>();
-		worksites = new List<Worksite>();
-
-        cityName = "default city"; // lol
-	}
+            cityName = "default city"; // lol
+        }
+        houses = new List<House>();
+        powerGrid = new List<Building>();
+        docks = new List<Dock>();
+        worksites = new List<Worksite>();
+    }
 
 	public void CreateStorage() { // call from game master
 		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
@@ -180,7 +184,7 @@ public sealed class ColonyController : MonoBehaviour {
 		//  BIRTHRATE
 		if (birthrateCoefficient != 0) {
 			if (birthrateCoefficient > 0) {
-				real_birthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
+				realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
 				if (peopleSurplus > 1) {
 					int newborns = (int) peopleSurplus;
 					AddCitizens(newborns); 
@@ -188,13 +192,14 @@ public sealed class ColonyController : MonoBehaviour {
 				}
 			}
 			else {
-				real_birthrate = birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
+				realBirthrate = birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
 				if (peopleSurplus < - 1) {
-					KillCitizens(1); peopleSurplus += 1;
+                    deathCredit++;
+                    peopleSurplus ++;
 				}
 			}
 		}
-		peopleSurplus += real_birthrate;
+		peopleSurplus += realBirthrate;
 	}
 
 	public void AddCitizens(int x) {
@@ -459,7 +464,8 @@ public sealed class ColonyController : MonoBehaviour {
 	public void RecalculateHospitals() {
 		hospitals_coefficient = 0;
 		if (hospitals.Count == 0  ) return;
-		int i = 0, hospitalsCoverage = 0;
+        int i = 0;
+        float hospitalsCoverage = 0;
 		while (i <hospitals.Count) {
 			if (hospitals[i] == null || !hospitals[i].gameObject.activeSelf) {hospitals.RemoveAt(i); continue;}
 			if ( hospitals[i].isActive ) hospitalsCoverage += hospitals[i].coverage;
@@ -612,7 +618,8 @@ public sealed class ColonyController : MonoBehaviour {
 		ccs.housingTimer = housingTimer;
 		ccs.starvationTimer = starvationTimer;
 		ccs.starvationTime = starvationTime;
-		ccs.real_birthrate = real_birthrate;
+		ccs.real_birthrate = realBirthrate;
+        ccs.birthrateCoefficient = birthrateCoefficient;
 		return ccs;
 	}
 	public void Load(ColonyControllerSerializer ccs) {
@@ -654,14 +661,15 @@ public sealed class ColonyController : MonoBehaviour {
 				w.Load(ws);
 			}
 		}
-		freeWorkers =ccs.freeWorkers;
+		freeWorkers = ccs.freeWorkers;
 		citizenCount = ccs.citizenCount;
 		deathCredit = ccs.deathCredit;
 		peopleSurplus = ccs.peopleSurplus;
 		housingTimer = ccs.housingTimer;
 		starvationTimer = ccs.starvationTimer;
 		starvationTime = ccs.starvationTime;
-		real_birthrate = ccs.real_birthrate;
+		realBirthrate = ccs.realBirthrate;
+        birthrateCoefficient = ccs.birthrateCoefficient;
 	}
 	#endregion
 

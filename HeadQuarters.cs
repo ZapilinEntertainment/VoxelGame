@@ -141,19 +141,12 @@ public class HeadQuarters : House {
     {
         if ( !GameMaster.realMaster.weNeedNoResources )
         {
-            ResourceContainer[] cost = ResourcesCost.GetCost(id);
-            if (cost != null && cost.Length != 0) 
-            {
-                for (int i = 0; i < cost.Length; i++)
-                {
-                    cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - GameMaster.upgradeDiscount));
-                }
+            ResourceContainer[] cost = GetUpgradeCost() ;
                 if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                 {
                     UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                     return;
                 }
-            }
         }
         if (level < 4)
         {

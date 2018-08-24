@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum BirthrateMode {Normal, Improved, Lowered}
-public class Hospital : House {
-	[SerializeField]
-	int _coverage = 100;
-	public int coverage {get;private set;}
+public class Hospital : WorkBuilding {
+	public float coverage {get;private set;}
 	public static float hospital_birthrate_coefficient = 1;
 	public static  BirthrateMode birthrateMode{get; private set;}
+
 	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
+    const int STANDART_COVERAGE = 100;
 
 	public static void Reset() {
 		SetBirthrateMode(0);
@@ -17,23 +17,60 @@ public class Hospital : House {
 
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
-		PrepareHouse(b,pos);
-		coverage = _coverage;
+        SetBuildingData(b, pos);
+        coverage = 0;
 		GameMaster.colonyController.AddHospital(this);
 	}
 
-	override public void SetActivationStatus(bool x) {
+    void Update()
+    {
+        return; // иначе заместится wokbuilding.update
+    }
+
+    override public int AddWorkers(int x)
+    {
+        if (workersCount == maxWorkers) return 0;
+        else
+        {
+            if (x > maxWorkers - workersCount)
+            {
+                x -= (maxWorkers - workersCount);
+                workersCount = maxWorkers;
+            }
+            else
+            {
+                workersCount += x;
+            }
+            RecalculateWorkspeed();
+            GameMaster.colonyController.RecalculateHospitals();
+            return x;
+        }
+    }
+    override public void FreeWorkers(int x)
+    {
+        if (x > workersCount) x = workersCount;
+        workersCount -= x;
+        GameMaster.colonyController.AddWorkers(x);
+        RecalculateWorkspeed();
+        GameMaster.colonyController.RecalculateHospitals();
+    }
+
+    override public void SetActivationStatus(bool x) {
 		if (isActive == x) return;
 		isActive = x;
-		GameMaster.colonyController.RecalculateHousing();
 		GameMaster.colonyController.RecalculateHospitals();
 	}
 
-	public static void SetBirthrateMode(int x) {
+    override protected void RecalculateWorkspeed()
+    {
+        coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
+    }
+
+    public static void SetBirthrateMode(int x) {
 		switch (x) {
-		case 0: birthrateMode = BirthrateMode.Normal;break;
-		case 1: birthrateMode = BirthrateMode.Improved;break;
-		case 2: birthrateMode = BirthrateMode.Lowered;break;
+		case 0: birthrateMode = BirthrateMode.Normal; hospital_birthrate_coefficient = 1; break;
+		case 1: birthrateMode = BirthrateMode.Improved; hospital_birthrate_coefficient = improvedCoefficient; break;
+		case 2: birthrateMode = BirthrateMode.Lowered; hospital_birthrate_coefficient = loweredCoefficient; break;
 		}
 	}
 	public static int GetBirthrateModeIndex() {
@@ -45,25 +82,13 @@ public class Hospital : House {
 		}
 	}
 
-	void OnGUI() {
-		//from building.cs
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		byte p = (byte)birthrateMode;
-		GUI.DrawTexture(new Rect(rr.x, rr.y + p * rr.height, rr.width, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-		if (GUI.Button(rr, Localization.lowered_birthrate + " (" + string.Format("{0:0.##}", loweredCoefficient)  + "%)")) {
-			birthrateMode = BirthrateMode.Lowered; 
-			hospital_birthrate_coefficient = loweredCoefficient;
-		}
-		rr.y += rr.height;
-		if (GUI.Button(rr, Localization.normal_birthrate + " (100%)")) {
-			birthrateMode = BirthrateMode.Normal; 
-			hospital_birthrate_coefficient = 1;
-		}
-			rr.y += rr.height;
-		if (GUI.Button(rr, Localization.improved_birthrate + " (" + string.Format("{0:0.##}", improvedCoefficient)  + "%)")) {
-			birthrateMode = BirthrateMode.Improved; 
-			hospital_birthrate_coefficient = improvedCoefficient;
-		}
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        UIController.current.ActivateHospitalPanel();
+        showOnGUI = true;
+        return workbuildingObserver;
+    }
 }

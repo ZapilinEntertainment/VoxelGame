@@ -128,10 +128,10 @@ public sealed class UISurfacePanelController : UIObserver {
                 if (savedHqLevel != hq.level)
                 {
                     savedHqLevel = hq.level;
-                    blockCreateButton.enabled = (savedHqLevel > 3);
-                    columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
+                    blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
+                    columnCreateButton.gameObject.SetActive(IsColumnAvailable());
                 }
-                changeMaterialButton.enabled = (GameMaster.colonyController.gears_coefficient >= 2);
+                changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
                 break;
 
             case SurfacePanelMode.Build:
@@ -255,7 +255,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     changeMaterialButton.gameObject.SetActive(true);
                 }
                 else changeMaterialButton.gameObject.SetActive(false);
-                columnCreateButton.gameObject.SetActive( colony.hq.level > 2 );
+                columnCreateButton.gameObject.SetActive(IsColumnAvailable() & surface.pos.y < Chunk.CHUNK_SIZE - 1);
                 blockCreateButton.gameObject.SetActive(colony.hq.level > 5);
                 break;
         }
@@ -277,7 +277,7 @@ public sealed class UISurfacePanelController : UIObserver {
             costPanelMode = CostPanelMode.Disabled;
             return;
         }
-        Transform t;
+        Transform t;        
         switch (m)
         {
             case CostPanelMode.SurfaceMaterialChanging:
@@ -346,7 +346,10 @@ public sealed class UISurfacePanelController : UIObserver {
                             r.gameObject.SetActive(true);
                             int id = rc[i].type.ID;
                             r.GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(id);
-                            r.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(id) + " : " + rc[i].volume.ToString();
+                            Text tx = r.GetChild(0).GetComponent<Text>();
+                            tx.text= Localization.GetResourceName(id) + " : " + rc[i].volume.ToString();
+                            float[] storageResource = GameMaster.colonyController.storage.standartResources;
+                            tx.color = (rc[i].volume > storageResource[rc[i].type.ID]) ? Color.red : Color.white;
                         }
                         else
                         {
@@ -508,9 +511,9 @@ public sealed class UISurfacePanelController : UIObserver {
                 digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
             }
             savedHqLevel = hq.level;
-			blockCreateButton.enabled = ( savedHqLevel> 3);
-			columnCreateButton.enabled = (savedHqLevel > 4 && surface.pos.y < Chunk.CHUNK_SIZE - 1);
-			changeMaterialButton.enabled = (GameMaster.colonyController.gears_coefficient >=2);
+			blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
+			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && surface.pos.y < Chunk.CHUNK_SIZE - 1);
+            changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
 			UIController.current.closePanelButton.gameObject.SetActive(true);
 		}
 		else {
@@ -521,6 +524,19 @@ public sealed class UISurfacePanelController : UIObserver {
             if (costPanelMode != CostPanelMode.Disabled) SetCostPanelMode(CostPanelMode.Disabled);
         }
 	}
+
+    bool IsColumnAvailable()
+    {
+        return (hq.level > 2);
+    }
+    bool IsBlockCreatingAvailable()
+    {
+        return ((hq.level > 4) & (GameMaster.colonyController.gears_coefficient == 3));
+    }
+    bool IsChangeSurfaceMaterialAvalable()
+    {
+        return (GameMaster.colonyController.gears_coefficient >= 2);
+    }
     #endregion
 
     #region building construction 

@@ -104,7 +104,7 @@ public class RollingShop : WorkBuilding {
 
     public override UIObserver ShowOnGUI()
     {
-        if (workbuildingObserver == null) workbuildingObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/workbuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        if (workbuildingObserver == null) UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;

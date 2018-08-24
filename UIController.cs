@@ -91,9 +91,9 @@ sealed public class UIController : MonoBehaviour {
                         showingHappinessCf = colony.happiness_coefficient;
                         happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
                     }
-                    if (showingBirthrate != colony.birthrateCoefficient)
+                    if (showingBirthrate != colony.realBirthrate)
                     {
-                        showingBirthrate = colony.birthrateCoefficient;
+                        showingBirthrate = colony.realBirthrate;
                         birthrateText.text = showingBirthrate > 0 ? '+' + showingBirthrate.ToString() : showingBirthrate.ToString();
                     }
                     if (showingHospitalCf != colony.hospitals_coefficient)
@@ -315,7 +315,7 @@ sealed public class UIController : MonoBehaviour {
             if (colony == null) return;
             showingGearsCf = colony.gears_coefficient;
             showingHappinessCf = colony.happiness_coefficient;
-            showingBirthrate = colony.birthrateCoefficient;
+            showingBirthrate = colony.realBirthrate;
             showingHospitalCf = colony.hospitals_coefficient;
             showingHealthCf = colony.health_coefficient;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
@@ -433,13 +433,17 @@ sealed public class UIController : MonoBehaviour {
             optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodDistance;
             optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
             optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
+            Time.timeScale = 0;
+            MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
         }
 		else { //off
             optionsPanel.SetActive(false);
 			menuPanel.SetActive(false);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
-        }
+            Time.timeScale = 1;
+            MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
+        }        
 	}
 	public void SaveButton() {
         SaveSystemUI.current.Activate(true);
@@ -709,6 +713,7 @@ sealed public class UIController : MonoBehaviour {
         UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
         if (wbo != null && wbo.gameObject.activeSelf)
         { // уу, костыли!
+            // и вообще надо переделать на dropdown
             RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
             if (rs != null)
             {

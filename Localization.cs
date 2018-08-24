@@ -4,7 +4,7 @@ Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes,
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress }
-public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable };
+public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots}
 
@@ -178,7 +178,9 @@ public static class Localization {
             case GameAnnouncements.LoadingFailed: return "Loading failed";
             case GameAnnouncements.PowerFailure: return "Power failure";
             case GameAnnouncements.NewQuestAvailable: return "New quest available";
-		}
+            case GameAnnouncements.GamePaused: return "Game paused";
+            case GameAnnouncements.GameUnpaused: return "Game unpaused";
+        }
 	}
 
 	public static string GetRestrictionPhrase(RestrictionKey rkey ) {
@@ -294,7 +296,7 @@ public static class Localization {
             case LocalizedPhrase.CreateNewSave: return "Create new save";
             case LocalizedPhrase.CameraZoom: return "Camera zoom";
             case LocalizedPhrase.LODdistance: return "LOD sprite distance";
-            case LocalizedPhrase.GraphicQuality: return "Graphic quality";
+            case LocalizedPhrase.GraphicQuality: return "Graphic quality";            
         }
     }
 

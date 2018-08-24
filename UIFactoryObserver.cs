@@ -31,6 +31,8 @@ public class UIFactoryObserver : UIObserver {
 
         Recipe[] recipes = observingFactory.GetFactoryRecipes();
         recipesDropdown.enabled = true;
+        Recipe r = observingFactory.recipe;
+        int positionInDropdown = -1;
         if (recipes.Length == 1) recipesDropdown.interactable = false;
         else
         {
@@ -39,14 +41,16 @@ public class UIFactoryObserver : UIObserver {
             for (int i = 0; i < recipes.Length; i++)
             {
                 recipeButtons.Add(new Dropdown.OptionData(Localization.GetResourceName(recipes[i].input.ID) + " -> " + Localization.GetResourceName(recipes[i].output.ID)));
+                if (recipes[i].ID == r.ID) positionInDropdown = i;
             }
             recipesDropdown.options = recipeButtons;
         }
-        Recipe r = observingFactory.recipe;
+        
         inputIcon.uvRect = ResourceType.GetTextureRect(r.input.ID);
         inputValueString.text = r.inputValue.ToString();
         outputIcon.uvRect = ResourceType.GetTextureRect(r.output.ID);
-        outputValueString.text = r.outputValue.ToString();        
+        outputValueString.text = r.outputValue.ToString();
+        recipesDropdown.value = positionInDropdown;
 
         STATUS_UPDATE_TIME = 0.1f; timer = STATUS_UPDATE_TIME;
     }

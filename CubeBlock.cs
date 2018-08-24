@@ -13,7 +13,7 @@ public class CubeBlockSerializer {
 public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public float naturalFossils = 0;
-	byte excavatingStatus = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
+	byte excavatingStatus = 0, prevDrawMask = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
 	public int volume ;
 	public static readonly int MAX_VOLUME;
 	public bool career{get;private set;} // изменена ли верхняя поверхность на котлован?
@@ -72,65 +72,48 @@ public class CubeBlock : Block{
 
 	public override void ReplaceMaterial(int newId) {
 		material_id = newId;
-		Material m = ResourceType.GetMaterialById(material_id);
 		if (faces != null) {
 			foreach (MeshRenderer mr in faces) {
 				if (mr == null) continue;
-				else mr.material = m;
+				else mr.material = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>());
 			}
 		}
-	}
+    }
 
 	override public void SetRenderBitmask(byte x) {
-		if (renderMask != x) {
-			renderMask = x;
-			if (visibilityMask == 0) return;
-			for (int i = 0; i< 6; i++) {
-				if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) {
-					if (faces != null && faces[i]!= null) faces[i].enabled = true;
-					else CreateFace(i);
-				}
-				else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
-			}
-		}
+		renderMask = x;
+		ChangeFacesStatus();
 	}
 
 	override public void SetVisibilityMask (byte x) {
-		if ( x == visibilityMask) return;
-		byte prevVisibility = visibilityMask;
 		visibilityMask = x;
-		if (visibilityMask == 0) {
-			if (faces != null) {
-				for (int i = 0; i < 5; i++) {
-					if (faces[i] == null) continue;
-					else {
-						faces[i].enabled = false;
-						faces[i].GetComponent<MeshCollider>().enabled = false;
-					}
-				}
-			}
-		}
-		else {
-			if (prevVisibility == 0 && faces != null) {
-				for (int i = 0; i < 5; i++) {
-					if (faces[i] != null) faces[i].GetComponent<MeshCollider>().enabled = true;
-				}
-			}
-			if (renderMask == 0) return;
-			for (int i = 0; i< 6; i++) {
-				if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) {
-					if (faces != null && faces[i]!= null) faces[i].enabled = true;
-					else CreateFace(i);
-				}
-				else {if (faces != null && faces[i]!=null) faces[i].enabled = false;}
-			}
-		}
+		ChangeFacesStatus();
 	}
+
+	void ChangeFacesStatus () {
+		byte mask = (byte)(renderMask&visibilityMask);
+		if (mask == prevDrawMask) return;
+		else prevDrawMask = mask;
+		byte[] arr = new byte[]{1,2,4,8,16,32};
+		if (faces == null) faces = new MeshRenderer[6];
+		for (int i = 0; i < 6; i++) {
+			if (faces[i] == null) CreateFace(i);
+			if (((mask & arr[i]) == 0)) {
+				faces[i].enabled = false;
+				faces[i].GetComponent<Collider>().enabled = false;
+			}
+			else {
+				faces[i].enabled = true;
+				faces[i].GetComponent<Collider>().enabled = true;
+			}
+		}
+    }
 
 	void CreateFace(int i) {
 		if (faces == null) faces =new MeshRenderer[6];
 		else {if (faces[i] != null) return;}
 		GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
+		g.tag = "BlockCollider";
 		faces[i] =g.GetComponent <MeshRenderer>();
 		g.transform.parent = transform;
 		switch (i) {
@@ -147,11 +130,13 @@ public class CubeBlock : Block{
 			faces[i].transform.localRotation = Quaternion.Euler(-90, 0, 0); 
 			faces[i].name = "bottom_plane"; 
 			faces[i].transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
-			GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
+			//GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
 			break;
 		}
-		faces[i].material = ResourceType.GetMaterialById(material_id);
+		faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>());
 		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+        faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
 		//if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
 		faces[i].enabled = true;
 	}
@@ -164,15 +149,19 @@ public class CubeBlock : Block{
 				if (excavatingStatus != 0) {
 					excavatingStatus = 0; 
 					if (faces == null || faces[4] == null) CreateFace(4);
-					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
-				}
+                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
+					mf.mesh = PoolMaster.quad_pref.GetComponent<MeshFilter>().mesh;
+                    ResourceType.GetMaterialById(material_id, mf);
+                }
 			}
 			else {
 				if (excavatingStatus != 1) {
 					excavatingStatus = 1;
 					if (faces == null || faces[4] == null) CreateFace(4);
-					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_025;
-				}
+                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
+                    mf.mesh = PoolMaster.plane_excavated_025;
+                    ResourceType.GetMaterialById(material_id, mf);
+                }
 			}
 		}
 		else { // выкопано больше половины
@@ -180,20 +169,24 @@ public class CubeBlock : Block{
 				if (excavatingStatus != 2) {
 					excavatingStatus = 2;
 					if ( faces == null || faces[4] == null) CreateFace(4);
-					faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_05;
-				}
+                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
+                    mf.mesh = PoolMaster.plane_excavated_05;
+                    ResourceType.GetMaterialById(material_id, mf);
+                }
 				}
 				else {
 					if (excavatingStatus != 3) {
 						excavatingStatus = 3; 
 					if ( faces == null || faces[4] == null) CreateFace(4);
-						faces[4].GetComponent<MeshFilter>().mesh = PoolMaster.plane_excavated_075;
-					}
+                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
+                    mf.mesh = PoolMaster.plane_excavated_075;
+                    ResourceType.GetMaterialById(material_id, mf);
+                }
 				}
 			
 		}
 	}
-
+   
 	#region save-load system
 	override public BlockSerializer Save() {
 		BlockSerializer bs = GetBlockSerializer();
@@ -215,9 +208,9 @@ public class CubeBlock : Block{
 	protected void LoadCubeBlockData(CubeBlockSerializer cbs) {
 		career = cbs.career;
 		excavatingStatus = cbs.excavatingStatus;
-		if (career) CheckExcavatingStatus();
-		naturalFossils =  cbs.naturalFossils;
-		volume = cbs.volume;
+        naturalFossils = cbs.naturalFossils;
+        volume = cbs.volume;
+        if (career) CheckExcavatingStatus();		
 	}
 	#endregion
 

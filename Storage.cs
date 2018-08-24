@@ -9,7 +9,6 @@ public class StorageSerializer {
 
 public class Storage : MonoBehaviour {
 	public float totalVolume = 0, maxVolume;
-	List<ResourceContainer> customResources;
 	public List<StorageHouse> warehouses { get; private set; }
 	public bool showStorage = false;
 	public float[] standartResources{get;private set;}
@@ -60,25 +59,7 @@ public class Storage : MonoBehaviour {
 		if (totalVolume == maxVolume || count == 0) return count;
 		float loadedCount = count;
 		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - totalVolume;
-		if (rtype.ID < 0 || rtype.ID >= standartResources.Length) { // custom resources
-			if (customResources == null) {
-				customResources = new List<ResourceContainer>();
-				customResources.Add(new ResourceContainer (rtype, loadedCount));
-			}
-			else {
-				bool myTypeFound = false;
-				for (int i = 0 ; i < customResources.Count; i++ ) {
-					if (customResources[i].type == rtype) {
-						myTypeFound = true;
-						customResources[i] = new ResourceContainer(rtype, customResources[i].volume + loadedCount);
-					}
-				}
-				if ( !myTypeFound ) {
-					customResources.Add( new ResourceContainer(rtype, loadedCount) );
-				}
-			}
-		}
-		else 	standartResources[ rtype.ID ] += loadedCount;
+		standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
         operationsDone++;
 		return (count - loadedCount);
@@ -102,27 +83,8 @@ public class Storage : MonoBehaviour {
 			float appliableVolume = resourcesList[i].volume;
 			int id = resourcesList[i].type.ID;
 			if (appliableVolume > freeSpace) appliableVolume = freeSpace;
-			if (id > 0 & id < idsCount) {
-				standartResources[id] += appliableVolume;
-				freeSpace -= appliableVolume;
-			}
-			else {
-				if (customResources != null) {
-					bool found = false;
-					for (int j = 0; j < customResources.Count; j++) {
-						if (customResources[j].type.ID == id) {
-							found = true;
-							customResources[j] = new ResourceContainer(customResources[j].type, customResources[j].volume + appliableVolume);
-							freeSpace -= appliableVolume;
-							break;
-						}
-						if ( !found ) {
-							customResources.Add(new ResourceContainer(resourcesList[i].type, appliableVolume));
-							freeSpace -= appliableVolume;
-						} 
-					}
-				}
-			}
+			standartResources[id] += appliableVolume;
+			freeSpace -= appliableVolume;
 			i++;
 		}
         operationsDone++;
@@ -133,25 +95,6 @@ public class Storage : MonoBehaviour {
 		if (GameMaster.realMaster.weNeedNoResources) return count;
 		if (totalVolume == 0 ) return 0;
 		float gainedCount = 0;
-		if (rtype.ID < 0 || rtype.ID > standartResources.Length) { // custom resource
-			if ( customResources != null )  {
-				for (int i = 0; i < customResources.Count; i++) {
-					if (customResources[i].type == rtype) {
-						if (customResources[i].volume <= count) {
-							gainedCount = count; 
-							customResources.RemoveAt(i);
-							if (customResources.Count == 0) customResources = null;
-						}						
-						else {
-							customResources[i] = new ResourceContainer(customResources[i].type, customResources[i].volume - count);
-							gainedCount = count;
-						}	
-						break;
-					}
-				}
-			}
-		}
-		else { //standart resource
 			if (standartResources[rtype.ID] > count) {
 				gainedCount = count;
 				standartResources[rtype.ID] -= count;
@@ -160,7 +103,6 @@ public class Storage : MonoBehaviour {
 				gainedCount = standartResources[rtype.ID];
 				standartResources[rtype.ID] = 0;
 			}
-		}
         operationsDone++;
         return gainedCount;
 	}
@@ -198,48 +140,14 @@ public class Storage : MonoBehaviour {
 	public bool CheckBuildPossibilityAndCollectIfPossible (ResourceContainer[] resourcesContain) {
 		//TEST ZONE
 		if (GameMaster.realMaster.weNeedNoResources) return true;
-		//-----
+        //-----
 		if (resourcesContain == null || resourcesContain.Length == 0) return true;
 
 		List<int> customResourcesIndexes = new List<int>();
 		foreach (ResourceContainer rc in resourcesContain ) {
-			if (rc.type.ID < 0 || rc.type.ID > standartResources.Length) { // custom resources
-				if (customResources == null) return false;
-				else {
-					bool resourceFound = false;
-					for ( int i = 0; i < customResources.Count; i++) {
-						if (customResources[i].type == rc.type) {
-							if (customResources[i].volume >= rc.volume) {
-								customResourcesIndexes.Add(i);
-							}
-							else return false;
-						}
-					}
-					if ( !resourceFound ) return false;
-				}
-			}
-			else { // standart resources
-				if (standartResources[rc.type.ID] < rc.volume ) return false;
-			}
+           if (standartResources[rc.type.ID] < rc.volume) return false;
 		}
-		// getting resources:
-		int j = 0;
-		foreach (ResourceContainer rc in resourcesContain ) {
-			if (rc.type.ID < 0 || rc.type.ID > standartResources.Length) { // custom resource
-				int n = customResourcesIndexes[j];
-
-				if (customResources[n].volume <= rc.volume) {
-					customResources.RemoveAt(n);
-					if (customResources.Count == 0) customResources = null;
-				}
-				else {
-					customResources[n] = new ResourceContainer(customResources[n].type, customResources[n].volume - rc.volume);
-				}
-				j++;
-			}
-			else 	standartResources[rc.type.ID] -= rc.volume;
-		}
-        operationsDone++;
+        GetResources(resourcesContain);
         return true;
 	}
 	#region save-load system

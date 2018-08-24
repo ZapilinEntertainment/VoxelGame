@@ -45,14 +45,6 @@ public sealed class UIWorkbuildingObserver : UIObserver {
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
 		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
 
-		if (showingWorkersCount > 0) {
-			minusAllButton.enabled = true;
-			minusButton.enabled = true;
-		}
-		else {
-			minusAllButton.enabled = false;
-			minusButton.enabled = false;
-		}
 		workSpeedField.enabled = (showingWorkspeed > 0);
         actionLabel.enabled = false;        
         stopButton.SetActive(false);
@@ -94,42 +86,16 @@ public sealed class UIWorkbuildingObserver : UIObserver {
             if (observingWorkbuilding == null) SelfShutOff();
             else
             {
-                bool changes = false;
                 if (showingWorkersCount != observingWorkbuilding.workersCount)
                 {
                     showingWorkersCount = observingWorkbuilding.workersCount;
                     workersCountField.text = showingWorkersCount.ToString();
                     slider.value = showingWorkersCount;
-                    changes = true;
                 }
                 if (showingWorkersMaxCount != observingWorkbuilding.maxWorkers)
                 {
                     showingWorkersMaxCount = observingWorkbuilding.maxWorkers;
                     slider.maxValue = showingWorkersMaxCount;
-                    changes = true;
-                }
-                if (changes)
-                {
-                    if (showingWorkersCount == showingWorkersMaxCount)
-                    {
-                        plusAllButton.enabled = false;
-                        plusButton.enabled = false;
-                    }
-                    else
-                    {
-                        plusAllButton.enabled = true;
-                        plusButton.enabled = true;
-                    }
-                    if (showingWorkersCount == 0)
-                    {
-                        minusAllButton.enabled = false;
-                        minusAllButton.enabled = false;
-                    }
-                    else
-                    {
-                        minusAllButton.enabled = true;
-                        minusButton.enabled = true;
-                    }
                 }
                 if (showingWorkspeed != observingWorkbuilding.workSpeed)
                 {
@@ -148,42 +114,16 @@ public sealed class UIWorkbuildingObserver : UIObserver {
             if (observingWorksite == null) SelfShutOff();
             else
             {
-                bool changes = false;
                 if (showingWorkersCount != observingWorksite.workersCount)
                 {
                     showingWorkersCount = observingWorksite.workersCount;
                     workersCountField.text = showingWorkersCount.ToString();
                     slider.value = showingWorkersCount;
-                    changes = true;
                 }
                 if (showingWorkersMaxCount != observingWorksite.maxWorkers)
                 {
                     showingWorkersMaxCount = observingWorksite.maxWorkers;
                     slider.maxValue = showingWorkersMaxCount;
-                    changes = true;
-                }
-                if (changes)
-                {
-                    if (showingWorkersCount == showingWorkersMaxCount)
-                    {
-                        plusAllButton.enabled = false;
-                        plusButton.enabled = false;
-                    }
-                    else
-                    {
-                        plusAllButton.enabled = true;
-                        plusButton.enabled = true;
-                    }
-                    if (showingWorkersCount == 0)
-                    {
-                        minusAllButton.enabled = false;
-                        minusAllButton.enabled = false;
-                    }
-                    else
-                    {
-                        minusAllButton.enabled = true;
-                        minusButton.enabled = true;
-                    }
                 }
                 if (showingWorkspeed != observingWorksite.workSpeed)
                 {
