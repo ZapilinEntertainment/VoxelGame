@@ -48,9 +48,12 @@ public class SurfaceBlock : Block {
 	public List<Structure> surfaceObjects{get;protected set;}
 	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures = 0;
-	public bool[,] map {get; protected set;}
+	public bool[,] map { get; protected set; }
 	public BlockRendererController structureBlock;
 	public int freeCells = 0;
+    public Texture saveTex;
+
+	public static UISurfacePanelController surfaceObserver;
 
 	void Awake() 
 	{
@@ -64,11 +67,16 @@ public class SurfaceBlock : Block {
 		isTransparent = false;
 	}
 
+    public void SetGrassland(Grassland g) { grassland = g; }
+
 
 	public bool[,] GetBooleanMap() {
 			map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
 			for (int i =0; i < INNER_RESOLUTION; i++) {
-				for (int j =0; j< INNER_RESOLUTION; j++) map[i,j] = false;
+            for (int j = 0; j < INNER_RESOLUTION; j++)
+            {
+                map[i, j] = false;
+            }
 			}
 			if (surfaceObjects.Count != 0) {
 				int a = 0;
@@ -81,7 +89,7 @@ public class SurfaceBlock : Block {
 						while (i < sr.x_size ) {
 								map[ sr.x + i, sr.z + j ] = true;
 								i++;
-						}
+							}
 						i = 0; // обнуляй переменные !
 						j++;
 					}
@@ -96,7 +104,67 @@ public class SurfaceBlock : Block {
 			}
 		return map;
 	}
-	protected void CellsStatusUpdate() {
+
+    public Texture2D GetMapTexture()
+    {
+        byte[] buildmap = new byte[INNER_RESOLUTION * INNER_RESOLUTION * 4];
+        for (int i = 0; i < buildmap.Length; i += 4)
+        {
+            buildmap[i] = 0;
+            buildmap[i + 1] = 255;
+            buildmap[i + 2] = 255;
+            buildmap[i + 3] = 128; // cyan
+        }
+        GetBooleanMap(); // обновит данные и избавит от проверки на null
+        if (cellsStatus != 0)
+        {
+            foreach (Structure s in surfaceObjects)
+            {
+                byte[] col;
+                if (s is Plant) col = new byte[4] { 0, 255, 0, 255 };
+                else
+                {
+                    if (s is HarvestableResource | s is ScalableHarvestableResource) col = new byte[4] { 255, 106, 0, 255 };
+                    else
+                    {
+                        Building bd = s as Building;
+                        if (bd != null)
+                        {
+                            if (bd.fullCover) col = new byte[4] { 255, 255, 255, 255 };
+                            else col = new byte[4] { 64, 64, 64, 255 };
+                        }
+                        else col = new byte[4] { 128, 128, 128, 255 };
+                    }
+                }
+                SurfaceRect sr = s.innerPosition;
+                for (int i = sr.x; i < sr.x + sr.x_size; i++)
+                {
+                    for (int j = sr.z; j < sr.z + sr.z_size; j++)
+                    {
+                        int index = i * INNER_RESOLUTION * 4 + j * 4;
+                        buildmap[index] = col[0];
+                        buildmap[index + 1] = col[1];
+                        buildmap[index + 2] = col[2];
+                        buildmap[index + 3] = col[3];
+                    }
+                }
+            }
+        }
+        Texture2D planeTex = new Texture2D(INNER_RESOLUTION, INNER_RESOLUTION, TextureFormat.RGBA32, false);
+        planeTex.filterMode = FilterMode.Point;
+        planeTex.LoadRawTextureData(buildmap);
+        planeTex.Apply();
+        saveTex = planeTex;
+        return planeTex;
+    }
+    public Vector2 WorldToMapCoordinates(Vector3 point)
+    {
+        point = transform.InverseTransformPoint(point);
+        point.y = 0;
+        return new Vector2(point.x / QUAD_SIZE + 0.5f, 0.5f - point.z / QUAD_SIZE );
+    }
+
+	public void CellsStatusUpdate() {
 		map = GetBooleanMap();
 		bool empty = true, full = true; 
 		bool emptyCheckFailed = false, fullCheckFailed = false;
@@ -128,12 +196,10 @@ public class SurfaceBlock : Block {
 		if (cellsStatus != 0) { 
 			SurfaceRect sr = s.innerPosition;
 			int i =0;
-			if (sr.x_size == INNER_RESOLUTION && sr.z_size == INNER_RESOLUTION) { // destroy everything there
-				foreach (Structure gs in surfaceObjects) {
-					if (gs == null) continue;
-					if (gs.isBasement) savedBasementForNow = gs;
-					else gs.Annihilate(true);
-				}
+			if (sr == SurfaceRect.full) { // destroy everything there
+                                          //print("fullscale");
+                ClearSurface(false); // false так как не нужна лишняя установка коллайдера
+				surfaceRenderer.GetComponent<Collider>().enabled = false;
 			}
 			else {
 				while (i < surfaceObjects.Count) {
@@ -178,13 +244,15 @@ public class SurfaceBlock : Block {
 		}
 	}
 
-	public void ClearSurface() {
+	public void ClearSurface(bool colliderCheck) {
 		if (surfaceObjects == null) return;
+        // is basement check and special conditions?
 		int i =0;
 		while ( i < surfaceObjects.Count) {
 			if (surfaceObjects[i] != null) surfaceObjects[i].Annihilate(true);
-			surfaceObjects.RemoveAt(i);
+            i++;
 		}
+        surfaceObjects.Clear();
 		cellsStatus = 0; artificialStructures = 0;
 		i = 0;
 		map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
@@ -193,6 +261,7 @@ public class SurfaceBlock : Block {
 				map[i,j] = false;
 			}
 		}
+        if (colliderCheck) surfaceRenderer.GetComponent<MeshCollider>().enabled = true;        
 		structureBlock = null;
 	}
 
@@ -209,7 +278,7 @@ public class SurfaceBlock : Block {
 				if ( surfaceObjects[i] == null) {surfaceObjects.RemoveAt(i); continue;}
 				SurfaceRect sr = surfaceObjects[i].innerPosition;
 				if (sr.x <= pos.x && sr.z <= pos.y && sr.x + sr.x_size >= pos.x && sr.z+ sr.z_size >= pos.y) {
-					if ( surfaceObjects[i].undestructible || (surfaceObjects[i].type == StructureType.MainStructure && s.type != StructureType.MainStructure))
+					if ( surfaceObjects[i].undestructible)
 					{	
 						s.Annihilate( true);
 						return;
@@ -236,13 +305,18 @@ public class SurfaceBlock : Block {
 	/// </summary>
 	/// <param name="so">So.</param>
 	public void RemoveStructure(Structure s) {
-		int count = surfaceObjects.Count;
+        int count = surfaceObjects.Count;
 		if (count == 0) return;
-		for ( int i = 0; i < count; i++) {
+        for ( int i = 0; i < count; i++) {
 			if (surfaceObjects[i] == s) {
 				if (s.isArtificial) artificialStructures--;	if (artificialStructures < 0) artificialStructures = 0;
 				surfaceObjects.RemoveAt(i);
-				if (surfaceObjects.Count == 0) cellsStatus = 0;
+				if (surfaceObjects.Count == 0) {
+					cellsStatus = 0;
+					if (s.innerPosition == SurfaceRect.full) {
+						surfaceRenderer.GetComponent<Collider>().enabled = true;
+					}
+				}
 				else CellsStatusUpdate();
 				break;
 			}
@@ -251,21 +325,13 @@ public class SurfaceBlock : Block {
 		if (brc != null) structureBlock = null;
 	}
 
-	public Grassland AddGrassland() {
-		if (grassland == null)  {
-			grassland = gameObject.AddComponent<Grassland>();
-			grassland.SetBlock(this);
-		}
-		return grassland;
-	}
-
 	public override void ReplaceMaterial( int newId) {
 		material_id = newId;
 		if (grassland != null) {
 			grassland.Annihilation();
 			CellsStatusUpdate();
 		}
-		surfaceRenderer.material =  ResourceType.GetMaterialById(newId);
+		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
 	}
 
 	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) {
@@ -281,11 +347,12 @@ public class SurfaceBlock : Block {
 			surfaceRenderer =g.GetComponent <MeshRenderer>();
 			surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			g.transform.parent = transform;
-			g.transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
+			g.transform.localPosition = new Vector3(0, -QUAD_SIZE/2f, 0); 
 			g.transform.localRotation = Quaternion.Euler(90, 0, 0);
 			g.name = "upper_plane"; 
+			g.tag = "BlockCollider";
 		}
-		surfaceRenderer.material = ResourceType.GetMaterialById(material_id);
+		surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
 		if (visibilityMask != 0) surfaceRenderer.enabled = true;
 
 		type = BlockType.Surface; isTransparent = false;
@@ -296,15 +363,7 @@ public class SurfaceBlock : Block {
 		float res = INNER_RESOLUTION;
 		float xpos = sr.x + sr.x_size/2f ;
 		float zpos = sr.z + sr.z_size/2f;
-		return( new Vector3((xpos / res - 0.5f) * Block.QUAD_SIZE , -Block.QUAD_SIZE/2f, (zpos / res - 0.5f)* Block.QUAD_SIZE));
-	}
-	public PixelPosByte WorldToLocalPosition(Vector3 pos) {
-		float xdelta = pos.x - gameObject.transform.position.x; xdelta /= Block.QUAD_SIZE;
-		float zdelta = pos.z - gameObject.transform.position.z; zdelta /= Block.QUAD_SIZE;
-		if (Mathf.Abs(xdelta) > 0.5f|| Mathf.Abs(zdelta) > 0.5f) return PixelPosByte.Empty;
-		else {
-			return new PixelPosByte((byte)((xdelta + 0.5f) * INNER_RESOLUTION), (byte)(zdelta  + 0.5f) * INNER_RESOLUTION);
-		}
+		return( new Vector3((xpos / res - 0.5f) * QUAD_SIZE , -QUAD_SIZE/2f, ((1 -zpos / res) - 0.5f)* QUAD_SIZE));
 	}
 
 	public PixelPosByte GetRandomCell() {
@@ -519,6 +578,15 @@ public class SurfaceBlock : Block {
 		}
 	}
 
+	public UIObserver ShowOnGUI() {
+		if (surfaceObserver == null) {
+			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+		}
+		else surfaceObserver.gameObject.SetActive(true);
+		surfaceObserver.SetObservingSurface(this);
+		return surfaceObserver;
+	}
+
 	#region save-load system
 	override public BlockSerializer Save() {
 		BlockSerializer bs = GetBlockSerializer();
@@ -537,15 +605,18 @@ public class SurfaceBlock : Block {
 		LoadSurfaceBlockData(sbs);
 		if (sbs.haveStructures) {
 			foreach (StructureSerializer ss in sbs.structuresList) {
-				Structure s = Structure.GetNewStructure(ss.id);
-				s.Load(ss,this);
+				if (ss.id != Structure.PLANT_ID) {
+					Structure s = Structure.GetNewStructure(ss.id);
+					if (s!=null)	s.Load(ss,this);
+				}
+				else 	Plant.StaticLoad(ss, this);
 			}
 		}
 	}
 
 	protected void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) {
 		if (sbs.haveGrassland) {
-			AddGrassland();
+            grassland = Grassland.Create(this);
 			grassland.Load(sbs.grasslandSerializer);
 		}
 	}

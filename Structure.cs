@@ -260,7 +260,7 @@ public class Structure : MonoBehaviour {
 			innerPosition = new SurfaceRect(0,0,6,6);
 			break;
 		case LUMBERMILL_4_ID:
-			innerPosition = SurfaceRect.full; 
+			innerPosition = SurfaceRect.full;
 			break;
 		case LUMBERMILL_5_ID:
 			innerPosition = SurfaceRect.full; fullCover = true;  isBasement = true;

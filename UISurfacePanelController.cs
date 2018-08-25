@@ -9,8 +9,8 @@ enum BuildingCreateInfoMode {Acceptable, Unacceptable_SideBlock, Unacceptable_Ma
 
 public sealed class UISurfacePanelController : UIObserver {
 	public Button buildButton, gatherButton, digButton, blockCreateButton, columnCreateButton, changeMaterialButton;
-	SurfaceBlock surface;
-	bool status_gatherEnabled = true, status_gatherOrdered = false, status_digOrdered = false;
+    SurfaceBlock observingSurface;
+    bool status_gatherEnabled = true, status_gatherOrdered = false, status_digOrdered = false, firstSet = true;
 	byte savedHqLevel = 0;
 	Vector2[] showingResourcesCount;
     int selectedBuildingButton = -1;
@@ -20,45 +20,54 @@ public sealed class UISurfacePanelController : UIObserver {
 	SurfacePanelMode mode;
     CostPanelMode costPanelMode;
 	BuildingCreateInfoMode buildingCreateMode;
+    Vector2Int constructingPlaneTouchPos;
+
+    [SerializeField] Material constructingPlaneMaterial;
+    [SerializeField] GameObject buildIntersectionSubmit, constructionPlane; // window asking about deleting overlapping buildings
+    [SerializeField] Transform buildingButtonsContainer; // fiti
 	public Toggle[] buildingsLevelToggles; // fiti
-	public Button[] availableBuildingsButtons; // fiti
 	public Text nameField, description, gridTextField,energyTextField, housingTextField; // fiti
 	public RawImage[] resourcesCostImage; // fiti
-	public Button innerBuildButton, returnButton; // fiti
-	public RectTransform buildZone; // fiti
-
-	public Toggle surfaceGridToggle; // fiti
+	[SerializeField] Button innerBuildButton, returnButton, constructionPlaneSwitchButton; // fiti
 	[SerializeField] GameObject surfaceBuildingPanel, infoPanel, energyIcon, housingIcon, costPanel; // fiti
 	HeadQuarters hq;
 
+    public static UISurfacePanelController current { get; private set; }
 
-
-	void Start() {
-		returnButton.onClick.AddListener(() => {
-			this.ChangeMode(SurfacePanelMode.SelectAction);
-		});
-		showingResourcesCount = new Vector2[resourcesCostImage.Length];
-        changeMaterialButton.onClick.AddListener(() => {
-            this.SetCostPanelMode(CostPanelMode.SurfaceMaterialChanging);
-        });
-        columnCreateButton.onClick.AddListener(() => {
-            this.SetCostPanelMode(CostPanelMode.ColumnBuilding);
-        });
-        blockCreateButton.onClick.AddListener(() => {
-            this.SetCostPanelMode(CostPanelMode.BlockBuilding);
-        });
+    void Start() {
+        if (firstSet)
+        {
+            showingResourcesCount = new Vector2[resourcesCostImage.Length];
+            changeMaterialButton.onClick.AddListener(() =>
+            {
+                this.SetCostPanelMode(CostPanelMode.SurfaceMaterialChanging);
+            });
+            columnCreateButton.onClick.AddListener(() =>
+            {
+                this.SetCostPanelMode(CostPanelMode.ColumnBuilding);
+            });
+            blockCreateButton.onClick.AddListener(() =>
+            {
+                this.SetCostPanelMode(CostPanelMode.BlockBuilding);
+            });
+            constructionPlane.transform.parent = null;
+            current = this;
+            firstSet = false;
+        }
+       LocalizeButtonTitles();
     }
 
-	public void SetObservingSurface(SurfaceBlock sb) {
+    public void SetObservingSurface(SurfaceBlock sb) {
 		if (sb == null) {
 			SelfShutOff();
 			return;
 		}
 		else {
 			hq = GameMaster.colonyController.hq;
-			surface = sb;
+			observingSurface = sb;
 			isObserving = true;
 			ChangeMode (SurfacePanelMode.SelectAction);
+            if (constructionPlane.activeSelf) PrepareConstructionPlane();
 				
 			STATUS_UPDATE_TIME = 1;
 			timer = STATUS_UPDATE_TIME;
@@ -67,7 +76,7 @@ public sealed class UISurfacePanelController : UIObserver {
 
     protected override void StatusUpdate()
     {
-        if (surface == null)
+        if (observingSurface == null)
         {
             SelfShutOff();
             return;
@@ -78,7 +87,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 hq = GameMaster.colonyController.hq;
 
                 bool check = false;
-                if (surface.GetComponent<GatherSite>() != null)
+                if (observingSurface.GetComponent<GatherSite>() != null)
                 {
                     if (status_gatherOrdered == false)
                     {
@@ -94,7 +103,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     {
                         status_gatherOrdered = false;
                         gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Gather);
-                        if (surface.cellsStatus != 0)
+                        if (observingSurface.cellsStatus != 0)
                         {
                             status_gatherEnabled = true;
                             gatherButton.interactable = true;
@@ -107,7 +116,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     }
                     else
                     {
-                        check = (surface.cellsStatus != 0);
+                        check = (observingSurface.cellsStatus != 0);
                         if (check != status_gatherEnabled)
                         {
                             status_gatherEnabled = check;
@@ -116,7 +125,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     }
                 }
 
-                CleanSite cs = surface.GetComponent<CleanSite>();
+                CleanSite cs = observingSurface.GetComponent<CleanSite>();
                 check = (cs != null && cs.diggingMission);
                 if (check != status_digOrdered)
                 {
@@ -152,23 +161,23 @@ public sealed class UISurfacePanelController : UIObserver {
                             }
                             break;
                         case BuildingCreateInfoMode.Unacceptable_Material:
-                            if ((chosenBuilding as Building).requiredBasementMaterialId == surface.material_id)
+                            if ((chosenBuilding as Building).requiredBasementMaterialId == observingSurface.material_id)
                             {
                                 SelectBuildingForConstruction(chosenBuilding, selectedBuildingButton);
                             }
                             break;
                         case BuildingCreateInfoMode.HeightBlocked:
                             int side = 0;
-                            if (surface.pos.x == 0)
+                            if (observingSurface.pos.x == 0)
                             {
-                                if (surface.pos.z == 0) side = 2;
+                                if (observingSurface.pos.z == 0) side = 2;
                             }
                             else
                             {
-                                if (surface.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
+                                if (observingSurface.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
                                 else side = 3;
                             }
-                            if (surface.myChunk.sideBlockingMap[surface.pos.y, side] == false) SelectBuildingForConstruction(chosenBuilding, selectedBuildingButton);
+                            if (observingSurface.myChunk.sideBlockingMap[observingSurface.pos.y, side] == false) SelectBuildingForConstruction(chosenBuilding, selectedBuildingButton);
                             break;
                     }
                     //rotating window
@@ -176,20 +185,21 @@ public sealed class UISurfacePanelController : UIObserver {
                 break;
         }
     }
+       
 
     public void BuildButton() {
 		ChangeMode( SurfacePanelMode.Build );
 	}
 	public void GatherButton() {
-		if (surface == null) {
+		if (observingSurface == null) {
 			SelfShutOff();
 			return;
 		}
 		else {
-			GatherSite gs = surface.GetComponent<GatherSite>();
+			GatherSite gs = observingSurface.GetComponent<GatherSite>();
 			if (gs == null) {
-				gs = surface.gameObject.AddComponent<GatherSite>();
-				gs.Set(surface);
+				gs = observingSurface.gameObject.AddComponent<GatherSite>();
+				gs.Set(observingSurface);
                 UIController.current.ShowWorksite(gs);
 			}
 			else gs.StopWork();
@@ -197,15 +207,15 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
 	public void DigButton() {
-		if (surface == null) {
+		if (observingSurface == null) {
 			SelfShutOff();
 			return;
 		}
 		else {
-			CleanSite cs = surface.GetComponent<CleanSite>();
+			CleanSite cs = observingSurface.GetComponent<CleanSite>();
 			if (cs == null) {
-				cs = surface.gameObject.AddComponent<CleanSite>();
-				cs.Set(surface, true);
+				cs = observingSurface.gameObject.AddComponent<CleanSite>();
+				cs.Set(observingSurface, true);
                 UIController.current.ShowWorksite(cs);
             }
 			else {
@@ -237,12 +247,12 @@ public sealed class UISurfacePanelController : UIObserver {
                 SetBuildPanelStatus(true);
 
                 returnButton.gameObject.SetActive(true);
-                availableBuildingsButtons[0].transform.parent.gameObject.SetActive(true); // "surfaceBuildingPanel"
-                buildZone.gameObject.SetActive(false);
+                buildingButtonsContainer.gameObject.SetActive(true); // "surfaceBuildingPanel"
                 RewriteBuildingButtons();
                 mode = SurfacePanelMode.Build;
                 break;
             case SurfacePanelMode.SelectAction:
+                buildIntersectionSubmit.SetActive(false);
                 switch (mode)
                 {
                     case SurfacePanelMode.Build: SetBuildPanelStatus(false); break;
@@ -255,13 +265,15 @@ public sealed class UISurfacePanelController : UIObserver {
                     changeMaterialButton.gameObject.SetActive(true);
                 }
                 else changeMaterialButton.gameObject.SetActive(false);
-                columnCreateButton.gameObject.SetActive(IsColumnAvailable() & surface.pos.y < Chunk.CHUNK_SIZE - 1);
-                blockCreateButton.gameObject.SetActive(colony.hq.level > 5);
+                columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.CHUNK_SIZE - 1);
+                blockCreateButton.gameObject.SetActive(colony.hq.level > 5);                
                 break;
         }
     }
 
     #region panels setting
+    
+
     void SetCostPanelMode(CostPanelMode m)
     {        
         if (m != CostPanelMode.Disabled) costPanel.gameObject.SetActive(true);
@@ -297,7 +309,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     costPanel.transform.GetChild(2).gameObject.SetActive(false);
                     foreach (ResourceType rt in ResourceType.materialsForCovering)
                     {
-                        if (rt.ID == surface.material_id) continue;
+                        if (rt.ID == observingSurface.material_id) continue;
                         t = costPanel.transform.GetChild(0).GetChild(lastUsedIndex);
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
@@ -426,7 +438,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     ResourceType rt = ResourceType.GetResourceTypeById(costPanel_selectedButton.y);
                     if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, GameMaster.SURFACE_MATERIAL_REPLACE_COUNT) }))
                     {
-                        surface.ReplaceMaterial(rt.ID);
+                        observingSurface.ReplaceMaterial(rt.ID);
                         costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
                     }
                     else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
@@ -434,25 +446,25 @@ public sealed class UISurfacePanelController : UIObserver {
                 case CostPanelMode.ColumnBuilding:
                     if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(Structure.COLUMN_ID)))
                     {
-                        float supportPoints = surface.myChunk.CalculateSupportPoints(surface.pos.x, surface.pos.y, surface.pos.z);
+                        float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
                         if (supportPoints <= 1)
                         {
                             Structure s = Structure.GetNewStructure(Structure.COLUMN_ID);
-                            s.SetBasement(surface, new PixelPosByte(7, 7));
-                            PoolMaster.current.BuildSplash(surface.transform.position);
+                            s.SetBasement(observingSurface, new PixelPosByte(7, 7));
+                            PoolMaster.current.BuildSplash(observingSurface.transform.position);
                         }
                         else
                         {
-                            surface.myChunk.ReplaceBlock(surface.pos, BlockType.Cave, surface.material_id, ResourceType.CONCRETE_ID, false);
+                            observingSurface.myChunk.ReplaceBlock(observingSurface.pos, BlockType.Cave, observingSurface.material_id, ResourceType.CONCRETE_ID, false);
                         }
                     }
                     else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                
                 break;
             case CostPanelMode.BlockBuilding:
-                BlockBuildingSite bbs = surface.gameObject.GetComponent<BlockBuildingSite>();
-                if (bbs == null) bbs = surface.gameObject.AddComponent<BlockBuildingSite>();
-                bbs.Set(surface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
+                BlockBuildingSite bbs = observingSurface.gameObject.GetComponent<BlockBuildingSite>();
+                if (bbs == null) bbs = observingSurface.gameObject.AddComponent<BlockBuildingSite>();
+                bbs.Set(observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
                 SetCostPanelMode(CostPanelMode.Disabled);
                 UIController.current.ShowWorksite(bbs);
                 break;
@@ -462,16 +474,14 @@ public sealed class UISurfacePanelController : UIObserver {
     void SetBuildPanelStatus ( bool working ) {
 		buildingsLevelToggles[0].transform.parent.gameObject.SetActive(working);
 		returnButton.gameObject.SetActive( working );
-		surfaceBuildingPanel.SetActive( working ); 
-		surfaceGridToggle.gameObject.SetActive(working);        
+		surfaceBuildingPanel.SetActive( working );       
         if (!working) {
             infoPanel.SetActive(false); // включаются по select building
             if (selectedBuildingButton != -1) {
-				availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
+                buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
 				selectedBuildingButton = -1;
 				chosenBuilding = null;
 			}
-			surfaceGridToggle.isOn = false;
 		}
         else
         {
@@ -483,7 +493,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		gatherButton.gameObject.SetActive( working  );
 		digButton.gameObject.SetActive( working  );
 		if (working) {
-            if (surface.GetComponent<GatherSite>() != null)
+            if (observingSurface.GetComponent<GatherSite>() != null)
             {
                 status_gatherOrdered = true;
                 status_gatherEnabled = true;
@@ -494,11 +504,11 @@ public sealed class UISurfacePanelController : UIObserver {
             {                
                 status_gatherOrdered = false;
                 gatherButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Gather);
-                status_gatherEnabled = (surface.cellsStatus != 0);
+                status_gatherEnabled = (observingSurface.cellsStatus != 0);
                 gatherButton.interactable = status_gatherEnabled ;
             }
 
-            CleanSite cs = surface.GetComponent<CleanSite>();
+            CleanSite cs = observingSurface.GetComponent<CleanSite>();
             if (cs != null && cs.diggingMission)
             {
 
@@ -512,7 +522,7 @@ public sealed class UISurfacePanelController : UIObserver {
             }
             savedHqLevel = hq.level;
 			blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
-			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && surface.pos.y < Chunk.CHUNK_SIZE - 1);
+			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && observingSurface.pos.y < Chunk.CHUNK_SIZE - 1);
             changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
 			UIController.current.closePanelButton.gameObject.SetActive(true);
 		}
@@ -540,10 +550,55 @@ public sealed class UISurfacePanelController : UIObserver {
     #endregion
 
     #region building construction 
+
+
+    public void SwitchConstructionPlane()
+    {
+        SwitchConstructionPlane(!constructionPlane.activeSelf);
+    }
+    public void SwitchConstructionPlane(bool x)
+    {
+        if (x) // enable
+        {
+            constructionPlaneSwitchButton.image.overrideSprite = UIController.current.overridingSprite;
+            PrepareConstructionPlane();            
+        }
+        else
+        {
+            constructionPlaneSwitchButton.image.overrideSprite = null;
+            constructionPlane.SetActive(false);
+            UIController.current.interceptingConstructPlaneID = -1;
+            if (mode == SurfacePanelMode.Build) surfaceBuildingPanel.SetActive(true);
+        }
+    }
+
+    private void PrepareConstructionPlane()
+    {
+        surfaceBuildingPanel.SetActive(false);
+        constructionPlane.transform.position = observingSurface.transform.position + Vector3.down * 0.45f;
+        constructionPlane.transform.rotation = observingSurface.transform.rotation;
+        constructionPlane.SetActive(true);        
+        constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
+        UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
+        constructionPlane.SetActive(true);
+    }
+
+    public void ReturnButton()
+    {
+        if (surfaceBuildingPanel.activeSelf)
+        {
+            ChangeMode(SurfacePanelMode.SelectAction);
+        }
+        else
+        {
+            SwitchConstructionPlane(false);
+        }
+    }
+
     public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
 		chosenBuilding = building;
-		availableBuildingsButtons[buttonIndex].image.overrideSprite = UIController.current.overridingSprite; 
-		if (selectedBuildingButton >= 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
+		buildingButtonsContainer.GetChild(buttonIndex).GetComponent<Image>().overrideSprite = UIController.current.overridingSprite; 
+		if (selectedBuildingButton >= 0) buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
 		selectedBuildingButton = buttonIndex;
 
         infoPanel.SetActive(true);
@@ -585,7 +640,7 @@ public sealed class UISurfacePanelController : UIObserver {
         description.text = Localization.GetStructureDescription(chosenBuilding.id);
         
 
-		bool sideBlock = ( surface.pos.x == 0 | surface.pos.z == 0 | surface.pos.x == Chunk.CHUNK_SIZE - 1 | surface.pos.z == Chunk.CHUNK_SIZE - 1 );
+		bool sideBlock = ( observingSurface.pos.x == 0 | observingSurface.pos.z == 0 | observingSurface.pos.x == Chunk.CHUNK_SIZE - 1 | observingSurface.pos.z == Chunk.CHUNK_SIZE - 1 );
 		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
         bool allConditionsMet = false;
@@ -601,17 +656,17 @@ public sealed class UISurfacePanelController : UIObserver {
             else
             {
                 int side = 0;
-                if (surface.pos.x == 0)
+                if (observingSurface.pos.x == 0)
                 {
-                    if (surface.pos.z == 0) side = 2;
+                    if (observingSurface.pos.z == 0) side = 2;
                 }
                 else
                 {
-                    if (surface.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
+                    if (observingSurface.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
                     else side = 3;
                 }
 
-                if (surface.myChunk.sideBlockingMap[surface.pos.y, side] == false)
+                if (observingSurface.myChunk.sideBlockingMap[observingSurface.pos.y, side] == false)
                 {
                     allConditionsMet = true;
                 }
@@ -626,7 +681,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		if (allConditionsMet) {	
 			Building bd = chosenBuilding as Building;
 			// material check :
-			if (bd != null & bd.requiredBasementMaterialId != -1 & bd.requiredBasementMaterialId != surface.material_id) {
+			if (bd != null & bd.requiredBasementMaterialId != -1 & bd.requiredBasementMaterialId != observingSurface.material_id) {
 				t.text = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
 				t.color = Color.yellow;
 				resourcesCostImage[0].uvRect = ResourceType.GetTextureRect(0);
@@ -662,8 +717,6 @@ public sealed class UISurfacePanelController : UIObserver {
 					}
 				}
 				buildingCreateMode = BuildingCreateInfoMode.Acceptable;
-				buildZone.anchorMin = Vector2.zero;
-				buildZone.anchorMax = new Vector2( (SurfaceBlock.INNER_RESOLUTION - chosenBuilding.innerPosition.x_size) / SurfaceBlock.INNER_RESOLUTION, (SurfaceBlock.INNER_RESOLUTION - chosenBuilding.innerPosition.z_size) / SurfaceBlock.INNER_RESOLUTION );
 				innerBuildButton.gameObject.SetActive(true);
 			}
 		}
@@ -682,31 +735,73 @@ public sealed class UISurfacePanelController : UIObserver {
     void DeselectBuildingButton()
     {
         chosenBuilding = null;
-        if (selectedBuildingButton >= 0) availableBuildingsButtons[selectedBuildingButton].image.overrideSprite = null;
+        if (selectedBuildingButton >= 0) buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
         selectedBuildingButton = -1;
         infoPanel.SetActive(false);
     }
 
 	public void CreateSelectedBuilding () {
-        if (chosenBuilding.fullCover) CreateSelectedBuilding(0, 0);
-        else CreateSelectedBuilding((byte)(SurfaceBlock.INNER_RESOLUTION / 2 - chosenBuilding.innerPosition.x_size/2), (byte)(SurfaceBlock.INNER_RESOLUTION / 2 - chosenBuilding.innerPosition.z_size/2));
-    }
-	public void CreateSelectedBuilding (byte x, byte z) {
-		if (selectedBuildingButton == -1 | chosenBuilding == null) return;
-		if (chosenBuilding.innerPosition != SurfaceRect.full) surfaceGridToggle.Select();
-		ResourceContainer[] cost = ResourcesCost.GetCost(chosenBuilding.id);
-		// make checks!
-		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
-			if ( surface.IsAnyBuildingInArea(new SurfaceRect(x, z,chosenBuilding.innerPosition.x_size, chosenBuilding.innerPosition.z_size)) == false) {
-                GameMaster.colonyController.storage.GetResources(cost);
-                Structure s = Structure.GetNewStructure(chosenBuilding.id);
-				s.gameObject.SetActive(true);
-				s.SetBasement(surface, new PixelPosByte(x,z));
-                PoolMaster.current.BuildSplash(surface.transform.position);
+        if (chosenBuilding.fullCover )
+        {
+            if (observingSurface.artificialStructures == 0) CreateSelectedBuilding(0,0);
+            else buildIntersectionSubmit.SetActive(true);
+        }
+        else
+        {
+            if (chosenBuilding is Farm)
+            {
+                int size = SurfaceBlock.INNER_RESOLUTION;
+                SurfaceRect sr = chosenBuilding.innerPosition;
+                CreateSelectedBuilding((byte)(size/ 2 - sr.x_size/2), (byte)(size / 2 - sr.z_size/2));
             }
-			else {
-				//вывести запрос на подтверждение
-			}
+            else    PrepareConstructionPlane(); // включает плоскость, отключает окно выбора строений
+        }
+    }
+
+    public void IntersectionSubmit_Yes()
+    {
+        CreateSelectedBuilding((byte)constructingPlaneTouchPos.x ,(byte)constructingPlaneTouchPos.y);
+        buildIntersectionSubmit.SetActive(false);
+    }
+    // public void IntersectionSubmit_No() - just deactivate the panel 
+    public void ConstructingPlaneTouch(Vector3 pos)
+    {
+        Vector2 mappos = observingSurface.WorldToMapCoordinates(pos);
+        byte size = SurfaceBlock.INNER_RESOLUTION;
+        byte x = (byte)(mappos.x * size), z = (byte)(mappos.y * size);
+        if (chosenBuilding == null) return;
+        SurfaceRect sr = chosenBuilding.innerPosition;
+        if (x + sr.x_size >= size)
+        {
+            // корректировка
+            x = (byte)(size - sr.x_size);
+        }
+        if (z + chosenBuilding.innerPosition.z_size >= size)
+        {
+            // корректировка
+            z = (byte)(size - sr.z_size);
+        }
+        constructingPlaneTouchPos = new Vector2Int(x, z);
+        if ( observingSurface.IsAnyBuildingInArea(new SurfaceRect(x,z,sr.x_size, sr.z_size)))
+        {
+            buildIntersectionSubmit.SetActive(true);            
+        }
+        else  CreateSelectedBuilding(x, z);
+    }
+
+
+	public void CreateSelectedBuilding (byte x, byte z) {
+		ResourceContainer[] cost = ResourcesCost.GetCost(chosenBuilding.id);
+		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
+           GameMaster.colonyController.storage.GetResources(cost);
+           Structure s = Structure.GetNewStructure(chosenBuilding.id);
+		   s.gameObject.SetActive(true);
+		    s.SetBasement(observingSurface, new PixelPosByte(x,z));
+           PoolMaster.current.BuildSplash(observingSurface.transform.position);
+            if (constructionPlane.activeSelf)
+            {
+                PrepareConstructionPlane();
+            }
 		}
 		else {
             UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
@@ -726,21 +821,33 @@ public sealed class UISurfacePanelController : UIObserver {
 		// поправка на материал
 		// поправка на side-only
 		List<Building> abuildings = Structure.GetApplicableBuildingsList(constructingLevel);
-		for (int n = 0; n < availableBuildingsButtons.Length; n++) {
-			if (n < abuildings.Count) {
-				availableBuildingsButtons[n].gameObject.SetActive(true);
-				RawImage rimage = availableBuildingsButtons[n].transform.GetChild(0).GetComponent<RawImage>();
+		for (int n = 0; n < buildingButtonsContainer.childCount; n++) {
+            GameObject g = buildingButtonsContainer.GetChild(n).gameObject;
+            if (n < abuildings.Count) {
+				g.SetActive(true);
+				RawImage rimage = buildingButtonsContainer.GetChild(n).GetChild(0).GetComponent<RawImage>();
                 rimage.uvRect = Structure.GetTextureRect(abuildings[n].id);
-				availableBuildingsButtons[n].onClick.RemoveAllListeners();
+                Button b = g.GetComponent<Button>();
+				b.onClick.RemoveAllListeners();
 				int bid = n;
-				availableBuildingsButtons[n].onClick.AddListener(() => {
+				b.onClick.AddListener(() => {
 					this.SelectBuildingForConstruction(abuildings[bid], bid);
 				});
 			}
 			else {
-				availableBuildingsButtons[n].gameObject.SetActive(false);
+				g.SetActive(false);
 			}
 		}
 	}
     #endregion
+
+    void LocalizeButtonTitles()
+    {
+        transform.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build);
+
+        Transform t = buildIntersectionSubmit.transform;
+        t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.Ask_DestroyIntersectingBuildings);
+        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Accept);
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+    }
 }

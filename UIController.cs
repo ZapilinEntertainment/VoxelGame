@@ -10,7 +10,7 @@ public enum ProgressPanelMode { Offline, Powerplant, Hangar}
 
 sealed public class UIController : MonoBehaviour {	
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
-	public Button touchZone, closePanelButton; // fill in the Inspector
+	public Button closePanelButton; // fill in the Inspector
 
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText;
@@ -31,7 +31,7 @@ sealed public class UIController : MonoBehaviour {
     const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
 
     bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false, localized = false;
-	
+    public int interceptingConstructPlaneID = -1;
 
 	float saved_energySurplus;
     int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
@@ -567,6 +567,10 @@ sealed public class UIController : MonoBehaviour {
 				chosenCube = null;
 				if (chosenWorksite != null) ChangeChosenObject( ChosenObjectType.Worksite ); else ChangeChosenObject( ChosenObjectType.None );
 				break;
+                default:
+                    if (collided.transform.parent.gameObject.GetInstanceID() == interceptingConstructPlaneID) UISurfacePanelController.current.ConstructingPlaneTouch(rh.point);
+                    else print("no");
+                    break;
 			}
 		}
 		else SelectedObjectLost();

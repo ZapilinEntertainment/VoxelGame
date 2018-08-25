@@ -1,8 +1,8 @@
 ﻿public enum Language{English, Russian};
 public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu}
+Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality}
+ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress }
 public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
@@ -264,6 +264,7 @@ public static class Localization {
             case LocalizedWord.Rewrite: return "Rewrite"; // rewrite save?
             case LocalizedWord.Yes: return "Yes"; // rewrite - yes
             case LocalizedWord.MainMenu: return "Main menu";
+            case LocalizedWord.Accept: return "Accept";
 		default: return "...";
 		}
 	}
@@ -296,7 +297,8 @@ public static class Localization {
             case LocalizedPhrase.CreateNewSave: return "Create new save";
             case LocalizedPhrase.CameraZoom: return "Camera zoom";
             case LocalizedPhrase.LODdistance: return "LOD sprite distance";
-            case LocalizedPhrase.GraphicQuality: return "Graphic quality";            
+            case LocalizedPhrase.GraphicQuality: return "Graphic quality";
+            case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";
         }
     }
 
