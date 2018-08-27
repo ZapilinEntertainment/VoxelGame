@@ -93,8 +93,8 @@ sealed public class UIController : MonoBehaviour {
                     }
                     if (showingBirthrate != colony.realBirthrate)
                     {
-                        showingBirthrate = colony.realBirthrate;
-                        birthrateText.text = showingBirthrate > 0 ? '+' + showingBirthrate.ToString() : showingBirthrate.ToString();
+                        showingBirthrate = (int)(colony.realBirthrate * 100) / 100f; ;
+                        birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
                     }
                     if (showingHospitalCf != colony.hospitals_coefficient)
                     {
@@ -320,7 +320,7 @@ sealed public class UIController : MonoBehaviour {
             showingHealthCf = colony.health_coefficient;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
             happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
-            birthrateText.text = showingBirthrate > 0 ? '+' + showingBirthrate.ToString() : showingBirthrate.ToString();
+            birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}",showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
             healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
         }

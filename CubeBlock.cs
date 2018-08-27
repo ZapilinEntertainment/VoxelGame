@@ -5,7 +5,6 @@ using UnityEngine;
 [System.Serializable]
 public class CubeBlockSerializer {
 	public float naturalFossils;
-	public byte excavatingStatus;
 	public int volume;
 	public bool career;
 }
@@ -142,7 +141,9 @@ public class CubeBlock : Block{
 	}
 
 	void CheckExcavatingStatus() {
-		if ( volume == 0) {myChunk.DeleteBlock(pos);return;}
+		if ( volume == 0) {
+            if (career) myChunk.DeleteBlock(pos); else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
+            return;}
 		float pc = (float)volume/ (float)MAX_VOLUME;
 		if (pc > 0.5f) {				
 			if (pc > 0.75f) {				
@@ -207,7 +208,6 @@ public class CubeBlock : Block{
 
 	protected void LoadCubeBlockData(CubeBlockSerializer cbs) {
 		career = cbs.career;
-		excavatingStatus = cbs.excavatingStatus;
         naturalFossils = cbs.naturalFossils;
         volume = cbs.volume;
         if (career) CheckExcavatingStatus();		
@@ -217,7 +217,6 @@ public class CubeBlock : Block{
 	CubeBlockSerializer GetCubeBlockSerializer() {
 		CubeBlockSerializer cbs = new CubeBlockSerializer();
 		cbs.naturalFossils =naturalFossils;
-		cbs.excavatingStatus = excavatingStatus;
 		cbs.volume = volume;
 		cbs.career = career;
 		return cbs;

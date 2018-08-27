@@ -17,7 +17,6 @@ public class MineSerializer {
 public class Mine : WorkBuilding {
 	CubeBlock workObject;
 	bool workFinished = false;
-	string actionLabel = "";
 	ChunkPos lastWorkObjectPos;
 	public List<Structure> elevators;
 	public bool awaitingElevatorBuilding = false;
@@ -44,7 +43,7 @@ public class Mine : WorkBuilding {
 					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.z_size/2));
 					elevators.Add(s);
 					awaitingElevatorBuilding = false;
-					GameMaster.realMaster.AddAnnouncement(Localization.mine_levelFinished);
+                    UIController.current.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
 				}
 			}
 		}
@@ -66,13 +65,13 @@ override protected void LabourResult() {
 		production = workObject.Dig(x, false);
 		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
 		if ( workObject!=null & workObject.volume != 0) {
-			int percent = (int)((1 - (float)workObject.volume / (float) CubeBlock.MAX_VOLUME) * 100);
-			actionLabel = percent.ToString() + "% " + Localization.extracted; 
+		    float percent = workObject.volume / (float) CubeBlock.MAX_VOLUME;
+			if (showOnGUI) workbuildingObserver.SetActionLabel( string.Format("{0:0.##}", (1 - percent) * 100) + "% " + Localization.GetActionLabel(LocalizationActionLabels.Extracted)); 
 			workflow -= production;	
 		}
 		else {
 			workFinished = true;
-			actionLabel = Localization.work_has_stopped;
+            if (showOnGUI) workbuildingObserver.SetActionLabel(Localization.GetActionLabel(LocalizationActionLabels.WorkStopped));
 			awaitingElevatorBuilding = true;
 		}			
 	}
@@ -100,8 +99,8 @@ override protected void LabourResult() {
 	}
 
 	protected void LoadMineData(MineSerializer ms) {
-		LoadWorkBuildingData(ms.workBuildingSerializer);
 		level = ms.level;
+		LoadWorkBuildingData(ms.workBuildingSerializer);
 		elevators = new List<Structure>();
 		if (level > 1 & ms.haveElevators) {
 			for (int i = 0; i < ms.elevators.Count; i++) {
@@ -143,7 +142,7 @@ override protected void LabourResult() {
 		GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
 		if (nextModel != null) {
 			GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
-			if (myRenderer != null) Destroy(myRenderer.gameObject);
+			if (myRenderers[0] != null) Destroy(myRenderers[0].gameObject);
 			if (myRenderers != null) {for (int n =0; n < myRenderers.Count; n++) Destroy( myRenderers[n].gameObject );}
 			myRenderers = new List<Renderer>();
 			for (int n = 0; n < newModelGO.transform.childCount; n++) {
@@ -153,47 +152,86 @@ override protected void LabourResult() {
 			if ( !isActive || !energySupplied ) ChangeRenderersView(false);
 		}
 		level = f_level;
+		Rename();
 	}
 
-	void OnGUI() {
-		if ( !showOnGUI ) return;
-		GUI.skin = GameMaster.mainGUISkin;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		GUI.Label(rr, actionLabel); 
-		if (workFinished && !awaitingElevatorBuilding) {
-			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
-			if (b != null && b.type == BlockType.Cube) {
-				rr.y += rr.height;
-				GUI.DrawTexture(new Rect( rr.x, rr.y, rr.height, rr.height), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-					if ( GUI.Button(new Rect (rr.x + rr.height, rr.y, rr.height * 4, rr.height), "Level up") ) {
-						if ( GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible( requiredResources ) )
-						{
-							workObject = b as CubeBlock;
-							lastWorkObjectPos = b.pos;
-							workFinished = false;
-							ChangeModel((byte)(level +1));
-						}
-						else UI.current.ChangeSystemInfoString(Localization.announcement_notEnoughResources);
-					}
-				if ( requiredResources.Length > 0) {
-						rr.y += rr.height;
-					for (int i = 0; i < requiredResources.Length; i++) {
-						GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), requiredResources[i].type.icon, ScaleMode.StretchToFill);
-						GUI.Label(new Rect(rr.x +rr.height, rr.y, rr.height * 5, rr.height), requiredResources[i].type.name);
-						GUI.Label(new Rect(rr.xMax - rr.height * 3, rr.y, rr.height * 3, rr.height), (requiredResources[i].volume * (1 - GameMaster.upgradeDiscount)).ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-							rr.y += rr.height;
-						}
-					}
-			}
-		}
-	}
+    override public bool IsLevelUpPossible(ref string refusalReason)
+    {
+        if (workFinished && !awaitingElevatorBuilding)
+        {
+            Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
+            if (b != null && b.type == BlockType.Cube) return true;
+            else
+            {
+                refusalReason = Localization.GetRefusalReason(RefusalReason.NoBlockBelow);
+                return false;
+            }
+        }
+        else
+        {
+            refusalReason = Localization.GetRefusalReason(RefusalReason.WorkNotFinished);
+            return false;
+        }
+    }
 
-	void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-		if (elevators.Count > 0) {
-			foreach (Structure s in elevators) {
-				if (s != null)	s.Annihilate(false);
-			}
-		}
-	}
+    override public void LevelUp(bool returnToUI)
+    {
+        Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
+        if (b != null && b.type == BlockType.Cube)
+        {
+            if (!GameMaster.realMaster.weNeedNoResources)
+            {
+                ResourceContainer[] cost = GetUpgradeCost();
+                if (cost != null && cost.Length != 0)
+                {
+                    if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+                    {
+                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                        return;
+                    }
+                }
+            }
+            workObject = b as CubeBlock;
+            lastWorkObjectPos = b.pos;
+            workFinished = false;
+            ChangeModel((byte)(level + 1));
+            Rename();
+        }        
+    }
+    override public ResourceContainer[] GetUpgradeCost()
+    {
+        ResourceContainer[] cost = ResourcesCost.GetCost(MINE_ID);
+        float discount = GameMaster.upgradeCostIncrease + level - 1;
+        for (int i = 0; i < cost.Length; i++)
+        {
+            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
+        }
+        return cost;
+    }
+
+    override public void Annihilate(bool forced)
+    { 
+        SurfaceBlock lastBasement = basement;
+        if (forced) UnsetBasement();
+        else
+        {
+            ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
+            if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1)
+            {
+                for (int i = 0; i < resourcesLeft.Length; i++)
+                {
+                    resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
+                }
+                GameMaster.colonyController.storage.AddResources(resourcesLeft);
+            }
+        }
+        if (elevators.Count > 0)
+        {
+            foreach (Structure s in elevators)
+            {
+                if (s != null) s.Annihilate(false);
+            }
+        }
+        Destroy(gameObject);
+    }
 }

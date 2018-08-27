@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Dock : WorkBuilding {
+public sealed class Dock : WorkBuilding {
 	bool correctLocation = false;
-	bool gui_tradeGoodTabActive = false, gui_sellResourcesTabActive = false, gui_addTransactionMenu = false;
 	public static bool?[] isForSale{get; private set;}
 	public static int[] minValueForTrading{get; private set;}
 	ColonyController colony;
@@ -16,6 +15,7 @@ public class Dock : WorkBuilding {
 	float loadingTimer = 0, shipArrivingTimer = 0;
 	const float SHIP_ARRIVING_TIME = 300;
 	int blockedHeight = -1, blockedSide = -1, preparingResourceIndex;
+    public static UIDockObserver dockObserver;
 
 	public static void Reset() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
@@ -26,7 +26,6 @@ public class Dock : WorkBuilding {
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		type = StructureType.MainStructure;
 		borderOnlyConstruction = true;
 		if (isForSale == null) {
 			Reset();
@@ -78,10 +77,10 @@ public class Dock : WorkBuilding {
 	}
 
 	void Update() {
-		if (GameMaster.gameSpeed == 0) return;
+		if (GameMaster.gameSpeed == 0 |  !energySupplied) return;
 		if ( maintainingShip ) {
 			if (loadingTimer > 0) {
-					loadingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+					loadingTimer -= (1 + workSpeed) * Time.deltaTime * GameMaster.gameSpeed;
 					if (loadingTimer <= 0) {
 						if (loadingShip != null) ShipLoading(loadingShip);
 						loadingTimer = 0;
@@ -90,7 +89,7 @@ public class Dock : WorkBuilding {
 		}
 		else {
 			// ship arriving
-			if (shipArrivingTimer > 0) { 
+			if (shipArrivingTimer > 0 ) { 
 				shipArrivingTimer -= Time.deltaTime * GameMaster.gameSpeed;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
@@ -218,7 +217,7 @@ public class Dock : WorkBuilding {
 		shipArrivingTimer /= f;
 
 		int newPeople = peopleBefore - immigrationPlan;
-		if (newPeople > 0) GameMaster.realMaster.AddAnnouncement(Localization.announcement_peopleArrived + " (" + newPeople.ToString() + ')');
+		if (newPeople > 0) UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
 	}
 
 	void SellResource(ResourceType rt, float volume) {
@@ -230,15 +229,23 @@ public class Dock : WorkBuilding {
 		colony.storage.AddResource(rt, volume);
 	}
 
-	public static void MakeLot( int index, bool forSale, int minValue ) {
-		isForSale[index] = forSale;
-		minValueForTrading[index] = minValue;
-	}
-
 	public static void SetImmigrationStatus ( bool x, int count) {
 		immigrationEnabled = x;
 		immigrationPlan = count;
 	}
+
+    public static void ChangeMinValue(int index, int val)
+    {
+        minValueForTrading[index] = val;
+    }
+    public static void ChangeSaleStatus(int index, bool? val)
+    {
+        if (isForSale[index] == val) return;
+        else
+        {
+            isForSale[index] = val;
+        }
+    }
 
 	#region save-load system
 	public static DockStaticSerializer SaveStaticDockData() {
@@ -276,7 +283,7 @@ public class Dock : WorkBuilding {
 		GameMaster.DeserializeByteArray<DockSerializer>(ss.specificData, ref ds);
 		LoadDockData(ds);
 	}
-	protected void LoadDockData(DockSerializer ds) {
+	void LoadDockData(DockSerializer ds) {
 		LoadWorkBuildingData(ds.workBuildingSerializer);
 		correctLocation = ds.correctLocation;
 		maintainingShip =ds.maintainingShip;
@@ -290,153 +297,48 @@ public class Dock : WorkBuilding {
 		shipArrivingTimer = ds.shipArrivingTimer;
 	} 
 
-	protected DockSerializer GetDockSerializer() {
+	DockSerializer GetDockSerializer() {
 		DockSerializer ds = new DockSerializer();
 		ds.workBuildingSerializer = GetWorkBuildingSerializer();
 		ds.correctLocation = correctLocation;
 		ds.maintainingShip = maintainingShip;
-		if (maintainingShip) ds.loadingShip =  loadingShip.GetShipSerializer();
+		if (maintainingShip && loadingShip != null) ds.loadingShip =  loadingShip.GetShipSerializer();
 		ds.loadingTimer = loadingTimer;
 		ds.shipArrivingTimer = shipArrivingTimer;
 		return ds;
 	}
-	#endregion
+    #endregion
 
-	void OnGUI() {
-		if (!showOnGUI) return;
-		GUI.skin = GameMaster.mainGUISkin;
-		float k =GameMaster.guiPiece;
-		Rect r = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		//trade
-		if ( !gui_tradeGoodTabActive ) GUI.DrawTexture(new Rect(r.x, r.y, r.width / 2f, r.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-		else GUI.DrawTexture(new Rect(r.x + r.width/2f, r.y, r.width/2f, r.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-		if (GUI.Button(new Rect(r.x, r.y, r.width / 2f, r.height), Localization.ui_immigration, PoolMaster.GUIStyle_BorderlessButton)) {gui_tradeGoodTabActive = false;gui_addTransactionMenu = false;}
-		if (GUI.Button(new Rect(r.x + r.width/2f, r.y, r.width/2f, r.height), Localization.ui_trading, PoolMaster.GUIStyle_BorderlessButton)) gui_tradeGoodTabActive = true;
-		GUI.DrawTexture(r, PoolMaster.twoButtonsDivider_tx, ScaleMode.StretchToFill);
-		r.y += r.height;
-		if (gui_tradeGoodTabActive) {
-			if (!gui_sellResourcesTabActive) GUI.DrawTexture(new Rect(r.x, r.y, r.width / 2f, r.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-			else GUI.DrawTexture(new Rect(r.x + r.width/2f, r.y, r.width / 2f, r.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-			if (GUI.Button(new Rect(r.x, r.y, r.width / 2f, r.height), Localization.ui_buy, PoolMaster.GUIStyle_BorderlessButton)) gui_sellResourcesTabActive = false;
-			if (GUI.Button(new Rect(r.x + r.width/2f, r.y, r.width/2f, r.height), Localization.ui_sell, PoolMaster.GUIStyle_BorderlessButton)) gui_sellResourcesTabActive = true;
-			GUI.DrawTexture(r, PoolMaster.twoButtonsDivider_tx, ScaleMode.StretchToFill);
-			r.y += r.height;
-			if (GUI.Button(r, '<' + Localization.ui_add_transaction + '>')) {
-				gui_addTransactionMenu = !gui_addTransactionMenu;
-				UI.current.touchscreenTemporarilyBlocked = gui_addTransactionMenu;
-			}
-			r.y += r.height;
-			if (gui_addTransactionMenu) {  // Настройка торговой операции
-				GUI.Box(new Rect(2 *k, 2*k, Screen.width - 2 *k - UI.current.rightPanelBox.width,Screen.height - 4 *k), GUIContent.none);
-				float resQuad_k = 10 * k / ResourceType.RTYPE_ARRAY_ROWS;
-				float resQuad_leftBorder = 2 * k ;
-				Rect resrect = new Rect(  resQuad_leftBorder, 2 *k , resQuad_k, resQuad_k);
-				int index = 1; resrect.x += resrect.width;
-				for (int i = 0; i < ResourceType.RTYPE_ARRAY_ROWS; i++) {
-					for (int j =0; j < ResourceType.RTYPE_ARRAY_COLUMNS; j++) {
-						if (ResourceType.resourceTypesArray[index] == null) {
-							index++;
-							resrect.x += resrect.width;
-							continue;
-						}
-						if (index == preparingResourceIndex) GUI.DrawTexture(resrect, PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-						if (GUI.Button(resrect, ResourceType.resourceTypesArray[index].icon)) {
-							preparingResourceIndex = index;
-						}
-						GUI.Label(new Rect(resrect.x, resrect.y, resrect.width, resrect.height/2f), ResourceType.resourceTypesArray[index].name, PoolMaster.GUIStyle_CenterOrientedLabel);
-						GUI.Label(new Rect(resrect.x, resrect.yMax -  resrect.height/2f, resrect.width, resrect.height/2f), ((int)(colony.storage.standartResources[index] *100f)/100f ).ToString(), PoolMaster.GUIStyle_RightBottomLabel);
-						if ( isForSale [index] != null) {
-							if (isForSale [index] == true) GUI.DrawTexture( new Rect(resrect.x, resrect.y + resrect.height / 2f, resrect.height / 2f, resrect.height/2f), PoolMaster.redArrow_tx, ScaleMode.StretchToFill);
-							else GUI.DrawTexture(new Rect(resrect.x, resrect.y + resrect.height / 2f, resrect.height / 2f, resrect.height/2f), PoolMaster.greenArrow_tx, ScaleMode.StretchToFill);
-						}
-						index ++;
-						resrect.x += resrect.width;
-						if (index >= ResourceType.resourceTypesArray.Length) break;
-					}
-					resrect.x = resQuad_leftBorder;
-					resrect.y += resrect.height;
-					if (index >= ResourceType.resourceTypesArray.Length) break;
-				}
+    override protected void RecalculateWorkspeed()
+    {
+        workSpeed = (float)workersCount / (float)maxWorkers;
+        if (workSpeed == 0)
+        {
+            if (maintainingShip & loadingShip != null) loadingShip.Undock();
+        }
+    }
 
-				int fb = PoolMaster.GUIStyle_CenterOrientedLabel.fontSize, fb_b = GUI.skin.button.fontSize;
-				PoolMaster.GUIStyle_CenterOrientedLabel.fontSize = fb * 2; GUI.skin.button.fontSize = fb_b * 2;
-				float xpos = 2 *k, ypos = Screen.height/2f, qsize = 2 *k;
-				GUI.Label(new Rect(xpos, ypos, 4 * qsize, qsize), Localization.min_value_to_trade, PoolMaster.GUIStyle_CenterOrientedLabel); 
-				GUI.Label(new Rect(Screen.width/2f - 4 * resQuad_k, k, 5 * resQuad_k, k ), Localization.ui_selectResource, PoolMaster.GUIStyle_CenterOrientedLabel);
-				int val = minValueForTrading[preparingResourceIndex];
-				if (GUI.Button(new Rect(xpos + 4 * qsize, ypos , qsize, qsize ), "-10")) val -= 10;
-				if (GUI.Button(new Rect(xpos + 5 * qsize, ypos, qsize, qsize), "-1")) val--;
-				if (val < 0) val = 0; minValueForTrading[preparingResourceIndex] = val;
-				GUI.Label (new Rect(xpos + 6 * qsize, ypos, qsize * 2, qsize), minValueForTrading[preparingResourceIndex].ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
-				if (GUI.Button(new Rect(xpos + 8 * qsize, ypos, qsize, qsize), "+1")) minValueForTrading[preparingResourceIndex]++;
-				if (GUI.Button(new Rect(xpos + 9 * qsize, ypos, qsize, qsize), "+10")) minValueForTrading[preparingResourceIndex] += 10; 
-				ypos += qsize;
-				GUI.Label(new Rect(xpos, ypos, 2 * qsize, qsize), '+' + (ResourceType.prices[preparingResourceIndex] * GameMaster.sellPriceCoefficient).ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
-				if (isForSale [preparingResourceIndex] == true ) GUI.DrawTexture(new Rect(xpos + 2 *qsize, ypos, 3 * qsize, qsize) , PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-				if (GUI.Button (new Rect(xpos + 2 *qsize, ypos, 3 * qsize, qsize) , Localization.ui_sell)) {isForSale [preparingResourceIndex] = true; gui_sellResourcesTabActive = true;}
-				if ( isForSale [preparingResourceIndex] == false ) GUI.DrawTexture(new Rect(xpos + 6 *qsize, ypos, 3 * qsize, qsize) , PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-				if (GUI.Button (new Rect(xpos + 6 *qsize, ypos, 3 * qsize, qsize) , Localization.ui_buy)) {isForSale [preparingResourceIndex] = false; gui_sellResourcesTabActive = false;}
-				GUI.DrawTexture(new Rect(xpos + 2 * qsize, ypos, 7 * qsize, qsize) , PoolMaster.twoButtonsDivider_tx, ScaleMode.StretchToFill);
-				GUI.Label(new Rect(xpos + 9 * qsize, ypos, 2 * qsize, qsize), '-' + ResourceType.prices[preparingResourceIndex] .ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
-				ypos += 2 * qsize;
-				if (GUI.Button(new Rect(xpos + 3 * qsize, ypos, 2 * qsize, qsize), Localization.ui_close)) {
-					gui_addTransactionMenu = false;
-					UI.current.touchscreenTemporarilyBlocked = false;
-				}
-				if (GUI.Button(new Rect(xpos + 6 * qsize, ypos, 2 * qsize, qsize), Localization.ui_reset)) {
-					minValueForTrading[preparingResourceIndex] = 0;
-					isForSale [preparingResourceIndex] = null;
-					gui_addTransactionMenu = false;
-					UI.current.touchscreenTemporarilyBlocked = false;
-				}
-				PoolMaster.GUIStyle_CenterOrientedLabel.fontSize = fb;
-				GUI.skin.button.fontSize = fb_b;
-			}
-			// list
-			for (int i = 1 ; i < minValueForTrading.Length; i ++) {
-				if (ResourceType.resourceTypesArray[i] == null || isForSale[i] == null) continue;
-				bool b = (isForSale[i] == true);
-				if (b != gui_sellResourcesTabActive) continue;
-				GUI.DrawTexture(new Rect(r.x, r.y, r.height, r.height), ResourceType.resourceTypesArray[i].icon);
-				int val = minValueForTrading[i];
-				if (GUI.Button(new Rect(r.x + r.height, r.y, r.height, r.height), "-10")) val -= 10;
-				if (GUI.Button(new Rect(r.x + 2 *r.height, r.y, r.height, r.height), "-1")) val--;
-				if (val < 0) val = 0; minValueForTrading[i] = val;
-				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 2, r.height ), minValueForTrading[i].ToString(), PoolMaster.GUIStyle_CenterOrientedLabel);
-				if (GUI.Button(new Rect(r.x + 5 * r.height, r.y, r.height, r.height), "+1")) minValueForTrading[i]++;
-				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+10")) minValueForTrading[i] += 10;
-				if (minValueForTrading[i] >= 10000) minValueForTrading[i] = 9999;
-				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), PoolMaster.minusButton_tx)) {isForSale [i] = null; minValueForTrading[i] = 0;}
-					r.y += r.height;
-				}
-		}
-		else // immigration tab
-		{
-			immigrationEnabled = GUI.Toggle(r, immigrationEnabled, Localization.ui_immigrationEnabled);
-			r.y += r.height;
-			if ( !immigrationEnabled ) {
-				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), Localization.ui_immigrationDisabled , PoolMaster.GUIStyle_CenterOrientedLabel);
-			}
-			else {
-				GUI.Label(new Rect(r.x + 1 * r.height, r.y, r.height * 7, r.height ), Localization.ui_immigrationPlaces + " :", PoolMaster.GUIStyle_CenterOrientedLabel);
-				r.y += r.height;
-				if (GUI.Button(new Rect(r.x + r.height, r.y, r.height, r.height), "-10")) immigrationPlan=10;
-				if (GUI.Button(new Rect(r.x + 2 *r.height, r.y, r.height, r.height), "-1")) immigrationPlan--;
-				GUI.Label(new Rect(r.x + 3 * r.height, r.y, r.height * 3, r.height ), immigrationPlan.ToString(),  PoolMaster.GUIStyle_CenterOrientedLabel);
-				if (GUI.Button(new Rect(r.x + 6 * r.height, r.y, r.height, r.height), "+1")) immigrationPlan++;
-				if (GUI.Button(new Rect(r.x + 7 * r.height, r.y, r.height, r.height), "+10")) immigrationPlan += 10;
-				if (immigrationPlan >= 1000) immigrationPlan = 999;
-			}
-		}
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (dockObserver == null) dockObserver = UIDockObserver.InitializeDockObserverScript();
+        else dockObserver.gameObject.SetActive(true);
+        dockObserver.SetObservingDock(this);
+        showOnGUI = true;
+        return dockObserver;
+    }
 
-	void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-		GameMaster.colonyController.RemoveDock(this);
-		if (blockedHeight != -1 & blockedSide != -1) {
-			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
-		}
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (forced) { UnsetBasement(); }
+        PrepareWorkbuildingForDestruction();
+        GameMaster.colonyController.RemoveDock(this);
+        if (maintainingShip & loadingShip != null) loadingShip.Undock();
+        if (blockedHeight != -1 & blockedSide != -1)
+        {
+            GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
+        }
+        Destroy(gameObject);
+    }
 }
 
 [System.Serializable]

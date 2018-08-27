@@ -6,7 +6,7 @@ ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepai
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress }
 public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
-public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots}
+public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
 
 public static class Localization {
 
@@ -316,6 +316,7 @@ public static class Localization {
             case RefusalReason.SpaceAboveBlocked: return "Space above blocked";
             case RefusalReason.NoBlockBelow: return "No block below";
             case RefusalReason.NotEnoughSlots: return "Not enough slots";
+            case RefusalReason.WorkNotFinished: return "Work not finished";
         }
     }
 

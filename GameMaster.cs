@@ -76,8 +76,8 @@ public sealed class GameMaster : MonoBehaviour {
 	public static int layerCutHeight = 16, prevCutHeight = 16;
 
 	
-	static float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
+	static float diggingSpeed = 0.5f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
+	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     
 	float t;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
@@ -340,7 +340,7 @@ public sealed class GameMaster : MonoBehaviour {
 		case WorkType.Pouring: workspeed  *= pouringSpeed;break;
 		case WorkType.Clearing: workspeed  *= clearingSpeed;break;
 		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
-		case WorkType.Mining: workspeed  *= miningSpeed;break;
+		case WorkType.Mining: workspeed  *= miningSpeed;break; // digging inside mine
 		case WorkType.Farming : workspeed *= GameMaster.lifeGrowCoefficient * environmentalConditions;break;
 		case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed;break;
 		}

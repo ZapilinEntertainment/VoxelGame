@@ -158,6 +158,11 @@ public class Storage : MonoBehaviour {
 	}
 	public void Load(StorageSerializer ss) {
 		standartResources = ss.standartResources;
+        totalVolume = 0;
+        for (int i =0; i < standartResources.Length; i++)
+        {
+            totalVolume += standartResources[i];
+        }
 	}
 	#endregion
 }

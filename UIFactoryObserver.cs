@@ -63,7 +63,7 @@ public class UIFactoryObserver : UIObserver {
         if (observingFactory == null) SelfShutOff();
         else
         {
-            workflowString.text = string.Format("{0:0.##}", observingFactory.workflow * 100) + '%' ;
+            workflowString.text = string.Format("{0:0.##}", observingFactory.workflow / observingFactory.workflowToProcess * 100) + '%' ;
         }
     }
 

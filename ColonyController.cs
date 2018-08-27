@@ -471,7 +471,11 @@ public sealed class ColonyController : MonoBehaviour {
 			if ( hospitals[i].isActive ) hospitalsCoverage += hospitals[i].coverage;
 			i++;
 		}
-		hospitals_coefficient = (float)hospitalsCoverage / (float)citizenCount;
+        if (citizenCount != 0)
+        {
+            hospitals_coefficient = (float)hospitalsCoverage / (float)citizenCount;
+        }
+        else hospitals_coefficient = 0;
 	}
 
 	public void AddToPowerGrid(Building b) {
