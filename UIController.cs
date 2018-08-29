@@ -15,7 +15,7 @@ sealed public class UIController : MonoBehaviour {
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText;
     [SerializeField] Text[] announcementStrings;
-    [SerializeField] Image colonyToggleButton, storageToggleButton;
+    [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton;
     public Sprite overridingSprite;
     [SerializeField] Transform storagePanelContent;
     public Texture iconsTexture { get; private set; }
@@ -30,7 +30,7 @@ sealed public class UIController : MonoBehaviour {
 
     const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
 
-    bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false, localized = false;
+    bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, showLayerCut = false, activeAnnouncements = false, localized = false;
     public int interceptingConstructPlaneID = -1;
 
 	float saved_energySurplus;
@@ -302,120 +302,6 @@ sealed public class UIController : MonoBehaviour {
             }
         }
     }
-
-	#region up panel 
-    public void ColonyButton()
-    {
-        showColonyInfo = !showColonyInfo;
-        if (showColonyInfo) {
-            if (showStorageInfo) StorageButton();
-            colonyPanel.SetActive(true);
-            colonyToggleButton.overrideSprite = overridingSprite;
-            ColonyController colony = GameMaster.colonyController;
-            if (colony == null) return;
-            showingGearsCf = colony.gears_coefficient;
-            showingHappinessCf = colony.happiness_coefficient;
-            showingBirthrate = colony.realBirthrate;
-            showingHospitalCf = colony.hospitals_coefficient;
-            showingHealthCf = colony.health_coefficient;
-            gearsText.text = string.Format("{0:0.###}", showingGearsCf);
-            happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
-            birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}",showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
-            hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
-            healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
-        }
-        else
-        {
-            colonyPanel.SetActive(false);
-            colonyToggleButton.overrideSprite = null;
-        }
-    }
-
-    public void StorageButton()
-    {
-        showStorageInfo = !showStorageInfo;
-        if (showStorageInfo)
-        {
-            if (showColonyInfo) ColonyButton();
-            storageToggleButton.overrideSprite = overridingSprite;
-            storagePanel.SetActive(true);
-            RecalculateStoragePanel();
-        }
-        else
-        {
-            storageToggleButton.overrideSprite = null;
-            storagePanel.SetActive(false);
-        }
-    }
-
-    void RecalculateStoragePanel()
-    {
-        Storage st = GameMaster.colonyController.storage;
-        float[] resources = st.standartResources;
-        int i = 0, b = 0, buttonsCount = storagePanelContent.childCount;
-        while (i < resources.Length)
-        {
-            if (resources[i] != 0)
-            {
-                Transform t;
-                if (b < buttonsCount) t = storagePanelContent.GetChild(b);
-                else
-                {
-                    t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
-                    RectTransform rt = (t as RectTransform);
-                    t.localPosition += Vector3.down * b * rt.rect.height;
-                }
-                t.gameObject.SetActive(true);
-                b++;
-                t.GetChild(0).GetComponent<RawImage>().enabled = true;
-                t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(i);
-                t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(i);
-                t.GetChild(2).GetComponent<Text>().text = ((int)(resources[i] * 10) / 10f).ToString(); // why not format? I think no need
-            }
-            i++;
-        }
-        // "Total" string
-        {
-            Transform t;
-            if (b < buttonsCount) t = storagePanelContent.GetChild(b);
-            else
-            {
-                t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
-                RectTransform rt = (t as RectTransform);
-                t.localPosition += Vector3.down * b * rt.rect.height;
-            }
-            t.gameObject.SetActive(true);
-            b++;
-            t.GetChild(0).GetComponent<RawImage>().enabled = false;
-            t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
-            t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString() ;
-        }
-
-        {
-            RectTransform rt = storagePanel.transform.GetChild(0) as RectTransform;
-            float listSize = b * (storagePanelContent.GetChild(0) as RectTransform).rect.height;
-            float freeSpace = Screen.height - upPanel.GetComponent<RectTransform>().rect.height * 0.7f;
-            if (listSize < freeSpace)
-            {
-                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
-            }
-            else
-            {
-                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, freeSpace);
-            }
-            (storagePanelContent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
-            //rt.offsetMin = new Vector2(rt.offsetMin.x, rt.offsetMax.y -  b * (storagePanelContent.GetChild(0) as RectTransform).rect.height);
-        }
-        lastStorageOperationNumber = st.operationsDone;
-        if (b < buttonsCount)
-        {
-            for (; b< buttonsCount; b++)
-            {
-                storagePanelContent.GetChild(b).gameObject.SetActive(false);
-            }
-        }
-    }
-    #endregion
 
     #region menu
     public void MenuButton() {
@@ -870,6 +756,7 @@ sealed public class UIController : MonoBehaviour {
         moneyFlyingText.enabled = true;
     }
 
+    #region leftPanel
     public void ActivateQuestUI()
     {
         questUI.Activate();
@@ -879,6 +766,169 @@ sealed public class UIController : MonoBehaviour {
     {
         leftPanel.SetActive(true);
     }
+    public void ColonyButton()
+    {
+        showColonyInfo = !showColonyInfo;
+        if (showColonyInfo)
+        {
+            if (showStorageInfo) StorageButton();
+            else
+            {
+                if (showLayerCut) LayerCutButton();
+            }
+            colonyPanel.SetActive(true);
+            colonyToggleButton.overrideSprite = overridingSprite;
+            ColonyController colony = GameMaster.colonyController;
+            if (colony == null) return;
+            showingGearsCf = colony.gears_coefficient;
+            showingHappinessCf = colony.happiness_coefficient;
+            showingBirthrate = colony.realBirthrate;
+            showingHospitalCf = colony.hospitals_coefficient;
+            showingHealthCf = colony.health_coefficient;
+            gearsText.text = string.Format("{0:0.###}", showingGearsCf);
+            happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
+            birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
+            hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
+            healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
+        }
+        else
+        {
+            colonyPanel.SetActive(false);
+            colonyToggleButton.overrideSprite = null;
+        }
+    }
+    public void StorageButton()
+    {
+        showStorageInfo = !showStorageInfo;
+        if (showStorageInfo)
+        {
+            if (showColonyInfo) ColonyButton();
+            else
+            {
+                if (showLayerCut) LayerCutButton();
+            }
+            storageToggleButton.overrideSprite = overridingSprite;
+            storagePanel.SetActive(true);
+            RecalculateStoragePanel();
+        }
+        else
+        {
+            storageToggleButton.overrideSprite = null;
+            storagePanel.SetActive(false);
+        }
+    }
+    public void LayerCutButton()
+    {
+        showLayerCut = !showLayerCut;
+        if (showLayerCut) 
+        { // layercut on
+            if (showColonyInfo) ColonyButton();
+            else
+            {
+                if (showStorageInfo) StorageButton();
+            }
+            layerCutToggleButton.overrideSprite = overridingSprite;
+            int p = GameMaster.layerCutHeight;
+            GameMaster.layerCutHeight = GameMaster.prevCutHeight;
+            if (GameMaster.layerCutHeight != p) GameMaster.mainChunk.LayersCut();
+        }
+        else // off
+        {
+            layerCutToggleButton.overrideSprite = null;
+            GameMaster.prevCutHeight = GameMaster.layerCutHeight;
+            GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
+            GameMaster.mainChunk.LayersCut();
+        }
+
+        Transform t = layerCutToggleButton.transform;
+        t.GetChild(1).gameObject.SetActive(showLayerCut); // plus button
+        t.GetChild(2).gameObject.SetActive(showLayerCut); // minus button
+        t.GetChild(3).gameObject.SetActive(showLayerCut); // level cut value   
+        layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
+    }
+    public void LayerCutPlus()
+    {
+        GameMaster.layerCutHeight++;
+        if (GameMaster.layerCutHeight > Chunk.CHUNK_SIZE) GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
+        else GameMaster.mainChunk.LayersCut();
+        layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
+    }
+    public void LayerCutMinus()
+    {
+        GameMaster.layerCutHeight--;
+        if (GameMaster.layerCutHeight < 0) GameMaster.layerCutHeight = 0;
+        else GameMaster.mainChunk.LayersCut();
+        layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
+    }
+
+    void RecalculateStoragePanel()
+    {
+        Storage st = GameMaster.colonyController.storage;
+        float[] resources = st.standartResources;
+        int i = 0, b = 0, buttonsCount = storagePanelContent.childCount;
+        while (i < resources.Length)
+        {
+            if (resources[i] != 0)
+            {
+                Transform t;
+                if (b < buttonsCount) t = storagePanelContent.GetChild(b);
+                else
+                {
+                    t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
+                    RectTransform rt = (t as RectTransform);
+                    t.localPosition += Vector3.down * b * rt.rect.height;
+                }
+                t.gameObject.SetActive(true);
+                b++;
+                t.GetChild(0).GetComponent<RawImage>().enabled = true;
+                t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(i);
+                t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(i);
+                t.GetChild(2).GetComponent<Text>().text = ((int)(resources[i] * 10) / 10f).ToString(); // why not format? I think no need
+            }
+            i++;
+        }
+        // "Total" string
+        {
+            Transform t;
+            if (b < buttonsCount) t = storagePanelContent.GetChild(b);
+            else
+            {
+                t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
+                RectTransform rt = (t as RectTransform);
+                t.localPosition += Vector3.down * b * rt.rect.height;
+            }
+            t.gameObject.SetActive(true);
+            b++;
+            t.GetChild(0).GetComponent<RawImage>().enabled = false;
+            t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
+            t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString();
+        }
+
+        {
+            RectTransform rt = storagePanel.transform.GetChild(0) as RectTransform;
+            float listSize = b * (storagePanelContent.GetChild(0) as RectTransform).rect.height;
+            float freeSpace = Screen.height - upPanel.GetComponent<RectTransform>().rect.height * 0.7f;
+            if (listSize < freeSpace)
+            {
+                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
+            }
+            else
+            {
+                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, freeSpace);
+            }
+            (storagePanelContent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
+            //rt.offsetMin = new Vector2(rt.offsetMin.x, rt.offsetMax.y -  b * (storagePanelContent.GetChild(0) as RectTransform).rect.height);
+        }
+        lastStorageOperationNumber = st.operationsDone;
+        if (b < buttonsCount)
+        {
+            for (; b < buttonsCount; b++)
+            {
+                storagePanelContent.GetChild(b).gameObject.SetActive(false);
+            }
+        }
+    }
+    #endregion
 
     public void LocalizeButtonTitles()
     {
