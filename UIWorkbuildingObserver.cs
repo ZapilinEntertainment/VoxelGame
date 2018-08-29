@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIWorkbuildingObserver : UIObserver {
+public sealed class UIWorkbuildingObserver : UIObserver { // работает и на workbuilding, и на worksite
 	public Button minusAllButton, minusButton, plusButton, plusAllButton; // fiti
 	public Slider slider; // fiti
     public Text workersCountField, workSpeedField, actionLabel; // fiti
@@ -135,6 +135,7 @@ public sealed class UIWorkbuildingObserver : UIObserver {
                         workSpeedField.enabled = true;
                     }
                 }
+                actionLabel.text = observingWorksite.actionLabel;
             }
         }
 	}

@@ -224,13 +224,13 @@ public sealed class ColonyController : MonoBehaviour {
 		case WorkersDestination.ForWorksite:
 			Worksite ws = destination as Worksite;
 			if (ws == null) return;
-			else 	freeWorkers -= ws.AddWorkers(x);
+			else 	freeWorkers = freeWorkers -x + ws.AddWorkers(x);
 			break;
 		case WorkersDestination.ForWorkBuilding:
 			WorkBuilding wb = destination as WorkBuilding;
 			if (wb == null) return;
-			else freeWorkers -= wb.AddWorkers(x);
-			break;
+			else freeWorkers = freeWorkers - x + wb.AddWorkers(x);
+                break;
 		}
 	}
 

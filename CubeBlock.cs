@@ -12,7 +12,8 @@ public class CubeBlockSerializer {
 public class CubeBlock : Block{
 	public MeshRenderer[] faces {get;private set;} // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
 	public float naturalFossils = 0;
-	byte excavatingStatus = 0, prevDrawMask = 0; // 0 is 0, 1 is 25, 2 is 50, 3 is 75
+    public byte excavatingStatus { get; private set; } // 0 is 75%+, 1 is 50%+, 2 is 25%+, 3 is less than 25%
+    byte prevDrawMask = 0;
 	public int volume ;
 	public static readonly int MAX_VOLUME;
 	public bool career{get;private set;} // изменена ли верхняя поверхность на котлован?
@@ -22,7 +23,8 @@ public class CubeBlock : Block{
 	}
 
 	void Awake() {
-		visibilityMask = 0; 
+		visibilityMask = 0;
+        excavatingStatus = 0;
 		naturalFossils = MAX_VOLUME;
 		isTransparent = false;
 		volume = MAX_VOLUME; career = false;
@@ -39,18 +41,15 @@ public class CubeBlock : Block{
 	}
 
 	public int Dig(int blocksCount, bool show) {
+        if (volume == 0) return 0;
 		if (blocksCount > volume) blocksCount = volume;
 		volume -= blocksCount;	
 		if (show) career = true;
-		if (volume == 0) {
-			if (career) {
-				Block b = myChunk.GetBlock(pos.x, pos.y - 1, pos.z);
-				if ( b == null | !(b.type == BlockType.Cube | b.type == BlockType.Cave)) myChunk.DeleteBlock(pos);
-				else myChunk.ReplaceBlock(pos, BlockType.Surface, b.material_id, false);
-			}
-			else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
-		} 
-		else if (career) CheckExcavatingStatus();
+        if (career) CheckExcavatingStatus();
+        else
+        {
+           if (volume == 0) myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
+        }
 		return blocksCount;
 	}
 
@@ -111,24 +110,24 @@ public class CubeBlock : Block{
 	void CreateFace(int i) {
 		if (faces == null) faces =new MeshRenderer[6];
 		else {if (faces[i] != null) return;}
-		GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
+		GameObject g = Instantiate(PoolMaster.quad_pref) as GameObject;
 		g.tag = "BlockCollider";
 		faces[i] =g.GetComponent <MeshRenderer>();
 		g.transform.parent = transform;
 		switch (i) {
 		case 0: faces[i].name = "north_plane"; faces[i].transform.localRotation = Quaternion.Euler(0, 180, 0); faces[i].transform.localPosition = new Vector3(0, 0, Block.QUAD_SIZE/2f); break;
 		case 1: faces[i].transform.localRotation = Quaternion.Euler(0, 270, 0); faces[i].name = "east_plane"; faces[i].transform.localPosition = new Vector3(Block.QUAD_SIZE/2f, 0, 0); break;
-		case 2: faces[i].name = "south_plane"; faces[i].transform.localPosition = new Vector3(0, 0, -Block.QUAD_SIZE/2f); break;
+		case 2: faces[i].name = "south_plane"; faces[i].transform.localPosition = new Vector3(0, 0, -QUAD_SIZE/2f); break;
 		case 3: faces[i].transform.localRotation = Quaternion.Euler(0, 90, 0);faces[i].name = "west_plane"; faces[i].transform.localPosition = new Vector3(-Block.QUAD_SIZE/2f, 0, 0); break;
 		case 4: 
-				faces[i].transform.localPosition = new Vector3(0, Block.QUAD_SIZE/2f, 0); 
+				faces[i].transform.localPosition = new Vector3(0, QUAD_SIZE/2f, 0); 
 				faces[i].transform.localRotation = Quaternion.Euler(90, 0, 0);
 				faces[i].name = "upper_plane"; 
 			break;
 		case 5: 
 			faces[i].transform.localRotation = Quaternion.Euler(-90, 0, 0); 
 			faces[i].name = "bottom_plane"; 
-			faces[i].transform.localPosition = new Vector3(0, -Block.QUAD_SIZE/2f, 0); 
+			faces[i].transform.localPosition = new Vector3(0, -QUAD_SIZE/2f, 0); 
 			//GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
 			break;
 		}
@@ -142,7 +141,7 @@ public class CubeBlock : Block{
 
 	void CheckExcavatingStatus() {
 		if ( volume == 0) {
-            if (career) myChunk.DeleteBlock(pos); else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, false);
+            if (career) myChunk.DeleteBlock(pos); else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id,false);
             return;}
 		float pc = (float)volume/ (float)MAX_VOLUME;
 		if (pc > 0.5f) {				

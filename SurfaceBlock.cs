@@ -244,6 +244,10 @@ public class SurfaceBlock : Block {
 		}
 	}
 
+    /// <summary>
+    /// collider check - enables surface collider, if inactive
+    /// </summary>
+    /// <param name="colliderCheck"></param>
 	public void ClearSurface(bool colliderCheck) {
 		if (surfaceObjects == null) return;
         // is basement check and special conditions?

@@ -236,7 +236,7 @@ public class Structure : MonoBehaviour {
 		case CONTAINER_ID :	
 			innerPosition = SurfaceRect.one; isArtificial = false; 
 			break;
-		case MINE_ELEVATOR_ID: innerPosition = new SurfaceRect(0,0,4,4); isBasement = true; break;
+		case MINE_ELEVATOR_ID: innerPosition = new SurfaceRect(0,0,4,4); break;
 		case HOUSE_0_ID:		innerPosition = SurfaceRect.one;  break;
 		case HOUSE_1_ID: innerPosition = new SurfaceRect( 0, 0, 4,4); break;
 		case HOUSE_2_ID:
@@ -519,15 +519,10 @@ public class Structure : MonoBehaviour {
             SurfaceBlock lastBasement = basement;
             if (isBasement)
             {
-                Block ub = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
-                if (ub != null)
+                Block upperBlock = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
+                if (upperBlock != null)
                 {
-                    if (lastBasement.myChunk.CalculateSupportPoints(lastBasement.pos.x, lastBasement.pos.y, lastBasement.pos.z) < 1)
-                    {
-                        lastBasement.myChunk.DeleteBlock(ub.pos);
-
-                    }
-                    else lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, ub.material_id, false);
+                    lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, upperBlock.material_id, false);
                 }
             }
         }

@@ -16,19 +16,26 @@ public enum WorksiteType {Abstract, BlockBuildingSite, CleanSite, DigSite, Gathe
 public abstract class Worksite : MonoBehaviour {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
-	protected float workflow, labourTimer, workSpeed;
+    protected float workflow, labourTimer;
+    public float workSpeed { get; protected set; }
 	public WorksiteSign sign{get; protected set;}
-	protected string actionLabel;
+	public string actionLabel { get; protected set; }
 	public bool showOnGUI = false;
 	public float gui_ypos = 0;
+    public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
 
 	void Awake () {
 		labourTimer = 0; workflow = 0;
 		workersCount = 0; 
 	}
 
+	/// <summary>
+	/// return excess workers
+	/// </summary>
+	/// <returns>The workers.</returns>
+	/// <param name="x">The x coordinate.</param>
 	public int AddWorkers ( int x) {
-		if (workersCount == maxWorkers) return 0;
+		if (workersCount == maxWorkers) return x;
 		else {
 			if (x > maxWorkers - workersCount) {
 				x -= (maxWorkers - workersCount);
@@ -36,13 +43,16 @@ public abstract class Worksite : MonoBehaviour {
 			}
 			else {
 				workersCount += x;
+                x = 0;
 			}
 			RecalculateWorkspeed();
 			return x;
 		}
 	}
 
-	public void FreeWorkers(int x) {
+	public void FreeWorkers() {FreeWorkers(workersCount);}
+    ///
+	public void FreeWorkers(int x) { 
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		GameMaster.colonyController.AddWorkers(x);
@@ -50,8 +60,13 @@ public abstract class Worksite : MonoBehaviour {
 	}
 	protected abstract void RecalculateWorkspeed() ;
 
-	#region save-load system
-	virtual public WorksiteSerializer Save() {
+    private void OnDestroy()
+    {
+        if (workersCount > 0 & !GameMaster.applicationStopWorking) GameMaster.colonyController.AddWorkers(workersCount);
+    }
+
+    #region save-load system
+    virtual public WorksiteSerializer Save() {
 		WorksiteSerializer ws = GetWorksiteSerializer();
 		ws.type = WorksiteType.Abstract;
 		return ws;
@@ -78,38 +93,23 @@ public abstract class Worksite : MonoBehaviour {
 	}
 	#endregion
 
-	void OnGUI () {
-		if (showOnGUI == false) return;
-		GUI.depth = UI.GUIDEPTH_WORKSITE_WINDOW;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		float p = rr.height;
-		GUI.Label (new Rect(rr.x , rr.y, p, p), "0" );
-		GUI.Label ( new Rect (rr.xMax - p, rr.y, p, p), maxWorkers.ToString(), PoolMaster.GUIStyle_RightOrientedLabel);
-		int wcount = (int)GUI.HorizontalSlider(new Rect(rr.x +  p, rr.y, rr.width - 2 * p, p), workersCount, 0, maxWorkers);
-		if (wcount != workersCount) {
-			if (wcount > workersCount) GameMaster.colonyController.SendWorkers(wcount - workersCount, this, WorkersDestination.ForWorksite);
-			else FreeWorkers(workersCount - wcount);
-		}
-		rr.y += p;
-		p *= 1.5f;
-		if ( workersCount > 0 && GUI.Button (new Rect( rr.x, rr.y, p, p ), PoolMaster.minusX10Button_tx)) { FreeWorkers(workersCount);}
-		if ( workersCount > 0 && GUI.Button (new Rect( rr.x + p, rr.y, p, p ), PoolMaster.minusButton_tx)) { FreeWorkers(1);}
-		GUI.Label ( new Rect (rr.x + 2 *p, rr.y, rr.width - 4 * p, p), workersCount.ToString(), PoolMaster.GUIStyle_CenterOrientedLabel );
-		if ( workersCount != maxWorkers && GUI.Button (new Rect( rr.xMax - 2 *p, rr.y, p, p ), PoolMaster.plusButton_tx) ) { GameMaster.colonyController.SendWorkers(1, this, WorkersDestination.ForWorksite);}
-		if ( workersCount != maxWorkers &&GUI.Button (new Rect( rr.xMax - p, rr.y, p, p ), PoolMaster.plusX10Button_tx)) { GameMaster.colonyController.SendWorkers(maxWorkers - workersCount,this, WorkersDestination.ForWorksite);}
-		rr.y += p;
-		GUI.Label ( new Rect (rr.x , rr.y, rr.width , rr.height), actionLabel, PoolMaster.GUIStyle_CenterOrientedLabel );
-		rr.y += rr.height;
-		GUI.Label ( new Rect (rr.x , rr.y, rr.width , rr.height), string.Format("{0:0.##}",workSpeed) + ' ' + Localization.ui_points_sec, PoolMaster.GUIStyle_CenterOrientedLabel );
-		rr.y += rr.height;
+    public UIObserver ShowOnGUI()
+    {
+        if (observer == null) observer = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
+        else observer.gameObject.SetActive(true);
+        observer.SetWorksiteObserver(this);
+        showOnGUI = true;
+        return observer;
+    }
 
-		if (GUI.Button ( rr, Localization.ui_stopWork) ) { Destroy(this); return; }
-		rr.y += rr.height;
-		if (GUI.Button ( rr, Localization.menu_cancel) ) { showOnGUI = false; UI.current.DropFocus();}
-	}
-
-	void OnDestroy() {
-		GameMaster.colonyController.AddWorkers(workersCount);
-		if (sign != null) Destroy(sign.gameObject);
-	}
+    virtual public void StopWork()
+    {
+        if (workersCount > 0)
+        {
+            GameMaster.colonyController.AddWorkers(workersCount);
+            workersCount = 0;
+        }
+        if (sign != null) Destroy(sign.gameObject);
+        Destroy(this);
+    }
 }

@@ -27,25 +27,6 @@ public class Hospital : WorkBuilding {
         return; // иначе заместится wokbuilding.update
     }
 
-    override public int AddWorkers(int x)
-    {
-        if (workersCount == maxWorkers) return 0;
-        else
-        {
-            if (x > maxWorkers - workersCount)
-            {
-                x -= (maxWorkers - workersCount);
-                workersCount = maxWorkers;
-            }
-            else
-            {
-                workersCount += x;
-            }
-            RecalculateWorkspeed();
-            GameMaster.colonyController.RecalculateHospitals();
-            return x;
-        }
-    }
     override public void FreeWorkers(int x)
     {
         if (x > workersCount) x = workersCount;
@@ -63,7 +44,9 @@ public class Hospital : WorkBuilding {
 
     override protected void RecalculateWorkspeed()
     {
+        float prevCoverage = coverage;
         coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
+        if (prevCoverage != coverage) GameMaster.colonyController.RecalculateHospitals();
     }
 
     public static void SetBirthrateMode(int x) {

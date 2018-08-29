@@ -9,13 +9,13 @@ public class Block : MonoBehaviour {
 	public BlockType type {get;protected set;}
 
 	public Chunk myChunk {get; protected  set;}
-	public bool isTransparent {get;protected  set;}
+	public bool isTransparent {get;protected  set;} // <- замени на transparent map
 	public ChunkPos pos {get; protected  set;}
 	public Structure mainStructure{get;protected set;}
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
-	public byte visibilityMask;
-	public byte renderMask = 0;
+	public byte visibilityMask; // видимость относительно других блоков
+	public byte renderMask = 0; // видимость относительно камеры
 	public bool indestructible {get; protected set;}
 
 	public virtual void ReplaceMaterial(int newId) {

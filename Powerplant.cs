@@ -8,8 +8,9 @@ public class Powerplant : WorkBuilding {
 	GeneratorFuel fuelType;
 	ResourceType fuel;
 	[SerializeField]
-	 float output = 100, fuelCount = 1, fuelBurnTime = 10, fuelLoadTryingTime = 2;
-	float ftimer = 0;
+	 float output = 100, fuelCount = 1, fuelBurnTime = 24, fuelLoadTryingTime = 2;
+    float ftimer, takenFuel = 0;
+    public float fuelLeft { get; private set; }
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -24,37 +25,53 @@ public class Powerplant : WorkBuilding {
 		if (GameMaster.gameSpeed == 0 ) return;
 		if (ftimer > 0) ftimer -= Time.deltaTime * GameMaster.gameSpeed;
 		if (ftimer <= 0) {
-			float takenFuel =  0;
-			if (workersCount > 0 && isActive) takenFuel = GameMaster.colonyController.storage.GetResources(fuel, fuelCount);
+            if (workersCount > 0 && isActive) takenFuel = GameMaster.colonyController.storage.GetResources(fuel, fuelCount);
+            else takenFuel = 0;
 			float newEnergySurplus = 0;
 			if (takenFuel == 0) {
 				newEnergySurplus = 0;
 				ftimer = fuelLoadTryingTime;
 			}
 			else {
+                float rel = workersCount / (float)maxWorkers;
 				if (workersCount > 0) {
-					if (workersCount >  maxWorkers / 2) {
-						if (workersCount > maxWorkers * 5f/6f) {
-							newEnergySurplus = output;
-						}
-						else newEnergySurplus = output/2f;
-					}
+					if (rel > 0.5f) {
+                        if (rel > 0.83f)
+                        {
+                            rel = (rel - 0.83f) / 0.16f;
+                            newEnergySurplus = Mathf.Lerp(0.5f, 1, rel) * output;
+                        }
+                        else
+                        {
+                            rel = (rel - 0.5f) / 0.33f;
+                            newEnergySurplus = Mathf.Lerp(0, 0.5f, rel) * output;
+                        }
+                    }
 					else {
-						if (workersCount > maxWorkers / 6) newEnergySurplus = output * 0.25f;
-						else newEnergySurplus = output * 0.1f;
-					}
+                        if (rel > 0.16f)
+                        {
+                            rel = (rel - 0.16f) / 0.34f;
+                            newEnergySurplus = Mathf.Lerp(0.25f, 0.5f, rel) * output;
+                        }
+                        else
+                        {
+                            rel /= 0.1f;
+                            newEnergySurplus = Mathf.Lerp(0, 0.1f, rel) * output;
+                        }
+                    }
 				}
 				else newEnergySurplus = 0;
-				ftimer = fuelBurnTime * takenFuel / fuelCount * 2 * ((float)workersCount / (float)maxWorkers);
-			}
+				ftimer = fuelBurnTime * takenFuel / fuelCount * rel;
+            }
 			if (newEnergySurplus != energySurplus) {
 				energySurplus = newEnergySurplus;
 				GameMaster.colonyController.RecalculatePowerGrid();
 			}
 		}
-	}
+        fuelLeft = takenFuel / fuelCount * ftimer/fuelBurnTime;
+    }
 
-	override public int AddWorkers (int x) {
+	override public int AddWorkers (int x) { // не используется recalculate workspeed
 		if (workersCount == maxWorkers) return 0;
 		else {
 			if (x > maxWorkers - workersCount) {
@@ -68,8 +85,9 @@ public class Powerplant : WorkBuilding {
 		}
 	}
 
-	override public void FreeWorkers(int x) {
-		if (x > workersCount) x = workersCount;
+	override public void FreeWorkers(int x)
+    { // не используется recalculate workspeed
+        if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		GameMaster.colonyController.AddWorkers(x);
 	}
@@ -91,14 +109,16 @@ public class Powerplant : WorkBuilding {
 	}
 	#endregion
 
-	void OnGUI() {
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		GUI.DrawTexture(new Rect(rr.x, rr.y, rr.height, rr.height), fuel.icon, ScaleMode.StretchToFill);
-		if (energySurplus > 0) {
-			GUI.DrawTexture(new Rect(rr.x + rr.height, rr.y, (Screen.width - rr.x - rr.height) * ftimer /fuelBurnTime, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-			GUI.Label(new Rect(rr.x + rr.height, rr.y, Screen.width - rr.x - rr.height, rr.height), string.Format("{0:0.##}", ftimer / fuelBurnTime * 100) + '%' );
-			rr.y += rr.height;
-		}
-	}
+    public int GetFuelResourseID() { return fuel.ID; }
+
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        UIController.current.ActivateProgressPanel(ProgressPanelMode.Powerplant);
+        showOnGUI = true;
+        return workbuildingObserver;
+    }
+
 }

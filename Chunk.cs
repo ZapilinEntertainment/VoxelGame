@@ -174,13 +174,13 @@ public sealed class Chunk : MonoBehaviour
             Block bx = GetBlock(i + 1, j, k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 61;
             bx = GetBlock(i - 1, j, k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 55;
             bx = GetBlock(i, j + 1, k); if (bx != null && !bx.isTransparent && bx.type != BlockType.Shapeless && (bx.pos.y != GameMaster.layerCutHeight + 1)) vmask &= 47;
-            bx = GetBlock(i, j - 1, k); if (bx != null && !bx.isTransparent && (bx.type == BlockType.Cube || bx.type == BlockType.Cave)) vmask &= 31;
+            bx = GetBlock(i, j - 1, k); if (bx != null && !bx.isTransparent && (bx.type == BlockType.Cube | (bx.type == BlockType.Cave && (bx as CaveBlock).haveSurface ))) vmask &= 31;
             bx = GetBlock(i, j, k + 1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 62;
             bx = GetBlock(i, j, k - 1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 59;
         }
         return vmask;
     }
-    void ApplyVisibleInfluenceMask(int x, int y, int z, byte mask)
+    public void ApplyVisibleInfluenceMask(int x, int y, int z, byte mask)
     {
         Block b = GetBlock(x, y, z + 1); if (b != null) b.ChangeVisibilityMask(2, ((mask & 1) != 0));
         b = GetBlock(x + 1, y, z); if (b != null) b.ChangeVisibilityMask(3, ((mask & 2) != 0));
@@ -195,10 +195,15 @@ public sealed class Chunk : MonoBehaviour
     {
         return AddBlock(f_pos, f_type, material1_id, material1_id, naturalGeneration);
     }
-    public Block AddBlock(ChunkPos f_pos, BlockType f_type, int material1_id, int material2_id, bool naturalGeneration)
+    public Block AddBlock(ChunkPos f_pos, BlockType f_type, int i_floorMaterialID, int i_ceilingMaterialID, bool i_naturalGeneration)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (GetBlock(x, y, z) != null) return ReplaceBlock(f_pos, f_type, material1_id, material2_id, naturalGeneration);
+        if (f_type == BlockType.Cave)
+        {
+            float pts = CalculateSupportPoints(x, y, z);
+            if (pts < 1) f_type = BlockType.Surface;
+        }
+        if (GetBlock(x, y, z) != null) return ReplaceBlock(f_pos, f_type, i_floorMaterialID, i_ceilingMaterialID, i_naturalGeneration);
         GameObject g = null;
         CubeBlock cb = null;
         Block b = null;
@@ -210,7 +215,7 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Cube:
                 g = new GameObject();
                 cb = g.AddComponent<CubeBlock>();
-                cb.BlockSet(this, f_pos, material1_id, naturalGeneration);
+                cb.BlockSet(this, f_pos, i_floorMaterialID, i_naturalGeneration);
                 blocks[x, y, z] = cb;
                 if (cb.isTransparent == false) influenceMask = 0; else influenceMask = 1; // закрывает собой все соседние стенки
                 calculateUpperBlock = true;
@@ -218,35 +223,43 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Shapeless:
                 g = new GameObject();
                 blocks[x, y, z] = g.AddComponent<Block>();
-                blocks[x, y, z].BlockSet(this, f_pos, material1_id);
+                blocks[x, y, z].BlockSet(this, f_pos, i_floorMaterialID);
                 break;
             case BlockType.Surface:
-                b = blocks[x, y - 1, z];
+                b = GetBlock(x, y-1,z);
                 if (b == null)
                 {
                     return null;
                 }
+                if ( b.type != BlockType.Surface) influenceMask = 31;
+                else influenceMask = 63;
+
                 g = new GameObject();
                 SurfaceBlock sb = g.AddComponent<SurfaceBlock>();
-                sb.SurfaceBlockSet(this, f_pos, material1_id);
+                sb.SurfaceBlockSet(this, f_pos, i_floorMaterialID);
                 blocks[x, y, z] = sb;
                 surfaceBlocks.Add(sb);
-                if (b.type != BlockType.Surface) influenceMask = 31;
-                else influenceMask = 63;
+                
                 break;
             case BlockType.Cave:
                 float spoints = CalculateSupportPoints(x, y, z);
                 if (spoints < 1) goto case BlockType.Surface;
 
                 Block lowerBlock = blocks[x, y - 1, z];
-                if (lowerBlock == null) return null; // переделать на cave без пола
+                if (lowerBlock == null) i_floorMaterialID = -1;
                 g = Instantiate(cave_pref);
                 CaveBlock caveb = g.GetComponent<CaveBlock>();
-                caveb.CaveBlockSet(this, f_pos, material2_id, material1_id);
+                caveb.CaveBlockSet(this, f_pos, i_ceilingMaterialID, i_floorMaterialID);
                 blocks[x, y, z] = caveb;
-                if (lowerBlock.type != BlockType.Surface) influenceMask = 15;
-                else influenceMask = 47;
-                calculateUpperBlock = true;
+                if (lowerBlock.type == BlockType.Surface) // снизу структура с isBasement == true ?
+                {
+                    influenceMask = 47; // все грани, кроме верхней
+                }
+                else
+                {
+                    if (caveb.haveSurface) influenceMask = 15; else influenceMask = 47;
+                    calculateUpperBlock = true;
+                }
                 surfaceBlocks.Add(caveb);
                 break;
         }
@@ -260,9 +273,9 @@ public sealed class Chunk : MonoBehaviour
             {
                 if (GetBlock(x, y + 2, z) != null)
                 {
-                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Cave, material2_id, blocks[x, y + 2, z].material_id, naturalGeneration);
+                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Cave, i_ceilingMaterialID, blocks[x, y + 2, z].material_id, i_naturalGeneration);
                 }
-                else AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, material2_id, material2_id, naturalGeneration);
+                else AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
             }
         }
         return b;
@@ -275,6 +288,12 @@ public sealed class Chunk : MonoBehaviour
     public Block ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int material1_id, int material2_id, bool naturalGeneration)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
+        if (GetBlock(x, y, z) == null) return null;
+        if (f_newType == BlockType.Cave)
+        {
+            float pts = CalculateSupportPoints(x, y, z);
+            if (pts < 1) f_newType = BlockType.Surface;
+        }
         Block originalBlock = GetBlock(x, y, z);
         if (originalBlock == null) return AddBlock(f_pos, f_newType, material1_id, material2_id, naturalGeneration);
         if (originalBlock.type == f_newType)
@@ -389,15 +408,52 @@ public sealed class Chunk : MonoBehaviour
     {
         // в сиквеле стоит пересмотреть всю иерархию классов ><
         //12.06 нет, я так не думаю
-        Block b = blocks[pos.x, pos.y, pos.z];
+        Block b = GetBlock(pos);
         if (b == null || b.indestructible == true) return;
         int x = pos.x, y = pos.y, z = pos.z;
-        bool neighboursSupportCalculation = (b.type == BlockType.Cube | b.type == BlockType.Cave);
+        bool neighboursSupportCalculation = (b.type == BlockType.Cube | b.type == BlockType.Cave) , makeSurface = false;
         switch (b.type)
         {
             case BlockType.Cube:
-                Block upperBlock = GetBlock(x, y + 1, z);
-                if (upperBlock != null && (upperBlock.type == BlockType.Surface | upperBlock.type == BlockType.Cave)) DeleteBlock(new ChunkPos(x, y + 1, z));
+                {
+                    Block upperBlock = GetBlock(x, y + 1, z);
+                    if (upperBlock != null)
+                    {
+                        if (upperBlock.type == BlockType.Surface) DeleteBlock(new ChunkPos(x, y + 1, z));
+                        else
+                        {
+                            if (upperBlock.type == BlockType.Cave) (upperBlock as CaveBlock).DestroySurface();
+                        }
+                    }
+                    else
+                    {
+                        Block lowerBlock = GetBlock(x, y - 1, z);
+                        if (lowerBlock != null)
+                        {
+                            SurfaceBlock surf = lowerBlock as SurfaceBlock;
+                            if (surf != null)
+                            {
+                                if (surf.cellsStatus != 0)
+                                {
+                                    foreach (Structure s in surf.surfaceObjects)
+                                    {
+                                        if (s == null) continue;
+                                        if (s.isBasement)
+                                        {
+                                            makeSurface = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (surf.type == BlockType.Cave) makeSurface = true;
+                            }
+                            else
+                            {
+                                if (lowerBlock.type == BlockType.Cube) makeSurface = true;
+                            }
+                        }
+                    }
+                }
                 break;
             case BlockType.Surface:
             case BlockType.Cave:
@@ -437,6 +493,7 @@ public sealed class Chunk : MonoBehaviour
                 if (supportPoints < 1) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
             }
         }
+        if (makeSurface) AddBlock(pos, BlockType.Surface, b.material_id, false);
     }
 
     public float CalculateSupportPoints(int x, int y, int z)

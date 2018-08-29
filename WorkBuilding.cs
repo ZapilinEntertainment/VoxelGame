@@ -43,6 +43,11 @@ public abstract class WorkBuilding : Building {
 		workflow = 0;
 	}
 
+    /// <summary>
+    /// returns excess workers
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
 	virtual public int AddWorkers (int x) {
 		if (workersCount == maxWorkers) return 0;
 		else {
@@ -52,6 +57,7 @@ public abstract class WorkBuilding : Building {
 			}
 			else {
 				workersCount += x;
+                x = 0;
 			}
 			RecalculateWorkspeed();
 			return x;

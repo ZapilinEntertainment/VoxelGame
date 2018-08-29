@@ -3,33 +3,35 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CleanSite : Worksite {
-	bool diggingMission = false;
+	public bool diggingMission {get;protected set;}
 	SurfaceBlock workObject;
 	const int START_WORKERS_COUNT = 10;
 
 	void Update () {
 		if (GameMaster.gameSpeed == 0) return;
 		if (workObject ==null) {
-			Destroy(this);
+            StopWork();
 			return;
 		}
 		if (workObject.surfaceObjects.Count == 0) {
 			Chunk ch = workObject.myChunk;
 			int x = workObject.pos.x, y = workObject.pos.y, z = workObject.pos.z;
-			ch.DeleteBlock(workObject.pos);
+            if (workObject.type != BlockType.Cave) ch.DeleteBlock(workObject.pos);
+            else (workObject as CaveBlock).DestroySurface();
 			if (diggingMission) {
 				Block basement = ch.GetBlock(x, y - 1, z);
 				if (basement == null || basement.type != BlockType.Cube) {
-					FreeWorkers(workersCount);
+					FreeWorkers(workersCount); 
 				}
 				else {
 					DigSite ds =  basement.gameObject.AddComponent<DigSite>();
 					ds.Set(basement as CubeBlock, true);
-					ds.AddWorkers(workersCount);
-					workersCount = 0;
+					workersCount =  ds.AddWorkers(workersCount);
+					if (workersCount > 0) FreeWorkers();
+                    ds.ShowOnGUI();
 				}
 			}
-			Destroy(this);
+            StopWork();
 			return;
 		}
 		if (workersCount  > 0) {
@@ -45,34 +47,20 @@ public class CleanSite : Worksite {
 	void LabourResult() {
 		Structure s = workObject.surfaceObjects[0];
 		if (s == null || !s.gameObject.activeSelf) {workObject.RequestAnnihilationAtIndex(0);return;}
-			Plant p = s.GetComponent<Plant>();
-			if (p != null) {
-			if (p is Tree) {
-					Tree t = s.GetComponent<Tree>();
-					if (t != null) {
-						float lumberDelta= t.CalculateLumberCount(); 
-						GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, lumberDelta * 0.9f);
-						t.Chop();
-						workflow -= lumberDelta;
-					}
-				}
-			else {
-				p.Annihilate( false );
-				workflow--;
-			}
-			}
-			else {
+		if (s.id == Structure.PLANT_ID) {
+			(s as Plant).Harvest();
+		}
+		else {
 				HarvestableResource hr = s.GetComponent<HarvestableResource>();
 				if (hr != null) {
 					GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
-					Destroy(hr.gameObject);
+					hr.Annihilate( false );
 				}
 				else {
 					s.ApplyDamage(workflow);
 				}
-			}
-		workObject.surfaceObjects[0].Annihilate( false );
-		actionLabel = Localization.ui_clean_in_progress + " (" + workObject.surfaceObjects.Count.ToString() +' '+ Localization.objects_left +")" ;
+		}
+		actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + workObject.surfaceObjects.Count.ToString() +' '+ Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) +")" ;
 	}
 
 	protected override void RecalculateWorkspeed() {
@@ -81,7 +69,7 @@ public class CleanSite : Worksite {
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
 		workObject = block;
-		if (block.grassland != null) {Destroy(block.grassland);}
+		if (block.grassland != null) block.grassland.Annihilation(true); 
 		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.worksite = this;
 		sign.transform.position = workObject.transform.position;
@@ -93,7 +81,7 @@ public class CleanSite : Worksite {
 	#region save-load mission
 	override public WorksiteSerializer Save() {
 		if (workObject == null) {
-			Destroy(this);
+            StopWork();
 			return null;
 		}
 		WorksiteSerializer ws = GetWorksiteSerializer();
