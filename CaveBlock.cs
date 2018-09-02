@@ -12,26 +12,9 @@ public class CaveBlockSerializer
 
 public class CaveBlock : SurfaceBlock
 {
-    [SerializeField]
     MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west
-    [SerializeField] MeshRenderer ceilingRenderer, _surfaceRenderer; // fiti
+    MeshRenderer ceilingRenderer;
     public bool haveSurface { get; private set; }
-
-    void Awake()
-    {
-        cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-        for (int i = 0; i < map.GetLength(0); i++)
-        {
-            for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
-        }
-        surfaceRenderer = _surfaceRenderer;
-        haveSurface = true;
-        material_id = 0;
-        surfaceObjects = new List<Structure>();
-        artificialStructures = 0;
-        isTransparent = false;
-        visibilityMask = 0;
-    }
 
     public override void ReplaceMaterial(int newId)
     {
@@ -51,33 +34,60 @@ public class CaveBlock : SurfaceBlock
 
     public void CaveBlockSet(Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)
     {
-        // проверки при повторном использовании?
-        isTransparent = false;
-        myChunk = f_chunk; transform.parent = f_chunk.transform;
-        pos = f_chunkPos; transform.localPosition = new Vector3(pos.x, pos.y, pos.z);
-        transform.localRotation = Quaternion.Euler(Vector3.zero);
-        material_id = f_up_material_id;
-        foreach (MeshRenderer mr in faces)
+        if (firstSet)
         {
-            if (mr == null) continue;
-            else mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>()); ;
-        }
-        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, ceilingRenderer.GetComponent<MeshFilter>());
-        if (f_down_material_id != -1)
-        {
+            cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
+            }
             haveSurface = true;
-            surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(f_down_material_id, surfaceRenderer.GetComponent<MeshFilter>());
+            material_id = 0;
+            surfaceObjects = new List<Structure>();
+            artificialStructures = 0;
+            isTransparent = false;
+            visibilityMask = 0;
+            firstSet = false;
+            personalNumber = lastUsedNumber++;
         }
-        else
+        myChunk = f_chunk;
+        model = Object.Instantiate(PoolMaster.cavePref);
+        Transform t = model.transform;
+        // setting renderers
         {
-            if (surfaceObjects.Count != 0) ClearSurface(false);
-            haveSurface = false;
-            surfaceRenderer.GetComponent<Collider>().enabled = false;
-            surfaceRenderer.enabled = false;
+            faces = new MeshRenderer[4];
+            faces[0] = t.GetChild(0).GetComponent<MeshRenderer>();
+            faces[1] = t.GetChild(1).GetComponent<MeshRenderer>();
+            faces[2] = t.GetChild(2).GetComponent<MeshRenderer>();
+            faces[3] = t.GetChild(3).GetComponent<MeshRenderer>();
+            ceilingRenderer = t.GetChild(4).GetComponent<MeshRenderer>();
+            surfaceRenderer = t.GetChild(5).GetComponent<MeshRenderer>();            
+            material_id = f_up_material_id;
+            foreach (MeshRenderer mr in faces)
+            {
+                if (mr == null) continue;
+                else mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>()); ;
+            }
+            ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, ceilingRenderer.GetComponent<MeshFilter>());
+            if (f_down_material_id != -1)
+            {
+                haveSurface = true;
+                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(f_down_material_id, surfaceRenderer.GetComponent<MeshFilter>());
+            }
+            else
+            {
+                if (surfaceObjects.Count != 0) ClearSurface(false);
+                haveSurface = false;
+                surfaceRenderer.GetComponent<Collider>().enabled = false;
+                surfaceRenderer.enabled = false;
+            }
         }
-
+        t.parent = f_chunk.transform;
+        pos = f_chunkPos;
+        t.localPosition = new Vector3(pos.x, pos.y, pos.z);
+        t.localRotation = Quaternion.Euler(Vector3.zero);
         type = BlockType.Cave; isTransparent = false;
-        gameObject.name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+        model.name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
     }
 
     override public void SetRenderBitmask(byte x)

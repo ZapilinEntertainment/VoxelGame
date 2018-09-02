@@ -13,27 +13,26 @@ public class WorksiteSerializer {
 
 public enum WorksiteType {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
 
-public abstract class Worksite : MonoBehaviour {
+public abstract class Worksite {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
     protected float workflow, labourTimer;
     public float workSpeed { get; protected set; }
 	public WorksiteSign sign{get; protected set;}
 	public string actionLabel { get; protected set; }
-	public bool showOnGUI = false;
+	public bool showOnGUI = false, deleted = false;
 	public float gui_ypos = 0;
     public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
 
-	void Awake () {
-		labourTimer = 0; workflow = 0;
-		workersCount = 0; 
-	}
+    public virtual void WorkUpdate(float t)
+    {
+    }
 
 	/// <summary>
 	/// return excess workers
 	/// </summary>
 	/// <returns>The workers.</returns>
-	/// <param name="x">The x coordinate.</param>
+	/// <param name="x">The x coordinate.</param>    /// 
 	public int AddWorkers ( int x) {
 		if (workersCount == maxWorkers) return x;
 		else {
@@ -59,11 +58,6 @@ public abstract class Worksite : MonoBehaviour {
 		RecalculateWorkspeed();
 	}
 	protected abstract void RecalculateWorkspeed() ;
-
-    private void OnDestroy()
-    {
-        if (workersCount > 0 & !GameMaster.applicationStopWorking) GameMaster.colonyController.AddWorkers(workersCount);
-    }
 
     #region save-load system
     virtual public WorksiteSerializer Save() {
@@ -104,12 +98,14 @@ public abstract class Worksite : MonoBehaviour {
 
     virtual public void StopWork()
     {
+        if (deleted) return;
+        else deleted = true;
         if (workersCount > 0)
         {
             GameMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Destroy(sign.gameObject);
-        Destroy(this);
+        if (sign != null) Object.Destroy(sign.gameObject);
+        GameMaster.colonyController.RemoveWorksite(this);
     }
 }

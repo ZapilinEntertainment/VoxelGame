@@ -4,10 +4,14 @@ using UnityEngine;
 
 public enum BlockType {Shapeless, Cube, Surface, Cave}
 
-public class Block : MonoBehaviour {
-	public const float QUAD_SIZE = 1;
-	public BlockType type {get;protected set;}
+public class Block {
+    public const float QUAD_SIZE = 1;
+    public BlockType type { get; protected set; }
+    public int personalNumber { get; protected set; }
+    public static int lastUsedNumber = 0;
 
+    public Worksite worksite {get;protected set;}
+    public GameObject model { get; protected set; }
 	public Chunk myChunk {get; protected  set;}
 	public bool isTransparent {get;protected  set;} // <- замени на transparent map
 	public ChunkPos pos {get; protected  set;}
@@ -17,31 +21,45 @@ public class Block : MonoBehaviour {
 	public byte visibilityMask; // видимость относительно других блоков
 	public byte renderMask = 0; // видимость относительно камеры
 	public bool indestructible {get; protected set;}
+    protected bool firstSet = true;
 
 	public virtual void ReplaceMaterial(int newId) {
 		material_id = newId;
 	}
 
 	public void ShapelessBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
-		isTransparent = true; material_id = 0;
+        if (firstSet)
+        {
+            type = BlockType.Shapeless;
+            personalNumber = lastUsedNumber++;
+            firstSet = false;
+        }
+        isTransparent = true; material_id = 0;
 		myChunk = f_chunk; 
-		transform.parent = f_chunk.transform;
-		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
-		transform.localRotation = Quaternion.Euler(Vector3.zero);
+		model.transform.parent = f_chunk.transform;
+		pos = f_chunkPos; model.transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
+		model.transform.localRotation = Quaternion.Euler(Vector3.zero);
 		mainStructure = f_mainStructure;
 		if (mainStructure != null) blockedByStructure = true; else blockedByStructure = false;
-		type = BlockType.Shapeless;
-		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+		
+		model.gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 }
 	public virtual void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
+        if (firstSet)
+        {
+            type = BlockType.Shapeless;
+            personalNumber = lastUsedNumber++;
+            firstSet = false;
+        }
 		isTransparent = true; material_id = 0;
-		myChunk = f_chunk; transform.parent = f_chunk.transform;
-		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
-		transform.localRotation = Quaternion.Euler(Vector3.zero);
+		myChunk = f_chunk;
+        model.transform.parent = f_chunk.transform;
+		pos = f_chunkPos;
+        model.transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
+		model.transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = newId;
 		blockedByStructure = false;
-		type = BlockType.Shapeless;
-		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+		model.gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
 
 	public void MakeIndestructible(bool x) {
@@ -63,7 +81,24 @@ public class Block : MonoBehaviour {
 		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
 
-	virtual public BlockSerializer Save() {
+    public void SetWorksite(Worksite w)
+    {
+        Worksite oldw = worksite;
+        worksite = w;
+        if (oldw != null) oldw.StopWork();        
+    }
+    public void ResetWorksite()
+    {
+        if (worksite != null)
+        {
+            Worksite w = worksite;
+            worksite = null;
+            w.StopWork();            
+        }
+    }
+
+    #region save-load
+    virtual public BlockSerializer Save() {
 		return GetBlockSerializer();
 	} 
 
@@ -73,13 +108,16 @@ public class Block : MonoBehaviour {
 
 	protected void LoadBlockData(BlockSerializer bs) {
 		isTransparent = bs.isTransparent;
+        personalNumber = bs.personalNumber;
 	}
 
-	void OnDestroy() {
-		if (mainStructure == null) return;
-		MultiblockStructure ms =  mainStructure.gameObject.GetComponent<MultiblockStructure>();
-		if (ms != null) ms.PartCollapse(pos);
-	}
+    public void Annihilate()
+    {
+        if (model != null) Object.Destroy(model);
+        if (mainStructure == null) return;
+        MultiblockStructure ms = mainStructure.gameObject.GetComponent<MultiblockStructure>();
+        if (ms != null) ms.PartCollapse(pos);
+    }
 
 	protected BlockSerializer GetBlockSerializer() {
 		BlockSerializer bs = new BlockSerializer();
@@ -87,8 +125,10 @@ public class Block : MonoBehaviour {
 		bs.isTransparent = isTransparent;
 		bs.pos = pos;
 		bs.material_id = material_id;
+        bs.personalNumber = personalNumber;
 		return bs;
 	}
+    #endregion
 }
 
 [System.Serializable]
@@ -96,6 +136,6 @@ public class BlockSerializer {
 	public BlockType type;
 	public bool isTransparent;
 	public ChunkPos pos;
-	public int material_id;
+	public int material_id, personalNumber;
 	public byte[] specificData;
 }

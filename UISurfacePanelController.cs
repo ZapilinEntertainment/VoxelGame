@@ -89,7 +89,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     hq = GameMaster.colonyController.hq;
                     CheckGatherButton();
 
-                    CleanSite cs = observingSurface.GetComponent<CleanSite>();
+                    CleanSite cs = observingSurface.worksite as CleanSite;
                     bool check = (cs != null && cs.diggingMission);
                     if (check != status_digOrdered)
                     {
@@ -163,9 +163,9 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-			GatherSite gs = observingSurface.GetComponent<GatherSite>();
+			GatherSite gs = observingSurface.worksite as GatherSite;
 			if (gs == null) {
-				gs = observingSurface.gameObject.AddComponent<GatherSite>();
+				gs = new GatherSite();
 				gs.Set(observingSurface);
                 UIController.current.ShowWorksite(gs);
 			}
@@ -179,9 +179,9 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-			CleanSite cs = observingSurface.GetComponent<CleanSite>();
+			CleanSite cs = observingSurface.worksite as CleanSite;
 			if (cs == null) {
-				cs = observingSurface.gameObject.AddComponent<CleanSite>();
+				cs = new CleanSite();
 				cs.Set(observingSurface, true);
                 UIController.current.ShowWorksite(cs);
             }
@@ -194,7 +194,7 @@ public sealed class UISurfacePanelController : UIObserver {
 
     void CheckGatherButton()
     {
-        if (observingSurface.GetComponent<GatherSite>() != null)
+        if (!(observingSurface.worksite is GatherSite))
         {
             if (status_gather != true)
             {
@@ -457,7 +457,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         {
                             Structure s = Structure.GetNewStructure(Structure.COLUMN_ID);
                             s.SetBasement(observingSurface, new PixelPosByte(7, 7));
-                            PoolMaster.current.BuildSplash(observingSurface.transform.position);
+                            PoolMaster.current.BuildSplash(observingSurface.model.transform.position);
                         }
                         else
                         {
@@ -468,8 +468,7 @@ public sealed class UISurfacePanelController : UIObserver {
                
                 break;
             case CostPanelMode.BlockBuilding:
-                BlockBuildingSite bbs = observingSurface.gameObject.GetComponent<BlockBuildingSite>();
-                if (bbs == null) bbs = observingSurface.gameObject.AddComponent<BlockBuildingSite>();
+                BlockBuildingSite bbs = new BlockBuildingSite();
                 bbs.Set(observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
                 SetCostPanelMode(CostPanelMode.Disabled);
                 UIController.current.ShowWorksite(bbs);
@@ -501,7 +500,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		if (working) {
             CheckGatherButton();
 
-            CleanSite cs = observingSurface.GetComponent<CleanSite>();
+            CleanSite cs = new CleanSite();
             if (cs != null && cs.diggingMission)
             {
 
@@ -568,8 +567,8 @@ public sealed class UISurfacePanelController : UIObserver {
     private void PrepareConstructionPlane()
     {
         surfaceBuildingPanel.SetActive(false);
-        constructionPlane.transform.position = observingSurface.transform.position + Vector3.down * 0.45f;
-        constructionPlane.transform.rotation = observingSurface.transform.rotation;
+        constructionPlane.transform.position = observingSurface.model.transform.position + Vector3.down * 0.45f;
+        constructionPlane.transform.rotation = observingSurface.model.transform.rotation;
         constructionPlane.SetActive(true);        
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
@@ -791,7 +790,7 @@ public sealed class UISurfacePanelController : UIObserver {
            Structure s = Structure.GetNewStructure(chosenStructure.id);
 		   s.gameObject.SetActive(true);
 		    s.SetBasement(observingSurface, new PixelPosByte(x,z));
-           PoolMaster.current.BuildSplash(observingSurface.transform.position);
+           PoolMaster.current.BuildSplash(observingSurface.model.transform.position);
             if (constructionPlane.activeSelf)
             {
                 PrepareConstructionPlane();

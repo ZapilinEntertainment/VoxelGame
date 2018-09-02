@@ -55,17 +55,50 @@ public class SurfaceBlock : Block {
 
 	public static UISurfacePanelController surfaceObserver;
 
-	void Awake() 
-	{
-		cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-		for (int i =0; i < map.GetLength(0); i++) {
-			for (int j =0; j< map.GetLength(1); j++) map[i,j] = false;
-		}
-		material_id = 0;
-		surfaceObjects = new List<Structure>();
-		artificialStructures = 0;
-		isTransparent = false;
-	}
+    public void SurfaceBlockSet(Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id)
+    {
+        if (firstSet)
+        {
+            cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
+            }
+            material_id = 0;
+            surfaceObjects = new List<Structure>();
+            artificialStructures = 0;
+            isTransparent = false;            
+            type = BlockType.Surface;
+            personalNumber = lastUsedNumber++;
+            firstSet = false;
+        }
+        myChunk = f_chunk;
+
+        if (model == null)
+        {
+            model = new GameObject();
+            model.transform.parent = f_chunk.transform;
+        }
+        if (surfaceRenderer == null)
+        {
+            GameObject g = Object.Instantiate(PoolMaster.quad_pref);
+            surfaceRenderer = g.GetComponent<MeshRenderer>();
+            surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            g.transform.parent = model.transform;
+            g.transform.localPosition = new Vector3(0, -QUAD_SIZE / 2f, 0);
+            g.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            g.name = "upper_plane";
+            g.tag = "BlockCollider";
+        }
+        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
+        material_id = f_material_id;
+        if (visibilityMask != 0) surfaceRenderer.enabled = true;       
+       
+        pos = f_chunkPos;
+        model.transform.localPosition = new Vector3(pos.x, pos.y, pos.z);
+        model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        model.name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+    }
 
     public void SetGrassland(Grassland g) { grassland = g; }
 
@@ -159,8 +192,8 @@ public class SurfaceBlock : Block {
     }
     public Vector2 WorldToMapCoordinates(Vector3 point)
     {
-        point = transform.InverseTransformPoint(point);
-        point.y = 0;
+        if (model == null) return Vector2.zero;
+        point = model.transform.InverseTransformPoint(point);
         return new Vector2(point.x / QUAD_SIZE + 0.5f, 0.5f - point.z / QUAD_SIZE );
     }
 
@@ -185,7 +218,7 @@ public class SurfaceBlock : Block {
 	public void AddStructure(Structure s) { // with autoreplacing
 		if (s == null) return;
 		if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION  ) {
-			print ("error in structure size");
+			MonoBehaviour.print ("error in structure size");
 			return;
 		}
 		if (s.innerPosition.x_size == 1 && s.innerPosition.z_size == 1) {
@@ -222,7 +255,7 @@ public class SurfaceBlock : Block {
 			}
 		}
 		surfaceObjects.Add(s);
-		s.transform.parent = transform;
+		s.transform.parent = model.transform;
 		s.transform.localPosition = GetLocalPosition(s.innerPosition);
 		if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
 		if (s.randomRotation) {
@@ -296,7 +329,7 @@ public class SurfaceBlock : Block {
 			}
 		}
 		surfaceObjects.Add(s);
-		s.transform.parent = transform;
+		s.transform.parent = model.transform;
 		s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1, 1));
 		if (s.randomRotation) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
 		if ( visibilityMask == 0 ) s.SetVisibility(false); else s.SetVisibility(true);
@@ -338,30 +371,7 @@ public class SurfaceBlock : Block {
 		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
 	}
 
-	public void SurfaceBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) {
-		// проверки при повторном использовании?
-		isTransparent = false;
-		myChunk = f_chunk; transform.parent = f_chunk.transform;
-		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
-		transform.localRotation = Quaternion.Euler(Vector3.zero);
-		material_id = f_material_id;
 
-		if (surfaceRenderer == null) {
-			GameObject g = GameObject.Instantiate(PoolMaster.quad_pref) as GameObject;
-			surfaceRenderer =g.GetComponent <MeshRenderer>();
-			surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			g.transform.parent = transform;
-			g.transform.localPosition = new Vector3(0, -QUAD_SIZE/2f, 0); 
-			g.transform.localRotation = Quaternion.Euler(90, 0, 0);
-			g.name = "upper_plane"; 
-			g.tag = "BlockCollider";
-		}
-		surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
-		if (visibilityMask != 0) surfaceRenderer.enabled = true;
-
-		type = BlockType.Surface; isTransparent = false;
-		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
-	}
 		
 	public static Vector3 GetLocalPosition(SurfaceRect sr) {
 		float res = INNER_RESOLUTION;
@@ -584,7 +594,7 @@ public class SurfaceBlock : Block {
 
 	public UIObserver ShowOnGUI() {
 		if (surfaceObserver == null) {
-			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+			surfaceObserver = Object.Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
 		}
 		else surfaceObserver.gameObject.SetActive(true);
 		surfaceObserver.SetObservingSurface(this);

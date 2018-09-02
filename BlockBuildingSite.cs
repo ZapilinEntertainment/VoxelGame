@@ -8,14 +8,13 @@ public class BlockBuildingSite : Worksite {
 	ResourceType rtype;
 	const int START_WORKERS_COUNT = 20;
 
-	void Update () {
-		if (GameMaster.gameSpeed == 0) return;
-		if (workObject ==null) {
-			Destroy(this);
-		}
+	override public void WorkUpdate ( float t) {
+		if (workObject == null) {
+            StopWork();
+        }
 		if (workersCount  > 0) {
-			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
-			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			workflow += workSpeed * t ;
+			labourTimer -= t;
 			if ( labourTimer <= 0 ) {
 				LabourResult();
 				labourTimer = GameMaster.LABOUR_TICK;
@@ -65,11 +64,11 @@ public class BlockBuildingSite : Worksite {
 		}
 
 		if ( placesToWork == 0 ) {
-			actionLabel = "Block completed";
-			workObject.ClearSurface();
+            actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
+			workObject.ClearSurface(false); // false так как все равно его удаляем
 			workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
-			Destroy(this);
-		}
+            StopWork();
+        }
 		else {
 			int pos = (int)(placesToWork * Random.value);
 			int n = 0;
@@ -94,12 +93,15 @@ public class BlockBuildingSite : Worksite {
 								shr.SetBasement(workObject, new PixelPosByte(a * 2, b * 2));
 							}
 							count = GameMaster.colonyController.storage.GetResources(rtype, count);
-							if (count == 0) actionLabel = Localization.announcement_notEnoughResources + ' ';
-							else 
-							{
-								totalResources += count;
-								shr.AddResource(rtype, count);
-							}
+                            if (count == 0)
+                            {
+                               // if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources);
+                            }
+                            else
+                            {
+                                totalResources += count;
+                                shr.AddResource(rtype, count);
+                            }
 							actionLabel += string.Format("{0:0.##}", totalResources / (float)CubeBlock.MAX_VOLUME * 100f)+ '%';	
 							return;
 						} 
@@ -115,9 +117,10 @@ public class BlockBuildingSite : Worksite {
 	}
 	public void Set(SurfaceBlock block, ResourceType type) {
 		workObject = block;
+        workObject.SetWorksite(this);
 		rtype = type;
-		actionLabel = Localization.structureName[Structure.RESOURCE_STICK_ID];
-		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
+		actionLabel = Localization.GetStructureName( Structure.RESOURCE_STICK_ID );
+		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
 		GameMaster.colonyController.AddWorksite(this);
 
 		if (sign == null) {
@@ -126,15 +129,38 @@ public class BlockBuildingSite : Worksite {
 			bc.size = new Vector3(Block.QUAD_SIZE, 0.1f, Block.QUAD_SIZE);
 			bc.center = Vector3.up * 0.05f;
 			sign.worksite = this;
-			sign.transform.position = workObject.transform.position;
+			sign.transform.position = workObject.model.transform.position;
 		}
 	}
 
+    override public void StopWork()
+    {
+        if (deleted) return;
+        else deleted = true;
+        if (workersCount > 0)
+        {
+            GameMaster.colonyController.AddWorkers(workersCount);
+            workersCount = 0;
+        }
+        if (sign != null) Object.Destroy(sign.gameObject);
+        GameMaster.colonyController.RemoveWorksite(this);
+        if (workObject != null)
+        {
+            if (workObject.worksite == this) workObject.ResetWorksite();
+            workObject = null;
+        }
+        if (showOnGUI)
+        {
+            observer.SelfShutOff();
+            showOnGUI = false;
+        }
+    }
 
-	#region save-load system
-	override public WorksiteSerializer Save() {
+
+    #region save-load system
+    override public WorksiteSerializer Save() {
 		if (workObject == null) {
-			Destroy(this);
+            StopWork();
 			return null;
 		}
 		WorksiteSerializer ws = GetWorksiteSerializer();

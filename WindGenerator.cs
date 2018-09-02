@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class WindGenerator : Building {
 	public Transform head, screw;
-	Vector3 windDirection;
+	Vector2 windDirection;
 	bool rotateHead = false, rotateScrew = true;
 	const float HEAD_ROTATE_SPEED = 1, SCREW_ROTATE_SPEED = 20;
 	float height_coefficient = 1;
@@ -28,15 +28,16 @@ public class WindGenerator : Building {
 		if (GameMaster.gameSpeed == 0) return;
 		float t = Time.deltaTime * GameMaster.gameSpeed * energySurplus / (float)STANDART_SURPLUS;
 		if ( rotateHead ) {
-			head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDirection, HEAD_ROTATE_SPEED * t);
-			if (head.transform.forward == windDirection.normalized) rotateHead = false;
+            Vector3 windDir = new Vector3(windDirection.x, 0, windDirection.y).normalized;
+            head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDir, HEAD_ROTATE_SPEED * t);            
+			if (head.transform.forward == windDir) rotateHead = false;
 		}
 		if (rotateScrew) {
 			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * t);
 		}
 	}
 
-	public void WindUpdate( Vector3 direction) {
+	public void WindUpdate( Vector2 direction) {
 		windDirection = direction;
 		if (windDirection.magnitude == 0) {
 			if ( rotateScrew ) {
@@ -58,7 +59,7 @@ public class WindGenerator : Building {
                 GameMaster.colonyController.RecalculatePowerGrid();
             }
             else energySurplus = newSurplus;
-            if (transform.forward != windDirection) rotateHead = true; else rotateHead = false;
+            if (transform.forward != new Vector3(windDirection.x, 0, windDirection.y).normalized) rotateHead = true; else rotateHead = false;
 		}
 	}
 }

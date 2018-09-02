@@ -7,8 +7,7 @@ public class CleanSite : Worksite {
 	SurfaceBlock workObject;
 	const int START_WORKERS_COUNT = 10;
 
-	void Update () {
-		if (GameMaster.gameSpeed == 0) return;
+	override public void WorkUpdate (float t) {
 		if (workObject ==null) {
             StopWork();
 			return;
@@ -24,7 +23,7 @@ public class CleanSite : Worksite {
 					FreeWorkers(workersCount); 
 				}
 				else {
-					DigSite ds =  basement.gameObject.AddComponent<DigSite>();
+					DigSite ds =  new DigSite();
 					ds.Set(basement as CubeBlock, true);
 					workersCount =  ds.AddWorkers(workersCount);
 					if (workersCount > 0) FreeWorkers();
@@ -35,8 +34,8 @@ public class CleanSite : Worksite {
 			return;
 		}
 		if (workersCount  > 0) {
-			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
-			labourTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			workflow += workSpeed * t ;
+			labourTimer -= t;
 			if ( labourTimer <= 0 ) {
 				if (workflow >= 1) LabourResult();
 				labourTimer = GameMaster.LABOUR_TICK;
@@ -69,17 +68,44 @@ public class CleanSite : Worksite {
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
 		workObject = block;
+        workObject.SetWorksite(this);
 		if (block.grassland != null) block.grassland.Annihilation(true); 
-		sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
+		if (sign == null) sign = Object.Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.worksite = this;
-		sign.transform.position = workObject.transform.position;
+		sign.transform.position = workObject.model.transform.position;
 		diggingMission = f_diggingMission;
-		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this, WorkersDestination.ForWorksite);
+		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
 		GameMaster.colonyController.AddWorksite(this);
 	}
 
-	#region save-load mission
-	override public WorksiteSerializer Save() {
+    override public void StopWork()
+    {
+        if (deleted) return;
+        else deleted = true;
+        if (workersCount > 0)
+        {
+            GameMaster.colonyController.AddWorkers(workersCount);
+            workersCount = 0;
+        }
+        if (sign != null) Object.Destroy(sign.gameObject);
+        GameMaster.colonyController.RemoveWorksite(this);
+        if (workObject != null)
+        {
+            if (workObject.worksite == this) workObject.ResetWorksite();
+            workObject = null;
+        }
+        if (showOnGUI)
+        {
+            if (observer.observingWorksite == this)
+            {
+                observer.SelfShutOff();
+            }
+            showOnGUI = false;
+        }
+    }
+
+    #region save-load mission
+    override public WorksiteSerializer Save() {
 		if (workObject == null) {
             StopWork();
 			return null;

@@ -85,7 +85,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public List<Component> everydayUpdateList, everyYearUpdateList, everyMonthUpdateList;
 
 	public List <Component> windUpdateList;
-	public Vector3 windVector {get; private set;}
+	public Vector2 windVector {get; private set;}
 	public float windTimer = 0, windChangeTime = 120;
 
     bool firstSet = true;
@@ -307,10 +307,9 @@ public sealed class GameMaster : MonoBehaviour {
 		//eo day update
 		}
 
-		windTimer -= Time.deltaTime * GameMaster.gameSpeed;
+		windTimer -= Time.deltaTime * gameSpeed;
 		if (windTimer <= 0) {
-			windVector = Random.onUnitSphere;
-			windVector += Vector3.down * windVector.y;
+			windVector = Random.insideUnitCircle;
 			windTimer = windChangeTime + Random.value * windChangeTime;
 			if (windUpdateList.Count != 0) {
 				int i = 0;
@@ -318,6 +317,7 @@ public sealed class GameMaster : MonoBehaviour {
 					Component c = windUpdateList[i];
 					if (c == null) {windUpdateList.RemoveAt(i); continue;}
 					else	{c.SendMessage("WindUpdate", windVector,SendMessageOptions.DontRequireReceiver); i++;}
+                    Shader.SetGlobalVector("wind", windVector);
 				}
 			}
 		}
@@ -438,7 +438,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.miningSpeed = miningSpeed;
 		gms.machineConstructingSpeed = machineConstructingSpeed;
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
-		gms.windVector_x = windVector.x; gms.windVector_y = windVector.y; gms.windVector_z = windVector.z; 
+        gms.windVector = windVector;
 		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
 		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
 		#endregion
@@ -468,6 +468,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public bool LoadGame( string fullname ) {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
+            StopAllCoroutines();
             BinaryFormatter bf = new BinaryFormatter();
             FileStream file = File.Open(fullname, FileMode.Open);
             Time.timeScale = 0; GameMaster.gameSpeed = 0;
@@ -495,7 +496,7 @@ public sealed class GameMaster : MonoBehaviour {
             miningSpeed = gms.miningSpeed;
             machineConstructingSpeed = gms.machineConstructingSpeed;
             day = gms.day; week = gms.week; month = gms.month; year = gms.year; millenium = gms.millenium; t = gms.t;
-            windVector = new Vector3(gms.windVector_x, gms.windVector_y, gms.windVector_z);
+            windVector = gms.windVector;
             windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
             RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
             #endregion
@@ -543,6 +544,7 @@ public sealed class GameMaster : MonoBehaviour {
 
     private void OnApplicationQuit()
     {
+        StopAllCoroutines();
         applicationStopWorking = true;
     }
 }
@@ -558,7 +560,7 @@ class GameMasterSerializer {
 	public float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
-	public float windVector_x,windVector_y,windVector_z;
+    public Vector2 windVector;
 	public float windTimer = 0, windChangeTime = 120;
 	public float sunlightIntensity;
 

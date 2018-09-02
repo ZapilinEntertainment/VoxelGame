@@ -52,7 +52,7 @@ sealed public class UIController : MonoBehaviour {
 	public static UIController current;
 
     const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, OPTIONS_CAMZOOM_SLIDER_INDEX = 0, 
-        OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 2, OPTIONS_QUALITY_DROPDOWN_INDEX = 4;
+        OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 2, OPTIONS_QUALITY_DROPDOWN_INDEX = 4, RPANEL_CUBE_DIG_BUTTON_INDEX = 5;
 
 	void Awake() {
 		current = this;
@@ -420,42 +420,53 @@ sealed public class UIController : MonoBehaviour {
 				else ChangeChosenObject( ChosenObjectType.None );
 				break;
 			case "BlockCollider":
-				Block b = collided.transform.parent.gameObject.GetComponent<Block>();
-				switch (b.type) {
-				case BlockType.Cave:
-				case BlockType.Surface:
-					chosenSurface = b as SurfaceBlock;
-					chosenCube = null;
-					if (chosenSurface != null) ChangeChosenObject( ChosenObjectType.Surface); else ChangeChosenObject( ChosenObjectType.None);
-					break;
-				case BlockType.Cube:
-					chosenCube = b as CubeBlock;
-					chosenSurface = null;
-					if (chosenCube != null) {
-						faceIndex = 10;
-						for (byte i =0; i< 6; i++) {
-							if (chosenCube.faces[i] == null) continue;
-							if (chosenCube.faces[i].GetComponent<Collider>() == rh.collider ) {faceIndex = i;break;}
-						}
-						if (faceIndex  < 6) ChangeChosenObject( ChosenObjectType.Cube );
-					}
-					else ChangeChosenObject(ChosenObjectType.None);
-					break;
-				}
-				chosenStructure = null;
-				chosenWorksite = null;;
+                    {
+                        Transform t = collided.transform.parent; // model transform
+                        Vector3 blockPos = t.localPosition / Block.QUAD_SIZE ;
+                        Block b = GameMaster.mainChunk.GetBlock((int)blockPos.x, (int)blockPos.y, (int)blockPos.z);
+                        switch (b.type)
+                        {
+                            case BlockType.Cave:
+                            case BlockType.Surface:
+                                chosenSurface = b as SurfaceBlock;
+                                chosenCube = null;
+                                if (chosenSurface != null) ChangeChosenObject(ChosenObjectType.Surface); else ChangeChosenObject(ChosenObjectType.None);
+                                break;
+                            case BlockType.Cube:
+                                chosenCube = b as CubeBlock;
+                                chosenSurface = null;
+                                if (chosenCube != null)
+                                {
+                                    faceIndex = 10;
+                                    for (byte i = 0; i < 6; i++)
+                                    {
+                                        if (chosenCube.faces[i] == null) continue;
+                                        if (chosenCube.faces[i].GetComponent<Collider>() == rh.collider) { faceIndex = i; break; }
+                                    }
+                                    if (faceIndex < 6) ChangeChosenObject(ChosenObjectType.Cube);
+                                }
+                                else ChangeChosenObject(ChosenObjectType.None);
+                                break;
+                        }
+                        chosenStructure = null;
+                        chosenWorksite = null; 
+                    }
 				break;
 			case "WorksiteSign":
-				WorksiteSign ws = collided.GetComponent<WorksiteSign>();
-				if (ws != null)	chosenWorksite =  ws.worksite; else chosenWorksite = null;
-				chosenStructure = null;
-				chosenSurface = null;
-				chosenCube = null;
-				if (chosenWorksite != null) ChangeChosenObject( ChosenObjectType.Worksite ); else ChangeChosenObject( ChosenObjectType.None );
+                    {
+                        WorksiteSign ws = collided.GetComponent<WorksiteSign>();
+                        if (ws != null) chosenWorksite = ws.worksite; else chosenWorksite = null;
+                        chosenStructure = null;
+                        chosenSurface = null;
+                        chosenCube = null;
+                        if (chosenWorksite != null) ChangeChosenObject(ChosenObjectType.Worksite); else ChangeChosenObject(ChosenObjectType.None);
+                    }
 				break;
                 default:
-                    if (collided.transform.parent.gameObject.GetInstanceID() == interceptingConstructPlaneID) UISurfacePanelController.current.ConstructingPlaneTouch(rh.point);
-                    else print("no");
+                    if (collided.transform.parent != null)
+                    {
+                        if (collided.transform.parent.gameObject.GetInstanceID() == interceptingConstructPlaneID) UISurfacePanelController.current.ConstructingPlaneTouch(rh.point);
+                    }
                     break;
 			}
 		}
@@ -483,9 +494,11 @@ sealed public class UIController : MonoBehaviour {
 
         //отключение предыдущего observer
         if (workingObserver != null) workingObserver.ShutOff();
+        bool checkCubeMenuButtons;
         if (newChosenType == ChosenObjectType.None)
         {
             rightPanel.SetActive(false);
+            checkCubeMenuButtons = false;
             selectionFrame.gameObject.SetActive(false);
             chosenObjectType = ChosenObjectType.None;
         }
@@ -494,6 +507,7 @@ sealed public class UIController : MonoBehaviour {
             chosenObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
             rightPanel.SetActive(true);
+            checkCubeMenuButtons = true;
 
             selectionFrame.gameObject.SetActive(true);
             if (showMenuWindow)
@@ -502,7 +516,7 @@ sealed public class UIController : MonoBehaviour {
             }
         }
 
-        Vector3 sframeColor = Vector3.one;
+        Vector3 sframeColor = Vector3.one;        
         switch (chosenObjectType)
         {
             case ChosenObjectType.None:
@@ -511,13 +525,13 @@ sealed public class UIController : MonoBehaviour {
             case ChosenObjectType.Surface:
                 {
                     faceIndex = 10;
-                    selectionFrame.position = chosenSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
+                    selectionFrame.position = chosenSurface.model.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
                     selectionFrame.rotation = Quaternion.identity;
                     selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
                     selectionFrame.gameObject.SetActive(true);
                     workingObserver = chosenSurface.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
+                    FollowingCamera.main.SetLookPoint(chosenSurface.model.transform.position);
                 }
                 break;
 
@@ -535,7 +549,13 @@ sealed public class UIController : MonoBehaviour {
                     }
                     selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 0.9f);
-                    FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
+                    FollowingCamera.main.SetLookPoint(chosenCube.model.transform.position);
+
+                    Transform t = rightPanel.transform;
+                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(true);
+                    if (chosenCube.excavatingStatus != 0) t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX+1).gameObject.SetActive(true);
+                    else t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(false);
+                    checkCubeMenuButtons = false;
                 }
                 break;
 
@@ -553,8 +573,14 @@ sealed public class UIController : MonoBehaviour {
                 faceIndex = 10;
                 selectionFrame.gameObject.SetActive(false);
                 workingObserver = chosenWorksite.ShowOnGUI();
-                FollowingCamera.main.SetLookPoint(chosenWorksite.transform.position);
+                FollowingCamera.main.SetLookPoint(chosenWorksite.sign.transform.position);
                 break;
+        }
+        if (checkCubeMenuButtons)
+        {
+            Transform t = rightPanel.transform;
+            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(false);
+            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(false);
         }
 
         selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
@@ -954,6 +980,9 @@ sealed public class UIController : MonoBehaviour {
         optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 1).GetComponent<Text>().text= Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
         optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
 
+        t = rightPanel.transform;
+        t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
+        t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.PourIn);
         localized = true;
     }
 
@@ -962,5 +991,48 @@ sealed public class UIController : MonoBehaviour {
 		if (chosenObjectType == ChosenObjectType.None) return;
 		ChangeChosenObject(ChosenObjectType.None);
 	}
+
+    public void DigCube()
+    {
+        if (chosenCube == null) return;
+        else
+        {
+            if (faceIndex == 4)
+            {
+                SurfaceBlock sb = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z) as SurfaceBlock;
+                if (sb == null)
+                {
+                    DigSite ds = new DigSite();
+                    ds.Set(chosenCube, true);
+                    ds.ShowOnGUI();
+                }
+                else
+                {
+                    CleanSite cs = new CleanSite();
+                    cs.Set(sb, true);
+                    cs.ShowOnGUI();
+                }
+            }
+            else
+            {
+                if (faceIndex < 4)
+                {
+                    TunnelBuildingSite tbs = new TunnelBuildingSite();
+                    tbs.Set(chosenCube);
+                    tbs.CreateSign(faceIndex);
+                    tbs.ShowOnGUI();
+                }
+            }
+        }
+    }
+    public void PourInCube()
+    {
+        if (chosenCube == null || chosenCube.excavatingStatus == 0) return;
+        else
+        {
+            DigSite ds = new DigSite();
+            ds.Set(chosenCube, false);
+        }
+    }
     #endregion
 }

@@ -11,6 +11,7 @@ public class PoolMaster : MonoBehaviour {
 	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
 	public static GameObject quad_pref {get;private set;}
 	public static GameObject mineElevator_pref {get;private set;}
+    public static GameObject cavePref { get; private set; }
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
     public static Material default_material, lr_red_material, lr_green_material, basic_material, basic_offline_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
     static Material metal_material, green_material;
@@ -48,6 +49,7 @@ public class PoolMaster : MonoBehaviour {
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
+        cavePref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
         quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
         quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
         quad_pref.GetComponent<MeshRenderer>().enabled = false;

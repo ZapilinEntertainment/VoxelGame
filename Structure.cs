@@ -400,7 +400,7 @@ public class Structure : MonoBehaviour {
 			else {
 				GameObject g = PoolMaster.GetRooftop(this);
 				MeshRenderer mr =g.transform.GetChild(0).GetComponent <MeshRenderer>();
-				g.transform.parent = basement.transform;
+				g.transform.parent = basement.model.transform;
 				g.transform.localPosition = Vector3.up * Block.QUAD_SIZE/2f;
 				g.name = "block ceiling";
 				mr.enabled = true;

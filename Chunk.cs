@@ -23,6 +23,7 @@ public sealed class ChunkSerializer
     public List<BlockSerializer> blocksData;
     public float lifepower, lifepowerTimer;
     public byte chunkSize;
+    public int lastUsedBlockNumber;
 }
 
 public sealed class Chunk : MonoBehaviour
@@ -33,14 +34,13 @@ public sealed class Chunk : MonoBehaviour
     public float lifePower = 0;
     float lifepower_timer = 0;
     public static byte CHUNK_SIZE { get; private set; }
-    GameObject cave_pref;
     public List<Component> chunkUpdateSubscribers;
     public bool[,] sideBlockingMap { get; private set; }
+    Texture3D chunkLightMap; Color32[] lmap;
 
     public void Awake()
     {
         surfaceBlocks = new List<SurfaceBlock>();
-        cave_pref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
         chunkUpdateSubscribers = new List<Component>();
         sideBlockingMap = new bool[CHUNK_SIZE, 4];
         for (int a = 0; a < CHUNK_SIZE; a++)
@@ -56,12 +56,13 @@ public sealed class Chunk : MonoBehaviour
 
     void Start()
     {
-        if (Camera.main != null) CullingUpdate(Camera.main.transform);
+        if (Camera.main != null) { StartCoroutine(CullingUpdate(Camera.main.transform)); }
     }
 
+    #region updating
     public void CameraUpdate(Transform t)
     {
-        CullingUpdate(t);
+        StartCoroutine(CullingUpdate(t));
     }
 
     void Update()
@@ -165,6 +166,71 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
+    IEnumerator CullingUpdate(Transform campoint)
+    {
+        if (campoint == null) campoint = Camera.main.transform;
+        Vector3 cpos = transform.InverseTransformPoint(campoint.position);
+        Vector3 v = Vector3.one * (-1);
+        int size = blocks.GetLength(0);
+        if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
+        if (cpos.y > 0) { if (cpos.y > size) v.y = 1; else v.y = 0; }
+        if (cpos.z > 0) { if (cpos.z > size) v.z = 1; else v.z = 0; }
+        //print (v);
+        if (v != Vector3.zero)
+        {
+            //easy-culling	
+            byte renderBitmask = 63;
+            if (v.x == 1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
+            if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
+            if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
+            if (renderBitmask != prevBitmask)
+            {
+                foreach (Block b in blocks)
+                {
+                    if (b != null)
+                    {
+                        b.SetRenderBitmask(renderBitmask);
+                    }
+                }
+                prevBitmask = renderBitmask;
+            }
+        }
+        else
+        {
+            //camera in chunk
+            foreach (Block b in blocks)
+            {
+                if (b == null) continue;
+                Vector3 icpos = campoint.InverseTransformPoint(new Vector3(b.pos.x, b.pos.y, b.pos.z) * Block.QUAD_SIZE);
+                Vector3 vn = Vector3.one * (-1);
+                if (icpos.x > 0) { if (icpos.x > size) vn.x = 1; else vn.x = 0; }
+                if (icpos.y > 0) { if (icpos.y > size) vn.y = 1; else vn.y = 0; }
+                if (icpos.z > 0) { if (icpos.z > size) vn.z = 1; else vn.z = 0; }
+                byte renderBitmask = 63;
+                if (v.x == 1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
+                if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
+                if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
+                b.SetRenderBitmask(renderBitmask);
+            }
+        }
+        yield return null;
+    }
+    void BroadcastChunkUpdate(ChunkPos pos)
+    {
+        int i = 0;
+        while (i < chunkUpdateSubscribers.Count)
+        {
+            if (chunkUpdateSubscribers[i] == null)
+            {
+                chunkUpdateSubscribers.RemoveAt(i);
+                continue;
+            }
+            chunkUpdateSubscribers[i].BroadcastMessage("ChunkUpdated", pos, SendMessageOptions.DontRequireReceiver);
+            i++;
+        }
+    }
+    #endregion
+
     public byte GetVisibilityMask(int i, int j, int k)
     {
         byte vmask = 63;
@@ -191,6 +257,153 @@ public sealed class Chunk : MonoBehaviour
         BroadcastChunkUpdate(new ChunkPos(x, y, z));
     }
 
+    void ChunkLightmapFullRecalculation()
+    {
+        return;
+        lmap = new Color32[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+        float LIGHT_DECREASE_PER_BLOCK = 0.5f;
+        for (int x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (int z = 0; z < CHUNK_SIZE; z++)
+            {
+                for (int y = CHUNK_SIZE - 1; y >= 0; y--)
+                {
+                    byte alpha = 0;
+                    // up
+                    if (y == CHUNK_SIZE - 1) { alpha += 255; goto CALCULATION; }
+                    else
+                    {
+                        alpha += (byte)(lmap[(y + 1) * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x ].a * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    // fwd
+                    if (z == CHUNK_SIZE - 1) alpha += 128;
+                    // right
+                    if (x == CHUNK_SIZE - 1) alpha += 128;
+                    // back
+                    if (z == 0) alpha += 128;
+                    else
+                    {            // можно уже считывать с других блоков, так как они рассчитаны
+                        alpha += (byte)(lmap[y * CHUNK_SIZE * CHUNK_SIZE + (z - 1) * CHUNK_SIZE + x ].a * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    // left
+                    if (x == 0) alpha += 128;
+                    else
+                    {
+                        alpha += (byte)(lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + (x - 1) ].a * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    // down
+                    if (y == 0) alpha += 1;
+
+                    CALCULATION:
+                    if (alpha > 255) alpha = 255;
+                    lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, alpha);
+                }
+            }
+        }
+        chunkLightMap = new Texture3D(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, TextureFormat.RGBA32, false);
+        //testblock
+        for (int x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (int z = 0; z < CHUNK_SIZE; z++)
+            {
+                bool surfaceFound = false;
+                for (int y = CHUNK_SIZE - 1; y >= 0; y--)
+                {
+                    if (blocks[x, y, z] == null) lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, 255);
+                    else
+                    {
+                        if (!surfaceFound)
+                        {
+                            lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, 255);
+                            surfaceFound = true;
+                        }
+                        else
+                        {
+                            lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, 0);
+                        }
+                    }
+                }
+            }
+        }
+        // eo testblock
+        chunkLightMap.SetPixels32(lmap);
+        chunkLightMap.Apply();
+        Shader.SetGlobalTexture("_GlobalLightmap", chunkLightMap);
+        Shader.SetGlobalInt("chunkSize", CHUNK_SIZE);
+    }
+
+    #region operating blocks data
+
+    public static void SetChunkSize(byte x)
+    {
+        CHUNK_SIZE = x;
+    }
+
+    public void SetChunk(int[,,] newData)
+    {
+        if (blocks != null) ClearChunk();
+        int size = newData.GetLength(0);
+        CHUNK_SIZE = (byte)size;
+        if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
+        GameMaster.layerCutHeight = CHUNK_SIZE;
+        GameMaster.prevCutHeight = GameMaster.layerCutHeight;
+
+        blocks = new Block[size, size, size];        
+        surfaceBlocks = new List<SurfaceBlock>();
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                bool surfaceFound = false;
+                for (int y = size - 1; y >= 0; y--)
+                {
+                    if (newData[x, y, z] != 0)
+                    {
+                        if (!surfaceFound)
+                        {
+                            SurfaceBlock sb = new SurfaceBlock() ;
+                            sb.SurfaceBlockSet(this, new ChunkPos(x, y + 1, z), newData[x, y, z]);
+                            surfaceBlocks.Add(sb);
+                            blocks[x, y + 1, z] = sb;
+                            surfaceFound = true;
+                        }
+                        CubeBlock cb = new CubeBlock();
+                        cb.BlockSet(this, new ChunkPos(x, y, z), newData[x, y, z], true);
+                        blocks[x, y, z] = cb;
+                    }
+                }
+            }
+        }
+        for (int x = 0; x < size; x++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    if (blocks[x, y, z] == null) continue;
+                    blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
+                }
+            }
+        }
+        if (surfaceBlocks.Count != 0)
+        {
+            foreach (SurfaceBlock sb in surfaceBlocks)
+            {
+                GameMaster.geologyModule.SpreadMinerals(sb);
+            }
+        }
+        ChunkLightmapFullRecalculation();
+    }
+
+    public Block GetBlock(ChunkPos cpos) { return GetBlock(cpos.x, cpos.y, cpos.z); }
+    public Block GetBlock(int x, int y, int z)
+    {
+        int size = blocks.GetLength(0);
+        if (x < 0 || x > size - 1 || y < 0 || y > size - 1 || z < 0 || z > size - 1) return null;
+        else { return blocks[x, y, z]; }
+    }  
+
     public Block AddBlock(ChunkPos f_pos, BlockType f_type, int material1_id, bool naturalGeneration)
     {
         return AddBlock(f_pos, f_type, material1_id, material1_id, naturalGeneration);
@@ -198,13 +411,13 @@ public sealed class Chunk : MonoBehaviour
     public Block AddBlock(ChunkPos f_pos, BlockType f_type, int i_floorMaterialID, int i_ceilingMaterialID, bool i_naturalGeneration)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
+        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
         if (f_type == BlockType.Cave)
         {
             float pts = CalculateSupportPoints(x, y, z);
             if (pts < 1) f_type = BlockType.Surface;
         }
         if (GetBlock(x, y, z) != null) return ReplaceBlock(f_pos, f_type, i_floorMaterialID, i_ceilingMaterialID, i_naturalGeneration);
-        GameObject g = null;
         CubeBlock cb = null;
         Block b = null;
         byte visMask = GetVisibilityMask(x, y, z), influenceMask = 63; // видимость объекта, видимость стенок соседних объектов
@@ -213,16 +426,14 @@ public sealed class Chunk : MonoBehaviour
         switch (f_type)
         {
             case BlockType.Cube:
-                g = new GameObject();
-                cb = g.AddComponent<CubeBlock>();
+                cb = new CubeBlock();
                 cb.BlockSet(this, f_pos, i_floorMaterialID, i_naturalGeneration);
                 blocks[x, y, z] = cb;
                 if (cb.isTransparent == false) influenceMask = 0; else influenceMask = 1; // закрывает собой все соседние стенки
                 calculateUpperBlock = true;
                 break;
             case BlockType.Shapeless:
-                g = new GameObject();
-                blocks[x, y, z] = g.AddComponent<Block>();
+                blocks[x, y, z] = new Block();
                 blocks[x, y, z].BlockSet(this, f_pos, i_floorMaterialID);
                 break;
             case BlockType.Surface:
@@ -234,8 +445,7 @@ public sealed class Chunk : MonoBehaviour
                 if ( b.type != BlockType.Surface) influenceMask = 31;
                 else influenceMask = 63;
 
-                g = new GameObject();
-                SurfaceBlock sb = g.AddComponent<SurfaceBlock>();
+                SurfaceBlock sb = new SurfaceBlock();
                 sb.SurfaceBlockSet(this, f_pos, i_floorMaterialID);
                 blocks[x, y, z] = sb;
                 surfaceBlocks.Add(sb);
@@ -247,8 +457,7 @@ public sealed class Chunk : MonoBehaviour
 
                 Block lowerBlock = blocks[x, y - 1, z];
                 if (lowerBlock == null) i_floorMaterialID = -1;
-                g = Instantiate(cave_pref);
-                CaveBlock caveb = g.GetComponent<CaveBlock>();
+                CaveBlock caveb = new CaveBlock();
                 caveb.CaveBlockSet(this, f_pos, i_ceilingMaterialID, i_floorMaterialID);
                 blocks[x, y, z] = caveb;
                 if (lowerBlock.type == BlockType.Surface) // снизу структура с isBasement == true ?
@@ -315,13 +524,13 @@ public sealed class Chunk : MonoBehaviour
         {
 
             case BlockType.Shapeless:
-                b = new GameObject().AddComponent<Block>();
+                b = new Block();
                 b.ShapelessBlockSet(this, f_pos, null);
                 blocks[x, y, z] = b;
                 break;
 
             case BlockType.Surface:
-                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                SurfaceBlock sb = new SurfaceBlock();
                 sb.SurfaceBlockSet(this, f_pos, material1_id);
                 surfaceBlocks.Add(sb);
                 b = sb;
@@ -341,7 +550,7 @@ public sealed class Chunk : MonoBehaviour
                 break;
 
             case BlockType.Cube:
-                CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
+                CubeBlock cb = new CubeBlock();
                 cb.BlockSet(this, f_pos, material1_id, naturalGeneration);
                 b = cb;
                 blocks[x, y, z] = cb;
@@ -353,7 +562,7 @@ public sealed class Chunk : MonoBehaviour
                 float supportPoints = CalculateSupportPoints(x, y, z);
                 if (supportPoints < 1) goto case BlockType.Surface;
 
-                CaveBlock cvb = Instantiate(cave_pref).GetComponent<CaveBlock>();
+                CaveBlock cvb = new CaveBlock();
                 cvb.CaveBlockSet(this, f_pos, material2_id, material1_id);
                 surfaceBlocks.Add(cvb);
                 blocks[x, y, z] = cvb;
@@ -387,7 +596,9 @@ public sealed class Chunk : MonoBehaviour
         }
         b.SetVisibilityMask(originalBlock.visibilityMask);
         blocks[x, y, z].MakeIndestructible(originalBlock.indestructible);
-        Destroy(originalBlock.gameObject);
+        originalBlock.Annihilate();
+        originalBlock = null;
+
         b.SetRenderBitmask(prevBitmask);
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
         if (calculateUpperBlock)
@@ -402,6 +613,35 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         return b;
+    }
+
+    public SurfaceBlock GetSurfaceBlock(int x, int z)
+    {
+        if (x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;
+        SurfaceBlock fsb = null;
+        foreach (SurfaceBlock sb in surfaceBlocks)
+        {
+            if (sb.pos.x == x && sb.pos.z == z) fsb = sb; // to find the highest
+        }
+        return fsb; // we are not watching you. Honestly.
+    }
+    public void RecalculateSurfaceBlocks()
+    {
+        surfaceBlocks = new List<SurfaceBlock>();
+        foreach (Block b in blocks)
+        {
+            if (b == null) continue;
+            if (b.type == BlockType.Surface || b.type == BlockType.Cave) surfaceBlocks.Add(b as SurfaceBlock);
+        }
+    }
+
+    public void BlockByStructure(byte x, byte y, byte z, Structure s)
+    {
+        if (x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
+        Block b = GetBlock(x, y, z);
+        if (b != null) { ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false); }
+        else blocks[x, y, z] = new Block();
+        blocks[x, y, z].ShapelessBlockSet(this, new ChunkPos(x, y, z), s);
     }
 
     public void DeleteBlock(ChunkPos pos)
@@ -462,7 +702,7 @@ public sealed class Chunk : MonoBehaviour
                 sb.ClearSurface(false); // false так как все равно удаляется
                 break;
         }
-        Destroy(blocks[x, y, z].gameObject);
+        blocks[x, y, z].Annihilate();
         blocks[x, y, z] = null;
         ApplyVisibleInfluenceMask(x, y, z, 63);
 
@@ -495,6 +735,26 @@ public sealed class Chunk : MonoBehaviour
         }
         if (makeSurface) AddBlock(pos, BlockType.Surface, b.material_id, false);
     }
+    public void ClearChunk()
+    {
+        int size = blocks.GetLength(0);
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                for (int k = 0; k < size; k++)
+                {
+                    if (blocks[i, j, k] == null) continue;
+                    blocks[i, j, k].Annihilate();
+                    blocks[i, j, k] = null;
+                }
+            }
+        }
+        blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+        surfaceBlocks.Clear();
+    }
+
+    #endregion
 
     public float CalculateSupportPoints(int x, int y, int z)
     {
@@ -627,6 +887,8 @@ public sealed class Chunk : MonoBehaviour
         }
         return supportPoints;
     }
+
+    #region operating lifepower
 
     public void GenerateNature(PixelPosByte lifeSourcePos, int lifeVolume)
     {
@@ -769,151 +1031,7 @@ public sealed class Chunk : MonoBehaviour
             gl.AddLifepowerAndCalculate((int)(vol));
             lifePower -= vol;
         }
-    }
-
-    public static void SetChunkSize(byte x)
-    {
-        CHUNK_SIZE = x;
-    }
-
-    public void SetChunk(int[,,] newData)
-    {
-        if (blocks != null) ClearChunk();
-        int size = newData.GetLength(0);
-        CHUNK_SIZE = (byte)size;
-        if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
-        GameMaster.layerCutHeight = CHUNK_SIZE;
-        GameMaster.prevCutHeight = GameMaster.layerCutHeight;
-
-        blocks = new Block[size, size, size];
-        surfaceBlocks = new List<SurfaceBlock>();
-
-        for (int x = 0; x < size; x++)
-        {
-            for (int z = 0; z < size; z++)
-            {
-                byte surfaceFound = 2;
-                for (int y = size - 1; y >= 0; y--)
-                {
-                    if (newData[x, y, z] != 0)
-                    {
-                        if (surfaceFound == 2)
-                        {
-                            SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-                            sb.SurfaceBlockSet(this, new ChunkPos(x, y, z), newData[x, y, z]);
-                            surfaceBlocks.Add(sb);
-                            blocks[x, y, z] = sb;
-                            surfaceFound--;
-                        }
-                        else
-                        {
-                            CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
-                            cb.BlockSet(this, new ChunkPos(x, y, z), newData[x, y, z], true);
-                            blocks[x, y, z] = cb;
-                            if (surfaceFound == 1)
-                            {
-                                surfaceFound = 0;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (int x = 0; x < size; x++)
-        {
-            for (int z = 0; z < size; z++)
-            {
-                for (int y = 0; y < size; y++)
-                {
-                    if (blocks[x, y, z] == null) continue;
-                    blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
-                }
-            }
-        }
-        if (surfaceBlocks.Count != 0)
-        {
-            foreach (SurfaceBlock sb in surfaceBlocks)
-            {
-                GameMaster.geologyModule.SpreadMinerals(sb);
-            }
-        }
-    }
-
-    public Block GetBlock(ChunkPos cpos) { return GetBlock(cpos.x, cpos.y, cpos.z); }
-    public Block GetBlock(int x, int y, int z)
-    {
-        int size = blocks.GetLength(0);
-        if (x < 0 || x > size - 1 || y < 0 || y > size - 1 || z < 0 || z > size - 1) return null;
-        else { return blocks[x, y, z]; }
-    }
-
-    public void ClearChunk()
-    {
-        int size = blocks.GetLength(0);
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                for (int k = 0; k < size; k++)
-                {
-                    if (blocks[i, j, k] == null) continue;
-                    Destroy(blocks[i, j, k].gameObject);
-                }
-            }
-        }
-        blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-        surfaceBlocks.Clear();
-    }
-
-
-    void CullingUpdate(Transform campoint)
-    {
-        if (campoint == null) campoint = Camera.main.transform;
-        Vector3 cpos = transform.InverseTransformPoint(campoint.position);
-        Vector3 v = Vector3.one * (-1);
-        int size = blocks.GetLength(0);
-        if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
-        if (cpos.y > 0) { if (cpos.y > size) v.y = 1; else v.y = 0; }
-        if (cpos.z > 0) { if (cpos.z > size) v.z = 1; else v.z = 0; }
-        //print (v);
-        if (v != Vector3.zero)
-        {
-            //easy-culling	
-            byte renderBitmask = 63;
-            if (v.x == 1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
-            if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
-            if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
-            if (renderBitmask != prevBitmask)
-            {
-                foreach (Block b in blocks)
-                {
-                    if (b != null)
-                    {
-                        b.SetRenderBitmask(renderBitmask);
-                    }
-                }
-                prevBitmask = renderBitmask;
-            }
-        }
-        else
-        {
-            //camera in chunk
-            foreach (Block b in blocks)
-            {
-                if (b == null) continue;
-                Vector3 icpos = campoint.InverseTransformPoint(b.transform.position);
-                Vector3 vn = Vector3.one * (-1);
-                if (icpos.x > 0) { if (icpos.x > size) vn.x = 1; else vn.x = 0; }
-                if (icpos.y > 0) { if (icpos.y > size) vn.y = 1; else vn.y = 0; }
-                if (icpos.z > 0) { if (icpos.z > size) vn.z = 1; else vn.z = 0; }
-                byte renderBitmask = 63;
-                if (v.x == 1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
-                if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
-                if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
-                b.SetRenderBitmask(renderBitmask);
-            }
-        }
-    }
+    }   
 
     public void AddLifePower(int count) { lifePower += count; if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK; }
     public int TakeLifePower(int count)
@@ -933,50 +1051,7 @@ public sealed class Chunk : MonoBehaviour
         return count;
     }
 
-    public SurfaceBlock GetSurfaceBlock(int x, int z)
-    {
-        if (x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;
-        SurfaceBlock fsb = null;
-        foreach (SurfaceBlock sb in surfaceBlocks)
-        {
-            if (sb.pos.x == x && sb.pos.z == z) fsb = sb; // to find the highest
-        }
-        return fsb; // we are not watching you. Honestly.
-    }
-
-    public void BlockByStructure(byte x, byte y, byte z, Structure s)
-    {
-        if (x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
-        Block b = GetBlock(x, y, z);
-        if (b != null) { ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false); }
-        else blocks[x, y, z] = new GameObject().AddComponent<Block>();
-        blocks[x, y, z].ShapelessBlockSet(this, new ChunkPos(x, y, z), s);
-    }
-
-    public void RecalculateSurfaceBlocks()
-    {
-        surfaceBlocks = new List<SurfaceBlock>();
-        foreach (Block b in blocks)
-        {
-            if (b == null) continue;
-            if (b.type == BlockType.Surface || b.type == BlockType.Cave) surfaceBlocks.Add(b as SurfaceBlock);
-        }
-    }
-
-    void BroadcastChunkUpdate(ChunkPos pos)
-    {
-        int i = 0;
-        while (i < chunkUpdateSubscribers.Count)
-        {
-            if (chunkUpdateSubscribers[i] == null)
-            {
-                chunkUpdateSubscribers.RemoveAt(i);
-                continue;
-            }
-            chunkUpdateSubscribers[i].BroadcastMessage("ChunkUpdated", pos, SendMessageOptions.DontRequireReceiver);
-            i++;
-        }
-    }
+    #endregion    
 
     public void LayersCut()
     {
@@ -1019,6 +1094,7 @@ public sealed class Chunk : MonoBehaviour
         cs.chunkSize = CHUNK_SIZE;
         cs.lifepower = lifePower;
         cs.lifepowerTimer = lifepower_timer;
+        cs.lastUsedBlockNumber = Block.lastUsedNumber;
         return cs;
     }
 
@@ -1034,6 +1110,7 @@ public sealed class Chunk : MonoBehaviour
         }
         lifePower = cs.lifepower;
         lifepower_timer = cs.lifepowerTimer;
+        Block.lastUsedNumber = cs.lastUsedBlockNumber;
     }
     #endregion
 

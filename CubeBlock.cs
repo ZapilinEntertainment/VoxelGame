@@ -22,14 +22,6 @@ public class CubeBlock : Block{
 		MAX_VOLUME = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
 	}
 
-	void Awake() {
-		visibilityMask = 0;
-        excavatingStatus = 0;
-		naturalFossils = MAX_VOLUME;
-		isTransparent = false;
-		volume = MAX_VOLUME; career = false;
-	}
-
 	public int PourIn (int blocksCount) {
 		if (volume == MAX_VOLUME) return blocksCount;
 		if (blocksCount > (MAX_VOLUME - volume)) {
@@ -58,14 +50,38 @@ public class CubeBlock : Block{
 	}
 
 	public void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration) {
-		myChunk = f_chunk; transform.parent = f_chunk.transform;
-		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
-		transform.localRotation = Quaternion.Euler(Vector3.zero);
-		material_id = f_material_id;
-		type = BlockType.Cube; isTransparent = false;
-		if (naturalGeneration) {naturalFossils = MAX_VOLUME;} else naturalFossils = 0;
+        if (firstSet)
+        {
+            visibilityMask = 0;
+            excavatingStatus = 0;
+            naturalFossils = MAX_VOLUME;
+            isTransparent = false;
+            volume = MAX_VOLUME; career = false;
+            firstSet = false;
+            type = BlockType.Cube;
+            personalNumber = lastUsedNumber++;
+        }
+		myChunk = f_chunk;
+        pos = f_chunkPos;
+        if (model == null)
+        {
+            model = new GameObject();
+            model.transform.parent = f_chunk.transform;
+        }
+        model.transform.parent = f_chunk.transform;
+        model.transform.localPosition = new Vector3(pos.x, pos.y, pos.z);        
+		model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        model.name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+        material_id = f_material_id;
+		
 
-		gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+        if (firstSet)
+        {
+            if (naturalGeneration) { naturalFossils = MAX_VOLUME; }
+            else naturalFossils = 0;
+            personalNumber = lastUsedNumber++;
+            firstSet = false;
+        }         
 	}
 
 	public override void ReplaceMaterial(int newId) {
@@ -110,10 +126,10 @@ public class CubeBlock : Block{
 	void CreateFace(int i) {
 		if (faces == null) faces =new MeshRenderer[6];
 		else {if (faces[i] != null) return;}
-		GameObject g = Instantiate(PoolMaster.quad_pref) as GameObject;
+		GameObject g = Object.Instantiate(PoolMaster.quad_pref);
 		g.tag = "BlockCollider";
-		faces[i] =g.GetComponent <MeshRenderer>();
-		g.transform.parent = transform;
+		faces[i] = g.GetComponent <MeshRenderer>();
+		g.transform.parent = model.transform;
 		switch (i) {
 		case 0: faces[i].name = "north_plane"; faces[i].transform.localRotation = Quaternion.Euler(0, 180, 0); faces[i].transform.localPosition = new Vector3(0, 0, Block.QUAD_SIZE/2f); break;
 		case 1: faces[i].transform.localRotation = Quaternion.Euler(0, 270, 0); faces[i].name = "east_plane"; faces[i].transform.localPosition = new Vector3(Block.QUAD_SIZE/2f, 0, 0); break;

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WorkersDestination {ForWorksite, ForWorkBuilding}
-
 [System.Serializable]
 public sealed class ColonyControllerSerializer{
 	public StorageSerializer storageSerializer;
@@ -11,7 +9,6 @@ public sealed class ColonyControllerSerializer{
 	happiness_coefficient, health_coefficient, birthrateCoefficient, realBirthrate;
 
 	public float energyStored,energyCrystalsCount;
-	public bool haveWorksites;
 	public List<WorksiteSerializer> worksites;
 
 	public int freeWorkers, citizenCount,deathCredit;
@@ -40,6 +37,7 @@ public sealed class ColonyController : MonoBehaviour {
 	public List<Building> powerGrid { get; private set; }
 	public List<Dock> docks{get;private set;}
 	public List<Worksite> worksites{get;private set;}
+    List<int> deletedWorksites; List<Worksite> worksite_addlist; // костылим,да?
 	public byte docksLevel{get; private set;}
 	public float housingLevel { get; private set; }
 
@@ -60,7 +58,7 @@ public sealed class ColonyController : MonoBehaviour {
         {
             GameMaster.realMaster.everydayUpdateList.Add(this);
             GameMaster.realMaster.everyYearUpdateList.Add(this);
-            gears_coefficient = 1;
+            gears_coefficient = 2;
             labourEfficientcy_coefficient = 1;
             health_coefficient = 1;
             hospitals_coefficient = 0;
@@ -74,6 +72,8 @@ public sealed class ColonyController : MonoBehaviour {
         powerGrid = new List<Building>();
         docks = new List<Dock>();
         worksites = new List<Worksite>();
+        deletedWorksites = new List<int>();
+        worksite_addlist = new List<Worksite>();
     }
 
 	public void CreateStorage() { // call from game master
@@ -82,6 +82,22 @@ public sealed class ColonyController : MonoBehaviour {
 
 	void Update() {
 		if (GameMaster.gameSpeed == 0) return;
+        float t = Time.deltaTime * GameMaster.gameSpeed;
+        //WORKSITES
+        if (deletedWorksites.Count > 0)
+        {
+            foreach (int i in deletedWorksites) worksites.RemoveAt(i); 
+            deletedWorksites.Clear();
+        }
+        if (worksite_addlist.Count > 0)
+        {
+            foreach (Worksite w in worksite_addlist) worksites.Add(w);
+            worksite_addlist.Clear();
+        }
+        if (worksites.Count > 0)
+        {
+            foreach (Worksite w in worksites) w.WorkUpdate(t);
+        }
 
         // ENERGY CONSUMPTION
         if (energySurplus > 0)
@@ -110,7 +126,7 @@ public sealed class ColonyController : MonoBehaviour {
 		//   STARVATION PROBLEM
 		float foodSupplyHappiness = 1;
 		if (starvationTimer > 0) {
-			starvationTimer -= Time.deltaTime * GameMaster.gameSpeed;
+			starvationTimer -= t;
 			if (starvationTimer < 0) starvationTimer = starvationTime;
 			float pc = starvationTimer / starvationTime;
 			foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT * pc;
@@ -124,7 +140,7 @@ public sealed class ColonyController : MonoBehaviour {
 			foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + ( 1 - FOOD_PROBLEM_HAPPINESS_LIMIT ) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
 		}
 		//HOUSING PROBLEM
-		housingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+		housingTimer -= t;
 		if ( housingTimer <= 0 ) {
 			if ( totalLivespace < citizenCount ) {
 				int tentsCount = (citizenCount - totalLivespace) / 4;
@@ -171,7 +187,7 @@ public sealed class ColonyController : MonoBehaviour {
 		}
 		//HEALTHCARE
 		if (health_coefficient < 1 && hospitals_coefficient > 0) {
-			health_coefficient += hospitals_coefficient * GameMaster.gameSpeed * Time.deltaTime * gears_coefficient * 0.001f;
+			health_coefficient += hospitals_coefficient * t * gears_coefficient * 0.001f;
 		}
 		float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT) * hospitals_coefficient;
 		healthcareHappiness *= health_coefficient;	
@@ -184,7 +200,7 @@ public sealed class ColonyController : MonoBehaviour {
 		//  BIRTHRATE
 		if (birthrateCoefficient != 0) {
 			if (birthrateCoefficient > 0) {
-				realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* GameMaster.gameSpeed * Time.deltaTime;
+				realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f)* t;
 				if (peopleSurplus > 1) {
 					int newborns = (int) peopleSurplus;
 					AddCitizens(newborns); 
@@ -192,7 +208,7 @@ public sealed class ColonyController : MonoBehaviour {
 				}
 			}
 			else {
-				realBirthrate = birthrateCoefficient * (1.1f - health_coefficient) *GameMaster.gameSpeed * Time.deltaTime;
+				realBirthrate = birthrateCoefficient * (1.1f - health_coefficient) *t;
 				if (peopleSurplus < - 1) {
                     deathCredit++;
                     peopleSurplus ++;
@@ -217,24 +233,19 @@ public sealed class ColonyController : MonoBehaviour {
 	public void AddWorkers(int x) {
 		freeWorkers += x;
 	}
-	public void SendWorkers( int x, Component destination,  WorkersDestination destinationCode ) {
-		if (freeWorkers == 0) return;
+	public void SendWorkers( int x, WorkBuilding w ) {
+		if (freeWorkers == 0 | w == null) return;
 		if (x > freeWorkers) x = freeWorkers;
-		switch (destinationCode) {
-		case WorkersDestination.ForWorksite:
-			Worksite ws = destination as Worksite;
-			if (ws == null) return;
-			else 	freeWorkers = freeWorkers -x + ws.AddWorkers(x);
-			break;
-		case WorkersDestination.ForWorkBuilding:
-			WorkBuilding wb = destination as WorkBuilding;
-			if (wb == null) return;
-			else freeWorkers = freeWorkers - x + wb.AddWorkers(x);
-                break;
-		}
+		else freeWorkers = freeWorkers - x + w.AddWorkers(x);
 	}
+    public void SendWorkers(int x, Worksite w)
+    {
+        if (freeWorkers == 0 | w == null) return;
+        if (x > freeWorkers) x = freeWorkers;
+        else freeWorkers = freeWorkers - x + w.AddWorkers(x);
+    }
 
-	void EverydayUpdate() {
+    void EverydayUpdate() {
 		if (!GameMaster.realMaster.weNeedNoResources) {
 			//   FOOD  CONSUMPTION
 			float fc = FOOD_CONSUMPTION * citizenCount;
@@ -269,24 +280,19 @@ public sealed class ColonyController : MonoBehaviour {
 
 	#region AddingToLists
 	public void AddWorksite( Worksite w ) {
-		if ( w == null ) return;
 		int i = 0;
 		while ( i < worksites.Count) {
-			if ( worksites[i] == null ) worksites.RemoveAt(i);
-			else {
-				if ( worksites[i] == w ) return;
-				else i++;
-			}
+			if ( worksites[i] == w ) return;
+			else i++;
 		}
-		worksites.Add(w);
+        worksite_addlist.Add(w);
 	}
 	public void RemoveWorksite( Worksite w) {
-		if ( w == null || worksites.Count == 0) return;
+		if (worksites.Count == 0) return;
 		int i = 0;
 		while (i < worksites.Count) {
 			if ( worksites[i] == w | worksites[i] == null ) {
-				docks.RemoveAt(i);
-				continue;
+                deletedWorksites.Add(i);
 			}
 			i++;
 		}
@@ -539,6 +545,11 @@ public sealed class ColonyController : MonoBehaviour {
 		}
         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
 	}
+    public void AddEnergy(float f)
+    {
+        energyStored += f;
+        if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+    }
 
 	public void AddDock( Dock d ) {
 		if ( d == null ) return;
@@ -586,7 +597,7 @@ public sealed class ColonyController : MonoBehaviour {
 	public float GetEnergyCrystals(float v) {
 		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
 		else energyCrystalsCount -= v;
-        if (v > 1) UIController.current.MoneyChanging(-v);
+        if (v >= 1) UIController.current.MoneyChanging(-v);
         return v;
 	}
 
@@ -602,18 +613,12 @@ public sealed class ColonyController : MonoBehaviour {
 
 		ccs.energyStored = energyStored;
 		ccs.energyCrystalsCount = energyCrystalsCount;
-		if (worksites.Count == 0) ccs.haveWorksites = false;
-		else {
-			int realCount = 0;
-			ccs.worksites = new List<WorksiteSerializer>();
-			foreach (Worksite w in worksites) {
+		ccs.worksites = new List<WorksiteSerializer>();
+		foreach (Worksite w in worksites) {
 				if (w == null) continue;
 				WorksiteSerializer wbs = w.Save();
 				if (wbs == null) continue;
 				ccs.worksites.Add(wbs);
-				realCount++;
-			}
-			if (realCount == 0) ccs.haveWorksites = false; else ccs.haveWorksites = true;
 		}
 		ccs.freeWorkers = freeWorkers;
 		ccs.citizenCount = citizenCount;
@@ -637,29 +642,24 @@ public sealed class ColonyController : MonoBehaviour {
 
 		energyStored = ccs.energyStored;
 		energyCrystalsCount = ccs.energyCrystalsCount;
-		if (ccs.haveWorksites) {
+		if (ccs.worksites.Count > 0) {
 			foreach (WorksiteSerializer ws in ccs.worksites) {
 				Worksite w = null;
-				Block b = GameMaster.mainChunk.GetBlock(ws.workObjectPos);
-				if (b == null) continue;
 				switch (ws.type) {
-				case WorksiteType.Abstract : 
-					w = b.gameObject.AddComponent<Worksite>();
-					break;
 				case WorksiteType.BlockBuildingSite:
-					w= b.gameObject.AddComponent<BlockBuildingSite>();
+					w= new BlockBuildingSite();
 					break;
 				case WorksiteType.CleanSite:
-					w = b.gameObject.AddComponent<CleanSite>();
+					w = new CleanSite();
 					break;
 				case WorksiteType.DigSite:
-					w = b.gameObject.AddComponent<DigSite>();
+					w = new DigSite();
 					break;
 				case WorksiteType.GatherSite:
-					w = b.gameObject.AddComponent<GatherSite>();
+					w = new GatherSite();
 					break;
 				case WorksiteType.TunnelBuildingSite:
-					w = b.gameObject.AddComponent<TunnelBuildingSite>();
+					w = new TunnelBuildingSite();
 					break;
 				}
 				w.Load(ws);
