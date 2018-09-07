@@ -1,9 +1,10 @@
 ﻿public enum Language{English, Russian};
 public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept}
+Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings}
-public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress }
+ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+StorageOverloaded}
+public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
@@ -67,23 +68,23 @@ public static class Localization {
             case Structure.MINERAL_POWERPLANT_2_ID: return "Mineral F powerplant";
             case Structure.ORE_ENRICHER_2_ID: return "Ore enricher";
             case Structure.ROLLING_SHOP_ID: return "Rolling shop";
-            case Structure.MINI_GRPH_REACTOR_ID: return "Small Graphonum reactor";
+            case Structure.MINI_GRPH_REACTOR_3_ID: return "Small Graphonum reactor";
             case Structure.FUEL_FACILITY_3_ID: return "Fuel facility";
             case Structure.GRPH_REACTOR_4_ID: return "Graphonium reactor";
             case Structure.PLASTICS_FACTORY_3_ID: return "Plastics factory";
             case Structure.FOOD_FACTORY_4_ID: return "Food factory";
             case Structure.FOOD_FACTORY_5_ID: return "Food factory Block";
-            case Structure.GRPH_ENRICHER_ID: return "Graphonium enricher";
-            case Structure.XSTATION_ID: return "Experimental station";
-            case Structure.QUANTUM_ENERGY_TRANSMITTER_ID: return "Quantum energy transmitter";
-            case Structure.CHEMICAL_FACTORY_ID: return "Chemical factory";
+            case Structure.GRPH_ENRICHER_3_ID: return "Graphonium enricher";
+            case Structure.XSTATION_3_ID: return "Experimental station";
+            case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Quantum energy transmitter";
+            case Structure.CHEMICAL_FACTORY_4_ID: return "Chemical factory";
             case Structure.RESOURCE_STICK_ID: return "Constructing block...";
             case Structure.COLUMN_ID: return "Column";
             case Structure.SWITCH_TOWER_ID: return "Switch tower";
-            case Structure.SHUTTLE_HANGAR_ID: return "Shuttle hangar";
-            case Structure.RECRUITING_CENTER_ID: return "Recruiting Center";
-            case Structure.EXPEDITION_CORPUS_ID: return "Expedition Corpus";
-            case Structure.QUANTUM_TRANSMITTER_ID: return "Long-range transmitter";
+            case Structure.SHUTTLE_HANGAR_4_ID: return "Shuttle hangar";
+            case Structure.RECRUITING_CENTER_4_ID: return "Recruiting Center";
+            case Structure.EXPEDITION_CORPUS_4_ID: return "Expedition Corpus";
+            case Structure.QUANTUM_TRANSMITTER_4_ID: return "Long-range transmitter";
         }
     }
 	public static string GetStructureDescription(int id) {
@@ -265,6 +266,7 @@ public static class Localization {
             case LocalizedWord.Yes: return "Yes"; // rewrite - yes
             case LocalizedWord.MainMenu: return "Main menu";
             case LocalizedWord.Accept: return "Accept";
+            case LocalizedWord.PourIn: return "Pour In";// pour in the hole in cube block
 		default: return "...";
 		}
 	}
@@ -299,6 +301,7 @@ public static class Localization {
             case LocalizedPhrase.LODdistance: return "LOD sprite distance";
             case LocalizedPhrase.GraphicQuality: return "Graphic quality";
             case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";
+            case LocalizedPhrase.StorageOverloaded: return "Storage overloaded";
         }
     }
 
@@ -332,6 +335,7 @@ public static class Localization {
             case LocalizationActionLabels.CleanInProgress: return "Clean in progress";
             case LocalizationActionLabels.DigInProgress: return "Dig in progress";
             case LocalizationActionLabels.GatherInProgress: return "Gather in progress";
+            case LocalizationActionLabels.PouringInProgress: return "Pouring in progress";
         }
     }
 
@@ -396,7 +400,7 @@ public static class Localization {
                     case ProgressQuestID.Progress_XStation:
                         q.name = "Experimental prognosis";
                         q.description = "The Last Sector is dangerous place. Organise your own meteorologist team to foresee threats";
-                        q.steps[0] = "Build " + GetStructureName(Structure.XSTATION_ID);
+                        q.steps[0] = "Build " + GetStructureName(Structure.XSTATION_3_ID);
                         break;
                     case ProgressQuestID.Progress_Tier4:
                         q.name = "Technology progress III";

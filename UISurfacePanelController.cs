@@ -15,7 +15,7 @@ public sealed class UISurfacePanelController : UIObserver {
 	byte savedHqLevel = 0;
 	Vector2[] showingResourcesCount;
     int selectedBuildingButton = -1, lastStorageStatus = -1;
-    Vector2Int costPanel_selectedButton;
+    Vector2Int costPanel_selectedButton = new Vector2Int(-1,-1);
 	Structure chosenStructure = null;
 	public byte constructingLevel = 1;
 	SurfacePanelMode mode;
@@ -194,7 +194,7 @@ public sealed class UISurfacePanelController : UIObserver {
 
     void CheckGatherButton()
     {
-        if (!(observingSurface.worksite is GatherSite))
+        if ( observingSurface.worksite is GatherSite )
         {
             if (status_gather != true)
             {
@@ -277,8 +277,7 @@ public sealed class UISurfacePanelController : UIObserver {
         }
     }
 
-    #region panels setting
-    
+    #region panels setting    
 
     void SetCostPanelMode(CostPanelMode m)
     {        
@@ -309,14 +308,15 @@ public sealed class UISurfacePanelController : UIObserver {
                     changeMaterialButton.GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
                     columnCreateButton.GetComponent<Image>().overrideSprite = null;
                     blockCreateButton.GetComponent<Image>().overrideSprite = null;
-                    int lastUsedIndex = 0;                    
-                    costPanel.transform.GetChild(0).gameObject.SetActive(true);
+                    Transform buttonsKeeper = costPanel.transform.GetChild(0);
+                    buttonsKeeper.gameObject.SetActive(true);
                     costPanel.transform.GetChild(1).gameObject.SetActive(false);
                     costPanel.transform.GetChild(2).gameObject.SetActive(false);
+                    int lastUsedIndex = 0;                    
                     foreach (ResourceType rt in ResourceType.materialsForCovering)
                     {
                         if (rt.ID == observingSurface.material_id) continue;
-                        t = costPanel.transform.GetChild(0).GetChild(lastUsedIndex);
+                        t = buttonsKeeper.GetChild(lastUsedIndex);
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
                         ri.texture = UIController.current.resourcesTexture;
@@ -332,11 +332,11 @@ public sealed class UISurfacePanelController : UIObserver {
                         b.GetComponent<Image>().overrideSprite = null;
                         lastUsedIndex++;
                     }
-                    if (lastUsedIndex < costPanel.transform.childCount)
-                    {
-                        for (; lastUsedIndex < costPanel.transform.childCount; lastUsedIndex++)
+                    if (lastUsedIndex < buttonsKeeper.childCount)
+                    {                        
+                        for (; lastUsedIndex < buttonsKeeper.childCount; lastUsedIndex++)
                         {
-                            costPanel.transform.GetChild(lastUsedIndex).gameObject.SetActive(false);
+                            buttonsKeeper.GetChild(lastUsedIndex).gameObject.SetActive(false);
                         }
                     }
                     costPanel.transform.GetChild(2).gameObject.SetActive(false); // build button
@@ -430,6 +430,10 @@ public sealed class UISurfacePanelController : UIObserver {
     }
     public void CostPanel_SelectResource(Vector2Int indexes)
     {        
+        if (costPanel_selectedButton.x != -1)
+        {
+            costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
+        }
         costPanel_selectedButton = indexes;
         costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
         Transform t = costPanel.transform.GetChild(2);// build button
@@ -455,7 +459,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
                         if (supportPoints <= 1)
                         {
-                            Structure s = Structure.GetNewStructure(Structure.COLUMN_ID);
+                            Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
                             s.SetBasement(observingSurface, new PixelPosByte(7, 7));
                             PoolMaster.current.BuildSplash(observingSurface.model.transform.position);
                         }
@@ -542,7 +546,6 @@ public sealed class UISurfacePanelController : UIObserver {
     #endregion
 
     #region building construction 
-
 
     public void SwitchConstructionPlane()
     {
@@ -734,9 +737,9 @@ public sealed class UISurfacePanelController : UIObserver {
     }
 
 	public void CreateSelectedBuilding () {
-        if (chosenStructure.fullCover )
+        if (chosenStructure.placeInCenter )
         {
-            if (observingSurface.artificialStructures == 0) CreateSelectedBuilding(0,0);
+            if (observingSurface.artificialStructures == 0) CreateSelectedBuilding( (byte)(SurfaceBlock.INNER_RESOLUTION /2 - chosenStructure.innerPosition.x_size/2), (byte)(SurfaceBlock.INNER_RESOLUTION/ 2 - chosenStructure.innerPosition.z_size/2) );
             else buildIntersectionSubmit.SetActive(true);
         }
         else
@@ -782,13 +785,11 @@ public sealed class UISurfacePanelController : UIObserver {
         else  CreateSelectedBuilding(x, z);
     }
 
-
 	public void CreateSelectedBuilding (byte x, byte z) {
 		ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
 		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
            GameMaster.colonyController.storage.GetResources(cost);
-           Structure s = Structure.GetNewStructure(chosenStructure.id);
-		   s.gameObject.SetActive(true);
+           Structure s = Structure.GetStructureByID(chosenStructure.id);
 		    s.SetBasement(observingSurface, new PixelPosByte(x,z));
            PoolMaster.current.BuildSplash(observingSurface.model.transform.position);
             if (constructionPlane.activeSelf)
@@ -813,7 +814,7 @@ public sealed class UISurfacePanelController : UIObserver {
 	void RewriteBuildingButtons () {
 		// поправка на материал
 		// поправка на side-only
-		List<Building> abuildings = Structure.GetApplicableBuildingsList(constructingLevel);
+		List<Building> abuildings = Building.GetApplicableBuildingsList(constructingLevel);
 		for (int n = 0; n < buildingButtonsContainer.childCount; n++) {
             GameObject g = buildingButtonsContainer.GetChild(n).gameObject;
             if (n < abuildings.Count) {

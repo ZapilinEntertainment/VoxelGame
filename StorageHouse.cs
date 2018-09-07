@@ -15,10 +15,14 @@ public class StorageHouse : Building {
 		isActive = x;
 	}
 
-	void OnDestroy() {
-		PrepareBuildingForDestruction();
-		if (basement != null) {
-			GameMaster.colonyController.storage.RemoveWarehouse(this);
-		}
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (forced) { UnsetBasement(); }
+        if (PrepareBuildingForDestruction(forced))
+        {
+            GameMaster.colonyController.storage.RemoveWarehouse(this);
+        }
+    }
 }

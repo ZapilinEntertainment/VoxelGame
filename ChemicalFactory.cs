@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class ChemicalFactory : WorkBuilding {
+﻿public class ChemicalFactory : WorkBuilding {
     public static ChemicalFactory current { get; private set; }
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -14,9 +10,9 @@ public class ChemicalFactory : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
-        if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
         if (current == this) current = null;
-        Destroy(gameObject);
     }
 }

@@ -5,20 +5,28 @@ using UnityEngine;
 public class ScalableHarvestableResource : Structure {
 	public const float MAX_VOLUME = 64;
 	public ResourceType mainResource {get;protected set;}
-	public float count1;
+	public float resourceCount;
 
 	override public void Prepare() {
 		PrepareStructure();
 		mainResource = ResourceType.Nothing; 
 		hp = maxHp;
-		count1 = 0;
-		transform.localScale = new Vector3(1,0,1);
+		resourceCount = 0;		
 	}
 
-	public float AddResource( ResourceType type, float volume) {
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        SetStructureData(b, pos);
+        model.transform.localScale = new Vector3(1, 0, 1);
+        //if (isBasement) basement.myChunk.chunkUpdateSubscribers_structures.Add(this);
+    }
+
+    public float AddResource( ResourceType type, float volume) {
 		if (mainResource == ResourceType.Nothing) {
 			mainResource = type;
-			myRenderer.sharedMaterial = type.material;
+            Transform t = model.transform.GetChild(0);
+            t.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(type.ID, t.GetComponent<MeshFilter>());
 		}
 		else{
 			if (type != mainResource) {
@@ -26,10 +34,14 @@ public class ScalableHarvestableResource : Structure {
 			}
 		}
 		float addingVolume = volume; 
-		if (addingVolume > MAX_VOLUME - count1) addingVolume = MAX_VOLUME - count1;
-		count1 += addingVolume;
-		transform.localScale = new Vector3(1,count1/MAX_VOLUME,1);
+		if (addingVolume > MAX_VOLUME - resourceCount) addingVolume = MAX_VOLUME - resourceCount;
+		resourceCount += addingVolume;
+		model.transform.localScale = new Vector3(1,resourceCount/MAX_VOLUME,1);
 		return volume - addingVolume;
+	}
+	public void Harvest() {
+		resourceCount -= GameMaster.colonyController.storage.AddResource(mainResource,resourceCount);
+		if (resourceCount == 0) Annihilate(false);
 	}
 
 	#region save-load system
@@ -48,20 +60,21 @@ public class ScalableHarvestableResource : Structure {
 		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
 		GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
 		mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
-		count1 = hrs.count;
+		resourceCount = hrs.count;
 	}
 
 	protected HarvestableResourceSerializer GetHarvestableResourceSerializer() {
 		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
 		hrs.mainResource_id = mainResource.ID;
-		hrs.count = count1;
+		hrs.count = resourceCount;
 		return hrs;
 	}
 	#endregion
 	override public void Annihilate( bool forced ) { // for pooling
-		if (forced) basement = null;
-		else GameMaster.colonyController.storage.AddResource(mainResource, count1);
-		Destroy(gameObject);
+        if (destroyed) return;
+        else destroyed = true;
+        if (forced) basement = null;
+		else GameMaster.colonyController.storage.AddResource(mainResource, resourceCount);
 	}
 
 }

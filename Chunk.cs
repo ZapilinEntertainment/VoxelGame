@@ -21,7 +21,7 @@ public struct ChunkPos
 public sealed class ChunkSerializer
 {
     public List<BlockSerializer> blocksData;
-    public float lifepower, lifepowerTimer;
+    public float lifepower;
     public byte chunkSize;
     public int lastUsedBlockNumber;
 }
@@ -32,16 +32,16 @@ public sealed class Chunk : MonoBehaviour
     public List<SurfaceBlock> surfaceBlocks { get; private set; }
     public byte prevBitmask = 63;
     public float lifePower = 0;
-    float lifepower_timer = 0;
     public static byte CHUNK_SIZE { get; private set; }
-    public List<Component> chunkUpdateSubscribers;
+    public List<Structure> chunkUpdateSubscribers_structures;
     public bool[,] sideBlockingMap { get; private set; }
     Texture3D chunkLightMap; Color32[] lmap;
+    bool allGrasslandsCreated = false;
 
     public void Awake()
     {
         surfaceBlocks = new List<SurfaceBlock>();
-        chunkUpdateSubscribers = new List<Component>();
+        chunkUpdateSubscribers_structures = new List<Structure>();
         sideBlockingMap = new bool[CHUNK_SIZE, 4];
         for (int a = 0; a < CHUNK_SIZE; a++)
         {
@@ -65,12 +65,9 @@ public sealed class Chunk : MonoBehaviour
         StartCoroutine(CullingUpdate(t));
     }
 
-    void Update()
+    public void LifepowerUpdate()
     {
-        lifepower_timer -= Time.deltaTime * GameMaster.gameSpeed;
-        if (lifepower_timer <= 0)
-        {
-            if (surfaceBlocks.Count > 0)
+       if (surfaceBlocks.Count > 0)
             {
                 float grasslandLifepowerChanges = 0;
                 if (lifePower > 0)
@@ -79,10 +76,10 @@ public sealed class Chunk : MonoBehaviour
                     List<SurfaceBlock> dirt_for_grassland = new List<SurfaceBlock>();
                     foreach (SurfaceBlock sb in surfaceBlocks)
                     {
-                        if (sb.material_id == ResourceType.DIRT_ID && sb.grassland == null) dirt_for_grassland.Add(sb);
+                        if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null) dirt_for_grassland.Add(sb);
                     }
                     SurfaceBlock b = null;
-                    while (b == null && dirt_for_grassland.Count > 0)
+                    while (b == null & dirt_for_grassland.Count > 0)
                     {
                         int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
                         b = dirt_for_grassland[pos];
@@ -162,8 +159,6 @@ public sealed class Chunk : MonoBehaviour
                 }
                 lifePower = Grassland.GrasslandUpdate(grasslandLifepowerChanges);
             }
-            lifepower_timer = GameMaster.LIFEPOWER_TICK;
-        }
     }
 
     IEnumerator CullingUpdate(Transform campoint)
@@ -218,14 +213,14 @@ public sealed class Chunk : MonoBehaviour
     void BroadcastChunkUpdate(ChunkPos pos)
     {
         int i = 0;
-        while (i < chunkUpdateSubscribers.Count)
+        while (i < chunkUpdateSubscribers_structures.Count)
         {
-            if (chunkUpdateSubscribers[i] == null)
+            if (chunkUpdateSubscribers_structures[i] == null)
             {
-                chunkUpdateSubscribers.RemoveAt(i);
+                chunkUpdateSubscribers_structures.RemoveAt(i);
                 continue;
             }
-            chunkUpdateSubscribers[i].BroadcastMessage("ChunkUpdated", pos, SendMessageOptions.DontRequireReceiver);
+            chunkUpdateSubscribers_structures[i].ChunkUpdated(pos);
             i++;
         }
     }
@@ -431,6 +426,7 @@ public sealed class Chunk : MonoBehaviour
                 blocks[x, y, z] = cb;
                 if (cb.isTransparent == false) influenceMask = 0; else influenceMask = 1; // закрывает собой все соседние стенки
                 calculateUpperBlock = true;
+                i_ceilingMaterialID = i_floorMaterialID;
                 break;
             case BlockType.Shapeless:
                 blocks[x, y, z] = new Block();
@@ -484,7 +480,11 @@ public sealed class Chunk : MonoBehaviour
                 {
                     AddBlock(new ChunkPos(x, y + 1, z), BlockType.Cave, i_ceilingMaterialID, blocks[x, y + 2, z].material_id, i_naturalGeneration);
                 }
-                else AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+                else
+                {
+                    
+                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+                }
             }
         }
         return b;
@@ -1033,21 +1033,19 @@ public sealed class Chunk : MonoBehaviour
         }
     }   
 
-    public void AddLifePower(int count) { lifePower += count; if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK; }
+    public void AddLifePower(int count) { lifePower += count;  }
     public int TakeLifePower(int count)
     {
         if (count < 0) return 0;
         float lifeTransfer = count;
         if (lifeTransfer > lifePower) { if (lifePower >= 0) lifeTransfer = lifePower; else lifeTransfer = 0; }
         lifePower -= lifeTransfer;
-        if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
         return (int)lifeTransfer;
     }
     public int TakeLifePowerWithForce(int count)
     {
         if (count < 0) return 0;
         lifePower -= count;
-        if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
         return count;
     }
 
@@ -1093,7 +1091,6 @@ public sealed class Chunk : MonoBehaviour
         }
         cs.chunkSize = CHUNK_SIZE;
         cs.lifepower = lifePower;
-        cs.lifepowerTimer = lifepower_timer;
         cs.lastUsedBlockNumber = Block.lastUsedNumber;
         return cs;
     }
@@ -1109,7 +1106,6 @@ public sealed class Chunk : MonoBehaviour
             b.Load(bs);
         }
         lifePower = cs.lifepower;
-        lifepower_timer = cs.lifepowerTimer;
         Block.lastUsedNumber = cs.lastUsedBlockNumber;
     }
     #endregion

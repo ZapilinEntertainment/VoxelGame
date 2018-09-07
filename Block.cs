@@ -114,9 +114,9 @@ public class Block {
     public void Annihilate()
     {
         if (model != null) Object.Destroy(model);
-        if (mainStructure == null) return;
-        MultiblockStructure ms = mainStructure.gameObject.GetComponent<MultiblockStructure>();
-        if (ms != null) ms.PartCollapse(pos);
+        //if (mainStructure == null) return;
+        //MultiblockStructure ms = mainStructure as MultiblockStructure;
+        //if (ms != null) ms.PartCollapse(pos);
     }
 
 	protected BlockSerializer GetBlockSerializer() {

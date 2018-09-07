@@ -76,17 +76,17 @@ public class Zeppelin : MonoBehaviour {
 								landed = true;
 								anchor.gameObject.SetActive(false);
 								anchorChain_as.enabled = false;
-								Structure hq = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")).GetComponent<Structure>();
+                                Structure hq = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                                hq.modelRotation = (byte)(transform.rotation.eulerAngles.y / 45f);
 								hq.SetBasement(landingPlace, PixelPosByte.zero);
 
 								landingPlace.MakeIndestructible(true);
 								landingPlace.myChunk.GetBlock(landingPlace.pos.x, landingPlace.pos.y - 1,landingPlace.pos.z).MakeIndestructible(true);
 								GameMaster.colonyController.AddCitizens(GameMaster.START_WORKERS_COUNT);
-								GameMaster.colonyController.SetHQ(hq.GetComponent<HeadQuarters>());
 
 								Chunk c = landingPlace.myChunk;
 
-								Structure storage = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")).GetComponent<Structure>();
+                                Structure storage = Structure.GetStructureByID(Structure.STORAGE_0_ID);
 								storage.SetBasement(s_place1, PixelPosByte.one);
 							} 
 							else transform.Translate (Vector3.down * speed);

@@ -89,14 +89,14 @@ public class LODController : MonoBehaviour {
      void TreeCheck(int index)
     {
         ModelWithLOD tree = models[index];
-        Transform fullModelTransform = tree.transform.parent, spriteTransform = tree.transform;
-        Vector3 treePos = fullModelTransform.position;
+        Transform modelParent = tree.transform.parent, spriteTransform = tree.transform;
+        Vector3 treePos = modelParent.position;
         if ((treePos - camPos).magnitude > lodDistance)
         {
             if (!tree.spriteIsActive)
             {
-                fullModelTransform.GetChild(0).gameObject.SetActive(false);
-                fullModelTransform.GetChild(1).gameObject.SetActive(false);
+                modelParent.GetChild(0).gameObject.SetActive(false);
+                modelParent.GetChild(1).gameObject.SetActive(false);
                 spriteTransform.gameObject.SetActive(true);
                 tree.spriteIsActive = true;
             }
@@ -132,8 +132,8 @@ public class LODController : MonoBehaviour {
         {
             if (tree.spriteIsActive)
             {
-                fullModelTransform.GetChild(0).gameObject.SetActive(true);            
-                fullModelTransform.GetChild(1).gameObject.SetActive(true);
+                modelParent.GetChild(0).gameObject.SetActive(true);            
+                modelParent.GetChild(1).gameObject.SetActive(true);
                 spriteTransform.gameObject.SetActive(false);
                 tree.spriteIsActive = false;
             }

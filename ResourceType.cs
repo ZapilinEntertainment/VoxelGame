@@ -111,9 +111,9 @@ public class ResourceType {
 		switch (f_id)
         {
             default: return PoolMaster.default_material;
-            case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, mf, true);
-            case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, mf, true);
-            case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, mf, true);
+            case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, mf);
+            case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, mf);
+            case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, mf);
             case METAL_K_ID:
             case METAL_K_ORE_ID:
                 return PoolMaster.GetMetalMaterial(MetalMaterial.MetalK, mf);
@@ -127,12 +127,12 @@ public class ResourceType {
             case METAL_P_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalP, mf);
             case METAL_S_ORE_ID:
             case METAL_S_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalS, mf);
-            case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, mf, true);
-            case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, mf, true);
-            case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, mf, true);
-            case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, mf, true);
+            case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, mf);
+            case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, mf);
+            case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, mf);
+            case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, mf);
 
-            case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf, true);
+            case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf);
             case GRAPHONIUM_ID: return PoolMaster.energy_material;
         }
 	}

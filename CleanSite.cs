@@ -1,13 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class CleanSite : Worksite {
 	public bool diggingMission {get;protected set;}
 	SurfaceBlock workObject;
 	const int START_WORKERS_COUNT = 10;
 
-	override public void WorkUpdate (float t) {
+	override public void WorkUpdate () {
 		if (workObject ==null) {
             StopWork();
 			return;
@@ -32,34 +30,34 @@ public class CleanSite : Worksite {
 			}
             StopWork();
 			return;
-		}
-		if (workersCount  > 0) {
-			workflow += workSpeed * t ;
-			labourTimer -= t;
-			if ( labourTimer <= 0 ) {
-				if (workflow >= 1) LabourResult();
-				labourTimer = GameMaster.LABOUR_TICK;
-			}
-		}
-	}
-
-	void LabourResult() {
-		Structure s = workObject.surfaceObjects[0];
-		if (s == null || !s.gameObject.activeSelf) {workObject.RequestAnnihilationAtIndex(0);return;}
-		if (s.id == Structure.PLANT_ID) {
-			(s as Plant).Harvest();
-		}
-		else {
-				HarvestableResource hr = s.GetComponent<HarvestableResource>();
-				if (hr != null) {
-					GameMaster.colonyController.storage.AddResource(hr.mainResource, hr.count1);
-					hr.Annihilate( false );
-				}
-				else {
-					s.ApplyDamage(workflow);
-				}
-		}
-		actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + workObject.surfaceObjects.Count.ToString() +' '+ Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) +")" ;
+		}		
+        else
+        {
+            workflow += workSpeed;
+            Structure s = workObject.surfaceObjects[0];
+            float workGained = 0;
+            if (s.id == Structure.PLANT_ID)
+            {
+                workGained = s.hp;
+                (s as Plant).Harvest();                
+            }
+            else
+            {
+                HarvestableResource hr = s as HarvestableResource;
+                if (hr != null)
+                {
+                    workGained = hr.resourceCount;
+                    hr.Harvest();
+                }
+                else
+                {
+                    s.ApplyDamage(workflow);
+                    workGained = workflow;
+                }
+            }
+            workflow -= workGained;
+            actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + workObject.surfaceObjects.Count.ToString() + ' ' + Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) + ")";
+        }		
 	}
 
 	protected override void RecalculateWorkspeed() {
@@ -75,8 +73,13 @@ public class CleanSite : Worksite {
 		sign.transform.position = workObject.model.transform.position;
 		diggingMission = f_diggingMission;
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
-		GameMaster.colonyController.AddWorksite(this);
-	}
+        if (!worksitesList.Contains(this)) worksitesList.Add(this);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+            subscribedToUpdate = true;
+        }
+    }
 
     override public void StopWork()
     {
@@ -88,7 +91,12 @@ public class CleanSite : Worksite {
             workersCount = 0;
         }
         if (sign != null) Object.Destroy(sign.gameObject);
-        GameMaster.colonyController.RemoveWorksite(this);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
+            subscribedToUpdate = false;
+        }
         if (workObject != null)
         {
             if (workObject.worksite == this) workObject.ResetWorksite();
@@ -105,7 +113,7 @@ public class CleanSite : Worksite {
     }
 
     #region save-load mission
-    override public WorksiteSerializer Save() {
+    override protected WorksiteSerializer Save() {
 		if (workObject == null) {
             StopWork();
 			return null;
@@ -117,7 +125,7 @@ public class CleanSite : Worksite {
 		else ws.specificData = new byte[1]{0};
 		return ws;
 	}
-	override public void Load(WorksiteSerializer ws) {
+	override protected void Load(WorksiteSerializer ws) {
 		LoadWorksiteData(ws);
 		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ws.specificData[0] == 1);
 	}

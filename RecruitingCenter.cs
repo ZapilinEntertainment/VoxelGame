@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine; // random
 
 [System.Serializable]
 public class RecruitingCenterSerializer {
@@ -9,16 +7,29 @@ public class RecruitingCenterSerializer {
 	public bool finding;
 }
 
-public class RecruitingCenter : WorkBuilding {
-	float backupSpeed = 0.02f, progress = 0;
-	bool finding = false;
+public sealed class RecruitingCenter : WorkBuilding {
+    float backupSpeed = 0.02f;
+    public float progress{ get; private set; }
+    public bool finding = false;
 	ColonyController colonyController;
 	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
-	public static float hireCost = -1;
+	static float hireCost = -1;
+    public static UIRecruitingCenterObserver rcenterObserver;
+    const float FIND_SPEED = 5;
 
 	public static void Reset() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
 	}
+
+   public static float GetHireCost()
+    {
+        if (hireCost == -1) hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
+        return hireCost;
+    }
+    public static void SetHireCost(float f)
+    {
+        hireCost = f;
+    }
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (hireCost == -1) Reset();
@@ -26,63 +37,59 @@ public class RecruitingCenter : WorkBuilding {
 		if (basement != null) movement = true;
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		colonyController = GameMaster.colonyController;
-		if ( !movement ) Crew.AddCrewSlots( CREW_SLOTS_FOR_BUILDING );
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
+        colonyController = GameMaster.colonyController;
+        if (!movement) // здание не создавалось, а было перенесено
+        {
+            Crew.AddCrewSlots(CREW_SLOTS_FOR_BUILDING);
+            progress = 0;
+        }
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
+	override public void LabourUpdate() {
+		if ( !isActive | !energySupplied) return;
 		if (workersCount > 0) {
 			if (finding) {
 				float candidatsCountFactor = colonyController.freeWorkers / Crew.OPTIMAL_CANDIDATS_COUNT;
 				if (candidatsCountFactor > 1) candidatsCountFactor = 1;
-				progress += ( workSpeed * 0.3f + colonyController.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.gameSpeed * Time.deltaTime / workflowToProcess;
+				progress += ( FIND_SPEED * workSpeed * 0.3f + colonyController.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
 				if (progress >= 1) {
 					Crew ncrew = new Crew();
 					ncrew.SetCrew(colonyController, hireCost);
 					Crew.crewsList.Add(ncrew);
 					progress = 0;
 					finding = false;
-					GameMaster.realMaster.AddAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
+                    UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
 					hireCost = hireCost * (1 + GameMaster.HIRE_COST_INCREASE);
 					hireCost = ((int)(hireCost * 100)) / 100f;
+                    if (showOnGUI) rcenterObserver.SelectCrew(ncrew);
 				}
 			}
 		}
 		else {
 			if (progress > 0) {
-				progress -= backupSpeed * GameMaster.gameSpeed * Time.deltaTime;
+				progress -= backupSpeed * GameMaster.LABOUR_TICK;
 				if (progress < 0) progress = 0;
 			}
 		}
 	}
 
-	virtual protected void RecalculateWorkspeed() {
+	override protected void RecalculateWorkspeed() {
 		workSpeed = (float)workersCount / (float)maxWorkers;
 	}
 
-	void OnGUI() {
-		//sync with hospital.cs, rollingShop.cs
-		if ( !showOnGUI ) return;
-		Rect rr = new Rect(UI.current.rightPanelBox.x, gui_ypos, UI.current.rightPanelBox.width, GameMaster.guiPiece);
-		GUI.Label(rr, Localization.ui_freeSlots + " : " + Crew.crewSlots.ToString(), Crew.crewSlots == 0 ? PoolMaster.GUIStyle_COLabel_red : PoolMaster.GUIStyle_CenterOrientedLabel);
-		rr.y += rr.height;
-		if ( !finding) {
-			if (GUI.Button(rr, Localization.hangar_hireCrew + " (" + Localization.CostInCoins(hireCost) + ')', colonyController.energyCrystalsCount < hireCost ? PoolMaster.GUIStyle_Button_red : GUI.skin.button)) {
-				if (colonyController.energyCrystalsCount >= hireCost) {
-					colonyController.GetEnergyCrystals(hireCost);
-					finding = true;
-				}
-			}
-			rr.y += rr.height;
-		}
-		else {
-			GUI.Label(rr, Localization.ui_recruitmentInProgress); rr.y += rr.height;
-			GUI.DrawTexture(new Rect(rr.x, rr.y, rr.width * progress, rr.height), PoolMaster.orangeSquare_tx, ScaleMode.StretchToFill);
-			GUI.Label(rr, ((int)(progress * 100)).ToString() + '%');
-			rr.y += rr.height;
-		}
-	}
+    public override UIObserver ShowOnGUI()
+    {
+        if (rcenterObserver == null) rcenterObserver = UIRecruitingCenterObserver.InitializeRCenterObserverScript();
+        else rcenterObserver.gameObject.SetActive(true);
+        rcenterObserver.SetObservingRCenter(this);
+        showOnGUI = true;
+        return rcenterObserver;
+    }
 
 	#region save-load system
 	override public StructureSerializer Save() {
@@ -104,7 +111,7 @@ public class RecruitingCenter : WorkBuilding {
 		progress = rcs.progress;
 	}
 
-	protected RecruitingCenterSerializer GetRecruitingCenterSerializer() {
+	RecruitingCenterSerializer GetRecruitingCenterSerializer() {
 		RecruitingCenterSerializer rcs = new RecruitingCenterSerializer();
 		rcs.workBuildingSerializer = GetWorkBuildingSerializer();
 		rcs.backupSpeed = backupSpeed;
@@ -113,8 +120,17 @@ public class RecruitingCenter : WorkBuilding {
 		return rcs;
 	}
 	#endregion
-	void OnDestroy() {
-		PrepareWorkbuildingForDestruction();
-		Crew.RemoveCrewSlots(CREW_SLOTS_FOR_BUILDING);
-	}
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
+        Crew.RemoveCrewSlots(CREW_SLOTS_FOR_BUILDING);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
+    }
 }

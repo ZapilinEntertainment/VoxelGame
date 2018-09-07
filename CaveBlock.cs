@@ -61,7 +61,7 @@ public class CaveBlock : SurfaceBlock
             faces[2] = t.GetChild(2).GetComponent<MeshRenderer>();
             faces[3] = t.GetChild(3).GetComponent<MeshRenderer>();
             ceilingRenderer = t.GetChild(4).GetComponent<MeshRenderer>();
-            surfaceRenderer = t.GetChild(5).GetComponent<MeshRenderer>();            
+            surfaceRenderer = t.GetChild(5).GetComponent<MeshRenderer>();
             material_id = f_up_material_id;
             foreach (MeshRenderer mr in faces)
             {
@@ -127,17 +127,8 @@ public class CaveBlock : SurfaceBlock
                 int i = 0; bool listChanged = false;
                 while (i < surfaceObjects.Count)
                 {
-                    if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf)
-                    {
-                        surfaceObjects.RemoveAt(i);
-                        listChanged = true;
-                        continue;
-                    }
-                    else
-                    {
-                        surfaceObjects[i].SetVisibility(false);
-                        i++;
-                    }
+                    surfaceObjects[i].SetVisibility(false);
+                    i++;
                 }
                 surfaceRenderer.GetComponent<MeshCollider>().enabled = false;
                 if (listChanged) CellsStatusUpdate();
@@ -149,17 +140,8 @@ public class CaveBlock : SurfaceBlock
                     int i = 0; bool listChanged = false;
                     while (i < surfaceObjects.Count)
                     {
-                        if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf)
-                        {
-                            surfaceObjects.RemoveAt(i);
-                            listChanged = true;
-                            continue;
-                        }
-                        else
-                        {
-                            surfaceObjects[i].SetVisibility(true);
-                            i++;
-                        }
+                        surfaceObjects[i].SetVisibility(true);
+                        i++;
                     }
                     if (listChanged) CellsStatusUpdate();
                     surfaceRenderer.GetComponent<MeshCollider>().enabled = true;
@@ -196,7 +178,7 @@ public class CaveBlock : SurfaceBlock
         surfaceRenderer.enabled = false;
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 47);
     }
-    public void RestoreSurface( int newMaterialID)
+    public void RestoreSurface(int newMaterialID)
     {
         if (haveSurface) return;
         haveSurface = true;
@@ -236,7 +218,7 @@ public class CaveBlock : SurfaceBlock
         LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
         ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(cbs.upMaterial_ID, ceilingRenderer.GetComponent<MeshFilter>());
         haveSurface = cbs.haveSurface;
-        if ( !haveSurface )
+        if (!haveSurface)
         {
             surfaceRenderer.enabled = false;
             surfaceRenderer.GetComponent<Collider>().enabled = false;

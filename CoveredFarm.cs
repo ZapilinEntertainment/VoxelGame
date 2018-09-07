@@ -1,21 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-enum CoveredFarmOutput { Food, Lumber }
+﻿
 public class CoveredFarm : WorkBuilding {
-	[SerializeField]
-	CoveredFarmOutput outputResource_type;
-	[SerializeField]
 	float output_value = 1;
 	ResourceType outputResource;
 	const float MIN_SPEED = 0.2f;
 	Storage s;
 
 	override public void Prepare()  {
-		PrepareWorkbuilding();
-		if (outputResource_type == CoveredFarmOutput.Food) outputResource = ResourceType.Food;
-		else outputResource = ResourceType.Lumber;
+        PrepareWorkbuilding();
+        switch (id)
+        {
+            case FARM_4_ID:
+            case FARM_5_ID:
+                outputResource = ResourceType.Food;
+                break;
+            case LUMBERMILL_4_ID:
+            case LUMBERMILL_5_ID:
+                outputResource = ResourceType.Lumber;
+                break;
+        }		
 		s = GameMaster.colonyController.storage;
 	}
 

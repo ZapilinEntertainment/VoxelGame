@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
+﻿public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
 
 [System.Serializable]
 public class FactorySerializer {
@@ -17,7 +13,7 @@ public class Factory : WorkBuilding {
 	protected const float BUFFER_LIMIT = 10;
 	public float inputResourcesBuffer  {get; protected set;}
 	protected bool gui_showRecipesList = false;
-	public FactorySpecialization specialization; // fixed by asset
+	public FactorySpecialization specialization; // fixed by id
 	protected float outputResourcesBuffer = 0;
 
     public static UIFactoryObserver factoryObserver;
@@ -25,6 +21,24 @@ public class Factory : WorkBuilding {
 	override public void Prepare() {
 		PrepareWorkbuilding();
 		recipe = Recipe.NoRecipe;
+        switch (id)
+        {
+            case SMELTERY_1_ID:
+            case SMELTERY_2_ID:
+            case SMELTERY_3_ID:
+            case SMELTERY_5_ID:
+                specialization = FactorySpecialization.Smeltery;
+                break;
+            case ORE_ENRICHER_2_ID:
+                specialization = FactorySpecialization.OreRefiner;
+                break;
+            case PLASTICS_FACTORY_3_ID:
+                specialization = FactorySpecialization.PlasticsFactory;
+                break;
+            case FUEL_FACILITY_3_ID:
+                specialization = FactorySpecialization.FuelFacility;
+                break;
+        }
 		inputResourcesBuffer = 0;
 	}
 
@@ -32,35 +46,39 @@ public class Factory : WorkBuilding {
 		if (b == null) return;
 		SetBuildingData(b, pos);
 		storage = GameMaster.colonyController.storage;
-		SetRecipe(Recipe.NoRecipe);
+        if ( !subscribedToUpdate )
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-		if (outputResourcesBuffer > 0) {
-			outputResourcesBuffer =  storage.AddResource(recipe.output, outputResourcesBuffer); 
-		}
-		if (outputResourcesBuffer <= BUFFER_LIMIT ) {
-			if (workersCount > 0 && recipe != Recipe.NoRecipe) { // сильно намудрил!
-				float progress = workflow / workflowToProcess;
-				float resourcesSupport = inputResourcesBuffer / recipe.inputValue;
-				if (resourcesSupport < 1 ) inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue - inputResourcesBuffer);
-				resourcesSupport = inputResourcesBuffer / recipe.inputValue;
-				if (resourcesSupport > progress) 	workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
-				if (workflow >= workflowToProcess) LabourResult();
-			}
-		}
+	override public void LabourUpdate() {
+        if (recipe == Recipe.NoRecipe ) return;
+        if(outputResourcesBuffer > 0) {
+            outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
+        }
+        if (outputResourcesBuffer <= BUFFER_LIMIT)
+        {
+            if (isActive & energySupplied) workflow += workSpeed;
+            if (workflow >= workflowToProcess) LabourResult();
+        }
 	}
 
 	override protected void LabourResult() {
-		int iterations = (int)(workflow / workflowToProcess);
-		if (inputResourcesBuffer < recipe.inputValue * iterations) inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
-		while ( iterations >=1 & inputResourcesBuffer >= recipe.inputValue) {
-			inputResourcesBuffer -= recipe.inputValue;
-			outputResourcesBuffer += recipe.outputValue;
-			workflow -= workflowToProcess;
-			iterations --;
-		}
+        int iterations = (int)(workflow / workflowToProcess);
+        workflow = 0;
+        if (storage.standartResources[recipe.input.ID] + inputResourcesBuffer < recipe.inputValue)
+        {            
+            return;
+        }
+        else
+        {
+            inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
+            iterations = (int)(inputResourcesBuffer / recipe.inputValue);
+            outputResourcesBuffer += iterations * recipe.outputValue;
+            outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
+        }
 	}
 
 	public void SetRecipe( Recipe r ) {
@@ -143,5 +161,17 @@ public class Factory : WorkBuilding {
         factoryObserver.SetObservingFactory(this);
         showOnGUI = true;
         return factoryObserver;
+    }
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
     }
 }

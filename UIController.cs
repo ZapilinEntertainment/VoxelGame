@@ -412,13 +412,17 @@ sealed public class UIController : MonoBehaviour {
 			GameObject collided = rh.collider.gameObject;
 			switch (collided.tag) {
 			case "Structure":
-				chosenStructure = collided.GetComponent<Structure>();
-				chosenCube = null;
-				chosenSurface = null;
-				chosenWorksite = null;
-				if (chosenStructure != null) ChangeChosenObject( ChosenObjectType.Structure ); 
-				else ChangeChosenObject( ChosenObjectType.None );
-				break;
+                    {
+                        var structureLinkerComponent = collided.GetComponent<StructureColliderLinker>();
+                        if (structureLinkerComponent == null) return;
+                        else chosenStructure = structureLinkerComponent.linkedStructure;
+                        chosenCube = null;
+                        chosenSurface = null;
+                        chosenWorksite = null;
+                        if (chosenStructure != null) ChangeChosenObject(ChosenObjectType.Structure);
+                        else ChangeChosenObject(ChosenObjectType.None);
+                        break;
+                    }
 			case "BlockCollider":
                     {
                         Transform t = collided.transform.parent; // model transform
@@ -561,12 +565,12 @@ sealed public class UIController : MonoBehaviour {
 
             case ChosenObjectType.Structure:
                 faceIndex = 10;
-                selectionFrame.position = chosenStructure.transform.position;
-                selectionFrame.rotation = chosenStructure.transform.rotation;
+                selectionFrame.position = chosenStructure.model.transform.position;
+                selectionFrame.rotation = chosenStructure.model.transform.rotation;
                 selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
                 sframeColor = new Vector3(1, 0, 1);
                 workingObserver = chosenStructure.ShowOnGUI();
-                FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
+                FollowingCamera.main.SetLookPoint(chosenStructure.model.transform.position);
                 break;
 
             case ChosenObjectType.Worksite:
@@ -630,7 +634,7 @@ sealed public class UIController : MonoBehaviour {
         if (wbo != null && wbo.gameObject.activeSelf)
         { // уу, костыли!
             // и вообще надо переделать на dropdown
-            RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
+            RollingShop rs = wbo.observingWorkbuilding as RollingShop;
             if (rs != null)
             {
                 rollingShopPanel.SetActive(true);
@@ -652,7 +656,7 @@ sealed public class UIController : MonoBehaviour {
             return;
         }
         else { // уу, костыли!
-            RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
+            RollingShop rs = wbo.observingWorkbuilding as RollingShop;
             if (rs == null)
             {
                 DeactivateRollingShopPanel();
@@ -1032,6 +1036,7 @@ sealed public class UIController : MonoBehaviour {
         {
             DigSite ds = new DigSite();
             ds.Set(chosenCube, false);
+            ds.ShowOnGUI();
         }
     }
     #endregion

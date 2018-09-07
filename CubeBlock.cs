@@ -158,8 +158,9 @@ public class CubeBlock : Block{
 	void CheckExcavatingStatus() {
 		if ( volume == 0) {
             if (career) myChunk.DeleteBlock(pos); else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id,false);
-            return;}
-		float pc = (float)volume/ (float)MAX_VOLUME;
+            return;
+        }
+		float pc = volume/ (float)MAX_VOLUME;
 		if (pc > 0.5f) {				
 			if (pc > 0.75f) {				
 				if (excavatingStatus != 0) {

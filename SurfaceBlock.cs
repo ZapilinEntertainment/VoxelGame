@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -90,8 +89,9 @@ public class SurfaceBlock : Block {
             g.name = "upper_plane";
             g.tag = "BlockCollider";
         }
-        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
         material_id = f_material_id;
+        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
+        
         if (visibilityMask != 0) surfaceRenderer.enabled = true;       
        
         pos = f_chunkPos;
@@ -114,7 +114,6 @@ public class SurfaceBlock : Block {
 			if (surfaceObjects.Count != 0) {
 				int a = 0;
 				while (a < surfaceObjects.Count) {
-					if ( surfaceObjects[a] == null || !surfaceObjects[a].gameObject.activeSelf) {surfaceObjects.RemoveAt(a); continue;}
 					SurfaceRect sr = surfaceObjects[a].innerPosition;	
 				//if (sr.x_size != 1 && sr.z_size != 1) print (surfaceObjects[a].name+ ' '+ sr.x_size.ToString() + ' ' + sr.z_size.ToString());
 					int i = 0, j=0;
@@ -163,7 +162,7 @@ public class SurfaceBlock : Block {
                         Building bd = s as Building;
                         if (bd != null)
                         {
-                            if (bd.fullCover) col = new byte[4] { 255, 255, 255, 255 };
+                            if (bd.placeInCenter) col = new byte[4] { 255, 255, 255, 255 };
                             else col = new byte[4] { 64, 64, 64, 255 };
                         }
                         else col = new byte[4] { 128, 128, 128, 255 };
@@ -216,7 +215,7 @@ public class SurfaceBlock : Block {
 	/// </summary>
 	/// <param name="s">S.</param>
 	public void AddStructure(Structure s) { // with autoreplacing
-		if (s == null) return;
+		if (s == null ) return;
 		if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION  ) {
 			MonoBehaviour.print ("error in structure size");
 			return;
@@ -255,21 +254,19 @@ public class SurfaceBlock : Block {
 			}
 		}
 		surfaceObjects.Add(s);
-		s.transform.parent = model.transform;
-		s.transform.localPosition = GetLocalPosition(s.innerPosition);
+		s.model.transform.parent = model.transform;
+		s.model.transform.localPosition = GetLocalPosition(s.innerPosition);
 		if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
-		if (s.randomRotation) {
-			if ( !s.rotate90only ) s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 8) * 45, 0);
-			else s.transform.localRotation = Quaternion.Euler(0, Mathf.RoundToInt(Random.value * 4) * 90f, 0 );
+		BlockRendererController brc =  s.model.GetComponent<BlockRendererController>();
+		if (brc != null) {
+			structureBlock = brc;
+			brc.SetRenderBitmask(renderMask);
+			brc.SetVisibilityMask(visibilityMask);
 		}
-		else {
-			BlockRendererController brc =  s.gameObject.GetComponent<BlockRendererController>();
-			if (brc != null) {
-				structureBlock = brc;
-				brc.SetRenderBitmask(renderMask);
-				brc.SetVisibilityMask(visibilityMask);
-			}
-		}
+        else
+        {
+            s.model.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
+        }
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 		if (savedBasementForNow != null) {
@@ -329,10 +326,10 @@ public class SurfaceBlock : Block {
 			}
 		}
 		surfaceObjects.Add(s);
-		s.transform.parent = model.transform;
-		s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1, 1));
-		if (s.randomRotation) s.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
-		if ( visibilityMask == 0 ) s.SetVisibility(false); else s.SetVisibility(true);
+		s.model.transform.parent = model.transform;
+		s.model.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1, 1));
+        s.model.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
+        if ( visibilityMask == 0 ) s.SetVisibility(false); else s.SetVisibility(true);
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 	}
@@ -358,8 +355,6 @@ public class SurfaceBlock : Block {
 				break;
 			}
 		}
-		BlockRendererController brc = s.GetComponent<BlockRendererController>();
-		if (brc != null) structureBlock = null;
 	}
 
 	public override void ReplaceMaterial( int newId) {
@@ -386,7 +381,7 @@ public class SurfaceBlock : Block {
 			if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
 			else {
 				List<PixelPosByte> acceptableVariants = GetAcceptablePositions(10);
-				int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
+				int ppos = (int)(GameMaster.randomizer.NextDouble() * (acceptableVariants.Count - 1));
 				return acceptableVariants[ppos];
 			}
 		}
@@ -501,7 +496,7 @@ public class SurfaceBlock : Block {
 			}	
 		}
 		while (acceptableVariants.Count > count) {
-			int i = (int)(Random.value * (acceptableVariants.Count - 1));
+			int i = (int)(GameMaster.randomizer.NextDouble() * (acceptableVariants.Count - 1));
 			acceptableVariants.RemoveAt(i);
 		}
 		return acceptableVariants;
@@ -527,16 +522,6 @@ public class SurfaceBlock : Block {
 		return found;
 	}
 
-	public void RequestAnnihilationAtIndex(int index) {
-		if (index < 0 || index >= surfaceObjects.Count) return;
-		else {
-			if (surfaceObjects[index] == null || !surfaceObjects[index].gameObject.activeSelf ) {
-				surfaceObjects.RemoveAt(index);
-				CellsStatusUpdate();
-			}
-		}
-	}
-
 	override public void SetRenderBitmask(byte x) {
 		if (renderMask != x) {
 			renderMask = x;
@@ -553,19 +538,11 @@ public class SurfaceBlock : Block {
 			if (visibilityMask == 0) {
 				surfaceRenderer.GetComponent<Collider>().enabled = false;
 				surfaceRenderer.enabled = false;
-				int i = 0; bool listChanged = false;
+				int i = 0;
 				while ( i < surfaceObjects.Count ) {
-					if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf ) {
-						surfaceObjects.RemoveAt(i);
-						listChanged = true;
-						continue;
-					}
-					else {
-						surfaceObjects[i].SetVisibility(false);
-						i++;
-					}
+					surfaceObjects[i].SetVisibility(false);
+					i++;
 				} 
-				if (listChanged) CellsStatusUpdate();
 			}
 			else {
 				if ( renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
@@ -574,19 +551,11 @@ public class SurfaceBlock : Block {
 				if ( prevVisibility == 0) {
 					surfaceRenderer.enabled = true;
 					surfaceRenderer.GetComponent<Collider>().enabled = true;
-					int i = 0; bool listChanged = false;
+					int i = 0; 
 					while ( i < surfaceObjects.Count ) {
-						if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf ) {
-							surfaceObjects.RemoveAt(i);
-							listChanged = true;
-							continue;
-						}
-						else {
-							surfaceObjects[i].SetVisibility(true);
-							i++;
-						}
+						surfaceObjects[i].SetVisibility(true);
+						i++;
 					} 
-					if (listChanged) CellsStatusUpdate();
 				}
 			}
 		}
@@ -619,11 +588,8 @@ public class SurfaceBlock : Block {
 		LoadSurfaceBlockData(sbs);
 		if (sbs.haveStructures) {
 			foreach (StructureSerializer ss in sbs.structuresList) {
-				if (ss.id != Structure.PLANT_ID) {
-					Structure s = Structure.GetNewStructure(ss.id);
-					if (s!=null)	s.Load(ss,this);
-				}
-				else 	Plant.StaticLoad(ss, this);
+				Structure s = Structure.GetStructureByID(ss.id);
+				if (s!=null) s.Load(ss,this);
 			}
 		}
 	}

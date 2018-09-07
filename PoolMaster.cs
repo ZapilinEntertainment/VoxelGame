@@ -13,7 +13,7 @@ public class PoolMaster : MonoBehaviour {
 	public static GameObject mineElevator_pref {get;private set;}
     public static GameObject cavePref { get; private set; }
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
-    public static Material default_material, lr_red_material, lr_green_material, basic_material, basic_offline_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
+    public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
     static Material metal_material, green_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
@@ -58,7 +58,6 @@ public class PoolMaster : MonoBehaviour {
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
         basic_material = Resources.Load<Material>("Materials/Basic");
-        basic_offline_material = Resources.Load<Material>("Materials/BasicOffline");
         glass_material = Resources.Load<Material>("Materials/Glass");
         glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
         metal_material = Resources.Load<Material>("Materials/Metal");
@@ -66,7 +65,6 @@ public class PoolMaster : MonoBehaviour {
 
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-        Structure.LoadPrefs();
         QuestUI.LoadTextures();
 	}
 
@@ -314,7 +312,7 @@ public class PoolMaster : MonoBehaviour {
         }
         return metal_material;
     }
-    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, bool online)
+    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf)
     {
         Mesh quad = mf.mesh;
         if (quad != null)

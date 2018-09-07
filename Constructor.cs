@@ -7,7 +7,6 @@ public class Constructor : MonoBehaviour {
 	public float TERRAIN_ROUGHNESS = 0.3f;
 	Chunk c;
 	public float seed = 1.1f;
-	int START_LIFEPOWER = 100;
 
 	// Use this for initialization
 	void Awake () {
@@ -21,8 +20,8 @@ public class Constructor : MonoBehaviour {
 		int size = chunkSize;
 		int[,,] dat = new int[size, size ,size ];
 		float radius = size * Mathf.Sqrt(2);
-		for (int x =0; x< size ; x++) {
-			for (int z= 0; z< size ; z++)
+		for (int x = 0; x < size ; x++) {
+			for (int z = 0; z< size ; z++)
 			{
 				float cs = size ;
 				float perlin = Mathf.PerlinNoise(x/cs * (10 * TERRAIN_ROUGHNESS) + seed, z/cs * (10 * TERRAIN_ROUGHNESS) + seed);
@@ -58,11 +57,11 @@ public class Constructor : MonoBehaviour {
 		x = (byte)(Chunk.CHUNK_SIZE / 2) ;z = (byte)(Chunk.CHUNK_SIZE/2);
 		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
 		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);
-		chunk.GenerateNature(new PixelPosByte(x,z), START_LIFEPOWER * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
+		chunk.GenerateNature(new PixelPosByte(x,z), GameMaster.LIFEPOWER_PER_BLOCK * Chunk.CHUNK_SIZE * Chunk.CHUNK_SIZE);
 
 		MultiblockStructure ms = null;
-		if (Random.value > 0.5f) ms = Structure.GetNewStructure(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;
-		else ms = Structure.GetNewStructure(Structure.LIFESTONE_ID) as MultiblockStructure;
+		if (Random.value > 0.5f) ms = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;
+		else ms = Structure.GetStructureByID(Structure.LIFESTONE_ID) as MultiblockStructure;
 		SurfaceBlock sb = chunk.GetSurfaceBlock(x,z);
 		ms.SetBasement(sb, PixelPosByte.zero);
 	}

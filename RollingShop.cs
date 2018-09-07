@@ -12,7 +12,6 @@ public class RollingShopSerializer {
 
 public class RollingShop : WorkBuilding {
 	RollingShopMode mode;
-	bool showModes = false;
     public static RollingShop current;
 	const float GEARS_UP_LIMIT = 3, GEARS_UPGRADE_STEP = 0.1f;
 
@@ -24,16 +23,20 @@ public class RollingShop : WorkBuilding {
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
         if (current != null & current != this) current.Annihilate(false);
         current = this;
 	}
 
-    void Update()
+    override public void LabourUpdate()
     {
-        if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-        if (workersCount > 0)
+        if (isActive & energySupplied)
         {
-            workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed;
+            workflow += workSpeed;
             if (workflow >= workflowToProcess)
             {
                 LabourResult();
@@ -96,10 +99,16 @@ public class RollingShop : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
-        if (current == this) current = null; // на случай, если все-таки переделаю из behaviour в обычные, тогда еще и OnDestroy
-        Destroy(gameObject);
+        PrepareWorkbuildingForDestruction(forced);
+        if (current == this) current = null;
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
     }
 
     public override UIObserver ShowOnGUI()

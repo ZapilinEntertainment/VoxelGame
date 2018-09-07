@@ -29,17 +29,22 @@ public class Mine : WorkBuilding {
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
 		Block bb = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y - 1, basement.pos.z);
 		workObject = bb as CubeBlock;
 		lastWorkObjectPos = bb.pos;
 	}
 
-	void Update() {
+	override public void LabourUpdate() {
 		if (awaitingElevatorBuilding) {
 			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y, lastWorkObjectPos.z);
 			if ( b != null ) {
 				if (b.type == BlockType.Cave | b.type == BlockType.Surface ) {
-					Structure s = Structure.GetNewStructure(Structure.MINE_ELEVATOR_ID);
+					Structure s = GetStructureByID(MINE_ELEVATOR_ID);
 					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.x_size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.z_size/2));
 					elevators.Add(s);
 					awaitingElevatorBuilding = false;
@@ -47,10 +52,10 @@ public class Mine : WorkBuilding {
 				}
 			}
 		}
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied ) return;
+		if ( !isActive | !energySupplied ) return;
 		if ( workObject != null ) {
 			if (workersCount > 0 && !workFinished ) {
-				workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
+				workflow += workSpeed  ;
 				if (workflow >= workflowToProcess) {
 					LabourResult();
 					workflow -= workflowToProcess;
@@ -104,7 +109,7 @@ override protected void LabourResult() {
 		elevators = new List<Structure>();
 		if (level > 1 & ms.haveElevators) {
 			for (int i = 0; i < ms.elevators.Count; i++) {
-				Structure s = Structure.GetNewStructure(MINE_ELEVATOR_ID);
+				Structure s = Structure.GetStructureByID(MINE_ELEVATOR_ID);
 				s.Load(ms.elevators[i], basement.myChunk.GetBlock(basement.pos.x, ms.elevatorHeights[i], basement.pos.z) as SurfaceBlock);
 				elevators.Add(s);
 			}
@@ -137,22 +142,18 @@ override protected void LabourResult() {
 	}
 	#endregion
 
-	void ChangeModel(byte f_level) {
+	void UpgradeMine(byte f_level) {
 		if (f_level == level ) return;
 		GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
 		if (nextModel != null) {
-			GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
-			if (myRenderers[0] != null) Destroy(myRenderers[0].gameObject);
-			if (myRenderers != null) {for (int n =0; n < myRenderers.Count; n++) Destroy( myRenderers[n].gameObject );}
-			myRenderers = new List<Renderer>();
-			for (int n = 0; n < newModelGO.transform.childCount; n++) {
-				myRenderers.Add( newModelGO.transform.GetChild(n).GetComponent<Renderer>());
-				if (!visible) myRenderers[n].enabled = false;
-			}
-			if ( !isActive || !energySupplied ) ChangeRenderersView(false);
-		}
+			GameObject newModelGO = Object.Instantiate(nextModel, model.transform.position, model.transform.rotation, model.transform);
+			if (model != null) Object.Destroy(model);
+            model = newModelGO;
+            model.name = personalNumber.ToString();
+            model.SetActive(visible);
+            if (!isActive | !energySupplied) ChangeRenderersView(false);
+        }		
 		level = f_level;
-		Rename();
 	}
 
     override public bool IsLevelUpPossible(ref string refusalReason)
@@ -194,8 +195,7 @@ override protected void LabourResult() {
             workObject = b as CubeBlock;
             lastWorkObjectPos = b.pos;
             workFinished = false;
-            ChangeModel((byte)(level + 1));
-            Rename();
+            UpgradeMine((byte)(level + 1));
         }        
     }
     override public ResourceContainer[] GetUpgradeCost()
@@ -210,21 +210,10 @@ override protected void LabourResult() {
     }
 
     override public void Annihilate(bool forced)
-    { 
-        SurfaceBlock lastBasement = basement;
-        if (forced) UnsetBasement();
-        else
-        {
-            ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
-            if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1)
-            {
-                for (int i = 0; i < resourcesLeft.Length; i++)
-                {
-                    resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
-                }
-                GameMaster.colonyController.storage.AddResources(resourcesLeft);
-            }
-        }
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
         if (elevators.Count > 0)
         {
             foreach (Structure s in elevators)
@@ -232,6 +221,10 @@ override protected void LabourResult() {
                 if (s != null) s.Annihilate(false);
             }
         }
-        Destroy(gameObject);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
     }
 }

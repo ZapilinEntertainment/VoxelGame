@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TunnelBuildingSite : Worksite {
 	public byte signsMask = 0;
@@ -8,21 +6,17 @@ public class TunnelBuildingSite : Worksite {
 	const int START_WORKERS_COUNT = 10;
 
 
-	override public void WorkUpdate (float t) {
+	override public void WorkUpdate () {
 		if (GameMaster.gameSpeed == 0) return;
 		if (workObject ==null ) {
             StopWork();
             return;
 		}
 		if (workersCount > 0) {
-			workflow += workSpeed * t;
-			labourTimer -= t;
-			if ( labourTimer <= 0 ) {
-				if (workflow >= 1) LabourResult();
-				labourTimer = GameMaster.LABOUR_TICK;
+			workflow += workSpeed;
+			if (workflow >= 1) LabourResult();
 			}
 		}
-	}
 
 	void LabourResult() {
 		int x = (int) workflow;
@@ -41,8 +35,12 @@ public class TunnelBuildingSite : Worksite {
 		workObject = block;
         workObject.SetWorksite(this);
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
-		GameMaster.colonyController.AddWorksite(this);
-	}
+        if (!worksitesList.Contains(this)) worksitesList.Add(this);
+        if (!subscribedToUpdate) {
+            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+            subscribedToUpdate = true;
+        }
+    }
 
 	public void CreateSign(byte side) {
 		if ((signsMask & side) != 0) return;
@@ -85,7 +83,12 @@ public class TunnelBuildingSite : Worksite {
             workersCount = 0;
         }
         if (sign != null) Object.Destroy(sign.gameObject);
-        GameMaster.colonyController.RemoveWorksite(this);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
+            subscribedToUpdate = false;
+        }
         if (workObject != null)
         {
             if (workObject.worksite == this) workObject.ResetWorksite();
@@ -99,7 +102,7 @@ public class TunnelBuildingSite : Worksite {
     }
 
     #region save-load system
-    override public WorksiteSerializer Save() {
+    override protected WorksiteSerializer Save() {
 		if (workObject == null) {
             StopWork();
 			return null;
@@ -110,7 +113,7 @@ public class TunnelBuildingSite : Worksite {
 		ws.specificData = new byte[1]{signsMask};
 		return ws;
 	}
-	override public void Load (WorksiteSerializer ws) {
+	override protected void Load (WorksiteSerializer ws) {
 		LoadWorksiteData(ws);
 		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as CubeBlock);
 		int smask = ws.specificData[0];

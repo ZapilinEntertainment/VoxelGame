@@ -183,7 +183,7 @@ public class Quest {
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.MINI_GRPH_REACTOR_ID) mrc++;
+                                    if (b.id == Structure.MINI_GRPH_REACTOR_3_ID) mrc++;
                                 }
                             }
                             stepsAddInfo[0] = mrc.ToString() + "/4";
@@ -563,7 +563,7 @@ public class Quest {
             case ProgressQuestID.Progress_4MiniReactors:
                 overridingSprite = QuestUI.questBuildingBack_tx;
                 icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.MINI_GRPH_REACTOR_ID);
+                iconRect = Structure.GetTextureRect(Structure.MINI_GRPH_REACTOR_3_ID);
                 break;
             case ProgressQuestID.Progress_100Fuel:
                 overridingSprite = QuestUI.questResourceBack_tx;
@@ -575,7 +575,7 @@ public class Quest {
                 overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.XSTATION_ID);
+                iconRect = Structure.GetTextureRect(Structure.XSTATION_3_ID);
                 break;
             case ProgressQuestID.Progress_Tier4:
                 icon = UIController.current.buildingsTexture;

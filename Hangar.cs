@@ -13,17 +13,42 @@ public sealed class Hangar : WorkBuilding {
 	static int hangarsCount = 0;
 	public Shuttle shuttle{get; private set;}
 	const float CREW_HIRE_BASE_COST = 100;
-    public bool constructing = false;
+    public bool constructing { get; private set; }
     public static UIHangarObserver hangarObserver;
 
 	public static void Reset() {
 		hangarsCount = 0;
 	}
 
+    public void StartConstruction()
+    {
+        if (!constructing)
+        {
+            constructing = true;
+            if (!subscribedToUpdate)
+            {
+                GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+                subscribedToUpdate = true;
+            }
+        }
+    }
+    public void StopConstruction()
+    {
+        if (constructing)
+        {
+            constructing = false;
+            if (subscribedToUpdate)
+            {
+                GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+                subscribedToUpdate = false;
+            }
+        }
+    }
+
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		Transform meshTransform = transform.GetChild(0);
+		Transform meshTransform = model.transform.GetChild(0);
 		if (basement.pos.z == 0) {
 			meshTransform.transform.localRotation = Quaternion.Euler(0, 180,0); 
 		}
@@ -39,13 +64,12 @@ public sealed class Hangar : WorkBuilding {
 				}
 			}
 		}
-		hangarsCount++;
+		hangarsCount++;        
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-		if ( constructing & workersCount > 0 & shuttle == null) {
-			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
+    public override void LabourUpdate() {
+        if ( isActive & energySupplied & constructing)  {
+			workflow += workSpeed ;
 			if (workflow >= workflowToProcess) {
 				LabourResult();
 			}
@@ -53,7 +77,7 @@ public sealed class Hangar : WorkBuilding {
 	}
 
 	override protected void LabourResult() {
-		shuttle = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
+		shuttle = Object.Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
 		shuttle.FirstSet(this);
 		constructing = false;
 		workflow -= workflowToProcess;
@@ -119,10 +143,16 @@ public sealed class Hangar : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        PrepareWorkbuildingForDestruction(forced);
         hangarsCount--;
         if (shuttle != null) shuttle.Deconstruct();
-        Destroy(gameObject);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
     }
 }

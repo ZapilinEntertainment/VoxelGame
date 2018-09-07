@@ -40,7 +40,7 @@ public class Shuttle : MonoBehaviour {
 
     public void FirstSet(Hangar h) {
 		hangar = h;
-		transform.position = hangar.transform.position;
+		transform.position = hangar.model.transform.position;
 		foreach (Renderer r in renderers) {
 			r.enabled = false;
 		}

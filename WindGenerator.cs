@@ -5,7 +5,7 @@ using UnityEngine;
 public class WindGenerator : Building {
 	public Transform head, screw;
 	Vector2 windDirection;
-	bool rotateHead = false, rotateScrew = true;
+    bool rotateHead = false, rotateScrew = true, subscribedToWindUpdate = false;
 	const float HEAD_ROTATE_SPEED = 1, SCREW_ROTATE_SPEED = 20;
 	float height_coefficient = 1;
     const int STANDART_SURPLUS = 100;
@@ -14,26 +14,35 @@ public class WindGenerator : Building {
 		PrepareBuilding();
 	}
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		GameMaster.realMaster.windUpdateList.Add(this);
+        if (!subscribedToWindUpdate)
+        {
+            GameMaster.realMaster.WindUpdateEvent += this.WindUpdate;            
+            subscribedToWindUpdate = true;
+            head = model.transform.GetChild(0);
+            screw = head.transform.GetChild(0);
+        }
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.visualUpdateEvent += VisualUpdate;
+            subscribedToUpdate = true;
+        }
         float hf = Chunk.CHUNK_SIZE / 2f;
 		height_coefficient = (basement.pos.y - hf) / hf;
         if (height_coefficient < 0) height_coefficient /= 4f;
 		WindUpdate(GameMaster.realMaster.windVector);
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0) return;
-		float t = Time.deltaTime * GameMaster.gameSpeed * energySurplus / (float)STANDART_SURPLUS;
+	public void VisualUpdate() {
 		if ( rotateHead ) {
             Vector3 windDir = new Vector3(windDirection.x, 0, windDirection.y).normalized;
-            head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDir, HEAD_ROTATE_SPEED * t);            
+            head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDir, HEAD_ROTATE_SPEED * Time.deltaTime);            
 			if (head.transform.forward == windDir) rotateHead = false;
 		}
 		if (rotateScrew) {
-			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * t);
+			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * Time.deltaTime * GameMaster.gameSpeed * energySurplus / (float)STANDART_SURPLUS);
 		}
 	}
 
@@ -59,7 +68,25 @@ public class WindGenerator : Building {
                 GameMaster.colonyController.RecalculatePowerGrid();
             }
             else energySurplus = newSurplus;
-            if (transform.forward != new Vector3(windDirection.x, 0, windDirection.y).normalized) rotateHead = true; else rotateHead = false;
+            if (head.transform.forward != new Vector3(windDirection.x, 0, windDirection.y).normalized) rotateHead = true; else rotateHead = false;
 		}
 	}
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (forced) { UnsetBasement(); }
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.visualUpdateEvent -= VisualUpdate;
+            subscribedToUpdate = false;
+        }
+        PrepareBuildingForDestruction(forced);
+        if (subscribedToWindUpdate)
+        {
+            GameMaster.realMaster.WindUpdateEvent -= this.WindUpdate;
+            subscribedToWindUpdate = false;
+        }
+    }
 }

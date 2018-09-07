@@ -22,11 +22,6 @@ public class Hospital : WorkBuilding {
 		GameMaster.colonyController.AddHospital(this);
 	}
 
-    void Update()
-    {
-        return; // иначе заместится wokbuilding.update
-    }
-
     override public void FreeWorkers(int x)
     {
         if (x > workersCount) x = workersCount;

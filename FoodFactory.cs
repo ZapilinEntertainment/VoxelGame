@@ -1,15 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-[System.Serializable]
+﻿[System.Serializable]
 public class FoodFactorySerializer {
 	public WorkBuildingSerializer workBuildingSerializer;
 	public float food_inputBuffer, metalP_inputBuffer, supplies_outputBuffer; 
 }
 
 public class FoodFactory : WorkBuilding {
-	const float food_input = 10, metalP_input = 1, output = 15;
+	const float food_input = 10, metalP_input = 1, supplies_output = 15;
 	float food_inputBuffer = 0, metalP_inputBuffer = 0, supplies_outputBuffer = 0; 
 	Storage storage;
 	const float BUFFER_LIMIT = 10;
@@ -19,31 +15,50 @@ public class FoodFactory : WorkBuilding {
 		storage = GameMaster.colonyController.storage;
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-		if (supplies_outputBuffer > 0) {
-			supplies_outputBuffer = storage.AddResource(ResourceType.Supplies, supplies_outputBuffer);
-			if (supplies_outputBuffer > BUFFER_LIMIT) return;
-		}
-		if (workersCount > 0) {
-			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
-			if (workflow >= workflowToProcess) {
-				if (food_inputBuffer < food_input) food_inputBuffer += storage.GetResources(ResourceType.Food, food_input - food_inputBuffer); 
-				if ( metalP_inputBuffer < metalP_input ) metalP_inputBuffer += storage.GetResources( ResourceType.metal_P, metalP_input - metalP_inputBuffer);
-				LabourResult();
-			}
-		}
-	}
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        SetBuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
+    }
 
-	override protected void LabourResult() {
-		while ( food_inputBuffer >= food_input & metalP_inputBuffer >= metalP_input & workflow >= workflowToProcess)
-		{
-			food_inputBuffer -= food_input;
-			metalP_inputBuffer -= metalP_input;
-			supplies_outputBuffer += output;
-			workflow -= workflowToProcess;
-		}
-	}
+    override public void LabourUpdate()
+    {
+        if (supplies_outputBuffer > 0)
+        {
+            supplies_outputBuffer = storage.AddResource(ResourceType.Supplies, supplies_outputBuffer);
+        }
+        if (supplies_outputBuffer <= BUFFER_LIMIT)
+        {
+            if (isActive & energySupplied) workflow += workSpeed;
+            if (workflow >= workflowToProcess) LabourResult();
+        }
+    }
+
+    override protected void LabourResult()
+    {
+        int iterations = (int)(workflow / workflowToProcess);
+        workflow = 0;
+        if (storage.standartResources[ResourceType.FOOD_ID] + food_inputBuffer < food_input | storage.standartResources[ResourceType.METAL_P_ID] + metalP_inputBuffer < metalP_input)
+        {            
+            return;
+        }
+        else
+        {
+            food_inputBuffer += storage.GetResources(ResourceType.Food, food_input * iterations - food_inputBuffer);
+            int it_a = (int)(food_inputBuffer / food_input);
+            metalP_inputBuffer += storage.GetResources(ResourceType.metal_P, metalP_input * iterations - metalP_inputBuffer);
+            int it_b = (int)(metalP_inputBuffer / metalP_input);
+            if (it_a < it_b) iterations = it_a; else iterations = it_b;
+            supplies_outputBuffer += iterations * supplies_output;
+            supplies_outputBuffer = storage.AddResource(ResourceType.Supplies, supplies_outputBuffer);
+        }
+    }
+
 
 	#region save-load system
 	override public StructureSerializer Save() {
@@ -80,10 +95,24 @@ public class FoodFactory : WorkBuilding {
 	}
 	#endregion
 
-	void OnDestroy() {
-		if (food_inputBuffer > 0) storage.AddResource(ResourceType.Food, food_inputBuffer);
-		if (metalP_inputBuffer > 0) storage.AddResource(ResourceType.metal_P, metalP_inputBuffer);
-		if (supplies_outputBuffer > 0) storage.AddResource(ResourceType.Supplies,supplies_outputBuffer);
-		PrepareWorkbuildingForDestruction();
-	}
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (forced) {
+            UnsetBasement();
+        }
+        else
+        {
+            if (food_inputBuffer > 0) storage.AddResource(ResourceType.Food, food_inputBuffer);
+            if (metalP_inputBuffer > 0) storage.AddResource(ResourceType.metal_P, metalP_inputBuffer);
+            if (supplies_outputBuffer > 0) storage.AddResource(ResourceType.Supplies, supplies_outputBuffer);
+        }
+        PrepareWorkbuildingForDestruction(forced);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
+    }
 }

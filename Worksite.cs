@@ -7,7 +7,7 @@ public class WorksiteSerializer {
 	public WorksiteType type;
 	public ChunkPos workObjectPos;
 	public int maxWorkers,workersCount;
-	public float workflow, labourTimer, workSpeed;
+	public float workflow, workSpeed;
 	public byte[] specificData;
 }
 
@@ -16,15 +16,23 @@ public enum WorksiteType {Abstract, BlockBuildingSite, CleanSite, DigSite, Gathe
 public abstract class Worksite {
 	public int maxWorkers = 32;
 	public int workersCount {get;protected set;}
-    protected float workflow, labourTimer;
+    protected float workflow;
     public float workSpeed { get; protected set; }
 	public WorksiteSign sign{get; protected set;}
 	public string actionLabel { get; protected set; }
 	public bool showOnGUI = false, deleted = false;
 	public float gui_ypos = 0;
-    public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
+    protected bool subscribedToUpdate = false;
 
-    public virtual void WorkUpdate(float t)
+    public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
+    protected static List<Worksite> worksitesList;
+
+    static Worksite()
+    {
+        worksitesList = new List<Worksite>();
+    }
+
+    public virtual void WorkUpdate()
     {
     }
 
@@ -60,12 +68,12 @@ public abstract class Worksite {
 	protected abstract void RecalculateWorkspeed() ;
 
     #region save-load system
-    virtual public WorksiteSerializer Save() {
+    virtual protected WorksiteSerializer Save() {
 		WorksiteSerializer ws = GetWorksiteSerializer();
 		ws.type = WorksiteType.Abstract;
 		return ws;
 	}
-	virtual public void Load(WorksiteSerializer ws) {
+	virtual protected void Load(WorksiteSerializer ws) {
 		LoadWorksiteData(ws);
 	}
 
@@ -73,7 +81,6 @@ public abstract class Worksite {
 		WorksiteSerializer ws = new WorksiteSerializer();
 		ws.maxWorkers = maxWorkers;
 		ws.workersCount = workersCount;
-		ws.labourTimer = labourTimer;
 		ws.workflow = workflow;
 		ws.workSpeed = workSpeed;
 		return ws;
@@ -81,10 +88,52 @@ public abstract class Worksite {
 	protected void LoadWorksiteData(WorksiteSerializer ws) {
 		maxWorkers = ws.maxWorkers;
 		workersCount = ws.workersCount;
-		labourTimer = ws.labourTimer;
 		workflow = ws.workflow;
 		workSpeed = ws.workSpeed;
 	}
+
+    public static WorksiteSerializer[] StaticSave()
+    {
+        if (worksitesList.Count == 0) return new WorksiteSerializer[0];
+        var wa = new WorksiteSerializer[worksitesList.Count];
+            for (int i =0; i < wa.Length; i++)
+            {
+                wa[i] = worksitesList[i].Save();
+            }
+            return wa;
+    }
+    public static void StaticLoad(WorksiteSerializer[] wdata)
+    {
+        worksitesList = new List<Worksite>(wdata.Length);
+        Worksite w = null;
+        for (int i = 0; i < worksitesList.Count; i++)
+        {            
+            switch (wdata[i].type)
+            {
+                default: w = null; ;break;
+                case WorksiteType.BlockBuildingSite:
+                    w = new BlockBuildingSite();
+                    break;
+                case WorksiteType.CleanSite:
+                    w = new CleanSite();
+                    break;
+                case WorksiteType.DigSite:
+                    w = new DigSite();
+                    break;
+                case WorksiteType.GatherSite:
+                    w = new GatherSite();
+                    break;
+                case WorksiteType.TunnelBuildingSite:
+                    w = new TunnelBuildingSite();
+                    break;
+            }
+            if (w != null)
+            {
+                w.Load(wdata[i]);
+                worksitesList[i] = w;
+            }
+        }
+    }
 	#endregion
 
     public UIObserver ShowOnGUI()
@@ -106,6 +155,5 @@ public abstract class Worksite {
             workersCount = 0;
         }
         if (sign != null) Object.Destroy(sign.gameObject);
-        GameMaster.colonyController.RemoveWorksite(this);
     }
 }

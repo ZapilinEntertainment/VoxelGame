@@ -143,7 +143,6 @@ public class Storage : MonoBehaviour {
         //-----
 		if (resourcesContain == null || resourcesContain.Length == 0) return true;
 
-		List<int> customResourcesIndexes = new List<int>();
 		foreach (ResourceContainer rc in resourcesContain ) {
            if (standartResources[rc.type.ID] < rc.volume) return false;
 		}
