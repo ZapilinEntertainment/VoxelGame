@@ -36,6 +36,10 @@ public class OakTree : Plant
         growSpeed = 0.1f;
         decaySpeed = growSpeed;
     }
+    public static void ResetToDefaults_Static_OakTree()
+    {
+        if (modelsContainer == null) modelsContainerReady = false;
+    }
 
     override protected void SetModel()
     {

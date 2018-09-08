@@ -12,7 +12,7 @@ public class StructureSerializer {
     public byte modelRotation;
 }
 
-public class Structure {
+public class Structure  {
     public GameObject model { get; protected set; }
 	public SurfaceBlock basement{get;protected set;}
 	public SurfaceRect innerPosition{get;protected set;}
@@ -59,7 +59,12 @@ public class Structure {
 
     public static void ResetToDefaults_Static()
     {
-        
+        OakTree.ResetToDefaults_Static_OakTree();
+        Hospital.ResetToDefaults_Static_Hospital();
+        Dock.ResetToDefaults_Static_Dock();
+        RecruitingCenter.ResetToDefaults_Static_RecruitingCenter();
+        QuantumTransmitter.ResetToDefaults_Static_QuantumTransmitter();
+        Hangar.ResetToDefaults_Static_Hangar();
     }
 
     virtual protected void SetModel()
@@ -77,7 +82,6 @@ public class Structure {
             case STORAGE_2_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2"));break;
             case STORAGE_3_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_3"));break;
             case STORAGE_5_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/Blocks/storageBlock_level_5"));break;
-            case CONTAINER_ID: model = new GameObject();break;
             case MINE_ELEVATOR_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/MineElevator"));break;
             case LIFESTONE_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/LifeStone"));break;
             case HOUSE_0_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/House_level_0"));break;
@@ -131,8 +135,11 @@ public class Structure {
             case QUANTUM_TRANSMITTER_4_ID: model = Object.Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter"));break;
         }
         model.name = personalNumber.ToString();
-        StructureColliderLinker scl = model.AddComponent<StructureColliderLinker>();
-        scl.SetLinkedStructure(this);
+        if (model.GetComponent<Collider>() != null)
+        {
+            StructureColliderLinker scl = model.AddComponent<StructureColliderLinker>();
+            scl.SetLinkedStructure(this);
+        }
     }
 
     public static Structure GetStructureByID(int i_id)
@@ -282,6 +289,7 @@ public class Structure {
                     isBasement = false;
                     placeInCenter = true;
                     rotate90only = false;
+                    undestructible = true;
                 }
                 break;
             case STORAGE_0_ID:
@@ -371,6 +379,7 @@ public class Structure {
                     borderOnlyConstruction = false;
                     isArtificial = false;
                     isBasement = false;
+                    undestructible = true;
                 }
                 break;
             case HOUSE_0_ID:
@@ -1016,16 +1025,7 @@ public class Structure {
 				g.name = "block ceiling";
 			}
 		}
-	} 
-
-	public void UnsetBasement() {
-		if ( isBasement ) {
-            basement.myChunk.chunkUpdateSubscribers_structures.Remove(this);			
-		}
-		basement = null;
-		innerPosition = new SurfaceRect(0,0,innerPosition.x_size, innerPosition.z_size);
-        if (model != null) Object.Destroy(model);
-	}
+	} 	
 
 	public void ApplyDamage(float d) {
 		hp -= d;
@@ -1090,6 +1090,17 @@ public class Structure {
 		else innerPosition = sr;
 	}
 
+    public void UnsetBasement()
+    {
+        if (isBasement)
+        {
+            basement.myChunk.chunkUpdateSubscribers_structures.Remove(this);
+        }
+        basement = null;
+        innerPosition = new SurfaceRect(0, 0, innerPosition.x_size, innerPosition.z_size);
+        if (model != null) Object.Destroy(model);
+    }
+
     protected bool PrepareStructureForDestruction( bool forced )
     {        
         if (forced) { UnsetBasement(); }
@@ -1117,6 +1128,7 @@ public class Structure {
                     lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, upperBlock.material_id, false);
                 }
             }
+            basement = null;
         }
         if (model != null) Object.Destroy(model);
         return haveBasement;
@@ -1130,6 +1142,6 @@ public class Structure {
 	virtual public void Annihilate( bool forced ) {
         if (destroyed) return;
         else destroyed = true;
-        PrepareStructureForDestruction(forced);      
+        PrepareStructureForDestruction(forced);
 	}
 }

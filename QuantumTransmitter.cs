@@ -12,7 +12,7 @@ public class QuantumTransmitter : Building {
         transmittersList = new List<QuantumTransmitter>();
     }
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_QuantumTransmitter() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
     public static void PrepareList()

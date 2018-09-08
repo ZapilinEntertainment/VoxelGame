@@ -34,7 +34,7 @@ public abstract class WorkBuilding : Building {
                 break;
             case FARM_1_ID:
                 {
-                    workflowToProcess = 1;
+                    workflowToProcess = 8;
                     maxWorkers = 100;
                 }
                 break;

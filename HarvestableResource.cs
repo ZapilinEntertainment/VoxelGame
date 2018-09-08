@@ -40,79 +40,71 @@ public class HarvestableResource : Structure
         mainResource = rc.type;
     }
     // выдаст модели для природных объектов
+
+    protected override void SetModel()
+    {
+        if (model != null) Object.Destroy(model);
+        int material_ID = mainResource.ID;
+        bool modelIsSprite = false;
+        switch (material_ID)
+        {
+            case ResourceType.STONE_ID:
+            case ResourceType.METAL_K_ORE_ID:
+            case ResourceType.METAL_S_ORE_ID:
+            case ResourceType.METAL_P_ORE_ID:
+            case ResourceType.METAL_N_ORE_ID:
+            case ResourceType.METAL_E_ORE_ID:
+            case ResourceType.METAL_M_ORE_ID:
+                model = Object.Instantiate(Resources.Load<GameObject>("Prefs/boulderPref"));
+                break;
+            case ResourceType.MINERAL_F_ID:
+            case ResourceType.MINERAL_L_ID:
+                model = Object.Instantiate(Resources.Load<GameObject>("Prefs/pilePref"));
+                break;
+            case ResourceType.FOOD_ID:
+                model = Object.Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
+                modelIsSprite = true;
+                break;
+            default:
+                model = Object.Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
+                break;
+        }
+        if (!modelIsSprite)
+        {
+            Transform t = model.transform.GetChild(0);
+            t.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(material_ID, t.GetComponent<MeshFilter>());
+
+            short packIndex = -1;
+            if (!materialBasedLods.TryGetValue(mainResource, out packIndex))
+            {
+                Vector3[] positions = new Vector3[] { new Vector3(0, 0.084f, -0.063f) };
+                Vector3[] angles = new Vector3[] { new Vector3(45, 0, 0) };
+                Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.06f, Color.grey);
+                Sprite[] lodSprites = new Sprite[1];
+
+                lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, spritesAtlas.width, spritesAtlas.height), new Vector2(0.5f, 0.5f), 512);
+                packIndex = LODController.AddSpritePack(lodSprites);
+                materialBasedLods.Add(mainResource, packIndex);
+            }
+            modelController.AddObject(model.transform, ModelType.Boulder, packIndex);
+        }
+        else
+        {
+            GameMaster.realMaster.standartSpritesList.Add(model);
+        }
+    }
+
     public void SetResources(ResourceType resType, float f_count1)
     {
         ResourceType prevResType = mainResource;
+        if (prevResType != ResourceType.Nothing & model != null) // замена модели
+        {  
+            SetModel();
+            model.SetActive(visible);
+        }
         mainResource = resType;
         if (prevResType != mainResource & model != null) Object.Destroy(model); 
         resourceCount = f_count1;
-        bool modelIsSprite = false;
-        if (model == null)
-        {
-            switch (resType.ID)
-            {
-                case ResourceType.STONE_ID:
-                case ResourceType.METAL_K_ORE_ID:
-                case ResourceType.METAL_S_ORE_ID:
-                case ResourceType.METAL_P_ORE_ID:
-                case ResourceType.METAL_N_ORE_ID:
-                case ResourceType.METAL_E_ORE_ID:
-                case ResourceType.METAL_M_ORE_ID:
-                    model = Object.Instantiate(Resources.Load<GameObject>("Prefs/boulderPref"));
-                    break;
-                case ResourceType.MINERAL_F_ID:
-                case ResourceType.MINERAL_L_ID:
-                    model = Object.Instantiate(Resources.Load<GameObject>("Prefs/pilePref"));
-                    break;
-                case ResourceType.FOOD_ID:
-                    model = Object.Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
-                    modelIsSprite = true;
-                    break;
-                default:
-                    model = Object.Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
-                    break;
-            }
-        }
-        if (model != null)
-        {
-            model.transform.parent = model.transform;
-            model.transform.localPosition = Vector3.zero;
-            model.transform.localRotation = Quaternion.Euler(0, Random.value * 360, 0);
-            //model.transform.localScale = Vector3.one * (1.2f + Random.value * 0.6f);
-            if (!modelIsSprite)
-            {
-                Transform t = model.transform.GetChild(0);
-                t.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(resType.ID, t.GetComponent<MeshFilter>());
-
-                short packIndex = -1;
-                if (!materialBasedLods.TryGetValue(resType, out packIndex))
-                {
-                    Vector3[] positions = new Vector3[] { new Vector3(0, 0.084f, -0.063f) };
-                    Vector3[] angles = new Vector3[] { new Vector3(45, 0, 0) };
-                    Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.06f, Color.grey);
-                    Sprite[] lodSprites = new Sprite[1];
-
-                    lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, spritesAtlas.width, spritesAtlas.height), new Vector2(0.5f, 0.5f), 512);
-                    packIndex = LODController.AddSpritePack(lodSprites);
-                    materialBasedLods.Add(resType, packIndex);
-                }
-                if (prevResType == ResourceType.Nothing)
-                {
-                    modelController.AddObject(model.transform, ModelType.Boulder, packIndex);
-                }
-                else
-                {
-                    if (prevResType != resType)
-                    {
-                        LODController.GetCurrent().ChangeModelSpritePack(model.transform, ModelType.Boulder, packIndex);
-                    }
-                }
-            }
-            else
-            {
-                GameMaster.realMaster.standartSpritesList.Add(model);
-            }
-        }
     }
 
     public void Harvest()

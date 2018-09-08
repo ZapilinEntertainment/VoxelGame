@@ -68,6 +68,14 @@ public sealed class ColonyController : MonoBehaviour {
         powerGrid = new List<Building>();
         docks = new List<Dock>();
     }
+    public void ResetToDefaults()
+    {
+        hq = null;
+        powerGrid.Clear();
+        docks.Clear();
+        houses.Clear();
+        if (hospitals != null) hospitals.Clear();
+    }
 
 	public void CreateStorage() { // call from game master
 		if (storage == null) 	storage = gameObject.AddComponent<Storage>();

@@ -442,7 +442,8 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.miningSpeed = miningSpeed;
 		gms.machineConstructingSpeed = machineConstructingSpeed;
 		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = timeGone;
-        gms.windVector = windVector;
+        gms.windVector_x = windVector.x;
+        gms.windVector_z = windVector.y;
 
 		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
         gms.labourTimer = labourTimer;
@@ -475,7 +476,19 @@ public sealed class GameMaster : MonoBehaviour {
 	public bool LoadGame( string fullname ) {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
+            // ОЧИСТКА
             StopAllCoroutines();
+            if (mainChunk != null) Destroy(mainChunk.gameObject);
+            // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
+            Crew.Reset(); Shuttle.Reset();
+            Grassland.ScriptReset();
+            Expedition.GameReset();
+            Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
+            colonyController.ResetToDefaults(); // подчищает все списки
+            //UI.current.Reset();
+            
+
+            // НАЧАЛО ЗАГРУЗКИ
             BinaryFormatter bf = new BinaryFormatter();
             FileStream file = File.Open(fullname, FileMode.Open);
             Time.timeScale = 0; gameSpeed = 0;
@@ -504,28 +517,20 @@ public sealed class GameMaster : MonoBehaviour {
             machineConstructingSpeed = gms.machineConstructingSpeed;
             day = gms.day; week = gms.week; month = gms.month; year = gms.year; millenium = gms.millenium; timeGone = gms.t;
 
-            windVector = gms.windVector;
+            windVector = new Vector2(gms.windVector_x, gms.windVector_z);
             windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
             lifepowerTimer = gms.lifepowerTimer;
             labourTimer = gms.labourTimer;
             RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
             #endregion
-            if (mainChunk != null)Destroy(mainChunk.gameObject);
-
-            Crew.Reset(); Shuttle.Reset(); Hospital.Reset(); Dock.ResetToDefaults(); RecruitingCenter.Reset();
-            QuantumTransmitter.Reset(); Hangar.Reset();
-            Grassland.ScriptReset();
-            Expedition.GameReset();
-            Structure.ResetToDefaults_Static();
-            //UI.current.Reset();
-
+            
             Crew.LoadStaticData(gms.crewStaticSerializer);
             Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
 
             GameObject g = new GameObject("chunk");
             mainChunk = g.AddComponent<Chunk>();
             mainChunk.LoadChunkData(gms.chunkSerializer);
-            colonyController.Load(gms.colonyControllerSerializer);
+            colonyController.Load(gms.colonyControllerSerializer); // < --- COLONY CONTROLLER
 
             Dock.LoadStaticData(gms.dockStaticSerializer);
             QuestUI.current.Load(gms.questStaticSerializer);
@@ -571,7 +576,7 @@ class GameMasterSerializer {
 	public float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
 	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
-    public Vector2 windVector;
+    public float windVector_x, windVector_z; // cause serialization error
 	public float windTimer = 0, windChangeTime = 120, labourTimer, lifepowerTimer;
 
 	public ChunkSerializer chunkSerializer;

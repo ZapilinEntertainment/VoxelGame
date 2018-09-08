@@ -11,7 +11,7 @@ public class Hospital : WorkBuilding {
 	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
     const int STANDART_COVERAGE = 100;
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_Hospital() {
 		SetBirthrateMode(0);
 	}
 

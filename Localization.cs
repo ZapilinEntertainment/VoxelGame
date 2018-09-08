@@ -3,9 +3,9 @@ public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-StorageOverloaded}
+}
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
-public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused };
+public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused, StorageOverloaded };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
 
@@ -181,6 +181,7 @@ public static class Localization {
             case GameAnnouncements.NewQuestAvailable: return "New quest available";
             case GameAnnouncements.GamePaused: return "Game paused";
             case GameAnnouncements.GameUnpaused: return "Game unpaused";
+            case GameAnnouncements.StorageOverloaded: return "Storage overloaded";
         }
 	}
 
@@ -300,8 +301,7 @@ public static class Localization {
             case LocalizedPhrase.CameraZoom: return "Camera zoom";
             case LocalizedPhrase.LODdistance: return "LOD sprite distance";
             case LocalizedPhrase.GraphicQuality: return "Graphic quality";
-            case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";
-            case LocalizedPhrase.StorageOverloaded: return "Storage overloaded";
+            case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";            
         }
     }
 

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -7,8 +6,8 @@ public class StorageSerializer {
 	public float[] standartResources;
 }
 
-public class Storage : MonoBehaviour {
-	public float totalVolume = 0, maxVolume;
+public sealed class Storage : MonoBehaviour {
+	public float totalVolume = 0, maxVolume, announcementTimer;
 	public List<StorageHouse> warehouses { get; private set; }
 	public bool showStorage = false;
 	public float[] standartResources{get;private set;}
@@ -23,7 +22,12 @@ public class Storage : MonoBehaviour {
 		warehouses = new List<StorageHouse>();
 	}
 
-	public void AddWarehouse(StorageHouse sh) {
+    private void Update()
+    {
+        if (announcementTimer > 0) announcementTimer -= Time.deltaTime;
+    }
+
+    public void AddWarehouse(StorageHouse sh) {
 		if (sh == null) return;
 		warehouses.Add(sh);
 		RecalculateStorageVolume();
@@ -56,7 +60,7 @@ public class Storage : MonoBehaviour {
 	/// <param name="rtype">Rtype.</param>
 	/// <param name="count">Count.</param>
 	public float AddResource(ResourceType rtype, float count) {
-		if (totalVolume == maxVolume || count == 0) return count;
+		if (totalVolume >= maxVolume | count == 0) return count;
 		float loadedCount = count;
 		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - totalVolume;
 		standartResources[ rtype.ID ] += loadedCount;
@@ -76,7 +80,15 @@ public class Storage : MonoBehaviour {
 	}
 	public void AddResources(ResourceContainer[] resourcesList) {
 		float freeSpace = maxVolume - totalVolume;
-		if (freeSpace == 0) return;
+        if (freeSpace == 0)
+        {
+            if (announcementTimer <= 0)
+            {
+                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.StorageOverloaded));
+                announcementTimer = 5;
+            }
+            return;
+        }
 		int idsCount = ResourceType.resourceTypesArray.Length;
 		int i =0;
 		while ( i < resourcesList.Length & freeSpace > 0) {

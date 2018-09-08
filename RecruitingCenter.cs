@@ -17,7 +17,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     public static UIRecruitingCenterObserver rcenterObserver;
     const float FIND_SPEED = 5;
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_RecruitingCenter() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
 	}
 
@@ -32,7 +32,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     }
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (hireCost == -1) Reset();
+		if (hireCost == -1) ResetToDefaults_Static_RecruitingCenter();
 		bool movement = false;
 		if (basement != null) movement = true;
 		if (b == null) return;

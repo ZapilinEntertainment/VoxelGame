@@ -6,7 +6,7 @@ public class WindGenerator : Building {
 	public Transform head, screw;
 	Vector2 windDirection;
     bool rotateHead = false, rotateScrew = true, subscribedToWindUpdate = false;
-	const float HEAD_ROTATE_SPEED = 1, SCREW_ROTATE_SPEED = 20;
+	const float HEAD_ROTATE_SPEED = 1, SCREW_ROTATE_SPEED = 90;
 	float height_coefficient = 1;
     const int STANDART_SURPLUS = 100;
 
@@ -42,7 +42,7 @@ public class WindGenerator : Building {
 			if (head.transform.forward == windDir) rotateHead = false;
 		}
 		if (rotateScrew) {
-			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * Time.deltaTime * GameMaster.gameSpeed * energySurplus / (float)STANDART_SURPLUS);
+			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * Time.deltaTime * GameMaster.gameSpeed);
 		}
 	}
 

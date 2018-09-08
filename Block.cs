@@ -111,12 +111,16 @@ public class Block {
         personalNumber = bs.personalNumber;
 	}
 
-    public void Annihilate()
+    protected void PrepareBlockForDestruction()
     {
         if (model != null) Object.Destroy(model);
         //if (mainStructure == null) return;
         //MultiblockStructure ms = mainStructure as MultiblockStructure;
         //if (ms != null) ms.PartCollapse(pos);
+    }
+    virtual public void Annihilate()
+    {
+        PrepareBlockForDestruction();
     }
 
 	protected BlockSerializer GetBlockSerializer() {

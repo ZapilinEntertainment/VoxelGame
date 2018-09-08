@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [System.Serializable]
 public sealed class HangarSerializer {
@@ -16,7 +14,7 @@ public sealed class Hangar : WorkBuilding {
     public bool constructing { get; private set; }
     public static UIHangarObserver hangarObserver;
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_Hangar() {
 		hangarsCount = 0;
 	}
 

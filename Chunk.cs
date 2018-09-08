@@ -1123,4 +1123,14 @@ public sealed class Chunk : MonoBehaviour
     { //test
         GUI.Label(new Rect(0, 32, 64, 32), lifePower.ToString());
     }
+
+    private void OnDestroy()
+    {
+        foreach (Block b in blocks)
+        {
+            if (b != null) b.Annihilate();
+        }
+        surfaceBlocks.Clear();
+        chunkUpdateSubscribers_structures.Clear();
+    }
 }

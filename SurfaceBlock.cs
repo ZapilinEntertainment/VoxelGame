@@ -281,16 +281,17 @@ public class SurfaceBlock : Block {
 	public void ClearSurface(bool colliderCheck) {
 		if (surfaceObjects == null) return;
         // is basement check and special conditions?
-		int i =0;
-		while ( i < surfaceObjects.Count) {
-			if (surfaceObjects[i] != null) surfaceObjects[i].Annihilate(true);
-            i++;
-		}
+        if (cellsStatus != 0)
+        {
+            for (int i =0; i < surfaceObjects.Count; i++)
+            {
+                surfaceObjects[i].Annihilate(true); // чтобы не вызывали removeStructure здесь
+            }
+        }
         surfaceObjects.Clear();
 		cellsStatus = 0; artificialStructures = 0;
-		i = 0;
 		map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-		for (; i < INNER_RESOLUTION; i++) {
+		for (int i = 0; i < INNER_RESOLUTION; i++) {
 			for (int j = 0; j < INNER_RESOLUTION; j++) {
 				map[i,j] = false;
 			}
@@ -588,8 +589,16 @@ public class SurfaceBlock : Block {
 		LoadSurfaceBlockData(sbs);
 		if (sbs.haveStructures) {
 			foreach (StructureSerializer ss in sbs.structuresList) {
-				Structure s = Structure.GetStructureByID(ss.id);
-				if (s!=null) s.Load(ss,this);
+                if (ss.id != Structure.PLANT_ID)
+                {
+                    Structure s = Structure.GetStructureByID(ss.id);
+                    if (s != null) s.Load(ss, this);
+                }
+                else
+                {
+                    Plant p = Plant.GetNewPlant(ss.id);
+                    if (p != null) p.Load(ss, this);
+                }
 			}
 		}
 	}
@@ -624,7 +633,21 @@ public class SurfaceBlock : Block {
 		else sbs.haveStructures = false;
 		return sbs;
 	}
-	#endregion
+    #endregion
+
+    protected void PrepareSurfaceForDestruction()
+    {
+        PrepareBlockForDestruction();
+        if (cellsStatus != 0)
+        {
+            ClearSurface(false);
+        }
+        if (grassland != null) grassland.Annihilation(true);
+    }
+    override public void Annihilate()
+    {
+        PrepareSurfaceForDestruction();
+    }
 }
 
 [System.Serializable]

@@ -17,7 +17,7 @@ public sealed class Dock : WorkBuilding {
 	int blockedHeight = -1, blockedSide = -1, preparingResourceIndex;
     public static UIDockObserver dockObserver;
 
-	public static void ResetToDefaults() {
+	public static void ResetToDefaults_Static_Dock() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
 		minValueForTrading= new int[ResourceType.RTYPES_COUNT];
 		immigrationEnabled = true;
@@ -27,7 +27,7 @@ public sealed class Dock : WorkBuilding {
 	override public void Prepare() {
 		PrepareWorkbuilding();
 		if (isForSale == null) {
-			ResetToDefaults();
+			ResetToDefaults_Static_Dock();
 		}
 	}
 

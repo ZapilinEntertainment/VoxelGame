@@ -1,11 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿
+public sealed class StorageHouse : Building {
+	public float volume { get; private set; }
 
-public class StorageHouse : Building {
-	public float volume = 1000; // fixed by asset
+    override public void Prepare() {
+        PrepareBuilding();
+        switch (id)
+        {
+            case STORAGE_0_ID: volume = 10000;break;
+            case STORAGE_1_ID: volume = 5000; break;
+            case STORAGE_2_ID: volume = 20000; break;
+            case STORAGE_3_ID: volume = 50000; break;
+        }
+    }
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
 		GameMaster.colonyController.storage.AddWarehouse(this);
