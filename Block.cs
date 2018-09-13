@@ -6,8 +6,8 @@ public enum BlockType {Shapeless, Cube, Surface, Cave}
 
 public class Block : MonoBehaviour {
     public const float QUAD_SIZE = 1;
-    public BlockType type { get; protected set; }
 
+    public BlockType type { get; protected set; }
     public Worksite worksite {get;protected set;}
 	public Chunk myChunk {get; protected  set;}
 	public bool isTransparent {get;protected  set;} // <- замени на transparent map
@@ -15,10 +15,11 @@ public class Block : MonoBehaviour {
 	public Structure mainStructure{get;protected set;}
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
-	public byte visibilityMask; // видимость относительно других блоков
-	public byte renderMask = 0; // видимость относительно камеры
+	public byte visibilityMask { get; protected set; } // видимость относительно других блоков
+	protected byte renderMask = 0; // видимость относительно камеры
 	public bool indestructible {get; protected set;}
     protected bool destroyed = false;
+    public byte illumination { get; protected set; }
 
 	public virtual void ReplaceMaterial(int newId) {
 		material_id = newId;
@@ -26,7 +27,9 @@ public class Block : MonoBehaviour {
 
 	public void InitializeShapelessBlock (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
         type = BlockType.Shapeless;
-        isTransparent = true; material_id = 0;
+        isTransparent = true;
+        material_id = 0;
+        illumination = 255;
 		myChunk = f_chunk; 
 		transform.parent = f_chunk.transform;
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
@@ -38,7 +41,9 @@ public class Block : MonoBehaviour {
 }
 	public virtual void InitializeBlock (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
         type = BlockType.Shapeless;
-		isTransparent = true; material_id = 0;
+		isTransparent = true;
+        material_id = 0;
+        illumination = 255;
 		myChunk = f_chunk;
         transform.parent = f_chunk.transform;
 		pos = f_chunkPos;
@@ -67,6 +72,12 @@ public class Block : MonoBehaviour {
 		if (value) { vm +=  val;}
 		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
 	}
+    virtual public void SetIllumination()
+    {
+       illumination = myChunk.lightMap[pos.x, pos.y,pos.z];
+       MeshRenderer[] rrs = gameObject.GetComponentsInChildren<MeshRenderer>();
+       foreach (MeshRenderer mr in rrs) mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>(), illumination);
+    }
 
     public void SetWorksite(Worksite w)
     {
@@ -93,7 +104,18 @@ public class Block : MonoBehaviour {
 
 	protected void LoadBlockData(BlockSerializer bs) {
 		isTransparent = bs.isTransparent;
+	} 
+
+    protected BlockSerializer GetBlockSerializer() {
+		BlockSerializer bs = new BlockSerializer();
+		bs.type = type;
+		bs.isTransparent = isTransparent;
+		bs.pos = pos;
+		bs.material_id = material_id;
+		return bs;
 	}
+    #endregion
+
     virtual public void Annihilate()
     {
         //#block annihilate
@@ -107,16 +129,6 @@ public class Block : MonoBehaviour {
     {
         if (!destroyed & !GameMaster.applicationStopWorking) Annihilate();
     }
-
-    protected BlockSerializer GetBlockSerializer() {
-		BlockSerializer bs = new BlockSerializer();
-		bs.type = type;
-		bs.isTransparent = isTransparent;
-		bs.pos = pos;
-		bs.material_id = material_id;
-		return bs;
-	}
-    #endregion
 }
 
 [System.Serializable]

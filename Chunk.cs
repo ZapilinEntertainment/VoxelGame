@@ -33,15 +33,18 @@ public sealed class Chunk : MonoBehaviour
     public float lifePower = 0;
     public static byte CHUNK_SIZE { get; private set; }
     public List<Structure> chunkUpdateSubscribers_structures;
-    public bool[,] sideBlockingMap { get; private set; }
-    Texture3D chunkLightMap; Color32[] lmap;
-    bool allGrasslandsCreated = false;
+    public bool[,] sideBlockingMap { get; private set; }      
+    private bool allGrasslandsCreated = false;
+    public byte[,,] lightMap { get; private set; }
+
+    const float LIGHT_DECREASE_PER_BLOCK = 0.5f;
 
     public void Awake()
     {
         surfaceBlocks = new List<SurfaceBlock>();
         chunkUpdateSubscribers_structures = new List<Structure>();
         sideBlockingMap = new bool[CHUNK_SIZE, 4];
+        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         for (int a = 0; a < CHUNK_SIZE; a++)
         {
             for (int b = 0; b < 4; b++)
@@ -162,7 +165,8 @@ public sealed class Chunk : MonoBehaviour
         if (j > GameMaster.layerCutHeight) vmask = 0;
         else
         {
-            Block bx = GetBlock(i + 1, j, k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 61;
+            Block bx = GetBlock(i + 1, j, k);
+            if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 61;
             bx = GetBlock(i - 1, j, k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 55;
             bx = GetBlock(i, j + 1, k); if (bx != null && !bx.isTransparent && bx.type != BlockType.Shapeless && (bx.pos.y != GameMaster.layerCutHeight + 1)) vmask &= 47;
             bx = GetBlock(i, j - 1, k); if (bx != null && !bx.isTransparent && (bx.type == BlockType.Cube | (bx.type == BlockType.Cave && (bx as CaveBlock).haveSurface ))) vmask &= 31;
@@ -180,81 +184,91 @@ public sealed class Chunk : MonoBehaviour
         b = GetBlock(x, y + 1, z); if (b != null) b.ChangeVisibilityMask(5, ((mask & 16) != 0));
         b = GetBlock(x, y - 1, z); if (b != null) b.ChangeVisibilityMask(4, ((mask & 32) != 0));
         BroadcastChunkUpdate(new ChunkPos(x, y, z));
+        ChunkLightmapFullRecalculation();
     }
 
     void ChunkLightmapFullRecalculation()
     {
-        return;
-        lmap = new Color32[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
-        float LIGHT_DECREASE_PER_BLOCK = 0.5f;
-        for (int x = 0; x < CHUNK_SIZE; x++)
+        int x = 0, y = 0, z = 0;
+        for (x = 0; x < CHUNK_SIZE; x++)
         {
-            for (int z = 0; z < CHUNK_SIZE; z++)
+            for (z = 0; z < CHUNK_SIZE; z++)
             {
-                for (int y = CHUNK_SIZE - 1; y >= 0; y--)
+                for (y = 0; y < CHUNK_SIZE; y++)
                 {
-                    byte alpha = 0;
-                    // up
-                    if (y == CHUNK_SIZE - 1) { alpha += 255; goto CALCULATION; }
-                    else
-                    {
-                        alpha += (byte)(lmap[(y + 1) * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x ].a * LIGHT_DECREASE_PER_BLOCK);
-                    }
-                    // fwd
-                    if (z == CHUNK_SIZE - 1) alpha += 128;
-                    // right
-                    if (x == CHUNK_SIZE - 1) alpha += 128;
-                    // back
-                    if (z == 0) alpha += 128;
-                    else
-                    {            // можно уже считывать с других блоков, так как они рассчитаны
-                        alpha += (byte)(lmap[y * CHUNK_SIZE * CHUNK_SIZE + (z - 1) * CHUNK_SIZE + x ].a * LIGHT_DECREASE_PER_BLOCK);
-                    }
-                    // left
-                    if (x == 0) alpha += 128;
-                    else
-                    {
-                        alpha += (byte)(lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + (x - 1) ].a * LIGHT_DECREASE_PER_BLOCK);
-                    }
-                    // down
-                    if (y == 0) alpha += 1;
-
-                    CALCULATION:
-                    if (alpha > 255) alpha = 255;
-                    lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, alpha);
+                    lightMap[x, y, z] = 0;
                 }
             }
         }
-        chunkLightMap = new Texture3D(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, TextureFormat.RGBA32, false);
-        //testblock
-        for (int x = 0; x < CHUNK_SIZE; x++)
+        // проход снизу
+        Block b = null;
+        x = 0; y = 0;z = 0;
+       for (x = 0; x < CHUNK_SIZE; x++)
         {
-            for (int z = 0; z < CHUNK_SIZE; z++)
+            for (z = 0; z < CHUNK_SIZE; z++)
             {
-                bool surfaceFound = false;
-                for (int y = CHUNK_SIZE - 1; y >= 0; y--)
+                for (y = 0; y < CHUNK_SIZE; y++)
                 {
-                    if (blocks[x, y, z] == null) lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, 255);
+                    b = blocks[x, y, z];
+                    if (b == null) lightMap[x, y, z] = 255 ;
                     else
                     {
-                        if (!surfaceFound)
-                        {
-                            lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, 255);
-                            surfaceFound = true;
+                        if (b.type == BlockType.Cave) {
+                            if ((b as CaveBlock).haveSurface) lightMap[x, y, z] = 255;
                         }
-                        else
-                        {
-                            lmap[y * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + x] = new Color32(255, 255, 255, 0);
+                        else {
+                            if (b.type == BlockType.Shapeless) { lightMap[x, y, z] = 255; }
+                            else  break; 
                         }
                     }
                 }
             }
         }
-        // eo testblock
-        chunkLightMap.SetPixels32(lmap);
-        chunkLightMap.Apply();
-        Shader.SetGlobalTexture("_GlobalLightmap", chunkLightMap);
-        Shader.SetGlobalInt("chunkSize", CHUNK_SIZE);
+        // проход сверху
+        x = 0; y = 0; z = 0;
+        for (x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (z = 0; z < CHUNK_SIZE; z++)
+            {
+                for (y = CHUNK_SIZE - 1; y >= 0; y--)
+                {
+                    b = blocks[x, y, z];
+                    if (b == null) lightMap[x, y, z] = 255;
+                    else
+                    {
+                        if (b.type == BlockType.Shapeless) lightMap[x, y, z] = 255;
+                        else break;
+                    }
+                }
+            }
+        }
+        //проход спереди
+        x = 0; y = 0; z = 0;
+        byte val;
+        for (x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (y = 0; y < CHUNK_SIZE; y++)
+            {
+                val = 255;
+                for (z = CHUNK_SIZE - 1; z >= 0; z--)
+                {
+                    b = blocks[x, y, z];
+                    if (b == null) lightMap[x, y, z] = 255;
+                    else
+                    {
+                        if (b.type == BlockType.Shapeless | b.type == BlockType.Surface) lightMap[x, y, z] = 255;
+                        else {
+                            if (b.type == BlockType.Cave)
+                            {
+                                val = (byte)(val * LIGHT_DECREASE_PER_BLOCK);
+                                lightMap[x, y, z] = val;
+                            }
+                            else break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     #region operating blocks data
@@ -314,7 +328,7 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
-        
+        ChunkLightmapFullRecalculation();
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
@@ -329,8 +343,7 @@ public sealed class Chunk : MonoBehaviour
                     if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
                 }
             }
-        }
-        //ChunkLightmapFullRecalculation();
+        }        
         FollowingCamera.main.WeNeedUpdate();
     }
 

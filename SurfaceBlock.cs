@@ -58,6 +58,7 @@ public class SurfaceBlock : Block {
          for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
         }
         material_id = 0;
+        illumination = 255;
         surfaceObjects = new List<Structure>();
         artificialStructures = 0;
         isTransparent = false;            
@@ -81,7 +82,7 @@ public class SurfaceBlock : Block {
             g.tag = "BlockCollider";
         }
         material_id = f_material_id;
-        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>());
+        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
         
         if (visibilityMask != 0) surfaceRenderer.enabled = true;       
         
@@ -344,12 +345,22 @@ public class SurfaceBlock : Block {
 			grassland.Annihilation();
 			CellsStatusUpdate();
 		}
-		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
+		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
 	}
 
+    override public void SetIllumination()
+    {
+        byte prevIllumination = illumination;
+        illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+        if (illumination != prevIllumination)
+        {
+            surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+        }
+    }
 
-    #region positioning   
-    public static Vector3 GetLocalPosition(SurfaceRect sr) {
+
+        #region positioning   
+        public static Vector3 GetLocalPosition(SurfaceRect sr) {
 		float res = INNER_RESOLUTION;
 		float xpos = sr.x + sr.size/2f ;
 		float zpos = sr.z + sr.size/2f;

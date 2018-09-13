@@ -65,6 +65,7 @@ public class CubeBlock : Block{
 		t.localRotation = Quaternion.Euler(Vector3.zero);
         name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
         material_id = f_material_id;
+        illumination = 255;
 
         faces = new MeshRenderer[6];
         if (naturalGeneration) { naturalFossils = MAX_VOLUME; }
@@ -75,7 +76,7 @@ public class CubeBlock : Block{
 		material_id = newId;
 		foreach (MeshRenderer mr in faces) {
 			if (mr == null) continue;
-			else mr.material = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>());
+			else mr.material = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>(), illumination);
 		}
     }
 
@@ -141,40 +142,47 @@ public class CubeBlock : Block{
         Transform t = g.transform;		
         t.parent = transform;
         faces[i] = g.GetComponent <MeshRenderer>();
-		
+
+        byte faceIllumination = 255 ;
 		switch (i) {
 		case 0: // fwd
                 g.name = "north_plane";
                 t.localRotation = Quaternion.Euler(0, 180, 0);
                 t.localPosition = new Vector3(0, 0, QUAD_SIZE/2f);
+                if (pos.z != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z + 1];
                 break;
 		case 1: // right
                 g.name = "east_plane";
                 t.localRotation = Quaternion.Euler(0, 270, 0);               
                 t.localPosition = new Vector3(QUAD_SIZE/2f, 0, 0);
+                if (pos.x != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x + 1, pos.y, pos.z];
                 break;
 		case 2: // back
                 g.name = "south_plane";
                 t.localPosition = new Vector3(0, 0, -QUAD_SIZE/2f);
+                if (pos.z != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z - 1];
                 break;
 		case 3: // left
                 g.name = "west_plane";
                 t.localRotation = Quaternion.Euler(0, 90, 0);
                 t.localPosition = new Vector3(-QUAD_SIZE/2f, 0, 0);
+                if (pos.x != 0) faceIllumination = myChunk.lightMap[pos.x - 1, pos.y, pos.z ];
                 break;
 		case 4: // up
                 g.name = "upper_plane";
                 t.localPosition = new Vector3(0, QUAD_SIZE/2f, 0); 
-				t.localRotation = Quaternion.Euler(90, 0, 0);				
-			    break;
+				t.localRotation = Quaternion.Euler(90, 0, 0);
+                if (pos.y != Chunk.CHUNK_SIZE -1) faceIllumination = myChunk.lightMap[pos.x, pos.y + 1, pos.z ];
+                break;
 		case 5: // down
                 g.name = "bottom_plane";
                 t.localRotation = Quaternion.Euler(-90, 0, 0);			
-			    t.localPosition = new Vector3(0, -QUAD_SIZE/2f, 0); 
-			//GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
-			break;
+			    t.localPosition = new Vector3(0, -QUAD_SIZE/2f, 0);
+                if (pos.y != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y - 1, pos.z ];
+                //GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
+                break;
 		}
-		faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>());
+		faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>(), faceIllumination);
 		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
         faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
@@ -195,7 +203,7 @@ public class CubeBlock : Block{
 					if (faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
                     mf.mesh = PoolMaster.GetOriginalQuadMesh();
-                    ResourceType.GetMaterialById(material_id, mf);
+                    ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 			}
 			else {
@@ -204,7 +212,7 @@ public class CubeBlock : Block{
 					if (faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
                     mf.mesh = PoolMaster.plane_excavated_025;
-                    ResourceType.GetMaterialById(material_id, mf);
+                    ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 			}
 		}
@@ -215,7 +223,7 @@ public class CubeBlock : Block{
 					if ( faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
                     mf.mesh = PoolMaster.plane_excavated_05;
-                    ResourceType.GetMaterialById(material_id, mf);
+                    ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 				}
 				else {
@@ -224,15 +232,52 @@ public class CubeBlock : Block{
 					if ( faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
                     mf.mesh = PoolMaster.plane_excavated_075;
-                    ResourceType.GetMaterialById(material_id, mf);
+                    ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 				}
 			
 		}
 	}
-   
-	#region save-load system
-	override public BlockSerializer Save() {
+
+    override public void SetIllumination()
+    {
+        illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+        int size = Chunk.CHUNK_SIZE;
+        byte[,,] lmap = myChunk.lightMap;
+        if (faces[0] != null)
+        {
+            if (pos.z + 1 >= size) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z + 1];
+            faces[0].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[0].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[1] != null)
+        {
+            if (pos.x + 1 >= size) illumination = 255; else illumination = lmap[pos.x + 1, pos.y, pos.z];
+            faces[1].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[1].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[2] != null)
+        {
+            if (pos.z - 1 < 0) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z - 1];
+            faces[2].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[2].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[3] != null)
+        {
+            if (pos.x - 1 < 0) illumination = 255; else illumination = lmap[pos.x - 1, pos.y, pos.z];
+            faces[3].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[3].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[4] != null)
+        {
+            if (pos.y >= size - 1) illumination = 255; else illumination = lmap[pos.x , pos.y + 1, pos.z];
+            faces[4].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[4].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[5] != null)
+        {
+            if (pos.y == 0) illumination = 255; else illumination = lmap[pos.x , pos.y - 1, pos.z];
+            faces[5].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[5].GetComponent<MeshFilter>(), illumination);
+        }
+    }
+
+    #region save-load system
+    override public BlockSerializer Save() {
 		BlockSerializer bs = GetBlockSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{

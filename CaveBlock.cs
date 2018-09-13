@@ -15,6 +15,7 @@ public class CaveBlock : SurfaceBlock
     MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west
     MeshRenderer ceilingRenderer;
     public bool haveSurface { get; private set; }
+    private int ceilingMaterial = 0;
 
     public override void ReplaceMaterial(int newId)
     {
@@ -27,10 +28,10 @@ public class CaveBlock : SurfaceBlock
         foreach (MeshRenderer mr in faces)
         {
             if (mr == null) continue;
-            else mr.sharedMaterial = ResourceType.GetMaterialById(newId, mr.GetComponent<MeshFilter>());
+            else mr.sharedMaterial = ResourceType.GetMaterialById(newId, mr.GetComponent<MeshFilter>(), illumination);
         }
-        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, ceilingRenderer.GetComponent<MeshFilter>());
-        if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
+        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
+        if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
     }
 
     public void InitializeCaveBlock (Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)
@@ -41,11 +42,13 @@ public class CaveBlock : SurfaceBlock
                 for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
             }
             haveSurface = true;
-            material_id = 0;
+        material_id = f_down_material_id;
+        ceilingMaterial = f_up_material_id;
             surfaceObjects = new List<Structure>();
             artificialStructures = 0;
             isTransparent = false;
             visibilityMask = 0;
+        illumination = 255;
 
         myChunk = f_chunk;
         Transform t = transform;
@@ -74,13 +77,13 @@ public class CaveBlock : SurfaceBlock
             foreach (MeshRenderer mr in faces)
             {
                 if (mr == null) continue;
-                else mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>()); ;
+                else mr.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, mr.GetComponent<MeshFilter>(), illumination); ;
             }
-            ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, ceilingRenderer.GetComponent<MeshFilter>());
-            if (f_down_material_id != -1)
+            ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
+            if (material_id != -1)
             {
                 haveSurface = true;
-                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(f_down_material_id, surfaceRenderer.GetComponent<MeshFilter>());
+                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
             }
             else
             {
@@ -123,36 +126,6 @@ public class CaveBlock : SurfaceBlock
         if (visibilityMask == x) return;
         byte prevVisibility = visibilityMask;
         visibilityMask = x;
-        if (haveSurface)
-        {
-            if (visibilityMask == 0)
-            {
-                int i = 0; bool listChanged = false;
-                while (i < surfaceObjects.Count)
-                {
-                    surfaceObjects[i].SetVisibility(false);
-                    i++;
-                }
-                surfaceRenderer.GetComponent<MeshCollider>().enabled = false;
-                if (listChanged) CellsStatusUpdate();
-            }
-            else
-            {
-                if (prevVisibility == 0)
-                {
-                    int i = 0; bool listChanged = false;
-                    while (i < surfaceObjects.Count)
-                    {
-                        surfaceObjects[i].SetVisibility(true);
-                        i++;
-                    }
-                    if (listChanged) CellsStatusUpdate();
-                    surfaceRenderer.GetComponent<MeshCollider>().enabled = true;
-                }
-            }
-        }
-        if (renderMask == 0) return;
-
 
         if (visibilityMask == 0)
         {
@@ -205,6 +178,7 @@ public class CaveBlock : SurfaceBlock
                     surfaceRenderer.enabled = ((visibilityMask & renderMask & 32) != 0);
                     surfaceRenderer.GetComponent<MeshCollider>().enabled = true;
                 }
+                SetIllumination();
             }
             else
             {                
@@ -232,12 +206,51 @@ public class CaveBlock : SurfaceBlock
     public void RestoreSurface(int newMaterialID)
     {
         if (haveSurface) return;
+        ceilingMaterial = newMaterialID;
         haveSurface = true;
         surfaceRenderer.enabled = true;
-        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newMaterialID, surfaceRenderer.GetComponent<MeshFilter>());
+        illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
         surfaceRenderer.GetComponent<Collider>().enabled = true;
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 15);
+    }
 
+    override public void SetIllumination()
+    {
+        byte prevIllumination = illumination;
+        int size = Chunk.CHUNK_SIZE;
+        byte[,,] lmap = myChunk.lightMap;
+        if (faces[0] != null) {
+            if (pos.z + 1 >= size) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z + 1];
+            faces[0].sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, faces[0].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[1] != null)
+        {
+            if (pos.x + 1 >= size) illumination = 255; else illumination = lmap[pos.x + 1, pos.y, pos.z];
+            faces[1].sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, faces[1].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[2] != null)
+        {
+            if (pos.z - 1 < 0) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z - 1];
+            faces[2].sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, faces[2].GetComponent<MeshFilter>(), illumination);
+        }
+        if (faces[3] != null)
+        {
+            if (pos.x - 1 < 0) illumination = 255; else illumination = lmap[pos.x - 1, pos.y, pos.z];
+            faces[3].sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, faces[3].GetComponent<MeshFilter>(), illumination);
+        }       
+        illumination = lmap[pos.x, pos.y, pos.z];
+        if (illumination != prevIllumination)
+        {
+            if (ceilingRenderer != null)
+            {
+                ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
+            }
+            if (surfaceRenderer != null)
+            {
+                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+            }
+        }
     }
 
     #region save-load system
@@ -267,7 +280,7 @@ public class CaveBlock : SurfaceBlock
     protected void LoadCaveBlockData(CaveBlockSerializer cbs)
     {
         LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
-        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(cbs.upMaterial_ID, ceilingRenderer.GetComponent<MeshFilter>());
+        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(cbs.upMaterial_ID, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
         haveSurface = cbs.haveSurface;
         if (!haveSurface)
         {

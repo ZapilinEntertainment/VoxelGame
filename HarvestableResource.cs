@@ -80,7 +80,7 @@ public class HarvestableResource : Structure
         if (!modelIsSprite)
         {
             Transform meshTransform = transform.GetChild(0).GetChild(0);
-            meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(material_ID, meshTransform.GetComponent<MeshFilter>());
+            meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(material_ID, meshTransform.GetComponent<MeshFilter>(), 255);
 
             short packIndex = -1;
             if (!materialBasedLods.TryGetValue(mainResource, out packIndex))

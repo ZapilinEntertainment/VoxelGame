@@ -7,28 +7,30 @@ public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS}
 public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber}
 
 public class PoolMaster : MonoBehaviour {
-	public static PoolMaster current;
+    List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
+        lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные	
+    float shipsClearTimer = 0, clearTime = 30;
+    ParticleSystem buildEmitter;    
+
+    public static PoolMaster current;
 	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
     public static List<GameObject> quadsPool;
     private static GameObject quad_pref;
 	public static GameObject mineElevator_pref {get;private set;}
     public static GameObject cavePref { get; private set; }
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
-    public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
-    static Material metal_material, green_material;
+    public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
+        glass_material, glass_offline_material;
+    private static Material[] basic_illuminated;
+    static Material metal_material, green_material, darkness_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
-	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
+	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;	
 
-	List<GameObject>  lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
-		lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные
-	const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
-	const int SHIPS_BUFFER_SIZE = 5;
-	float  shipsClearTimer = 0,clearTime = 30;
+    const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6, MAX_MATERIAL_LIGHT_DIVISIONS = 10;
+    const int SHIPS_BUFFER_SIZE = 5;
 
-    ParticleSystem buildEmitter;
-
-	public void Load() {
+    public void Load() {
 		if (current != null) return;
 		current = this;
 
@@ -59,6 +61,7 @@ public class PoolMaster : MonoBehaviour {
         quadsPool.Add(quad_pref);
         default_material = Resources.Load<Material>("Materials/Default");
 
+        darkness_material = Resources.Load<Material>("Materials/Darkness");
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
         basic_material = Resources.Load<Material>("Materials/Basic");
@@ -67,6 +70,7 @@ public class PoolMaster : MonoBehaviour {
         metal_material = Resources.Load<Material>("Materials/Metal");
         green_material = Resources.Load<Material>("Materials/Green");
 
+        basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         QuestUI.LoadTextures();
@@ -340,8 +344,11 @@ public class PoolMaster : MonoBehaviour {
         }
         return metal_material;
     }
-    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf)
+    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, byte i_illumination)
     {
+        float illumination = i_illumination / 255f;
+        float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
+        if (illumination < p / 2f) return darkness_material;
         Mesh quad = mf.mesh;
         if (quad != null)
         {
@@ -408,6 +415,26 @@ public class PoolMaster : MonoBehaviour {
             }
             quad.uv = uvEditing;
         }
-        return basic_material;
+
+        if (illumination >= 1 - p/2f) return basic_material;
+        else
+        {        
+            // проверка на darkness в самом начале функции
+            int pos = (int)(illumination / p);
+            if (illumination - pos * p > p / 2f)
+            {
+                pos++;
+            }
+            if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return basic_material;
+            else
+            {
+                if (basic_illuminated[pos] == null)
+                {
+                    basic_illuminated[pos] = new Material(basic_material);
+                    basic_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                }
+                return basic_illuminated[pos];
+            }
+        }
     }
 }

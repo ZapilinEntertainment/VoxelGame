@@ -107,34 +107,34 @@ public class ResourceType {
 		}
 		else return resourceTypesArray[f_id];
 	}
-	public static Material GetMaterialById(int f_id, MeshFilter mf) {
-		switch (f_id)
-        {
-            default: return PoolMaster.default_material;
-            case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, mf, true);
-            case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, mf, true);
-            case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, mf, true);
-            case METAL_K_ID:
-            case METAL_K_ORE_ID:
-                return PoolMaster.GetMetalMaterial(MetalMaterial.MetalK, mf);
-            case METAL_M_ORE_ID:
-            case METAL_M_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalM, mf);
-            case METAL_E_ORE_ID:
-            case METAL_E_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalE, mf);
-            case METAL_N_ORE_ID:
-            case METAL_N_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalN, mf);
-            case METAL_P_ORE_ID:
-            case METAL_P_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalP, mf);
-            case METAL_S_ORE_ID:
-            case METAL_S_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalS, mf);
-            case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, mf, true);
-            case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, mf, true);
-            case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, mf, true);
-            case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, mf, true);
+	public static Material GetMaterialById(int f_id, MeshFilter mf, byte illumination) {
+            switch (f_id)
+            {
+                default: return PoolMaster.default_material;
+                case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, mf, illumination);
+                case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, mf, illumination);
+                case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, mf, illumination);
+                case METAL_K_ID:
+                case METAL_K_ORE_ID:
+                    return PoolMaster.GetMetalMaterial(MetalMaterial.MetalK, mf);
+                case METAL_M_ORE_ID:
+                case METAL_M_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalM, mf);
+                case METAL_E_ORE_ID:
+                case METAL_E_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalE, mf);
+                case METAL_N_ORE_ID:
+                case METAL_N_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalN, mf);
+                case METAL_P_ORE_ID:
+                case METAL_P_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalP, mf);
+                case METAL_S_ORE_ID:
+                case METAL_S_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalS, mf);
+                case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, mf, illumination);
+                case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, mf, illumination);
+                case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, mf, illumination);
+                case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, mf, illumination);
 
-            case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf, true);
-            case GRAPHONIUM_ID: return PoolMaster.energy_material;
-        }
+                case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf, illumination);
+                case GRAPHONIUM_ID: return PoolMaster.energy_material;
+            }
 	}
 
     /// <summary>
