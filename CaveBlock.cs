@@ -29,13 +29,12 @@ public class CaveBlock : SurfaceBlock
             if (mr == null) continue;
             else mr.sharedMaterial = ResourceType.GetMaterialById(newId, mr.GetComponent<MeshFilter>());
         }
-        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
+        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, ceilingRenderer.GetComponent<MeshFilter>());
+        if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>());
     }
 
-    public void CaveBlockSet(Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)
+    public void InitializeCaveBlock (Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)
     {
-        if (firstSet)
-        {
             cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
             for (int i = 0; i < map.GetLength(0); i++)
             {
@@ -47,12 +46,21 @@ public class CaveBlock : SurfaceBlock
             artificialStructures = 0;
             isTransparent = false;
             visibilityMask = 0;
-            firstSet = false;
-            personalNumber = lastUsedNumber++;
-        }
+
         myChunk = f_chunk;
-        model = Object.Instantiate(PoolMaster.cavePref);
-        Transform t = model.transform;
+        Transform t = transform;
+        t.parent = f_chunk.transform;
+        pos = f_chunkPos;
+        t.localPosition = new Vector3(pos.x, pos.y, pos.z);
+        t.localRotation = Quaternion.Euler(Vector3.zero);
+        type = BlockType.Cave; 
+        name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+
+        GameObject model = Instantiate(PoolMaster.cavePref, Vector3.zero, Quaternion.identity, transform);
+        t = model.transform;
+        t.transform.parent = transform;
+        t.localPosition = Vector3.zero;
+        t.localRotation = Quaternion.Euler(Vector3.zero);
         // setting renderers
         {
             faces = new MeshRenderer[4];
@@ -61,7 +69,7 @@ public class CaveBlock : SurfaceBlock
             faces[2] = t.GetChild(2).GetComponent<MeshRenderer>();
             faces[3] = t.GetChild(3).GetComponent<MeshRenderer>();
             ceilingRenderer = t.GetChild(4).GetComponent<MeshRenderer>();
-            surfaceRenderer = t.GetChild(5).GetComponent<MeshRenderer>();            
+            surfaceRenderer = t.GetChild(5).GetComponent<MeshRenderer>();
             material_id = f_up_material_id;
             foreach (MeshRenderer mr in faces)
             {
@@ -81,13 +89,8 @@ public class CaveBlock : SurfaceBlock
                 surfaceRenderer.GetComponent<Collider>().enabled = false;
                 surfaceRenderer.enabled = false;
             }
-        }
-        t.parent = f_chunk.transform;
-        pos = f_chunkPos;
-        t.localPosition = new Vector3(pos.x, pos.y, pos.z);
-        t.localRotation = Quaternion.Euler(Vector3.zero);
-        type = BlockType.Cave; isTransparent = false;
-        model.name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+        }       
+        
     }
 
     override public void SetRenderBitmask(byte x)
@@ -116,9 +119,9 @@ public class CaveBlock : SurfaceBlock
     }
 
     override public void SetVisibilityMask(byte x)
-    {
-        byte prevVisibility = visibilityMask;
+    {        
         if (visibilityMask == x) return;
+        byte prevVisibility = visibilityMask;
         visibilityMask = x;
         if (haveSurface)
         {
@@ -127,17 +130,8 @@ public class CaveBlock : SurfaceBlock
                 int i = 0; bool listChanged = false;
                 while (i < surfaceObjects.Count)
                 {
-                    if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf)
-                    {
-                        surfaceObjects.RemoveAt(i);
-                        listChanged = true;
-                        continue;
-                    }
-                    else
-                    {
-                        surfaceObjects[i].SetVisibility(false);
-                        i++;
-                    }
+                    surfaceObjects[i].SetVisibility(false);
+                    i++;
                 }
                 surfaceRenderer.GetComponent<MeshCollider>().enabled = false;
                 if (listChanged) CellsStatusUpdate();
@@ -149,17 +143,8 @@ public class CaveBlock : SurfaceBlock
                     int i = 0; bool listChanged = false;
                     while (i < surfaceObjects.Count)
                     {
-                        if (surfaceObjects[i] == null || !surfaceObjects[i].gameObject.activeSelf)
-                        {
-                            surfaceObjects.RemoveAt(i);
-                            listChanged = true;
-                            continue;
-                        }
-                        else
-                        {
-                            surfaceObjects[i].SetVisibility(true);
-                            i++;
-                        }
+                        surfaceObjects[i].SetVisibility(true);
+                        i++;
                     }
                     if (listChanged) CellsStatusUpdate();
                     surfaceRenderer.GetComponent<MeshCollider>().enabled = true;
@@ -167,22 +152,70 @@ public class CaveBlock : SurfaceBlock
             }
         }
         if (renderMask == 0) return;
-        for (int i = 0; i < 4; i++)
+
+
+        if (visibilityMask == 0)
         {
-            if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) faces[i].enabled = true;
-            else faces[i].enabled = false;
-        }
-        if ((renderMask & 15) == 0)
-        {
-            ceilingRenderer.enabled = false;
-            surfaceRenderer.enabled = false;
+            for (int i = 0; i < 4; i++)
+            {
+                if (faces[i] != null) faces[i].gameObject.SetActive(false);
+            }
+            if (ceilingRenderer != null) ceilingRenderer.gameObject.SetActive(false);
+            if (surfaceRenderer != null)
+            {
+                // отключать surfaceRenderer нельзя, так как на нем могут быть структуры
+                if (cellsStatus != 0)
+                {
+                    foreach (Structure s in surfaceObjects)
+                    {
+                        if (s != null) s.SetVisibility(false);
+                    }
+                }
+                surfaceRenderer.enabled = false;                
+                surfaceRenderer.GetComponent<MeshCollider>().enabled = false;
+            }            
         }
         else
         {
-            ceilingRenderer.enabled = true;
-            if (haveSurface) surfaceRenderer.enabled = true;
+            byte[] arr = new byte[] { 1, 2, 4, 8 };
+            if (prevVisibility == 0)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (faces[i] != null)
+                    {
+                        faces[i].gameObject.SetActive(true);
+                        faces[i].enabled = ((visibilityMask & renderMask & arr[i]) != 0);
+                    }
+                }
+                if (ceilingRenderer != null)
+                {
+                    ceilingRenderer.gameObject.SetActive(true);
+                    ceilingRenderer.enabled = ((visibilityMask & renderMask & 16) != 0);
+                }
+                if (surfaceRenderer != null)
+                {
+                    if (cellsStatus != 0)
+                    {
+                        foreach (Structure s in surfaceObjects)
+                        {
+                            if (s != null) s.SetVisibility(true);
+                        }
+                    }
+                    surfaceRenderer.enabled = ((visibilityMask & renderMask & 32) != 0);
+                    surfaceRenderer.GetComponent<MeshCollider>().enabled = true;
+                }
+            }
+            else
+            {                
+                for (int i = 0; i < 4; i++)
+                {
+                    faces[i].enabled = ((visibilityMask & renderMask & arr[i]) != 0);
+                }
+                surfaceRenderer.enabled = ((visibilityMask & renderMask & 32) != 0);
+                ceilingRenderer.enabled = ((visibilityMask & renderMask & 16) != 0);
+            }
         }
-
         if (structureBlock != null) structureBlock.SetVisibilityMask(x);
     }
 
@@ -196,7 +229,7 @@ public class CaveBlock : SurfaceBlock
         surfaceRenderer.enabled = false;
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 47);
     }
-    public void RestoreSurface( int newMaterialID)
+    public void RestoreSurface(int newMaterialID)
     {
         if (haveSurface) return;
         haveSurface = true;
@@ -236,7 +269,7 @@ public class CaveBlock : SurfaceBlock
         LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
         ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(cbs.upMaterial_ID, ceilingRenderer.GetComponent<MeshFilter>());
         haveSurface = cbs.haveSurface;
-        if ( !haveSurface )
+        if (!haveSurface)
         {
             surfaceRenderer.enabled = false;
             surfaceRenderer.GetComponent<Collider>().enabled = false;

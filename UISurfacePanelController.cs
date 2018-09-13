@@ -15,13 +15,14 @@ public sealed class UISurfacePanelController : UIObserver {
 	byte savedHqLevel = 0;
 	Vector2[] showingResourcesCount;
     int selectedBuildingButton = -1, lastStorageStatus = -1;
-    Vector2Int costPanel_selectedButton;
+    Vector2Int costPanel_selectedButton = new Vector2Int(-1,-1);
 	Structure chosenStructure = null;
 	public byte constructingLevel = 1;
 	SurfacePanelMode mode;
     CostPanelMode costPanelMode;
 	BuildingCreateInfoMode buildingCreateMode;
     Vector2Int constructingPlaneTouchPos;
+    private Transform exampleBuildingsContainer;
 
     [SerializeField] Material constructingPlaneMaterial;
     [SerializeField] GameObject buildIntersectionSubmit, constructionPlane; // window asking about deleting overlapping buildings
@@ -165,7 +166,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		else {
 			GatherSite gs = observingSurface.worksite as GatherSite;
 			if (gs == null) {
-				gs = new GatherSite();
+				gs = observingSurface.gameObject.AddComponent<GatherSite>();
 				gs.Set(observingSurface);
                 UIController.current.ShowWorksite(gs);
 			}
@@ -179,22 +180,24 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-			CleanSite cs = observingSurface.worksite as CleanSite;
-			if (cs == null) {
-				cs = new CleanSite();
-				cs.Set(observingSurface, true);
-                UIController.current.ShowWorksite(cs);
-            }
-			else {
-				if (cs.diggingMission) cs.StopWork();
-			}
+                CleanSite cs = observingSurface.worksite as CleanSite;
+                if (cs == null)
+                {
+                    cs = observingSurface.gameObject.AddComponent<CleanSite>();
+                    cs.Set(observingSurface, true);
+                    UIController.current.ShowWorksite(cs);
+                }
+                else
+                {
+                    if (cs.diggingMission) cs.StopWork();
+                }
 			StatusUpdate(); timer = STATUS_UPDATE_TIME;
 		}
 	}
 
     void CheckGatherButton()
     {
-        if (!(observingSurface.worksite is GatherSite))
+        if ( observingSurface.worksite is GatherSite )
         {
             if (status_gather != true)
             {
@@ -277,8 +280,7 @@ public sealed class UISurfacePanelController : UIObserver {
         }
     }
 
-    #region panels setting
-    
+    #region panels setting    
 
     void SetCostPanelMode(CostPanelMode m)
     {        
@@ -309,14 +311,15 @@ public sealed class UISurfacePanelController : UIObserver {
                     changeMaterialButton.GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
                     columnCreateButton.GetComponent<Image>().overrideSprite = null;
                     blockCreateButton.GetComponent<Image>().overrideSprite = null;
-                    int lastUsedIndex = 0;                    
-                    costPanel.transform.GetChild(0).gameObject.SetActive(true);
+                    Transform buttonsKeeper = costPanel.transform.GetChild(0);
+                    buttonsKeeper.gameObject.SetActive(true);
                     costPanel.transform.GetChild(1).gameObject.SetActive(false);
                     costPanel.transform.GetChild(2).gameObject.SetActive(false);
+                    int lastUsedIndex = 0;                    
                     foreach (ResourceType rt in ResourceType.materialsForCovering)
                     {
                         if (rt.ID == observingSurface.material_id) continue;
-                        t = costPanel.transform.GetChild(0).GetChild(lastUsedIndex);
+                        t = buttonsKeeper.GetChild(lastUsedIndex);
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
                         ri.texture = UIController.current.resourcesTexture;
@@ -332,11 +335,11 @@ public sealed class UISurfacePanelController : UIObserver {
                         b.GetComponent<Image>().overrideSprite = null;
                         lastUsedIndex++;
                     }
-                    if (lastUsedIndex < costPanel.transform.childCount)
-                    {
-                        for (; lastUsedIndex < costPanel.transform.childCount; lastUsedIndex++)
+                    if (lastUsedIndex < buttonsKeeper.childCount)
+                    {                        
+                        for (; lastUsedIndex < buttonsKeeper.childCount; lastUsedIndex++)
                         {
-                            costPanel.transform.GetChild(lastUsedIndex).gameObject.SetActive(false);
+                            buttonsKeeper.GetChild(lastUsedIndex).gameObject.SetActive(false);
                         }
                     }
                     costPanel.transform.GetChild(2).gameObject.SetActive(false); // build button
@@ -430,6 +433,10 @@ public sealed class UISurfacePanelController : UIObserver {
     }
     public void CostPanel_SelectResource(Vector2Int indexes)
     {        
+        if (costPanel_selectedButton.x != -1)
+        {
+            costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
+        }
         costPanel_selectedButton = indexes;
         costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
         Transform t = costPanel.transform.GetChild(2);// build button
@@ -455,9 +462,9 @@ public sealed class UISurfacePanelController : UIObserver {
                         float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
                         if (supportPoints <= 1)
                         {
-                            Structure s = Structure.GetNewStructure(Structure.COLUMN_ID);
+                            Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
                             s.SetBasement(observingSurface, new PixelPosByte(7, 7));
-                            PoolMaster.current.BuildSplash(observingSurface.model.transform.position);
+                            PoolMaster.current.BuildSplash(observingSurface.transform.position);
                         }
                         else
                         {
@@ -468,7 +475,7 @@ public sealed class UISurfacePanelController : UIObserver {
                
                 break;
             case CostPanelMode.BlockBuilding:
-                BlockBuildingSite bbs = new BlockBuildingSite();
+                BlockBuildingSite bbs = observingSurface.gameObject.AddComponent<BlockBuildingSite>();
                 bbs.Set(observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
                 SetCostPanelMode(CostPanelMode.Disabled);
                 UIController.current.ShowWorksite(bbs);
@@ -487,6 +494,7 @@ public sealed class UISurfacePanelController : UIObserver {
 				selectedBuildingButton = -1;
 				chosenStructure = null;
 			}
+            if (exampleBuildingsContainer != null) Destroy(exampleBuildingsContainer.gameObject);
 		}
         else
         {
@@ -499,8 +507,7 @@ public sealed class UISurfacePanelController : UIObserver {
         gatherButton.gameObject.SetActive(working);
 		if (working) {
             CheckGatherButton();
-
-            CleanSite cs = new CleanSite();
+            CleanSite cs = observingSurface.worksite as CleanSite;
             if (cs != null && cs.diggingMission)
             {
 
@@ -543,7 +550,6 @@ public sealed class UISurfacePanelController : UIObserver {
 
     #region building construction 
 
-
     public void SwitchConstructionPlane()
     {
         SwitchConstructionPlane(!constructionPlane.activeSelf);
@@ -567,8 +573,8 @@ public sealed class UISurfacePanelController : UIObserver {
     private void PrepareConstructionPlane()
     {
         surfaceBuildingPanel.SetActive(false);
-        constructionPlane.transform.position = observingSurface.model.transform.position + Vector3.down * 0.45f;
-        constructionPlane.transform.rotation = observingSurface.model.transform.rotation;
+        constructionPlane.transform.position = observingSurface.transform.position + Vector3.down * 0.45f;
+        constructionPlane.transform.rotation = observingSurface.transform.rotation;
         constructionPlane.SetActive(true);        
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
@@ -595,7 +601,7 @@ public sealed class UISurfacePanelController : UIObserver {
 
         infoPanel.SetActive(true);
 		nameField.text = Localization.GetStructureName(chosenStructure.id);
-        gridTextField.text = chosenStructure.innerPosition.x_size.ToString() + " x " + chosenStructure.innerPosition.z_size.ToString();
+        gridTextField.text = chosenStructure.innerPosition.size.ToString() + " x " + chosenStructure.innerPosition.size.ToString();
         Building b = chosenStructure as Building;
         if (b != null)
         {
@@ -734,9 +740,9 @@ public sealed class UISurfacePanelController : UIObserver {
     }
 
 	public void CreateSelectedBuilding () {
-        if (chosenStructure.fullCover )
+        if (chosenStructure.placeInCenter )
         {
-            if (observingSurface.artificialStructures == 0) CreateSelectedBuilding(0,0);
+            if (observingSurface.artificialStructures == 0) CreateSelectedBuilding( (byte)(SurfaceBlock.INNER_RESOLUTION /2 - chosenStructure.innerPosition.size/2), (byte)(SurfaceBlock.INNER_RESOLUTION/ 2 - chosenStructure.innerPosition.size/2) );
             else buildIntersectionSubmit.SetActive(true);
         }
         else
@@ -745,7 +751,7 @@ public sealed class UISurfacePanelController : UIObserver {
             {
                 int size = SurfaceBlock.INNER_RESOLUTION;
                 SurfaceRect sr = chosenStructure.innerPosition;
-                CreateSelectedBuilding((byte)(size/ 2 - sr.x_size/2), (byte)(size / 2 - sr.z_size/2));
+                CreateSelectedBuilding((byte)(size/ 2 - sr.size/2), (byte)(size / 2 - sr.size/2));
             }
             else    PrepareConstructionPlane(); // включает плоскость, отключает окно выбора строений
         }
@@ -764,33 +770,31 @@ public sealed class UISurfacePanelController : UIObserver {
         byte x = (byte)(mappos.x * size), z = (byte)(mappos.y * size);
         if (chosenStructure == null) return;
         SurfaceRect sr = chosenStructure.innerPosition;
-        if (x + sr.x_size >= size)
+        if (x + sr.size >= size)
         {
             // корректировка
-            x = (byte)(size - sr.x_size);
+            x = (byte)(size - sr.size);
         }
-        if (z + chosenStructure.innerPosition.z_size >= size)
+        if (z + chosenStructure.innerPosition.size >= size)
         {
             // корректировка
-            z = (byte)(size - sr.z_size);
+            z = (byte)(size - sr.size);
         }
         constructingPlaneTouchPos = new Vector2Int(x, z);
-        if ( observingSurface.IsAnyBuildingInArea(new SurfaceRect(x,z,sr.x_size, sr.z_size)))
+        if ( observingSurface.IsAnyBuildingInArea(new SurfaceRect(x,z,sr.size)))
         {
             buildIntersectionSubmit.SetActive(true);            
         }
         else  CreateSelectedBuilding(x, z);
     }
 
-
 	public void CreateSelectedBuilding (byte x, byte z) {
 		ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
 		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
            GameMaster.colonyController.storage.GetResources(cost);
-           Structure s = Structure.GetNewStructure(chosenStructure.id);
-		   s.gameObject.SetActive(true);
+           Structure s = Structure.GetStructureByID(chosenStructure.id);
 		    s.SetBasement(observingSurface, new PixelPosByte(x,z));
-           PoolMaster.current.BuildSplash(observingSurface.model.transform.position);
+           PoolMaster.current.BuildSplash(observingSurface.transform.position);
             if (constructionPlane.activeSelf)
             {
                 PrepareConstructionPlane();
@@ -811,9 +815,11 @@ public sealed class UISurfacePanelController : UIObserver {
 	}
 
 	void RewriteBuildingButtons () {
-		// поправка на материал
-		// поправка на side-only
-		List<Building> abuildings = Structure.GetApplicableBuildingsList(constructingLevel);
+        // поправка на материал
+        // поправка на side-only
+        if (exampleBuildingsContainer != null) Destroy(exampleBuildingsContainer.gameObject);
+		List<Building> abuildings = Building.GetApplicableBuildingsList(constructingLevel);
+        exampleBuildingsContainer = new GameObject("example buildings container").transform;
 		for (int n = 0; n < buildingButtonsContainer.childCount; n++) {
             GameObject g = buildingButtonsContainer.GetChild(n).gameObject;
             if (n < abuildings.Count) {
@@ -826,6 +832,7 @@ public sealed class UISurfacePanelController : UIObserver {
 				b.onClick.AddListener(() => {
 					this.SelectBuildingForConstruction(abuildings[bid], bid);
 				});
+                abuildings[n].transform.parent = exampleBuildingsContainer;
 			}
 			else {
 				g.SetActive(false);

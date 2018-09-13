@@ -1,42 +1,66 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public enum PlantType {Tree, Crop}
-
+﻿using UnityEngine;
 [System.Serializable]
 public class PlantSerializer {
 	public int id;
-	public float lifepower, growth, growSpeed;
+	public float lifepower, growth;
 	public byte stage;
 }
 
-public class Plant : Structure {
+public abstract class Plant : Structure {
 	public int plant_ID{get;protected set;}
 	public float lifepower;
-	public float lifepowerToGrow {get;protected set;}  // fixed by id
-	public int maxLifeTransfer{get;protected set;}  // fixed by id
-	protected float growSpeed, decaySpeed; // fixed by id
+	public float lifepowerToGrow {get;protected set;}  // fixed by id		
 	public float growth;
-	public byte stage;
-	public byte harvestableStage{get;protected set;}
+	public byte stage;	
+    protected bool addedToClassList = false;
 
-	public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2;
+    public const int CROP_CORN_ID = 0, TREE_OAK_ID = 1, 
+        TOTAL_PLANT_TYPES = 2;  // при создании нового добавить во все статические функции внизу
+    public static int existingPlantsMask = 0;
 
-	public static byte maxStage{get;protected set;}
+    public static Plant GetNewPlant(int i_id)
+    {
+        Plant p;
+        switch (i_id)
+        {
+            default: return null;
+            case CROP_CORN_ID: p = new GameObject("Corn").AddComponent<Corn>(); break;
+            case TREE_OAK_ID: p = new GameObject("Oak Tree").AddComponent<OakTree>(); break;
+        }
+        p.id = PLANT_ID;
+        p.plant_ID = i_id;
+        p.Prepare();
+        return p;
+    }
 
-	public static Plant GetNewPlant(int id) {
-		Plant p = null;
-		switch (id) {
-		case CROP_CORN_ID: p = new GameObject().AddComponent<Corn>(); break;
-		case TREE_OAK_ID: p = new GameObject().AddComponent<OakTree>();break;
-		}
-		p.id = PLANT_ID;
-		p.Prepare();
-		return p;
-	}
+    public static int GetCreateCost(int id)
+    {
+        switch (id)
+        {
+            case CROP_CORN_ID: return Corn.CREATE_COST;
+            case TREE_OAK_ID: return OakTree.CREATE_COST;
+            default: return 1;
+        }
+    }
+    public static int GetMaxLifeTransfer(int id) {
+        switch (id)
+        {
+            default: return 1;
+            case CROP_CORN_ID: return Corn.maxLifeTransfer;
+            case TREE_OAK_ID: return OakTree.maxLifeTransfer;
+        }
+    }
+    public static byte GetHarvestableStage(int id)
+    {
+        switch (id)
+        {
+            default: return 1;
+            case CROP_CORN_ID: return Corn.HARVESTABLE_STAGE;
+            case TREE_OAK_ID: return OakTree.HARVESTABLE_STAGE;
+        }
+    }
 
-	virtual public void ResetPlant() {
+    virtual public void ResetToDefaults() {
 		lifepower = GetCreateCost(id);
 		lifepowerToGrow = 1;
 		stage = 0;
@@ -45,40 +69,24 @@ public class Plant : Structure {
 
 	override public void Prepare() {		
 		PrepareStructure();
-		innerPosition = SurfaceRect.one; isArtificial = false; 
 		lifepower = GetCreateCost(id);
 		growth = 0;
 	}
 
-	public static int GetCreateCost(int id) {
-		switch (id) {
-		case CROP_CORN_ID: return Corn.CREATE_COST; 
-		case TREE_OAK_ID: return OakTree.CREATE_COST; 
-		default: return 1;
-		}
-	}
-	static public float GetLifepowerLevelForStage(byte st) {
-		return 1;
+	public static void PlantUpdate() { // можно выделить в потоки
+        if (existingPlantsMask != 0) {
+            if ((existingPlantsMask & (1 << CROP_CORN_ID)) != 0) Corn.UpdatePlants();
+            if ((existingPlantsMask & (1 << TREE_OAK_ID)) != 0) OakTree.UpdatePlants();
+        }
 	}
 
-	void Update() {
-        float t = GameMaster.gameSpeed * Time.deltaTime;
-        if (t == 0) return;
-        PlantUpdate(t);
-	}
-
-    protected void PlantUpdate(float t) {       
-        float theoreticalGrowth = lifepower / lifepowerToGrow;
-        if (growth < theoreticalGrowth)
-        {
-            growth = Mathf.MoveTowards(growth, theoreticalGrowth, growSpeed * t);
-        }
-        else
-        {
-            lifepower -= decaySpeed * t;
-            if (lifepower == 0) Dry();
-        }
-        if (growth >= 1 & stage < maxStage) SetStage((byte)(stage + 1));
+    virtual public int GetMaxLifeTransfer()
+    {
+        return 1;
+    }
+    virtual public byte GetHarvestableStage()
+    {
+        return 255;
     }
 
 	#region lifepower operations
@@ -118,20 +126,14 @@ public class Plant : Structure {
 		}
 		return ss;
 	}
-
-	public static void StaticLoad(StructureSerializer ss, SurfaceBlock sblock) {
-		PlantSerializer ps = new PlantSerializer();
-		GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
-		Plant p = GetNewPlant(ps.id);
-		p.LoadPlant(ss, sblock, ps);
-	}
-	protected void LoadPlant (StructureSerializer ss, SurfaceBlock sblock, PlantSerializer ps) {
+	override public void Load (StructureSerializer ss, SurfaceBlock sblock) {
 		LoadStructureData(ss,sblock);
-		LoadPlantData(ps);
-	}
+        PlantSerializer ps = new PlantSerializer();
+        GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
+        LoadPlantData(ps);
+    }
 
 	protected void LoadPlantData(PlantSerializer ps) {
-		growSpeed = ps.growSpeed;
 		lifepower = ps.lifepower;
 		SetStage(ps.stage);
 		growth = ps.growth;
@@ -142,7 +144,6 @@ public class Plant : Structure {
 		ps.id = plant_ID;
 		ps.lifepower = lifepower;
 		ps.growth = growth;
-		ps.growSpeed = growSpeed;
 		ps.stage = stage;
 		return ps;
 	}
@@ -156,11 +157,11 @@ public class Plant : Structure {
 		// аннигиляция со сбором ресурсов
 	}
 
-    protected bool PreparePlantForDestruction()
+    protected bool PreparePlantForDestruction(bool forced)
     {
-        if (PrepareStructureForDestruction())
+        if (PrepareStructureForDestruction(forced))
         {
-            basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+            if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
             return true;
         }
         else return false;
@@ -168,8 +169,11 @@ public class Plant : Structure {
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        PreparePlantForDestruction();
+        PreparePlantForDestruction(forced);
+        basement = null;
         Destroy(gameObject);
     }
 }

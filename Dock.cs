@@ -17,7 +17,7 @@ public sealed class Dock : WorkBuilding {
 	int blockedHeight = -1, blockedSide = -1, preparingResourceIndex;
     public static UIDockObserver dockObserver;
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_Dock() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
 		minValueForTrading= new int[ResourceType.RTYPES_COUNT];
 		immigrationEnabled = true;
@@ -26,9 +26,8 @@ public sealed class Dock : WorkBuilding {
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		borderOnlyConstruction = true;
 		if (isForSale == null) {
-			Reset();
+			ResetToDefaults_Static_Dock();
 		}
 	}
 
@@ -38,9 +37,9 @@ public sealed class Dock : WorkBuilding {
 			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
 		}
 		SetBuildingData(b, pos);
-		Transform meshTransform = transform.GetChild(0);
+		Transform modelTransform = transform.GetChild(0);
 		if (basement.pos.z == 0) {
-			meshTransform.transform.localRotation = Quaternion.Euler(0, 180,0); correctLocation = true;
+			modelTransform.transform.localRotation = Quaternion.Euler(0, 180,0); correctLocation = true;
 		}
 		else {
 			if (basement.pos.z == Chunk.CHUNK_SIZE - 1) {
@@ -48,11 +47,11 @@ public sealed class Dock : WorkBuilding {
 			}
 			else {
 				if (basement.pos.x == 0) {
-					meshTransform.transform.localRotation = Quaternion.Euler(0, -90,0); correctLocation = true;
+					modelTransform.transform.localRotation = Quaternion.Euler(0, -90,0); correctLocation = true;
 				}
 				else {
 					if (basement.pos.x == Chunk.CHUNK_SIZE - 1) {
-						meshTransform.transform.localRotation = Quaternion.Euler(0, 90,0); correctLocation = true;
+						modelTransform.transform.localRotation = Quaternion.Euler(0, 90,0); correctLocation = true;
 					}
 				}
 			}
@@ -74,13 +73,18 @@ public sealed class Dock : WorkBuilding {
 			b.myChunk.BlockRow(b.pos.y, side);
 			blockedHeight = b.pos.y; blockedSide = side;
 		}
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 |  !energySupplied) return;
+	override public void LabourUpdate () {
+		if ( !energySupplied ) return;
 		if ( maintainingShip ) {
 			if (loadingTimer > 0) {
-					loadingTimer -= (1 + workSpeed) * Time.deltaTime * GameMaster.gameSpeed;
+					loadingTimer -= (1 + workSpeed) * GameMaster.LABOUR_TICK;
 					if (loadingTimer <= 0) {
 						if (loadingShip != null) ShipLoading(loadingShip);
 						loadingTimer = 0;
@@ -90,15 +94,15 @@ public sealed class Dock : WorkBuilding {
 		else {
 			// ship arriving
 			if (shipArrivingTimer > 0 ) { 
-				shipArrivingTimer -= Time.deltaTime * GameMaster.gameSpeed;
+				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
 					if ( immigrationPlan > 0  && immigrationEnabled ) {
 						if (Random.value < 0.3f || colony.totalLivespace > colony.citizenCount) sendImmigrants = true;
 					}
 					int transitionsCount = 0;
-					for (int x = 0; x < Dock.isForSale.Length; x++) {
-						if (Dock.isForSale[x] != null) transitionsCount++;
+					for (int x = 0; x < isForSale.Length; x++) {
+						if (isForSale[x] != null) transitionsCount++;
 					}
 					if (transitionsCount > 0) sendGoods = true;
 					ShipType stype = ShipType.Cargo;
@@ -132,7 +136,7 @@ public sealed class Dock : WorkBuilding {
 						maintainingShip = true;
 						s.SetDestination( this );
 					}
-					else print ("error:no ship given");
+					//else print ("error:no ship given");
 				}
 			}
 		}
@@ -180,7 +184,7 @@ public sealed class Dock : WorkBuilding {
 					int buyIndex = (int)(Random.value * buyPositions.Count - 1); // index in index arrays
 					int i = buyPositions[buyIndex]; // real index
 					float buyVolume = minValueForTrading[i] - colony.storage.standartResources[i]; 
-					if (buyVolume < 0) {buyVolume = 0; print ("error : negative buy volume");}
+					if (buyVolume < 0) buyVolume = 0;
 					if (v < buyVolume) buyVolume = v;
 					BuyResource(ResourceType.resourceTypesArray[i], buyVolume);
 					v -= buyVolume;
@@ -329,13 +333,19 @@ public sealed class Dock : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
-        if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
         GameMaster.colonyController.RemoveDock(this);
         if (maintainingShip & loadingShip != null) loadingShip.Undock();
         if (blockedHeight != -1 & blockedSide != -1)
         {
             GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
+        }
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
         }
         Destroy(gameObject);
     }

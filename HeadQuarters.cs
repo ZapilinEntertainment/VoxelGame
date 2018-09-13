@@ -21,22 +21,20 @@ public class HeadQuarters : House {
 		if (level > 3 ) {
 			if (rooftop == null) {
 				rooftop = Instantiate(Resources.Load<GameObject>("Structures/HQ_rooftop"));
-				rooftop.transform.parent = transform;
+				rooftop.transform.parent = transform.GetChild(0);
 				rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
-				myRenderers.Add(rooftop.transform.GetChild(0).GetComponent<MeshRenderer>());
 			}
 			if (level > 4) {
 				int i = 5;
 				while (i <= level) {
 					b.myChunk.BlockByStructure( b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this);
 					GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
-					addon.transform.parent = transform;
+					addon.transform.parent = transform.GetChild(0);
 					addon.transform.localPosition = Vector3.zero + (i - 3.5f) * Vector3.up * Block.QUAD_SIZE;
-					addon.transform.localRotation = transform.localRotation;
-					myRenderers.Add(addon.transform.GetChild(0).GetComponent<MeshRenderer>());
+					addon.transform.localRotation = transform.GetChild(0).localRotation;
 					i++;
 				}
-				BoxCollider bc = gameObject.GetComponent<BoxCollider>();
+				BoxCollider bc = transform.GetChild(0).GetComponent<BoxCollider>();
 				bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE/2f;
 				bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE );
 			}
@@ -45,11 +43,6 @@ public class HeadQuarters : House {
 		colony.SetHQ(this);
 	}
 
-	void Update() {
-		if ( showOnGUI && colony != null) {
-            nextStageConditionMet = CheckUpgradeCondition();
-		}
-	}
 
     bool CheckUpgradeCondition()
     {
@@ -150,7 +143,7 @@ public class HeadQuarters : House {
         }
         if (level < 4)
         {
-                Building upgraded = Structure.GetNewStructure(upgradedIndex) as Building;
+                Building upgraded = GetStructureByID(upgradedIndex) as Building;
                 upgraded.SetBasement(basement, PixelPosByte.zero);
                 if (returnToUI) upgraded.ShowOnGUI();
         }
@@ -163,21 +156,21 @@ public class HeadQuarters : House {
                 {
                     chunk.BlockByStructure(upperPos.x, upperPos.y, upperPos.z, this);
                 }
+                Transform model = transform.GetChild(0);
                 GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
-                addon.transform.parent = transform;
+                addon.transform.parent = model;
                 addon.transform.localPosition = Vector3.zero + (level - 2.5f) * Vector3.up * Block.QUAD_SIZE;
-                addon.transform.localRotation = transform.localRotation;
-                myRenderers.Add(addon.transform.GetChild(0).GetComponent<MeshRenderer>());
-                BoxCollider bc = gameObject.GetComponent<BoxCollider>();
+                addon.transform.localRotation = model.localRotation;
+                BoxCollider bc = model.GetComponent<BoxCollider>();
                 bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE);
                 bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE / 2f;
                 if (rooftop == null)
                 {
                     rooftop = Instantiate(Resources.Load<GameObject>("Structures/HQ_rooftop"));
-                    rooftop.transform.parent = transform;
+                    rooftop.transform.parent = model;
                 }
                 rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;
-                level++; Rename();
+                level++;
         }
     }
     override public ResourceContainer[] GetUpgradeCost()

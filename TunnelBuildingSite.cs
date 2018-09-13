@@ -1,28 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TunnelBuildingSite : Worksite {
 	public byte signsMask = 0;
 	CubeBlock workObject;
 	const int START_WORKERS_COUNT = 10;
+    // public const int MAX_WORKERS = 32
 
 
-	override public void WorkUpdate (float t) {
+    override public void WorkUpdate () {
 		if (GameMaster.gameSpeed == 0) return;
 		if (workObject ==null ) {
             StopWork();
             return;
 		}
 		if (workersCount > 0) {
-			workflow += workSpeed * t;
-			labourTimer -= t;
-			if ( labourTimer <= 0 ) {
-				if (workflow >= 1) LabourResult();
-				labourTimer = GameMaster.LABOUR_TICK;
+			workflow += workSpeed;
+			if (workflow >= 1) LabourResult();
 			}
 		}
-	}
 
 	void LabourResult() {
 		int x = (int) workflow;
@@ -41,8 +36,12 @@ public class TunnelBuildingSite : Worksite {
 		workObject = block;
         workObject.SetWorksite(this);
 		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
-		GameMaster.colonyController.AddWorksite(this);
-	}
+        if (!worksitesList.Contains(this)) worksitesList.Add(this);
+        if (!subscribedToUpdate) {
+            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+            subscribedToUpdate = true;
+        }
+    }
 
 	public void CreateSign(byte side) {
 		if ((signsMask & side) != 0) return;
@@ -50,24 +49,24 @@ public class TunnelBuildingSite : Worksite {
 		switch (side) {
 		case 0:
 				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-				sign.transform.position = workObject.model.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
+				sign.transform.position = workObject.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
 				signsMask += 1;
 			break;
 		case 1:
 				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-			sign.transform.position = workObject.model.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
+			sign.transform.position = workObject.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,90,0);
 				signsMask += 2;
 			break;
 		case 2:
 				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-				sign.transform.position = workObject.model.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
+				sign.transform.position = workObject.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,180,0);
 				signsMask += 4;
 			break;
 		case 3:
 				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-				sign.transform.position = workObject.model.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
+				sign.transform.position = workObject.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,-90,0);
 				signsMask += 8;
 			break;
@@ -77,15 +76,20 @@ public class TunnelBuildingSite : Worksite {
 
     override public void StopWork()
     {
-        if (deleted) return;
-        else deleted = true;
+        if (destroyed) return;
+        else destroyed = true;
         if (workersCount > 0)
         {
             GameMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Object.Destroy(sign.gameObject);
-        GameMaster.colonyController.RemoveWorksite(this);
+        if (sign != null) Destroy(sign.gameObject);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
+            subscribedToUpdate = false;
+        }
         if (workObject != null)
         {
             if (workObject.worksite == this) workObject.ResetWorksite();
@@ -96,10 +100,11 @@ public class TunnelBuildingSite : Worksite {
             observer.SelfShutOff();
             showOnGUI = false;
         }
+        Destroy(this);
     }
 
     #region save-load system
-    override public WorksiteSerializer Save() {
+    override protected WorksiteSerializer Save() {
 		if (workObject == null) {
             StopWork();
 			return null;
@@ -110,7 +115,7 @@ public class TunnelBuildingSite : Worksite {
 		ws.specificData = new byte[1]{signsMask};
 		return ws;
 	}
-	override public void Load (WorksiteSerializer ws) {
+	override protected void Load (WorksiteSerializer ws) {
 		LoadWorksiteData(ws);
 		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as CubeBlock);
 		int smask = ws.specificData[0];

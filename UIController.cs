@@ -412,18 +412,19 @@ sealed public class UIController : MonoBehaviour {
 			GameObject collided = rh.collider.gameObject;
 			switch (collided.tag) {
 			case "Structure":
-				chosenStructure = collided.GetComponent<Structure>();
-				chosenCube = null;
-				chosenSurface = null;
-				chosenWorksite = null;
-				if (chosenStructure != null) ChangeChosenObject( ChosenObjectType.Structure ); 
-				else ChangeChosenObject( ChosenObjectType.None );
-				break;
+                    {
+                        chosenStructure = collided.transform.parent.GetComponent<Structure>();
+                        chosenCube = null;
+                        chosenSurface = null;
+                        chosenWorksite = null;
+                        if (chosenStructure != null) ChangeChosenObject(ChosenObjectType.Structure);
+                        else ChangeChosenObject(ChosenObjectType.None);
+                        break;
+                    }
 			case "BlockCollider":
                     {
-                        Transform t = collided.transform.parent; // model transform
-                        Vector3 blockPos = t.localPosition / Block.QUAD_SIZE ;
-                        Block b = GameMaster.mainChunk.GetBlock((int)blockPos.x, (int)blockPos.y, (int)blockPos.z);
+                        Block b = collided.transform.parent.GetComponent<Block>();
+                        if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block
                         switch (b.type)
                         {
                             case BlockType.Cave:
@@ -525,13 +526,13 @@ sealed public class UIController : MonoBehaviour {
             case ChosenObjectType.Surface:
                 {
                     faceIndex = 10;
-                    selectionFrame.position = chosenSurface.model.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
+                    selectionFrame.position = chosenSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
                     selectionFrame.rotation = Quaternion.identity;
                     selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
                     selectionFrame.gameObject.SetActive(true);
                     workingObserver = chosenSurface.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(chosenSurface.model.transform.position);
+                    FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
                 }
                 break;
 
@@ -549,7 +550,7 @@ sealed public class UIController : MonoBehaviour {
                     }
                     selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 0.9f);
-                    FollowingCamera.main.SetLookPoint(chosenCube.model.transform.position);
+                    FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
 
                     Transform t = rightPanel.transform;
                     t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(true);
@@ -563,7 +564,7 @@ sealed public class UIController : MonoBehaviour {
                 faceIndex = 10;
                 selectionFrame.position = chosenStructure.transform.position;
                 selectionFrame.rotation = chosenStructure.transform.rotation;
-                selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.x_size, 1, chosenStructure.innerPosition.z_size);
+                selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.size, 1, chosenStructure.innerPosition.size);
                 sframeColor = new Vector3(1, 0, 1);
                 workingObserver = chosenStructure.ShowOnGUI();
                 FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
@@ -630,7 +631,7 @@ sealed public class UIController : MonoBehaviour {
         if (wbo != null && wbo.gameObject.activeSelf)
         { // уу, костыли!
             // и вообще надо переделать на dropdown
-            RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
+            RollingShop rs = wbo.observingWorkbuilding as RollingShop;
             if (rs != null)
             {
                 rollingShopPanel.SetActive(true);
@@ -652,7 +653,7 @@ sealed public class UIController : MonoBehaviour {
             return;
         }
         else { // уу, костыли!
-            RollingShop rs = wbo.observingWorkbuilding.GetComponent<RollingShop>();
+            RollingShop rs = wbo.observingWorkbuilding as RollingShop;
             if (rs == null)
             {
                 DeactivateRollingShopPanel();
@@ -1032,6 +1033,7 @@ sealed public class UIController : MonoBehaviour {
         {
             DigSite ds = new DigSite();
             ds.Set(chosenCube, false);
+            ds.ShowOnGUI();
         }
     }
     #endregion

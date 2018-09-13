@@ -4,14 +4,11 @@ using UnityEngine;
 
 public enum BlockType {Shapeless, Cube, Surface, Cave}
 
-public class Block {
+public class Block : MonoBehaviour {
     public const float QUAD_SIZE = 1;
     public BlockType type { get; protected set; }
-    public int personalNumber { get; protected set; }
-    public static int lastUsedNumber = 0;
 
     public Worksite worksite {get;protected set;}
-    public GameObject model { get; protected set; }
 	public Chunk myChunk {get; protected  set;}
 	public bool isTransparent {get;protected  set;} // <- замени на transparent map
 	public ChunkPos pos {get; protected  set;}
@@ -21,45 +18,35 @@ public class Block {
 	public byte visibilityMask; // видимость относительно других блоков
 	public byte renderMask = 0; // видимость относительно камеры
 	public bool indestructible {get; protected set;}
-    protected bool firstSet = true;
+    protected bool destroyed = false;
 
 	public virtual void ReplaceMaterial(int newId) {
 		material_id = newId;
 	}
 
-	public void ShapelessBlockSet (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
-        if (firstSet)
-        {
-            type = BlockType.Shapeless;
-            personalNumber = lastUsedNumber++;
-            firstSet = false;
-        }
+	public void InitializeShapelessBlock (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
+        type = BlockType.Shapeless;
         isTransparent = true; material_id = 0;
 		myChunk = f_chunk; 
-		model.transform.parent = f_chunk.transform;
-		pos = f_chunkPos; model.transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
-		model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		transform.parent = f_chunk.transform;
+		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
+		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		mainStructure = f_mainStructure;
 		if (mainStructure != null) blockedByStructure = true; else blockedByStructure = false;
 		
-		model.gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+		name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 }
-	public virtual void BlockSet (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
-        if (firstSet)
-        {
-            type = BlockType.Shapeless;
-            personalNumber = lastUsedNumber++;
-            firstSet = false;
-        }
+	public virtual void InitializeBlock (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
+        type = BlockType.Shapeless;
 		isTransparent = true; material_id = 0;
 		myChunk = f_chunk;
-        model.transform.parent = f_chunk.transform;
+        transform.parent = f_chunk.transform;
 		pos = f_chunkPos;
-        model.transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
-		model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
+		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		material_id = newId;
 		blockedByStructure = false;
-		model.gameObject.name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+		name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}
 
 	public void MakeIndestructible(bool x) {
@@ -83,17 +70,15 @@ public class Block {
 
     public void SetWorksite(Worksite w)
     {
-        Worksite oldw = worksite;
+        if (worksite != null) worksite.StopWork();
         worksite = w;
-        if (oldw != null) oldw.StopWork();        
     }
     public void ResetWorksite()
     {
         if (worksite != null)
         {
-            Worksite w = worksite;
+            worksite.StopWork();
             worksite = null;
-            w.StopWork();            
         }
     }
 
@@ -108,24 +93,27 @@ public class Block {
 
 	protected void LoadBlockData(BlockSerializer bs) {
 		isTransparent = bs.isTransparent;
-        personalNumber = bs.personalNumber;
 	}
-
-    public void Annihilate()
+    virtual public void Annihilate()
     {
-        if (model != null) Object.Destroy(model);
-        if (mainStructure == null) return;
-        MultiblockStructure ms = mainStructure.gameObject.GetComponent<MultiblockStructure>();
-        if (ms != null) ms.PartCollapse(pos);
+        //#block annihilate
+        if (destroyed) return;
+        else destroyed = true;
+        if (worksite != null) worksite.StopWork();
+        if (mainStructure != null) mainStructure.Annihilate(true);
+        Destroy(gameObject);
+    }
+    protected void OnDestroy()
+    {
+        if (!destroyed & !GameMaster.applicationStopWorking) Annihilate();
     }
 
-	protected BlockSerializer GetBlockSerializer() {
+    protected BlockSerializer GetBlockSerializer() {
 		BlockSerializer bs = new BlockSerializer();
 		bs.type = type;
 		bs.isTransparent = isTransparent;
 		bs.pos = pos;
 		bs.material_id = material_id;
-        bs.personalNumber = personalNumber;
 		return bs;
 	}
     #endregion

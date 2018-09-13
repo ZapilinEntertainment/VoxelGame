@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class XStation : WorkBuilding {
+﻿public class XStation : WorkBuilding {
     public static XStation current { get; private set; }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
@@ -15,8 +11,10 @@ public class XStation : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        PrepareWorkbuildingForDestruction(forced);
         if (current == this) current = null;
         Destroy(gameObject);
     }

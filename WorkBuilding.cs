@@ -13,10 +13,8 @@ public abstract class WorkBuilding : Building {
 	public float workflow {get;protected set;} 
 	public float workSpeed {get;protected set;}
 	public float workflowToProcess{get; protected set;}
-	public int maxWorkers = 8; // fixed by asset
+	public int maxWorkers { get; protected set; }
 	public int workersCount {get; protected set;} 
-	const float WORKFLOW_GAIN = 1;
-	public float workflowToProcess_setValue = 1;//fixed by asset
     public static UIWorkbuildingObserver workbuildingObserver;
 
 	override public void Prepare() {
@@ -26,13 +24,219 @@ public abstract class WorkBuilding : Building {
 		PrepareBuilding();
 		workersCount = 0;
 		workflow = 0;
-		workflowToProcess = workflowToProcess_setValue;
-	}
+        switch (id)
+        {
+            case DOCK_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 40;
+                 }
+                break;
+            case FARM_1_ID:
+                {
+                    workflowToProcess = 8;
+                    maxWorkers = 100;
+                }
+                break;
+            case FARM_2_ID:
+                {
+                    workflowToProcess = 7;
+                    maxWorkers = 80;
+                }
+                break;
+            case FARM_3_ID:
+                {
+                    workflowToProcess = 6;
+                    maxWorkers = 70;
+                }
+                break;
+            case FARM_4_ID:
+                {
+                    workflowToProcess = 5;
+                    maxWorkers = 100;
+                }
+                break;
+            case FARM_5_ID:
+                {
+                    workflowToProcess = 3;
+                    maxWorkers = 300;
+                }
+                break;
+            case LUMBERMILL_1_ID:
+                {
+                    workflowToProcess = 12;
+                    maxWorkers = 80;
+                }
+                break;
+            case LUMBERMILL_2_ID:
+                {
+                    workflowToProcess = 11;
+                    maxWorkers = 80;
+                }
+                break;
+            case LUMBERMILL_3_ID:
+                {
+                    workflowToProcess = 10;
+                    maxWorkers = 80;
+                }
+                break;
+            case LUMBERMILL_4_ID:
+                {
+                    workflowToProcess = 8;
+                    maxWorkers = 140;
+                }
+                break;
+            case LUMBERMILL_5_ID:
+                {
+                    workflowToProcess = 8;
+                    maxWorkers = 280;
+                }
+                break;
+            case MINE_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 60;
+                }
+                break;
+            case SMELTERY_1_ID:
+                {
+                    workflowToProcess = 1; // зависит от рецепта
+                    maxWorkers = 40;
+                }
+                break;
+            case SMELTERY_2_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 60;
+                }
+                break;
+            case SMELTERY_3_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 100;
+                }
+                break;
+            case SMELTERY_5_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 400;
+                }
+                break;
+            case BIOGENERATOR_2_ID:
+                {
+                    workflowToProcess = 40;
+                    maxWorkers = 20;
+                }
+                break;
+            case HOSPITAL_2_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 50;
+                }
+                break;
+            case MINERAL_POWERPLANT_2_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 60;
+                }
+                break;
+            case ORE_ENRICHER_2_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 80;
+                }
+                break;
+            case ROLLING_SHOP_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 40;
+                }
+                break;
+            case FUEL_FACILITY_3_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 100;
+                }
+                break;
+            case GRPH_REACTOR_4_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 80;
+                }
+                break;
+            case PLASTICS_FACTORY_3_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 150;
+                }
+                break;
+            case FOOD_FACTORY_4_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 140;
+                }
+                break;
+            case FOOD_FACTORY_5_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 250;
+                }
+                break;
+            case GRPH_ENRICHER_3_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 60;
+                }
+                break;
+            case XSTATION_3_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 40;
+                }
+                break;
+            case CHEMICAL_FACTORY_4_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 80;
+                }
+                break;
+            case SHUTTLE_HANGAR_4_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 45;
+                }
+                break;
+            case RECRUITING_CENTER_4_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 40;
+                }
+                break;
+            case EXPEDITION_CORPUS_4_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 60;
+                }
+                break;
+        }
+    }
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        SetBuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
+    }
+
+    virtual public void LabourUpdate()
+    {
+		if ( !isActive | !energySupplied) return;
 		if (workersCount > 0) {
-			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
+			workflow += workSpeed;
 			if (workflow >= workflowToProcess) {
 				LabourResult();
 			}
@@ -136,32 +340,36 @@ public abstract class WorkBuilding : Building {
                 return;
             }
         }
-        WorkBuilding upgraded = Structure.GetNewStructure(upgradedIndex) as WorkBuilding;
+        WorkBuilding upgraded = GetStructureByID(upgradedIndex) as WorkBuilding;
+        upgraded.Prepare();
         PixelPosByte setPos = new PixelPosByte(innerPosition.x, innerPosition.z);
-        byte bzero = (byte)0;
-        if (upgraded.innerPosition.x_size == 16) setPos = new PixelPosByte(bzero, innerPosition.z);
-        if (upgraded.innerPosition.z_size == 16) setPos = new PixelPosByte(setPos.x, bzero);
+        if (upgraded.innerPosition.size == 16) setPos = new PixelPosByte(0, 0);
         int workers = workersCount;
         workersCount = 0;
-        Quaternion originalRotation = transform.rotation;
-        upgraded.SetBasement(basement, setPos);
-        if (!upgraded.isBasement & upgraded.randomRotation & (upgraded.rotate90only == rotate90only))
+        if (upgraded.rotate90only & (modelRotation % 2 != 0))
         {
-            upgraded.transform.localRotation = originalRotation;
+            upgraded.modelRotation = (byte)(modelRotation - 1);
         }
+        else upgraded.modelRotation = modelRotation;
         upgraded.AddWorkers(workers);
         if (returnToUI) upgraded.ShowOnGUI();
     }
 
-    protected bool PrepareWorkbuildingForDestruction() {		
+    protected bool PrepareWorkbuildingForDestruction(bool forced) {		
 		if (workersCount != 0) GameMaster.colonyController.AddWorkers(workersCount);
-        return PrepareBuildingForDestruction();
+        return PrepareBuildingForDestruction(forced);
     }
 
     override public void Annihilate(bool forced)
     {
-        if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
         Destroy(gameObject);
     }
 }

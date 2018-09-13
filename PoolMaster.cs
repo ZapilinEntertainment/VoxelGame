@@ -9,11 +9,12 @@ public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, Mine
 public class PoolMaster : MonoBehaviour {
 	public static PoolMaster current;
 	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
-	public static GameObject quad_pref {get;private set;}
+    public static List<GameObject> quadsPool;
+    private static GameObject quad_pref;
 	public static GameObject mineElevator_pref {get;private set;}
     public static GameObject cavePref { get; private set; }
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
-    public static Material default_material, lr_red_material, lr_green_material, basic_material, basic_offline_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
+    public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material, glass_material, glass_offline_material;
     static Material metal_material, green_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
@@ -50,15 +51,17 @@ public class PoolMaster : MonoBehaviour {
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
         cavePref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
+        quadsPool = new List<GameObject>();
         quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
         quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
-        quad_pref.GetComponent<MeshRenderer>().enabled = false;
+        quad_pref.transform.parent = transform;
+        quad_pref.SetActive(false);
+        quadsPool.Add(quad_pref);
         default_material = Resources.Load<Material>("Materials/Default");
 
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
         basic_material = Resources.Load<Material>("Materials/Basic");
-        basic_offline_material = Resources.Load<Material>("Materials/BasicOffline");
         glass_material = Resources.Load<Material>("Materials/Glass");
         glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
         metal_material = Resources.Load<Material>("Materials/Metal");
@@ -66,7 +69,6 @@ public class PoolMaster : MonoBehaviour {
 
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-        Structure.LoadPrefs();
         QuestUI.LoadTextures();
 	}
 
@@ -96,6 +98,30 @@ public class PoolMaster : MonoBehaviour {
 			}
 		}       
 	}
+
+    public static GameObject GetQuad()
+    {
+        GameObject g = null;
+        if (quadsPool.Count == 1) g = Instantiate(quadsPool[0]); // нулевой никогда не удаляется
+        else g = quadsPool[quadsPool.Count - 1];
+        g.transform.parent = null;
+        g.SetActive(true);
+        return g;
+    }
+    public static void ReturnQuadToPool(GameObject g)
+    {
+        if (g == null) return;
+        else
+        {
+            g.SetActive(false);
+            g.transform.parent = current.transform;
+            quadsPool.Add(g);
+        }
+    }
+    public static Mesh GetOriginalQuadMesh()
+    {
+        return quadsPool[0].GetComponent<MeshFilter>().mesh;
+    }
 
     public void BuildSplash(Vector3 pos)
     {
@@ -314,7 +340,7 @@ public class PoolMaster : MonoBehaviour {
         }
         return metal_material;
     }
-    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, bool online)
+    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf)
     {
         Mesh quad = mf.mesh;
         if (quad != null)
@@ -384,8 +410,4 @@ public class PoolMaster : MonoBehaviour {
         }
         return basic_material;
     }
-
-    public static void BuildSplashEffect(Structure s) {
-		//заготовка
-	}
 }

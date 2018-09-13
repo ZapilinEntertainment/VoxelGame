@@ -11,8 +11,12 @@ public sealed class QuantumEnergyTransmitter : Building {
     {
         if (b == null) return;
         SetStructureData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
         isActive = true;    
-        Rename();
         if (current != null)
         {
             current.Annihilate(false);
@@ -20,14 +24,13 @@ public sealed class QuantumEnergyTransmitter : Building {
         current = this;
         colony = GameMaster.colonyController;
         colony.accumulateEnergy = false;
-
         connectedToPowerGrid = true;
     }
 
-    private void Update()
+    public void LabourUpdate()
     {
         if (!isActive) return;
-        charge += chargeSpeed * colony.energySurplus * Time.deltaTime * GameMaster.gameSpeed;
+        charge += chargeSpeed * colony.energySurplus;
         if (charge > GameMaster.ENERGY_IN_CRYSTAL)
         {
             int count = (int)(charge / GameMaster.ENERGY_IN_CRYSTAL);
@@ -50,12 +53,18 @@ public sealed class QuantumEnergyTransmitter : Building {
 
     override public void Annihilate(bool forced)
     {
-        if (forced) { UnsetBasement(); }
-        PrepareStructureForDestruction();
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareStructureForDestruction(forced);
         if (current == this)
         {
             colony.accumulateEnergy = true;
             current = null;
+        }
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
         }
         Destroy(gameObject);
     }

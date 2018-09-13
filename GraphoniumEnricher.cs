@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class GraphoniumEnricher : WorkBuilding {
+﻿public class GraphoniumEnricher : WorkBuilding {
     public static GraphoniumEnricher current {get;private set;}
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
@@ -14,8 +10,9 @@ public class GraphoniumEnricher : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
-        if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
         if (current == this) current = null;
         Destroy(gameObject);
     }

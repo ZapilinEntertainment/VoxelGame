@@ -2,55 +2,159 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Corn : Plant {
+sealed public class Corn : Plant {
+    private Transform model;
+
 	static Sprite[] stageSprites;
-	const byte MAX_STAGE = 3;
-	public const int CREATE_COST = 1, GATHER = 5;
+    static bool spritePackLoaded = false;
+    private static List<Corn> corns;
 
-	void Awake() {
-		if (stageSprites == null) {
-			stageSprites = Resources.LoadAll<Sprite>("Textures/Plants/corn"); // 4 images
-			maxStage = MAX_STAGE;
-		}
-		gameObject.name = "Plant - Corn";
-		GameObject spriteSatellite = new GameObject("sprite");
-		spriteSatellite.transform.parent = transform;
-		spriteSatellite.transform.localPosition = Vector3.zero;
-		GameMaster.realMaster.mastSpritesList.Add(spriteSatellite);
-        myRenderers = new List<Renderer>();
-        SpriteRenderer sr = spriteSatellite.AddComponent<SpriteRenderer>();
-        myRenderers.Add( sr );
-		sr.sprite = stageSprites[0];
-	}
+    private static float growSpeed, decaySpeed; // fixed by class
+    public static int maxLifeTransfer { get; private set; }  // fixed by class
+    public const byte HARVESTABLE_STAGE = 3;
 
-	override public void Prepare() {		
-		PrepareStructure();
-		plant_ID = CROP_CORN_ID;
-		innerPosition = SurfaceRect.one; isArtificial = false; 
-		lifepower = CREATE_COST;
-		lifepowerToGrow = GetLifepowerLevelForStage(stage);
-		maxLifeTransfer = 1;
-		growSpeed = 0.03f;
-		decaySpeed = growSpeed;
-		harvestableStage = 3;
-		growth = 0;
-	}
+    public const byte MAX_STAGE = 3;
+    public const int CREATE_COST = 1, GATHER = 2;
 
-	override public void ResetPlant() {
+    static Corn()
+    {
+        corns = new List<Corn>();
+        maxLifeTransfer = 1;
+        growSpeed = 0.03f;
+        decaySpeed = growSpeed;
+        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
+    }
+
+    public static void ResetToDefaults_Static_Corn()
+    {
+        corns = new List<Corn>();
+    }    
+
+    override public void Prepare()
+    {
+        PrepareStructure();
+        plant_ID = CROP_CORN_ID;
+        lifepower = CREATE_COST;
+        lifepowerToGrow = GetLifepowerLevelForStage(stage);
+        growth = 0;
+    }
+
+    override protected void SetModel()
+    {
+        if (!spritePackLoaded)
+        {
+            stageSprites = Resources.LoadAll<Sprite>("Textures/Plants/corn"); // 4 images
+            spritePackLoaded = true;
+        }
+        model = new GameObject("sprite").transform;
+        model.parent = transform;
+        model.transform.localPosition = Vector3.zero;
+        model.gameObject.AddComponent<SpriteRenderer>().sprite = stageSprites[0];
+    }
+
+    public static void UpdatePlants()
+    {
+        float t = GameMaster.LIFEPOWER_TICK;
+        if (corns.Count > 0)
+        {
+            int i = 0;
+            while (i < corns.Count)
+            {
+                Corn c = corns[i];
+                if (c == null)
+                {
+                    corns.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    float theoreticalGrowth = c.lifepower / c.lifepowerToGrow;
+                    if (c.growth < theoreticalGrowth)
+                    {
+                        c.growth = Mathf.MoveTowards(c.growth, theoreticalGrowth, growSpeed * t);
+                    }
+                    else
+                    {
+                        c.lifepower -= decaySpeed * t;
+                        if (c.lifepower == 0) c.Dry();
+                    }
+                    if (c.growth >= 1 & c.stage < MAX_STAGE) c.SetStage((byte)(c.stage + 1));
+                    i++;
+                }
+            }
+        }
+        else
+        {
+            if (((existingPlantsMask >> CROP_CORN_ID) & 1) != 0)
+            {
+                int val = 1;
+                val = val << CROP_CORN_ID;
+                existingPlantsMask -= val;
+            }
+        }
+    }
+    public static void CameraUpdate()
+    {
+        Vector3 camPos = FollowingCamera.camPos;
+        Vector3 inPos;
+        foreach (Corn c in corns)
+        {
+            if (c != null)
+            {
+                inPos = c.transform.InverseTransformPoint(camPos);
+                inPos.y = 0;
+                c.transform.localRotation = Quaternion.Euler(0, Vector3.Angle(Vector3.forward, inPos),0);
+            }
+        }
+    }
+
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        //#setStructureData
+        basement = b;
+        innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.size);
+        if (model == null) SetModel();
+        b.AddStructure(this);
+            // isbasement check deleted
+        //---
+        if (!addedToClassList)
+        {
+            corns.Add(this);
+            addedToClassList = true;
+            if ( ((existingPlantsMask >> CROP_CORN_ID) & 1)  != 1 )
+            {
+                int val = 1;
+                val = val << CROP_CORN_ID;
+                existingPlantsMask += val;
+            }
+        }
+    }
+
+    override public void ResetToDefaults() {
 		lifepower = CREATE_COST;
         stage = 0;
         lifepowerToGrow = GetLifepowerLevelForStage(stage);		
 		growth = 0;
 		hp = maxHp;
-		(myRenderers[0] as SpriteRenderer).sprite = stageSprites[0];
+		if (model != null) model.GetComponent<SpriteRenderer>().sprite = stageSprites[0];
 	}
 
-	#region lifepower operations
-	public override void AddLifepowerAndCalculate(int life) {
+    override public int GetMaxLifeTransfer()
+    {
+        return maxLifeTransfer;
+    }
+    override public byte GetHarvestableStage()
+    {
+        return HARVESTABLE_STAGE;
+    }
+
+    #region lifepower operations
+    public override void AddLifepowerAndCalculate(int life) {
 		lifepower += life;
 		byte nstage = 0;
 		float lpg = GetLifepowerLevelForStage(nstage);
-		while ( lifepower > lifepowerToGrow & nstage < maxStage) {
+		while ( lifepower > lifepowerToGrow & nstage < MAX_STAGE) {
 			nstage++;
 			lpg = GetLifepowerLevelForStage(nstage);
 		}
@@ -72,23 +176,38 @@ public class Corn : Plant {
 	override public void SetStage( byte newStage) {
 		if (newStage == stage) return;
 		stage = newStage;
-		(myRenderers[0] as SpriteRenderer).sprite = stageSprites[stage];
+        if (model != null) model.GetComponent<SpriteRenderer>().sprite = stageSprites[stage];
+        else SetModel();
 		lifepowerToGrow  = GetLifepowerLevelForStage(stage);
 		growth = lifepower / lifepowerToGrow;
 	}
-	new static public float GetLifepowerLevelForStage(byte st) {
+	public static float GetLifepowerLevelForStage(byte st) {
 		return (st+1);
 	}
 	#endregion
 
 	override public void Harvest() {
 		GameMaster.colonyController.storage.AddResource(ResourceType.Food, GATHER);
-		ResetPlant();
+		ResetToDefaults();
 	}
 
 	override public void Dry() {
-		Destroy(gameObject);
-		Structure s = Structure.GetNewStructure(Structure.DRYED_PLANT_ID);
+		Structure s = GetStructureByID(DRYED_PLANT_ID);
 		basement.AddCellStructure(s, new PixelPosByte(innerPosition.x, innerPosition.z));
 	}
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (forced) { UnsetBasement(); }
+        PreparePlantForDestruction(forced);
+        if (addedToClassList)
+        {
+            int index = corns.IndexOf(this);
+            if (index > 0) corns[index] = null;
+            addedToClassList = false;
+        }
+        Destroy(gameObject);
+    }
 }

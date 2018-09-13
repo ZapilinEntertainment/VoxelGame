@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+﻿using System.Collections.Generic; // листы
+using UnityEngine; // классы Юнити
+using System.IO; // чтение-запись файлов
+using System.Runtime.Serialization.Formatters.Binary; // конверсия в поток байтов и обратно
 
 public struct GameStartSettings  {
     public bool generateChunk;
@@ -34,25 +33,21 @@ public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 
+/// -----------------------------------------------------------------------------
+
 public sealed class GameMaster : MonoBehaviour {
 	 public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
 
-	public Constructor constructor;
-	public Transform camTransform, camBasis;
-	public static Vector3 camPos{get;private set;}
-    public static bool applicationStopWorking { get; protected set; }
+	public Constructor constructor;	
+    public static bool applicationStopWorking { get; private set; }
 
-	public List<GameObject> cameraUpdateBroadcast;
-	public List<GameObject> standartSpritesList, mastSpritesList;
-	bool cameraHasMoved = false; Vector3 prevCamPos = Vector3.zero; Quaternion prevCamRot = Quaternion.identity;
-	float cameraTimer =0, cameraUpdateTime = 0.04f;
 	public static Chunk mainChunk; 
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
 	public  LineRenderer systemDrawLR;
 
-	public const int START_LIFEPOWER = 100000;
+	public const int LIFEPOWER_PER_BLOCK = 130; // 200
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
 	public static float lifeGrowCoefficient {get;private set;}
 	public static float demolitionLossesPercent {get;private set;}
@@ -63,8 +58,9 @@ public sealed class GameMaster : MonoBehaviour {
 	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
 
-    public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, LABOUR_TICK = 1, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
-    START_BIRTHRATE_COEFFICIENT = 0.001f, LIFEPOWER_TICK = 1, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
+    public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
+    START_BIRTHRATE_COEFFICIENT = 0.001f, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
+    public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
     public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
 
     public static string savename = "autosave";
@@ -79,14 +75,18 @@ public sealed class GameMaster : MonoBehaviour {
 	static float diggingSpeed = 0.5f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     
-	float t;
+	float timeGone;
 	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
 	public const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
-	public List<Component> everydayUpdateList, everyYearUpdateList, everyMonthUpdateList;
 
-	public List <Component> windUpdateList;
+    public delegate void StructureUpdateHandler();
+    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
+    private float labourTimer = 0, lifepowerTimer = 0;
+
+    public delegate void WindChangeHandler(Vector2 newVector);
+    public event WindChangeHandler WindUpdateEvent;
 	public Vector2 windVector {get; private set;}
-	public float windTimer = 0, windChangeTime = 120;
+    private float windTimer = 0, windChangeTime = 120;
 
     bool firstSet = true;
 
@@ -107,21 +107,10 @@ public sealed class GameMaster : MonoBehaviour {
 	void Start() {
         if (!firstSet) return;
         gameSpeed = 1;
-        cameraUpdateBroadcast = new List<GameObject>();
-        standartSpritesList = new List<GameObject>();
-
-        mastSpritesList = new List<GameObject>();
-        GameObject[] msprites = GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
-        if (msprites != null) foreach (GameObject g in msprites) mastSpritesList.Add(g);
-
-        everydayUpdateList = new List<Component>();
-        everyYearUpdateList = new List<Component>();
-        everyMonthUpdateList = new List<Component>();
-        windUpdateList = new List<Component>();
+        
 
         lifeGrowCoefficient = 1;
         //Localization.ChangeLanguage(Language.English);
-
 
             geologyModule = gameObject.AddComponent<GeologyModule>();
             difficulty = gss.difficulty;
@@ -129,11 +118,13 @@ public sealed class GameMaster : MonoBehaviour {
             colonyController.CreateStorage();
             PoolMaster pm = gameObject.AddComponent<PoolMaster>();
             pm.Load();
-            if (gss.generateChunk)
+        //byte chunksize = gss.chunkSize;
+        byte chunksize = 25;
+        if (gss.generateChunk)
             {
-                Chunk.SetChunkSize(gss.chunkSize);
-                constructor.ConstructChunk(gss.chunkSize);
-                camBasis.transform.position = Vector3.one * gss.chunkSize / 2f;
+                Chunk.SetChunkSize(chunksize);
+                constructor.ConstructChunk(chunksize);
+                FollowingCamera.CenterCamera(Vector3.one * chunksize / 2f);
                 switch (difficulty)
                 {
                     case Difficulty.Utopia:
@@ -192,22 +183,55 @@ public sealed class GameMaster : MonoBehaviour {
                         Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
                         break;
                     case GameStart.Headquarters:
-                        int xpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
-                        int zpos = (int)(Random.value * (Chunk.CHUNK_SIZE - 1));
+                    List<SurfaceBlock> sblocks = mainChunk.surfaceBlocks;
+                    SurfaceBlock sb = sblocks[(int)(Random.value *(sblocks.Count - 1))];
+                    int xpos = sb.pos.x;
+                    int zpos = sb.pos.z;
 
-                        if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
-                        Structure s = Structure.GetNewStructure(Structure.LANDED_ZEPPELIN_ID);
+                    if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
+                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
                         b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
 
                         colonyController.AddCitizens(START_WORKERS_COUNT);
-                        colonyController.SetHQ(s.GetComponent<HeadQuarters>());
 
-                        if (xpos > 0) xpos--; else xpos++;
-                        StorageHouse firstStorage = Structure.GetNewStructure(Structure.STORAGE_0_ID) as StorageHouse;
-                        firstStorage.SetBasement(mainChunk.GetSurfaceBlock(xpos, zpos), PixelPosByte.zero);
+                    sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos + 1);
+                    if (sb == null)
+                    {
+                        sb = mainChunk.GetSurfaceBlock(xpos, zpos + 1);
+                        if (sb == null)
+                        {
+                            sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos + 1);
+                            if (sb == null)
+                            {
+                                sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos);
+                                if (sb == null)
+                                {
+                                    sb = mainChunk.GetSurfaceBlock(xpos+1 , zpos);
+                                    if (sb == null)
+                                    {
+                                        sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos - 1);
+                                        if (sb == null)
+                                        {
+                                            sb = mainChunk.GetSurfaceBlock(xpos , zpos - 1);
+                                            if (sb == null)
+                                            {
+                                                sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos - 1);
+                                                if (sb == null)
+                                                {
+                                                    print("bad generation, do something!");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }                        
+                    }
+                        StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
+                        firstStorage.SetBasement(sb, PixelPosByte.zero);
                         //start resources
                         colonyController.storage.AddResource(ResourceType.metal_K, 100);
                         colonyController.storage.AddResource(ResourceType.metal_M, 50);
@@ -219,116 +243,90 @@ public sealed class GameMaster : MonoBehaviour {
                         //ui.lineDrawer = systemDrawLR;
                         break;
                 }
+                FollowingCamera.main.WeNeedUpdate();
             }
             else LoadGame(Application.persistentDataPath + "/Saves/" + savename + ".sav");        
-
-        if (camTransform == null) camTransform = Camera.main.transform;
-		prevCamPos = camTransform.position * (-1);
-        firstSet = false;
 	}
 
-	void Update() {
-		if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
-
-		if (camTransform != null) {
-			if (prevCamPos != camTransform.position || prevCamRot != Camera.main.transform.rotation) {
-				cameraHasMoved = true;
-				prevCamPos = camTransform.position;
-				prevCamRot = camTransform.rotation;
-			}
-			if (cameraTimer > 0) cameraTimer-= Time.deltaTime;            
-            if (cameraTimer <= 0 && cameraHasMoved) {
-                AllCameraFollowersUpdate();
-			}
-			camPos = camTransform.position;
-		}
-
-		if (gameSpeed == 0) return;
-		t += Time.deltaTime * gameSpeed;
-
-		if (t >= DAY_LONG) {
-			uint daysDelta= (uint)(t / DAY_LONG);
-			day += daysDelta;
-			t = t % DAY_LONG;
-			if (day >= DAYS_IN_WEEK) {
-				week += day / DAYS_IN_WEEK;
-				day = day % DAYS_IN_WEEK;
-				if (week >= WEEKS_IN_MONTH) {
-					month += week / WEEKS_IN_MONTH;
-					week = week % WEEKS_IN_MONTH;
-					if (month > MONTHS_IN_YEAR) {
-						uint yearsDelta =(uint) month / MONTHS_IN_YEAR;
-						year += yearsDelta;
-						month = month % MONTHS_IN_YEAR;
-						if (year > 1000) {
-							millenium += year / 1000;
-							year = year % 1000;
-						}
-						for (int c = 0; c < yearsDelta; c++) {
-						if (everyYearUpdateList.Count > 0) {
-							int i = 0;
-							while (i < everyYearUpdateList.Count) {
-								if (everyYearUpdateList[i] == null) {everyYearUpdateList.RemoveAt(i); continue;}
-								else {
-									everyYearUpdateList[i].SendMessage("EveryYearUpdate", SendMessageOptions.DontRequireReceiver);
-									i++;
-								}
-							}
-						}
-					}
-						//everymonth update
-						if (everyMonthUpdateList.Count > 0) {
-							int i = 0;
-							while (i < everyMonthUpdateList.Count) {
-								if (everyMonthUpdateList[i] == null) {everyMonthUpdateList.RemoveAt(i); continue;}
-								else {
-									everyMonthUpdateList[i].SendMessage("EveryMonthUpdate", SendMessageOptions.DontRequireReceiver);
-									i++;
-								}
-							}
-						}
-					}
-				}
-			}
-			//day Update
-
-			for (int c = 0; c < daysDelta; c++) {
-			if (everydayUpdateList.Count > 0) {
-				int i =0;
-				while (i < everydayUpdateList.Count) {
-					if (everydayUpdateList[i] == null) {everydayUpdateList.RemoveAt(i); continue;}
-					else {
-						everydayUpdateList[i].SendMessage("EverydayUpdate", SendMessageOptions.DontRequireReceiver);
-						i++;
-					}
-				}
-			}
-		}
-		//eo day update
-		}
-
-		windTimer -= Time.deltaTime * gameSpeed;
-		if (windTimer <= 0) {
-			windVector = Random.insideUnitCircle;
-			windTimer = windChangeTime + Random.value * windChangeTime;
-			if (windUpdateList.Count != 0) {
-				int i = 0;
-				while (i < windUpdateList.Count) {
-					Component c = windUpdateList[i];
-					if (c == null) {windUpdateList.RemoveAt(i); continue;}
-					else	{c.SendMessage("WindUpdate", windVector,SendMessageOptions.DontRequireReceiver); i++;}
-                    Shader.SetGlobalVector("wind", windVector);
-				}
-			}
-		}
-	}
-
-    public void AddToCameraUpdateBroadcast(GameObject g)
+    #region updates
+    private void Update()
     {
-        if (cameraUpdateBroadcast == null) cameraUpdateBroadcast = new List<GameObject>();
-        if (g != null) cameraUpdateBroadcast.Add(g);
+        //testzone
+        if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
+        // eo testzone
+
+        //float frameTime = Time.deltaTime * gameSpeed;
     }
 
+    private void FixedUpdate()
+    {
+        if (gameSpeed != 0)
+        {
+            timeGone += Time.deltaTime * gameSpeed;
+
+            if (timeGone >= DAY_LONG)
+            {
+                uint daysDelta = (uint)(timeGone / DAY_LONG);
+                day += daysDelta;
+                timeGone = timeGone % DAY_LONG;
+                if (day >= DAYS_IN_WEEK)
+                {
+                    week += day / DAYS_IN_WEEK;
+                    day = day % DAYS_IN_WEEK;
+                    if (week >= WEEKS_IN_MONTH)
+                    {
+                        month += week / WEEKS_IN_MONTH;
+                        week = week % WEEKS_IN_MONTH;
+                        if (month > MONTHS_IN_YEAR)
+                        {
+                            uint yearsDelta = (uint)month / MONTHS_IN_YEAR;
+                            year += yearsDelta;
+                            month = month % MONTHS_IN_YEAR;
+                            if (year > 1000)
+                            {
+                                millenium += year / 1000;
+                                year = year % 1000;
+                            }
+                            if (yearsDelta < 2) colonyController.EveryYearUpdate();
+                            else print("unexpected - more than one year coming in one frame");
+                        }
+                    }
+                }
+                //day Update
+                if (daysDelta < 2) colonyController.EverydayUpdate();
+                else print("unexpected - more than one day coming in one frame");
+                //eo day update
+            }
+
+            float fixedTime = Time.fixedDeltaTime * gameSpeed;
+            windTimer -= fixedTime;
+            labourTimer -= fixedTime;
+            lifepowerTimer -= fixedTime;
+
+            if (windTimer <= 0)
+            {
+                windTimer = windChangeTime * (0.7f + Random.value * 1.3f);
+                windVector = Random.insideUnitCircle;
+                windTimer = windChangeTime + Random.value * windChangeTime;
+                if (WindUpdateEvent != null)
+                {
+                    WindUpdateEvent(windVector);
+                }
+            }
+          if (labourTimer <= 0)
+            {
+                labourTimer = LABOUR_TICK;
+                if (labourUpdateEvent != null) labourUpdateEvent();
+            }
+          if (lifepowerTimer <= 0)
+            {
+                lifepowerTimer = LIFEPOWER_TICK;
+                Plant.PlantUpdate();
+                if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
+            }
+        }
+    }  
+    #endregion
 
     public static float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
@@ -341,76 +339,15 @@ public sealed class GameMaster : MonoBehaviour {
 		case WorkType.Clearing: workspeed  *= clearingSpeed;break;
 		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
 		case WorkType.Mining: workspeed  *= miningSpeed;break; // digging inside mine
-		case WorkType.Farming : workspeed *= GameMaster.lifeGrowCoefficient * environmentalConditions;break;
+		case WorkType.Farming : workspeed *= lifeGrowCoefficient * environmentalConditions;break;
 		case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed;break;
 		}
 		return workspeed ;
 	}
 
-    void AllCameraFollowersUpdate()
-    {
-        GameObject receiver = null;
-        int c = 0;
-        while (c < cameraUpdateBroadcast.Count)
-        {
-            receiver = cameraUpdateBroadcast[c];
-            if (receiver == null)
-            {
-                cameraUpdateBroadcast.RemoveAt(c);
-                continue;
-            }
-            else
-            {
-                if (receiver.activeSelf) receiver.SendMessage("CameraUpdate", camTransform, SendMessageOptions.DontRequireReceiver);
-                c++;
-            }
-        }
-        if (standartSpritesList.Count > 0)
-        {
-            int i = 0;
-            while (i < standartSpritesList.Count)
-            {
-                receiver = standartSpritesList[i];
-                if (receiver == null)
-                {
-                    standartSpritesList.RemoveAt(i);
-                    continue;
-                }
-                else
-                {
-                    if (receiver.activeSelf) receiver.transform.LookAt(camPos);
-                    i++;
-                }
-            }
-        }
-        if (mastSpritesList.Count > 0)
-        {
-            int i = 0;
-            while (i < mastSpritesList.Count)
-            {
-                receiver = mastSpritesList[i];
-                if (receiver == null)
-                {
-                    mastSpritesList.RemoveAt(i);
-                    continue;
-                }
-                else
-                {
-                    if (receiver.activeSelf)
-                    {
-                        Transform obj = receiver.transform;
-                        Vector3 dir = camPos - obj.position;
-                        dir = Vector3.ProjectOnPlane(dir, obj.TransformDirection(Vector3.up));
-                        obj.rotation = Quaternion.LookRotation(dir.normalized, obj.TransformDirection(Vector3.up));
-                    }
-                    i++;
-                }
-            }
-        }
-        cameraHasMoved = false;
-        cameraTimer = cameraUpdateTime;
-    }
+    
 
+    #region save-load system
     public bool SaveGame() { return SaveGame("autosave"); }
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
 		Time.timeScale = 0;
@@ -437,9 +374,14 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.gatheringSpeed = gatheringSpeed;
 		gms.miningSpeed = miningSpeed;
 		gms.machineConstructingSpeed = machineConstructingSpeed;
-		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = t;
-        gms.windVector = windVector;
+		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = timeGone;
+        gms.windVector_x = windVector.x;
+        gms.windVector_z = windVector.y;
+
 		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
+        gms.labourTimer = labourTimer;
+        gms.lifepowerTimer = lifepowerTimer;
+
 		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
 		#endregion
 		gms.chunkSerializer = mainChunk.SaveChunkData();
@@ -463,16 +405,29 @@ public sealed class GameMaster : MonoBehaviour {
 		return true;
 	}
 
-
     public bool LoadGame() { return LoadGame("autosave"); }
 	public bool LoadGame( string fullname ) {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
+            // ОЧИСТКА
             StopAllCoroutines();
+            if (mainChunk != null) Destroy(mainChunk.gameObject);
+            // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
+            Crew.Reset(); Shuttle.Reset();
+            Grassland.ScriptReset();
+            Expedition.GameReset();
+            Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
+            colonyController.ResetToDefaults(); // подчищает все списки
+            FollowingCamera.main.ResetLists();
+            //UI.current.Reset();
+            
+
+            // НАЧАЛО ЗАГРУЗКИ
             BinaryFormatter bf = new BinaryFormatter();
             FileStream file = File.Open(fullname, FileMode.Open);
-            Time.timeScale = 0; GameMaster.gameSpeed = 0;
+            Time.timeScale = 0; gameSpeed = 0;
             GameMasterSerializer gms = (GameMasterSerializer)bf.Deserialize(file);
+            file.Close();
             #region gms mainPartLoading
             gameSpeed = gms.gameSpeed;
             lifeGrowCoefficient = gms.lifeGrowCoefficient;
@@ -495,36 +450,29 @@ public sealed class GameMaster : MonoBehaviour {
             gatheringSpeed = gms.gatheringSpeed;
             miningSpeed = gms.miningSpeed;
             machineConstructingSpeed = gms.machineConstructingSpeed;
-            day = gms.day; week = gms.week; month = gms.month; year = gms.year; millenium = gms.millenium; t = gms.t;
-            windVector = gms.windVector;
+            day = gms.day; week = gms.week; month = gms.month; year = gms.year; millenium = gms.millenium; timeGone = gms.t;
+
+            windVector = new Vector2(gms.windVector_x, gms.windVector_z);
             windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
-            RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
+            lifepowerTimer = gms.lifepowerTimer;
+            labourTimer = gms.labourTimer;
             #endregion
-            if (mainChunk != null)Destroy(mainChunk.gameObject);
-
-            Crew.Reset(); Shuttle.Reset(); Hospital.Reset(); Dock.Reset(); RecruitingCenter.Reset();
-            QuantumTransmitter.Reset(); Hangar.Reset();
-            Grassland.ScriptReset();
-            Expedition.GameReset();
-            //UI.current.Reset();
-
+            RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
             Crew.LoadStaticData(gms.crewStaticSerializer);
             Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
 
             GameObject g = new GameObject("chunk");
             mainChunk = g.AddComponent<Chunk>();
             mainChunk.LoadChunkData(gms.chunkSerializer);
-            colonyController.Load(gms.colonyControllerSerializer);
+            colonyController.Load(gms.colonyControllerSerializer); // < --- COLONY CONTROLLER
 
             Dock.LoadStaticData(gms.dockStaticSerializer);
             QuestUI.current.Load(gms.questStaticSerializer);
             Expedition.LoadStaticData(gms.expeditionStaticSerializer);
 
-            file.Close();
-            Time.timeScale = 1; GameMaster.gameSpeed = 1;
-            AllCameraFollowersUpdate();
-            prevCamPos = camTransform.position;
-            prevCamRot = camTransform.rotation;
+            FollowingCamera.main.WeNeedUpdate();
+            Time.timeScale = 1; gameSpeed = 1;
+            
             savename = fullname;
             return true;
         }
@@ -541,7 +489,7 @@ public sealed class GameMaster : MonoBehaviour {
 			output = (T)System.Convert.ChangeType(new BinaryFormatter().Deserialize(stream), typeof(T));
 		}
 	}
-
+    #endregion
     private void OnApplicationQuit()
     {
         StopAllCoroutines();
@@ -559,10 +507,10 @@ class GameMasterSerializer {
 	public int prevCutHeight = 16;
 	public float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
-	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0; public float t;
-    public Vector2 windVector;
-	public float windTimer = 0, windChangeTime = 120;
-	public float sunlightIntensity;
+	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
+    public float t;
+    public float windVector_x, windVector_z; // cause serialization error
+	public float windTimer = 0, windChangeTime = 120, labourTimer, lifepowerTimer;
 
 	public ChunkSerializer chunkSerializer;
 	public ColonyControllerSerializer colonyControllerSerializer;

@@ -24,15 +24,15 @@ public class ModelWithLOD
 
 public class LODController : MonoBehaviour {
     List<ModelWithLOD> models = new List<ModelWithLOD>();
+    Vector3 camPos;
+
     static List<Sprite[]> lodPacks = new List<Sprite[]>(); // not destroying between loads
     static LODController current; // singleton
-    Vector3 camPos;
     public static float lodDistance { get; private set; }
     const string LOD_DIST_KEY = "LOD distance";
 
     private void Awake()
     {
-        camPos = GameMaster.camPos;
         if (PlayerPrefs.HasKey(LOD_DIST_KEY)) lodDistance = PlayerPrefs.GetFloat(LOD_DIST_KEY);
         else lodDistance = 5;
     }
@@ -43,7 +43,7 @@ public class LODController : MonoBehaviour {
         {
             lodDistance = f;
             PlayerPrefs.SetFloat(LOD_DIST_KEY, lodDistance);
-            current.CameraUpdate(GameMaster.realMaster.camTransform);
+            current.CameraUpdate();
         }
     }
 
@@ -54,14 +54,14 @@ public class LODController : MonoBehaviour {
             GameObject g = new GameObject("lodController");
             current = g.AddComponent<LODController>();
             current.models = new List<ModelWithLOD>();
-            GameMaster.realMaster.AddToCameraUpdateBroadcast(g);
+            FollowingCamera.main.cameraChangedEvent += current.CameraUpdate;
         }
         return current;
     }
 
-    public void CameraUpdate(Transform cam)
-    {  
-        camPos = cam.transform.position;
+    public void CameraUpdate()
+    {
+        camPos = FollowingCamera.camPos;
         if (models.Count > 0)
         {
             int i = 0;
@@ -76,7 +76,7 @@ public class LODController : MonoBehaviour {
                 {
                     switch (models[i].type)
                     {
-                        case ModelType.Tree: TreeCheck(i); break;
+                        case ModelType.Tree: TreeCheck(i); break; // какого фига? надо переделать на нормальные перечисления!
                         case ModelType.Boulder: BoulderCheck(i);break;
                     }
                     i++;
@@ -89,14 +89,14 @@ public class LODController : MonoBehaviour {
      void TreeCheck(int index)
     {
         ModelWithLOD tree = models[index];
-        Transform fullModelTransform = tree.transform.parent, spriteTransform = tree.transform;
-        Vector3 treePos = fullModelTransform.position;
+        Transform modelParent = tree.transform.parent, spriteTransform = tree.transform;
+        Vector3 treePos = modelParent.position;
         if ((treePos - camPos).magnitude > lodDistance)
         {
             if (!tree.spriteIsActive)
             {
-                fullModelTransform.GetChild(0).gameObject.SetActive(false);
-                fullModelTransform.GetChild(1).gameObject.SetActive(false);
+                modelParent.GetChild(0).gameObject.SetActive(false);
+                modelParent.GetChild(1).gameObject.SetActive(false);
                 spriteTransform.gameObject.SetActive(true);
                 tree.spriteIsActive = true;
             }
@@ -132,8 +132,8 @@ public class LODController : MonoBehaviour {
         {
             if (tree.spriteIsActive)
             {
-                fullModelTransform.GetChild(0).gameObject.SetActive(true);            
-                fullModelTransform.GetChild(1).gameObject.SetActive(true);
+                modelParent.GetChild(0).gameObject.SetActive(true);            
+                modelParent.GetChild(1).gameObject.SetActive(true);
                 spriteTransform.gameObject.SetActive(false);
                 tree.spriteIsActive = false;
             }
@@ -172,7 +172,8 @@ public class LODController : MonoBehaviour {
         models.Add(newModel);
         switch (type)
         {
-            case ModelType.Tree: TreeCheck(models.Count - 1); break;
+            case ModelType.Tree:
+                TreeCheck(models.Count - 1); break;
             case ModelType.Boulder:
                 newModel.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = lodPacks[lodPackIndex][0];
                 BoulderCheck(models.Count - 1);

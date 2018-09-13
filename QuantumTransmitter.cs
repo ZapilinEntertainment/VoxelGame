@@ -12,7 +12,7 @@ public class QuantumTransmitter : Building {
         transmittersList = new List<QuantumTransmitter>();
     }
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_QuantumTransmitter() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
     public static void PrepareList()
@@ -31,7 +31,7 @@ public class QuantumTransmitter : Building {
 		if ( x == true & tracingExpedition == null & isActive == false) return; // невозможно включить вхолостую
 		isActive = x;
 		GameMaster.colonyController.RecalculatePowerGrid();
-		transform.GetChild(0).GetComponent<Animator>().SetBool("works",x);
+		transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works",x);
 		ChangeRenderersView(x);
 	}
 	override public void SetEnergySupply(bool x) {
@@ -92,8 +92,10 @@ public class QuantumTransmitter : Building {
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        PrepareBuildingForDestruction();
+        PrepareBuildingForDestruction(forced);
         if (transmittersList != null && transmittersList.Count > 0) RemoveFromList(this);
         Destroy(gameObject);
     }

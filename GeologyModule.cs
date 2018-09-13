@@ -29,7 +29,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.metal_K_ore, 1+ Random.value * 100 * metalK_abundance);
 					allBoulders.Add(hr);
 					positionsLeft--; i++;
@@ -41,7 +41,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.metal_M_ore, 1+ Random.value * 100 * metalM_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -52,7 +52,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.metal_E_ore, 1+ Random.value * 100 * metalE_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -63,7 +63,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr =Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr =Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.metal_N_ore, 1+ Random.value * 100 * metalN_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -74,7 +74,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.metal_P_ore, 1+ Random.value * 100 * metalP_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -85,7 +85,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr =Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr =Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.metal_S_ore, 1+ Random.value * 100 * metalS_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -96,7 +96,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.mineral_F, 1+ Random.value * 100 * mineralF_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -107,7 +107,7 @@ public class GeologyModule : MonoBehaviour {
 			if (containersCount != 0) {						
 				int i =0;
 				while ( i < containersCount && positionsLeft > 0) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.mineral_L, 1+ Random.value * 100 * mineralL_abundance);
 					allBoulders.Add(hr); positionsLeft--; i++;
 				}
@@ -119,13 +119,15 @@ public class GeologyModule : MonoBehaviour {
 			}
 		}
 		maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION - surface.surfaceObjects.Count;
+        maxObjectsCount /= 2;
+        maxObjectsCount = (int)(maxObjectsCount * Random.value);
 		if (maxObjectsCount > 0) {
 			int count = 0;
 			if (surface.material_id == ResourceType.STONE_ID) count = (int)(maxObjectsCount * (0.05f + Random.value * 0.05f)); else count = (int)(Random.value * 0.08f);
 			List<PixelPosByte> points = surface.GetRandomCells(count);
 			if (points.Count > 0) {
 				foreach (PixelPosByte p in points) {
-					HarvestableResource hr = Structure.GetNewStructure(Structure.CONTAINER_ID) as HarvestableResource;
+					HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
 					hr.SetResources(ResourceType.Stone, 4 + Random.value * 10);
 					hr.SetBasement(surface, p);
 				}

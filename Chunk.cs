@@ -21,9 +21,8 @@ public struct ChunkPos
 public sealed class ChunkSerializer
 {
     public List<BlockSerializer> blocksData;
-    public float lifepower, lifepowerTimer;
+    public float lifepower;
     public byte chunkSize;
-    public int lastUsedBlockNumber;
 }
 
 public sealed class Chunk : MonoBehaviour
@@ -32,16 +31,16 @@ public sealed class Chunk : MonoBehaviour
     public List<SurfaceBlock> surfaceBlocks { get; private set; }
     public byte prevBitmask = 63;
     public float lifePower = 0;
-    float lifepower_timer = 0;
     public static byte CHUNK_SIZE { get; private set; }
-    public List<Component> chunkUpdateSubscribers;
+    public List<Structure> chunkUpdateSubscribers_structures;
     public bool[,] sideBlockingMap { get; private set; }
     Texture3D chunkLightMap; Color32[] lmap;
+    bool allGrasslandsCreated = false;
 
     public void Awake()
     {
         surfaceBlocks = new List<SurfaceBlock>();
-        chunkUpdateSubscribers = new List<Component>();
+        chunkUpdateSubscribers_structures = new List<Structure>();
         sideBlockingMap = new bool[CHUNK_SIZE, 4];
         for (int a = 0; a < CHUNK_SIZE; a++)
         {
@@ -51,125 +50,51 @@ public sealed class Chunk : MonoBehaviour
             }
         }
 
-        GameMaster.realMaster.AddToCameraUpdateBroadcast(gameObject);
-    }
-
-    void Start()
-    {
-        if (Camera.main != null) { StartCoroutine(CullingUpdate(Camera.main.transform)); }
+        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
 
     #region updating
-    public void CameraUpdate(Transform t)
+    public void CameraUpdate()
     {
-        StartCoroutine(CullingUpdate(t));
+        StartCoroutine(CullingUpdate());
     }
 
-    void Update()
+    public void LifepowerUpdate()
     {
-        lifepower_timer -= Time.deltaTime * GameMaster.gameSpeed;
-        if (lifepower_timer <= 0)
-        {
-            if (surfaceBlocks.Count > 0)
+       if (surfaceBlocks.Count > 0)
             {
                 float grasslandLifepowerChanges = 0;
-                if (lifePower > 0)
+                if (lifePower > 100)
                 {
-                    // creating new grasslands - можно было и получше написать!
+                    // создание новых и снабжение существующих
                     List<SurfaceBlock> dirt_for_grassland = new List<SurfaceBlock>();
                     foreach (SurfaceBlock sb in surfaceBlocks)
                     {
-                        if (sb.material_id == ResourceType.DIRT_ID && sb.grassland == null) dirt_for_grassland.Add(sb);
+                        if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null) dirt_for_grassland.Add(sb);
                     }
-                    SurfaceBlock b = null;
-                    while (b == null && dirt_for_grassland.Count > 0)
+                    if (dirt_for_grassland.Count > 0)
                     {
                         int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
-                        b = dirt_for_grassland[pos];
-                        if (b != null)
-                        {
-                            {
-                                int x = b.pos.x; int z = b.pos.z;
-                                List<SurfaceBlock> candidats = new List<SurfaceBlock>();
-                                bool rightSide = false, leftSide = false;
-                                SurfaceBlock candidateSurface = null;
-                                if (x + 1 < CHUNK_SIZE)
-                                {
-                                    candidateSurface = GetSurfaceBlock(x + 1, z);
-                                    if (candidateSurface != null)
-                                    {
-                                        candidats.Add(candidateSurface);
-                                        rightSide = true;
-                                    }
-                                }
-                                if (x - 1 >= 0)
-                                {
-                                    candidateSurface = GetSurfaceBlock(x - 1, z);
-                                    if (candidateSurface != null)
-                                    {
-                                        candidats.Add(candidateSurface);
-                                        rightSide = true;
-                                    }
-                                }
-                                if (z + 1 < CHUNK_SIZE)
-                                {
-                                    candidateSurface = GetSurfaceBlock(x, z + 1);
-                                    if (candidateSurface != null) candidats.Add(candidateSurface);
-                                    if (rightSide)
-                                    {
-                                        candidateSurface = GetSurfaceBlock(x + 1, z + 1);
-                                        if (candidateSurface != null) candidats.Add(candidateSurface);
-                                    }
-                                    if (leftSide)
-                                    {
-                                        candidateSurface = GetSurfaceBlock(x - 1, z + 1);
-                                        if (candidateSurface != null) candidats.Add(candidateSurface);
-                                    }
-                                }
-                                if (z - 1 >= 0)
-                                {
-                                    candidateSurface = GetSurfaceBlock(x, z - 1);
-                                    if (candidateSurface != null) candidats.Add(candidateSurface);
-                                    if (rightSide)
-                                    {
-                                        candidateSurface = GetSurfaceBlock(x + 1, z - 1);
-                                        if (candidateSurface != null) candidats.Add(candidateSurface);
-                                    }
-                                    if (leftSide)
-                                    {
-                                        candidateSurface = GetSurfaceBlock(x - 1, z - 1);
-                                        if (candidateSurface != null) candidats.Add(candidateSurface);
-                                    }
-                                }
-                                foreach (SurfaceBlock n in candidats)
-                                {
-                                    if (n == null | n.grassland != null) continue;
-                                    if (n.material_id == ResourceType.DIRT_ID & !dirt_for_grassland.Contains(n) & Mathf.Abs(b.pos.y - n.pos.y) < 2) dirt_for_grassland.Add(n);
-                                }
-                            }
-                            Grassland.Create(b);
+                        SurfaceBlock sb = dirt_for_grassland[pos];
+                            
+                            Grassland.CreateOn(sb);
                             int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
-                            if (lifePower > lifeTransfer) { b.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
-                            else { b.grassland.AddLifepower((int)lifePower); lifePower = 0; }
-                        }
-                        else dirt_for_grassland.RemoveAt(pos);
+                            if (lifePower > lifeTransfer) { sb.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
+                            else { sb.grassland.AddLifepower((int)lifePower); lifePower = 0; }
                     }
                     grasslandLifepowerChanges = lifePower;
                 }
                 if (lifePower < -100)
-                { // LifePower decreases
+                { // выкачивание жизненной силы обратно
                     grasslandLifepowerChanges = -1 * lifePower;
                 }
                 lifePower = Grassland.GrasslandUpdate(grasslandLifepowerChanges);
             }
-            lifepower_timer = GameMaster.LIFEPOWER_TICK;
-        }
     }
 
-    IEnumerator CullingUpdate(Transform campoint)
+    IEnumerator CullingUpdate()
     {
-        if (campoint == null) campoint = Camera.main.transform;
-        Vector3 cpos = transform.InverseTransformPoint(campoint.position);
+        Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
         Vector3 v = Vector3.one * (-1);
         int size = blocks.GetLength(0);
         if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
@@ -201,7 +126,7 @@ public sealed class Chunk : MonoBehaviour
             foreach (Block b in blocks)
             {
                 if (b == null) continue;
-                Vector3 icpos = campoint.InverseTransformPoint(new Vector3(b.pos.x, b.pos.y, b.pos.z) * Block.QUAD_SIZE);
+                Vector3 icpos = FollowingCamera.camTransform.worldToLocalMatrix * (new Vector3(b.pos.x, b.pos.y, b.pos.z) * Block.QUAD_SIZE);
                 Vector3 vn = Vector3.one * (-1);
                 if (icpos.x > 0) { if (icpos.x > size) vn.x = 1; else vn.x = 0; }
                 if (icpos.y > 0) { if (icpos.y > size) vn.y = 1; else vn.y = 0; }
@@ -218,14 +143,14 @@ public sealed class Chunk : MonoBehaviour
     void BroadcastChunkUpdate(ChunkPos pos)
     {
         int i = 0;
-        while (i < chunkUpdateSubscribers.Count)
+        while (i < chunkUpdateSubscribers_structures.Count)
         {
-            if (chunkUpdateSubscribers[i] == null)
+            if (chunkUpdateSubscribers_structures[i] == null)
             {
-                chunkUpdateSubscribers.RemoveAt(i);
+                chunkUpdateSubscribers_structures.RemoveAt(i);
                 continue;
             }
-            chunkUpdateSubscribers[i].BroadcastMessage("ChunkUpdated", pos, SendMessageOptions.DontRequireReceiver);
+            chunkUpdateSubscribers_structures[i].ChunkUpdated(pos);
             i++;
         }
     }
@@ -350,50 +275,63 @@ public sealed class Chunk : MonoBehaviour
 
         blocks = new Block[size, size, size];        
         surfaceBlocks = new List<SurfaceBlock>();
-
         for (int x = 0; x < size; x++)
         {
             for (int z = 0; z < size; z++)
             {
-                bool surfaceFound = false;
+                bool noBlockAbove = false;
                 for (int y = size - 1; y >= 0; y--)
                 {
-                    if (newData[x, y, z] != 0)
+                    if (newData[x, y, z] == 0) {
+                        noBlockAbove = true;
+                        continue;
+                    }
+                    else
                     {
-                        if (!surfaceFound)
-                        {
-                            SurfaceBlock sb = new SurfaceBlock() ;
-                            sb.SurfaceBlockSet(this, new ChunkPos(x, y + 1, z), newData[x, y, z]);
-                            surfaceBlocks.Add(sb);
-                            blocks[x, y + 1, z] = sb;
-                            surfaceFound = true;
-                        }
-                        CubeBlock cb = new CubeBlock();
-                        cb.BlockSet(this, new ChunkPos(x, y, z), newData[x, y, z], true);
+                        CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
                         blocks[x, y, z] = cb;
+                        cb.InitializeCubeBlock(this, new ChunkPos(x, y, z), newData[x, y, z], true);
+                        if (noBlockAbove) {
+                            if (y < size - 2 && newData[x, y + 2, z] != 0)
+                            {
+                                CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
+                                blocks[x, y + 1, z] = cvb;
+                                cvb.InitializeCaveBlock(this, new ChunkPos(x, y + 1, z), newData[x, y + 2, z], newData[x, y, z]);
+                                surfaceBlocks.Add(cvb);
+                                GameMaster.geologyModule.SpreadMinerals(cvb); // <- замена на пещерные структуры
+                            }
+                            else
+                            {
+                                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                                blocks[x, y + 1, z] = sb;
+                                sb.InitializeSurfaceBlock(this, new ChunkPos(x, y + 1, z), newData[x, y, z]);
+                                surfaceBlocks.Add(sb);
+                                GameMaster.geologyModule.SpreadMinerals(sb);
+                            }
+                        }
+                        noBlockAbove = false;
                     }
                 }
             }
         }
-        for (int x = 0; x < size; x++)
+        
+        for (int x = 0; x < CHUNK_SIZE; x++)
         {
-            for (int z = 0; z < size; z++)
+            for (int z = 0; z < CHUNK_SIZE; z++)
             {
-                for (int y = 0; y < size; y++)
+                int y = CHUNK_SIZE - 1;
+                    for (; y > GameMaster.layerCutHeight; y--)
+                    {
+                        if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(0);
+                    }
+                for (; y > -1; y--)
                 {
-                    if (blocks[x, y, z] == null) continue;
-                    blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
+                    if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
                 }
             }
         }
-        if (surfaceBlocks.Count != 0)
-        {
-            foreach (SurfaceBlock sb in surfaceBlocks)
-            {
-                GameMaster.geologyModule.SpreadMinerals(sb);
-            }
-        }
-        ChunkLightmapFullRecalculation();
+        //ChunkLightmapFullRecalculation();
+        FollowingCamera.main.WeNeedUpdate();
     }
 
     public Block GetBlock(ChunkPos cpos) { return GetBlock(cpos.x, cpos.y, cpos.z); }
@@ -426,15 +364,16 @@ public sealed class Chunk : MonoBehaviour
         switch (f_type)
         {
             case BlockType.Cube:
-                cb = new CubeBlock();
-                cb.BlockSet(this, f_pos, i_floorMaterialID, i_naturalGeneration);
+                cb = new GameObject().AddComponent<CubeBlock>();
+                cb.InitializeCubeBlock(this, f_pos, i_floorMaterialID, i_naturalGeneration);
                 blocks[x, y, z] = cb;
                 if (cb.isTransparent == false) influenceMask = 0; else influenceMask = 1; // закрывает собой все соседние стенки
                 calculateUpperBlock = true;
+                i_ceilingMaterialID = i_floorMaterialID;
                 break;
             case BlockType.Shapeless:
-                blocks[x, y, z] = new Block();
-                blocks[x, y, z].BlockSet(this, f_pos, i_floorMaterialID);
+                blocks[x, y, z] = new GameObject().AddComponent<Block>();
+                blocks[x, y, z].InitializeBlock(this, f_pos, i_floorMaterialID);
                 break;
             case BlockType.Surface:
                 b = GetBlock(x, y-1,z);
@@ -445,8 +384,8 @@ public sealed class Chunk : MonoBehaviour
                 if ( b.type != BlockType.Surface) influenceMask = 31;
                 else influenceMask = 63;
 
-                SurfaceBlock sb = new SurfaceBlock();
-                sb.SurfaceBlockSet(this, f_pos, i_floorMaterialID);
+                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                sb.InitializeSurfaceBlock(this, f_pos, i_floorMaterialID);
                 blocks[x, y, z] = sb;
                 surfaceBlocks.Add(sb);
                 
@@ -457,8 +396,8 @@ public sealed class Chunk : MonoBehaviour
 
                 Block lowerBlock = blocks[x, y - 1, z];
                 if (lowerBlock == null) i_floorMaterialID = -1;
-                CaveBlock caveb = new CaveBlock();
-                caveb.CaveBlockSet(this, f_pos, i_ceilingMaterialID, i_floorMaterialID);
+                CaveBlock caveb = new GameObject().AddComponent<CaveBlock>();
+                caveb.InitializeCaveBlock(this, f_pos, i_ceilingMaterialID, i_floorMaterialID);
                 blocks[x, y, z] = caveb;
                 if (lowerBlock.type == BlockType.Surface) // снизу структура с isBasement == true ?
                 {
@@ -484,7 +423,11 @@ public sealed class Chunk : MonoBehaviour
                 {
                     AddBlock(new ChunkPos(x, y + 1, z), BlockType.Cave, i_ceilingMaterialID, blocks[x, y + 2, z].material_id, i_naturalGeneration);
                 }
-                else AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+                else
+                {
+                    
+                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+                }
             }
         }
         return b;
@@ -524,14 +467,14 @@ public sealed class Chunk : MonoBehaviour
         {
 
             case BlockType.Shapeless:
-                b = new Block();
-                b.ShapelessBlockSet(this, f_pos, null);
+                b = new GameObject().AddComponent<Block>();
+                b.InitializeShapelessBlock(this, f_pos, null);
                 blocks[x, y, z] = b;
                 break;
 
             case BlockType.Surface:
-                SurfaceBlock sb = new SurfaceBlock();
-                sb.SurfaceBlockSet(this, f_pos, material1_id);
+                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                sb.InitializeSurfaceBlock(this, f_pos, material1_id);
                 surfaceBlocks.Add(sb);
                 b = sb;
                 blocks[x, y, z] = sb;
@@ -550,8 +493,8 @@ public sealed class Chunk : MonoBehaviour
                 break;
 
             case BlockType.Cube:
-                CubeBlock cb = new CubeBlock();
-                cb.BlockSet(this, f_pos, material1_id, naturalGeneration);
+                CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
+                cb.InitializeCubeBlock(this, f_pos, material1_id, naturalGeneration);
                 b = cb;
                 blocks[x, y, z] = cb;
                 influenceMask = 0;
@@ -562,8 +505,8 @@ public sealed class Chunk : MonoBehaviour
                 float supportPoints = CalculateSupportPoints(x, y, z);
                 if (supportPoints < 1) goto case BlockType.Surface;
 
-                CaveBlock cvb = new CaveBlock();
-                cvb.CaveBlockSet(this, f_pos, material2_id, material1_id);
+                CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
+                cvb.InitializeCaveBlock(this, f_pos, material2_id, material1_id);
                 surfaceBlocks.Add(cvb);
                 blocks[x, y, z] = cvb;
                 b = cvb;
@@ -586,7 +529,7 @@ public sealed class Chunk : MonoBehaviour
                     }
                     if (originalSurface.grassland != null)
                     {
-                        Grassland gl = Grassland.Create(cvb);
+                        Grassland gl = Grassland.CreateOn(cvb);
                         gl.SetLifepower(originalSurface.grassland.lifepower);
                         originalSurface.grassland.SetLifepower(0);
                     }
@@ -631,7 +574,7 @@ public sealed class Chunk : MonoBehaviour
         foreach (Block b in blocks)
         {
             if (b == null) continue;
-            if (b.type == BlockType.Surface || b.type == BlockType.Cave) surfaceBlocks.Add(b as SurfaceBlock);
+            if (b.type == BlockType.Surface | b.type == BlockType.Cave) surfaceBlocks.Add(b as SurfaceBlock);
         }
     }
 
@@ -640,8 +583,8 @@ public sealed class Chunk : MonoBehaviour
         if (x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE || x < 0 || y < 0 || z < 0 || s == null) return;
         Block b = GetBlock(x, y, z);
         if (b != null) { ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false); }
-        else blocks[x, y, z] = new Block();
-        blocks[x, y, z].ShapelessBlockSet(this, new ChunkPos(x, y, z), s);
+        else blocks[x, y, z] = new GameObject().AddComponent<Block>();
+        blocks[x, y, z].InitializeShapelessBlock(this, new ChunkPos(x, y, z), s);
     }
 
     public void DeleteBlock(ChunkPos pos)
@@ -890,164 +833,37 @@ public sealed class Chunk : MonoBehaviour
 
     #region operating lifepower
 
-    public void GenerateNature(PixelPosByte lifeSourcePos, int lifeVolume)
+    public void GenerateNature(Vector3 lifeSourcePos)
     {
-        byte px = lifeSourcePos.x, py = lifeSourcePos.y;
-        float[,] lifepowers = new float[CHUNK_SIZE, CHUNK_SIZE];
-        lifepowers[px, py] = 1;
-        float power = 1, half = (float)CHUNK_SIZE / 2f;
-        bool leftSide = false, rightSide = false, upSide = false, downSide = false;
-        SurfaceBlock[,] t_surfaceBlocks = new SurfaceBlock[CHUNK_SIZE, CHUNK_SIZE];
-        RecalculateSurfaceBlocks();
-        foreach (SurfaceBlock sb in surfaceBlocks)
+        float lifepowerPerBlock = GameMaster.LIFEPOWER_PER_BLOCK;
+        int dirtID = ResourceType.DIRT_ID;
+       foreach (SurfaceBlock sb in surfaceBlocks)
         {
-            if (t_surfaceBlocks[sb.pos.x, sb.pos.z] == null) t_surfaceBlocks[sb.pos.x, sb.pos.z] = sb;
-            else
+            if (sb.material_id == dirtID)
             {
-                if (sb.pos.y > t_surfaceBlocks[sb.pos.x, sb.pos.z].pos.y) t_surfaceBlocks[sb.pos.x, sb.pos.z] = sb;
-            }
-        }
-        if (px > 0)
-        {
-            leftSide = true;
-            for (int i = px - 1; i >= 0; i--)
-            {
-                byte delta = (byte)Mathf.Abs(t_surfaceBlocks[i + 1, py].pos.y - t_surfaceBlocks[i, py].pos.y);
-                lifepowers[i, py] = power * (1 - (delta / half) * (delta / half));
-                power = lifepowers[i, py] * 0.9f;
-            }
-        }
-        power = 1;
-        if (px < CHUNK_SIZE - 1)
-        {
-            rightSide = true;
-            for (int i = px + 1; i < CHUNK_SIZE; i++)
-            {
-                byte delta = (byte)Mathf.Abs(t_surfaceBlocks[i - 1, py].pos.y - t_surfaceBlocks[i, py].pos.y);
-                lifepowers[i, py] = power * (1 - (delta / half) * (delta / half));
-                power = lifepowers[i, py] * 0.9f;
-            }
-        }
-        power = 1;
-        if (py > 0)
-        {
-            downSide = true;
-            for (int i = py - 1; i >= 0; i--)
-            {
-                byte delta = (byte)Mathf.Abs(t_surfaceBlocks[px, i + 1].pos.y - t_surfaceBlocks[px, i].pos.y);
-                lifepowers[px, i] = power * (1 - (delta / half) * (delta / half));
-                power = lifepowers[px, i] * 0.9f;
-            }
-        }
-        power = 1;
-        if (px < CHUNK_SIZE - 1)
-        {
-            upSide = true;
-            for (int i = py + 1; i < CHUNK_SIZE; i++)
-            {
-                byte delta = (byte)Mathf.Abs(t_surfaceBlocks[px, i - 1].pos.y - t_surfaceBlocks[px, i].pos.y);
-                lifepowers[px, i] = power * (1 - (delta / half) * (delta / half));
-                power = lifepowers[px, i] * 0.9f;
-            }
-        }
-
-        // горизонтальная обработка
-        if (leftSide)
-        {
-            for (int i = 0; i < CHUNK_SIZE; i++)
-            {
-                if (i == py) continue;
-                power = lifepowers[i, px];
-                for (int j = px - 1; j >= 0; j--)
+                Grassland gl = Grassland.CreateOn(sb);                
+                if (gl != null)
                 {
-                    byte delta = (byte)Mathf.Abs(t_surfaceBlocks[i, j + 1].pos.y - t_surfaceBlocks[i, j].pos.y);
-                    lifepowers[i, j] = power * (1 - (delta / half) * (delta / half));
-                    power = lifepowers[i, j] * 0.9f;
+                    float lval = lifepowerPerBlock * (( 1 -(sb.transform.position - lifeSourcePos).magnitude / CHUNK_SIZE) * 0.5f + 0.5f);
+                    gl.AddLifepowerAndCalculate((int)lval);
                 }
             }
-        }
-        if (rightSide)
-        {
-            for (int i = 0; i < CHUNK_SIZE; i++)
-            {
-                if (i == py) continue;
-                power = lifepowers[i, px];
-                for (int j = px + 1; j < CHUNK_SIZE; j++)
-                {
-                    byte delta = (byte)Mathf.Abs(t_surfaceBlocks[i, j].pos.y - t_surfaceBlocks[i, j - 1].pos.y);
-                    lifepowers[i, j] = power * (1 - (delta / half) * (delta / half));
-                    power = lifepowers[i, j] * 0.9f;
-                }
-            }
-        }
-        // вертикальная обработка + усреднение
-        for (int i = 0; i < CHUNK_SIZE; i++)
-        {
-            if (i == px) continue;
-            if (upSide)
-            {
-                power = lifepowers[i, py];
-                for (int j = py + 1; j < CHUNK_SIZE; j++)
-                {
-                    byte delta = (byte)Mathf.Abs(t_surfaceBlocks[i, j].pos.y - t_surfaceBlocks[i, j - 1].pos.y);
-                    lifepowers[i, j] = (power * (1 - (delta / half) * (delta / half)) + lifepowers[i, j]) / 2f;
-                    power = lifepowers[i, j] * 0.9f;
-                }
-            }
-            if (downSide)
-            {
-                power = lifepowers[i, py];
-                for (int j = py - 1; j >= 0; j--)
-                {
-                    byte delta = (byte)Mathf.Abs(t_surfaceBlocks[i, j].pos.y - t_surfaceBlocks[i, j + 1].pos.y);
-                    lifepowers[i, j] = (power * (1 - (delta / half) * (delta / half)) + lifepowers[i, j]) / 2f;
-                    power = lifepowers[i, j] * 0.9f;
-                }
-            }
-        }
-
-        float total = 0;
-        List<SurfaceBlock> afl = new List<SurfaceBlock>();
-        for (int i = 0; i < CHUNK_SIZE; i++)
-        {
-            for (int j = 0; j < CHUNK_SIZE; j++)
-            {
-                SurfaceBlock b = t_surfaceBlocks[i, j];
-                if (b == null) continue;
-                if (b.material_id == ResourceType.DIRT_ID)
-                { // Acceptable for life
-                    total += lifepowers[i, j];
-                    afl.Add(b);
-                }
-            }
-        }
-        float lifePiece = lifeVolume / total;
-        lifePower = lifeVolume;
-        foreach (SurfaceBlock b in afl)
-        {
-            Grassland gl = b.grassland;
-            if (b.grassland == null) gl = Grassland.Create(b);
-            float vol = lifepowers[b.pos.x, b.pos.z] * lifePiece;
-            gl.AddLifepowerAndCalculate((int)(vol));
-            lifePower -= vol;
         }
     }   
 
-    public void AddLifePower(int count) { lifePower += count; if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK; }
+    public void AddLifePower(int count) { lifePower += count;  }
     public int TakeLifePower(int count)
     {
         if (count < 0) return 0;
         float lifeTransfer = count;
         if (lifeTransfer > lifePower) { if (lifePower >= 0) lifeTransfer = lifePower; else lifeTransfer = 0; }
         lifePower -= lifeTransfer;
-        if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
         return (int)lifeTransfer;
     }
     public int TakeLifePowerWithForce(int count)
     {
         if (count < 0) return 0;
         lifePower -= count;
-        if (lifepower_timer == 0) lifepower_timer = GameMaster.LIFEPOWER_TICK;
         return count;
     }
 
@@ -1093,8 +909,6 @@ public sealed class Chunk : MonoBehaviour
         }
         cs.chunkSize = CHUNK_SIZE;
         cs.lifepower = lifePower;
-        cs.lifepowerTimer = lifepower_timer;
-        cs.lastUsedBlockNumber = Block.lastUsedNumber;
         return cs;
     }
 
@@ -1109,8 +923,6 @@ public sealed class Chunk : MonoBehaviour
             b.Load(bs);
         }
         lifePower = cs.lifepower;
-        lifepower_timer = cs.lifepowerTimer;
-        Block.lastUsedNumber = cs.lastUsedBlockNumber;
     }
     #endregion
 
@@ -1126,5 +938,17 @@ public sealed class Chunk : MonoBehaviour
     void OnGUI()
     { //test
         GUI.Label(new Rect(0, 32, 64, 32), lifePower.ToString());
+    }
+
+    private void OnDestroy()
+    {
+        if (GameMaster.applicationStopWorking) return;
+        foreach (Block b in blocks)
+        {
+            if (b != null) b.Annihilate();
+        }
+        surfaceBlocks.Clear();
+        chunkUpdateSubscribers_structures.Clear();
+        FollowingCamera.main.cameraChangedEvent -= CameraUpdate;
     }
 }

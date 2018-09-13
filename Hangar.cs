@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [System.Serializable]
 public sealed class HangarSerializer {
@@ -13,39 +11,63 @@ public sealed class Hangar : WorkBuilding {
 	static int hangarsCount = 0;
 	public Shuttle shuttle{get; private set;}
 	const float CREW_HIRE_BASE_COST = 100;
-    public bool constructing = false;
+    public bool constructing { get; private set; }
     public static UIHangarObserver hangarObserver;
 
-	public static void Reset() {
+	public static void ResetToDefaults_Static_Hangar() {
 		hangarsCount = 0;
 	}
+
+    public void StartConstruction()
+    {
+        if (!constructing)
+        {
+            constructing = true;
+            if (!subscribedToUpdate)
+            {
+                GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+                subscribedToUpdate = true;
+            }
+        }
+    }
+    public void StopConstruction()
+    {
+        if (constructing)
+        {
+            constructing = false;
+            if (subscribedToUpdate)
+            {
+                GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+                subscribedToUpdate = false;
+            }
+        }
+    }
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		Transform meshTransform = transform.GetChild(0);
+		Transform modelTransform = transform.GetChild(0);
 		if (basement.pos.z == 0) {
-			meshTransform.transform.localRotation = Quaternion.Euler(0, 180,0); 
+			modelTransform.transform.localRotation = Quaternion.Euler(0, 180,0); 
 		}
 		else {
 			if (basement.pos.z != Chunk.CHUNK_SIZE - 1) {
 				if (basement.pos.x == 0) {
-					meshTransform.transform.localRotation = Quaternion.Euler(0, -90,0); 
+					modelTransform.transform.localRotation = Quaternion.Euler(0, -90,0); 
 				}
 				else {
 					if (basement.pos.x == Chunk.CHUNK_SIZE - 1) {
-						meshTransform.transform.localRotation = Quaternion.Euler(0, 90,0);
+						modelTransform.transform.localRotation = Quaternion.Euler(0, 90,0);
 					}
 				}
 			}
 		}
-		hangarsCount++;
+		hangarsCount++;        
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 || !isActive || !energySupplied) return;
-		if ( constructing & workersCount > 0 & shuttle == null) {
-			workflow += workSpeed * Time.deltaTime * GameMaster.gameSpeed ;
+    public override void LabourUpdate() {
+        if ( isActive & energySupplied & constructing)  {
+			workflow += workSpeed ;
 			if (workflow >= workflowToProcess) {
 				LabourResult();
 			}
@@ -119,10 +141,17 @@ public sealed class Hangar : WorkBuilding {
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction();
+        PrepareWorkbuildingForDestruction(forced);
         hangarsCount--;
         if (shuttle != null) shuttle.Deconstruct();
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
         Destroy(gameObject);
     }
 }

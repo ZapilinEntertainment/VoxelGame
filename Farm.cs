@@ -2,94 +2,134 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Farm : WorkBuilding {
-	protected float farmFertility = 1;
-	public int crop_id = -1;
+public class Farm : WorkBuilding
+{
+    protected float farmFertility = 1;
+    public int crop_id = -1;
+    byte harvestableStage = 0;
+    int lifepowerBoost = 0;
+    const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1, PLANT_ACTIVITY_COST = 1;
 
-	override public void Prepare() {
-		PrepareWorkbuilding();
-		if (crop_id == -1) crop_id = Plant.CROP_CORN_ID;
-	}
+    override public void Prepare()
+    {
+        PrepareWorkbuilding();
+        switch (id)
+        {
+            case FARM_1_ID:
+            case FARM_2_ID:
+            case FARM_3_ID:
+            case FARM_4_ID:
+            case FARM_5_ID:
+                crop_id = Plant.CROP_CORN_ID;
+                break;
+            case LUMBERMILL_1_ID:
+            case LUMBERMILL_2_ID:
+            case LUMBERMILL_3_ID:
+            case LUMBERMILL_4_ID:
+            case LUMBERMILL_5_ID:
+                crop_id = Plant.TREE_OAK_ID;
+                break;
+        }
+        harvestableStage = Plant.GetHarvestableStage(crop_id);
+        lifepowerBoost = Plant.GetMaxLifeTransfer(crop_id);
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (b == null) return;
-		b.ClearSurface( !(innerPosition == SurfaceRect.full) ); 
-		SetBuildingData(b, pos);
-		b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
-	}
+    }
 
-	override protected void RecalculateWorkspeed() {
-		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
-		workflowToProcess = workflowToProcess_setValue *( 10 - (float)workersCount / (float)maxWorkers * 9);
-	}
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        b.ClearSurface(!(innerPosition == SurfaceRect.full));
+        SetBuildingData(b, pos);
+        b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
+    }
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0 ) return;
-		if ( isActive && energySupplied && workersCount > 0) {
-			workflow += workSpeed * Time.deltaTime  * GameMaster.gameSpeed ;
-			if (workflow >= workflowToProcess) {
-				LabourResult();
-			}
-		}
-	}
+    override protected void RecalculateWorkspeed()
+    {
+        workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
+    }
 
-	override protected void LabourResult() {
-		int i = 0, totalCost = 0, actionsCount = (int)(workflow / workflowToProcess);
-        workflow -= actionsCount * workflowToProcess;
-		List<Structure> structures = basement.surfaceObjects;
-		Chunk c = basement.myChunk;
-		if (basement.cellsStatus != 0) {	
-			while (i < structures.Count & actionsCount > 0) {
-				if (structures[i] == null ) {
-					basement.RequestAnnihilationAtIndex(i);
-					continue;
-				}
-				else {
-					if (structures[i].id == Structure.PLANT_ID) {
-						Plant p = structures[i] as Plant;
-						if (p.plant_ID == crop_id) {
-                            if (p.stage >= p.harvestableStage & p.growth >= 1)
+    override public void LabourUpdate()
+    {
+        if (isActive & energySupplied)
+        {
+            workflow += workSpeed;
+            if (workflow >= workflowToProcess)
+            {
+                LabourResult();
+            }
+        }
+    }
+
+    override protected void LabourResult()
+    {
+        int i = 0, totalCost = 0;
+        float actionsPoints = workflow / workflowToProcess;
+        workflow = 0;
+        List<Structure> structures = basement.surfaceObjects;   
+        
+        if (basement.cellsStatus == 1)
+        {
+            while (i < structures.Count & actionsPoints > 0)
+            {
+                if (structures[i].id == PLANT_ID)
+                {
+                    Plant p = structures[i] as Plant;
+                    if (p.plant_ID == crop_id)
+                    {
+                        if (p.stage >= harvestableStage & p.growth >= 1)
+                        {
+                            p.Harvest();
+                            actionsPoints -= HARVEST_ACTIVITY_COST;
+                        }
+                        else
+                        {
+                            if (p.lifepower < p.lifepowerToGrow)
                             {
-                                p.Harvest();
-                                actionsCount--;
+                                p.AddLifepower(lifepowerBoost);
+                                totalCost += lifepowerBoost;
+                                actionsPoints -= BOOST_ACTIVITY_COST;
                             }
-                            else
-                            {
-                                if (p.lifepower < p.lifepowerToGrow)
-                                {
-                                    p.AddLifepower(p.maxLifeTransfer);
-                                    totalCost += p.maxLifeTransfer;
-                                    actionsCount--;
-                                }
-                            }
-						}
-					}
-					i++;
-				}
-			}
-		}
-		if (basement.cellsStatus != 1 & actionsCount > 0) {
-			PixelPosByte pos = basement.GetRandomCell();
-			int cost = Plant.GetCreateCost(crop_id);
-			if (pos != PixelPosByte.Empty & c.lifePower > cost ) {
-				Plant p = Plant.GetNewPlant(crop_id);
-				p.Prepare();
-				p.SetBasement(basement, pos);
-				c.TakeLifePowerWithForce(cost);
-				totalCost += cost;
-                actionsCount--;
-			}
-		}
-        if (actionsCount > 0) workflow += actionsCount * workflowToProcess;
-		if (totalCost > 0) c.TakeLifePowerWithForce(totalCost);
-	}
+                        }
+                    }
+                }
+                i++;
+            }
+        }
+        else
+        {
+            List<PixelPosByte> pos = basement.GetRandomCells((int)(actionsPoints / PLANT_ACTIVITY_COST ));
+            int cost = Plant.GetCreateCost(crop_id);
+            i = 0;
+            while (i < pos.Count )
+            {
+                Plant p = Plant.GetNewPlant(crop_id);
+                p.Prepare();
+                p.SetBasement(basement, pos[i]);
+                totalCost += cost;
+                i++;
+            }
+        }
+        if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce(totalCost);
+    }
 
     override public void Annihilate(bool forced)
     {
+        if (destroyed) return;
+        else destroyed = true;
         if (forced) { UnsetBasement(); }
-        if (PrepareWorkbuildingForDestruction())
+        if (PrepareWorkbuildingForDestruction(forced))
         {
             if (basement.material_id == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
+        }
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
         }
         Destroy(gameObject);
     }
