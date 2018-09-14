@@ -88,7 +88,7 @@ public class CubeBlock : Block{
 	override public void SetVisibilityMask (byte x) {
         byte prevMask = visibilityMask;
         // блоки, отключающиеся полностью, возвращают модели обратно в пул
-        if (prevMask == 0 & x != 0)
+        if (prevMask == 0 & x != 0) // включение
         {
             visibilityMask = x; 
             for (int i = 0; i < 6; i++)
@@ -100,15 +100,15 @@ public class CubeBlock : Block{
         }
         else
         {
-            if (prevMask != 0 & x== 0)
+            if (prevMask != 0 & x== 0) // полное выключение
             {                
                 visibilityMask = 0;
-                if (excavatingStatus == 0 & faces[4] != null) PoolMaster.ReturnQuadToPool(faces[4].gameObject);
-                if (faces[0] != null) PoolMaster.ReturnQuadToPool(faces[0].gameObject);
-                if (faces[1] != null) PoolMaster.ReturnQuadToPool(faces[1].gameObject);
-                if (faces[2] != null) PoolMaster.ReturnQuadToPool(faces[2].gameObject);
-                if (faces[3] != null) PoolMaster.ReturnQuadToPool(faces[3].gameObject);
-                if (faces[5] != null) PoolMaster.ReturnQuadToPool(faces[5].gameObject);
+                if (excavatingStatus == 0 & faces[4] != null) {PoolMaster.ReturnQuadToPool(faces[4].gameObject); faces[4] = null; }
+                if (faces[0] != null) { PoolMaster.ReturnQuadToPool(faces[0].gameObject); faces[0] = null; }
+                if (faces[1] != null) {PoolMaster.ReturnQuadToPool(faces[1].gameObject); faces[1] = null; }
+                if (faces[2] != null) {PoolMaster.ReturnQuadToPool(faces[2].gameObject); faces[2] = null; }
+                if (faces[3] != null) {PoolMaster.ReturnQuadToPool(faces[3].gameObject); faces[3] = null; }
+                if (faces[5] != null) {PoolMaster.ReturnQuadToPool(faces[5].gameObject); faces[5] = null; }
             }
             else
             {

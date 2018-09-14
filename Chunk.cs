@@ -37,7 +37,7 @@ public sealed class Chunk : MonoBehaviour
     private bool allGrasslandsCreated = false;
     public byte[,,] lightMap { get; private set; }
 
-    const float LIGHT_DECREASE_PER_BLOCK = 0.5f;
+    float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
 
     public void Awake()
     {
@@ -189,6 +189,7 @@ public sealed class Chunk : MonoBehaviour
 
     void ChunkLightmapFullRecalculation()
     {
+        byte UP_LIGHT = 255, DOWN_LIGHT = 128, SIDE_LIGHT = 200;
         int x = 0, y = 0, z = 0;
         for (x = 0; x < CHUNK_SIZE; x++)
         {
@@ -210,14 +211,19 @@ public sealed class Chunk : MonoBehaviour
                 for (y = 0; y < CHUNK_SIZE; y++)
                 {
                     b = blocks[x, y, z];
-                    if (b == null) lightMap[x, y, z] = 255 ;
+                    if (b == null) lightMap[x, y, z] = DOWN_LIGHT ;
                     else
                     {
                         if (b.type == BlockType.Cave) {
-                            if ((b as CaveBlock).haveSurface) lightMap[x, y, z] = 255;
+                            if (!(b as CaveBlock).haveSurface)
+                            {
+                                lightMap[x, y, z] = DOWN_LIGHT;
+                                break;
+                            }
+                            else break;
                         }
                         else {
-                            if (b.type == BlockType.Shapeless) { lightMap[x, y, z] = 255; }
+                            if (b.type == BlockType.Shapeless) { lightMap[x, y, z] = DOWN_LIGHT; }
                             else  break; 
                         }
                     }
@@ -233,39 +239,84 @@ public sealed class Chunk : MonoBehaviour
                 for (y = CHUNK_SIZE - 1; y >= 0; y--)
                 {
                     b = blocks[x, y, z];
-                    if (b == null) lightMap[x, y, z] = 255;
+                    if (b == null) lightMap[x, y, z] = UP_LIGHT;
                     else
                     {
-                        if (b.type == BlockType.Shapeless) lightMap[x, y, z] = 255;
-                        else break;
+                        if (b.type == BlockType.Shapeless) lightMap[x, y, z] = UP_LIGHT;
+                        else
+                        {
+                            if (b.type == BlockType.Surface) { lightMap[x, y, z] = UP_LIGHT; break; }
+                            else break;
+                        }
                     }
                 }
             }
         }
         //проход спереди
-        x = 0; y = 0; z = 0;
-        byte val;
+        byte decreasedVal;
         for (x = 0; x < CHUNK_SIZE; x++)
         {
             for (y = 0; y < CHUNK_SIZE; y++)
             {
-                val = 255;
-                for (z = CHUNK_SIZE - 1; z >= 0; z--)
+                decreasedVal = (byte)(lightMap[x,y,CHUNK_SIZE - 1] * LIGHT_DECREASE_PER_BLOCK);
+                for (z = CHUNK_SIZE - 2; z >= 0; z--)
+                {
+                    if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
+                    decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                }
+            }
+        }
+        //проход сзади
+        for (x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (y = 0; y < CHUNK_SIZE; y++)
+            {
+                decreasedVal = (byte)(lightMap[x, y, 0] * LIGHT_DECREASE_PER_BLOCK);
+                for (z = 1; z < CHUNK_SIZE; z++)
+                {
+                    if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
+                    decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                }
+            }
+        }
+        //проход справа
+        for (z = 0; z < CHUNK_SIZE; z++)
+        {
+            for (y = 0; y < CHUNK_SIZE; y++)
+            {
+                decreasedVal = (byte)(lightMap[CHUNK_SIZE - 1, y,z] * LIGHT_DECREASE_PER_BLOCK);
+                for (x = CHUNK_SIZE - 2; x >= 0; x--)
                 {
                     b = blocks[x, y, z];
-                    if (b == null) lightMap[x, y, z] = 255;
+                    if (b == null)
+                    {
+                        if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
+                    }
                     else
                     {
-                        if (b.type == BlockType.Shapeless | b.type == BlockType.Surface) lightMap[x, y, z] = 255;
-                        else {
-                            if (b.type == BlockType.Cave)
-                            {
-                                val = (byte)(val * LIGHT_DECREASE_PER_BLOCK);
-                                lightMap[x, y, z] = val;
-                            }
-                            else break;
+                        if (b.type == BlockType.Shapeless | b.type == BlockType.Surface)
+                        {
+                            if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
+                        }
+                        else
+                        {
+                            if (b.type == BlockType.Cave) lightMap[x, y, z] = decreasedVal;
                         }
                     }
+                    decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                }
+            }
+        }
+        //проход слева
+        for (z = 0; z < CHUNK_SIZE; z++)
+        {
+            for (y = 0; y < CHUNK_SIZE; y++)
+            {
+                decreasedVal = (byte)(lightMap[0,y,z] * LIGHT_DECREASE_PER_BLOCK);
+                for (x = 1; x < CHUNK_SIZE; x++)
+                {
+                    if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
+                    decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
                 }
             }
         }

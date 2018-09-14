@@ -21,13 +21,14 @@ public class PoolMaster : MonoBehaviour {
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
     public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
         glass_material, glass_offline_material;
-    private static Material[] basic_illuminated;
+    private static Material[] basic_illuminated, green_illuminated;
     static Material metal_material, green_material, darkness_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
-	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;	
+	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
 
-    const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6, MAX_MATERIAL_LIGHT_DIVISIONS = 10;
+    const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
+    public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
     const int SHIPS_BUFFER_SIZE = 5;
 
     public void Load() {
@@ -71,6 +72,7 @@ public class PoolMaster : MonoBehaviour {
         green_material = Resources.Load<Material>("Materials/Green");
 
         basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
+        green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         QuestUI.LoadTextures();
@@ -107,7 +109,12 @@ public class PoolMaster : MonoBehaviour {
     {
         GameObject g = null;
         if (quadsPool.Count == 1) g = Instantiate(quadsPool[0]); // нулевой никогда не удаляется
-        else g = quadsPool[quadsPool.Count - 1];
+        else
+        {
+            int i = quadsPool.Count - 1;
+            g = quadsPool[i];
+            quadsPool.RemoveAt(i);
+        }
         g.transform.parent = null;
         g.SetActive(true);
         return g;
@@ -217,12 +224,16 @@ public class PoolMaster : MonoBehaviour {
 
 	public static GameObject GetRooftop(Structure s) {
 		GameObject g = null;
-		g = GameObject.Instantiate(Resources.Load<GameObject>("Prefs/blockRooftop")) as GameObject;
+		g = Instantiate(Resources.Load<GameObject>("Prefs/blockRooftop")) as GameObject;
 		return g;
 	}
 
-    public static Material GetGreenMaterial(GreenMaterial mtype, MeshFilter mf)
+    public static Material GetGreenMaterial(GreenMaterial mtype, MeshFilter mf, byte i_illumination)
     {
+        float illumination = i_illumination / 255f;
+        float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
+        if (illumination < p / 2f) return darkness_material;
+
         Mesh quad = mf.mesh;
         if (quad == null) return green_material;           
         float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
@@ -280,7 +291,27 @@ public class PoolMaster : MonoBehaviour {
             }            
         }
         quad.uv = uvEditing;
-        return green_material;
+
+        if (illumination >= 1 - p / 2f) return green_material;
+        else
+        {
+            // проверка на darkness в самом начале функции
+            int pos = (int)(illumination / p);
+            if (illumination - pos * p > p / 2f)
+            {
+                pos++;
+            }
+            if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return green_material;
+            else
+            {
+                if (green_illuminated[pos] == null)
+                {
+                    green_illuminated[pos] = new Material(green_material);
+                    green_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                }
+                return green_illuminated[pos];
+            }
+        }
     }
     public static Material GetMetalMaterial(MetalMaterial mtype, MeshFilter mf)
     {
@@ -349,6 +380,7 @@ public class PoolMaster : MonoBehaviour {
         float illumination = i_illumination / 255f;
         float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
         if (illumination < p / 2f) return darkness_material;
+
         Mesh quad = mf.mesh;
         if (quad != null)
         {

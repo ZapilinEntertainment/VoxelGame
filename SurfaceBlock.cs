@@ -541,6 +541,8 @@ public class SurfaceBlock : Block {
 				if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
 				else surfaceRenderer.enabled = true;
 				if ( prevVisibility == 0) {
+                    illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+                    surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
 					surfaceRenderer.enabled = true;
 					surfaceRenderer.GetComponent<Collider>().enabled = true;
 					int i = 0; 

@@ -224,19 +224,19 @@ public class Grassland : MonoBehaviour
                 myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
                 break;
             case 1:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass20, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass20, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
                 break;
             case 2:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass40, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass40, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
                 break;
             case 3:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass60, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass60, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
                 break;
             case 4:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass80, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass80, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
                 break;
             case 5:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass100, myBlock.surfaceRenderer.GetComponent<MeshFilter>());
+                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass100, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
                 break;
         }
     }
