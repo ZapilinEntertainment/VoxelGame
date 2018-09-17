@@ -136,6 +136,7 @@ public class GeologyModule : MonoBehaviour {
 	}
 
 	public void CalculateOutput(float production, CubeBlock workObject, Storage storage) {
+        if (workObject == null) return;
 		if (workObject.naturalFossils > 0) {
 			float v = Random.value - GameMaster.LUCK_COEFFICIENT; 
 			float m = 0;

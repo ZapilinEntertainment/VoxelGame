@@ -1,8 +1,8 @@
 ﻿public sealed class LifeSource : MultiblockStructure {
-    private int tick = 0, lifepowerPerTick = 100;
+    private int tick = 0, lifepowerPerTick = 500;
     const int MAXIMUM_TICKS = 1000;
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetMultiblockStructureData(b,pos);
         if (!subscribedToUpdate)
@@ -13,7 +13,7 @@
 	}
 
 	public void LifepowerUpdate () {
-        tick--;
+        tick++;
         basement.myChunk.AddLifePower(lifepowerPerTick);
         if (tick == MAXIMUM_TICKS) Annihilate(true);
 	}

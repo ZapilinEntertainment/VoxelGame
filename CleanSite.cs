@@ -28,11 +28,12 @@ public class CleanSite : Worksite {
                     StopWork();
                 }
                 else
-                {
-                    DigSite ds = new DigSite();
+                {                    
+                    DigSite ds = basement.gameObject.AddComponent<DigSite>();
                     TransferWorkers(this, ds);
-                    ds.Set(basement as CubeBlock, true); // остановит этот worksite при установке
-                    ds.ShowOnGUI();
+                    ds.Set(basement as CubeBlock, true);
+                    if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
+                    StopWork();
                 }
 			}            
             return;
@@ -77,7 +78,9 @@ public class CleanSite : Worksite {
 		if (sign == null) sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.worksite = this;
 		sign.transform.position = workObject.transform.position;
-		diggingMission = f_diggingMission;
+        FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
+
+        diggingMission = f_diggingMission;
 		if (workersCount < START_WORKERS_COUNT) GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
@@ -85,6 +88,11 @@ public class CleanSite : Worksite {
             GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
             subscribedToUpdate = true;
         }
+    }
+
+    public void SignCameraUpdate()
+    {
+        sign.transform.LookAt(FollowingCamera.camPos);
     }
 
     override public void StopWork()
@@ -96,7 +104,11 @@ public class CleanSite : Worksite {
             GameMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Destroy(sign.gameObject);
+        if (sign != null)
+        {
+            FollowingCamera.main.cameraChangedEvent -= SignCameraUpdate;
+            Destroy(sign.gameObject);
+        }
         if (worksitesList.Contains(this)) worksitesList.Remove(this);
         if (subscribedToUpdate)
         {

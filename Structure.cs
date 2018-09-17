@@ -141,9 +141,10 @@ public class Structure : MonoBehaviour  {
         Structure s;
         switch (i_id) {
             case PLANT_ID: print("error : cannot create plant via GetStructureById"); return null;
-            case DRYED_PLANT_ID:            
+            case DRYED_PLANT_ID:
+                s = new GameObject("dryed plant").AddComponent<Structure>(); break;
             case COLUMN_ID:
-                s = new GameObject().AddComponent<Structure>();break;
+                s = new GameObject("Column").AddComponent<Structure>();break;
             case RESOURCE_STICK_ID:
                 s = new GameObject().AddComponent<ScalableHarvestableResource>();break;
             case MINE_ELEVATOR_ID:

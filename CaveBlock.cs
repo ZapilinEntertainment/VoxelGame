@@ -34,20 +34,19 @@ public class CaveBlock : SurfaceBlock
         if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
     }
 
-    public void InitializeCaveBlock (Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)
+    public void InitializeCaveBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)
     {
-            cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
-            }
-            haveSurface = true;
+        cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
+        for (int i = 0; i < map.GetLength(0); i++)
+        {
+            for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
+        }
         material_id = f_down_material_id;
         ceilingMaterial = f_up_material_id;
-            surfaceObjects = new List<Structure>();
-            artificialStructures = 0;
-            isTransparent = false;
-            visibilityMask = 0;
+        surfaceObjects = new List<Structure>();
+        artificialStructures = 0;
+        isTransparent = false;
+        visibilityMask = 0;
         illumination = 255;
 
         myChunk = f_chunk;
@@ -56,7 +55,7 @@ public class CaveBlock : SurfaceBlock
         pos = f_chunkPos;
         t.localPosition = new Vector3(pos.x, pos.y, pos.z);
         t.localRotation = Quaternion.Euler(Vector3.zero);
-        type = BlockType.Cave; 
+        type = BlockType.Cave;
         name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 
         GameObject model = Instantiate(PoolMaster.cavePref, Vector3.zero, Quaternion.identity, transform);
@@ -76,8 +75,7 @@ public class CaveBlock : SurfaceBlock
             material_id = f_up_material_id;
             foreach (MeshRenderer mr in faces)
             {
-                if (mr == null) continue;
-                else mr.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, mr.GetComponent<MeshFilter>(), illumination); ;
+                mr.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, mr.GetComponent<MeshFilter>(), illumination); ;
             }
             ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
             if (material_id != -1)
@@ -92,37 +90,43 @@ public class CaveBlock : SurfaceBlock
                 surfaceRenderer.GetComponent<Collider>().enabled = false;
                 surfaceRenderer.enabled = false;
             }
-        }       
-        
+        }
+
     }
 
     override public void SetRenderBitmask(byte x)
     {
-        if (renderMask != x)
+        if (renderMask == x ) return;
+        renderMask = x;
+        if (visibilityMask == 0) return;
+        byte[] arr = new byte[] { 1, 2, 4, 8 };
+        // #visibility check
+        bool allFacesDisabled = true;
+        bool e = false;
+        for (int i = 0; i < 4; i++)
         {
-            renderMask = x;
-            if (visibilityMask == 0) return;
-            for (int i = 0; i < 4; i++)
-            {
-                if ((renderMask & ((int)Mathf.Pow(2, i)) & visibilityMask) != 0) faces[i].enabled = true;
-                else faces[i].enabled = false;
-            }
-            if ((renderMask & 15) == 0)
-            {
-                ceilingRenderer.enabled = false;
-                surfaceRenderer.enabled = false;
-            }
-            else
-            {
-                ceilingRenderer.enabled = true;
-                if (haveSurface) surfaceRenderer.enabled = true;
-            }
-            if (structureBlock != null) structureBlock.SetRenderBitmask(x);
+            e = ((visibilityMask & arr[i]) != 0);
+            faces[i].enabled = e;
+            if (e == true) allFacesDisabled = false;
         }
-    }
+        e = ((visibilityMask & renderMask & 32) == 32) & haveSurface;
+        if (e == false & allFacesDisabled)
+        {
+            surfaceRenderer.enabled = false;
+            surfaceRenderer.GetComponent<Collider>().enabled = false;
+        }
+        else
+        {
+            surfaceRenderer.enabled = true;
+            surfaceRenderer.GetComponent<Collider>().enabled = true;
+        }
 
+        e = ((visibilityMask & renderMask & 16) == 16);
+        if (e == false & allFacesDisabled) ceilingRenderer.enabled = false; else ceilingRenderer.enabled = true;
+        //eo visibility check
+    }
     override public void SetVisibilityMask(byte x)
-    {        
+    {
         if (visibilityMask == x) return;
         byte prevVisibility = visibilityMask;
         visibilityMask = x;
@@ -144,9 +148,9 @@ public class CaveBlock : SurfaceBlock
                         if (s != null) s.SetVisibility(false);
                     }
                 }
-                surfaceRenderer.enabled = false;                
+                surfaceRenderer.enabled = false;
                 surfaceRenderer.GetComponent<MeshCollider>().enabled = false;
-            }            
+            }
         }
         else
         {
@@ -166,7 +170,7 @@ public class CaveBlock : SurfaceBlock
                     ceilingRenderer.gameObject.SetActive(true);
                     ceilingRenderer.enabled = ((visibilityMask & renderMask & 16) != 0);
                 }
-                if (surfaceRenderer != null)
+                if ( haveSurface & surfaceRenderer != null)
                 {
                     if (cellsStatus != 0)
                     {
@@ -181,13 +185,31 @@ public class CaveBlock : SurfaceBlock
                 SetIllumination();
             }
             else
-            {                
+            {
+                // #visibility check
+                bool allFacesDisabled = true;
+                bool e = false;
                 for (int i = 0; i < 4; i++)
                 {
-                    faces[i].enabled = ((visibilityMask & renderMask & arr[i]) != 0);
+                    e = ((visibilityMask & arr[i]) != 0);
+                    faces[i].enabled = e;
+                    if (e == true) allFacesDisabled = false;
                 }
-                surfaceRenderer.enabled = ((visibilityMask & renderMask & 32) != 0);
-                ceilingRenderer.enabled = ((visibilityMask & renderMask & 16) != 0);
+                e = ((visibilityMask & renderMask & 32) == 32) & haveSurface;
+                if  (e == false & allFacesDisabled)
+                {
+                    surfaceRenderer.enabled = false;
+                    surfaceRenderer.GetComponent<Collider>().enabled = false;
+                }
+                else
+                {
+                    surfaceRenderer.enabled = true;
+                    surfaceRenderer.GetComponent<Collider>().enabled = true;
+                }
+                
+                e = ((visibilityMask & renderMask & 16) == 16);
+                if (e == false & allFacesDisabled) ceilingRenderer.enabled = false; else ceilingRenderer.enabled = true;
+                //eo visibility check
             }
         }
         if (structureBlock != null) structureBlock.SetVisibilityMask(x);
@@ -220,7 +242,8 @@ public class CaveBlock : SurfaceBlock
         byte prevIllumination = illumination;
         int size = Chunk.CHUNK_SIZE;
         byte[,,] lmap = myChunk.lightMap;
-        if (faces[0] != null) {
+        if (faces[0] != null)
+        {
             if (pos.z + 1 >= size) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z + 1];
             faces[0].sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, faces[0].GetComponent<MeshFilter>(), illumination);
         }
@@ -238,7 +261,7 @@ public class CaveBlock : SurfaceBlock
         {
             if (pos.x - 1 < 0) illumination = 255; else illumination = lmap[pos.x - 1, pos.y, pos.z];
             faces[3].sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, faces[3].GetComponent<MeshFilter>(), illumination);
-        }       
+        }
         illumination = lmap[pos.x, pos.y, pos.z];
         if (illumination != prevIllumination)
         {

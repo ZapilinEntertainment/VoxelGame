@@ -79,7 +79,7 @@ public class PoolMaster : MonoBehaviour {
 	}
 
 	void Update() {
-
+        if (GameMaster.editMode) return;
 		int docksCount = GameMaster.colonyController.docks.Count;
 		if (shipsClearTimer > 0) {
 			shipsClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
@@ -131,7 +131,7 @@ public class PoolMaster : MonoBehaviour {
     }
     public static Mesh GetOriginalQuadMesh()
     {
-        return quadsPool[0].GetComponent<MeshFilter>().mesh;
+        return quadsPool[0].GetComponent<MeshFilter>().sharedMesh;
     }
 
     public void BuildSplash(Vector3 pos)
@@ -427,18 +427,18 @@ public class PoolMaster : MonoBehaviour {
                 borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
                 if (seed > 0.5f)
                 {
-                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                    if (seed > 0.75f) uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else uvEditing = new Vector2[] { borders[1], borders[3], borders[0], borders[2] };
                 }
                 else
                 {
-                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                    if (seed > 0.25f) uvEditing = new Vector2[] { borders[2], borders[0], borders[1], borders[3] };
+                    else uvEditing = new Vector2[] { borders[3], borders[1], borders[2], borders[0] };
                 }               
-                uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                //uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
             }
             else
-            {
+            {                
                 for (int i = 0; i < uvEditing.Length; i++)
                 {
                     uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре

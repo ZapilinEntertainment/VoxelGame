@@ -17,7 +17,7 @@ public abstract class Worksite : MonoBehaviour {
 	public int workersCount {get;protected set;}
     protected float workflow;
     public float workSpeed { get; protected set; }
-	public WorksiteSign sign{get; protected set;}
+    public WorksiteSign sign;
 	public string actionLabel { get; protected set; }
 	public bool showOnGUI = false, destroyed = false;
 	public float gui_ypos = 0;
@@ -153,7 +153,7 @@ public abstract class Worksite : MonoBehaviour {
     {
         if (observer == null) observer = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else observer.gameObject.SetActive(true);
-        observer.SetWorksiteObserver(this);
+        observer.SetObservingWorksite(this);
         showOnGUI = true;
         return observer;
     }

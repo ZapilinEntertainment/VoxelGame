@@ -6,6 +6,9 @@ public class WorksiteSign : MonoBehaviour {
 	public Worksite worksite;
 
 	void Update() {
-		if (worksite == null) Destroy(gameObject);
+        if (worksite == null)
+        {
+            Destroy(gameObject);
+        }
 	}
 }

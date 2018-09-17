@@ -9,20 +9,29 @@ public class TunnelBuildingSite : Worksite {
 
     override public void WorkUpdate () {
 		if (GameMaster.gameSpeed == 0) return;
-		if (workObject ==null ) {
+        if (workObject == null)
+        {
             StopWork();
             return;
-		}
-		if (workersCount > 0) {
-			workflow += workSpeed;
-			if (workflow >= 1) LabourResult();
-			}
+        }
+        else
+        {
+            if (workersCount > 0)
+            {
+                workflow += workSpeed;
+                if (workflow >= 1) LabourResult();
+            }
+        }
 		}
 
-	void LabourResult() {
-		int x = (int) workflow;
-		float production = x;
-		production = workObject.Dig(x, false);
+    void LabourResult() {
+        int x = (int)workflow;
+        float production = x;
+        production = workObject.Dig(x, false);
+        if (workObject == null) {
+            StopWork();
+            return;
+        }
 		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
 		workflow -= production;	
 		actionLabel = Localization.GetActionLabel(LocalizationActionLabels.DigInProgress) + " ("+((int) (((float)workObject.volume / (float)CubeBlock.MAX_VOLUME) * 100)).ToString()+"%)";
@@ -45,27 +54,26 @@ public class TunnelBuildingSite : Worksite {
 
 	public void CreateSign(byte side) {
 		if ((signsMask & side) != 0) return;
-		WorksiteSign sign = null;
 		switch (side) {
 		case 0:
-				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 				sign.transform.position = workObject.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
 				signsMask += 1;
 			break;
 		case 1:
-				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 			sign.transform.position = workObject.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,90,0);
 				signsMask += 2;
 			break;
 		case 2:
-				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 				sign.transform.position = workObject.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,180,0);
 				signsMask += 4;
 			break;
 		case 3:
-				sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
 				sign.transform.position = workObject.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,-90,0);
 				signsMask += 8;

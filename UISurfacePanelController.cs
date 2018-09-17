@@ -457,22 +457,23 @@ public sealed class UISurfacePanelController : UIObserver {
                     else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                 break;
                 case CostPanelMode.ColumnBuilding:
+                {
                     if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(Structure.COLUMN_ID)))
                     {
-                        float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
-                        if (supportPoints <= 1)
-                        {
+                       // float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
+                       // if (supportPoints <= 1)
+                       // {
                             Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
                             s.SetBasement(observingSurface, new PixelPosByte(7, 7));
                             PoolMaster.current.BuildSplash(observingSurface.transform.position);
-                        }
-                        else
-                        {
-                            observingSurface.myChunk.ReplaceBlock(observingSurface.pos, BlockType.Cave, observingSurface.material_id, ResourceType.CONCRETE_ID, false);
-                        }
+                       // }
+                     //   else
+                      //  {
+                        //    observingSurface.myChunk.ReplaceBlock(observingSurface.pos, BlockType.Cave, observingSurface.material_id, ResourceType.CONCRETE_ID, false);
+                       // }
                     }
                     else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
-               
+                }
                 break;
             case CostPanelMode.BlockBuilding:
                 BlockBuildingSite bbs = observingSurface.gameObject.AddComponent<BlockBuildingSite>();

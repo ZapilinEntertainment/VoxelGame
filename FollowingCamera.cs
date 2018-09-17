@@ -185,23 +185,27 @@ public sealed class FollowingCamera : MonoBehaviour {
             #endregion
             float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
             cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
-            float dist = cam.transform.localPosition.magnitude;
-            if (dist > zoomSlider.maxValue)
+
+            if (zoomSlider != null) // удалить ?
             {
-                dist = zoomSlider.maxValue;
-            }
-            else
-            {
-                if (dist < zoomSlider.minValue)
+                float dist = cam.transform.localPosition.magnitude;
+                if (dist > zoomSlider.maxValue)
                 {
-                    dist = zoomSlider.minValue;
+                    dist = zoomSlider.maxValue;
                 }
-            }
-            if (dist != camTransform.localPosition.magnitude)
-            {
-                cam.transform.localPosition = cam.transform.localPosition.normalized * dist;
-                zoom_oneChangeIgnore = true;
-                zoomSlider.value = dist;
+                else
+                {
+                    if (dist < zoomSlider.minValue)
+                    {
+                        dist = zoomSlider.minValue;
+                    }
+                }
+                if (dist != camTransform.localPosition.magnitude)
+                {
+                    cam.transform.localPosition = cam.transform.localPosition.normalized * dist;
+                    zoom_oneChangeIgnore = true;
+                    zoomSlider.value = dist;
+                }
             }
             zoomSmoothCoefficient += zoomSmoothAcceleration;
         }
@@ -238,7 +242,99 @@ public sealed class FollowingCamera : MonoBehaviour {
         //if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
 
         camPos = camTransform.position;
-        camPosChanged = ((camPos - prevCamPos).magnitude > 0.1f);
+        camPosChanged = true;
+
+        if (GameMaster.editMode)
+        {
+            bool? leftClick = null;
+            if (Input.GetMouseButtonDown(0))
+            {
+                leftClick = true;
+            }
+            else
+            {
+                if (Input.GetMouseButtonDown(1)) leftClick = false;
+            }
+            if (leftClick != null)
+            {
+                Vector2 mpos = Input.mousePosition;
+                RaycastHit rh;
+                if (Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out rh))
+                {
+                    GameObject collided = rh.collider.gameObject;
+                    if (collided.tag == "BlockCollider")
+                    {
+                        Block b = collided.transform.parent.gameObject.GetComponent<Block>();
+                        if (b == null)
+                        {
+                            b = collided.transform.parent.parent.gameObject.GetComponent<Block>();
+                        }
+                        Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
+                        if (leftClick == true) // добавляем блок
+                        {
+                            if (b.type == BlockType.Cube)
+                            {
+                                float coordsDelta = rh.point.z - b.transform.position.z;
+                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
+                                {
+                                    if (coordsDelta > 0)
+                                    {
+                                        cpos.z += 1;
+                                        if (cpos.z >= Chunk.CHUNK_SIZE) goto END_OF_RAYCAST_CHECK;
+                                    }
+                                    else
+                                    {
+                                        cpos.z -= 1;
+                                        if (cpos.z < 0) goto END_OF_RAYCAST_CHECK;
+                                    }
+                                }
+                                coordsDelta = rh.point.x - b.transform.position.x;
+                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
+                                {
+                                    if (coordsDelta > 0)
+                                    {
+                                        cpos.x += 1;
+                                        if (cpos.x >= Chunk.CHUNK_SIZE) goto END_OF_RAYCAST_CHECK;
+                                    }
+                                    else
+                                    {
+                                        cpos.x -= 1;
+                                        if (cpos.x < 0) goto END_OF_RAYCAST_CHECK;
+                                    }
+                                }
+                                coordsDelta = rh.point.y - b.transform.position.y;
+                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
+                                {
+                                    if (coordsDelta > 0)
+                                    {
+                                        cpos.y += 1;
+                                        if (cpos.y >= Chunk.CHUNK_SIZE) goto END_OF_RAYCAST_CHECK;
+                                    }
+                                    else
+                                    {
+                                        cpos.y -= 1;
+                                        if (cpos.y < 0) goto END_OF_RAYCAST_CHECK;
+                                    }
+                                }
+                                GameMaster.mainChunk.AddBlock(new ChunkPos(cpos.x, cpos.y, cpos.z), BlockType.Cube, ResourceType.STONE_ID, true);
+                            }
+                            else // surface block
+                            {
+                                GameMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, b.material_id, true);
+                            }
+                        }
+                        else // удаляем блок
+                        {
+                            if (b.type == BlockType.Surface | b.type == BlockType.Cave) {
+                                GameMaster.mainChunk.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
+                            }
+                            GameMaster.mainChunk.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
+                        }
+                    }
+                }
+            }
+            END_OF_RAYCAST_CHECK:;
+        }
     }
 
     void LateUpdate()
@@ -264,29 +360,30 @@ public sealed class FollowingCamera : MonoBehaviour {
         }
         if (mastBillboards.Count > 0)
         {
-            Vector3 cpoint = camPos;
-            foreach (Transform t in mastBillboards) {
-                cpoint = t.InverseTransformPoint(camPos); cpoint.y = 0;
-                t.LookAt(cpoint, t.TransformDirection(Vector3.up));
+            foreach (Transform t in mastBillboards)
+            {
+                Vector3 cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
+                t.transform.forward = cpos.normalized;
             }
         }
         yield return null;
     }
 
-    public void AddSprite(Transform t)
+    public bool AddSprite(Transform t)
     {
         int id = t.GetInstanceID();
         if (billboards.Count != 0)
         {
             foreach (int i in billboardsIDs)
             {
-                if (i == id) return;
+                if (i == id) return false;
             }
         }
         billboards.Add(t);
         billboardsIDs.Add(id);
         t.LookAt(camPos);
         handleSprites = true;
+        return true;
     }
     public void AddMastSprite(Transform t)
     {
@@ -300,8 +397,10 @@ public sealed class FollowingCamera : MonoBehaviour {
         }
         mastBillboards.Add(t);
         mastBillboardsIDs.Add(id);
-        Vector3 cpoint = t.InverseTransformPoint(camPos); cpoint.y = 0;
-        t.LookAt(cpoint, t.TransformDirection(Vector3.up));
+
+        Vector3 cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
+        t.transform.forward = cpos.normalized;
+
         handleSprites = true;
     }
 

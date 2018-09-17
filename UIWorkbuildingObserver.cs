@@ -52,7 +52,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 		STATUS_UPDATE_TIME = 0.5f; timer = STATUS_UPDATE_TIME;
 	}
 
-    public void SetWorksiteObserver(Worksite ws)
+    public void SetObservingWorksite(Worksite ws)
     {
         workbuildingMode = false;
         if (ws == null)
@@ -77,6 +77,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         stopButton.SetActive(true);
 
         STATUS_UPDATE_TIME = 0.5f; timer = STATUS_UPDATE_TIME;
+        StatusUpdate();
     }
 
 	override protected void StatusUpdate() {
@@ -111,13 +112,16 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         }
         else
         {// WORKSITE
+            if (observingWorksite == null) SelfShutOff();
+            else
+            {
                 if (showingWorkersCount != observingWorksite.workersCount)
                 {
                     showingWorkersCount = observingWorksite.workersCount;
                     workersCountField.text = showingWorkersCount.ToString();
                     slider.value = showingWorkersCount;
                 }
-            int maxWorkers = observingWorksite.GetMaxWorkers();
+                int maxWorkers = observingWorksite.GetMaxWorkers();
                 if (showingWorkersMaxCount != maxWorkers)
                 {
                     showingWorkersMaxCount = maxWorkers;
@@ -134,6 +138,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                     }
                 }
                 actionLabel.text = observingWorksite.actionLabel;
+            }
         }
 	}
 
@@ -147,7 +152,11 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
     override public void ShutOff()
     {
         isObserving = false;
-        observingWorkbuilding = null;
+        if (observingWorksite != null)
+        {
+            observingWorksite.showOnGUI = false;
+            observingWorkbuilding = null;
+        }
         if (workbuildingMode)
         {
             Building.buildingObserver.ShutOff();

@@ -41,8 +41,9 @@ public sealed class GameMaster : MonoBehaviour {
 
 	public Constructor constructor;	
     public static bool applicationStopWorking { get; private set; }
+    public static bool editMode = false;
 
-	public static Chunk mainChunk; 
+    public static Chunk mainChunk; 
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
 	public  LineRenderer systemDrawLR;
@@ -94,6 +95,8 @@ public sealed class GameMaster : MonoBehaviour {
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
 	public bool generateChunk = true;
+    public byte test_size = 16;
+    public bool _editMode = false;
                                          
 
     private void Awake() {
@@ -107,10 +110,12 @@ public sealed class GameMaster : MonoBehaviour {
 	void Start() {
         if (!firstSet) return;
         gameSpeed = 1;
-        
 
-        lifeGrowCoefficient = 1;
-        //Localization.ChangeLanguage(Language.English);
+        editMode = _editMode;
+        if (!editMode)
+        {
+            lifeGrowCoefficient = 1;
+            //Localization.ChangeLanguage(Language.English);
 
             geologyModule = gameObject.AddComponent<GeologyModule>();
             difficulty = gss.difficulty;
@@ -118,9 +123,9 @@ public sealed class GameMaster : MonoBehaviour {
             colonyController.CreateStorage();
             PoolMaster pm = gameObject.AddComponent<PoolMaster>();
             pm.Load();
-        //byte chunksize = gss.chunkSize;
-        byte chunksize = 25;
-        if (gss.generateChunk)
+            //byte chunksize = gss.chunkSize;
+            byte chunksize = test_size;
+            if (gss.generateChunk)
             {
                 Chunk.SetChunkSize(chunksize);
                 constructor.ConstructChunk(chunksize);
@@ -182,14 +187,15 @@ public sealed class GameMaster : MonoBehaviour {
                         lui.lineDrawer = systemDrawLR;
                         Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
                         break;
-                    case GameStart.Headquarters:
-                    List<SurfaceBlock> sblocks = mainChunk.surfaceBlocks;
-                    SurfaceBlock sb = sblocks[(int)(Random.value *(sblocks.Count - 1))];
-                    int xpos = sb.pos.x;
-                    int zpos = sb.pos.z;
 
-                    if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
-                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                    case GameStart.Headquarters:
+                        List<SurfaceBlock> sblocks = mainChunk.surfaceBlocks;
+                        SurfaceBlock sb = sblocks[(int)(Random.value * (sblocks.Count - 1))];
+                        int xpos = sb.pos.x;
+                        int zpos = sb.pos.z;
+
+                        if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
+                        Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
@@ -197,39 +203,39 @@ public sealed class GameMaster : MonoBehaviour {
 
                         colonyController.AddCitizens(START_WORKERS_COUNT);
 
-                    sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos + 1);
-                    if (sb == null)
-                    {
-                        sb = mainChunk.GetSurfaceBlock(xpos, zpos + 1);
+                        sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos + 1);
                         if (sb == null)
                         {
-                            sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos + 1);
+                            sb = mainChunk.GetSurfaceBlock(xpos, zpos + 1);
                             if (sb == null)
                             {
-                                sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos);
+                                sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos + 1);
                                 if (sb == null)
                                 {
-                                    sb = mainChunk.GetSurfaceBlock(xpos+1 , zpos);
+                                    sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos);
                                     if (sb == null)
                                     {
-                                        sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos - 1);
+                                        sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos);
                                         if (sb == null)
                                         {
-                                            sb = mainChunk.GetSurfaceBlock(xpos , zpos - 1);
+                                            sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos - 1);
                                             if (sb == null)
                                             {
-                                                sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos - 1);
+                                                sb = mainChunk.GetSurfaceBlock(xpos, zpos - 1);
                                                 if (sb == null)
                                                 {
-                                                    print("bad generation, do something!");
+                                                    sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos - 1);
+                                                    if (sb == null)
+                                                    {
+                                                        print("bad generation, do something!");
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }                        
-                    }
+                        }
                         StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
                         firstStorage.SetBasement(sb, PixelPosByte.zero);
                         //start resources
@@ -245,7 +251,20 @@ public sealed class GameMaster : MonoBehaviour {
                 }
                 FollowingCamera.main.WeNeedUpdate();
             }
-            else LoadGame(Application.persistentDataPath + "/Saves/" + savename + ".sav");        
+            else LoadGame(Application.persistentDataPath + "/Saves/" + savename + ".sav");
+        }
+        else
+        {
+            gameObject.AddComponent<PoolMaster>().Load();           
+            
+            Chunk.SetChunkSize(test_size);
+            mainChunk = new GameObject("chunk").AddComponent<Chunk>();
+            mainChunk.InitializeBlocksArray();
+            mainChunk.ChunkLightmapFullRecalculation();
+            mainChunk.AddBlock(new ChunkPos(Chunk.CHUNK_SIZE / 2, Chunk.CHUNK_SIZE / 2, Chunk.CHUNK_SIZE / 2), BlockType.Cube, ResourceType.STONE_ID, true);
+
+            FollowingCamera.CenterCamera(Vector3.one * Chunk.CHUNK_SIZE / 2f);
+        }
 	}
 
     #region updates
@@ -253,6 +272,7 @@ public sealed class GameMaster : MonoBehaviour {
     {
         //testzone
         if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
+        if (Input.GetKeyDown("x")) mainChunk.TakeLifePowerWithForce(1000);
         // eo testzone
 
         //float frameTime = Time.deltaTime * gameSpeed;
@@ -260,7 +280,7 @@ public sealed class GameMaster : MonoBehaviour {
 
     private void FixedUpdate()
     {
-        if (gameSpeed != 0)
+        if (gameSpeed != 0 & !editMode)
         {
             timeGone += Time.deltaTime * gameSpeed;
 
@@ -323,6 +343,7 @@ public sealed class GameMaster : MonoBehaviour {
                 lifepowerTimer = LIFEPOWER_TICK;
                 Plant.PlantUpdate();
                 if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
+                if (lifepowerUpdateEvent != null) lifepowerUpdateEvent();
             }
         }
     }  
@@ -343,9 +364,7 @@ public sealed class GameMaster : MonoBehaviour {
 		case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed;break;
 		}
 		return workspeed ;
-	}
-
-    
+	}    
 
     #region save-load system
     public bool SaveGame() { return SaveGame("autosave"); }

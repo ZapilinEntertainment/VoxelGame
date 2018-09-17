@@ -76,7 +76,7 @@ sealed public class Corn : Plant {
                     else
                     {
                         c.lifepower -= decaySpeed * t;
-                        if (c.lifepower == 0) c.Dry();
+                        if (c.lifepower <= 0) c.Dry();
                     }
                     if (c.growth >= 1 & c.stage < MAX_STAGE) c.SetStage((byte)(c.stage + 1));
                     i++;

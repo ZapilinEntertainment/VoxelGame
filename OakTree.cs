@@ -245,7 +245,7 @@ public class OakTree : Plant
                     else
                     {
                         oak.lifepower -= decaySpeed * t;
-                        if (oak.lifepower == 0) oak.Dry();
+                        if (oak.lifepower <= 0) oak.Dry();
                     }
                     if (oak.timer <= 0)
                     {
@@ -253,7 +253,7 @@ public class OakTree : Plant
                         {
                             byte nextStage = oak.stage;
                             nextStage++;
-                            if (oak.CanGrowAround(nextStage)) oak.SetStage(nextStage);
+                            oak.SetStage(nextStage);
                         }
                         oak.timer = oak.stage;
                     }
@@ -349,41 +349,6 @@ public class OakTree : Plant
         growth = lifepower / lifepowerToGrow;
     }
 
-    bool CanGrowAround(byte st)
-    {
-        //central cell : (rewrite if size % 2 == 0)
-        SurfaceRect sr = new SurfaceRect((byte)(innerPosition.x + innerPosition.size / 2), (byte)(innerPosition.z + innerPosition.size / 2), innerPosition.size);
-        switch (st)
-        {
-            case 0:
-            case 1:
-            case 2:
-                sr = new SurfaceRect(sr.x, sr.z, 1);
-                break;
-            case 3:
-            case 4:
-                if (sr.x - 1 < 0 | sr.z - 1 < 0) return false;
-                sr = new SurfaceRect((byte)(sr.x - 1), (byte)(sr.z - 1), 3);
-                break;
-            case 5:
-                if (sr.x - 2 < 0 | sr.z - 2 < 0) return false;
-                sr = new SurfaceRect((byte)(sr.x - 2), (byte)(sr.z - 2), 4);
-                break;
-            case 6:
-                if (sr.x - 3 < 0 | sr.z - 3 < 0) return false;
-                sr = new SurfaceRect((byte)(sr.x - 3), (byte)(sr.z - 3), 5);
-                break;
-        }
-        if (sr == innerPosition) return true;
-        if (sr.x + sr.size > SurfaceBlock.INNER_RESOLUTION | sr.size + sr.z > SurfaceBlock.INNER_RESOLUTION) return false;
-        else
-        {
-            innerPosition = sr;
-            basement.CellsStatusUpdate();
-            return true;
-        }
-    }
-
     public static float GetLifepowerLevelForStage(byte st)
     {
         switch (st)
@@ -418,23 +383,28 @@ public class OakTree : Plant
         if (stage > 3)
         {
             GameObject pref = Load3DModel(stage);
-            GameObject deadTreeModel = Instantiate(pref);
+            GameObject model3d = Instantiate(pref);
             ReturnModelToPool(pref);
-            Destroy(deadTreeModel.transform.GetChild(1).gameObject);
-            deadTreeModel.transform.parent = deadTreeModel.transform;
-            Transform t = deadTreeModel.transform.GetChild(0);
+            Transform t = model3d.transform.GetChild(1);            
+            HarvestableResource hr = new GameObject("dead oak tree").AddComponent<HarvestableResource>();
+            t.parent = hr.transform;
+            t.gameObject.SetActive(true);
+            Destroy(model3d);
+            t.localPosition = Vector3.zero;
+            
             MeshFilter mf = t.GetComponent<MeshFilter>();
-            t.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mf);
-
-            HarvestableResource hr = new GameObject().AddComponent<HarvestableResource>();
-            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber()), false, innerPosition.size, deadTreeModel);
+            t.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mf, basement.illumination);
+            
+            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber()), false, innerPosition.size, model3d);
             hr.modelRotation = modelRotation;
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
+            // спрайтовый LOD?
         }
         else
         {
             Structure s = GetStructureByID(DRYED_PLANT_ID);
             s.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
+            s.gameObject.AddComponent<MastSpriter>();
         }
     }
 

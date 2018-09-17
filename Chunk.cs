@@ -85,11 +85,11 @@ public sealed class Chunk : MonoBehaviour
                             if (lifePower > lifeTransfer) { sb.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
                             else { sb.grassland.AddLifepower((int)lifePower); lifePower = 0; }
                     }
-                    grasslandLifepowerChanges = lifePower;
+                    grasslandLifepowerChanges = lifePower * 0.75f;
                 }
                 if (lifePower < -100)
                 { // выкачивание жизненной силы обратно
-                    grasslandLifepowerChanges = -1 * lifePower;
+                    grasslandLifepowerChanges = lifePower / 2f;
                 }
                 lifePower = Grassland.GrasslandUpdate(grasslandLifepowerChanges);
             }
@@ -159,21 +159,52 @@ public sealed class Chunk : MonoBehaviour
     }
     #endregion
 
-    public byte GetVisibilityMask(int i, int j, int k)
+    public byte GetVisibilityMask(int x, int y, int z)
     {
-        byte vmask = 63;
-        if (j > GameMaster.layerCutHeight) vmask = 0;
+        if (y > GameMaster.layerCutHeight) return 0;
         else
         {
-            Block bx = GetBlock(i + 1, j, k);
-            if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 61;
-            bx = GetBlock(i - 1, j, k); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 55;
-            bx = GetBlock(i, j + 1, k); if (bx != null && !bx.isTransparent && bx.type != BlockType.Shapeless && (bx.pos.y != GameMaster.layerCutHeight + 1)) vmask &= 47;
-            bx = GetBlock(i, j - 1, k); if (bx != null && !bx.isTransparent && (bx.type == BlockType.Cube | (bx.type == BlockType.Cave && (bx as CaveBlock).haveSurface ))) vmask &= 31;
-            bx = GetBlock(i, j, k + 1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 62;
-            bx = GetBlock(i, j, k - 1); if (bx != null && !bx.isTransparent && bx.type == BlockType.Cube) vmask &= 59;
+            byte vmask = 15; // видны только боковые (0,1,2,3)
+            Block bx = GetBlock(x, y, z + 1);
+            if (bx != null)
+            {
+                if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 1;
+            }
+            bx = GetBlock(x + 1, y, z);
+            if (bx != null)
+            {
+                if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 2;
+            }
+            bx = GetBlock(x , y, z - 1);
+            if (bx != null)
+            {
+                if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 4;
+            }
+            bx = GetBlock(x - 1, y, z);
+            if (bx != null)
+            {
+                if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 8;
+            }
+            // up and down
+            bx = GetBlock(x , y + 1, z);
+            if (bx == null || bx.isTransparent) vmask += 16;
+
+            bx = GetBlock(x, y - 1, z);
+            if (bx == null ) vmask += 32;
+            else
+            {
+                if (bx.type == BlockType.Surface)
+                {
+                    SurfaceBlock sb = bx as SurfaceBlock;
+                    if (!sb.haveSupportingStructure) vmask += 32;
+                }
+                else
+                {
+                    if (bx.isTransparent) vmask += 32;
+                }
+            }
+            return vmask;
         }
-        return vmask;
     }
     public void ApplyVisibleInfluenceMask(int x, int y, int z, byte mask)
     {
@@ -184,12 +215,11 @@ public sealed class Chunk : MonoBehaviour
         b = GetBlock(x, y + 1, z); if (b != null) b.ChangeVisibilityMask(5, ((mask & 16) != 0));
         b = GetBlock(x, y - 1, z); if (b != null) b.ChangeVisibilityMask(4, ((mask & 32) != 0));
         BroadcastChunkUpdate(new ChunkPos(x, y, z));
-        ChunkLightmapFullRecalculation();
     }
 
-    void ChunkLightmapFullRecalculation()
+    public void ChunkLightmapFullRecalculation()
     {
-        byte UP_LIGHT = 255, DOWN_LIGHT = 128, SIDE_LIGHT = 200;
+        byte UP_LIGHT = 255, DOWN_LIGHT = 128;
         int x = 0, y = 0, z = 0;
         for (x = 0; x < CHUNK_SIZE; x++)
         {
@@ -320,25 +350,43 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
+        foreach (Block block in blocks)
+        {
+            if (block != null)
+            {
+                if (block.illumination != lightMap[block.pos.x, block.pos.y, block.pos.z]) block.SetIllumination();
+            }
+        }
+    }
+    public void RecalculateIlluminationAtPoint(ChunkPos pos)
+    {
+        ChunkLightmapFullRecalculation(); // в разработке
     }
 
     #region operating blocks data
+    public void InitializeBlocksArray()
+    {
+        blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+    }
 
     public static void SetChunkSize(byte x)
     {
         CHUNK_SIZE = x;
+        //функция ресайза при наличии уже существующего массива блоков?
     }
 
     public void SetChunk(int[,,] newData)
     {
-        if (blocks != null) ClearChunk();
         int size = newData.GetLength(0);
         CHUNK_SIZE = (byte)size;
+        if (blocks != null) ClearChunk();
+        else blocks = new Block[size, size, size];
+        
+        
         if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
         GameMaster.layerCutHeight = CHUNK_SIZE;
         GameMaster.prevCutHeight = GameMaster.layerCutHeight;
-
-        blocks = new Block[size, size, size];        
+                
         surfaceBlocks = new List<SurfaceBlock>();
         for (int x = 0; x < size; x++)
         {
@@ -428,72 +476,119 @@ public sealed class Chunk : MonoBehaviour
         switch (f_type)
         {
             case BlockType.Cube:
-                cb = new GameObject().AddComponent<CubeBlock>();
-                cb.InitializeCubeBlock(this, f_pos, i_floorMaterialID, i_naturalGeneration);
-                blocks[x, y, z] = cb;
-                if (cb.isTransparent == false) influenceMask = 0; else influenceMask = 1; // закрывает собой все соседние стенки
-                calculateUpperBlock = true;
-                i_ceilingMaterialID = i_floorMaterialID;
-                break;
+                {
+                    cb = new GameObject().AddComponent<CubeBlock>();
+                    cb.InitializeCubeBlock(this, f_pos, i_floorMaterialID, i_naturalGeneration);
+                    blocks[x, y, z] = cb;
+                    if (cb.isTransparent == false) influenceMask = 0; // закрывает собой все соседние стенки
+                    calculateUpperBlock = true;
+                    i_ceilingMaterialID = i_floorMaterialID;
+
+                    lightMap[x, y, z] = 0;
+                    RecalculateIlluminationAtPoint(cb.pos);
+                    break;
+                }
             case BlockType.Shapeless:
-                blocks[x, y, z] = new GameObject().AddComponent<Block>();
-                blocks[x, y, z].InitializeBlock(this, f_pos, i_floorMaterialID);
-                break;
+                {
+                    b = new GameObject().AddComponent<Block>();
+                    blocks[x, y, z] = b;
+                    b.InitializeBlock(this, f_pos, i_floorMaterialID);                    
+
+                    //#shapeless light recalculation
+                    byte light = lightMap[x, y, z];
+                    if (light != 255)
+                    {
+                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                        if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z ] * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    if (light != lightMap[x, y, z])
+                    {
+                        lightMap[x, y, z] = light;
+                        RecalculateIlluminationAtPoint(b.pos);
+                    }
+                    // eo shapeless light recalculation
+                    break;
+                }
             case BlockType.Surface:
-                b = GetBlock(x, y-1,z);
-                if (b == null)
                 {
-                    return null;
-                }
-                if ( b.type != BlockType.Surface) influenceMask = 31;
-                else influenceMask = 63;
+                    b = GetBlock(x, y - 1, z);
+                    if (b == null)
+                    {
+                        return null;
+                    }
+                    influenceMask = 31;
+                    
+                    SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                    sb.InitializeSurfaceBlock(this, f_pos, i_floorMaterialID);
+                    blocks[x, y, z] = sb;
+                    surfaceBlocks.Add(sb);
 
-                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-                sb.InitializeSurfaceBlock(this, f_pos, i_floorMaterialID);
-                blocks[x, y, z] = sb;
-                surfaceBlocks.Add(sb);
-                
-                break;
+                    //#surface light recalculation
+                    byte light = lightMap[x, y, z];
+                    if (light != 255)
+                    {
+                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                    }
+                    if (light != lightMap[x, y, z])
+                    {
+                        lightMap[x, y, z] = light;
+                        RecalculateIlluminationAtPoint(sb.pos);
+                    }
+                    // eo surface light recalculation
+                    break;
+                }
             case BlockType.Cave:
-                float spoints = CalculateSupportPoints(x, y, z);
-                if (spoints < 1) goto case BlockType.Surface;
+                {
+                    float spoints = CalculateSupportPoints(x, y, z);
+                    if (spoints < 1) goto case BlockType.Surface;
 
-                Block lowerBlock = blocks[x, y - 1, z];
-                if (lowerBlock == null) i_floorMaterialID = -1;
-                CaveBlock caveb = new GameObject().AddComponent<CaveBlock>();
-                caveb.InitializeCaveBlock(this, f_pos, i_ceilingMaterialID, i_floorMaterialID);
-                blocks[x, y, z] = caveb;
-                if (lowerBlock.type == BlockType.Surface) // снизу структура с isBasement == true ?
-                {
-                    influenceMask = 47; // все грани, кроме верхней
-                }
-                else
-                {
+                    Block lowerBlock = blocks[x, y - 1, z];
+                    if (lowerBlock == null) i_floorMaterialID = -1;
+                    CaveBlock caveb = new GameObject().AddComponent<CaveBlock>();
+                    caveb.InitializeCaveBlock(this, f_pos, i_ceilingMaterialID, i_floorMaterialID);
+                    blocks[x, y, z] = caveb;
                     if (caveb.haveSurface) influenceMask = 15; else influenceMask = 47;
                     calculateUpperBlock = true;
+                    surfaceBlocks.Add(caveb);
+
+                    //#cave light recalculation
+                    byte light = lightMap[x, y, z];
+                    if (light != 255)
+                    {
+                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (!caveb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z ] * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    if (light != lightMap[x, y, z])
+                    {
+                        lightMap[x, y, z] = light;
+                        RecalculateIlluminationAtPoint(caveb.pos);
+                    }
+                    // eo cave light recalculation
                 }
-                surfaceBlocks.Add(caveb);
                 break;
         }
         b = blocks[x, y, z];
         b.SetVisibilityMask(visMask);
-        b.SetRenderBitmask(prevBitmask);
-        ApplyVisibleInfluenceMask(x, y, z, influenceMask);
+        b.SetRenderBitmask(prevBitmask);        
         if (calculateUpperBlock)
         {
             if (GetBlock(x, y + 1, z) == null)
-            {
-                if (GetBlock(x, y + 2, z) != null)
-                {
-                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Cave, i_ceilingMaterialID, blocks[x, y + 2, z].material_id, i_naturalGeneration);
-                }
-                else
-                {
-                    
-                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
-                }
+            {                   
+                AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
             }
         }
+        ApplyVisibleInfluenceMask(x, y, z, influenceMask);
         return b;
     }
 
@@ -505,11 +600,6 @@ public sealed class Chunk : MonoBehaviour
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (GetBlock(x, y, z) == null) return null;
-        if (f_newType == BlockType.Cave)
-        {
-            float pts = CalculateSupportPoints(x, y, z);
-            if (pts < 1) f_newType = BlockType.Surface;
-        }
         Block originalBlock = GetBlock(x, y, z);
         if (originalBlock == null) return AddBlock(f_pos, f_newType, material1_id, material2_id, naturalGeneration);
         if (originalBlock.type == f_newType)
@@ -531,81 +621,127 @@ public sealed class Chunk : MonoBehaviour
         {
 
             case BlockType.Shapeless:
-                b = new GameObject().AddComponent<Block>();
-                b.InitializeShapelessBlock(this, f_pos, null);
-                blocks[x, y, z] = b;
-                break;
+                {
+                    b = new GameObject().AddComponent<Block>();
+                    b.InitializeShapelessBlock(this, f_pos, null);
+                    blocks[x, y, z] = b;
 
+                    //#shapeless light recalculation
+                    byte light = lightMap[x, y, z];
+                    if (light != 255)
+                    {
+                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                        if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    if (light != lightMap[x, y, z])
+                    {
+                        lightMap[x, y, z] = light;
+                        RecalculateIlluminationAtPoint(b.pos);
+                    }
+                    // eo shapeless light recalculation
+                    break;
+                }
             case BlockType.Surface:
-                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-                sb.InitializeSurfaceBlock(this, f_pos, material1_id);
-                surfaceBlocks.Add(sb);
-                b = sb;
-                blocks[x, y, z] = sb;
-                Block blockBelow = GetBlock(x, y - 1, z);
-                if (blockBelow != null && (blockBelow.type != BlockType.Surface & blockBelow.type != BlockType.Cave)) influenceMask = 31;
-                else influenceMask = 63;
-                if (originalBlock.type == BlockType.Cave)
                 {
-                    CaveBlock originalSurface = originalBlock as CaveBlock;
-                    foreach (Structure s in originalSurface.surfaceObjects)
+                    SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                    sb.InitializeSurfaceBlock(this, f_pos, material1_id);
+                    surfaceBlocks.Add(sb);
+                    b = sb;
+                    blocks[x, y, z] = sb;
+                    influenceMask = 31;
+                    if (originalBlock.type == BlockType.Cave)
                     {
-                        if (s == null) continue;
-                        s.SetBasement(sb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
+                        CaveBlock originalSurface = originalBlock as CaveBlock;
+                        foreach (Structure s in originalSurface.surfaceObjects)
+                        {
+                            if (s == null) continue;
+                            s.SetBasement(sb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
+                        }
                     }
+                    //#surface light recalculation
+                    byte light = lightMap[x, y, z];
+                    if (light != 255)
+                    {
+                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                    }
+                    if (light != lightMap[x, y, z])
+                    {
+                        lightMap[x, y, z] = light;
+                        RecalculateIlluminationAtPoint(sb.pos);
+                    }
+                    // eo surface light recalculation
+                    break;
                 }
-                break;
-
             case BlockType.Cube:
-                CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
-                cb.InitializeCubeBlock(this, f_pos, material1_id, naturalGeneration);
-                b = cb;
-                blocks[x, y, z] = cb;
-                influenceMask = 0;
-                calculateUpperBlock = true;
+                {
+                    CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
+                    cb.InitializeCubeBlock(this, f_pos, material1_id, naturalGeneration);
+                    b = cb;
+                    blocks[x, y, z] = cb;
+                    influenceMask = 0;
+                    calculateUpperBlock = true;
+                    lightMap[x, y, z] = 0;
+                    RecalculateIlluminationAtPoint(b.pos);
+                }
                 break;
-
             case BlockType.Cave:
-                float supportPoints = CalculateSupportPoints(x, y, z);
-                if (supportPoints < 1) goto case BlockType.Surface;
+                {
+                    CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
+                    cvb.InitializeCaveBlock(this, f_pos, material2_id, material1_id);
+                    surfaceBlocks.Add(cvb);
+                    blocks[x, y, z] = cvb;
+                    b = cvb;
+                    if (cvb.haveSurface) influenceMask = 15; else influenceMask = 47;
 
-                CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
-                cvb.InitializeCaveBlock(this, f_pos, material2_id, material1_id);
-                surfaceBlocks.Add(cvb);
-                blocks[x, y, z] = cvb;
-                b = cvb;
-                if (GetBlock(x, y - 1, z) != null)
-                {
-                    if (GetBlock(x, y - 1, z).type != BlockType.Surface) influenceMask = 31;
-                    else
+                    if (originalBlock.type == BlockType.Surface)
                     {
-                        influenceMask = 63;
+                        SurfaceBlock originalSurface = originalBlock as SurfaceBlock;
+                        foreach (Structure s in originalSurface.surfaceObjects)
+                        {
+                            if (s == null) continue;
+                            s.SetBasement(cvb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
+                        }
+                        if (originalSurface.grassland != null)
+                        {
+                            Grassland gl = Grassland.CreateOn(cvb);
+                            gl.SetLifepower(originalSurface.grassland.lifepower);
+                            originalSurface.grassland.SetLifepower(0);
+                        }
                     }
+                    calculateUpperBlock = true;
+
+                    //#cave light recalculation
+                    byte light = lightMap[x, y, z];
+                    if (light != 255)
+                    {
+                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (!cvb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                    }
+                    if (light != lightMap[x, y, z])
+                    {
+                        lightMap[x, y, z] = light;
+                        RecalculateIlluminationAtPoint(cvb.pos);
+                    }
+                    // eo cave light recalculation
                 }
-                else influenceMask = 31;
-                if (originalBlock.type == BlockType.Surface)
-                {
-                    SurfaceBlock originalSurface = originalBlock as SurfaceBlock;
-                    foreach (Structure s in originalSurface.surfaceObjects)
-                    {
-                        if (s == null) continue;
-                        s.SetBasement(cvb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
-                    }
-                    if (originalSurface.grassland != null)
-                    {
-                        Grassland gl = Grassland.CreateOn(cvb);
-                        gl.SetLifepower(originalSurface.grassland.lifepower);
-                        originalSurface.grassland.SetLifepower(0);
-                    }
-                }
-                calculateUpperBlock = true;
                 break;
-        }
-        b.SetVisibilityMask(originalBlock.visibilityMask);
+        }        
         blocks[x, y, z].MakeIndestructible(originalBlock.indestructible);
         originalBlock.Annihilate();
         originalBlock = null;
 
+        b.SetVisibilityMask(GetVisibilityMask(x, y, z));
         b.SetRenderBitmask(prevBitmask);
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
         if (calculateUpperBlock)
@@ -619,6 +755,7 @@ public sealed class Chunk : MonoBehaviour
                 else AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, material2_id, naturalGeneration);
             }
         }
+        
         return b;
     }
 
@@ -741,6 +878,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         if (makeSurface) AddBlock(pos, BlockType.Surface, b.material_id, false);
+        ChunkLightmapFullRecalculation();
     }
     public void ClearChunk()
     {

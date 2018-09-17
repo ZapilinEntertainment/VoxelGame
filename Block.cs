@@ -64,13 +64,73 @@ public class Block : MonoBehaviour {
 	virtual public void SetVisibilityMask (byte x) {
 		visibilityMask = x;
 	}
-	virtual public void ChangeVisibilityMask (byte index, bool value) { 
-		byte vm = visibilityMask;
-		byte val = (byte)( Mathf.Pow(2, index) );
-		byte nmask= (byte)~val;
-		vm &= nmask; // любое значение в позиции index меняется на 0
-		if (value) { vm +=  val;}
-		if (vm != visibilityMask) SetVisibilityMask((byte)vm);
+	virtual public void ChangeVisibilityMask (byte index, bool val) {
+        byte vm = visibilityMask;
+        //длинно, зато ясно
+		switch (index)
+        {
+            case 0:// forward
+                if (val == true)
+                {
+                    if ((visibilityMask & 1) == 0) vm += 1;
+                }
+                else
+                {
+                    if ((visibilityMask & 1) == 1) vm -= 1;
+                }
+                break;
+            case 1:// right
+                if (val == true)
+                {
+                    if ((visibilityMask & 2) == 0) vm += 2;
+                }
+                else
+                {
+                    if ((visibilityMask & 2) == 2) vm -= 2;
+                }
+                break;
+            case 2:// back
+                if (val == true)
+                {
+                    if ((visibilityMask & 4) == 0) vm += 4;
+                }
+                else
+                {
+                    if ((visibilityMask & 4) == 4) vm -= 4;
+                }
+                break;
+            case 3:// left
+                if (val == true)
+                {
+                    if ((visibilityMask & 8) == 0) vm += 8;
+                }
+                else
+                {
+                    if ((visibilityMask & 8) == 8) vm -= 8;
+                }
+                break;
+            case 4:// up
+                if (val == true)
+                {
+                    if ((visibilityMask & 16) == 0) vm += 16;
+                }
+                else
+                {
+                    if ((visibilityMask & 16) == 16) vm -= 16;
+                }
+                break;
+            case 5:// down
+                if (val == true)
+                {
+                    if ((visibilityMask & 32) == 0) vm += 32;
+                }
+                else
+                {
+                    if ((visibilityMask & 32) == 32) vm -= 32;
+                }
+                break;
+        }
+		if (vm != visibilityMask) SetVisibilityMask(vm);
 	}
     virtual public void SetIllumination()
     {

@@ -47,6 +47,7 @@ public class SurfaceBlock : Block {
 	public int artificialStructures = 0;
 	public bool[,] map { get; protected set; }
 	public BlockRendererController structureBlock;
+    public bool haveSupportingStructure { get; protected set; }
 
 	public static UISurfacePanelController surfaceObserver;
 
@@ -92,33 +93,44 @@ public class SurfaceBlock : Block {
     public void SetGrassland(Grassland g) { grassland = g; }
 
 
-	public bool[,] GetBooleanMap() {
-			map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-			for (int i =0; i < INNER_RESOLUTION; i++) {
+    public bool[,] GetBooleanMap()
+    {
+        map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
+        for (int i = 0; i < INNER_RESOLUTION; i++)
+        {
             for (int j = 0; j < INNER_RESOLUTION; j++)
             {
                 map[i, j] = false;
             }
-			}
-			if (surfaceObjects.Count != 0) {
-				int a = 0;
-				while (a < surfaceObjects.Count) {
-					SurfaceRect sr = surfaceObjects[a].innerPosition;	
-				//if (sr.x_size != 1 && sr.z_size != 1) print (surfaceObjects[a].name+ ' '+ sr.x_size.ToString() + ' ' + sr.z_size.ToString());
-					int i = 0, j=0;
-					while ( j < sr.size ) {
-						while (i < sr.size ) {
-								map[ sr.x + i, sr.z + j ] = true;
-								i++;
-							}
-						i = 0; // обнуляй переменные !
-						j++;
-					}
-						a++;
-				}
-			}
-		return map;
-	}
+        }
+        haveSupportingStructure = false;
+        artificialStructures = 0;
+        if (surfaceObjects.Count != 0)
+        {
+            int a = 0;
+            while (a < surfaceObjects.Count)
+            {
+                Structure s = surfaceObjects[a];
+                if (s.isArtificial) artificialStructures++;
+                if (s.isBasement) haveSupportingStructure = true;
+                SurfaceRect sr = s.innerPosition;
+                //if (sr.x_size != 1 && sr.z_size != 1) print (surfaceObjects[a].name+ ' '+ sr.x_size.ToString() + ' ' + sr.z_size.ToString());
+                int i = 0, j = 0;
+                while (j < sr.size)
+                {
+                    while (i < sr.size)
+                    {
+                        map[sr.x + i, sr.z + j] = true;
+                        i++;
+                    }
+                    i = 0; // обнуляй переменные !
+                    j++;
+                }
+                a++;
+            }
+        }
+        return map;
+    }
 
     public Texture2D GetMapTexture()
     {
@@ -515,47 +527,78 @@ public class SurfaceBlock : Block {
     #endregion
 
     override public void SetRenderBitmask(byte x) {
-		if (renderMask != x) {
-			renderMask = x;
-			if ( visibilityMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
-			if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
-			else surfaceRenderer.enabled = true;
-		}
+        if (renderMask == x) return;
+        else
+        {
+            renderMask = x;
+            if (visibilityMask == 0) return;
+            else
+            {
+                //#surface block visibility check
+                if (renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x);
+                bool allSidesInvisible = ((visibilityMask & 15) == 0);
+                if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible)
+                {
+                    surfaceRenderer.GetComponent<Collider>().enabled = false;
+                    surfaceRenderer.enabled = false;
+                }
+                else
+                {
+                    surfaceRenderer.GetComponent<Collider>().enabled = true;
+                    surfaceRenderer.enabled = true;
+                }
+                //eo sblock vis check
+            }
+        }
 	}
 
-	override public void SetVisibilityMask (byte x) {
-		if (visibilityMask != x) {
-			byte prevVisibility = visibilityMask;
-			visibilityMask = x;
-			if (visibilityMask == 0) {
-				surfaceRenderer.GetComponent<Collider>().enabled = false;
-				surfaceRenderer.enabled = false;
-				int i = 0;
-				while ( i < surfaceObjects.Count ) {
-					surfaceObjects[i].SetVisibility(false);
-					i++;
-				} 
-			}
-			else {
-				if ( renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x); 
-				if ((renderMask & 16 & visibilityMask) == 0) surfaceRenderer.enabled = false;
-				else surfaceRenderer.enabled = true;
-				if ( prevVisibility == 0) {
-                    illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
-                    surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
-					surfaceRenderer.enabled = true;
-					surfaceRenderer.GetComponent<Collider>().enabled = true;
-					int i = 0; 
-					while ( i < surfaceObjects.Count ) {
-						surfaceObjects[i].SetVisibility(true);
-						i++;
-					} 
-				}
-			}
-		}
-	}
+    override public void SetVisibilityMask(byte x)
+    {
+        if (visibilityMask == x) return;
+        byte prevVisibility = visibilityMask;
+        visibilityMask = x;
+        if (visibilityMask == 0)
+        {
+            surfaceRenderer.GetComponent<Collider>().enabled = false;
+            surfaceRenderer.enabled = false;
+            int i = 0;
+            while (i < surfaceObjects.Count)
+            {
+                surfaceObjects[i].SetVisibility(false);
+                i++;
+            }
+        }
+        else
+        {
+            //#surface block visibility check
+            if (renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x);
+            if (prevVisibility == 0)
+            {
+                illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+                int i = 0;
+                while (i < surfaceObjects.Count)
+                {
+                    surfaceObjects[i].SetVisibility(true);
+                    i++;
+                }
+            }
+            bool allSidesInvisible = ((visibilityMask & 15) == 0);
+            if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible)
+            {
+                surfaceRenderer.GetComponent<Collider>().enabled = false;
+                surfaceRenderer.enabled = false;
+            }
+            else
+            {
+                surfaceRenderer.GetComponent<Collider>().enabled = true;
+                surfaceRenderer.enabled = true;
+            }
+            //eo sblock vis check
+        }
+    }
 
-	public UIObserver ShowOnGUI() {
+    public UIObserver ShowOnGUI() {
 		if (surfaceObserver == null) {
 			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
 		}

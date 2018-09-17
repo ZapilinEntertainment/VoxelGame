@@ -76,7 +76,7 @@ public class CubeBlock : Block{
 		material_id = newId;
 		foreach (MeshRenderer mr in faces) {
 			if (mr == null) continue;
-			else mr.material = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>(), illumination);
+			else mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>(), illumination);
 		}
     }
 
@@ -103,7 +103,10 @@ public class CubeBlock : Block{
             if (prevMask != 0 & x== 0) // полное выключение
             {                
                 visibilityMask = 0;
-                if (excavatingStatus == 0 & faces[4] != null) {PoolMaster.ReturnQuadToPool(faces[4].gameObject); faces[4] = null; }
+                if (faces[4] != null) {
+                    if (excavatingStatus == 0) { PoolMaster.ReturnQuadToPool(faces[4].gameObject); faces[4] = null; }
+                    else faces[4].gameObject.SetActive(false);
+                }
                 if (faces[0] != null) { PoolMaster.ReturnQuadToPool(faces[0].gameObject); faces[0] = null; }
                 if (faces[1] != null) {PoolMaster.ReturnQuadToPool(faces[1].gameObject); faces[1] = null; }
                 if (faces[2] != null) {PoolMaster.ReturnQuadToPool(faces[2].gameObject); faces[2] = null; }
@@ -159,6 +162,7 @@ public class CubeBlock : Block{
                 break;
 		case 2: // back
                 g.name = "south_plane";
+                t.localRotation = Quaternion.Euler(0, 0, 0);
                 t.localPosition = new Vector3(0, 0, -QUAD_SIZE/2f);
                 if (pos.z != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z - 1];
                 break;
@@ -202,7 +206,7 @@ public class CubeBlock : Block{
 					excavatingStatus = 0; 
 					if (faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.mesh = PoolMaster.GetOriginalQuadMesh();
+                    mf.sharedMesh = PoolMaster.GetOriginalQuadMesh();
                     ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 			}
@@ -211,7 +215,7 @@ public class CubeBlock : Block{
 					excavatingStatus = 1;
 					if (faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.mesh = PoolMaster.plane_excavated_025;
+                    mf.sharedMesh = PoolMaster.plane_excavated_025;
                     ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 			}
@@ -222,7 +226,7 @@ public class CubeBlock : Block{
 					excavatingStatus = 2;
 					if ( faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.mesh = PoolMaster.plane_excavated_05;
+                    mf.sharedMesh = PoolMaster.plane_excavated_05;
                     ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 				}
@@ -231,7 +235,7 @@ public class CubeBlock : Block{
 						excavatingStatus = 3; 
 					if ( faces[4] == null) CreateFace(4);
                     MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.mesh = PoolMaster.plane_excavated_075;
+                    mf.sharedMesh = PoolMaster.plane_excavated_075;
                     ResourceType.GetMaterialById(material_id, mf, illumination);
                 }
 				}
