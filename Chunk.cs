@@ -27,32 +27,21 @@ public sealed class ChunkSerializer
 
 public sealed class Chunk : MonoBehaviour
 {
-    Block[,,] blocks;
+    public Block[,,] blocks { get; private set; }
     public List<SurfaceBlock> surfaceBlocks { get; private set; }
     public byte prevBitmask = 63;
     public float lifePower = 0;
-    public static byte CHUNK_SIZE { get; private set; }
-    public List<Structure> chunkUpdateSubscribers_structures;
-    public bool[,] sideBlockingMap { get; private set; }      
+    public static byte CHUNK_SIZE { get; private set; }  
     private bool allGrasslandsCreated = false;
     public byte[,,] lightMap { get; private set; }
-
     float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
+    public delegate void ChunkUpdateHandler(ChunkPos pos);
+    public event ChunkUpdateHandler ChunkUpdateEvent;
 
     public void Awake()
     {
         surfaceBlocks = new List<SurfaceBlock>();
-        chunkUpdateSubscribers_structures = new List<Structure>();
-        sideBlockingMap = new bool[CHUNK_SIZE, 4];
         lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-        for (int a = 0; a < CHUNK_SIZE; a++)
-        {
-            for (int b = 0; b < 4; b++)
-            {
-                sideBlockingMap[a, b] = false;
-            }
-        }
-
         FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
 
@@ -143,20 +132,6 @@ public sealed class Chunk : MonoBehaviour
         }
         yield return null;
     }
-    void BroadcastChunkUpdate(ChunkPos pos)
-    {
-        int i = 0;
-        while (i < chunkUpdateSubscribers_structures.Count)
-        {
-            if (chunkUpdateSubscribers_structures[i] == null)
-            {
-                chunkUpdateSubscribers_structures.RemoveAt(i);
-                continue;
-            }
-            chunkUpdateSubscribers_structures[i].ChunkUpdated(pos);
-            i++;
-        }
-    }
     #endregion
 
     public byte GetVisibilityMask(int x, int y, int z)
@@ -214,7 +189,7 @@ public sealed class Chunk : MonoBehaviour
         b = GetBlock(x - 1, y, z); if (b != null) b.ChangeVisibilityMask(1, ((mask & 8) != 0));
         b = GetBlock(x, y + 1, z); if (b != null) b.ChangeVisibilityMask(5, ((mask & 16) != 0));
         b = GetBlock(x, y - 1, z); if (b != null) b.ChangeVisibilityMask(4, ((mask & 32) != 0));
-        BroadcastChunkUpdate(new ChunkPos(x, y, z));
+        if (ChunkUpdateEvent != null) ChunkUpdateEvent(new ChunkPos(x,y,z));
     }
 
     public void ChunkLightmapFullRecalculation()
@@ -1093,6 +1068,85 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
+    public bool BlockShipCorridorIfPossible(int xpos, int ypos, bool xyAxis, int width, Structure sender, ref List<Block> dependentBlocksList)
+    {
+        int xStart = xpos; int xEnd = xStart + width - 1;
+        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE - 1;
+        int yStart = ypos; int yEnd = yStart + width - 1;
+        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE - 1;
+        if (xyAxis)
+        {
+            for (int x = xStart; x < xEnd; x++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    {
+                        if (blocks[x, y, z] != null) return false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int z = xStart; z < xEnd; z++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    {
+                        if (blocks[x, y, z] != null) return false;
+                    }
+                }
+            }
+        }        
+        Block bk;
+        if (xyAxis)
+        {
+            for (int x = xStart; x < xEnd; x++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    {
+                        bk = new GameObject().AddComponent<Block>();
+                        bk.InitializeShapelessBlock(this, new ChunkPos(x, y, z), sender);
+                        blocks[x, y, z] = bk;
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int z = xStart; z < xEnd; z++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    {
+                        bk = new GameObject().AddComponent<Block>();
+                        bk.InitializeShapelessBlock(this, new ChunkPos(x, y, z), sender);
+                        blocks[x, y, z] = bk;
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    public void ClearBlocksList( List<Block> list, bool clearMainStructureField)
+    {
+        foreach (Block b in list)
+        {
+            if (b != null)
+            {
+                if (clearMainStructureField) b.mainStructure = null;
+                b.Annihilate();
+            }
+        }
+    }
+
     #region save-load system
     public ChunkSerializer SaveChunkData()
     {
@@ -1128,15 +1182,6 @@ public sealed class Chunk : MonoBehaviour
     }
     #endregion
 
-    public void BlockRow(int index, int side)
-    {
-        sideBlockingMap[index, side] = true;
-    }
-    public void UnblockRow(int index, int side)
-    {
-        sideBlockingMap[index, side] = false;
-    }
-
     void OnGUI()
     { //test
         GUI.Label(new Rect(0, 32, 64, 32), lifePower.ToString());
@@ -1150,7 +1195,6 @@ public sealed class Chunk : MonoBehaviour
             if (b != null) b.Annihilate();
         }
         surfaceBlocks.Clear();
-        chunkUpdateSubscribers_structures.Clear();
         FollowingCamera.main.cameraChangedEvent -= CameraUpdate;
     }
 }

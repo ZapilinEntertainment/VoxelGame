@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 enum CostPanelMode { Disabled, ColumnBuilding, SurfaceMaterialChanging, BlockBuilding }
 public enum SurfacePanelMode {SelectAction, Build}
-enum BuildingCreateInfoMode {Acceptable, Unacceptable_SideBlock, Unacceptable_Material, HeightBlocked}
+enum BuildingCreateInfoMode {Acceptable, Unacceptable_SideBlock, Unacceptable_Material}
 
 public sealed class UISurfacePanelController : UIObserver {
 	public Button buildButton, gatherButton, digButton, blockCreateButton, columnCreateButton, changeMaterialButton;
@@ -132,19 +132,6 @@ public sealed class UISurfacePanelController : UIObserver {
                                 {
                                     SelectBuildingForConstruction(chosenStructure, selectedBuildingButton);
                                 }
-                                break;
-                            case BuildingCreateInfoMode.HeightBlocked:
-                                int side = 0;
-                                if (observingSurface.pos.x == 0)
-                                {
-                                    if (observingSurface.pos.z == 0) side = 2;
-                                }
-                                else
-                                {
-                                    if (observingSurface.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
-                                    else side = 3;
-                                }
-                                if (observingSurface.myChunk.sideBlockingMap[observingSurface.pos.y, side] == false) SelectBuildingForConstruction(chosenStructure, selectedBuildingButton);
                                 break;
                         }
                         //rotating window
@@ -642,42 +629,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		bool sideBlock = ( observingSurface.pos.x == 0 | observingSurface.pos.z == 0 | observingSurface.pos.x == Chunk.CHUNK_SIZE - 1 | observingSurface.pos.z == Chunk.CHUNK_SIZE - 1 );
 		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
-        bool allConditionsMet = false;
-        //side block check :
-        if (chosenStructure.borderOnlyConstruction)
-        {
-            if (sideBlock == false)
-            {
-                // construction delayed in because of not-side position
-                t.text = Localization.GetRestrictionPhrase(RestrictionKey.SideConstruction);
-                buildingCreateMode = BuildingCreateInfoMode.Unacceptable_SideBlock;
-            }
-            else
-            {
-                int side = 0;
-                if (observingSurface.pos.x == 0)
-                {
-                    if (observingSurface.pos.z == 0) side = 2;
-                }
-                else
-                {
-                    if (observingSurface.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
-                    else side = 3;
-                }
-
-                if (observingSurface.myChunk.sideBlockingMap[observingSurface.pos.y, side] == false)
-                {
-                    allConditionsMet = true;
-                }
-                else
-                {
-                    t.text = Localization.GetRestrictionPhrase(RestrictionKey.HeightBlocked);
-                    buildingCreateMode = BuildingCreateInfoMode.HeightBlocked;
-                }
-            }
-        }
-        else allConditionsMet = true;
-		if (allConditionsMet) {	
+	
 			Building bd = chosenStructure as Building;
 			// material check :
 			if (bd != null & bd.requiredBasementMaterialId != -1 & bd.requiredBasementMaterialId != observingSurface.material_id) {
@@ -719,18 +671,6 @@ public sealed class UISurfacePanelController : UIObserver {
 				buildingCreateMode = BuildingCreateInfoMode.Acceptable;
 				innerBuildButton.gameObject.SetActive(true);
 			}
-		}
-        else
-        {
-            resourcesCostImage[0].gameObject.SetActive(true);            
-            t.color = Color.yellow;
-            resourcesCostImage[0].uvRect = ResourceType.GetTextureRect(0);
-            for (int i = 1; i < resourcesCostImage.Length; i++)
-            {
-                resourcesCostImage[i].gameObject.SetActive(false);
-            }
-            innerBuildButton.gameObject.SetActive(false);
-        }
 	}
     void DeselectBuildingButton()
     {

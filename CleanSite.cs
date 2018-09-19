@@ -78,7 +78,7 @@ public class CleanSite : Worksite {
 		if (sign == null) sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.worksite = this;
 		sign.transform.position = workObject.transform.position;
-        FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
+        //FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
 
         diggingMission = f_diggingMission;
 		if (workersCount < START_WORKERS_COUNT) GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
@@ -90,10 +90,10 @@ public class CleanSite : Worksite {
         }
     }
 
-    public void SignCameraUpdate()
-    {
-        sign.transform.LookAt(FollowingCamera.camPos);
-    }
+   // public void SignCameraUpdate()
+   // {
+    //    sign.transform.LookAt(FollowingCamera.camPos);
+    //}
 
     override public void StopWork()
     {
@@ -106,7 +106,7 @@ public class CleanSite : Worksite {
         }
         if (sign != null)
         {
-            FollowingCamera.main.cameraChangedEvent -= SignCameraUpdate;
+          //  FollowingCamera.main.cameraChangedEvent -= SignCameraUpdate;
             Destroy(sign.gameObject);
         }
         if (worksitesList.Contains(this)) worksitesList.Remove(this);

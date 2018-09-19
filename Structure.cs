@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [System.Serializable]
 public class StructureSerializer {
@@ -15,7 +13,6 @@ public class StructureSerializer {
 public class Structure : MonoBehaviour  {
 	public SurfaceBlock basement{get;protected set;}
 	public SurfaceRect innerPosition{get;protected set;}
-	public bool borderOnlyConstruction{get;private set;}  // fixed in ID
 	public bool isArtificial {get;protected set;} // fixed in ID - используется при проверках на снос
 	public bool isBasement{get;private set;} // fixed in ID
 	public bool placeInCenter{get;private set;} // fixed in ID 
@@ -23,11 +20,11 @@ public class Structure : MonoBehaviour  {
     public float hp {get;protected set;}
 	public float maxHp { get; protected set; } // fixed in ID
     public bool rotate90only { get; private set; } // fixed in ID
-    public bool showOnGUI;
+    public bool showOnGUI { get; protected set; }
 	public int id {get; protected set;}
 	public bool visible {get;protected set;}
-    public byte modelRotation;
-    protected bool destroyed = false, subscribedToUpdate = false;
+    public byte modelRotation { get; protected set; }
+    protected bool destroyed = false, subscribedToUpdate = false, subscribedToChunkUpdate = false;
 
 	//проверь при добавлении
 	//- ID
@@ -134,6 +131,20 @@ public class Structure : MonoBehaviour  {
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
         model.transform.localPosition = Vector3.zero;
+    }
+
+    virtual public void SetModelRotation(int r)
+    {
+        if (r > 7) r %= 8;
+        else
+        {
+            if (r < 0) r += 8;
+        }
+        modelRotation = (byte)r;
+        if (transform.childCount != 0 & basement != null)
+        {
+            transform.localRotation = Quaternion.Euler(0, modelRotation * 45, 0);
+        }
     }
 
     public static Structure GetStructureByID(int i_id)
@@ -246,7 +257,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 1;
                     innerPosition = SurfaceRect.one;
-                    borderOnlyConstruction = false;
                     isArtificial = false;
                     isBasement = false;
                     placeInCenter = false;
@@ -257,7 +267,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 1;
                     innerPosition = SurfaceRect.one;
-                    borderOnlyConstruction = false;
                     isArtificial = false;
                     isBasement = false;
                     placeInCenter = false;
@@ -268,7 +277,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 1000;
                     innerPosition = SurfaceRect.full;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                     placeInCenter = true;
@@ -280,7 +288,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 25000;
                     innerPosition = SurfaceRect.full;
-                    borderOnlyConstruction = false;
                     isArtificial = false;
                     isBasement = false;
                     placeInCenter = true;
@@ -292,7 +299,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 750;
                     innerPosition = SurfaceRect.full;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                     placeInCenter = true;
@@ -304,7 +310,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 500;
                     innerPosition = new SurfaceRect(0, 0, 4);
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                     placeInCenter = false;
@@ -315,7 +320,6 @@ public class Structure : MonoBehaviour  {
                 {
                     maxHp = 700;
                     innerPosition = new SurfaceRect(0, 0, 4);
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                     placeInCenter = false;
@@ -328,7 +332,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -339,7 +342,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -350,8 +352,7 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.one;
                     placeInCenter = false;
                     rotate90only = false;
-                    isArtificial = false;
-                    borderOnlyConstruction = false;                    
+                    isArtificial = false;                   
                     isBasement = false;
                 }
                 break;
@@ -361,7 +362,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -371,8 +371,7 @@ public class Structure : MonoBehaviour  {
                     maxHp = 45000;
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
-                    rotate90only = false;
-                    borderOnlyConstruction = false;
+                    rotate90only = false; 
                     isArtificial = false;
                     isBasement = false;
                     indestructible = true;
@@ -384,7 +383,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.one;
                     placeInCenter = false;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -395,7 +393,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -406,7 +403,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -417,7 +413,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -428,7 +423,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -439,7 +433,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = true;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -450,7 +443,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -461,7 +453,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 7);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -472,7 +463,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 7);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -483,7 +473,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -494,7 +483,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -505,7 +493,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 8);
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -516,7 +503,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -527,7 +513,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -538,7 +523,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                     indestructible = true;
@@ -550,7 +534,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 indestructible = true;
@@ -562,7 +545,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 indestructible = true;
@@ -574,7 +556,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -585,7 +566,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -596,7 +576,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -607,7 +586,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -618,7 +596,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -629,7 +606,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -640,7 +616,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -651,7 +626,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -662,7 +636,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -673,7 +646,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = true;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -684,7 +656,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -695,7 +666,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 8);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -706,7 +676,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 8);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -717,7 +686,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 8);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -728,7 +696,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -739,7 +706,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -750,7 +716,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -761,7 +726,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -772,7 +736,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -783,7 +746,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -794,7 +756,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -805,7 +766,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -816,7 +776,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -827,7 +786,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -838,7 +796,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -849,7 +806,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -860,7 +816,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 2);
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = true;
                 }
@@ -871,7 +826,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -882,7 +836,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = true;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -893,7 +846,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -904,7 +856,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -915,7 +866,6 @@ public class Structure : MonoBehaviour  {
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    borderOnlyConstruction = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -996,7 +946,6 @@ public class Structure : MonoBehaviour  {
 	virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetStructureData(b,pos);
-		if ( isBasement ) basement.myChunk.chunkUpdateSubscribers_structures.Add(this);
 	}
     // в финальном виде копипастить в потомков
     protected void SetStructureData(SurfaceBlock b, PixelPosByte pos) {
@@ -1006,7 +955,11 @@ public class Structure : MonoBehaviour  {
         if (transform.childCount == 0) SetModel();
 		b.AddStructure(this);
 		if (isBasement) {
-            basement.myChunk.chunkUpdateSubscribers_structures.Add(this);
+            if (!subscribedToChunkUpdate)
+            {
+                basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
+                subscribedToChunkUpdate = true;
+            }
             if (basement is CaveBlock) {
 				basement.myChunk.ReplaceBlock(basement.pos, BlockType.Surface, basement.material_id, false);
 			}
@@ -1029,7 +982,7 @@ public class Structure : MonoBehaviour  {
 		if ( hp <= 0 ) Annihilate(false);
 	}
 
-	public void ChunkUpdated( ChunkPos pos) { // проверка?
+	virtual public void ChunkUpdated( ChunkPos pos) { // проверка?
 		if ( basement == null) return;
 		Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y+1, basement.pos.z);
 		if (upperBlock == null) {
@@ -1074,12 +1027,16 @@ public class Structure : MonoBehaviour  {
 	}
 	#endregion
 
-	public virtual UIObserver ShowOnGUI() {
+	virtual public UIObserver ShowOnGUI() {
         if (structureObserver == null) structureObserver = UIStructureObserver.InitializeStructureObserverScript();
         else structureObserver.gameObject.SetActive(true);
 		structureObserver.SetObservingStructure(this);
 		return structureObserver;
 	}
+    virtual public void DisableGUI()
+    {
+        showOnGUI = false;
+    }
 
 	public void ChangeInnerPosition(SurfaceRect sr) { 
 		if (basement != null) return;
@@ -1088,13 +1045,16 @@ public class Structure : MonoBehaviour  {
 
     public void UnsetBasement()
     {
-        if (isBasement)
+        if (isBasement & basement != null & subscribedToChunkUpdate)
         {
-            basement.myChunk.chunkUpdateSubscribers_structures.Remove(this);
+            basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+            subscribedToChunkUpdate = false;
         }
         basement = null;
         innerPosition = new SurfaceRect(0, 0, innerPosition.size);
     }
+
+    virtual public void SectionDeleted(ChunkPos pos)   {    } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
 
     // в финальном виде копипастить в потомков
     protected bool PrepareStructureForDestruction( bool forced )
@@ -1112,11 +1072,15 @@ public class Structure : MonoBehaviour  {
                 GameMaster.colonyController.storage.AddResources(resourcesLeft);
             }
         }
-        if (!forced && (basement != null))
+        if (!forced & (basement != null))
         {
             basement.RemoveStructure(this);
             if (isArtificial) basement.artificialStructures--;
-
+            if (subscribedToChunkUpdate)
+            {
+                basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+                subscribedToChunkUpdate = false;
+            }
             SurfaceBlock lastBasement = basement;
             if (isBasement)
             {
@@ -1130,7 +1094,6 @@ public class Structure : MonoBehaviour  {
         }
         else return false;
     }
-
 	/// <summary>
 	/// forced means that this object will be deleted without basement-linked actions
 	/// </summary>

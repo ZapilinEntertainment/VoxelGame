@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIDockObserver : UIObserver
+public sealed class UIDockObserver : UIObserver
 {
     [SerializeField] Text tradingButtonText, immigrationButtonText, immigrationLimitText;
     [SerializeField] GameObject tradingListPanel, immigrationPanel, tradingPanelContent;
     [SerializeField] Image immigrationToggleButtonImage;
     [SerializeField] InputField immigrationLimitInputField;
     [SerializeField] Sprite overridingSprite;
-    Dock observingDock;
-    const float START_Y = -16, OPERATION_PANEL_HEIGHT = 32;
-    const int MIN_VALUE_CHANGING_STEP = 5, SELL_STATUS_ICON_INDEX = 0, NAME_INDEX = 1, MINUS_BUTTON_INDEX = 2, LIMIT_VALUE_INDEX = 3, PLUS_BUTTON_INDEX = 4, DELETE_BUTTON_INDEX = 5;
-    int showingImmigrationLimit = 0;
+    private Dock observingDock;
+    private const float START_Y = -16, OPERATION_PANEL_HEIGHT = 32;
+    private const int MIN_VALUE_CHANGING_STEP = 5, SELL_STATUS_ICON_INDEX = 0, NAME_INDEX = 1, MINUS_BUTTON_INDEX = 2, LIMIT_VALUE_INDEX = 3, PLUS_BUTTON_INDEX = 4, DELETE_BUTTON_INDEX = 5;
+    private int showingImmigrationLimit = 0;
 
     public static UIDockObserver InitializeDockObserverScript()
     {

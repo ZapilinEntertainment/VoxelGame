@@ -12,7 +12,7 @@ public class Block : MonoBehaviour {
 	public Chunk myChunk {get; protected  set;}
 	public bool isTransparent {get;protected  set;} // <- замени на transparent map
 	public ChunkPos pos {get; protected  set;}
-	public Structure mainStructure{get;protected set;}
+    public Structure mainStructure;
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
 	public byte visibilityMask { get; protected set; } // видимость относительно других блоков
@@ -182,9 +182,10 @@ public class Block : MonoBehaviour {
         if (destroyed) return;
         else destroyed = true;
         if (worksite != null) worksite.StopWork();
-        if (mainStructure != null) mainStructure.Annihilate(true);
+        if (mainStructure != null) mainStructure.SectionDeleted(pos);
         Destroy(gameObject);
     }
+
     protected void OnDestroy()
     {
         if (!destroyed & !GameMaster.applicationStopWorking) Annihilate();

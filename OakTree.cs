@@ -107,9 +107,11 @@ public class OakTree : Plant
             modelTransform = new GameObject("sprite").transform;
             modelTransform.transform.parent = transform;
             modelTransform.localPosition = Vector3.zero;
-            Vector3 cpos = modelTransform.InverseTransformPoint(FollowingCamera.camPos); cpos.y = 0;
-            modelTransform.LookAt(cpos);
-            modelTransform.gameObject.AddComponent<SpriteRenderer>().sprite = stageSprites[stage];
+            //Vector3 cpos = modelTransform.InverseTransformPoint(FollowingCamera.camPos); cpos.y = 0;
+            // modelTransform.LookAt(cpos);
+            SpriteRenderer sr = modelTransform.gameObject.AddComponent<SpriteRenderer>();
+            sr.sprite = stageSprites[stage];
+            sr.sharedMaterial = PoolMaster.billboardMaterial;
         }        
     }
 
@@ -396,7 +398,7 @@ public class OakTree : Plant
             t.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mf, basement.illumination);
             
             hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber()), false, innerPosition.size, model3d);
-            hr.modelRotation = modelRotation;
+            hr.SetModelRotation( modelRotation );
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
             // спрайтовый LOD?
         }

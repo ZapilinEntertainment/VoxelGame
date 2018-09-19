@@ -6,7 +6,7 @@ public enum GreenMaterial { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20
 public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS}
 public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber}
 
-public class PoolMaster : MonoBehaviour {
+public sealed class PoolMaster : MonoBehaviour {
     List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
         lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные	
     float shipsClearTimer = 0, clearTime = 30;
@@ -21,11 +21,13 @@ public class PoolMaster : MonoBehaviour {
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
     public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
         glass_material, glass_offline_material;
+    public static Material billboardMaterial { get; private set; }
     private static Material[] basic_illuminated, green_illuminated;
-    static Material metal_material, green_material, darkness_material;
+    private static Material metal_material, green_material, darkness_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
+    private static Transform zoneCube;
 
     const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
@@ -53,6 +55,7 @@ public class PoolMaster : MonoBehaviour {
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
+        zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);
         cavePref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
         quadsPool = new List<GameObject>();
         quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
@@ -60,8 +63,8 @@ public class PoolMaster : MonoBehaviour {
         quad_pref.transform.parent = transform;
         quad_pref.SetActive(false);
         quadsPool.Add(quad_pref);
-        default_material = Resources.Load<Material>("Materials/Default");
 
+        default_material = Resources.Load<Material>("Materials/Default");
         darkness_material = Resources.Load<Material>("Materials/Darkness");
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
@@ -70,6 +73,7 @@ public class PoolMaster : MonoBehaviour {
         glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
         metal_material = Resources.Load<Material>("Materials/Metal");
         green_material = Resources.Load<Material>("Materials/Green");
+        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
 
         basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
         green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
@@ -139,6 +143,14 @@ public class PoolMaster : MonoBehaviour {
         buildEmitter.transform.position = pos;
         buildEmitter.Emit(20);
     }
+    public void DrawZone(Vector3 point, Vector3 scale, Color col)
+    {
+        zoneCube.position = point;
+        zoneCube.localScale = scale;
+        zoneCube.GetComponent<MeshRenderer>().sharedMaterial.SetColor("_MainColor", col);
+        zoneCube.gameObject.SetActive(true);
+    }
+    public void DisableZone() { zoneCube.gameObject.SetActive(false); }
 
     public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;

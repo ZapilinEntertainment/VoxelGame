@@ -14,8 +14,10 @@ public sealed class Dock : WorkBuilding {
 	const float LOADING_TIME = 10;
 	float loadingTimer = 0, shipArrivingTimer = 0;
 	const float SHIP_ARRIVING_TIME = 300;
-	int blockedHeight = -1, blockedSide = -1, preparingResourceIndex;
+	int preparingResourceIndex;
     public static UIDockObserver dockObserver;
+    private List<Block> dependentBlocksList;
+    const int SMALL_SHIPS_PATH_WIDTH = 2;
 
 	public static void ResetToDefaults_Static_Dock() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
@@ -31,54 +33,98 @@ public sealed class Dock : WorkBuilding {
 		}
 	}
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+    override public void SetModelRotation(int r)
+    {
+        if (r > 7) r %= 8;
+        else
+        {
+            if (r < 0) r += 8;
+        }
+        modelRotation = (byte)r;
+        if (transform.childCount != 0 & basement != null)
+        {
+            transform.localRotation = Quaternion.Euler(0, modelRotation * 45, 0);
+            // #checkPositionCorrectness
+            switch (modelRotation)
+            {
+                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - 2, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - 2, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+            }
+            if (showOnGUI) {
+                if (!correctLocation)
+                {
+                    //#incorrectLocationDisplaying
+                    switch (modelRotation)
+                    {
+                        case 0:
+                            PoolMaster.current.DrawZone(
+                        new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, basement.transform.position.y, basement.transform.position.z + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                        new Vector3(Chunk.CHUNK_SIZE, SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH),
+                        new Color(1, 0.076f, 0.076f, 0.4f)
+                        );
+                            break;
+                        case 2:
+                            PoolMaster.current.DrawZone(
+                            new Vector3(basement.transform.position.x + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f), basement.transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                            new Vector3(SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH, Chunk.CHUNK_SIZE),
+                            new Color(1, 0.076f, 0.076f, 0.4f)
+                            );
+                            break;
+                        case 4:
+                            PoolMaster.current.DrawZone(
+                            new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, basement.transform.position.y, basement.transform.position.z - (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                            new Vector3(Chunk.CHUNK_SIZE, SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH),
+                            new Color(1, 0.076f, 0.076f, 0.4f)
+                            );
+                            break;
+                        case 6:
+                            PoolMaster.current.DrawZone(
+                            new Vector3(basement.transform.position.x -
+                            (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f), basement.transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                            new Vector3(SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH, Chunk.CHUNK_SIZE),
+                            new Color(1, 0.076f, 0.076f, 0.4f)
+                            );
+                            break;
+                    }
+                    //end
+                }
+                else PoolMaster.current.DisableZone();
+            }
+            // end
+        }
+    }
+
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
-		if (blockedHeight != -1 & blockedSide != -1) {
-			GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
-		}
 		SetBuildingData(b, pos);
-		Transform modelTransform = transform.GetChild(0);
-		if (basement.pos.z == 0) {
-			modelTransform.transform.localRotation = Quaternion.Euler(0, 180,0); correctLocation = true;
-		}
-		else {
-			if (basement.pos.z == Chunk.CHUNK_SIZE - 1) {
-				correctLocation = true;
-			}
-			else {
-				if (basement.pos.x == 0) {
-					modelTransform.transform.localRotation = Quaternion.Euler(0, -90,0); correctLocation = true;
-				}
-				else {
-					if (basement.pos.x == Chunk.CHUNK_SIZE - 1) {
-						modelTransform.transform.localRotation = Quaternion.Euler(0, 90,0); correctLocation = true;
-					}
-				}
-			}
-		}
-		if (correctLocation) 
-		{	
-			basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
-			colony = GameMaster.colonyController;
-			colony.AddDock(this);
-			shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) /2f ;
-			int side = 0;
-			if ( b.pos.x == 0 ) {
-				if (b.pos.z == 0) side = 2;
-			}
-			else {
-				if (b.pos.x == Chunk.CHUNK_SIZE - 1) side = 1;
-				else side = 3;
-			}
-			b.myChunk.BlockRow(b.pos.y, side);
-			blockedHeight = b.pos.y; blockedSide = side;
-		}
+		Transform modelTransform = transform.GetChild(0);		
+		basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
+		colony = GameMaster.colonyController;
+		colony.AddDock(this);		
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-	}
+        if (!subscribedToChunkUpdate)
+        {
+            basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
+            subscribedToChunkUpdate = true;
+        }
+        dependentBlocksList = new List<Block>();
+        // #checkPositionCorrectness
+        switch (modelRotation)
+        {
+            case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible( basement.pos.z + 1, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList ); break;
+            case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+            case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - 2, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+            case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - 2, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+        }
+        // end
+        if (correctLocation) shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) / 2f;
+    }
 
 	override public void LabourUpdate () {
 		if ( !energySupplied ) return;
@@ -93,7 +139,7 @@ public sealed class Dock : WorkBuilding {
 		}
 		else {
 			// ship arriving
-			if (shipArrivingTimer > 0 ) { 
+			if (shipArrivingTimer > 0 & correctLocation) { 
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
@@ -142,7 +188,62 @@ public sealed class Dock : WorkBuilding {
 		}
 	}
 
-	public void ShipLoading(Ship s) {
+    override public void ChunkUpdated(ChunkPos pos)
+    { 
+        if (basement == null | dependentBlocksList == null) return;
+        // #checkPositionCorrectness
+        switch (modelRotation)
+        {
+            case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+            case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+            case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - 2, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+            case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - 2, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
+        }
+        if (showOnGUI)
+        {
+            if (correctLocation) PoolMaster.current.DisableZone();
+            else
+            {
+                //#incorrectLocationDisplaying
+                switch (modelRotation)
+                {
+                    case 0:
+                        PoolMaster.current.DrawZone(
+                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, basement.transform.position.y, basement.transform.position.z + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                    new Vector3(Chunk.CHUNK_SIZE, SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH),
+                    new Color(1, 0.076f, 0.076f, 0.4f)
+                    );
+                        break;
+                    case 2:
+                        PoolMaster.current.DrawZone(
+                        new Vector3(basement.transform.position.x + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f), basement.transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                        new Vector3(SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH, Chunk.CHUNK_SIZE),
+                        new Color(1, 0.076f, 0.076f, 0.4f)
+                        );
+                        break;
+                    case 4:
+                        PoolMaster.current.DrawZone(
+                        new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, basement.transform.position.y, basement.transform.position.z - (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                        new Vector3(Chunk.CHUNK_SIZE, SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH),
+                        new Color(1, 0.076f, 0.076f, 0.4f)
+                        );
+                        break;
+                    case 6:
+                        PoolMaster.current.DrawZone(
+                        new Vector3(basement.transform.position.x -
+                        (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f), basement.transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                        new Vector3(SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH, Chunk.CHUNK_SIZE),
+                        new Color(1, 0.076f, 0.076f, 0.4f)
+                        );
+                        break;
+                }
+                //end
+            }
+        }
+        // end
+    }
+
+    public void ShipLoading(Ship s) {
 		if (loadingShip == null) {
 			loadingTimer = LOADING_TIME;
 			loadingShip = s;
@@ -223,12 +324,11 @@ public sealed class Dock : WorkBuilding {
 		int newPeople = peopleBefore - immigrationPlan;
 		if (newPeople > 0) UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
 	}
-
-	void SellResource(ResourceType rt, float volume) {
+	private void SellResource(ResourceType rt, float volume) {
 		float vol = colony.storage.GetResources(rt, volume);
 		colony.AddEnergyCrystals(vol * ResourceType.prices[rt.ID] * GameMaster.sellPriceCoefficient);
 	}
-	void BuyResource(ResourceType rt, float volume) {
+	private void BuyResource(ResourceType rt, float volume) {
 		volume = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]) / ResourceType.prices[rt.ID];
 		colony.storage.AddResource(rt, volume);
 	}
@@ -237,7 +337,6 @@ public sealed class Dock : WorkBuilding {
 		immigrationEnabled = x;
 		immigrationPlan = count;
 	}
-
     public static void ChangeMinValue(int index, int val)
     {
         minValueForTrading[index] = val;
@@ -328,20 +427,64 @@ public sealed class Dock : WorkBuilding {
         else dockObserver.gameObject.SetActive(true);
         dockObserver.SetObservingDock(this);
         showOnGUI = true;
+        if (!correctLocation)
+        {   //#incorrectLocationDisplaying
+            switch (modelRotation)
+            {
+                case 0:
+                    PoolMaster.current.DrawZone(
+                new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, basement.transform.position.y, basement.transform.position.z + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                new Vector3(Chunk.CHUNK_SIZE, SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH),
+                new Color(1, 0.076f, 0.076f, 0.4f)
+                );
+                    break;
+                case 2:
+                    PoolMaster.current.DrawZone(
+                    new Vector3(basement.transform.position.x + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f), basement.transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                    new Vector3(SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH, Chunk.CHUNK_SIZE),
+                    new Color(1, 0.076f, 0.076f, 0.4f)
+                    );
+                    break;
+                case 4:
+                    PoolMaster.current.DrawZone(
+                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, basement.transform.position.y, basement.transform.position.z - (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                    new Vector3(Chunk.CHUNK_SIZE, SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH),
+                    new Color(1, 0.076f, 0.076f, 0.4f)
+                    );
+                    break;
+                case 6:
+                    PoolMaster.current.DrawZone(
+                    new Vector3(basement.transform.position.x -
+                    (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f), basement.transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                    new Vector3(SMALL_SHIPS_PATH_WIDTH, SMALL_SHIPS_PATH_WIDTH, Chunk.CHUNK_SIZE),
+                    new Color(1, 0.076f, 0.076f, 0.4f)
+                    );
+                    break;
+            }
+            //end
+        }
         return dockObserver;
+    }
+    public override void DisableGUI()
+    {
+        if (showOnGUI)
+        {
+            showOnGUI = false;
+            PoolMaster.current.DisableZone();
+        }
     }
 
     override public void Annihilate(bool forced)
     {
         if (destroyed) return;
         else destroyed = true;
+        if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+        {
+            basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+        }
         PrepareWorkbuildingForDestruction(forced);
         GameMaster.colonyController.RemoveDock(this);
-        if (maintainingShip & loadingShip != null) loadingShip.Undock();
-        if (blockedHeight != -1 & blockedSide != -1)
-        {
-            GameMaster.mainChunk.UnblockRow(blockedHeight, blockedSide);
-        }
+        if (maintainingShip & loadingShip != null) loadingShip.Undock();        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

@@ -123,10 +123,10 @@ public class LODController : MonoBehaviour {
                 dir.y = 0;
                 spriteTransform.forward = dir.normalized;
             }
-            else
-            {
-                spriteTransform.LookAt(camPos);
-            }
+           // else
+           // {
+          //      spriteTransform.LookAt(camPos);
+           // }
         }
         else
         {
@@ -151,7 +151,7 @@ public class LODController : MonoBehaviour {
                 m.transform.GetChild(0).gameObject.SetActive(false);
                 m.spriteIsActive = true;
             }
-            m.transform.GetChild(1).LookAt(camPos);
+            //m.transform.GetChild(1).LookAt(camPos);
         }
         else
         {
@@ -175,7 +175,9 @@ public class LODController : MonoBehaviour {
             case ModelType.Tree:
                 TreeCheck(models.Count - 1); break;
             case ModelType.Boulder:
-                newModel.transform.GetChild(1).GetComponent<SpriteRenderer>().sprite = lodPacks[lodPackIndex][0];
+                SpriteRenderer sr = newModel.transform.GetChild(1).GetComponent<SpriteRenderer>();
+                sr.sprite = lodPacks[lodPackIndex][0];
+                sr.sharedMaterial = PoolMaster.billboardMaterial;
                 BoulderCheck(models.Count - 1);
                 break;
         }               

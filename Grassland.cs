@@ -52,6 +52,7 @@ public class GrasslandSerializer
 public class Grassland : MonoBehaviour
 {
     public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22;
+    const byte MAX_PLANTS_COUNT = 8;
 
     public SurfaceBlock myBlock { get; private set; }
     float progress = 0;
@@ -108,9 +109,9 @@ public class Grassland : MonoBehaviour
             }
 
             byte stage = gl.CheckGrasslandStage();
-            if (lifepower > 2 * LIFEPOWER_TO_PREPARE)
+            if (lifepower > 2 * LIFEPOWER_TO_PREPARE )
             {                
-                if (stage > 2)
+                if (stage > 2 & plants.Count < MAX_PLANTS_COUNT )
                 {
                     int i = 0;
                     while (lifepower > 2 * LIFEPOWER_TO_PREPARE & i < plants.Count)

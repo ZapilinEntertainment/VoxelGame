@@ -98,8 +98,9 @@ public class HarvestableResource : Structure
         }
         else
         {
-            FollowingCamera.main.AddSprite(model.transform);
-            haveSprite = true;
+            //shader replaced
+            //FollowingCamera.main.AddSprite(model.transform);
+            //haveSprite = true;
         }
     }
 

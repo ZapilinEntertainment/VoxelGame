@@ -20,8 +20,8 @@ public class UIStructureObserver : UIObserver {
 	public void SetObservingStructure(Structure s) {
 		if (s == null) {SelfShutOff();return;}
 		else {
-            if (observingStructure != null) observingStructure.showOnGUI = false;
-			observingStructure = s; isObserving = true; observingStructure.showOnGUI = true;
+            if (observingStructure != null) observingStructure.DisableGUI();
+			observingStructure = s; isObserving = true;
 			nameField.text = Localization.GetStructureName(s.id);
 			demolishButton.gameObject.SetActive(!s.indestructible);
             sizeField.text = s.innerPosition.size.ToString() + " x " + s.innerPosition.size.ToString();
@@ -33,8 +33,23 @@ public class UIStructureObserver : UIObserver {
 		if (observingStructure == null) SelfShutOff();
 	}
 
-	override public void SelfShutOff() {
-        if (observingStructure != null) observingStructure.showOnGUI = false;
+    public void RotateLeft()
+    {
+        int r = observingStructure.modelRotation;
+        if (observingStructure.rotate90only) r += 2;
+        else r++;
+        observingStructure.SetModelRotation(r);
+    }
+    public void RotateRight()
+    {
+        int r = observingStructure.modelRotation;
+        if (observingStructure.rotate90only) r -= 2;
+        else r--;
+        observingStructure.SetModelRotation(r);
+    }
+
+    override public void SelfShutOff() {
+        if (observingStructure != null) observingStructure.DisableGUI();
         isObserving = false;
 		UIController.current.SelectedObjectLost();
 		gameObject.SetActive(false);
@@ -43,7 +58,7 @@ public class UIStructureObserver : UIObserver {
 	override public void ShutOff() {
         if (observingStructure != null)
         {
-            observingStructure.showOnGUI = false;
+            observingStructure.DisableGUI();
             observingStructure = null;
         }
 		isObserving = false;
