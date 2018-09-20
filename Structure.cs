@@ -141,9 +141,10 @@ public class Structure : MonoBehaviour  {
             if (r < 0) r += 8;
         }
         modelRotation = (byte)r;
-        if (transform.childCount != 0 & basement != null)
+
+        if (basement != null)
         {
-            transform.localRotation = Quaternion.Euler(0, modelRotation * 45, 0);
+            transform.localRotation = Quaternion.AngleAxis(modelRotation * 45, Vector3.up);
         }
     }
 
@@ -157,32 +158,32 @@ public class Structure : MonoBehaviour  {
             case COLUMN_ID:
                 s = new GameObject("Column").AddComponent<Structure>();break;
             case RESOURCE_STICK_ID:
-                s = new GameObject().AddComponent<ScalableHarvestableResource>();break;
+                s = new GameObject("Scalable harvestable resource").AddComponent<ScalableHarvestableResource>();break;
             case MINE_ELEVATOR_ID:
-                s = new GameObject().AddComponent<MineElevator>();break;
+                s = new GameObject("Mine elevator").AddComponent<MineElevator>();break;
             case LANDED_ZEPPELIN_ID:
             case HQ_2_ID:
             case HQ_3_ID:
             case HQ_4_ID:
-                s = new GameObject().AddComponent<HeadQuarters>();break;
+                s = new GameObject("HQ").AddComponent<HeadQuarters>();break;
             case TREE_OF_LIFE_ID:
             case LIFESTONE_ID:
-                s = new GameObject().AddComponent<LifeSource>();break;
+                s = new GameObject("Lifestone").AddComponent<LifeSource>();break;
             case STORAGE_0_ID :
             case STORAGE_1_ID:
             case STORAGE_2_ID:
             case STORAGE_3_ID:
             case STORAGE_5_ID:
-                s = new GameObject().AddComponent<StorageHouse>();break;
+                s = new GameObject("Storage").AddComponent<StorageHouse>();break;
             case CONTAINER_ID:
-                s = new GameObject().AddComponent<HarvestableResource>();break;
+                s = new GameObject("Container").AddComponent<HarvestableResource>();break;
             case HOUSE_0_ID:
             case HOUSE_1_ID:
             case HOUSE_2_ID:
             case HOUSE_3_ID:
             case HOUSE_5_ID:
-                s = new GameObject().AddComponent<House>();break;
-            case DOCK_ID: s = new GameObject().AddComponent<Dock>();break;
+                s = new GameObject("House").AddComponent<House>();break;
+            case DOCK_ID: s = new GameObject("Dock").AddComponent<Dock>();break;
             case FARM_1_ID:
             case FARM_2_ID:
             case FARM_3_ID:
@@ -193,9 +194,9 @@ public class Structure : MonoBehaviour  {
             case LUMBERMILL_3_ID:
             case LUMBERMILL_4_ID:
             case LUMBERMILL_5_ID:
-                s = new GameObject().AddComponent<Farm>();break;
+                s = new GameObject("Farm").AddComponent<Farm>();break;
             case MINE_ID:
-                s = new GameObject().AddComponent<Mine>();break;
+                s = new GameObject("Mine").AddComponent<Mine>();break;
             case SMELTERY_1_ID:
             case SMELTERY_2_ID:
             case SMELTERY_3_ID:
@@ -203,7 +204,7 @@ public class Structure : MonoBehaviour  {
             case ORE_ENRICHER_2_ID:
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_3_ID:
-                s = new GameObject().AddComponent<Factory>();break;
+                s = new GameObject("Factory").AddComponent<Factory>();break;
             case FOOD_FACTORY_4_ID:
             case FOOD_FACTORY_5_ID:
                 s = new GameObject().AddComponent<FoodFactory>();break;
@@ -212,25 +213,25 @@ public class Structure : MonoBehaviour  {
             case BIOGENERATOR_2_ID:
             case MINERAL_POWERPLANT_2_ID:
             case GRPH_REACTOR_4_ID:
-                s = new GameObject().AddComponent<Powerplant>();break;
+                s = new GameObject("Powerplant").AddComponent<Powerplant>();break;
             case HOSPITAL_2_ID:
-                s = new GameObject().AddComponent<Hospital>();break;
+                s = new GameObject("Hospital").AddComponent<Hospital>();break;
             case ROLLING_SHOP_ID:
-                s = new GameObject().AddComponent<RollingShop>();break;
+                s = new GameObject("Rolling Shop").AddComponent<RollingShop>();break;
             case MINI_GRPH_REACTOR_3_ID:
             case ENERGY_CAPACITOR_1_ID:
             case ENERGY_CAPACITOR_2_ID:
             case ENERGY_CAPACITOR_3_ID:
-                s = new GameObject().AddComponent<Building>();break;
-            case GRPH_ENRICHER_3_ID: s = new GameObject().AddComponent<GraphoniumEnricher>();break;
-            case XSTATION_3_ID: s = new GameObject().AddComponent<XStation>();break;
-            case QUANTUM_ENERGY_TRANSMITTER_5_ID: s = new GameObject().AddComponent<QuantumEnergyTransmitter>();break;
-            case CHEMICAL_FACTORY_4_ID: s = new GameObject().AddComponent<ChemicalFactory>();break;
-            case QUANTUM_TRANSMITTER_4_ID: s = new GameObject().AddComponent<QuantumTransmitter>();break;
-            case SWITCH_TOWER_ID: s = new GameObject().AddComponent<SwitchTower>();break;
-            case SHUTTLE_HANGAR_4_ID: s = new GameObject().AddComponent<Hangar>();break;
-            case RECRUITING_CENTER_4_ID: s = new GameObject().AddComponent<RecruitingCenter>();break;
-            case EXPEDITION_CORPUS_4_ID: s = new GameObject().AddComponent<ExpeditionCorpus>();break;
+                s = new GameObject("Energy capacitor").AddComponent<Building>();break;
+            case GRPH_ENRICHER_3_ID: s = new GameObject("Graphonium Enricher").AddComponent<GraphoniumEnricher>();break;
+            case XSTATION_3_ID: s = new GameObject("XStation").AddComponent<XStation>();break;
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID: s = new GameObject("Quantum energy transmitter").AddComponent<QuantumEnergyTransmitter>();break;
+            case CHEMICAL_FACTORY_4_ID: s = new GameObject("Chemical factory").AddComponent<ChemicalFactory>();break;
+            case QUANTUM_TRANSMITTER_4_ID: s = new GameObject("Quantum transmitter").AddComponent<QuantumTransmitter>();break;
+            case SWITCH_TOWER_ID: s = new GameObject("Switch tower").AddComponent<SwitchTower>();break;
+            case SHUTTLE_HANGAR_4_ID: s = new GameObject("Shuttle hangar").AddComponent<Hangar>();break;
+            case RECRUITING_CENTER_4_ID: s = new GameObject("Recruiting center").AddComponent<RecruitingCenter>();break;
+            case EXPEDITION_CORPUS_4_ID: s = new GameObject("Expedition corpus").AddComponent<ExpeditionCorpus>();break;
             default: return null;
         }
         s.id = i_id;
@@ -1075,7 +1076,6 @@ public class Structure : MonoBehaviour  {
         if (!forced & (basement != null))
         {
             basement.RemoveStructure(this);
-            if (isArtificial) basement.artificialStructures--;
             if (subscribedToChunkUpdate)
             {
                 basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
@@ -1087,7 +1087,7 @@ public class Structure : MonoBehaviour  {
                 Block upperBlock = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
                 if (upperBlock != null)
                 {
-                    lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, upperBlock.material_id, false);
+                    lastBasement.myChunk.DeleteBlock(upperBlock.pos);
                 }
             }
             return true;

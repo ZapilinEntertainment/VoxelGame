@@ -44,7 +44,7 @@ public class SurfaceBlock : Block {
 	public Grassland grassland{get;protected set;}
 	public List<Structure> surfaceObjects{get;protected set;}
 	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
-	public int artificialStructures = 0;
+	public int artificialStructures { get; protected set; }
 	public bool[,] map { get; protected set; }
 	public BlockRendererController structureBlock;
     public bool haveSupportingStructure { get; protected set; }
@@ -229,7 +229,6 @@ public class SurfaceBlock : Block {
 			}
 			else {
 				while (i < surfaceObjects.Count) {
-					if ( surfaceObjects[i] == null ) {surfaceObjects.RemoveAt(i); continue;}
 					SurfaceRect a = surfaceObjects[i].innerPosition;
 					int leftX = -1, rightX = -1;
 					if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
@@ -241,7 +240,7 @@ public class SurfaceBlock : Block {
 					if (topZ <= downZ) {i++;continue;}
 					else {
 						if (surfaceObjects[i].isBasement) savedBasementForNow = surfaceObjects[i];
-						else surfaceObjects[i].Annihilate( true );
+						else surfaceObjects[i].Annihilate( false );
 						i++;
 					}
 				}
@@ -337,10 +336,11 @@ public class SurfaceBlock : Block {
 		if (count == 0) return;
         for ( int i = 0; i < count; i++) {
 			if (surfaceObjects[i] == s) {
-				if (s.isArtificial) artificialStructures--;	if (artificialStructures < 0) artificialStructures = 0;
 				surfaceObjects.RemoveAt(i);
 				if (surfaceObjects.Count == 0) {
 					cellsStatus = 0;
+                    artificialStructures = 0;
+                    haveSupportingStructure = false;
 					if (s.innerPosition == SurfaceRect.full) {
 						surfaceRenderer.GetComponent<Collider>().enabled = true;
 					}

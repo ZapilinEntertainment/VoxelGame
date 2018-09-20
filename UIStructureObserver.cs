@@ -36,15 +36,15 @@ public class UIStructureObserver : UIObserver {
     public void RotateLeft()
     {
         int r = observingStructure.modelRotation;
-        if (observingStructure.rotate90only) r += 2;
-        else r++;
+        if (observingStructure.rotate90only) r -= 2;
+        else r--;
         observingStructure.SetModelRotation(r);
     }
     public void RotateRight()
     {
         int r = observingStructure.modelRotation;
-        if (observingStructure.rotate90only) r -= 2;
-        else r--;
+        if (observingStructure.rotate90only) r += 2;
+        else r++;
         observingStructure.SetModelRotation(r);
     }
 

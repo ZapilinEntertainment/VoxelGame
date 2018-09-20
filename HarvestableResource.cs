@@ -128,10 +128,6 @@ public class HarvestableResource : Structure
         else destroyed = true;
         PrepareStructureForDestruction(forced);
         basement = null;
-        if (transform.childCount != 0 & haveSprite)
-        {
-            FollowingCamera.main.RemoveSprite(transform.GetChild(0).GetInstanceID());
-        }
         Destroy(gameObject);
     }
 

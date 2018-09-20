@@ -1068,12 +1068,15 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// uses min coordinates ( left down corner); start positions including!
+    /// </summary>
     public bool BlockShipCorridorIfPossible(int xpos, int ypos, bool xyAxis, int width, Structure sender, ref List<Block> dependentBlocksList)
     {
         int xStart = xpos; int xEnd = xStart + width - 1;
-        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE - 1;
+        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
         int yStart = ypos; int yEnd = yStart + width - 1;
-        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE - 1;
+        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
         if (xyAxis)
         {
             for (int x = xStart; x < xEnd; x++)
@@ -1099,7 +1102,7 @@ public sealed class Chunk : MonoBehaviour
                     }
                 }
             }
-        }        
+        }
         Block bk;
         if (xyAxis)
         {
@@ -1132,6 +1135,228 @@ public sealed class Chunk : MonoBehaviour
                     }
                 }
             }
+        }
+        return true;
+    }
+    /// <summary>
+    /// specify startpoint as point with min Coordinates(left down corner); startPoint including!
+    /// </summary>
+    public bool BlockShipCorridorIfPossible(Vector3Int startPoint, byte modelRotation, int width, Structure sender, ref List<Block> dependentBlocksList)
+    {
+        int xStart = startPoint.x, xEnd = startPoint.x + width;
+        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
+        int yStart = startPoint.y, yEnd = startPoint.y + width;
+        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
+        int zStart = startPoint.z, zEnd = startPoint.z + width;
+        if (zStart < 0) xStart = 0; if (zEnd >= CHUNK_SIZE) zEnd = CHUNK_SIZE;
+        switch (modelRotation)
+        {
+            default: return false;
+            case 0: // fwd
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < CHUNK_SIZE; z++)
+                            {
+                                if (blocks[x, y, z] != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z < CHUNK_SIZE; z++)
+                    {
+                        if (blocks[startPoint.x, startPoint.y, z] != null) return false;
+                    }
+                }
+                break;
+            case 2: // right
+                if (width != 1)
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                if (blocks[x, y, z] != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        if (blocks[x, startPoint.y, startPoint.z] != null) return false;
+                    }
+                }
+                break;
+            case 4: // back
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z >= 0; z--)
+                            {
+                                if (blocks[x, y, z] != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z >= 0; z--)
+                    {
+                        if (blocks[startPoint.x, startPoint.y, z] != null) return false;
+                    }
+                }
+                break;
+            case 6: // left
+                if (width != 1)
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                if (blocks[x, y, z] != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        if (blocks[x, startPoint.y, startPoint.z] != null) return false;
+                    }
+                }
+                break;
+        } // blocks check
+        Block bk;
+        switch (modelRotation) // blocks set
+        {
+            default: return false;
+            case 0: // fwd
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < CHUNK_SIZE; z++)
+                            {
+                                bk = new GameObject().AddComponent<Block>();
+                                bk.InitializeShapelessBlock(this, new ChunkPos(x, y, z), sender);
+                                blocks[x, y, z] = bk;
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z < CHUNK_SIZE; z++)
+                    {
+                        bk = new GameObject().AddComponent<Block>();
+                        bk.InitializeShapelessBlock(this, new ChunkPos(xStart, yStart, z), sender);
+                        blocks[xStart, yStart, z] = bk;
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+            case 2: // right
+                if (width != 1)
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                bk = new GameObject().AddComponent<Block>();
+                                bk.InitializeShapelessBlock(this, new ChunkPos(x, y, z), sender);
+                                blocks[x, y, z] = bk;
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        bk = new GameObject().AddComponent<Block>();
+                        bk.InitializeShapelessBlock(this, new ChunkPos(x, yStart, zStart), sender);
+                        blocks[x, yStart, zStart] = bk;
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+            case 4: // back
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z >= 0; z--)
+                            {
+                                bk = new GameObject().AddComponent<Block>();
+                                bk.InitializeShapelessBlock(this, new ChunkPos(x, y, z), sender);
+                                blocks[x, y, z] = bk;
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z >= 0; z--)
+                    {
+                        bk = new GameObject().AddComponent<Block>();
+                        bk.InitializeShapelessBlock(this, new ChunkPos(xStart, yStart, z), sender);
+                        blocks[xStart, yStart, z] = bk;
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+            case 6: // left
+                if (width != 1)
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                bk = new GameObject().AddComponent<Block>();
+                                bk.InitializeShapelessBlock(this, new ChunkPos(x, y, z), sender);
+                                blocks[x, y, z] = bk;
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        bk = new GameObject().AddComponent<Block>();
+                        bk.InitializeShapelessBlock(this, new ChunkPos(x, yStart, zStart), sender);
+                        blocks[x, yStart, zStart] = bk;
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
         }
         return true;
     }

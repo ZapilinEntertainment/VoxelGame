@@ -55,7 +55,7 @@ public sealed class PoolMaster : MonoBehaviour {
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
-        zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);
+        zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);zoneCube.gameObject.SetActive(false);
         cavePref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
         quadsPool = new List<GameObject>();
         quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?

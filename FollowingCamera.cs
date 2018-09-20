@@ -29,8 +29,8 @@ public sealed class FollowingCamera : MonoBehaviour {
     const string CAM_ZOOM_DIST_KEY = "CameraZoomDistance";
 
     private bool handleSprites = false, camPosChanged = false;
-    private List<Transform> billboards, mastBillboards;
-    private List<int> billboardsIDs, mastBillboardsIDs;
+    private List<Transform>  mastBillboards;
+    private List<int>  mastBillboardsIDs;
     public delegate void CameraChangedHandler();
     public event CameraChangedHandler cameraChangedEvent;
 
@@ -44,9 +44,7 @@ public sealed class FollowingCamera : MonoBehaviour {
         camTransform = camBasisTransform.GetChild(0);
         cam = camTransform.GetComponent<Camera>();
 
-        billboards = new List<Transform>();
         mastBillboards = new List<Transform>();
-        billboardsIDs = new List<int>();
         mastBillboardsIDs = new List<int>();
     }
 
@@ -68,9 +66,7 @@ public sealed class FollowingCamera : MonoBehaviour {
 
     public void ResetLists()
     {
-        billboards.Clear();
         mastBillboards.Clear();
-        billboardsIDs.Clear();
         mastBillboardsIDs.Clear();
         handleSprites = false;
     }
@@ -354,10 +350,6 @@ public sealed class FollowingCamera : MonoBehaviour {
     #region sprites handling
     IEnumerator SpritesHandler()
     {
-        if (billboards.Count > 0)
-        {
-            foreach (Transform t in billboards)   t.LookAt(camPos);
-        }
         if (mastBillboards.Count > 0)
         {
             foreach (Transform t in mastBillboards)
@@ -367,23 +359,6 @@ public sealed class FollowingCamera : MonoBehaviour {
             }
         }
         yield return null;
-    }
-
-    public bool AddSprite(Transform t)
-    {
-        int id = t.GetInstanceID();
-        if (billboards.Count != 0)
-        {
-            foreach (int i in billboardsIDs)
-            {
-                if (i == id) return false;
-            }
-        }
-        billboards.Add(t);
-        billboardsIDs.Add(id);
-        t.LookAt(camPos);
-        handleSprites = true;
-        return true;
     }
     public void AddMastSprite(Transform t)
     {
@@ -402,26 +377,6 @@ public sealed class FollowingCamera : MonoBehaviour {
         t.transform.forward = cpos.normalized;
 
         handleSprites = true;
-    }
-
-    public void RemoveSprite(int id)
-    {
-        if (billboards.Count == 0) return;
-        else
-        {
-            int i = 0;
-            while (i < billboards.Count)
-            {
-                if (billboardsIDs[i] == id)
-                {
-                    billboardsIDs.RemoveAt(i);
-                    billboards.RemoveAt(i);
-                    break;
-                }
-                i++;
-            }
-            handleSprites = ((billboards.Count == 0) & (mastBillboards.Count == 0));
-        }
     }
     public void RemoveMastSprite(int id)
     {
@@ -442,7 +397,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                 i++;
             }
             if (!found) print("not found");
-            handleSprites = ((billboards.Count == 0) & (mastBillboards.Count == 0));
+            handleSprites = (mastBillboards.Count != 0);
         }
     }
     #endregion

@@ -453,11 +453,12 @@ public sealed class UISurfacePanelController : UIObserver {
                             Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
                             s.SetBasement(observingSurface, new PixelPosByte(7, 7));
                             PoolMaster.current.BuildSplash(observingSurface.transform.position);
-                       // }
-                     //   else
-                      //  {
+                        SetCostPanelMode(CostPanelMode.Disabled);
+                        // }
+                        //   else
+                        //  {
                         //    observingSurface.myChunk.ReplaceBlock(observingSurface.pos, BlockType.Cave, observingSurface.material_id, ResourceType.CONCRETE_ID, false);
-                       // }
+                        // }
                     }
                     else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                 }

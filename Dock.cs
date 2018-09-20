@@ -40,11 +40,21 @@ public sealed class Dock : WorkBuilding {
         {
             if (r < 0) r += 8;
         }
+        if (r == modelRotation) return;
         modelRotation = (byte)r;
-        if (transform.childCount != 0 & basement != null)
+        if ( basement != null)
         {
             transform.localRotation = Quaternion.Euler(0, modelRotation * 45, 0);
-            // #checkPositionCorrectness
+            // #checkPositionCorrectness - Dock
+            if (dependentBlocksList != null)
+            {
+                if (dependentBlocksList.Count > 0)
+                {
+                    basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                    dependentBlocksList.Clear();
+                }
+            }
+            else dependentBlocksList = new List<Block>();
             switch (modelRotation)
             {
                 case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
@@ -190,8 +200,17 @@ public sealed class Dock : WorkBuilding {
 
     override public void ChunkUpdated(ChunkPos pos)
     { 
-        if (basement == null | dependentBlocksList == null) return;
-        // #checkPositionCorrectness
+        if (basement == null) return;
+        // #checkPositionCorrectness - Dock
+        if (dependentBlocksList != null)
+        {
+            if (dependentBlocksList.Count > 0)
+            {
+                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                dependentBlocksList.Clear();
+            }
+        }
+        else dependentBlocksList = new List<Block>();
         switch (modelRotation)
         {
             case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
@@ -481,7 +500,10 @@ public sealed class Dock : WorkBuilding {
         if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
         {
             basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+            dependentBlocksList.Clear();            
         }
+        if (showOnGUI & !correctLocation) PoolMaster.current.DisableZone();
+        if (forced) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(forced);
         GameMaster.colonyController.RemoveDock(this);
         if (maintainingShip & loadingShip != null) loadingShip.Undock();        
