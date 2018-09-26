@@ -53,6 +53,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 this.SetCostPanelMode(CostPanelMode.BlockBuilding);
             });
             constructionPlane.transform.parent = null;
+            //constructionPlane.transform.GetChild(0).GetComponent<MeshFilter>().mesh.uv = new Vector2[] { Vector2.zero, Vector2.up, Vector2.one, Vector2.right };
             current = this;
             firstSet = false;
         }
@@ -698,6 +699,25 @@ public sealed class UISurfacePanelController : UIObserver {
             else    PrepareConstructionPlane(); // включает плоскость, отключает окно выбора строений
         }
     }
+    public void CreateSelectedBuilding(byte x, byte z)
+    {
+        ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
+        if (GameMaster.colonyController.storage.CheckSpendPossibility(cost))
+        {
+            GameMaster.colonyController.storage.GetResources(cost);
+            Structure s = Structure.GetStructureByID(chosenStructure.id);
+            s.SetBasement(observingSurface, new PixelPosByte(x, z));
+            PoolMaster.current.BuildSplash(observingSurface.transform.position);
+            if (constructionPlane.activeSelf)
+            {
+                PrepareConstructionPlane();
+            }
+        }
+        else
+        {
+            UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+        }
+    }
 
     public void IntersectionSubmit_Yes()
     {
@@ -706,23 +726,23 @@ public sealed class UISurfacePanelController : UIObserver {
     }
     // public void IntersectionSubmit_No() - just deactivate the panel 
     public void ConstructingPlaneTouch(Vector3 pos)
-    {
+    {        
         Vector2 mappos = observingSurface.WorldToMapCoordinates(pos);
         byte size = SurfaceBlock.INNER_RESOLUTION;
         byte x = (byte)(mappos.x * size), z = (byte)(mappos.y * size);
         if (chosenStructure == null) return;
         SurfaceRect sr = chosenStructure.innerPosition;
+        // корректировка :
         if (x + sr.size >= size)
-        {
-            // корректировка
+        {            
             x = (byte)(size - sr.size);
         }
         if (z + chosenStructure.innerPosition.size >= size)
         {
-            // корректировка
             z = (byte)(size - sr.size);
         }
         constructingPlaneTouchPos = new Vector2Int(x, z);
+
         if ( observingSurface.IsAnyBuildingInArea(new SurfaceRect(x,z,sr.size)))
         {
             buildIntersectionSubmit.SetActive(true);            
@@ -730,22 +750,7 @@ public sealed class UISurfacePanelController : UIObserver {
         else  CreateSelectedBuilding(x, z);
     }
 
-	public void CreateSelectedBuilding (byte x, byte z) {
-		ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
-		if (GameMaster.colonyController.storage.CheckSpendPossibility(cost)) {
-           GameMaster.colonyController.storage.GetResources(cost);
-           Structure s = Structure.GetStructureByID(chosenStructure.id);
-		    s.SetBasement(observingSurface, new PixelPosByte(x,z));
-           PoolMaster.current.BuildSplash(observingSurface.transform.position);
-            if (constructionPlane.activeSelf)
-            {
-                PrepareConstructionPlane();
-            }
-		}
-		else {
-            UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
-		}
-	}
+	
 
 	public void SetConstructingLevel (int l) {
         if (constructingLevel != l)

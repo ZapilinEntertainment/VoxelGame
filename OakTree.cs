@@ -31,7 +31,7 @@ public class OakTree : Plant
         oaks = new List<OakTree>();
         maxLifeTransfer = 10;
         growSpeed = 0.1f;
-        decaySpeed = growSpeed;
+        decaySpeed = growSpeed / 10f;
         FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
     public static void ResetToDefaults_Static_OakTree()
@@ -111,7 +111,6 @@ public class OakTree : Plant
             // modelTransform.LookAt(cpos);
             SpriteRenderer sr = modelTransform.gameObject.AddComponent<SpriteRenderer>();
             sr.sprite = stageSprites[stage];
-            sr.sharedMaterial = PoolMaster.billboardMaterial;
         }        
     }
 
@@ -284,14 +283,13 @@ public class OakTree : Plant
             Vector3 cpos;
             while (i < count)
             {
-                if (oaks[i] != null)
+                if (oaks[i] != null && oaks[i].stage <= TRANSIT_STAGE)
                 {
-                    t = oaks[i].modelTransform;
+                    t = oaks[i].transform.GetChild(0);
                     if (t != null)
                     {
-                        cpos = t.InverseTransformPoint(camPos);
-                        cpos.y = 0;
-                        t.LookAt(camPos);
+                        cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
+                        t.forward = cpos.normalized;
                     }
                 }
                 i++;

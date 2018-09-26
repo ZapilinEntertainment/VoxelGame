@@ -131,62 +131,101 @@ public class SurfaceBlock : Block {
         }
         return map;
     }
-
     public Texture2D GetMapTexture()
     {
-        byte[] buildmap = new byte[INNER_RESOLUTION * INNER_RESOLUTION * 4];
-        for (int i = 0; i < buildmap.Length; i += 4)
+        int cellRes = 4;
+        int realRes = INNER_RESOLUTION * cellRes;
+        byte[] buildmap = new byte[realRes * realRes * 4 ];
+        int index;
+        for (int i = 0; i < buildmap.Length; i+=4)
         {
             buildmap[i] = 0;
             buildmap[i + 1] = 255;
             buildmap[i + 2] = 255;
-            buildmap[i + 3] = 128; // cyan
+            buildmap[i + 3] = 128;
         }
-        GetBooleanMap(); // обновит данные и избавит от проверки на null
-        if (cellsStatus != 0)
+        // red axis
+        buildmap[0] = 255;
+        buildmap[1] = 0;
+        buildmap[2] = 0;
+        buildmap[3] = 255;
+        for (int i = 1; i < realRes; i++)
         {
-            foreach (Structure s in surfaceObjects)
+            index = i * 4;
+            buildmap[index] = 255;
+            buildmap[index + 1] = 0;
+            buildmap[index + 2] = 0;
+            buildmap[index + 3] = 255;
+            if (i % cellRes == 0)
             {
-                byte[] col;
-                if (s is Plant) col = new byte[4] { 0, 255, 0, 255 };
-                else
+                for (int j = 1; j < realRes; j++)
                 {
-                    if (s is HarvestableResource | s is ScalableHarvestableResource) col = new byte[4] { 255, 106, 0, 255 };
+                    buildmap[index + j * realRes * 4] = 0;
+                    buildmap[index + 1 + j * realRes * 4] = 0;
+                    buildmap[index + 2 + j * realRes * 4] = 0;
+                    buildmap[index + 3 + j * realRes * 4] = 150;
+
+                    buildmap[i * realRes * 4 + j * 4] = 0;
+                    buildmap[i * realRes * 4 + j * 4 + 1] = 0;
+                    buildmap[i * realRes * 4 + j * 4 + 2] = 0;
+                    buildmap[i * realRes * 4 + j * 4 + 3] = 150;
+                }
+            }
+
+            index = i * realRes * 4;
+            buildmap[index] = 255;
+            buildmap[index + 1] = 0;
+            buildmap[index + 2] = 0;
+            buildmap[index + 3] = 255;
+        }
+        // eo red axis
+        
+        GetBooleanMap(); // обновит данные и избавит от проверки на null
+            if (cellsStatus != 0)
+            {
+                foreach (Structure s in surfaceObjects)
+                {
+                    byte[] col;
+                    if (s is Plant) col = new byte[4] { 0, 255, 0, 255 };
                     else
                     {
-                        Building bd = s as Building;
-                        if (bd != null)
+                        if (s is HarvestableResource | s is ScalableHarvestableResource) col = new byte[4] { 255, 106, 0, 255 };
+                        else
                         {
-                            if (bd.placeInCenter) col = new byte[4] { 255, 255, 255, 255 };
-                            else col = new byte[4] { 64, 64, 64, 255 };
+                            Building bd = s as Building;
+                            if (bd != null)
+                            {
+                                if (bd.placeInCenter) col = new byte[4] { 255, 255, 255, 255 };
+                                else col = new byte[4] { 64, 64, 64, 255 };
+                            }
+                            else col = new byte[4] { 128, 128, 128, 255 };
                         }
-                        else col = new byte[4] { 128, 128, 128, 255 };
                     }
-                }
-                SurfaceRect sr = s.innerPosition;
-                for (int i = sr.x; i < sr.x + sr.size; i++)
-                {
-                    for (int j = sr.z; j < sr.z + sr.size; j++)
+                    SurfaceRect sr = s.innerPosition;
+                    for (int i = sr.x * cellRes ; i < (sr.x + sr.size) * cellRes; i++)
                     {
-                        int index = i * INNER_RESOLUTION * 4 + j * 4;
-                        buildmap[index] = col[0];
-                        buildmap[index + 1] = col[1];
-                        buildmap[index + 2] = col[2];
-                        buildmap[index + 3] = col[3];
+                        for (int j = sr.z * cellRes ; j < (sr.z + sr.size) * cellRes; j++)
+                        {
+                        index = i * realRes * 4 + j * 4;
+                            buildmap[index] = col[0];
+                            buildmap[index + 1] = col[1];
+                            buildmap[index + 2] = col[2];
+                            buildmap[index + 3] = col[3];
+                        }
                     }
                 }
             }
-        }
-        Texture2D planeTex = new Texture2D(INNER_RESOLUTION, INNER_RESOLUTION, TextureFormat.RGBA32, false);
+        Texture2D planeTex = new Texture2D(INNER_RESOLUTION * cellRes, INNER_RESOLUTION * cellRes, TextureFormat.RGBA32, false);
         planeTex.filterMode = FilterMode.Point;
         planeTex.LoadRawTextureData(buildmap);
         planeTex.Apply();
         return planeTex;
     }
+
     public Vector2 WorldToMapCoordinates(Vector3 point)
     {
         if (transform.childCount == 0) return Vector2.zero;
-        point = transform.GetChild(0).InverseTransformPoint(point);
+        point = transform.InverseTransformPoint(point);
         return new Vector2(point.x / QUAD_SIZE + 0.5f, 0.5f - point.z / QUAD_SIZE );
     }
 

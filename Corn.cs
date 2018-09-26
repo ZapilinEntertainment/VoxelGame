@@ -96,14 +96,12 @@ sealed public class Corn : Plant {
     public static void CameraUpdate()
     {
         Vector3 camPos = FollowingCamera.camPos;
-        Vector3 inPos;
         foreach (Corn c in corns)
         {
             if (c != null)
             {
-                inPos = c.transform.InverseTransformPoint(camPos);
-                inPos.y = 0;
-                c.transform.localRotation = Quaternion.Euler(0, Vector3.Angle(Vector3.forward, inPos),0);
+                Vector3 cpos = Vector3.ProjectOnPlane(camPos - c.transform.position, c.transform.up);
+                c.transform.forward = cpos.normalized;
             }
         }
     }

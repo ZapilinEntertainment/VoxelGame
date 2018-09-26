@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class Farm : WorkBuilding
 {
-    protected float farmFertility = 1;
     public int crop_id = -1;
     byte harvestableStage = 0;
-    int lifepowerBoost = 0;
+    float lifepowerBoost = 0;
     const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1, PLANT_ACTIVITY_COST = 1;
 
     override public void Prepare()
@@ -21,6 +20,7 @@ public class Farm : WorkBuilding
             case FARM_4_ID:
             case FARM_5_ID:
                 crop_id = Plant.CROP_CORN_ID;
+                lifepowerBoost = Plant.GetMaxLifeTransfer(crop_id);
                 break;
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
@@ -28,10 +28,10 @@ public class Farm : WorkBuilding
             case LUMBERMILL_4_ID:
             case LUMBERMILL_5_ID:
                 crop_id = Plant.TREE_OAK_ID;
+                lifepowerBoost = Plant.GetMaxLifeTransfer(crop_id) / 8f;
                 break;
         }
-        harvestableStage = Plant.GetHarvestableStage(crop_id);
-        lifepowerBoost = Plant.GetMaxLifeTransfer(crop_id);
+        harvestableStage = Plant.GetHarvestableStage(crop_id);        
 
     }
 
@@ -67,7 +67,8 @@ public class Farm : WorkBuilding
 
     override protected void LabourResult()
     {
-        int i = 0, totalCost = 0;
+        int i = 0;
+        float totalCost = 0;
         float actionsPoints = workflow / workflowToProcess;
         workflow = 0;
         List<Structure> structures = basement.surfaceObjects;   
@@ -90,7 +91,7 @@ public class Farm : WorkBuilding
                         {
                             if (p.lifepower < p.lifepowerToGrow)
                             {
-                                p.AddLifepower(lifepowerBoost);
+                                p.AddLifepower((int)lifepowerBoost);
                                 totalCost += lifepowerBoost;
                                 actionsPoints -= BOOST_ACTIVITY_COST;
                             }
@@ -114,7 +115,7 @@ public class Farm : WorkBuilding
                 i++;
             }
         }
-        if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce(totalCost);
+        if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce((int)totalCost);
     }
 
     override public void Annihilate(bool forced)

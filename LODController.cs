@@ -90,7 +90,7 @@ public class LODController : MonoBehaviour {
     {
         ModelWithLOD tree = models[index];
         Transform modelParent = tree.transform.parent, spriteTransform = tree.transform;
-        Vector3 treePos = modelParent.position;
+        Vector3 treePos = spriteTransform.position;
         if ((treePos - camPos).magnitude > lodDistance)
         {
             if (!tree.spriteIsActive)
@@ -102,7 +102,7 @@ public class LODController : MonoBehaviour {
             }
             byte spriteStatus = 0;
             float angle = Vector3.Angle(Vector3.up, camPos - treePos);
-            if (angle < 20)
+            if (angle < 30)
             {
                 if (angle < 10) spriteStatus = 3;
                 else spriteStatus = 2;
@@ -117,16 +117,6 @@ public class LODController : MonoBehaviour {
                 spriteTransform.GetComponent<SpriteRenderer>().sprite = lodPacks[tree.lodPackIndex][spriteStatus];
                 tree.drawingSpriteIndex = spriteStatus;
             }
-            if (spriteStatus == 0)
-            {
-                Vector3 dir = camPos - treePos;
-                dir.y = 0;
-                spriteTransform.forward = dir.normalized;
-            }
-           // else
-           // {
-          //      spriteTransform.LookAt(camPos);
-           // }
         }
         else
         {
@@ -164,6 +154,12 @@ public class LODController : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="t"> Transform of the lod sprite GO </param>
+    /// <param name="type"></param>
+    /// <param name="lodPackIndex"></param>
     public void AddObject(Transform t, ModelType type, short lodPackIndex)
     {
         if (t == null) return;

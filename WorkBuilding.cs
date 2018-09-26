@@ -34,61 +34,61 @@ public abstract class WorkBuilding : Building {
                 break;
             case FARM_1_ID:
                 {
-                    workflowToProcess = 8;
+                    workflowToProcess = 16;
                     maxWorkers = 100;
                 }
                 break;
             case FARM_2_ID:
                 {
-                    workflowToProcess = 7;
+                    workflowToProcess = 15;
                     maxWorkers = 80;
                 }
                 break;
             case FARM_3_ID:
                 {
-                    workflowToProcess = 6;
+                    workflowToProcess = 14;
                     maxWorkers = 70;
                 }
                 break;
             case FARM_4_ID:
                 {
-                    workflowToProcess = 5;
+                    workflowToProcess = 11;
                     maxWorkers = 100;
                 }
                 break;
             case FARM_5_ID:
                 {
-                    workflowToProcess = 3;
+                    workflowToProcess = 11;
                     maxWorkers = 300;
                 }
                 break;
             case LUMBERMILL_1_ID:
                 {
-                    workflowToProcess = 12;
+                    workflowToProcess = 50;
                     maxWorkers = 80;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
-                    workflowToProcess = 11;
+                    workflowToProcess = 45;
                     maxWorkers = 80;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
-                    workflowToProcess = 10;
+                    workflowToProcess = 40;
                     maxWorkers = 80;
                 }
                 break;
             case LUMBERMILL_4_ID:
                 {
-                    workflowToProcess = 8;
+                    workflowToProcess = 35;
                     maxWorkers = 140;
                 }
                 break;
             case LUMBERMILL_5_ID:
                 {
-                    workflowToProcess = 8;
+                    workflowToProcess = 35;
                     maxWorkers = 280;
                 }
                 break;

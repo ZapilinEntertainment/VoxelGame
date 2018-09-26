@@ -195,7 +195,7 @@ public sealed class GameMaster : MonoBehaviour {
                         int zpos = sb.pos.z;
 
                         if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
-                        Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);
+                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);

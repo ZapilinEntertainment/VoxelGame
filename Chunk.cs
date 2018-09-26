@@ -1037,11 +1037,9 @@ public sealed class Chunk : MonoBehaviour
         lifePower -= lifeTransfer;
         return (int)lifeTransfer;
     }
-    public int TakeLifePowerWithForce(int count)
+    public void TakeLifePowerWithForce(int count)
     {
-        if (count < 0) return 0;
         lifePower -= count;
-        return count;
     }
 
     #endregion    

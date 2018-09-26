@@ -59,7 +59,8 @@ public sealed class PoolMaster : MonoBehaviour {
         cavePref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
         quadsPool = new List<GameObject>();
         quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
-        quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
+        //quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
+        quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { Vector2.zero, Vector2.one, Vector2.right, Vector2.up };
         quad_pref.transform.parent = transform;
         quad_pref.SetActive(false);
         quadsPool.Add(quad_pref);
