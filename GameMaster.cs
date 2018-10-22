@@ -95,7 +95,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources = false, treesOptimization = false;
 	public bool generateChunk = true;
-    public byte test_size = 16;
+    public byte test_size = 100;
     public bool _editMode = false;
                                          
 
@@ -124,7 +124,8 @@ public sealed class GameMaster : MonoBehaviour {
             PoolMaster pm = gameObject.AddComponent<PoolMaster>();
             pm.Load();
             //byte chunksize = gss.chunkSize;
-            byte chunksize = test_size;
+            byte chunksize;
+            if (test_size != 100) chunksize = test_size; else chunksize = gss.chunkSize;
             if (gss.generateChunk)
             {
                 Chunk.SetChunkSize(chunksize);
@@ -273,6 +274,8 @@ public sealed class GameMaster : MonoBehaviour {
         //testzone
         if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
         if (Input.GetKeyDown("x")) mainChunk.TakeLifePowerWithForce(1000);
+
+        if (Input.GetKeyDown("m")) { layerCutHeight = 0; mainChunk.LayersCut(); }
         // eo testzone
 
         //float frameTime = Time.deltaTime * gameSpeed;

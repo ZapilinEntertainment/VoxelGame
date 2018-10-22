@@ -392,9 +392,8 @@ public class SurfaceBlock : Block {
 
 	public override void ReplaceMaterial( int newId) {
 		material_id = newId;
-		if (grassland != null) {
+		if (material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID & grassland != null) {
 			grassland.Annihilation();
-			CellsStatusUpdate();
 		}
 		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
 	}
@@ -405,7 +404,8 @@ public class SurfaceBlock : Block {
         illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
         if (illumination != prevIllumination)
         {
-            surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+            if (grassland == null) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+            else grassland.SetGrassTexture();
         }
     }
 
@@ -614,7 +614,8 @@ public class SurfaceBlock : Block {
             if (prevVisibility == 0)
             {
                 illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
-                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+                if (grassland == null) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+                else grassland.SetGrassTexture();
                 int i = 0;
                 while (i < surfaceObjects.Count)
                 {

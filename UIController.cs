@@ -16,7 +16,6 @@ sealed public class UIController : MonoBehaviour {
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton;
-    public Sprite overridingSprite;
     [SerializeField] Transform storagePanelContent;
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
@@ -51,8 +50,7 @@ sealed public class UIController : MonoBehaviour {
 
 	public static UIController current;
 
-    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, OPTIONS_CAMZOOM_SLIDER_INDEX = 0, 
-        OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 2, OPTIONS_QUALITY_DROPDOWN_INDEX = 4, RPANEL_CUBE_DIG_BUTTON_INDEX = 5;
+    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 5;
 
 	void Awake() {
 		current = this;
@@ -313,18 +311,12 @@ sealed public class UIController : MonoBehaviour {
             if (showStorageInfo) StorageButton();
 			menuPanel.SetActive(true);
             //menuButton.transform.SetAsLastSibling();
-            menuButton.GetComponent<Image>().overrideSprite = overridingSprite;
-
-            optionsPanel.transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value = FollowingCamera.optimalDistance;
-            optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodDistance;
-            optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
-            optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
             Time.timeScale = 0;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
         }
 		else { //off
-            optionsPanel.SetActive(false);
 			menuPanel.SetActive(false);
+            optionsPanel.SetActive(false);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
             Time.timeScale = 1;
@@ -370,39 +362,21 @@ sealed public class UIController : MonoBehaviour {
                     menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
                     SaveSystemUI.current.CloseButton();
                     break;
-                case MenuSection.Options:
-                    menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    optionsPanel.SetActive(false);
-                    break;
+               // case MenuSection.Options:
+                 //   menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
+                 //   optionsPanel.SetActive(false);
+                 //   break;
             }
             selectedMenuSection = ms;
             switch (selectedMenuSection)
             {
-                case MenuSection.Save: menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = overridingSprite; break;
-                case MenuSection.Load: menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = overridingSprite; break;
-                case MenuSection.Options: menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = overridingSprite; break;
+                case MenuSection.Save: menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
+                case MenuSection.Load: menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
+                case MenuSection.Options: menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
             }
         }
     }
-
-    public void Options_CamZoomChanged()
-    {
-        FollowingCamera.SetOptimalDistance(optionsPanel.transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value);
-    }
-    public void Options_LODdistChanged()
-    {
-        LODController.SetLODdistance(optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value);
-    }
-    public void Options_QualityLevelChanged()
-    {
-        int v = optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value ;
-        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(v != QualitySettings.GetQualityLevel());
-    }
-    public void Options_ApplyGraphicsChange()
-    {
-        QualitySettings.SetQualityLevel(optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value);
-        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).gameObject.SetActive(false);
-    }
+   
 	#endregion
 
 	public void Raycasting() {
@@ -841,7 +815,7 @@ sealed public class UIController : MonoBehaviour {
                 if (showLayerCut) LayerCutButton();
             }
             colonyPanel.SetActive(true);
-            colonyToggleButton.overrideSprite = overridingSprite;
+            colonyToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             ColonyController colony = GameMaster.colonyController;
             if (colony == null) return;
             showingGearsCf = colony.gears_coefficient;
@@ -871,7 +845,7 @@ sealed public class UIController : MonoBehaviour {
             {
                 if (showLayerCut) LayerCutButton();
             }
-            storageToggleButton.overrideSprite = overridingSprite;
+            storageToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             storagePanel.SetActive(true);
             RecalculateStoragePanel();
         }
@@ -891,7 +865,7 @@ sealed public class UIController : MonoBehaviour {
             {
                 if (showStorageInfo) StorageButton();
             }
-            layerCutToggleButton.overrideSprite = overridingSprite;
+            layerCutToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             int p = GameMaster.layerCutHeight;
             GameMaster.layerCutHeight = GameMaster.prevCutHeight;
             if (GameMaster.layerCutHeight != p) GameMaster.mainChunk.LayersCut();
@@ -1013,10 +987,7 @@ sealed public class UIController : MonoBehaviour {
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
         t.GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
 
-        optionsPanel.transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX+1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CameraZoom);
-        optionsPanel.transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX+1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.LODdistance);
-        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 1).GetComponent<Text>().text= Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
-        optionsPanel.transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
+        optionsPanel.GetComponent<GameSettingsUI>().LocalizeTitles();
 
         t = rightPanel.transform;
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);

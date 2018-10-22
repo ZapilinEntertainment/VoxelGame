@@ -51,7 +51,7 @@ public class GrasslandSerializer
 
 public class Grassland : MonoBehaviour
 {
-    public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22;
+    public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22, BERRY_BUSH_LIFECOST = 10;
     const byte MAX_PLANTS_COUNT = 8;
 
     public SurfaceBlock myBlock { get; private set; }
@@ -217,8 +217,10 @@ public class Grassland : MonoBehaviour
             prevStage = stage;
         }
     }
+
     void SetGrassTexture(byte stage)
     {
+        // не ставь проверки - иногда вызываются для обновления
         switch (stage)
         {
             case 0:
@@ -241,21 +243,33 @@ public class Grassland : MonoBehaviour
                 break;
         }
     }
+    public void SetGrassTexture()
+    {
+        progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
+        byte stage = (byte)Mathf.RoundToInt(progress / 0.2f);
+        SetGrassTexture(stage);
+        prevStage = stage;
+    }
 
-    /// <summary>
-    /// Use this only on pre-gen
-    /// </summary>
     public void AddLifepowerAndCalculate(int count)
     {
-        if (count > 2 * LIFEPOWER_TO_PREPARE)
+        lifepower += count;
+        int existingPlantsCount = 0;
+        if (myBlock.cellsStatus != 0)
         {
-            lifepower = 2 * LIFEPOWER_TO_PREPARE;
-            float freeEnergy = count - lifepower;
+            foreach (Structure s in myBlock.surfaceObjects)
+            {
+                if (s is Plant) existingPlantsCount++;
+            }
+        }
+        if (lifepower > 2 * LIFEPOWER_TO_PREPARE)
+        {
+            float freeEnergy = lifepower - 2 * LIFEPOWER_TO_PREPARE;
             int treesCount = (int)(Random.value * 10 + 4);
             int i = 0;
             List<PixelPosByte> positions = myBlock.GetRandomCells(treesCount);
             if (treesCount > positions.Count) treesCount = positions.Count;
-            int lifepowerDosis = (int)(freeEnergy / treesCount);
+            int lifepowerDosis = (int)(freeEnergy / (treesCount + existingPlantsCount));
             if (treesCount != 0)
             {
                 while (i < treesCount & freeEnergy > 0 & myBlock.cellsStatus != 1)
@@ -282,27 +296,99 @@ public class Grassland : MonoBehaviour
                         HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
                         hr.SetResources(ResourceType.Food, 10);
                         hr.SetBasement(myBlock, positions[i]);
-                        freeEnergy -= 10;
+                        freeEnergy -= BERRY_BUSH_LIFECOST;
                     }
                     
                     i++;
                 }
             }
-            lifepower = freeEnergy + 2 * LIFEPOWER_TO_PREPARE;
+            if (existingPlantsCount != 0 & freeEnergy >= lifepowerDosis)
+            {
+                i = 0;
+                Plant p = null;
+                for (; i < myBlock.surfaceObjects.Count; i++)
+                {
+                    p = myBlock.surfaceObjects[i] as Plant;
+                    if (p != null)
+                    {
+                        p.AddLifepower(lifepowerDosis);
+                        freeEnergy -= lifepowerDosis;
+                        if (freeEnergy <= 0) break;
+                    }
+                }
+            }
+            lifepower += freeEnergy;
         }
-        else lifepower = count;
         progress = Mathf.Clamp(lifepower / LIFEPOWER_TO_PREPARE, 0, 1);
         byte stage = (byte)(Mathf.RoundToInt(progress / 0.2f));
         prevStage = stage;
         SetGrassTexture(stage);        
     }
 
+    public void TakeLifepowerAndCalculate(int count)
+    {
+        List<Plant> plants = new List<Plant>();
+        if (myBlock.cellsStatus != 0)
+        {
+            Plant p = null;
+            foreach (Structure s in myBlock.surfaceObjects)
+            {
+                p = s as Plant;
+                if (p != null) plants.Add(p);
+            }
+        }
+        bool havePlants = (plants.Count != 0);
+        int lifepiece = havePlants ? count / plants.Count : 0;
+        while (count > 0)
+        {            
+            if (havePlants)
+            {
+                int i = 0;
+                while (i < plants.Count & count > 0)
+                {
+                    if (plants[i].lifepower >= lifepiece)
+                    {
+                        count -= plants[i].TakeLifepower(lifepiece);
+                        i++;
+                    }
+                    else
+                    {
+                        count -= (int)plants[i].lifepower;
+                        plants[i].Dry();
+                        plants.RemoveAt(i);
+                    }
+                }                             
+            }
+            if (lifepower >= count) lifepower -= count; 
+            else
+            {
+                count -= (int)lifepower;
+                lifepower = 0;
+            }
+            havePlants = (plants.Count != 0);
+            if (lifepower <= 0 & !havePlants) break;
+        }
+        CheckGrasslandStage();
+    }
+
+
     public void Annihilation() { Annihilation(false); }
     public void Annihilation(bool forced)
     {
         if (destroyed) return;
-        else destroyed = true;
+        else destroyed = true;      
         if (!forced) myBlock.myChunk.AddLifePower((int)lifepower);
+        if (myBlock.cellsStatus != 0)
+        {
+            int k = 0;
+            Plant p = null;
+            while (k < myBlock.surfaceObjects.Count)
+            {
+                p = myBlock.surfaceObjects[k] as Plant;
+                if (p != null) p.Dry();
+                k++;
+            }
+        }
         myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
         int i = grasslandList.IndexOf(this);
         if (i > 0)

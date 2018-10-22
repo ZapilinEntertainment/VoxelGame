@@ -239,98 +239,6 @@ public sealed class FollowingCamera : MonoBehaviour {
 
         camPos = camTransform.position;
         camPosChanged = true;
-
-        if (GameMaster.editMode)
-        {
-            bool? leftClick = null;
-            if (Input.GetMouseButtonDown(0))
-            {
-                leftClick = true;
-            }
-            else
-            {
-                if (Input.GetMouseButtonDown(1)) leftClick = false;
-            }
-            if (leftClick != null)
-            {
-                Vector2 mpos = Input.mousePosition;
-                RaycastHit rh;
-                if (Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out rh))
-                {
-                    GameObject collided = rh.collider.gameObject;
-                    if (collided.tag == "BlockCollider")
-                    {
-                        Block b = collided.transform.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
-                        {
-                            b = collided.transform.parent.parent.gameObject.GetComponent<Block>();
-                        }
-                        Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
-                        if (leftClick == true) // добавляем блок
-                        {
-                            if (b.type == BlockType.Cube)
-                            {
-                                float coordsDelta = rh.point.z - b.transform.position.z;
-                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
-                                {
-                                    if (coordsDelta > 0)
-                                    {
-                                        cpos.z += 1;
-                                        if (cpos.z >= Chunk.CHUNK_SIZE) goto END_OF_RAYCAST_CHECK;
-                                    }
-                                    else
-                                    {
-                                        cpos.z -= 1;
-                                        if (cpos.z < 0) goto END_OF_RAYCAST_CHECK;
-                                    }
-                                }
-                                coordsDelta = rh.point.x - b.transform.position.x;
-                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
-                                {
-                                    if (coordsDelta > 0)
-                                    {
-                                        cpos.x += 1;
-                                        if (cpos.x >= Chunk.CHUNK_SIZE) goto END_OF_RAYCAST_CHECK;
-                                    }
-                                    else
-                                    {
-                                        cpos.x -= 1;
-                                        if (cpos.x < 0) goto END_OF_RAYCAST_CHECK;
-                                    }
-                                }
-                                coordsDelta = rh.point.y - b.transform.position.y;
-                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
-                                {
-                                    if (coordsDelta > 0)
-                                    {
-                                        cpos.y += 1;
-                                        if (cpos.y >= Chunk.CHUNK_SIZE) goto END_OF_RAYCAST_CHECK;
-                                    }
-                                    else
-                                    {
-                                        cpos.y -= 1;
-                                        if (cpos.y < 0) goto END_OF_RAYCAST_CHECK;
-                                    }
-                                }
-                                GameMaster.mainChunk.AddBlock(new ChunkPos(cpos.x, cpos.y, cpos.z), BlockType.Cube, ResourceType.STONE_ID, true);
-                            }
-                            else // surface block
-                            {
-                                GameMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, b.material_id, true);
-                            }
-                        }
-                        else // удаляем блок
-                        {
-                            if (b.type == BlockType.Surface | b.type == BlockType.Cave) {
-                                GameMaster.mainChunk.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
-                            }
-                            GameMaster.mainChunk.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
-                        }
-                    }
-                }
-            }
-            END_OF_RAYCAST_CHECK:;
-        }
     }
 
     void LateUpdate()
@@ -396,7 +304,8 @@ public sealed class FollowingCamera : MonoBehaviour {
                 }
                 i++;
             }
-            if (!found) print("not found");
+           // if (!found) print("not found");
+           // встречается при замещении блоков 
             handleSprites = (mastBillboards.Count != 0);
         }
     }

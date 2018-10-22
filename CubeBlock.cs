@@ -73,6 +73,7 @@ public class CubeBlock : Block{
 	}
 
 	public override void ReplaceMaterial(int newId) {
+        if (newId == material_id) return;
 		material_id = newId;
 		foreach (MeshRenderer mr in faces) {
 			if (mr == null) continue;

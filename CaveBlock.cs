@@ -19,11 +19,11 @@ public class CaveBlock : SurfaceBlock
 
     public override void ReplaceMaterial(int newId)
     {
+        if (newId == material_id) return;
         material_id = newId;
         if (grassland != null)
         {
             grassland.Annihilation();
-            CellsStatusUpdate();
         }
         foreach (MeshRenderer mr in faces)
         {
@@ -271,7 +271,8 @@ public class CaveBlock : SurfaceBlock
             }
             if (surfaceRenderer != null)
             {
-                surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+                if (grassland == null) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+                else grassland.SetGrassTexture();
             }
         }
     }

@@ -27,6 +27,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
+    public static Sprite gui_overridingSprite;
     private static Transform zoneCube;
 
     const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
@@ -81,6 +82,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         QuestUI.LoadTextures();
+        gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
 	}
 
 	void Update() {

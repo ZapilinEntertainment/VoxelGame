@@ -296,7 +296,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
                 else
                 {
-                    changeMaterialButton.GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
+                    changeMaterialButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                     columnCreateButton.GetComponent<Image>().overrideSprite = null;
                     blockCreateButton.GetComponent<Image>().overrideSprite = null;
                     Transform buttonsKeeper = costPanel.transform.GetChild(0);
@@ -337,7 +337,7 @@ public sealed class UISurfacePanelController : UIObserver {
             case CostPanelMode.ColumnBuilding:
                 if (costPanelMode != CostPanelMode.ColumnBuilding)
                 {
-                    columnCreateButton.GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
+                    columnCreateButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                     changeMaterialButton.GetComponent<Image>().overrideSprite = null;
                     blockCreateButton.GetComponent<Image>().overrideSprite = null;
 
@@ -376,7 +376,7 @@ public sealed class UISurfacePanelController : UIObserver {
             case CostPanelMode.BlockBuilding:
                 if (costPanelMode != CostPanelMode.BlockBuilding)
                 {
-                    blockCreateButton.GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
+                    blockCreateButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                     changeMaterialButton.GetComponent<Image>().overrideSprite = null;
                     columnCreateButton.GetComponent<Image>().overrideSprite = null;
 
@@ -426,7 +426,7 @@ public sealed class UISurfacePanelController : UIObserver {
             costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
         }
         costPanel_selectedButton = indexes;
-        costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
+        costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = costPanel.transform.GetChild(2);// build button
         t.gameObject.SetActive(true);
         t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? GameMaster.SURFACE_MATERIAL_REPLACE_COUNT : CubeBlock.MAX_VOLUME ) + ')';
@@ -548,7 +548,7 @@ public sealed class UISurfacePanelController : UIObserver {
     {
         if (x) // enable
         {
-            constructionPlaneSwitchButton.image.overrideSprite = UIController.current.overridingSprite;
+            constructionPlaneSwitchButton.image.overrideSprite = PoolMaster.gui_overridingSprite;
             PrepareConstructionPlane();            
         }
         else
@@ -585,7 +585,7 @@ public sealed class UISurfacePanelController : UIObserver {
 
     public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
 		chosenStructure = building;
-		buildingButtonsContainer.GetChild(buttonIndex).GetComponent<Image>().overrideSprite = UIController.current.overridingSprite; 
+		buildingButtonsContainer.GetChild(buttonIndex).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; 
 		if (selectedBuildingButton >= 0) buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
 		selectedBuildingButton = buttonIndex;
 

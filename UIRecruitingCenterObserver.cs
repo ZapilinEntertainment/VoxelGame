@@ -77,7 +77,7 @@ public class UIRecruitingCenterObserver : UIObserver {
         showingCrew = null;
         crewNameTextField.gameObject.SetActive(false);
         hireButton.gameObject.SetActive(true);
-        hireButton.GetComponent<Image>().overrideSprite = (observingRCenter.finding) ? UIController.current.overridingSprite : null;
+        hireButton.GetComponent<Image>().overrideSprite = (observingRCenter.finding) ? PoolMaster.gui_overridingSprite : null;
         mainCrewIcon.enabled = false;
         if ( Crew.crewsList.Count == 0 )
         {
@@ -157,7 +157,7 @@ public class UIRecruitingCenterObserver : UIObserver {
                     GameMaster.colonyController.GetEnergyCrystals(RecruitingCenter.GetHireCost());
                     observingRCenter.finding = true;
                     hireButton.gameObject.SetActive(true);
-                    hireButton.GetComponent<Image>().overrideSprite = UIController.current.overridingSprite;
+                    hireButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                 }
                 else
                 {
