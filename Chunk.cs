@@ -35,6 +35,7 @@ public sealed class Chunk : MonoBehaviour
     private bool allGrasslandsCreated = false;
     public byte[,,] lightMap { get; private set; }
     float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
+    public int MAX_BLOCKS_COUNT = 100;
     public delegate void ChunkUpdateHandler(ChunkPos pos);
     public event ChunkUpdateHandler ChunkUpdateEvent;
 

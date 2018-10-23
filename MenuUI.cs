@@ -66,7 +66,7 @@ public class MenuUI : MonoBehaviour {
         {
             SwitchVisualSelection(MenuSection.Loading);
             SaveSystemUI.Check(transform.root);
-            SaveSystemUI.current.Activate(false);
+            SaveSystemUI.current.Activate(false, false);
         }
         
     }

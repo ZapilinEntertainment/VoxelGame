@@ -22,13 +22,14 @@ public sealed class PoolMaster : MonoBehaviour {
     public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
         glass_material, glass_offline_material;
     public static Material billboardMaterial { get; private set; }
-    private static Material[] basic_illuminated, green_illuminated;
+    private static Material[] basic_illuminated, green_illuminated, metal_illuminated;
     private static Material metal_material, green_material, darkness_material;
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
     public static Sprite gui_overridingSprite;
     private static Transform zoneCube;
+    private static bool useTextureRotation = false;
 
     const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
@@ -79,6 +80,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
         basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
         green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
+        metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         QuestUI.LoadTextures();
@@ -277,35 +279,39 @@ public sealed class PoolMaster : MonoBehaviour {
         }
         // крутим развертку, если это квад, иначе просто перетаскиваем 
         bool isQuad = (quad.uv.Length == 4);
-        Vector2[] uvEditing = quad.uv;
+        Vector2[] uvEdited = quad.uv;
         if (isQuad)
         {
             borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
-            float seed = Random.value;            
+            if (useTextureRotation)
+            {
+                float seed = Random.value;
                 if (seed > 0.5f)
                 {
-                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0] , borders[2], borders[3], borders[1] };
-                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                    if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else uvEdited = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
                 }
                 else
                 {
-                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                    if (seed > 0.25f) uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else uvEdited = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
                 }
-
-
-            // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
-            uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
+            else
+            {
+                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
+                uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
         }
         else
         {            
-            for (int i = 0; i < uvEditing.Length; i++)
+            for (int i = 0; i < uvEdited.Length; i++)
             {
-                uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
-                uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
+                uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
+                uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
             }            
         }
-        quad.uv = uvEditing;
+        quad.uv = uvEdited;
 
         if (illumination >= 1 - p / 2f) return green_material;
         else
@@ -328,11 +334,14 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
     }
-    public static Material GetMetalMaterial(MetalMaterial mtype, MeshFilter mf)
+    public static Material GetMetalMaterial(MetalMaterial mtype, MeshFilter mf, byte i_illumination)
     {
+        float illumination = i_illumination / 255f;
+        float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
+        if (illumination < p / 2f) return darkness_material;
+
         Mesh quad = mf.mesh;
-        if (quad != null)
-        {
+        if (quad == null) return metal_material;
             float piece = 0.25f;
             Vector2[] borders;
             switch (mtype)
@@ -354,41 +363,64 @@ public sealed class PoolMaster : MonoBehaviour {
                     borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
                     break;
                 case MetalMaterial.MetalS:
-                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
                     break;
             }
             bool isQuad = (quad.uv.Length == 4);
-            Vector2[] uvEditing = quad.uv;
+            Vector2[] uvEdited = quad.uv;
             if (isQuad)
             {
-                float seed = Random.value;
                 borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+            if (useTextureRotation)
+            {
+                float seed = Random.value;
                 if (seed > 0.5f)
                 {
-                    if (seed > 0.75f) quad.uv = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else quad.uv = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                    if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    else uvEdited = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
                 }
                 else
                 {
-                    if (seed > 0.25f) quad.uv = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else quad.uv = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                    if (seed > 0.25f) uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
+                    else uvEdited = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
                 }
-
-
-                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
-                uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
             }
             else
             {
-                for (int i = 0; i < uvEditing.Length; i++)
+                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
+                uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+            }
+            }
+            else
+            {
+                for (int i = 0; i < uvEdited.Length; i++)
                 {
-                    uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
-                    uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
+                    uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
+                    uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
                 }
             }
-            quad.uv = uvEditing;
-        }
-        return metal_material;
+            quad.uv = uvEdited;
+
+            if (illumination >= 1 - p / 2f) return metal_material;
+            else
+            {
+                // проверка на darkness в самом начале функции
+                int pos = (int)(illumination / p);
+                if (illumination - pos * p > p / 2f)
+                {
+                    pos++;
+                }
+                if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return metal_material;
+                else
+                {
+                    if (metal_illuminated[pos] == null)
+                    {
+                        metal_illuminated[pos] = new Material(metal_material);
+                        metal_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                    }
+                    return metal_illuminated[pos];
+                }
+            }
     }
     public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, byte i_illumination)
     {
@@ -435,32 +467,39 @@ public sealed class PoolMaster : MonoBehaviour {
                     break;
             }
             bool isQuad = (quad.uv.Length == 4);
-            Vector2[] uvEditing = quad.uv;
+            Vector2[] uvEdited = quad.uv;
             if (isQuad)
             {
-                float seed = Random.value;
                 borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
-                if (seed > 0.5f)
+                if (useTextureRotation)
                 {
-                    if (seed > 0.75f) uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else uvEditing = new Vector2[] { borders[1], borders[3], borders[0], borders[2] };
+                    float seed = Random.value;
+                    if (seed > 0.5f)
+                    {
+                        if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                        else uvEdited = new Vector2[] { borders[1], borders[3], borders[0], borders[2] };
+                    }
+                    else
+                    {
+                        if (seed > 0.25f) uvEdited = new Vector2[] { borders[2], borders[0], borders[1], borders[3] };
+                        else uvEdited = new Vector2[] { borders[3], borders[1], borders[2], borders[0] };
+                    }
                 }
                 else
                 {
-                    if (seed > 0.25f) uvEditing = new Vector2[] { borders[2], borders[0], borders[1], borders[3] };
-                    else uvEditing = new Vector2[] { borders[3], borders[1], borders[2], borders[0] };
-                }               
-                //uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    //uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                    uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
+                }                
             }
             else
             {                
-                for (int i = 0; i < uvEditing.Length; i++)
+                for (int i = 0; i < uvEdited.Length; i++)
                 {
-                    uvEditing[i] = new Vector2(uvEditing[i].x % piece, uvEditing[i].y % piece); // относительное положение в собственной текстуре
-                    uvEditing[i] = new Vector2(borders[0].x + uvEditing[i].x, borders[0].y + uvEditing[i].y);
+                    uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
+                    uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
                 }
             }
-            quad.uv = uvEditing;
+            quad.uv = uvEdited;
         }
 
         if (illumination >= 1 - p/2f) return basic_material;

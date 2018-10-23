@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public sealed class EditorUI : MonoBehaviour {
     private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower}
     
-    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton;
+    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
-    [SerializeField] Text materialName;
+    [SerializeField] Text materialNameTextField;
 
     private ClickAction currentAction;
     private bool actionsPanelOpened = false;
@@ -17,12 +18,15 @@ public sealed class EditorUI : MonoBehaviour {
     private int[] idsArray;
     private bool blockEditMode = true;
 
-    private const int LIST_POSITIONS = 10, LIFEPOWER_PORTION = 100;
+    private const int LIST_POSITIONS = 10, LIFEPOWER_PORTION = 100, LISTPANEL_DEFAULT_CHILDCOUNT = 3;
 
     private void Start()
     {
         buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
         materialButtonImage.uvRect = ResourceType.GetTextureRect(chosenMaterialId);
+        materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
+        SaveSystemUI.Check(transform.root);
+        SaveSystemUI.current.ingame = true;
     }
 
     public void Click()
@@ -224,8 +228,16 @@ public sealed class EditorUI : MonoBehaviour {
 
     public void ActionsPanel()
     {
-        actionsPanelOpened = !actionsPanelOpened;
-        actionsPanel.SetActive(actionsPanelOpened);
+        if (!actionsPanel.activeSelf)
+        {
+            actionsPanel.SetActive(true);
+            menuPanel.SetActive(false);
+        }
+        else
+        {
+            actionsPanel.SetActive(false);
+            listPanel.SetActive(false);
+        }
     }
 
     public void MaterialButtonToggle()
@@ -233,7 +245,7 @@ public sealed class EditorUI : MonoBehaviour {
         if (listPanel.activeSelf)
         {
             listPanel.SetActive(false);
-            listPanel.transform.GetChild(chosenListPosition + 1).GetComponent<Image>().overrideSprite = null;
+            if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(chosenListPosition + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = null;
         }
         else
         {
@@ -243,26 +255,30 @@ public sealed class EditorUI : MonoBehaviour {
                 {
                     // preparing
                     int listPos = 0;
-                    while (listPos < LIST_POSITIONS & listPos < ResourceType.blockMaterials.Length)
+                    ResourceType[] appliableMaterials = ResourceType.blockMaterials;
+                    while (listPos < LIST_POSITIONS & listPos < appliableMaterials.Length)
                     {
                         RectTransform newButtonTransform = Instantiate(listPanel.transform.GetChild(0).gameObject, listPanel.transform).GetComponent<RectTransform>();
-                        newButtonTransform.position += Vector3.down * newButtonTransform.rect.height;
-                        int m_id = ResourceType.blockMaterials[listPos].ID;
+                        newButtonTransform.localPosition = new Vector3(newButtonTransform.localPosition.x, newButtonTransform.localPosition.y - listPos * newButtonTransform.rect.height, newButtonTransform.localPosition.z);
+                        int m_id = appliableMaterials[listPos].ID;
                         newButtonTransform.GetChild(0).GetComponent<Text>().text = listPos.ToString() + ". " + Localization.GetResourceName(m_id);
+                        int arg_listPos = listPos;
                         newButtonTransform.GetComponent<Button>().onClick.AddListener(() => {
-                            this.ChangeMaterial(m_id);
+                            this.ChangeMaterial(m_id, arg_listPos);
                         });
-                        if (m_id == chosenMaterialId)
-                        {
-                            chosenListPosition = listPos;
-                            newButtonTransform.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                        }
                         newButtonTransform.gameObject.SetActive(true);
                         listPos++;
                     }
                     firstInListPos = 0;
                     listUpButton.SetActive(false);
-                    listDownButton.SetActive(ResourceType.blockMaterials.Length > LIST_POSITIONS);
+                    listDownButton.SetActive(appliableMaterials.Length > LIST_POSITIONS);
+
+                    chosenListPosition = -1;
+                    for (int i = 0; i < appliableMaterials.Length; i++)
+                    {
+                        if (appliableMaterials[i].ID == chosenMaterialId) chosenListPosition = i;
+                    }
+                    if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenMaterialId).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                 }                
             }
             listPanel.SetActive(true);
@@ -277,19 +293,28 @@ public sealed class EditorUI : MonoBehaviour {
             {
                 firstInListPos++;
                 Transform list = listPanel.transform;
+                if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = null;
+                chosenListPosition--;
+                if (chosenListPosition > 0)
+                {
+                    list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                }
                 Transform button = null;
                 for (int i = 0; i < LIST_POSITIONS; i++)
                 {
-                    button = list.GetChild(i + 3);
-                    int m_id = ResourceType.blockMaterials[i + 1].ID;
-                    button.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(m_id);
+                    button = list.GetChild(i + LISTPANEL_DEFAULT_CHILDCOUNT);
+                    int index = firstInListPos + i;
+                    int m_id = ResourceType.blockMaterials[index].ID;
+                    button.GetChild(0).GetComponent<Text>().text = index.ToString() + ". " + Localization.GetResourceName(m_id);
                     Button b = button.GetComponent<Button>();
-                    b.onClick.RemoveAllListeners();                    
+                    b.onClick.RemoveAllListeners();
+                    int arg_listPos = i;
                     b.onClick.AddListener(() => {
-                        this.ChangeMaterial(m_id);
+                        this.ChangeMaterial(m_id, arg_listPos);
                     });
                 }
                 listDownButton.SetActive(firstInListPos + LIST_POSITIONS < ResourceType.blockMaterials.Length);
+                listUpButton.SetActive(firstInListPos > 0);
             }
         }
     }
@@ -301,27 +326,66 @@ public sealed class EditorUI : MonoBehaviour {
             {
                 firstInListPos--;
                 Transform list = listPanel.transform;
+                if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = null;
+                chosenListPosition++;
+                if (chosenListPosition < LIST_POSITIONS - 1) list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                 Transform button = null;
                 for (int i = 0; i < LIST_POSITIONS; i++)
                 {
-                    button = list.GetChild(i + 1);
-                    int m_id = ResourceType.blockMaterials[firstInListPos + i].ID;
-                    button.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(m_id);
+                    button = list.GetChild(i + LISTPANEL_DEFAULT_CHILDCOUNT);
+                    int index = firstInListPos + i;
+                    int m_id = ResourceType.blockMaterials[index].ID;
+                    button.GetChild(0).GetComponent<Text>().text = index.ToString() + ". " + Localization.GetResourceName(m_id);
                     Button b = button.GetComponent<Button>();
                     b.onClick.RemoveAllListeners();
+                    int arg_listPos = i;
                     b.onClick.AddListener(() => {
-                        this.ChangeMaterial(m_id);
+                        this.ChangeMaterial(m_id, arg_listPos);
                     });
                 }
                 listUpButton.SetActive(firstInListPos > 0);
+                listDownButton.SetActive(firstInListPos + LIST_POSITIONS < ResourceType.blockMaterials.Length);
             }
         }
     }
 
-    public void ChangeMaterial(int id)
+    public void ChangeMaterial(int id, int pos)
     {
         chosenMaterialId = id;
         materialButtonImage.uvRect = ResourceType.GetTextureRect(id);
-        materialName.text = Localization.GetResourceName(id);
+        materialNameTextField.text = Localization.GetResourceName(id);
+        if (pos != chosenListPosition)
+        {
+            if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(chosenListPosition + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = null;
+            chosenListPosition = pos;
+            listPanel.transform.GetChild(pos + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+        }
+    }
+
+
+    public void MenuPanelToggle()
+    {
+        if (!menuPanel.activeSelf)
+        {
+            menuPanel.SetActive(true);
+            actionsPanel.SetActive(false);
+            listPanel.SetActive(false);
+        }
+        else
+        {
+            menuPanel.SetActive(false);
+        }
+    }
+    public void SaveTerrain()
+    {
+       SaveSystemUI.current.Activate(true, true);
+    }
+    public void LoadTerrain()
+    {
+        SaveSystemUI.current.Activate(false, true);
+    }
+    public void BackToMenu()
+    {
+        SceneManager.LoadScene(0);
     }
 }

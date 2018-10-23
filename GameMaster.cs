@@ -418,7 +418,7 @@ public sealed class GameMaster : MonoBehaviour {
         {
             Directory.CreateDirectory(path);
         }
-        FileStream fs = File.Create(path + name + ".sav");
+        FileStream fs = File.Create(path + name + '.' + SaveSystemUI.SAVE_FNAME_EXTENSION);
         savename = name;
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
@@ -426,9 +426,9 @@ public sealed class GameMaster : MonoBehaviour {
 		Time.timeScale = 1;
 		return true;
 	}
-
     public bool LoadGame() { return LoadGame("autosave"); }
-	public bool LoadGame( string fullname ) {  // отдельно функцию проверки и коррекции сейв-файла
+    public bool LoadGame(string fullname)
+    {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
             // ОЧИСТКА
@@ -442,7 +442,7 @@ public sealed class GameMaster : MonoBehaviour {
             colonyController.ResetToDefaults(); // подчищает все списки
             FollowingCamera.main.ResetLists();
             //UI.current.Reset();
-            
+
 
             // НАЧАЛО ЗАГРУЗКИ
             BinaryFormatter bf = new BinaryFormatter();
@@ -494,7 +494,7 @@ public sealed class GameMaster : MonoBehaviour {
 
             FollowingCamera.main.WeNeedUpdate();
             Time.timeScale = 1; gameSpeed = 1;
-            
+
             savename = fullname;
             return true;
         }
@@ -503,7 +503,35 @@ public sealed class GameMaster : MonoBehaviour {
             UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed));
             return false;
         }
-	}
+    }
+
+    public bool SaveTerrain(string name)
+    {
+        string path = Application.persistentDataPath + "/Terrains/";
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        FileStream fs = File.Create(path + name + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
+        BinaryFormatter bf = new BinaryFormatter();
+        bf.Serialize(fs, mainChunk.SaveChunkData());
+        fs.Close();
+        return true;
+    }
+    public bool LoadTerrain(string fullname)
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file = File.Open(fullname, FileMode.Open);
+        ChunkSerializer cs = (ChunkSerializer)bf.Deserialize(file);
+        file.Close();
+        GameObject g = new GameObject("chunk");
+        mainChunk = g.AddComponent<Chunk>();
+        mainChunk.LoadChunkData(cs);
+        FollowingCamera.main.WeNeedUpdate();
+        return true;
+    }
+
+    
 
 	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
 		using (MemoryStream stream = new MemoryStream(data))

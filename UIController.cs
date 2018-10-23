@@ -324,11 +324,11 @@ sealed public class UIController : MonoBehaviour {
         }        
 	}
 	public void SaveButton() {
-        SaveSystemUI.current.Activate(true);
+        SaveSystemUI.current.Activate(true, false);
         SetMenuPanelSelection(MenuSection.Save);
     }
 	public void LoadButton(){
-        SaveSystemUI.current.Activate(false);
+        SaveSystemUI.current.Activate(false, false);
         SetMenuPanelSelection(MenuSection.Load);
     }
     public void OptionsButton() {
