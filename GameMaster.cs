@@ -4,25 +4,25 @@ using System.IO; // чтение-запись файлов
 using System.Runtime.Serialization.Formatters.Binary; // конверсия в поток байтов и обратно
 
 public struct GameStartSettings  {
-    public bool generateChunk;
     public byte chunkSize;
+    public ChunkGenerationMode generationMode;
     public Difficulty difficulty;
     public float terrainRoughness;
     public static readonly GameStartSettings Empty;
     static GameStartSettings()
     {
-        Empty = new GameStartSettings(true, 16, Difficulty.Normal, 0.3f);
+        Empty = new GameStartSettings(ChunkGenerationMode.Standart, 16, Difficulty.Normal, 0.3f);
     }
-    public GameStartSettings(bool i_generateChunk, byte i_chunkSize, Difficulty diff, float i_terrainRoughness)
+    public GameStartSettings(ChunkGenerationMode i_genMode, byte i_chunkSize, Difficulty diff, float i_terrainRoughness)
     {
-        generateChunk = i_generateChunk;
+        generationMode = i_genMode;
         chunkSize = i_chunkSize;
         difficulty = diff;
         terrainRoughness = i_terrainRoughness;
     }
-    public GameStartSettings(bool i_generateChunk)
+    public GameStartSettings(ChunkGenerationMode i_genMode)
     {
-        generateChunk = i_generateChunk;
+        generationMode = i_genMode;
         chunkSize = 8;
         difficulty = Difficulty.Normal;
         terrainRoughness = 0.3f;
@@ -126,10 +126,14 @@ public sealed class GameMaster : MonoBehaviour {
             //byte chunksize = gss.chunkSize;
             byte chunksize;
             if (test_size != 100) chunksize = test_size; else chunksize = gss.chunkSize;
-            if (gss.generateChunk)
+            if (gss.generationMode != ChunkGenerationMode.GameLoading)
             {
-                Chunk.SetChunkSize(chunksize);
-                constructor.ConstructChunk(chunksize);
+                if (gss.generationMode != ChunkGenerationMode.TerrainLoading)
+                {
+                    Chunk.SetChunkSize(chunksize);
+                    constructor.ConstructChunk(chunksize, gss.generationMode);
+                }
+                else LoadTerrain(savename);
                 FollowingCamera.CenterCamera(Vector3.one * chunksize / 2f);
                 switch (difficulty)
                 {

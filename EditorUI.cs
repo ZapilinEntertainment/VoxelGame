@@ -4,16 +4,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public sealed class EditorUI : MonoBehaviour {
-    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower}
-    
+public sealed class EditorUI : MonoBehaviour
+{
+    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower }
+
+#pragma warning disable 0649
     [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Text materialNameTextField;
+#pragma warning restore 0649
 
     private ClickAction currentAction;
-    private bool actionsPanelOpened = false;
     private int chosenMaterialId = ResourceType.STONE_ID, firstInListPos = 0, chosenListPosition = 0;
     private int[] idsArray;
     private bool blockEditMode = true;
@@ -164,7 +166,7 @@ public sealed class EditorUI : MonoBehaviour {
                         {
                             b = collided.parent.parent.gameObject.GetComponent<Block>();
                         }
-                        if (b != null )
+                        if (b != null)
                         {
                             if (b.type != BlockType.Surface)
                             {
@@ -223,7 +225,7 @@ public sealed class EditorUI : MonoBehaviour {
         currentAction = (ClickAction)x;
         currentActionIcon.uvRect = new Rect((x % 4) * 0.25f, (x / 4) * 0.25f, 0.25f, 0.25f);
         buttonsImages[lastAction].overrideSprite = null;
-        buttonsImages[x].overrideSprite = PoolMaster.gui_overridingSprite;        
+        buttonsImages[x].overrideSprite = PoolMaster.gui_overridingSprite;
     }
 
     public void ActionsPanel()
@@ -263,7 +265,8 @@ public sealed class EditorUI : MonoBehaviour {
                         int m_id = appliableMaterials[listPos].ID;
                         newButtonTransform.GetChild(0).GetComponent<Text>().text = listPos.ToString() + ". " + Localization.GetResourceName(m_id);
                         int arg_listPos = listPos;
-                        newButtonTransform.GetComponent<Button>().onClick.AddListener(() => {
+                        newButtonTransform.GetComponent<Button>().onClick.AddListener(() =>
+                        {
                             this.ChangeMaterial(m_id, arg_listPos);
                         });
                         newButtonTransform.gameObject.SetActive(true);
@@ -279,7 +282,7 @@ public sealed class EditorUI : MonoBehaviour {
                         if (appliableMaterials[i].ID == chosenMaterialId) chosenListPosition = i;
                     }
                     if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenMaterialId).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                }                
+                }
             }
             listPanel.SetActive(true);
         }
@@ -309,7 +312,8 @@ public sealed class EditorUI : MonoBehaviour {
                     Button b = button.GetComponent<Button>();
                     b.onClick.RemoveAllListeners();
                     int arg_listPos = i;
-                    b.onClick.AddListener(() => {
+                    b.onClick.AddListener(() =>
+                    {
                         this.ChangeMaterial(m_id, arg_listPos);
                     });
                 }
@@ -339,7 +343,8 @@ public sealed class EditorUI : MonoBehaviour {
                     Button b = button.GetComponent<Button>();
                     b.onClick.RemoveAllListeners();
                     int arg_listPos = i;
-                    b.onClick.AddListener(() => {
+                    b.onClick.AddListener(() =>
+                    {
                         this.ChangeMaterial(m_id, arg_listPos);
                     });
                 }
@@ -378,7 +383,7 @@ public sealed class EditorUI : MonoBehaviour {
     }
     public void SaveTerrain()
     {
-       SaveSystemUI.current.Activate(true, true);
+        SaveSystemUI.current.Activate(true, true);
     }
     public void LoadTerrain()
     {

@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIRecruitingCenterObserver : UIObserver {
+public class UIRecruitingCenterObserver : UIObserver
+{
     RecruitingCenter observingRCenter;
+#pragma warning disable 0649
     [SerializeField] RawImage mainCrewIcon; // fiti
     [SerializeField] InputField crewNameTextField; // fiti
     [SerializeField] Button hireButton, dismissButton; // fiti
     [SerializeField] Text crewStatusText, crewSlotsText; // fiti
     [SerializeField] RectTransform progressBar;//fiti
     [SerializeField] Dropdown crewListDropdown; // fiti
+#pragma warning restore 0649
     Crew showingCrew;
     int savedProgressBarValue = 100;
     float fullProgressBarLength = -1, startOffset = 0;
@@ -55,9 +58,9 @@ public class UIRecruitingCenterObserver : UIObserver {
             {
                 if (savedProgressBarValue != (int)(observingRCenter.progress * 100))
                 {
-                    savedProgressBarValue = (int)(observingRCenter.progress* 100);
+                    savedProgressBarValue = (int)(observingRCenter.progress * 100);
                     crewStatusText.text = savedProgressBarValue.ToString() + '%';
-                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset,  savedProgressBarValue / 100f * fullProgressBarLength);
+                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
                 }
             }
             else
@@ -66,7 +69,7 @@ public class UIRecruitingCenterObserver : UIObserver {
                 {
                     savedProgressBarValue = (int)(showingCrew.stamina * 100);
                     crewStatusText.text = savedProgressBarValue.ToString() + '%';
-                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset,  savedProgressBarValue / 100f * fullProgressBarLength);
+                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
                 }
             }
         }
@@ -79,19 +82,19 @@ public class UIRecruitingCenterObserver : UIObserver {
         hireButton.gameObject.SetActive(true);
         hireButton.GetComponent<Image>().overrideSprite = (observingRCenter.finding) ? PoolMaster.gui_overridingSprite : null;
         mainCrewIcon.enabled = false;
-        if ( Crew.crewsList.Count == 0 )
+        if (Crew.crewsList.Count == 0)
         {
-            dismissButton.gameObject.SetActive(false);              
+            dismissButton.gameObject.SetActive(false);
             crewListDropdown.interactable = false;
         }
         else
         {
-            dismissButton.gameObject.SetActive(true);                         
+            dismissButton.gameObject.SetActive(true);
             crewListDropdown.interactable = true;
         }
         crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + Crew.crewSlots.ToString();
         savedProgressBarValue = (int)(observingRCenter.progress * 100);
-        progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset,  savedProgressBarValue / 100f * fullProgressBarLength);
+        progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
         crewStatusText.text = savedProgressBarValue.ToString() + '%';
     }
 
@@ -100,7 +103,7 @@ public class UIRecruitingCenterObserver : UIObserver {
         List<Dropdown.OptionData> crewButtons = new List<Dropdown.OptionData>();
         crewButtons.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost() + ')'));
         var crews = Crew.crewsList;
-        if ( crews.Count > 0)
+        if (crews.Count > 0)
         {
             for (int i = 0; i < crews.Count; i++)
             {
@@ -117,15 +120,15 @@ public class UIRecruitingCenterObserver : UIObserver {
             PrepareCrewsWindow();
         }
         else
-        {            
+        {
             i--;
-            SelectCrew(Crew.crewsList[i]);            
+            SelectCrew(Crew.crewsList[i]);
         }
     }
 
     public void SelectCrew(Crew c)
     {
-        showingCrew = c;        
+        showingCrew = c;
         hireButton.gameObject.SetActive(false);
         crewListDropdown.interactable = true;
         crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + Crew.crewSlots.ToString();

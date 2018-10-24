@@ -6,33 +6,40 @@ using UnityEngine.SceneManagement;
 using System.IO;
 
 
-public class MenuUI : MonoBehaviour {
-    int currentGraphicsLevel = 0, lastSelectedSaveButton = -1;
-    [SerializeField] Image newGameButton, loadButton, optionsButton;
-    [SerializeField] GameObject newGamePanel, optionsPanel, graphicsApplyButton;
-    [SerializeField] Slider sizeSlider, roughnessSlider;
-    [SerializeField] Dropdown difficultyDropdown, qualityDropdown;
-    [SerializeField] Sprite overridingSprite;
-    [SerializeField] Text sizeSliderVal, roughSliderVal;
+public sealed class MenuUI : MonoBehaviour
+{
+    private int currentGraphicsLevel = 0;
+#pragma warning disable 0649
+    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, loadPresetButtonImage, standartGenButtonImage, cubeGenButtonImage;
+    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton;
+    [SerializeField] private Slider sizeSlider, roughnessSlider;
+    [SerializeField] private Dropdown difficultyDropdown, qualityDropdown;
+    [SerializeField] private Sprite overridingSprite;
+    [SerializeField] private Text sizeSliderVal, roughSliderVal;
+#pragma warning restore 0649
 
     enum MenuSection { NoSelection, NewGame, Loading, Options }
-    MenuSection currentSection = MenuSection.NoSelection;
+    private MenuSection currentSection = MenuSection.NoSelection;
+    private ChunkGenerationMode newGameGenMode = ChunkGenerationMode.Standart;
+
 
     private void Start()
     {
         currentGraphicsLevel = QualitySettings.GetQualityLevel();
+        SaveSystemUI.Check(transform.root);
     }
 
     public void StartGame()
     {
-        GameStartSettings gss = new GameStartSettings(true, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value, roughnessSlider.value);
+        GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value, roughnessSlider.value);
         GameMaster.gss = gss;
         GameMaster.savename = string.Empty;
         SceneManager.LoadScene(1);
     }
     public void NGPanelButton()
     {
-        if (currentSection == MenuSection.NewGame) {
+        if (currentSection == MenuSection.NewGame)
+        {
             SwitchVisualSelection(MenuSection.NoSelection);
             newGamePanel.SetActive(false);
         }
@@ -56,7 +63,7 @@ public class MenuUI : MonoBehaviour {
         }
     }
     public void LoadPanelButton()
-    {        
+    {
         if (currentSection == MenuSection.Loading)
         {
             SwitchVisualSelection(MenuSection.NoSelection);
@@ -65,18 +72,22 @@ public class MenuUI : MonoBehaviour {
         else
         {
             SwitchVisualSelection(MenuSection.Loading);
-            SaveSystemUI.Check(transform.root);
             SaveSystemUI.current.Activate(false, false);
         }
-        
+
+    }
+    public void EditorButton()
+    {
+        SceneManager.LoadScene(SaveSystemUI.EDITOR_LEVEL_NUMBER);
     }
     public void ExitButton()
     {
         Application.Quit();
     }
 
-    public void QualityDropdownChanged() {
-      graphicsApplyButton.SetActive(qualityDropdown.value != currentGraphicsLevel);
+    public void QualityDropdownChanged()
+    {
+        graphicsApplyButton.SetActive(qualityDropdown.value != currentGraphicsLevel);
     }
     public void ApplyGraphicsButton()
     {

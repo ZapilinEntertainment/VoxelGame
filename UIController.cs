@@ -12,11 +12,13 @@ sealed public class UIController : MonoBehaviour {
 	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
 	public Button closePanelButton; // fill in the Inspector
 
+#pragma warning disable 0649
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton;
     [SerializeField] Transform storagePanelContent;
+#pragma warning restore 0649
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
     public Texture buildingsTexture { get; private set; }

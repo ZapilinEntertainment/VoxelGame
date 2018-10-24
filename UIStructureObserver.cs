@@ -5,10 +5,10 @@ using UnityEngine.UI;
 
 public class UIStructureObserver : UIObserver {
     Structure observingStructure;
-    [SerializeField] 
-	Text nameField, sizeField;
-    [SerializeField]
-    Button demolishButton;
+#pragma warning disable 0649
+    [SerializeField] Text nameField, sizeField;
+    [SerializeField]  Button demolishButton;
+#pragma warning restore 0649
 
     public static UIStructureObserver InitializeStructureObserverScript()
     {

@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class GameSettingsUI : MonoBehaviour {
+public sealed class GameSettingsUI : MonoBehaviour
+{
     // вешается на объект с панелью
 
+#pragma warning disable 0649
     [SerializeField] Image settingsButton;
-    private const int  OPTIONS_CAMZOOM_SLIDER_INDEX = 0,
+#pragma warning restore 0649
+
+    private const int OPTIONS_CAMZOOM_SLIDER_INDEX = 0,
         OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 2, OPTIONS_QUALITY_DROPDOWN_INDEX = 4;
 
-    void OnEnable() 
+    void OnEnable()
     {
-            settingsButton.overrideSprite = PoolMaster.gui_overridingSprite;
-            Transform t = transform;
-            t.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value = FollowingCamera.optimalDistance;
-            t.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodDistance;
-            t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
-            t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
+        settingsButton.overrideSprite = PoolMaster.gui_overridingSprite;
+        Transform t = transform;
+        t.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value = FollowingCamera.optimalDistance;
+        t.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodDistance;
+        t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
+        t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
     }
 
     private void OnDisable()

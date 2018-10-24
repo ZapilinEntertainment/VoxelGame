@@ -5,19 +5,22 @@ using UnityEngine.UI;
 using System.IO;
 using UnityEngine.SceneManagement;
 
-public class SaveSystemUI : MonoBehaviour {
-    public static SaveSystemUI current {get;private set;}
+public class SaveSystemUI : MonoBehaviour
+{
+    public static SaveSystemUI current { get; private set; }
     public bool saveMode = false, ingame = false;
 
     private bool deleteSubmit = false, terrainsLoading = false;
-    string[] saveNames;    
+    string[] saveNames;
+#pragma warning disable 0649
     [SerializeField] RectTransform exampleButton, saveNamesContainer; // fiti
     [SerializeField] Text saveLoadButtonText, deleteButtonText, submitButtonText, rejectButtonText, submitQuestionText, saveDateString; // fiti
     [SerializeField] GameObject submitWindow, inputFieldPanel;
+#pragma warning restore 0649
     private int lastSelectedIndex = -1;
 
     public const string SAVE_FNAME_EXTENSION = "sav", TERRAIN_FNAME_EXTENSION = "itd"; // island terrain data
-    private const int GAME_LEVEL_NUMBER = 1, EDITOR_LEVEL_NUMBER = 2;
+    public const int GAME_LEVEL_NUMBER = 1, EDITOR_LEVEL_NUMBER = 2;
 
     public static void Check(Transform canvas)
     {
@@ -37,7 +40,7 @@ public class SaveSystemUI : MonoBehaviour {
     public void Activate(bool openSaveMode, bool i_terrainsLoading)
     {
         gameObject.SetActive(true);
-       if (inputFieldPanel.activeSelf) inputFieldPanel.SetActive(false);
+        if (inputFieldPanel.activeSelf) inputFieldPanel.SetActive(false);
         if (submitWindow.activeSelf) submitWindow.SetActive(false);
         lastSelectedIndex = -1;
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = false;
@@ -113,24 +116,25 @@ public class SaveSystemUI : MonoBehaviour {
                 {
                     t = saveNamesContainer.GetChild(i + 1); // 0 - example
                 }
-                else 
+                else
                 {
                     t = Instantiate(exampleButton, saveNamesContainer).transform;
-                    t.transform.localPosition = exampleButton.localPosition + Vector3.down * (exampleButton.rect.height * (i + 1) + 16) ;                    
+                    t.transform.localPosition = exampleButton.localPosition + Vector3.down * (exampleButton.rect.height * (i + 1) + 16);
                 }
                 t.gameObject.SetActive(true);
                 t.GetComponent<Button>().onClick.RemoveAllListeners(); // т.к. на example тоже может висеть listener
                 t.GetChild(0).GetComponent<Text>().text = saveNames[i];
-                int index = i ;
+                int index = i;
                 t.GetComponent<Button>().onClick.AddListener(() =>
                 {
                     this.SelectSave(index);
                 });
             }
-            if ( i < c)
+            if (i < c)
             {
                 i++;
-                for (; i < c; i++) {
+                for (; i < c; i++)
+                {
                     saveNamesContainer.GetChild(i).gameObject.SetActive(false);
                 }
             }
@@ -165,20 +169,20 @@ public class SaveSystemUI : MonoBehaviour {
         Transform t;
         if (lastSelectedIndex != -1)
         {
-            t = saveNamesContainer.GetChild(lastSelectedIndex +1);
+            t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
             if (t != null)
             {
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
             }
         }
-        t = saveNamesContainer.GetChild(index +1);
+        t = saveNamesContainer.GetChild(index + 1);
         t.GetComponent<Image>().color = Color.black;
         t.GetChild(0).GetComponent<Text>().color = Color.cyan;
         lastSelectedIndex = index;
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = true;
         deleteButtonText.transform.parent.GetComponent<Button>().interactable = true;
-        string fullPath = terrainsLoading ? Application.persistentDataPath + "/Terrains/" + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION  : Application.persistentDataPath + "/Saves/" + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
+        string fullPath = terrainsLoading ? Application.persistentDataPath + "/Terrains/" + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION : Application.persistentDataPath + "/Saves/" + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
         if (File.Exists(fullPath))
         {
             saveDateString.enabled = true;
@@ -208,7 +212,7 @@ public class SaveSystemUI : MonoBehaviour {
                 string fullPath = Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION;
                 if (ingame)
                 {
-                    if (GameMaster.realMaster.LoadTerrain(fullPath))  gameObject.SetActive(false);
+                    if (GameMaster.realMaster.LoadTerrain(fullPath)) gameObject.SetActive(false);
                 }
                 else
                 {
@@ -216,7 +220,7 @@ public class SaveSystemUI : MonoBehaviour {
                     if (File.Exists(fullPath))
                     {
                         GameMaster.savename = saveNames[lastSelectedIndex];
-                        GameStartSettings gss = new GameStartSettings(false);
+                        GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.TerrainLoading);
                         GameMaster.gss = gss;
                         SceneManager.LoadScene(EDITOR_LEVEL_NUMBER);
                     }
@@ -248,7 +252,7 @@ public class SaveSystemUI : MonoBehaviour {
                     if (File.Exists(fullPath))
                     {
                         GameMaster.savename = saveNames[lastSelectedIndex];
-                        GameStartSettings gss = new GameStartSettings(false);
+                        GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.GameLoading);
                         GameMaster.gss = gss;
                         SceneManager.LoadScene(GAME_LEVEL_NUMBER);
                     }
@@ -267,7 +271,7 @@ public class SaveSystemUI : MonoBehaviour {
         {// ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ТЕРРЕЙНА
             if (deleteSubmit)
             {
-                File.Delete(Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION );
+                File.Delete(Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION);
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -278,7 +282,7 @@ public class SaveSystemUI : MonoBehaviour {
             {
                 if (lastSelectedIndex != -1)
                 {
-                   GameMaster.realMaster.SaveTerrain(saveNames[lastSelectedIndex]);
+                    GameMaster.realMaster.SaveTerrain(saveNames[lastSelectedIndex]);
                 }
             }
         }
@@ -304,7 +308,7 @@ public class SaveSystemUI : MonoBehaviour {
                 }
             }
         }
-       submitWindow.SetActive(false);
+        submitWindow.SetActive(false);
     }
 
     public void DeleteButton()

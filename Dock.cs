@@ -108,8 +108,7 @@ public sealed class Dock : WorkBuilding {
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
-		SetBuildingData(b, pos);
-		Transform modelTransform = transform.GetChild(0);		
+		SetBuildingData(b, pos);	
 		basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
 		colony = GameMaster.colonyController;
 		colony.AddDock(this);		

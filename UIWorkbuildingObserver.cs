@@ -13,7 +13,9 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 
 	public WorkBuilding observingWorkbuilding { get; private set; }
     public Worksite observingWorksite { get; private set; }
+#pragma warning disable 0649
     [SerializeField] GameObject stopButton;
+#pragma warning restore 0649
 
     public static UIWorkbuildingObserver InitializeWorkbuildingObserverScript()
     {

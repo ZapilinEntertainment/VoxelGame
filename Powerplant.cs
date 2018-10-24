@@ -1,30 +1,27 @@
 ﻿using UnityEngine; // mathf
-
-enum GeneratorFuel {Biofuel, MineralFuel,Graphonium}
 public class Powerplant : WorkBuilding {
-	GeneratorFuel fuelType;
 	ResourceType fuel;
     private float output, fuelNeeds, fuelBurnTime, tickTimer;
     public float fuelLeft { get; private set; }
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		switch (fuelType) {
-		case GeneratorFuel.Biofuel:
+		switch (id) {
+		case BIOGENERATOR_2_ID:
                 fuel = ResourceType.Food;
                 output = 50;
                 fuelNeeds = 10;
                 fuelLeft = 0;
                 fuelBurnTime = 30 * 1f / GameMaster.LABOUR_TICK; // 30 sec
                 break;
-		case GeneratorFuel.MineralFuel:
+		case MINERAL_POWERPLANT_2_ID:
                 fuel = ResourceType.mineral_F;
                 output = 100;
                 fuelNeeds = 1;
                 fuelLeft = 0;
                 fuelBurnTime = 6 * 1f / GameMaster.LABOUR_TICK; // 6 sec
                 break;
-		case GeneratorFuel.Graphonium :
+		case GRPH_REACTOR_4_ID :
                 fuel = ResourceType.Graphonium;
                 output = 4000;
                 fuelNeeds = 1;

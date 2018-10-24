@@ -5,14 +5,17 @@ using UnityEngine.UI;
 
 enum HangarObserverMode { NoShuttle, BuildingShuttle, ShuttleInside, ShuttleOnMission }
 
-public class UIHangarObserver : UIObserver {
+public class UIHangarObserver : UIObserver
+{
     Hangar observingHangar;
+#pragma warning disable 0649
     [SerializeField] RawImage mainShuttleIcon; // fiti
     [SerializeField] InputField shuttleNameTextField; // fiti
     [SerializeField] Button constructButton, disassembleButton, repairButton; // fiti
     [SerializeField] Text shuttleStatusText; // fiti
     [SerializeField] RectTransform progressBar;//fiti
     [SerializeField] Transform resourceCostContainer;
+#pragma warning restore 0649
     Vector2[] showingResourcesCount;
     int savedProgressBarValue = 100;
     float fullProgressBarLength = -1, startOffset = 0;
@@ -102,9 +105,9 @@ public class UIHangarObserver : UIObserver {
         Shuttle shuttle = observingHangar.shuttle;
         bool haveShuttle = (shuttle != null);
 
-        
+
         shuttleNameTextField.gameObject.SetActive(haveShuttle);
-        repairButton.gameObject.SetActive(haveShuttle);        
+        repairButton.gameObject.SetActive(haveShuttle);
         disassembleButton.gameObject.SetActive(haveShuttle);
 
         bool showProgressBar = false;
@@ -118,12 +121,12 @@ public class UIHangarObserver : UIObserver {
             mode = HangarObserverMode.ShuttleInside;
         }
         else
-        {            
-            savedProgressBarValue = (int)(observingHangar.workflow / observingHangar.workflowToProcess * 100) ;
+        {
+            savedProgressBarValue = (int)(observingHangar.workflow / observingHangar.workflowToProcess * 100);
             mainShuttleIcon.uvRect = Rect.zero;
             showProgressBar = observingHangar.constructing;
             constructButton.GetComponent<Image>().overrideSprite = showProgressBar ? PoolMaster.gui_overridingSprite : null;
-            resourceCostContainer.gameObject.SetActive( !showProgressBar );
+            resourceCostContainer.gameObject.SetActive(!showProgressBar);
             if (!showProgressBar)
             {
                 mode = HangarObserverMode.NoShuttle;
@@ -152,7 +155,7 @@ public class UIHangarObserver : UIObserver {
             }
             else mode = HangarObserverMode.BuildingShuttle;
         }
-        constructButton.gameObject.SetActive(!showProgressBar);        
+        constructButton.gameObject.SetActive(!showProgressBar);
         progressBar.transform.parent.gameObject.SetActive(showProgressBar);
         if (showProgressBar)
         {
@@ -160,7 +163,7 @@ public class UIHangarObserver : UIObserver {
             progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
             shuttleStatusText.text = savedProgressBarValue.ToString() + '%';
         }
-    } 
+    }
 
     public void StartConstructing()
     {
@@ -220,7 +223,7 @@ public class UIHangarObserver : UIObserver {
     }
 
     public void LocalizeButtonTitles()
-    {        
+    {
         disassembleButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Disassemble);
         repairButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Repair);
     }

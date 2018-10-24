@@ -25,6 +25,8 @@ public sealed class ChunkSerializer
     public byte chunkSize;
 }
 
+public enum ChunkGenerationMode { Standart, GameLoading, Cube, TerrainLoading}
+
 public sealed class Chunk : MonoBehaviour
 {
     public Block[,,] blocks { get; private set; }
@@ -32,7 +34,7 @@ public sealed class Chunk : MonoBehaviour
     public byte prevBitmask = 63;
     public float lifePower = 0;
     public static byte CHUNK_SIZE { get; private set; }  
-    private bool allGrasslandsCreated = false;
+    //private bool allGrasslandsCreated = false;
     public byte[,,] lightMap { get; private set; }
     float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
     public int MAX_BLOCKS_COUNT = 100;

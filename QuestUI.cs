@@ -5,10 +5,13 @@ using UnityEngine.UI;
 
 public sealed class QuestUI : MonoBehaviour
 {
+#pragma warning disable 0649
     [SerializeField] RectTransform[] questButtons; // fiti
     [SerializeField] GameObject questInfoPanel, shuttlesOrCrewsOptions; // fiti
     [SerializeField] RectTransform stepsContainer, listContainer; // fiti
     [SerializeField] Text questName, questDescription, timer, rewardText; // fiti    
+#pragma warning restore 0649
+
     float rectTransformingSpeed = 0.8f, transformingProgress;
     RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
     public sbyte openedQuest { get; private set; }
@@ -351,7 +354,7 @@ public sealed class QuestUI : MonoBehaviour
             return;
         }
         // поиск подходящих среди отложенных
-        Quest q = Quest.GetProgressQuest(); 
+        Quest q = Quest.GetProgressQuest();
         if (q == null)
         {
             StartCoroutine(WaitForNewQuest(i));
@@ -473,10 +476,11 @@ public sealed class QuestUI : MonoBehaviour
         }
     }
 
-    public QuestStaticSerializer Save() {
+    public QuestStaticSerializer Save()
+    {
         QuestStaticSerializer qss = Quest.SaveStaticData();
         qss.visibleQuests = new QuestSerializer[visibleQuests.Length];
-        for (int i = 0; i < qss.visibleQuests.Length;i++)
+        for (int i = 0; i < qss.visibleQuests.Length; i++)
         {
             if (visibleQuests[i] != null) qss.visibleQuests[i] = visibleQuests[i].Save();
             else qss.visibleQuests[i] = null;

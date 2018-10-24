@@ -5,8 +5,7 @@ using UnityEngine;
 public class LODSpriteMaker : MonoBehaviour {
     public static LODSpriteMaker current {get; private set;}
     Camera cam;
-    [SerializeField]
-    Texture2D lastResult;
+   // [SerializeField]   Texture2D lastResult; // для тестов
 
     private void Awake()
     {
@@ -39,7 +38,7 @@ public class LODSpriteMaker : MonoBehaviour {
                 spriteBlanks[i] = new Texture2D(spriteSize, spriteSize);
                 spriteBlanks[i].ReadPixels(new Rect(0,0, spriteSize, spriteSize), 0, 0);
                 spriteBlanks[i].Apply();
-            if (positions.Length == 1) lastResult = spriteBlanks[i];
+            //if (positions.Length == 1) lastResult = spriteBlanks[i];
         }
         cam.enabled = false;
         cam.transform.parent = null;

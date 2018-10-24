@@ -81,7 +81,6 @@ public sealed class FollowingCamera : MonoBehaviour {
     void Update()
     {
         if (cam == null) return;
-        Vector3 prevCamPos = camPos;
         Vector3 mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
         if (Input.GetKey(KeyCode.Space)) mv.y = 1;
@@ -291,21 +290,18 @@ public sealed class FollowingCamera : MonoBehaviour {
         if (mastBillboards.Count == 0) return;
         else
         {
+            // при замещении блоков иногда работает вхолостую - почему?
             int i = 0;
-            bool found = false;
             while (i < mastBillboards.Count)
             {
                 if (mastBillboardsIDs[i] == id)
                 {
                     mastBillboardsIDs.RemoveAt(i);
                     mastBillboards.RemoveAt(i);
-                    found = true;
                     break;
                 }
                 i++;
             }
-           // if (!found) print("not found");
-           // встречается при замещении блоков 
             handleSprites = (mastBillboards.Count != 0);
         }
     }

@@ -24,15 +24,17 @@ public sealed class UISurfacePanelController : UIObserver {
     Vector2Int constructingPlaneTouchPos;
     private Transform exampleBuildingsContainer;
 
+#pragma warning disable 0649
     [SerializeField] Material constructingPlaneMaterial;
     [SerializeField] GameObject buildIntersectionSubmit, constructionPlane; // window asking about deleting overlapping buildings
     [SerializeField] Transform buildingButtonsContainer; // fiti
-	public Toggle[] buildingsLevelToggles; // fiti
-	public Text nameField, description, gridTextField,energyTextField, housingTextField; // fiti
-	public RawImage[] resourcesCostImage; // fiti
 	[SerializeField] Button innerBuildButton, returnButton, constructionPlaneSwitchButton; // fiti
 	[SerializeField] GameObject surfaceBuildingPanel, infoPanel, energyIcon, housingIcon, costPanel; // fiti
-	HeadQuarters hq;
+#pragma warning restore 0649
+    public Toggle[] buildingsLevelToggles; // fiti
+    public Text nameField, description, gridTextField, energyTextField, housingTextField; // fiti
+    public RawImage[] resourcesCostImage; // fiti
+    private HeadQuarters hq;
 
     public static UISurfacePanelController current { get; private set; }
 
@@ -627,8 +629,6 @@ public sealed class UISurfacePanelController : UIObserver {
         }
         description.text = Localization.GetStructureDescription(chosenStructure.id);
         
-
-		bool sideBlock = ( observingSurface.pos.x == 0 | observingSurface.pos.z == 0 | observingSurface.pos.x == Chunk.CHUNK_SIZE - 1 | observingSurface.pos.z == Chunk.CHUNK_SIZE - 1 );
 		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
 	

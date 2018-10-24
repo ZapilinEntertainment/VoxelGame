@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIFactoryObserver : UIObserver {
+public class UIFactoryObserver : UIObserver
+{
     Factory observingFactory;
-    [SerializeField]  RawImage inputIcon, outputIcon;
+#pragma warning disable 0649
+    [SerializeField] RawImage inputIcon, outputIcon;
     [SerializeField] Text inputValueString, outputValueString, workflowString;
     [SerializeField] Dropdown recipesDropdown;
+#pragma warning restore 0649
 
     public static UIFactoryObserver InitializeFactoryObserverScript()
     {
@@ -45,7 +48,7 @@ public class UIFactoryObserver : UIObserver {
             }
             recipesDropdown.options = recipeButtons;
         }
-        
+
         inputIcon.uvRect = ResourceType.GetTextureRect(r.input.ID);
         inputValueString.text = r.inputValue.ToString();
         outputIcon.uvRect = ResourceType.GetTextureRect(r.output.ID);
@@ -63,7 +66,7 @@ public class UIFactoryObserver : UIObserver {
         if (observingFactory == null) SelfShutOff();
         else
         {
-            workflowString.text = string.Format("{0:0.##}", observingFactory.workflow / observingFactory.workflowToProcess * 100) + '%' ;
+            workflowString.text = string.Format("{0:0.##}", observingFactory.workflow / observingFactory.workflowToProcess * 100) + '%';
         }
     }
 

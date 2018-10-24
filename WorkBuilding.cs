@@ -352,6 +352,7 @@ public abstract class WorkBuilding : Building {
         }
         else upgraded.modelRotation = modelRotation;
         upgraded.AddWorkers(workers);
+        upgraded.SetBasement(basement, setPos);
         if (returnToUI) upgraded.ShowOnGUI();
     }
 

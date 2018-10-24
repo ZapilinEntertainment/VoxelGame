@@ -13,7 +13,6 @@ public class HarvestableResource : Structure
 {
     public ResourceType mainResource { get; protected set; }
     public float resourceCount;
-    private bool haveSprite = false;
 
     static Dictionary<ResourceType, short> materialBasedLods = new Dictionary<ResourceType, short>();
     static LODController modelController;
