@@ -382,6 +382,7 @@ sealed public class UIController : MonoBehaviour {
 	#endregion
 
 	public void Raycasting() {
+        if (GameMaster.colonyController == null || GameMaster.colonyController.hq == null) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChabgeChosenObject
 		Vector2 mpos = Input.mousePosition;
 		RaycastHit rh;

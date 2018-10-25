@@ -33,6 +33,15 @@ public sealed class EditorUI : MonoBehaviour
 
     public void Click()
     {
+        if (FollowingCamera.touchscreen)
+        {
+            if (Input.touchCount != 1) return;
+            else
+            {
+                Touch t = Input.GetTouch(0);
+                if (t.phase != TouchPhase.Ended | t.deltaPosition != Vector2.zero) return;
+            }
+        }
         RaycastHit rh;
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
         {
@@ -226,6 +235,7 @@ public sealed class EditorUI : MonoBehaviour
         currentActionIcon.uvRect = new Rect((x % 4) * 0.25f, (x / 4) * 0.25f, 0.25f, 0.25f);
         buttonsImages[lastAction].overrideSprite = null;
         buttonsImages[x].overrideSprite = PoolMaster.gui_overridingSprite;
+        listPanel.SetActive(false);
     }
 
     public void ActionsPanel()
@@ -281,13 +291,12 @@ public sealed class EditorUI : MonoBehaviour
                     {
                         if (appliableMaterials[i].ID == chosenMaterialId) chosenListPosition = i;
                     }
-                    if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenMaterialId).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                    if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                 }
             }
             listPanel.SetActive(true);
         }
     }
-
     public void ListDown()
     {
         if (blockEditMode)
@@ -353,13 +362,19 @@ public sealed class EditorUI : MonoBehaviour
             }
         }
     }
+    public void PlayWithThisTerrain()
+    {
+        Destroy(transform.root.gameObject);
+        GameMaster.realMaster.ChangeModeToPlay();
+        Instantiate(Resources.Load<GameObject>("UIPrefs/gameCanvas"));
+    }
 
     public void ChangeMaterial(int id, int pos)
     {
         chosenMaterialId = id;
         materialButtonImage.uvRect = ResourceType.GetTextureRect(id);
         materialNameTextField.text = Localization.GetResourceName(id);
-        if (pos != chosenListPosition)
+        if (pos + firstInListPos != chosenListPosition)
         {
             if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(chosenListPosition + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = null;
             chosenListPosition = pos;
@@ -391,6 +406,7 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void BackToMenu()
     {
+        GameMaster.realMaster.OnApplicationQuit();
         SceneManager.LoadScene(0);
     }
 }

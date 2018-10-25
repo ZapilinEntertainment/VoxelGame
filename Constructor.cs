@@ -16,7 +16,7 @@ public class Constructor : MonoBehaviour {
 
 	public void ConstructChunk( byte chunkSize, ChunkGenerationMode mode ) {
 		seed += System.DateTime.Now.Second;
-        TERRAIN_ROUGHNESS = GameMaster.gss.terrainRoughness;
+        TERRAIN_ROUGHNESS = GameMaster.gameStartSettings.terrainRoughness;
 		int size = chunkSize;
 		int[,,] dat = new int[size, size ,size ];
         GenerateDataArray(size, ref dat);

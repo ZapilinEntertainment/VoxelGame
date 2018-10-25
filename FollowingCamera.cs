@@ -6,13 +6,14 @@ using UnityEngine;
 public sealed class FollowingCamera : MonoBehaviour {
     public static FollowingCamera main { get; private set; }
     public static Camera cam { get; private set; }
-    public static Transform camTransform; // unprotected - HOT
+    public static Transform camTransform; // unprotected - HOT - means using very often
     public static Transform camBasisTransform { get; private set; }
     public static Vector3 camPos; // unprotected - HOT
+    public static bool touchscreen { get; private set; }
 
     public float rotationSpeed = 65, zoomSpeed = 50, moveSpeed = 30;
 	float rotationSmoothCoefficient = 0;
-	float rotationSmoothAcceleration = 0.05f;
+	float rotationSmoothAcceleration = 0.1f;
 	float zoomSmoothCoefficient = 0;
 	float zoomSmoothAcceleration = 0.05f;
 	Vector3 moveSmoothCoefficient = Vector3.zero;
@@ -46,6 +47,8 @@ public sealed class FollowingCamera : MonoBehaviour {
 
         mastBillboards = new List<Transform>();
         mastBillboardsIDs = new List<int>();
+
+        touchscreen = Input.touchSupported;
     }
 
     void Start()
@@ -81,13 +84,14 @@ public sealed class FollowingCamera : MonoBehaviour {
     void Update()
     {
         if (cam == null) return;
-        Vector3 mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        Vector3 mv = Vector3.zero;
+            mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+            if (Input.GetKey(KeyCode.Space)) mv.y = 1;
+            else
+            {
+                if (Input.GetKey(KeyCode.LeftControl)) mv.y = -1;
+            }
 
-        if (Input.GetKey(KeyCode.Space)) mv.y = 1;
-        else
-        {
-            if (Input.GetKey(KeyCode.LeftControl)) mv.y = -1;
-        }
         if (mv != Vector3.zero)
         {
             #region dropping camera auto moving
@@ -115,96 +119,213 @@ public sealed class FollowingCamera : MonoBehaviour {
         else moveSmoothCoefficient = Vector3.zero;
 
         float delta = 0;
-        if (Input.GetMouseButton(2))
+        if (touchscreen)
         {
-            bool a = false, b = false; //rotation detectors
-            float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient);
-            delta = Input.GetAxis("Mouse X");
-            if (delta != 0)
+            if (Input.touchCount > 0 )
             {
-                #region dropping camera auto moving
-                if (changingBasePos)
+                Touch t = Input.GetTouch(0);
+                if (Input.touchCount == 1)
                 {
-                    changingBasePos = false;
-                    moveSmoothCoefficient = Vector3.zero;
-                }
-                if (changingCamZoom)
-                {
-                    changingCamZoom = false;
-                    rotationSmoothCoefficient = 0;
-                }
-                #endregion
-                transform.RotateAround(transform.position, Vector3.up, rspeed * delta);
-                rotationSmoothCoefficient += rotationSmoothAcceleration;
-                a = true;
-            }
-
-            delta = Input.GetAxis("Mouse Y");
-            if (delta != 0)
-            {
-                #region dropping camera auto moving
-                if (changingBasePos)
-                {
-                    changingBasePos = false;
-                    moveSmoothCoefficient = Vector3.zero;
-                }
-                if (changingCamZoom)
-                {
-                    changingCamZoom = false;
-                    rotationSmoothCoefficient = 0;
-                }
-                #endregion
-                cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
-                rotationSmoothCoefficient += rotationSmoothAcceleration;
-                b = true;
-            }
-
-            if (a == false && b == false) rotationSmoothCoefficient = 0;
-        }
-
-
-        delta = Input.GetAxis("Mouse ScrollWheel");
-        if (delta != 0)
-        {
-            #region dropping camera auto moving
-            if (changingBasePos)
-            {
-                changingBasePos = false;
-                moveSmoothCoefficient = Vector3.zero;
-            }
-            if (changingCamZoom)
-            {
-                changingCamZoom = false;
-                rotationSmoothCoefficient = 0;
-            }
-            #endregion
-            float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
-            cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
-
-            if (zoomSlider != null) // удалить ?
-            {
-                float dist = cam.transform.localPosition.magnitude;
-                if (dist > zoomSlider.maxValue)
-                {
-                    dist = zoomSlider.maxValue;
-                }
-                else
-                {
-                    if (dist < zoomSlider.minValue)
+                    if (t.phase == TouchPhase.Began | t.phase == TouchPhase.Moved)
                     {
-                        dist = zoomSlider.minValue;
+                        bool a = false, b = false; //rotation detectors
+                        float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient);
+                        delta = t.deltaPosition.x / (float)Screen.width * 10;
+                        if (delta != 0)
+                        {
+                            #region dropping camera auto moving
+                            if (changingBasePos)
+                            {
+                                changingBasePos = false;
+                                moveSmoothCoefficient = Vector3.zero;
+                            }
+                            if (changingCamZoom)
+                            {
+                                changingCamZoom = false;
+                                rotationSmoothCoefficient = 0;
+                            }
+                            #endregion
+                            transform.RotateAround(transform.position, Vector3.up, rspeed * delta);
+                            rotationSmoothCoefficient += rotationSmoothAcceleration;
+                            a = true;
+                        }
+
+                        delta = t.deltaPosition.y / (float)Screen.height * 10;
+                        if (delta != 0)
+                        {
+                            #region dropping camera auto moving
+                            if (changingBasePos)
+                            {
+                                changingBasePos = false;
+                                moveSmoothCoefficient = Vector3.zero;
+                            }
+                            if (changingCamZoom)
+                            {
+                                changingCamZoom = false;
+                                rotationSmoothCoefficient = 0;
+                            }
+                            #endregion
+                            cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
+                            rotationSmoothCoefficient += rotationSmoothAcceleration;
+                            b = true;
+                        }
+
+                        if (a == false & b == false) rotationSmoothCoefficient = 0;
                     }
                 }
-                if (dist != camTransform.localPosition.magnitude)
+
+                if (Input.touchCount == 2)
                 {
-                    cam.transform.localPosition = cam.transform.localPosition.normalized * dist;
-                    zoom_oneChangeIgnore = true;
-                    zoomSlider.value = dist;
+                    //https://unity3d.com/ru/learn/tutorials/topics/mobile-touch/pinch-zoom
+                    Touch t2 = Input.GetTouch(1);
+                    Vector2 tPrevPos = t.position - t.deltaPosition;
+                    Vector2 t2PrevPos = t2.position - t2.deltaPosition;
+                    float deltaMagnitudeDiff = ((tPrevPos - t2PrevPos).magnitude - (t.position - t2.position).magnitude) / (float)Screen.height * (-2);
+                    if (cam.orthographic) // на будущее
+                    {
+                        cam.orthographicSize += deltaMagnitudeDiff   * zoomSpeed * Time.deltaTime;
+                        cam.orthographicSize = Mathf.Max(cam.orthographicSize, 0.1f);
+                    }
+                    else
+                    {
+                        delta = deltaMagnitudeDiff;
+                        if (delta != 0)
+                        {
+                            #region dropping camera auto moving
+                            if (changingBasePos)
+                            {
+                                changingBasePos = false;
+                                moveSmoothCoefficient = Vector3.zero;
+                            }
+                            if (changingCamZoom)
+                            {
+                                changingCamZoom = false;
+                                rotationSmoothCoefficient = 0;
+                            }
+                            #endregion
+                            float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
+                            cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
+
+                            if (zoomSlider != null) // удалить ?
+                            {
+                                float dist = cam.transform.localPosition.magnitude;
+                                if (dist > zoomSlider.maxValue)
+                                {
+                                    dist = zoomSlider.maxValue;
+                                }
+                                else
+                                {
+                                    if (dist < zoomSlider.minValue)
+                                    {
+                                        dist = zoomSlider.minValue;
+                                    }
+                                }
+                                if (dist != camTransform.localPosition.magnitude)
+                                {
+                                    cam.transform.localPosition = cam.transform.localPosition.normalized * dist;
+                                    zoom_oneChangeIgnore = true;
+                                    zoomSlider.value = dist;
+                                }
+                            }
+                            zoomSmoothCoefficient += zoomSmoothAcceleration;
+                        }
+                        else zoomSmoothCoefficient = 0;
+                    }
                 }
             }
-            zoomSmoothCoefficient += zoomSmoothAcceleration;
         }
-        else zoomSmoothCoefficient = 0;
+        else
+        {
+            if (Input.GetMouseButton(2))
+            {
+                bool a = false, b = false; //rotation detectors
+                float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient);
+                delta = Input.GetAxis("Mouse X");
+                if (delta != 0)
+                {
+                    #region dropping camera auto moving
+                    if (changingBasePos)
+                    {
+                        changingBasePos = false;
+                        moveSmoothCoefficient = Vector3.zero;
+                    }
+                    if (changingCamZoom)
+                    {
+                        changingCamZoom = false;
+                        rotationSmoothCoefficient = 0;
+                    }
+                    #endregion
+                    transform.RotateAround(transform.position, Vector3.up, rspeed * delta);
+                    rotationSmoothCoefficient += rotationSmoothAcceleration;
+                    a = true;
+                }
+
+                delta = Input.GetAxis("Mouse Y");
+                if (delta != 0)
+                {
+                    #region dropping camera auto moving
+                    if (changingBasePos)
+                    {
+                        changingBasePos = false;
+                        moveSmoothCoefficient = Vector3.zero;
+                    }
+                    if (changingCamZoom)
+                    {
+                        changingCamZoom = false;
+                        rotationSmoothCoefficient = 0;
+                    }
+                    #endregion
+                    cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
+                    rotationSmoothCoefficient += rotationSmoothAcceleration;
+                    b = true;
+                }
+
+                if (a == false && b == false) rotationSmoothCoefficient = 0;
+            }
+
+            delta = Input.GetAxis("Mouse ScrollWheel");
+            if (delta != 0)
+            {
+                #region dropping camera auto moving
+                if (changingBasePos)
+                {
+                    changingBasePos = false;
+                    moveSmoothCoefficient = Vector3.zero;
+                }
+                if (changingCamZoom)
+                {
+                    changingCamZoom = false;
+                    rotationSmoothCoefficient = 0;
+                }
+                #endregion
+                float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
+                cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
+
+                if (zoomSlider != null) // удалить ?
+                {
+                    float dist = cam.transform.localPosition.magnitude;
+                    if (dist > zoomSlider.maxValue)
+                    {
+                        dist = zoomSlider.maxValue;
+                    }
+                    else
+                    {
+                        if (dist < zoomSlider.minValue)
+                        {
+                            dist = zoomSlider.minValue;
+                        }
+                    }
+                    if (dist != camTransform.localPosition.magnitude)
+                    {
+                        cam.transform.localPosition = cam.transform.localPosition.normalized * dist;
+                        zoom_oneChangeIgnore = true;
+                        zoomSlider.value = dist;
+                    }
+                }
+                zoomSmoothCoefficient += zoomSmoothAcceleration;
+            }
+            else zoomSmoothCoefficient = 0;
+        }
 
         if (changingBasePos)
         {
@@ -230,7 +351,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             {
                 zoomSmoothCoefficient = zoomSmoothAcceleration * zoomSmoothAcceleration * zoomSmoothAcceleration;
                 zoom_oneChangeIgnore = true;
-                zoomSlider.value = cam.transform.localPosition.magnitude;
+                if (zoomSlider != null) zoomSlider.value = cam.transform.localPosition.magnitude;
             }
         }
         cloudCamera.rotation = camTransform.rotation;
@@ -239,6 +360,7 @@ public sealed class FollowingCamera : MonoBehaviour {
         camPos = camTransform.position;
         camPosChanged = true;
     }
+    
 
     void LateUpdate()
    {
@@ -344,37 +466,6 @@ public sealed class FollowingCamera : MonoBehaviour {
             optimalDistance = d;
             PlayerPrefs.SetFloat(CAM_ZOOM_DIST_KEY, optimalDistance);
             main.SetLookPoint(main.lookPoint);
-        }
-    }
-
-    public void CheckTouches()
-    {
-        if (cam == null | Input.touchCount == 0) return;
-        Vector2 a = Vector2.zero, b = Vector2.zero;
-        foreach (Touch t in Input.touches)
-        {
-            if (t.phase == TouchPhase.Moved)
-            {
-                if (a == Vector2.zero) a = t.deltaPosition;
-                else b = t.deltaPosition;
-            }
-        }
-        if (b == Vector2.zero)
-        {
-            if (a != Vector2.zero) // one moved touch
-            {
-                a = new Vector2(a.x / Screen.width / 2f, a.y / Screen.height / 2f);
-                if (a.x > a.y) RotateX(a.x); else RotateY(a.y);
-            }
-        }
-        else // two touches
-        {
-            if (Vector2.Dot(a,b) < -0.75f) 
-            {
-                float z = Vector2.Distance(a, b);
-                z /= Mathf.Sqrt(Screen.width * Screen.width + Screen.height * Screen.height);
-                Zoom( z * (zoomSlider.maxValue - zoomSlider.minValue));
-            }
         }
     }
 

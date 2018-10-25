@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Zeppelin : MonoBehaviour {
-	SurfaceBlock landingPlace, s_place1, s_place2;
+	SurfaceBlock landingPlace, s_place1;
 	bool landing = false, anchored = false, landed = false;
 	public Transform anchor, leftScrew,rightScrew, body;
 	public LineRenderer anchorChain;
@@ -87,7 +87,7 @@ public class Zeppelin : MonoBehaviour {
 								Chunk c = landingPlace.myChunk;
 
                                 Structure storage = Structure.GetStructureByID(Structure.STORAGE_0_ID);
-								storage.SetBasement(s_place1, PixelPosByte.one);
+								storage.SetBasement(s_place1, PixelPosByte.zero);
 							} 
 							else transform.Translate (Vector3.down * speed);
 						}
@@ -111,7 +111,6 @@ public class Zeppelin : MonoBehaviour {
 	public void SetLandingPlace(SurfaceBlock block, SurfaceBlock block2, SurfaceBlock block3) {
 		landingPlace = block;
 		s_place1 = block2;
-		s_place2 = block3;
 		landing = true;
 	} 
 }

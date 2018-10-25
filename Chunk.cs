@@ -25,7 +25,7 @@ public sealed class ChunkSerializer
     public byte chunkSize;
 }
 
-public enum ChunkGenerationMode { Standart, GameLoading, Cube, TerrainLoading}
+public enum ChunkGenerationMode { Standart, GameLoading, Cube, TerrainLoading, DontGenerate}
 
 public sealed class Chunk : MonoBehaviour
 {
@@ -438,13 +438,9 @@ public sealed class Chunk : MonoBehaviour
     }
     public Block AddBlock(ChunkPos f_pos, BlockType f_type, int i_floorMaterialID, int i_ceilingMaterialID, bool i_naturalGeneration)
     {
+        // никаких условий - так как загружает сохранения
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
-        if (f_type == BlockType.Cave)
-        {
-            float pts = CalculateSupportPoints(x, y, z);
-            if (pts < 1) f_type = BlockType.Surface;
-        }
         if (GetBlock(x, y, z) != null) return ReplaceBlock(f_pos, f_type, i_floorMaterialID, i_ceilingMaterialID, i_naturalGeneration);
         CubeBlock cb = null;
         Block b = null;
@@ -875,6 +871,7 @@ public sealed class Chunk : MonoBehaviour
         }
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         surfaceBlocks.Clear();
+        lifePower = 0;
     }
 
     #endregion
@@ -1397,6 +1394,7 @@ public sealed class Chunk : MonoBehaviour
     public void LoadChunkData(ChunkSerializer cs)
     {
         if (cs == null) print("chunk serialization failed!");
+        if (blocks != null) ClearChunk();
         CHUNK_SIZE = cs.chunkSize;
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         foreach (BlockSerializer bs in cs.blocksData)

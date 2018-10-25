@@ -65,7 +65,7 @@ public sealed class GameMaster : MonoBehaviour {
     public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
 
     public static string savename = "autosave";
-    public static GameStartSettings gss = GameStartSettings.Empty;
+    public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
     public static Difficulty difficulty {get;private set;}
 	public GameStart startGameWith = GameStart.Zeppelin;
 	public static float LUCK_COEFFICIENT {get;private set;}
@@ -89,7 +89,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public Vector2 windVector {get; private set;}
     private float windTimer = 0, windChangeTime = 120;
 
-    bool firstSet = true;
+    private bool firstSet = true;
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
@@ -98,13 +98,25 @@ public sealed class GameMaster : MonoBehaviour {
     public byte test_size = 100;
     public bool _editMode = false;
                                          
+    public void ChangeModeToPlay()
+    {
+        if (!editMode) return;
+        _editMode = false;
+        firstSet = true;
+        gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
+        startGameWith = GameStart.Zeppelin;
+        Awake();
+        Start();
+    }
 
     private void Awake() {
         if (realMaster != null & realMaster != this)
         {
-            Destroy(realMaster);
+            Destroy(this);
+            return;
         }
         realMaster = this;
+        applicationStopWorking = false;
 	}
 
 	void Start() {
@@ -117,23 +129,32 @@ public sealed class GameMaster : MonoBehaviour {
             lifeGrowCoefficient = 1;
             //Localization.ChangeLanguage(Language.English);
 
-            geologyModule = gameObject.AddComponent<GeologyModule>();
-            difficulty = gss.difficulty;
-            colonyController = gameObject.AddComponent<ColonyController>();
-            colonyController.CreateStorage();
-            PoolMaster pm = gameObject.AddComponent<PoolMaster>();
-            pm.Load();
+            if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
+            difficulty = gameStartSettings.difficulty;
+            if (colonyController == null)
+            {
+                colonyController = gameObject.AddComponent<ColonyController>();
+                colonyController.CreateStorage();
+            }
+            if (PoolMaster.current == null)
+            {
+                PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+                pm.Load();
+            }
             //byte chunksize = gss.chunkSize;
             byte chunksize;
-            if (test_size != 100) chunksize = test_size; else chunksize = gss.chunkSize;
-            if (gss.generationMode != ChunkGenerationMode.GameLoading)
+            chunksize = gameStartSettings.chunkSize;
+            if (gameStartSettings.generationMode != ChunkGenerationMode.GameLoading)
             {
-                if (gss.generationMode != ChunkGenerationMode.TerrainLoading)
+                if (gameStartSettings.generationMode != ChunkGenerationMode.DontGenerate)
                 {
-                    Chunk.SetChunkSize(chunksize);
-                    constructor.ConstructChunk(chunksize, gss.generationMode);
+                    if (gameStartSettings.generationMode != ChunkGenerationMode.TerrainLoading)
+                    {
+                        Chunk.SetChunkSize(chunksize);
+                        constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
+                    }
+                    else LoadTerrain(Application.persistentDataPath + "/Terrains/" + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
                 }
-                else LoadTerrain(savename);
                 FollowingCamera.CenterCamera(Vector3.one * chunksize / 2f);
                 switch (difficulty)
                 {
@@ -528,8 +549,11 @@ public sealed class GameMaster : MonoBehaviour {
         FileStream file = File.Open(fullname, FileMode.Open);
         ChunkSerializer cs = (ChunkSerializer)bf.Deserialize(file);
         file.Close();
-        GameObject g = new GameObject("chunk");
-        mainChunk = g.AddComponent<Chunk>();
+        if (mainChunk == null)
+        {
+            GameObject g = new GameObject("chunk");
+            mainChunk = g.AddComponent<Chunk>();
+        }
         mainChunk.LoadChunkData(cs);
         FollowingCamera.main.WeNeedUpdate();
         return true;
@@ -544,7 +568,7 @@ public sealed class GameMaster : MonoBehaviour {
 		}
 	}
     #endregion
-    private void OnApplicationQuit()
+    public void OnApplicationQuit()
     {
         StopAllCoroutines();
         applicationStopWorking = true;

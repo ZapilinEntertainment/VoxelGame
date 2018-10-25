@@ -116,9 +116,9 @@ public class SurfaceBlock : Block {
                 SurfaceRect sr = s.innerPosition;
                 //if (sr.x_size != 1 && sr.z_size != 1) print (surfaceObjects[a].name+ ' '+ sr.x_size.ToString() + ' ' + sr.z_size.ToString());
                 int i = 0, j = 0;
-                while (j < sr.size)
+                while (j < sr.size & sr.x + i < INNER_RESOLUTION)
                 {
-                    while (i < sr.size)
+                    while (i < sr.size & sr.z + j < INNER_RESOLUTION)
                     {
                         map[sr.x + i, sr.z + j] = true;
                         i++;

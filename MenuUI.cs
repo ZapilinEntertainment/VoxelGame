@@ -32,9 +32,9 @@ public sealed class MenuUI : MonoBehaviour
     public void StartGame()
     {
         GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value, roughnessSlider.value);
-        GameMaster.gss = gss;
+        GameMaster.gameStartSettings = gss;
         GameMaster.savename = string.Empty;
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene(SaveSystemUI.GAME_LEVEL_NUMBER);
     }
     public void NGPanelButton()
     {
