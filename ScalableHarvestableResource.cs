@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 
 public class ScalableHarvestableResource : Structure {
+
+    // переделать к обычному harvestable resource
+    // 04.11 стоит ли?
 	public const float MAX_VOLUME = 64;
 	public ResourceType mainResource {get;protected set;}
 	public float resourceCount;
@@ -14,9 +17,10 @@ public class ScalableHarvestableResource : Structure {
 
     override protected void SetModel()
     {
-        GameObject model = transform.GetChild(0).gameObject;
+        GameObject model = null;
+        if (transform.childCount > 0) model = transform.GetChild(0).gameObject;
         if (model != null) Destroy(model);
-        model = Instantiate(Resources.Load<GameObject>("Structures/resourcesStick")); 
+        model = Instantiate(Resources.Load<GameObject>("Structures/resourceStick")); 
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
         model.transform.localPosition = Vector3.zero;
@@ -30,8 +34,9 @@ public class ScalableHarvestableResource : Structure {
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
-        if (b == null) return;
+        if (b == null) return;        
         SetStructureData(b, pos);
+        SetModel();
         transform.GetChild(0).localScale = new Vector3(1, 0, 1);
         //if (isBasement) basement.myChunk.chunkUpdateSubscribers_structures.Add(this);
     }

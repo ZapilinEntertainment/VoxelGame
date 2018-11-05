@@ -274,6 +274,16 @@ public class Structure : MonoBehaviour  {
                     rotate90only = false;
                 }
                 break;
+            case RESOURCE_STICK_ID:
+                {
+                    maxHp = SurfaceBlock.INNER_RESOLUTION;
+                    innerPosition = new SurfaceRect(0,0,2);
+                    isArtificial = false;
+                    isBasement = false;
+                    placeInCenter = false;
+                    rotate90only = true;
+                }
+                break;
             case LANDED_ZEPPELIN_ID:
                 {
                     maxHp = 1000;
@@ -975,6 +985,13 @@ public class Structure : MonoBehaviour  {
 				g.transform.localPosition = Vector3.up * Block.QUAD_SIZE/2f;
 				g.name = "block ceiling";
 			}
+            BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
+            if (brc != null)
+            {
+                brc.SetStructure(this);
+                brc.SetVisibilityMask(basement.myChunk.GetVisibilityMask(basement.pos.x, basement.pos.y, basement.pos.z));
+                basement.SetStructureBlock(brc);
+            }
 		}
 	} 	
 
@@ -1050,6 +1067,8 @@ public class Structure : MonoBehaviour  {
         {
             basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
             subscribedToChunkUpdate = false;
+            BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
+            if (brc != null) basement.ClearStructureBlock(brc);
         }
         basement = null;
         innerPosition = new SurfaceRect(0, 0, innerPosition.size);
@@ -1084,6 +1103,8 @@ public class Structure : MonoBehaviour  {
             SurfaceBlock lastBasement = basement;
             if (isBasement)
             {
+                BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
+                if (brc != null) basement.ClearStructureBlock(brc);
                 Block upperBlock = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
                 if (upperBlock != null)
                 {
@@ -1106,9 +1127,4 @@ public class Structure : MonoBehaviour  {
         basement = null;
         Destroy(gameObject);
 	}
-
-    protected void OnDestroy()
-    {
-        if (!destroyed & !GameMaster.applicationStopWorking) Annihilate(true);
-    }
 }

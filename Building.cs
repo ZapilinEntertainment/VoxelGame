@@ -139,7 +139,7 @@ public class Building : Structure
                 break;
             case HQ_4_ID:
                 {
-                    upgradedIndex = -1;
+                    upgradedIndex = 1;
                     canBePowerSwitched = false;
                     energySurplus = 100;
                     energyCapacity = 5000;

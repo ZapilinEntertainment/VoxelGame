@@ -27,6 +27,7 @@ public sealed class MenuUI : MonoBehaviour
     {
         currentGraphicsLevel = QualitySettings.GetQualityLevel();
         SaveSystemUI.Check(transform.root);
+        Time.timeScale = 1;
     }
 
     public void StartGame()

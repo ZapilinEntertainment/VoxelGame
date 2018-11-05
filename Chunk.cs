@@ -71,11 +71,10 @@ public sealed class Chunk : MonoBehaviour
                     {
                         int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
                         SurfaceBlock sb = dirt_for_grassland[pos];
-                            
-                            Grassland.CreateOn(sb);
-                            int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
-                            if (lifePower > lifeTransfer) { sb.grassland.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
-                            else { sb.grassland.AddLifepower((int)lifePower); lifePower = 0; }
+                        Grassland gl = Grassland.CreateOn(sb);
+                        int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+                        if (lifePower > lifeTransfer) { gl.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
+                        else { gl.AddLifepower((int)lifePower); lifePower = 0; }
                     }
                     grasslandLifepowerChanges = lifePower * 0.75f;
                 }
@@ -87,11 +86,11 @@ public sealed class Chunk : MonoBehaviour
             }
     }
 
-    IEnumerator CullingUpdate()
+    IEnumerator CullingUpdate() // фпс увеличивается, когда идет апдейт. То есть все-таки выделяет корутины в отдельный поток?
     {
         Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
         Vector3 v = Vector3.one * (-1);
-        int size = blocks.GetLength(0);
+        float size = CHUNK_SIZE * Block.QUAD_SIZE;
         if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
         if (cpos.y > 0) { if (cpos.y > size) v.y = 1; else v.y = 0; }
         if (cpos.z > 0) { if (cpos.z > size) v.z = 1; else v.z = 0; }
@@ -770,9 +769,7 @@ public sealed class Chunk : MonoBehaviour
         if (b == null || b.indestructible == true) return;
         int x = pos.x, y = pos.y, z = pos.z;
         bool neighboursSupportCalculation = (b.type == BlockType.Cube | b.type == BlockType.Cave) , makeSurface = false;
-        switch (b.type)
-        {
-            case BlockType.Cube:
+        if (b.type == BlockType.Cube)
                 {
                     Block upperBlock = GetBlock(x, y + 1, z);
                     if (upperBlock != null)
@@ -812,14 +809,7 @@ public sealed class Chunk : MonoBehaviour
                         }
                     }
                 }
-                break;
-            case BlockType.Surface:
-            case BlockType.Cave:
-                SurfaceBlock sb = b as SurfaceBlock;
-                if (sb.grassland != null) sb.grassland.Annihilation();
-                sb.ClearSurface(false); // false так как все равно удаляется
-                break;
-        }
+
         blocks[x, y, z].Annihilate();
         blocks[x, y, z] = null;
         ApplyVisibleInfluenceMask(x, y, z, 63);
@@ -865,13 +855,22 @@ public sealed class Chunk : MonoBehaviour
                 {
                     if (blocks[i, j, k] == null) continue;
                     blocks[i, j, k].Annihilate();
-                    blocks[i, j, k] = null;
                 }
             }
         }
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         surfaceBlocks.Clear();
         lifePower = 0;
+    }
+    public void RemoveFromSurfacesList(SurfaceBlock sb)
+    {
+        if (surfaceBlocks.Count > 0)
+        {
+            for (int i = 0; i < surfaceBlocks.Count; i++)
+            {
+                if (surfaceBlocks[i] == sb) { surfaceBlocks.RemoveAt(i); return; }
+            }
+        }
     }
 
     #endregion
@@ -1071,9 +1070,9 @@ public sealed class Chunk : MonoBehaviour
     /// </summary>
     public bool BlockShipCorridorIfPossible(int xpos, int ypos, bool xyAxis, int width, Structure sender, ref List<Block> dependentBlocksList)
     {
-        int xStart = xpos; int xEnd = xStart + width - 1;
+        int xStart = xpos; int xEnd = xStart + width;
         if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
-        int yStart = ypos; int yEnd = yStart + width - 1;
+        int yStart = ypos; int yEnd = yStart + width ;
         if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
         if (xyAxis)
         {
@@ -1084,6 +1083,7 @@ public sealed class Chunk : MonoBehaviour
                     for (int z = 0; z < CHUNK_SIZE; z++)
                     {
                         if (blocks[x, y, z] != null) return false;
+                        //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x,y,z));
                     }
                 }
             }
@@ -1097,6 +1097,7 @@ public sealed class Chunk : MonoBehaviour
                     for (int x = 0; x < CHUNK_SIZE; x++)
                     {
                         if (blocks[x, y, z] != null) return false;
+                        //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x, y, z));
                     }
                 }
             }
@@ -1397,6 +1398,8 @@ public sealed class Chunk : MonoBehaviour
         if (blocks != null) ClearChunk();
         CHUNK_SIZE = cs.chunkSize;
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+        surfaceBlocks = new List<SurfaceBlock>();
+        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         foreach (BlockSerializer bs in cs.blocksData)
         {
             Block b = AddBlock(bs.pos, bs.type, bs.material_id, true);
@@ -1414,11 +1417,11 @@ public sealed class Chunk : MonoBehaviour
     private void OnDestroy()
     {
         if (GameMaster.applicationStopWorking) return;
-        foreach (Block b in blocks)
-        {
-            if (b != null) b.Annihilate();
-        }
-        surfaceBlocks.Clear();
+        //foreach (Block b in blocks)
+        //{
+        //    if (b != null) b.Annihilate();
+       // }
+        //surfaceBlocks.Clear();
         FollowingCamera.main.cameraChangedEvent -= CameraUpdate;
     }
 }

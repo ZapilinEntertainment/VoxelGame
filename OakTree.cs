@@ -455,11 +455,11 @@ public class OakTree : Plant
         Destroy(gameObject);
     }
 
-    void ReturnModelToPool()
+   private void ReturnModelToPool()
     {
         ReturnModelToPool( transform.GetChild(0).gameObject ); 
     }
-    void ReturnModelToPool(GameObject model)
+    static void ReturnModelToPool(GameObject model)
     {
         // проверка на соответствие модели?
         model.transform.parent = modelsContainer.transform;

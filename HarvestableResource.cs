@@ -42,7 +42,6 @@ public class HarvestableResource : Structure
         resourceCount = rc.volume;
         mainResource = rc.type;
     }
-    // выдаст модели для природных объектов
 
     protected override void SetModel()
     {
@@ -78,7 +77,7 @@ public class HarvestableResource : Structure
         model.transform.localRotation = Quaternion.Euler(Vector3.zero);
         if (!modelIsSprite)
         {
-            Transform meshTransform = transform.GetChild(0).GetChild(0);
+            Transform meshTransform = model.transform.GetChild(0);
             meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(material_ID, meshTransform.GetComponent<MeshFilter>(), 255);
 
             short packIndex = -1;
@@ -97,7 +96,7 @@ public class HarvestableResource : Structure
         }
         else
         {
-            //shader replaced
+            //replaced by shader
             //FollowingCamera.main.AddSprite(model.transform);
             //haveSprite = true;
         }
@@ -108,7 +107,7 @@ public class HarvestableResource : Structure
         ResourceType prevResType = mainResource;
         mainResource = resType;
         resourceCount = f_count1;
-        if (prevResType != ResourceType.Nothing & transform.childCount != 0) // замена модели
+        if (prevResType != resType ) // замена модели
         {  
             SetModel();
             transform.GetChild(0).gameObject.SetActive(visible);
@@ -143,11 +142,11 @@ public class HarvestableResource : Structure
     }
 
     override public void Load(StructureSerializer ss, SurfaceBlock sblock)
-    {
-        LoadStructureData(ss, sblock);
+    {        
         HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
         GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
         SetResources(ResourceType.GetResourceTypeById(hrs.mainResource_id), hrs.count);
+        LoadStructureData(ss, sblock);
     }
 
 

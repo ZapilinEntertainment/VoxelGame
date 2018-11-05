@@ -191,7 +191,7 @@ public sealed class PoolMaster : MonoBehaviour {
 		if (searchList != null) {
 			int i = 0;
 			while (i < searchList.Count && !found) {
-				if (searchList[i] == null) {Destroy(searchList[i]); searchList.RemoveAt(i);continue;}
+				if (searchList[i] == null) {searchList.RemoveAt(i);continue;}
 				found = true;
 				s = searchList[i].GetComponent<Ship>();
 				searchList.RemoveAt(i);

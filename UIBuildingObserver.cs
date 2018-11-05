@@ -11,7 +11,7 @@ public class UIBuildingObserver : UIObserver {
     byte savedLevel = 0;
     Vector2[] savedResourcesValues;
 #pragma warning disable 0649
-    [SerializeField]RawImage energyImage, housingImage; //fiti
+    [SerializeField] RawImage energyImage, housingImage; //fiti
     [SerializeField] Text energyValue, housingValue, upgradeButtonText; // fiti
     [SerializeField] Button upgradeButton; // fiti
     [SerializeField] GameObject upgradeInfoPanel, chargeButton; // fiti

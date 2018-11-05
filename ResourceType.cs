@@ -162,7 +162,7 @@ public class ResourceType {
 		case CONCRETE_ID : return new Rect(0, 7 *p,p,p);
 		case METAL_K_ORE_ID : return new Rect(2 *p, 6 *p, p,p);
 		case METAL_M_ORE_ID : return new Rect( 4 *p, 6 *p, p,p);
-		case METAL_E_ORE_ID : return new Rect(p, 6 *p, p,p);
+		case METAL_E_ORE_ID : return new Rect(0, 6 *p, p,p);
 		case METAL_N_ORE_ID : return new Rect( 6 *p, 6 *p,p,p);
 		case METAL_P_ORE_ID : return new Rect(0, 5 *p,p,p);
 		case METAL_S_ORE_ID : return new Rect( 2 *p, 5 *p, p,p);

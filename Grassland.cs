@@ -169,7 +169,8 @@ public class Grassland : MonoBehaviour
 
     public static Grassland CreateOn(SurfaceBlock sblock)
     {
-        if (sblock == null || sblock.grassland != null) return null;
+        if (sblock == null) return null;
+        if (sblock.grassland != null) return sblock.grassland;
         Grassland gl = sblock.gameObject.AddComponent<Grassland>();
         gl.myBlock = sblock;
         sblock.SetGrassland(gl);
@@ -406,15 +407,9 @@ public class Grassland : MonoBehaviour
         return gs;
     }
 
-    public void Load(GrasslandSerializer gs)    {
-        
+    public void Load(GrasslandSerializer gs)    {        
         SetLifepower(gs.lifepower);
         prevStage = gs.prevStage;
         progress = gs.progress;
-    }
-
-    private void OnDestroy()
-    {
-        if (!destroyed & !GameMaster.applicationStopWorking) Annihilation(true);
     }
 }

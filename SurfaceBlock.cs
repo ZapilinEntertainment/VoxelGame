@@ -46,7 +46,7 @@ public class SurfaceBlock : Block {
 	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
 	public int artificialStructures { get; protected set; }
 	public bool[,] map { get; protected set; }
-	public BlockRendererController structureBlock;
+	protected BlockRendererController structureBlock;
     public bool haveSupportingStructure { get; protected set; }
 
 	public static UISurfacePanelController surfaceObserver;
@@ -289,16 +289,7 @@ public class SurfaceBlock : Block {
 		s.transform.parent = transform;
 		s.transform.localPosition = GetLocalPosition(s.innerPosition);
 		if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
-		BlockRendererController brc =  s.transform.GetChild(0).GetComponent<BlockRendererController>();
-		if (brc != null) {
-			structureBlock = brc;
-			brc.SetRenderBitmask(renderMask);
-			brc.SetVisibilityMask(visibilityMask);
-		}
-        else
-        {
-            s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
-        }
+        s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
 		if (s.isArtificial) artificialStructures++;
 		CellsStatusUpdate();
 		if (savedBasementForNow != null) {
@@ -409,8 +400,18 @@ public class SurfaceBlock : Block {
         }
     }
 
+    public void SetStructureBlock(BlockRendererController brc)
+    {
+        structureBlock = brc;
+        brc.SetVisibilityMask(visibilityMask);
+        brc.SetRenderBitmask(renderMask);
+    }
+    public void ClearStructureBlock(BlockRendererController brc)
+    {
+        if (structureBlock == brc) structureBlock = null;
+    }
 
-        #region positioning   
+        #region structures positioning   
         public static Vector3 GetLocalPosition(SurfaceRect sr) {
 		float res = INNER_RESOLUTION;
 		float xpos = sr.x + sr.size/2f ;
@@ -574,7 +575,7 @@ public class SurfaceBlock : Block {
             else
             {
                 //#surface block visibility check
-                if (renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x);
+                if (renderMask != 0 & structureBlock != null) structureBlock.SetRenderBitmask(x);
                 bool allSidesInvisible = ((visibilityMask & 15) == 0);
                 if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible)
                 {
@@ -610,7 +611,7 @@ public class SurfaceBlock : Block {
         else
         {
             //#surface block visibility check
-            if (renderMask != 0 && structureBlock != null) structureBlock.SetRenderBitmask(x);
+            if (renderMask != 0 & structureBlock != null) structureBlock.SetRenderBitmask(x);
             if (prevVisibility == 0)
             {
                 illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
@@ -721,6 +722,7 @@ public class SurfaceBlock : Block {
         }
         if (grassland != null) grassland.Annihilation(true);
         if (surfaceRenderer != null) PoolMaster.ReturnQuadToPool(surfaceRenderer.gameObject);
+        myChunk.RemoveFromSurfacesList(this);
         Destroy(gameObject);
     }
 }

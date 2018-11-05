@@ -93,7 +93,7 @@ sealed public class UIController : MonoBehaviour {
                     }
                     if (showingBirthrate != colony.realBirthrate)
                     {
-                        showingBirthrate = (int)(colony.realBirthrate * 100) / 100f; ;
+                        showingBirthrate = colony.realBirthrate ;
                         birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
                     }
                     if (showingHospitalCf != colony.hospitals_coefficient)
@@ -307,17 +307,20 @@ sealed public class UIController : MonoBehaviour {
     public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
 		if (showMenuWindow) { // on
-			if (rightPanel.activeSelf) rightPanel.SetActive(false);
+            if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.touchRightBorder = Screen.width; }
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
             if (showStorageInfo) StorageButton();
 			menuPanel.SetActive(true);
+            FollowingCamera.camRotationBlocked = true;
             //menuButton.transform.SetAsLastSibling();
             Time.timeScale = 0;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
         }
 		else { //off
-			menuPanel.SetActive(false);
+            FollowingCamera.camRotationBlocked = false;
+            FollowingCamera.touchRightBorder = Screen.width;
+            menuPanel.SetActive(false);
             optionsPanel.SetActive(false);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
@@ -383,7 +386,7 @@ sealed public class UIController : MonoBehaviour {
 
 	public void Raycasting() {
         if (GameMaster.colonyController == null || GameMaster.colonyController.hq == null) return;
-        // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChabgeChosenObject
+        // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
 		Vector2 mpos = Input.mousePosition;
 		RaycastHit rh;
 		if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh)) {            
@@ -423,9 +426,9 @@ sealed public class UIController : MonoBehaviour {
                                 {
                                     chosenSurface = sb;
                                     chosenStructure = null;
-                                    chosenCube = null;
+                                    chosenCube = null;                                    
                                     chosenWorksite = sb.worksite;
-                                    ChangeChosenObject(ChosenObjectType.Surface);
+                                    if (sb.pos.y != Chunk.CHUNK_SIZE - 1) ChangeChosenObject(ChosenObjectType.Surface);
                                 }
                                 break;
                             case BlockType.Cube:
@@ -477,6 +480,8 @@ sealed public class UIController : MonoBehaviour {
 		}
 		else SelectedObjectLost();
 	}
+
+
     public void ChangeChosenObject(ChosenObjectType newChosenType)
     {  
 
@@ -500,6 +505,7 @@ sealed public class UIController : MonoBehaviour {
         if (newChosenType == ChosenObjectType.None)
         {
             rightPanel.SetActive(false);
+            FollowingCamera.touchRightBorder = Screen.width;
             selectionFrame.gameObject.SetActive(false);
             chosenObjectType = ChosenObjectType.None;
             chosenWorksite = null;
@@ -511,6 +517,7 @@ sealed public class UIController : MonoBehaviour {
         }
         else
         {
+            FollowingCamera.touchRightBorder = rightPanel.GetComponent<RectTransform>().rect.x;
             chosenObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
             rightPanel.SetActive(true);
@@ -556,8 +563,8 @@ sealed public class UIController : MonoBehaviour {
 
                     Transform t = rightPanel.transform;
                     t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(true);
-                    if (chosenCube.excavatingStatus != 0) t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(true);
-                    else t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(false);
+                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(chosenCube.excavatingStatus != 0); // pour in button
+                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).gameObject.SetActive(faceIndex == 4); // make surface button
                     disableCubeMenuButtons = false;
                 }
                 break;
@@ -585,6 +592,7 @@ sealed public class UIController : MonoBehaviour {
             Transform t = rightPanel.transform;
             t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(false);
             t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(false);
+            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).gameObject.SetActive(false);
         }
         if (changeFrameColor)
         {
@@ -995,6 +1003,7 @@ sealed public class UIController : MonoBehaviour {
         t = rightPanel.transform;
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.PourIn);
+        t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.MakeSurface);
         localized = true;
     }
 
@@ -1046,6 +1055,16 @@ sealed public class UIController : MonoBehaviour {
             ds.Set(chosenCube, false);
             ds.ShowOnGUI();
         }
+    }
+    public void MakeSurfaceOnCube()
+    {
+       Block b = chosenCube.myChunk.AddBlock(new ChunkPos(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z), BlockType.Surface, chosenCube.material_id, false);
+        if (b != null)
+        {
+            chosenSurface = b as SurfaceBlock;
+            ChangeChosenObject(ChosenObjectType.Surface);
+        }
+        else MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ActionError));
     }
     #endregion
 }

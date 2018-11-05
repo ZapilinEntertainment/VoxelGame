@@ -22,7 +22,8 @@ public abstract class Worksite : MonoBehaviour {
 	public bool showOnGUI = false, destroyed = false;
 	public float gui_ypos = 0;
     protected bool subscribedToUpdate = false;
-    public const int MAX_WORKERS = 32;
+    public const string WORKSITE_SIGN_COLLIDER_TAG = "WorksiteSign";
+    
 
     public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
     protected static List<Worksite> worksitesList;
@@ -31,11 +32,10 @@ public abstract class Worksite : MonoBehaviour {
     {
         worksitesList = new List<Worksite>();
     }
-
+    public virtual int GetMaxWorkers() { return 32; }
     public virtual void WorkUpdate()
     {
     }
-    public int GetMaxWorkers() { return MAX_WORKERS; }
 
 	/// <summary>
 	/// return excess workers
@@ -43,11 +43,12 @@ public abstract class Worksite : MonoBehaviour {
 	/// <returns>The workers.</returns>
 	/// <param name="x">The x coordinate.</param>    /// 
 	public int AddWorkers ( int x) {
-		if (workersCount == MAX_WORKERS) return x;
+        int maxWorkers = GetMaxWorkers();
+		if (workersCount == maxWorkers) return x;
 		else {
-			if (x > MAX_WORKERS - workersCount) {
-				x -= (MAX_WORKERS - workersCount);
-				workersCount = MAX_WORKERS;
+			if (x > maxWorkers - workersCount) {
+				x -= (maxWorkers - workersCount);
+				workersCount = maxWorkers;
 			}
 			else {
 				workersCount += x;
@@ -169,9 +170,5 @@ public abstract class Worksite : MonoBehaviour {
         }
         if (sign != null) Destroy(sign.gameObject);
         Destroy(this);
-    }
-    protected void OnDestroy()
-    {
-        if (!destroyed & !GameMaster.applicationStopWorking) StopWork();
     }
 }

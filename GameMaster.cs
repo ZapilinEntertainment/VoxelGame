@@ -73,7 +73,7 @@ public sealed class GameMaster : MonoBehaviour {
 	public static int layerCutHeight = 16, prevCutHeight = 16;
 
 	
-	static float diggingSpeed = 0.5f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
+	static float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     
 	float timeGone;
@@ -93,7 +93,8 @@ public sealed class GameMaster : MonoBehaviour {
 
 	// FOR TESTING
 	public float newGameSpeed = 1;
-	public bool weNeedNoResources = false, treesOptimization = false;
+	public bool weNeedNoResources { get; private set; }
+    public bool treesOptimization = false;
 	public bool generateChunk = true;
     public byte test_size = 100;
     public bool _editMode = false;
@@ -221,11 +222,20 @@ public sealed class GameMaster : MonoBehaviour {
                         int zpos = sb.pos.z;
 
                         if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
-                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+
+                        //Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                        Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
+
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
                         b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
+                        //test
+                        HeadQuarters hq = s as HeadQuarters;
+                        weNeedNoResources = true;
+                        hq.LevelUp(false);
+                        hq.LevelUp(false);
+                        //
 
                         colonyController.AddCitizens(START_WORKERS_COUNT);
 
@@ -456,9 +466,10 @@ public sealed class GameMaster : MonoBehaviour {
     {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
+            Time.timeScale = 0; gameSpeed = 0;
             // ОЧИСТКА
             StopAllCoroutines();
-            if (mainChunk != null) Destroy(mainChunk.gameObject);
+            if (mainChunk != null) mainChunk.ClearChunk();
             // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
             Crew.Reset(); Shuttle.Reset();
             Grassland.ScriptReset();
@@ -472,7 +483,7 @@ public sealed class GameMaster : MonoBehaviour {
             // НАЧАЛО ЗАГРУЗКИ
             BinaryFormatter bf = new BinaryFormatter();
             FileStream file = File.Open(fullname, FileMode.Open);
-            Time.timeScale = 0; gameSpeed = 0;
+            
             GameMasterSerializer gms = (GameMasterSerializer)bf.Deserialize(file);
             file.Close();
             #region gms mainPartLoading
@@ -508,8 +519,11 @@ public sealed class GameMaster : MonoBehaviour {
             Crew.LoadStaticData(gms.crewStaticSerializer);
             Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
 
-            GameObject g = new GameObject("chunk");
-            mainChunk = g.AddComponent<Chunk>();
+            if (mainChunk == null)
+            {
+                GameObject g = new GameObject("chunk");
+                mainChunk = g.AddComponent<Chunk>();
+            }
             mainChunk.LoadChunkData(gms.chunkSerializer);
             colonyController.Load(gms.colonyControllerSerializer); // < --- COLONY CONTROLLER
 
@@ -568,6 +582,15 @@ public sealed class GameMaster : MonoBehaviour {
 		}
 	}
     #endregion
+
+    //test
+    public void OnGUI()
+    {
+        Rect r = new Rect(0, Screen.height - 16, 200, 16);
+        GUI.Box(r, GUIContent.none);
+        weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
+    }
+
     public void OnApplicationQuit()
     {
         StopAllCoroutines();

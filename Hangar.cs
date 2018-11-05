@@ -250,7 +250,7 @@ public sealed class Hangar : WorkBuilding {
         {
             //#incorrectLocationDisplaying - Hangar
             float len = 1;
-            float x = basement.transform.position.x, y = basement.transform.position.y, z = basement.transform.position.z;
+            float x = basement.transform.position.x, y = transform.position.y, z = basement.transform.position.z;
             switch (modelRotation)
             {
                 case 0:

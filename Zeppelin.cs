@@ -61,6 +61,7 @@ public class Zeppelin : MonoBehaviour {
 								AudioSource.PlayClipAtPoint(anchorLanded_ac, anchor.transform.position);
 								anchorChain_as.enabled = false;
 								anchor.transform.position = rh.point + Vector3.up * 0.01f;
+                                anchor.transform.parent = null;
 								propeller_as.enabled = false;
 							} 
 							else anchor.Translate(Vector3.down * speed);
@@ -103,8 +104,12 @@ public class Zeppelin : MonoBehaviour {
 		else {
 			Vector3 cs = body.transform.localScale;
 			cs -= Vector3.one * Time.deltaTime;
-			if (cs.x < 0.1f) Destroy(gameObject);
-			else body.transform.localScale = cs;
+            if (cs.x < 0.1f)
+            {
+                Destroy(anchor.gameObject);
+                Destroy(gameObject);
+            }
+            else body.transform.localScale = cs;
 		}
 	}
 

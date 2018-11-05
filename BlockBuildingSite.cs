@@ -4,10 +4,14 @@ using UnityEngine;
 public class BlockBuildingSite : Worksite
 {
     SurfaceBlock workObject;
-    const float BUILDING_SPEED = 1;
+    const float BUILDING_SPEED = 0.002f;
     ResourceType rtype;
     const int START_WORKERS_COUNT = 20;
-    new public const int MAX_WORKERS = 100;
+
+    public override int GetMaxWorkers()
+    {
+        return 400;
+    }
 
     override public void WorkUpdate()
     {
@@ -99,23 +103,24 @@ public class BlockBuildingSite : Worksite
                                     }
                                 }
                                 if (count > ScalableHarvestableResource.MAX_VOLUME - shr.resourceCount) count = ScalableHarvestableResource.MAX_VOLUME - shr.resourceCount;
+                                shr.AddResource(rtype, count);
                             }
                             else
                             {
                                 shr = Structure.GetStructureByID(Structure.RESOURCE_STICK_ID) as ScalableHarvestableResource;
+                                shr.AddResource(rtype, count);
                                 shr.SetBasement(workObject, new PixelPosByte(a * 2, b * 2));
                             }
                             count = GameMaster.colonyController.storage.GetResources(rtype, count);
                             if (count == 0)
                             {
-                                // if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources);
+                                if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources);
                             }
                             else
                             {
-                                totalResources += count;
-                                shr.AddResource(rtype, count);
-                            }
-                            actionLabel += string.Format("{0:0.##}", totalResources / (float)CubeBlock.MAX_VOLUME * 100f) + '%';
+                                totalResources += count;                                
+                                actionLabel = string.Format("{0:0.##}", totalResources / (float)CubeBlock.MAX_VOLUME * 100f) + '%';
+                            }                            
                             return;
                         }
                         else n++;
@@ -145,10 +150,11 @@ public class BlockBuildingSite : Worksite
 
         if (sign == null)
         {
-            sign = new GameObject().AddComponent<WorksiteSign>();
+            sign = new GameObject("Block Building Site sign").AddComponent<WorksiteSign>();
             BoxCollider bc = sign.gameObject.AddComponent<BoxCollider>();
-            bc.size = new Vector3(Block.QUAD_SIZE, 0.1f, Block.QUAD_SIZE);
-            bc.center = Vector3.up * 0.05f;
+            bc.size = new Vector3(Block.QUAD_SIZE, 0.5f, Block.QUAD_SIZE);
+            bc.center = new Vector3(0, - 0.25f, 0);
+            bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
             sign.worksite = this;
             sign.transform.position = workObject.transform.position;
         }

@@ -566,8 +566,7 @@ public sealed class UISurfacePanelController : UIObserver {
     {
         surfaceBuildingPanel.SetActive(false);
         constructionPlane.transform.position = observingSurface.transform.position + Vector3.down * 0.45f;
-        constructionPlane.transform.rotation = observingSurface.transform.rotation;
-        constructionPlane.SetActive(true);        
+        constructionPlane.transform.rotation = observingSurface.transform.rotation;      
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
@@ -708,10 +707,14 @@ public sealed class UISurfacePanelController : UIObserver {
             Structure s = Structure.GetStructureByID(chosenStructure.id);
             s.SetBasement(observingSurface, new PixelPosByte(x, z));
             PoolMaster.current.BuildSplash(observingSurface.transform.position);
-            if (constructionPlane.activeSelf)
+            if (s.innerPosition.size != SurfaceBlock.INNER_RESOLUTION & observingSurface.cellsStatus != 0)
             {
-                PrepareConstructionPlane();
+                if (constructionPlane.activeSelf)
+                {
+                    PrepareConstructionPlane();
+                }
             }
+            else ReturnButton();
         }
         else
         {

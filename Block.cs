@@ -185,11 +185,6 @@ public class Block : MonoBehaviour {
         if (mainStructure != null) mainStructure.SectionDeleted(pos);
         Destroy(gameObject);
     }
-
-    protected void OnDestroy()
-    {
-        if (!destroyed & !GameMaster.applicationStopWorking) Annihilate();
-    }
 }
 
 [System.Serializable]

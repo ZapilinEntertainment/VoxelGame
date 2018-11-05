@@ -58,6 +58,7 @@ public sealed class UIDockObserver : UIObserver
         immigrationButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         RecalculateTradingPanelContent();
         UIController.current.ActivateTradePanel();
+        FollowingCamera.camRotationBlocked = true;
     }
     public void PrepareImmigrationPanel()
     {
@@ -74,6 +75,7 @@ public sealed class UIDockObserver : UIObserver
         if (tradingListPanel.activeSelf)
         {
             tradingListPanel.SetActive(false);
+            FollowingCamera.camRotationBlocked = false;
             tradingButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         }        
         if (Dock.immigrationEnabled) {
@@ -224,6 +226,7 @@ public sealed class UIDockObserver : UIObserver
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
         UIController.current.CloseTradePanel();
+        FollowingCamera.camRotationBlocked = false;
         gameObject.SetActive(false);
     }
 
@@ -233,6 +236,7 @@ public sealed class UIDockObserver : UIObserver
         observingDock = null;
         WorkBuilding.workbuildingObserver.ShutOff();
         UIController.current.CloseTradePanel();
+        FollowingCamera.camRotationBlocked = false;
         gameObject.SetActive(false);
     }
 
