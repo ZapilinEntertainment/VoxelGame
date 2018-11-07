@@ -132,7 +132,7 @@ public class BlockBuildingSite : Worksite
 
     protected override void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Pouring);
+        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Pouring);
     }
     public void Set(SurfaceBlock block, ResourceType type)
     {
@@ -213,7 +213,7 @@ public class BlockBuildingSite : Worksite
         LoadWorksiteData(ws);
         int res_id = 0;
         GameMaster.DeserializeByteArray<int>(ws.specificData, ref res_id);
-        Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ResourceType.GetResourceTypeById(res_id));
+        Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as SurfaceBlock, ResourceType.GetResourceTypeById(res_id));
     }
     #endregion
 }

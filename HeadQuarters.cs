@@ -20,7 +20,7 @@ public class HeadQuarters : House {
 		PrepareHouse(b,pos);
 		if (level > 3 ) {
 			if (rooftop == null) {
-				rooftop = Instantiate(Resources.Load<GameObject>("Structures/HQ_rooftop"));
+				rooftop = PoolMaster.GetRooftop(true, true);
 				rooftop.transform.parent = transform.GetChild(0);
 				rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
 			}
@@ -166,8 +166,8 @@ public class HeadQuarters : House {
                 bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE / 2f;
                 if (rooftop == null)
                 {
-                    rooftop = Instantiate(Resources.Load<GameObject>("Structures/HQ_rooftop"));
-                    rooftop.transform.parent = model;
+                    rooftop = PoolMaster.GetRooftop(true, true);
+                rooftop.transform.parent = model;
                 }
                 rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;
                 level++;
@@ -178,7 +178,7 @@ public class HeadQuarters : House {
         if (level < 4)
         {
             ResourceContainer[] cost = ResourcesCost.GetCost(upgradedIndex);
-            float discount = GameMaster.upgradeDiscount;
+            float discount = GameMaster.realMaster.upgradeDiscount;
             for (int i = 0; i < cost.Length; i++)
             {
                 cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
@@ -187,7 +187,7 @@ public class HeadQuarters : House {
         }
         else {
             ResourceContainer[] cost = ResourcesCost.GetCost(HQ_4_ID);
-            float discount = GameMaster.upgradeCostIncrease + level - 4;
+            float discount = GameMaster.realMaster.upgradeCostIncrease + level - 4;
             for (int i = 0; i < cost.Length; i++)
             {
                 cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);

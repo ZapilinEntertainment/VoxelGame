@@ -237,7 +237,7 @@ public sealed class Hangar : WorkBuilding {
 	}
 
 	override protected void RecalculateWorkspeed() {
-		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.MachineConstructing);
+		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.MachineConstructing);
 	}
 
     public override UIObserver ShowOnGUI()

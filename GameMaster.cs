@@ -36,59 +36,55 @@ public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gather
 /// -----------------------------------------------------------------------------
 
 public sealed class GameMaster : MonoBehaviour {
-	 public static  GameMaster realMaster;
+	public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
-
-	public Constructor constructor;	
     public static bool applicationStopWorking { get; private set; }
     public static bool editMode = false;
-
-    public static Chunk mainChunk; 
+    public static string savename { get; protected set; }
+    public static float LUCK_COEFFICIENT { get; private set; }
+    public static float sellPriceCoefficient = 0.75f;
+    public static int layerCutHeight = 16, prevCutHeight = 16;
+    public static Vector3 sceneCenter { get { return Vector3.one * Chunk.CHUNK_SIZE / 2f; } } // SCENE CENTER
+    public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
+    public static Difficulty difficulty { get; private set; }
+    public static Chunk mainChunk { get; private set; } 
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
-	public  LineRenderer systemDrawLR;
 
-	public const int LIFEPOWER_PER_BLOCK = 130; // 200
+	public LineRenderer systemDrawLR;
+    public Constructor constructor;
+    public delegate void StructureUpdateHandler();
+    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
+    public delegate void WindChangeHandler(Vector2 newVector);
+    public event WindChangeHandler WindUpdateEvent;
+    public Vector2 windVector { get; private set; }    
+
+    public const int LIFEPOWER_PER_BLOCK = 130; // 200
 	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
-	public static float lifeGrowCoefficient {get;private set;}
-	public static float demolitionLossesPercent {get;private set;}
-	public static float lifepowerLossesPercent{get;private set;}
-	public static float tradeVesselsTrafficCoefficient{get;private set;}
-	public static float upgradeDiscount{get;private set;}
-	public static float upgradeCostIncrease{get;private set;}
-	public static float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
-	public static float warProximity{get;private set;} // 0 is far, 1 is nearby
-
     public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
     START_BIRTHRATE_COEFFICIENT = 0.001f, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
     public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
 
-    public static string savename = "autosave";
-    public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
-    public static Difficulty difficulty {get;private set;}
-	public GameStart startGameWith = GameStart.Zeppelin;
-	public static float LUCK_COEFFICIENT {get;private set;}
-	public static float sellPriceCoefficient = 0.75f;
-	public static int layerCutHeight = 16, prevCutHeight = 16;
+    public GameStart startGameWith = GameStart.Zeppelin;
 
-	
-	static float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
+    public float lifeGrowCoefficient {get;private set;}
+	public float demolitionLossesPercent {get;private set;}
+	public float lifepowerLossesPercent{get;private set;}
+	public float tradeVesselsTrafficCoefficient{get;private set;}
+	public float upgradeDiscount{get;private set;}
+	public float upgradeCostIncrease{get;private set;}
+	public float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
+	public float warProximity{get;private set;} // 0 is far, 1 is nearby  
     
-	float timeGone;
-	uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
+	private float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
+	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;    
+	private float timeGone;
+	private uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
 	public const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
-
-    public delegate void StructureUpdateHandler();
-    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
-    private float labourTimer = 0, lifepowerTimer = 0;
-
-    public delegate void WindChangeHandler(Vector2 newVector);
-    public event WindChangeHandler WindUpdateEvent;
-	public Vector2 windVector {get; private set;}
+    
+    private float labourTimer = 0, lifepowerTimer = 0;    
     private float windTimer = 0, windChangeTime = 120;
-
     private bool firstSet = true;
 
 	// FOR TESTING
@@ -98,7 +94,13 @@ public sealed class GameMaster : MonoBehaviour {
 	public bool generateChunk = true;
     public byte test_size = 100;
     public bool _editMode = false;
-                                         
+         
+    public static void SetSavename(string s)
+    {
+        savename = s;
+    }
+    public static void SetMainChunk(Chunk c) { mainChunk = c; }
+
     public void ChangeModeToPlay()
     {
         if (!editMode) return;
@@ -151,12 +153,11 @@ public sealed class GameMaster : MonoBehaviour {
                 {
                     if (gameStartSettings.generationMode != ChunkGenerationMode.TerrainLoading)
                     {
-                        Chunk.SetChunkSize(chunksize);
                         constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
                     }
-                    else LoadTerrain(Application.persistentDataPath + "/Terrains/" + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
+                    else LoadTerrain(SaveSystemUI.GetTerrainsPath() + '/' + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
                 }
-                FollowingCamera.CenterCamera(Vector3.one * chunksize / 2f);
+                FollowingCamera.CenterCamera(sceneCenter);
                 switch (difficulty)
                 {
                     case Difficulty.Utopia:
@@ -287,19 +288,20 @@ public sealed class GameMaster : MonoBehaviour {
                 }
                 FollowingCamera.main.WeNeedUpdate();
             }
-            else LoadGame(Application.persistentDataPath + "/Saves/" + savename + ".sav");
+            else LoadGame(SaveSystemUI.GetSavesPath() + '/' + savename + ".sav");
+            if (savename == null | savename == string.Empty) savename = "autosave";
         }
         else
         {
             gameObject.AddComponent<PoolMaster>().Load();           
-            
-            Chunk.SetChunkSize(test_size);
             mainChunk = new GameObject("chunk").AddComponent<Chunk>();
-            mainChunk.InitializeBlocksArray();
-            mainChunk.ChunkLightmapFullRecalculation();
-            mainChunk.AddBlock(new ChunkPos(Chunk.CHUNK_SIZE / 2, Chunk.CHUNK_SIZE / 2, Chunk.CHUNK_SIZE / 2), BlockType.Cube, ResourceType.STONE_ID, true);
+            int size = 16;
+            int[,,] blocksArray = new int[size,size,size];
+            size /= 2;
+            blocksArray[size,size,size] = ResourceType.STONE_ID;
+            mainChunk.SetChunk(blocksArray); // временно, потом сделать возможность выбирать размер
 
-            FollowingCamera.CenterCamera(Vector3.one * Chunk.CHUNK_SIZE / 2f);
+            FollowingCamera.CenterCamera(sceneCenter);
         }
 	}
 
@@ -387,7 +389,7 @@ public sealed class GameMaster : MonoBehaviour {
     }  
     #endregion
 
-    public static float CalculateWorkspeed(int workersCount, WorkType type) {
+    public float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
 		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
 		switch (type) {
@@ -448,7 +450,7 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.crewStaticSerializer = Crew.SaveStaticData();
 		gms.questStaticSerializer = QuestUI.current.Save();
 		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
-        string path = Application.persistentDataPath + "/Saves/";
+        string path = SaveSystemUI.GetSavesPath() + '/';
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
@@ -546,7 +548,7 @@ public sealed class GameMaster : MonoBehaviour {
 
     public bool SaveTerrain(string name)
     {
-        string path = Application.persistentDataPath + "/Terrains/";
+        string path = SaveSystemUI.GetTerrainsPath() + '/';
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);

@@ -9,14 +9,14 @@ public class ResourceType {
 	public static readonly ResourceType Nothing, Lumber, Stone, Dirt,Food, 
 		metal_K_ore, metal_M_ore, metal_E_ore, metal_N_ore, metal_P_ore, metal_S_ore, 
 		metal_K, metal_M, metal_E, metal_N, metal_P, metal_S,
-	mineral_F, mineral_L, Plastics, Concrete, FertileSoil, Fuel, Graphonium, Supplies;
+	mineral_F, mineral_L, Plastics, Concrete, FertileSoil, Fuel, Graphonium, Supplies, Snow;
 	public const int STONE_ID = 1, DIRT_ID = 2, LUMBER_ID = 4, METAL_K_ID = 5, METAL_M_ID = 6, METAL_E_ID = 7,
 	METAL_N_ID = 8, METAL_P_ID = 9,  METAL_S_ID = 10, MINERAL_F_ID = 11, MINERAL_L_ID = 12, PLASTICS_ID = 13, FOOD_ID = 14,
 	CONCRETE_ID = 15, METAL_K_ORE_ID = 16, METAL_M_ORE_ID = 17, METAL_E_ORE_ID = 18, METAL_N_ORE_ID = 19, METAL_P_ORE_ID = 20,
-	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25;
+	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25, SNOW_ID = 26;
 	public static readonly ResourceType[] resourceTypesArray, materialsForCovering, blockMaterials;
 	public static float[] prices, demand;
-    public const int RTYPES_COUNT = 26; 
+    public const int RTYPES_COUNT = 27; 
 
 	//проверь при добавлении
 	//- ID
@@ -92,11 +92,16 @@ public class ResourceType {
 		demand[GRAPHONIUM_ID] = 1;
 
 		Supplies = new ResourceType( SUPPLIES_ID, 0.1f, 0.1f);
-		prices[SUPPLIES_ID] = prices[FOOD_ID] * 2; demand[SUPPLIES_ID] = demand[FOOD_ID] * 0.95f;
+		prices[SUPPLIES_ID] = prices[FOOD_ID] * 2;
+        demand[SUPPLIES_ID] = demand[FOOD_ID] * 0.95f;
 
-		materialsForCovering = new ResourceType[] {Concrete, Dirt, metal_K, metal_S, Stone};
+        Snow = new ResourceType(SNOW_ID, 0.5f, 0.03f);
+        prices[SUPPLIES_ID] = prices[FOOD_ID] / 2f;
+        demand[SUPPLIES_ID] = 0.01f;
+
+        materialsForCovering = new ResourceType[] {Concrete, Dirt, metal_K, metal_S, Stone, Snow};
         blockMaterials = new ResourceType[] {
-           Stone, Dirt, Lumber, metal_K, metal_M, metal_E, metal_N, metal_P, metal_S, mineral_F, mineral_L, Plastics,  Concrete, FertileSoil, Graphonium
+           Stone, Dirt, Lumber, metal_K, metal_M, metal_E, metal_N, metal_P, metal_S, mineral_F, mineral_L, Plastics,  Concrete, FertileSoil, Graphonium, Snow
         };
     }
 
@@ -131,6 +136,7 @@ public class ResourceType {
                 case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, mf, illumination);
                 case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, mf, illumination);
                 case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, mf, illumination);
+                case SNOW_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Snow, mf, illumination);
 
                 case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf, illumination);
                 case GRAPHONIUM_ID: return PoolMaster.energy_material;
@@ -168,8 +174,9 @@ public class ResourceType {
 		case METAL_S_ORE_ID : return new Rect( 2 *p, 5 *p, p,p);
 		case FERTILE_SOIL_ID : return new Rect(3 *p, 7 *p,p,p);
 		case FUEL_ID : return new Rect( 5 *p, 7 *p,p,p);
-		case GRAPHONIUM_ID : return new Rect( 7 *p, 5 *p,p,p);
-		case SUPPLIES_ID : return new Rect(6 *p, 5 *p,p,p);
+        case SUPPLIES_ID: return new Rect(6 * p, 5 * p, p, p);
+        case GRAPHONIUM_ID : return new Rect( 7 *p, 5 *p,p,p);		
+        case SNOW_ID: return new Rect(0, 4 *p, p,p);
 		}
 	}
 }

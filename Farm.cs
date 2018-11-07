@@ -50,7 +50,7 @@ public class Farm : WorkBuilding
 
     override protected void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
+        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
     }
 
     override public void LabourUpdate()

@@ -6,15 +6,14 @@ using UnityEngine.SceneManagement;
 
 public sealed class EditorUI : MonoBehaviour
 {
-    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower }
-
 #pragma warning disable 0649
     [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Text materialNameTextField;
-#pragma warning restore 0649
+#pragma warning restore 0649  
 
+    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower }
     private ClickAction currentAction;
     private int chosenMaterialId = ResourceType.STONE_ID, firstInListPos = 0, chosenListPosition = 0;
     private int[] idsArray;

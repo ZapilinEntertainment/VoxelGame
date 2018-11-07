@@ -118,13 +118,13 @@ public class Shuttle : MonoBehaviour {
     /// </summary>
     public void Deconstruct()
     {
-        float pc = GameMaster.demolitionLossesPercent;
+        float pc = GameMaster.realMaster.demolitionLossesPercent;
         if (pc != 1) {
             ResourceContainer[] compensation = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
             Storage s = GameMaster.colonyController.storage;
             for (int i = 0; i < compensation.Length; i++)
             {
-                s.AddResource(compensation[i].type, compensation[i].volume * GameMaster.demolitionLossesPercent);
+                s.AddResource(compensation[i].type, compensation[i].volume * GameMaster.realMaster.demolitionLossesPercent);
             }
             GameMaster.colonyController.AddEnergyCrystals(cost * pc);
          }

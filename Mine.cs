@@ -82,7 +82,7 @@ override protected void LabourResult() {
 	}
 
 	override protected void RecalculateWorkspeed() {
-		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Mining);
+		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Mining);
 	}
 
 	#region save-load system
@@ -200,7 +200,7 @@ override protected void LabourResult() {
     override public ResourceContainer[] GetUpgradeCost()
     {
         ResourceContainer[] cost = ResourcesCost.GetCost(MINE_ID);
-        float discount = GameMaster.upgradeCostIncrease + level - 1;
+        float discount = GameMaster.realMaster.upgradeCostIncrease + level - 1;
         for (int i = 0; i < cost.Length; i++)
         {
             cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);

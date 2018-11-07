@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum GreenMaterial { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20}
 public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS}
-public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber}
+public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow}
 
 public sealed class PoolMaster : MonoBehaviour {
     List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
@@ -239,9 +239,37 @@ public sealed class PoolMaster : MonoBehaviour {
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
 	}
 
-	public static GameObject GetRooftop(Structure s) {
+	public static GameObject GetRooftop(bool peak, bool artificial) {
 		GameObject g = null;
-		g = Instantiate(Resources.Load<GameObject>("Prefs/blockRooftop")) as GameObject;
+        if (artificial)
+        {
+            if (peak)
+            {
+                g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialPeak0")) as GameObject;
+            }
+            else
+            {
+                g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop0")) as GameObject;
+            }            
+        }
+        else
+        {
+            if (peak)
+            {
+                float t = Random.value;
+                if (t <= 0.33f) g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalPeak0")) as GameObject;
+                else
+                {
+                    if (t >= 0.77f) g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalPeak1")) as GameObject;
+                    else g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalPeak2")) as GameObject;
+                }
+            }
+            else
+            {
+                if (Random.value > 0.5f) g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalRooftop0")) as GameObject;
+                else g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalRooftop1")) as GameObject;
+            }
+        }
 		return g;
 	}
 
@@ -464,6 +492,9 @@ public sealed class PoolMaster : MonoBehaviour {
                     break;
                 case BasicMaterial.DeadLumber:
                     borders = new Vector2[] { new Vector2(2 * piece, 3 *piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
+                    break;
+                case BasicMaterial.Snow:
+                    borders = new Vector2[] { new Vector2(piece, piece), new Vector2(piece, 2 * piece), new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, piece) };
                     break;
             }
             bool isQuad = (quad.uv.Length == 4);

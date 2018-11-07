@@ -77,7 +77,7 @@ public class Grassland : MonoBehaviour
             if (tax > 0)
             {
                 int pos = (int)(Random.value * (grasslandList.Count - 1));
-                int count = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+                int count = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
                 grasslandList[pos].AddLifepower(count);
                 returnVal -= count;
             }

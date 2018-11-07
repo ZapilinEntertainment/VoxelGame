@@ -68,7 +68,7 @@ public class CleanSite : Worksite {
 	}
 
 	protected override void RecalculateWorkspeed() {
-		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Clearing);
+		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Clearing);
 	}
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
@@ -146,7 +146,7 @@ public class CleanSite : Worksite {
 	}
 	override protected void Load(WorksiteSerializer ws) {
 		LoadWorksiteData(ws);
-		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock, ws.specificData[0] == 1);
+		Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as SurfaceBlock, ws.specificData[0] == 1);
 	}
 	#endregion
 			

@@ -118,7 +118,8 @@ public static class Localization {
 		case ResourceType.FERTILE_SOIL_ID : return "Fertile soil";
 		case ResourceType.FUEL_ID : return "Fuel";
 		case ResourceType.GRAPHONIUM_ID : return "Graphonium";
-		case ResourceType.SUPPLIES_ID : return "Supplies";			
+		case ResourceType.SUPPLIES_ID : return "Supplies";
+            case ResourceType.SNOW_ID: return "Snow";
 		}
 	}
     public static string GetResourcesDescription(int id)
@@ -166,6 +167,7 @@ public static class Localization {
             case ResourceType.GRAPHONIUM_ID:
                 return "Superstructured material, wrapping reality nearby";
             case ResourceType.SUPPLIES_ID: return "Well-packed food, medicaments and another life-support goods.";
+            case ResourceType.SNOW_ID: return "Crystalised N-water";
         }
     }
 

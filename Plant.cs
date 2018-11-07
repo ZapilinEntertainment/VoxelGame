@@ -161,7 +161,7 @@ public abstract class Plant : Structure {
     {
         if (PrepareStructureForDestruction(forced))
         {
-            if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+            if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
             return true;
         }
         else return false;

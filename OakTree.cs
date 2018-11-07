@@ -438,7 +438,7 @@ public class OakTree : Plant
             if (basement != null)
             {
                 basement.RemoveStructure(this);
-                basement.grassland.AddLifepower((int)(lifepower * GameMaster.lifepowerLossesPercent));
+                basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
             }
         }
         if (addedToClassList)
@@ -457,7 +457,7 @@ public class OakTree : Plant
 
    private void ReturnModelToPool()
     {
-        ReturnModelToPool( transform.GetChild(0).gameObject ); 
+        if (transform.childCount > 0) ReturnModelToPool( transform.GetChild(0).gameObject ); 
     }
     static void ReturnModelToPool(GameObject model)
     {

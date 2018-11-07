@@ -138,7 +138,7 @@ public class Ship : MonoBehaviour {
 		
 		if (speed != 0) {
 			transform.Translate(Vector3.forward * speed * GameMaster.gameSpeed * Time.deltaTime, Space.Self);
-			if (Vector3.Distance(transform.position, GameMaster.mainChunk.transform.position) >= 500) PoolMaster.current.ReturnShipToPool(this);
+			if (Vector3.Distance(transform.position, GameMaster.sceneCenter) >= 500) PoolMaster.current.ReturnShipToPool(this);
 		}
 	}
 

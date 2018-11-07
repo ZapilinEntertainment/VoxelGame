@@ -316,6 +316,7 @@ sealed public class UIController : MonoBehaviour {
             //menuButton.transform.SetAsLastSibling();
             Time.timeScale = 0;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
+            SetMenuPanelSelection(MenuSection.NoSelection);
         }
 		else { //off
             FollowingCamera.camRotationBlocked = false;
@@ -428,7 +429,7 @@ sealed public class UIController : MonoBehaviour {
                                     chosenStructure = null;
                                     chosenCube = null;                                    
                                     chosenWorksite = sb.worksite;
-                                    if (sb.pos.y != Chunk.CHUNK_SIZE - 1) ChangeChosenObject(ChosenObjectType.Surface);
+                                    ChangeChosenObject(ChosenObjectType.Surface);
                                 }
                                 break;
                             case BlockType.Cube:

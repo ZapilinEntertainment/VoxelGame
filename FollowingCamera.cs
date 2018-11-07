@@ -30,8 +30,10 @@ public sealed class FollowingCamera : MonoBehaviour {
     [SerializeField] UnityEngine.UI.Slider zoomSlider, xSlider; // fiti
     [SerializeField] Transform cloudCamera;
     const string CAM_ZOOM_DIST_KEY = "CameraZoomDistance";
+    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50;
 
     private bool handleSprites = false, camPosChanged = false;
+    private bool? verticalMovement = null;
     private List<Transform>  mastBillboards;
     private List<int>  mastBillboardsIDs;
     public delegate void CameraChangedHandler();
@@ -87,43 +89,40 @@ public sealed class FollowingCamera : MonoBehaviour {
     {
         if (cam == null) return;
         Vector3 mv = Vector3.zero;
-            mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            if (Input.GetKey(KeyCode.Space)) mv.y = 1;
+        mv = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        if (Input.GetKey(KeyCode.Space)) mv.y = 1;
+        else
+        {
+          if (Input.GetKey(KeyCode.LeftControl)) mv.y = -1;
+        }
+        if (mv != Vector3.zero) StopCameraMovement();
+        else
+        {
+            if (verticalMovement == null) moveSmoothCoefficient = Vector3.zero;
             else
             {
-                if (Input.GetKey(KeyCode.LeftControl)) mv.y = -1;
+                if (verticalMovement == true) mv.y = 1; else mv.y = -1;
             }
+        }
 
         if (mv != Vector3.zero)
         {
-            #region dropping camera auto moving
-            if (changingBasePos)
-            {
-                changingBasePos = false;
-                moveSmoothCoefficient = Vector3.zero;
-            }
-            if (changingCamZoom)
-            {
-                changingCamZoom = false;
-                rotationSmoothCoefficient = 0;
-            }
-            #endregion
-
             if (mv.x / moveSmoothCoefficient.x > 0) mv.x += moveSmoothAcceleration; else moveSmoothCoefficient.x = 0;
             if (mv.y / moveSmoothCoefficient.y > 0) mv.y += moveSmoothAcceleration; else moveSmoothCoefficient.y = 0;
             if (mv.z / moveSmoothCoefficient.z > 0) mv.z += moveSmoothAcceleration; else moveSmoothCoefficient.z = 0;
             mv.x *= (1 + moveSmoothCoefficient.x);
             mv.y *= (1 + moveSmoothCoefficient.y);
             mv.z *= (1 + moveSmoothCoefficient.z);
-            transform.Translate(mv * moveSpeed * Time.deltaTime, Space.Self);
+            Vector3 endPoint = transform.position + mv * moveSpeed * Time.deltaTime;
+            float d = (endPoint - GameMaster.sceneCenter).magnitude;
+            if (d < MAX_LOOKPOINT_RADIUS || (transform.position - GameMaster.sceneCenter).magnitude > d) transform.Translate(mv * moveSpeed * Time.deltaTime, Space.Self);
             //transform.Translate(mv * 30 * Time.deltaTime,Space.Self);
         }
-        else moveSmoothCoefficient = Vector3.zero;
 
         float delta = 0;
-        if (touchscreen & !camRotationBlocked)
+        if (touchscreen )
         {
-            if (Input.touchCount > 0 )
+            if (Input.touchCount > 0 & !camRotationBlocked)
             {
                 Touch t = Input.GetTouch(0);
                 if (t.position.x < touchRightBorder)
@@ -137,18 +136,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                             delta = t.deltaPosition.x / (float)Screen.width * 10;
                             if (delta != 0)
                             {
-                                #region dropping camera auto moving
-                                if (changingBasePos)
-                                {
-                                    changingBasePos = false;
-                                    moveSmoothCoefficient = Vector3.zero;
-                                }
-                                if (changingCamZoom)
-                                {
-                                    changingCamZoom = false;
-                                    rotationSmoothCoefficient = 0;
-                                }
-                                #endregion
+                                StopCameraMovement();
                                 transform.RotateAround(transform.position, Vector3.up, rspeed * delta);
                                 rotationSmoothCoefficient += rotationSmoothAcceleration;
                                 a = true;
@@ -157,18 +145,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                             delta = t.deltaPosition.y / (float)Screen.height * 10;
                             if (delta != 0)
                             {
-                                #region dropping camera auto moving
-                                if (changingBasePos)
-                                {
-                                    changingBasePos = false;
-                                    moveSmoothCoefficient = Vector3.zero;
-                                }
-                                if (changingCamZoom)
-                                {
-                                    changingCamZoom = false;
-                                    rotationSmoothCoefficient = 0;
-                                }
-                                #endregion
+                                StopCameraMovement();
                                 cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
                                 rotationSmoothCoefficient += rotationSmoothAcceleration;
                                 b = true;
@@ -197,20 +174,15 @@ public sealed class FollowingCamera : MonoBehaviour {
                                 delta = deltaMagnitudeDiff;
                                 if (delta != 0)
                                 {
-                                    #region dropping camera auto moving
-                                    if (changingBasePos)
-                                    {
-                                        changingBasePos = false;
-                                        moveSmoothCoefficient = Vector3.zero;
-                                    }
-                                    if (changingCamZoom)
-                                    {
-                                        changingCamZoom = false;
-                                        rotationSmoothCoefficient = 0;
-                                    }
-                                    #endregion
+                                    StopCameraMovement();
                                     float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
                                     cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
+                                    float zl = cam.transform.localPosition.magnitude;
+                                    if (zl > MAX_FAR) cam.transform.localPosition *= MAX_FAR / zl;
+                                    else
+                                    {
+                                        if (zl < MAX_ZOOM) cam.transform.localPosition *= MAX_ZOOM / zl;
+                                    }
 
                                     if (zoomSlider != null) // удалить ?
                                     {
@@ -251,18 +223,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                 delta = Input.GetAxis("Mouse X");
                 if (delta != 0)
                 {
-                    #region dropping camera auto moving
-                    if (changingBasePos)
-                    {
-                        changingBasePos = false;
-                        moveSmoothCoefficient = Vector3.zero;
-                    }
-                    if (changingCamZoom)
-                    {
-                        changingCamZoom = false;
-                        rotationSmoothCoefficient = 0;
-                    }
-                    #endregion
+                    StopCameraMovement();
                     transform.RotateAround(transform.position, Vector3.up, rspeed * delta);
                     rotationSmoothCoefficient += rotationSmoothAcceleration;
                     a = true;
@@ -271,18 +232,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                 delta = Input.GetAxis("Mouse Y");
                 if (delta != 0)
                 {
-                    #region dropping camera auto moving
-                    if (changingBasePos)
-                    {
-                        changingBasePos = false;
-                        moveSmoothCoefficient = Vector3.zero;
-                    }
-                    if (changingCamZoom)
-                    {
-                        changingCamZoom = false;
-                        rotationSmoothCoefficient = 0;
-                    }
-                    #endregion
+                    StopCameraMovement();
                     cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
                     rotationSmoothCoefficient += rotationSmoothAcceleration;
                     b = true;
@@ -294,20 +244,15 @@ public sealed class FollowingCamera : MonoBehaviour {
             delta = Input.GetAxis("Mouse ScrollWheel");
             if (delta != 0)
             {
-                #region dropping camera auto moving
-                if (changingBasePos)
-                {
-                    changingBasePos = false;
-                    moveSmoothCoefficient = Vector3.zero;
-                }
-                if (changingCamZoom)
-                {
-                    changingCamZoom = false;
-                    rotationSmoothCoefficient = 0;
-                }
-                #endregion
+                StopCameraMovement();
                 float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
                 cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
+                float zl = cam.transform.localPosition.magnitude;
+                if (zl > MAX_FAR) cam.transform.localPosition *= MAX_FAR / zl;
+                else
+                {
+                    if (zl < MAX_ZOOM) cam.transform.localPosition *= MAX_ZOOM / zl;
+                }
 
                 if (zoomSlider != null) // удалить ?
                 {
@@ -447,7 +392,25 @@ public sealed class FollowingCamera : MonoBehaviour {
             float d = cam.transform.localPosition.magnitude;
             if (d / optimalDistance > 1 | d/optimalDistance < 0.5f) changingCamZoom = true;
         }
+        verticalMovement = null;
 	}
+
+    private void StopCameraMovement()
+    {
+        //#region dropping camera auto moving
+        if (changingBasePos)
+        {
+            changingBasePos = false;
+            moveSmoothCoefficient = Vector3.zero;
+        }
+        if (changingCamZoom)
+        {
+            changingCamZoom = false;
+            rotationSmoothCoefficient = 0;
+        }
+        verticalMovement = null;
+        //#endregion
+    }
 
     public void RotateY(float val)
     {
@@ -467,6 +430,11 @@ public sealed class FollowingCamera : MonoBehaviour {
         }
         cam.transform.localPosition = cam.transform.localPosition.normalized * x;
     }
+    public void StartMoveUp() { StopCameraMovement(); verticalMovement = true; }
+    public void EndMoveUp() { StopCameraMovement(); if (verticalMovement == true) verticalMovement = null; }
+    public void StartMoveDown() { StopCameraMovement(); verticalMovement = false; }
+    public void EndMoveDown() { StopCameraMovement(); if (verticalMovement == false) verticalMovement = null; }
+
     public static void SetOptimalDistance(float d)
     {
         if (d != optimalDistance)

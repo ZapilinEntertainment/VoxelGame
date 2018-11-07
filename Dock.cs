@@ -145,7 +145,7 @@ public sealed class Dock : WorkBuilding {
             case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - 2, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
         }
         // end
-        if (correctLocation) shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) / 2f;
+        if (correctLocation) shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.realMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) / 2f;
     }
 
 	override public void LabourUpdate () {
@@ -185,7 +185,7 @@ public sealed class Dock : WorkBuilding {
 					}
 					else {
 						if (sendGoods) {
-							if (Random.value <= GameMaster.warProximity) stype = ShipType.Military;
+							if (Random.value <= GameMaster.realMaster.warProximity) stype = ShipType.Military;
 							else stype = ShipType.Cargo;
 						}
 						else {
@@ -194,7 +194,7 @@ public sealed class Dock : WorkBuilding {
 								else stype = ShipType.Private;
 							}
 							else {
-								if (Random.value > GameMaster.warProximity) stype = ShipType.Cargo;
+								if (Random.value > GameMaster.realMaster.warProximity) stype = ShipType.Cargo;
 								else stype = ShipType.Military;
 							}
 						}
@@ -325,13 +325,13 @@ public sealed class Dock : WorkBuilding {
 			}
 			break;
 		case ShipType.Military:
-			if (GameMaster.warProximity < 0.5f && Random.value < 0.1f && immigrationPlan > 0) {
+			if (GameMaster.realMaster.warProximity < 0.5f && Random.value < 0.1f && immigrationPlan > 0) {
 				int veterans =(int)( s.volume * 0.02f );
 				if (veterans > immigrationPlan) veterans = immigrationPlan;
 				colony.AddCitizens(veterans);
 			}
 			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, s.volume * 0.5f * (Random.value * 0.5f + 0.5f));
-			if (GameMaster.warProximity > 0.5f) {
+			if (GameMaster.realMaster.warProximity > 0.5f) {
 				if (isForSale[ResourceType.METAL_S_ID] == true) SellResource(ResourceType.metal_S, s.volume * 0.1f);
 				if (isForSale[ResourceType.METAL_K_ID] == true) SellResource(ResourceType.metal_K, s.volume * 0.05f);
 				if (isForSale[ResourceType.METAL_M_ID] == true) SellResource(ResourceType.metal_M, s.volume * 0.1f);
@@ -346,7 +346,7 @@ public sealed class Dock : WorkBuilding {
 		maintainingShip = false;
 		s.Undock();
 
-		shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f))  ;
+		shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.realMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f))  ;
 		float f = 1;
 		if (colony.docks.Count != 0) f /= (float)colony.docks.Count;
 		if ( f < 0.1f ) f = 0.1f;

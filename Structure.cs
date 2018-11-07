@@ -980,10 +980,7 @@ public class Structure : MonoBehaviour  {
 				if ( upperBlock == null ) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.CONCRETE_ID, false);
 			}
 			else {
-				GameObject g = PoolMaster.GetRooftop(this);
-				g.transform.parent = basement.transform;
-				g.transform.localPosition = Vector3.up * Block.QUAD_SIZE/2f;
-				g.name = "block ceiling";
+                basement.myChunk.SetRoof(basement.pos.x, basement.pos.z, isArtificial);
 			}
             BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
             if (brc != null)
@@ -1069,6 +1066,7 @@ public class Structure : MonoBehaviour  {
             subscribedToChunkUpdate = false;
             BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
             if (brc != null) basement.ClearStructureBlock(brc);
+            if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
         }
         basement = null;
         innerPosition = new SurfaceRect(0, 0, innerPosition.size);
@@ -1083,11 +1081,11 @@ public class Structure : MonoBehaviour  {
         else
         {
             ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
-            if (resourcesLeft.Length > 0 & GameMaster.demolitionLossesPercent != 1)
+            if (resourcesLeft.Length > 0 & GameMaster.realMaster.demolitionLossesPercent != 1)
             {
                 for (int i = 0; i < resourcesLeft.Length; i++)
                 {
-                    resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.demolitionLossesPercent));
+                    resourcesLeft[i] = new ResourceContainer(resourcesLeft[i].type, resourcesLeft[i].volume * (1 - GameMaster.realMaster.demolitionLossesPercent));
                 }
                 GameMaster.colonyController.storage.AddResources(resourcesLeft);
             }

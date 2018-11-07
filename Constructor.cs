@@ -14,20 +14,23 @@ public class Constructor : MonoBehaviour {
 		seed += System.DateTime.Now.Second;
 	}
 
-	public void ConstructChunk( byte chunkSize, ChunkGenerationMode mode ) {
-		seed += System.DateTime.Now.Second;
+    public void ConstructChunk(byte chunkSize, ChunkGenerationMode mode) {
+        seed += System.DateTime.Now.Second;
         TERRAIN_ROUGHNESS = GameMaster.gameStartSettings.terrainRoughness;
-		int size = chunkSize;
-		int[,,] dat = new int[size, size ,size ];
-        GenerateDataArray(size, ref dat);
+        int size = chunkSize;
+        int[,,] dat = new int[size, size, size];
+        switch (mode) {
+            case ChunkGenerationMode.Standart: GenerateSpirals(size, ref dat);  break;
+            case ChunkGenerationMode.Pyramid: GeneratePyramid(size, ref dat); break;
+        }
 		GameObject g = new GameObject("chunk");
 		c = g.AddComponent<Chunk>();
-		GameMaster.mainChunk = c;
+		GameMaster.SetMainChunk(c);
 		c.SetChunk(dat);
 		NatureCreation(c);
 	}
 
-    private void GenerateDataArray(int size, ref int[,,] data)
+    private void GenerateSpirals(int size, ref int[,,] data)
     {
         int arms = 3;
         float armsLength = 1;
@@ -189,7 +192,7 @@ public class Constructor : MonoBehaviour {
         }
     }
 
-    private void GenerateDataArray_Old(int size, ref int[,,] data)
+    private void GeneratePyramid(int size, ref int[,,] data)
     {
         float radius = size * Mathf.Sqrt(2);
         for (int x = 0; x < size; x++)

@@ -147,6 +147,7 @@ public class CubeBlock : Block{
         t.parent = transform;
         faces[i] = g.GetComponent <MeshRenderer>();
 
+        bool roofPlane = false;
         byte faceIllumination = 255 ;
 		switch (i) {
 		case 0: // fwd
@@ -178,6 +179,11 @@ public class CubeBlock : Block{
                 t.localPosition = new Vector3(0, QUAD_SIZE/2f, 0); 
 				t.localRotation = Quaternion.Euler(90, 0, 0);
                 if (pos.y != Chunk.CHUNK_SIZE -1) faceIllumination = myChunk.lightMap[pos.x, pos.y + 1, pos.z ];
+                else
+                {
+                    roofPlane = true;
+                    t.tag = "Untagged";
+                }
                 break;
 		case 5: // down
                 g.name = "bottom_plane";
@@ -187,8 +193,9 @@ public class CubeBlock : Block{
                 //GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
                 break;
 		}
-		faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>(), faceIllumination);
-		faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		if (!roofPlane) faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>(), faceIllumination);
+        else faces[i].sharedMaterial = ResourceType.GetMaterialById(ResourceType.SNOW_ID, faces[i].GetComponent<MeshFilter>(), faceIllumination);
+        faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
         faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
 		//if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;

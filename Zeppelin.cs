@@ -8,15 +8,13 @@ public class Zeppelin : MonoBehaviour {
 	public Transform anchor, leftScrew,rightScrew, body;
 	public LineRenderer anchorChain;
 	float anchorSpeed = 0, flySpeed = 1, landingSpeed = 1;
-	Vector3 centralPoint = new Vector3(8,8,8), anchorStartPos = Vector3.zero;
+	Vector3 anchorStartPos = Vector3.zero;
 	public AudioSource propeller_as, anchorChain_as;
 	public AudioClip anchorLanded_ac;
 
 	void Start() {
-		centralPoint = Vector3.one * Chunk.CHUNK_SIZE/2f;
-		centralPoint.y ++;
 		transform.position = Vector3.one * Chunk.CHUNK_SIZE + Vector3.up;
-		Vector3 v = centralPoint - transform.position; v.y = 0;
+		Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
 		transform.forward = v;
 		anchorStartPos = transform.InverseTransformPoint(anchor.transform.position);
 		leftScrew.Rotate(0, Random.value * 360, 0);
@@ -28,7 +26,7 @@ public class Zeppelin : MonoBehaviour {
 	void Update() {
 		if ( !landed ) {
 			if ( !landing) {
-				Vector3 v = centralPoint - transform.position; v.y = 0;
+				Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
 				transform.forward = Quaternion.AngleAxis(90, Vector3.up) * v;
 				transform.Translate(Vector3.forward * flySpeed * Time.deltaTime * GameMaster.gameSpeed,Space.Self);
 				if (anchor.transform.localPosition != anchorStartPos) { 

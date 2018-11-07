@@ -9,7 +9,6 @@ public class SaveSystemUI : MonoBehaviour
 {
     public static SaveSystemUI current { get; private set; }
     public bool saveMode = false, ingame = false;
-
     private bool deleteSubmit = false, terrainsLoading = false;
     string[] saveNames;
 #pragma warning disable 0649
@@ -30,12 +29,21 @@ public class SaveSystemUI : MonoBehaviour
             current = mainContainer.GetComponent<SaveSystemUI>();
         }
     }
+    /// <summary>
+    /// ATTENTION : returns without last slash : "Path/Folder" 
+    /// </summary>
+    public static string GetSavesPath() { return Application.persistentDataPath + "/Saves"; }
+    /// <summary>
+    /// ATTENTION : returns without last slash : "Path/Folder" 
+    /// </summary>
+    public static string GetTerrainsPath() { return Application.persistentDataPath + "/Terrains"; }
 
     private void Awake()
     {
         if (current != null & current != this) Destroy(current);
         current = this;
     }
+
 
     public void Activate(bool openSaveMode, bool i_terrainsLoading)
     {
@@ -55,7 +63,7 @@ public class SaveSystemUI : MonoBehaviour
 
     void RefreshSavesList()
     {
-        string directoryPath = terrainsLoading ? Application.persistentDataPath + "/Terrains" : Application.persistentDataPath + "/Saves";
+        string directoryPath = terrainsLoading ? GetTerrainsPath() : GetSavesPath();
         if (saveMode)
         {
             saveMode = true;
@@ -182,7 +190,10 @@ public class SaveSystemUI : MonoBehaviour
         lastSelectedIndex = index;
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = true;
         deleteButtonText.transform.parent.GetComponent<Button>().interactable = true;
-        string fullPath = terrainsLoading ? Application.persistentDataPath + "/Terrains/" + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION : Application.persistentDataPath + "/Saves/" + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
+        string fullPath = terrainsLoading ? 
+            GetTerrainsPath() + '/' + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION 
+            :
+            GetSavesPath() +'/' + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
         if (File.Exists(fullPath))
         {
             saveDateString.enabled = true;
@@ -209,7 +220,7 @@ public class SaveSystemUI : MonoBehaviour
         {
             if (terrainsLoading)
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  РЕДАКТОРА
-                string fullPath = Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION;
+                string fullPath = GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION;
                 if (ingame)
                 {
                     if (GameMaster.realMaster.LoadTerrain(fullPath)) gameObject.SetActive(false);
@@ -219,7 +230,7 @@ public class SaveSystemUI : MonoBehaviour
                     // теоретический сценарий, не должен использоваться
                     if (File.Exists(fullPath))
                     {
-                        GameMaster.savename = saveNames[lastSelectedIndex];
+                        GameMaster.SetSavename(saveNames[lastSelectedIndex]);
                         GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.TerrainLoading);
                         GameMaster.gameStartSettings = gss;
                         SceneManager.LoadScene(EDITOR_LEVEL_NUMBER);
@@ -232,7 +243,7 @@ public class SaveSystemUI : MonoBehaviour
             }
             else
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  ИГРЫ
-                string fullPath = Application.persistentDataPath + "/Saves/" + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
+                string fullPath = GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
                 if (ingame)
                 {
                     if (GameMaster.realMaster.LoadGame(fullPath))
@@ -251,7 +262,7 @@ public class SaveSystemUI : MonoBehaviour
                 {
                     if (File.Exists(fullPath))
                     {
-                        GameMaster.savename = saveNames[lastSelectedIndex];
+                        GameMaster.SetSavename(saveNames[lastSelectedIndex]);
                         GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.GameLoading);
                         GameMaster.gameStartSettings = gss;
                         SceneManager.LoadScene(GAME_LEVEL_NUMBER);
@@ -271,7 +282,7 @@ public class SaveSystemUI : MonoBehaviour
         {// ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ТЕРРЕЙНА
             if (deleteSubmit)
             {
-                File.Delete(Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION);
+                File.Delete(GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION);
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -290,7 +301,10 @@ public class SaveSystemUI : MonoBehaviour
         {   // ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ИГРЫ
             if (deleteSubmit)
             {
-                File.Delete(terrainsLoading ? Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION : Application.persistentDataPath + "/Saves/" + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION);
+                File.Delete(terrainsLoading ? 
+                    GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION 
+                    : 
+                    GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION);
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -314,7 +328,10 @@ public class SaveSystemUI : MonoBehaviour
     public void DeleteButton()
     {
         if (lastSelectedIndex == -1 | lastSelectedIndex >= saveNames.Length) return;
-        string path = terrainsLoading ? Application.persistentDataPath + "/Terrains/" + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION : Application.persistentDataPath + "/Saves/" + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
+        string path = terrainsLoading ? 
+            GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION 
+            : 
+            GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
         if (File.Exists(path))
         {
             deleteSubmit = true;

@@ -278,7 +278,7 @@ public abstract class WorkBuilding : Building {
 		RecalculateWorkspeed();
 	}
 	virtual protected void RecalculateWorkspeed() {
-		workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
+		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
 	}
 
 	#region save-load system

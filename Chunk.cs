@@ -25,7 +25,13 @@ public sealed class ChunkSerializer
     public byte chunkSize;
 }
 
-public enum ChunkGenerationMode { Standart, GameLoading, Cube, TerrainLoading, DontGenerate}
+sealed class Roof
+{
+    public GameObject model;
+    public bool peak = false, artificial = false;
+}
+
+public enum ChunkGenerationMode { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate}
 
 public sealed class Chunk : MonoBehaviour
 {
@@ -35,16 +41,34 @@ public sealed class Chunk : MonoBehaviour
     public float lifePower = 0;
     public static byte CHUNK_SIZE { get; private set; }  
     //private bool allGrasslandsCreated = false;
-    public byte[,,] lightMap { get; private set; }
-    float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
+    public byte[,,] lightMap { get; private set; }    
     public int MAX_BLOCKS_COUNT = 100;
     public delegate void ChunkUpdateHandler(ChunkPos pos);
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
-    public void Awake()
+    private float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
+    private Roof[,] roofs;
+    private GameObject roofObjectsHolder;
+
+    private void Prepare()
     {
+        blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         surfaceBlocks = new List<SurfaceBlock>();
-        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];       
+        roofs = new Roof[CHUNK_SIZE, CHUNK_SIZE];
+        if (roofObjectsHolder == null)
+        {
+            roofObjectsHolder = new GameObject("roofObjectsHolder");
+            roofObjectsHolder.transform.parent = transform;
+            roofObjectsHolder.transform.localPosition = Vector3.zero;
+            roofObjectsHolder.transform.localRotation = Quaternion.identity;
+        }
+        GameMaster.layerCutHeight = CHUNK_SIZE;
+        GameMaster.prevCutHeight = CHUNK_SIZE;
+    }
+
+    public void Awake()
+    {        
         FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
 
@@ -72,7 +96,7 @@ public sealed class Chunk : MonoBehaviour
                         int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
                         SurfaceBlock sb = dirt_for_grassland[pos];
                         Grassland gl = Grassland.CreateOn(sb);
-                        int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.lifeGrowCoefficient);
+                        int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
                         if (lifePower > lifeTransfer) { gl.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
                         else { gl.AddLifepower((int)lifePower); lifePower = 0; }
                     }
@@ -164,7 +188,7 @@ public sealed class Chunk : MonoBehaviour
             }
             // up and down
             bx = GetBlock(x , y + 1, z);
-            if (bx == null || bx.isTransparent) vmask += 16;
+            if ((bx == null || bx.isTransparent) & y != CHUNK_SIZE - 1) vmask += 16;
 
             bx = GetBlock(x, y - 1, z);
             if (bx == null ) vmask += 32;
@@ -346,25 +370,13 @@ public sealed class Chunk : MonoBehaviour
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
     }
 
-    public static void SetChunkSize(byte x)
-    {
-        CHUNK_SIZE = x;
-        //функция ресайза при наличии уже существующего массива блоков?
-    }
-
     public void SetChunk(int[,,] newData)
     {
         int size = newData.GetLength(0);
         CHUNK_SIZE = (byte)size;
         if (blocks != null) ClearChunk();
-        else blocks = new Block[size, size, size];
-        
-        
-        if (CHUNK_SIZE < 3) CHUNK_SIZE = 16;
-        GameMaster.layerCutHeight = CHUNK_SIZE;
-        GameMaster.prevCutHeight = GameMaster.layerCutHeight;
+        Prepare();
                 
-        surfaceBlocks = new List<SurfaceBlock>();
         for (int x = 0; x < size; x++)
         {
             for (int z = 0; z < size; z++)
@@ -388,7 +400,7 @@ public sealed class Chunk : MonoBehaviour
                                 blocks[x, y + 1, z] = cvb;
                                 cvb.InitializeCaveBlock(this, new ChunkPos(x, y + 1, z), newData[x, y + 2, z], newData[x, y, z]);
                                 surfaceBlocks.Add(cvb);
-                                GameMaster.geologyModule.SpreadMinerals(cvb); // <- замена на пещерные структуры
+                                if (!GameMaster.editMode) GameMaster.geologyModule.SpreadMinerals(cvb); // <- замена на пещерные структуры
                             }
                             else
                             {
@@ -396,12 +408,13 @@ public sealed class Chunk : MonoBehaviour
                                 blocks[x, y + 1, z] = sb;
                                 sb.InitializeSurfaceBlock(this, new ChunkPos(x, y + 1, z), newData[x, y, z]);
                                 surfaceBlocks.Add(sb);
-                                GameMaster.geologyModule.SpreadMinerals(sb);
+                                if (!GameMaster.editMode) GameMaster.geologyModule.SpreadMinerals(sb);
                             }
                         }
                         noBlockAbove = false;
                     }
                 }
+                if (newData[x, size - 1, z] != 0) SetRoof(x, z, false);
             }
         }
         ChunkLightmapFullRecalculation();
@@ -426,8 +439,7 @@ public sealed class Chunk : MonoBehaviour
     public Block GetBlock(ChunkPos cpos) { return GetBlock(cpos.x, cpos.y, cpos.z); }
     public Block GetBlock(int x, int y, int z)
     {
-        int size = blocks.GetLength(0);
-        if (x < 0 || x > size - 1 || y < 0 || y > size - 1 || z < 0 || z > size - 1) return null;
+        if (x < 0 | x > CHUNK_SIZE - 1 | y < 0 | y > CHUNK_SIZE - 1 | z < 0 | z > CHUNK_SIZE - 1) return null;
         else { return blocks[x, y, z]; }
     }  
 
@@ -557,8 +569,9 @@ public sealed class Chunk : MonoBehaviour
         if (calculateUpperBlock)
         {
             if (GetBlock(x, y + 1, z) == null)
-            {                   
-                AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+            {
+                if (y < CHUNK_SIZE - 1) AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+                else SetRoof(x, z, i_naturalGeneration);
             }
         }
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
@@ -721,11 +734,8 @@ public sealed class Chunk : MonoBehaviour
         {
             if (GetBlock(x, y + 1, z) == null)
             {
-                if (GetBlock(x, y + 2, z) != null)
-                {
-                    AddBlock(new ChunkPos(x, y + 1, z), BlockType.Cave, material2_id, blocks[x, y + 2, z].material_id, naturalGeneration);
-                }
-                else AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, material2_id, naturalGeneration);
+                if (y < CHUNK_SIZE - 1) AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, material1_id, naturalGeneration);
+                else SetRoof(x, z, naturalGeneration);
             }
         }
         
@@ -782,6 +792,7 @@ public sealed class Chunk : MonoBehaviour
                     }
                     else
                     {
+                        if (y == CHUNK_SIZE - 1) DeleteRoof(x, z);
                         Block lowerBlock = GetBlock(x, y - 1, z);
                         if (lowerBlock != null)
                         {
@@ -1045,14 +1056,16 @@ public sealed class Chunk : MonoBehaviour
 
     public void LayersCut()
     {
+        int layerCutHeight = GameMaster.layerCutHeight;
+        roofObjectsHolder.SetActive(layerCutHeight == CHUNK_SIZE);
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
                 int y = CHUNK_SIZE - 1;
-                if (GameMaster.layerCutHeight != CHUNK_SIZE)
+                if (layerCutHeight != CHUNK_SIZE)
                 {
-                    for (; y > GameMaster.layerCutHeight; y--)
+                    for (; y > layerCutHeight; y--)
                     {
                         if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(0);
                     }
@@ -1063,6 +1076,234 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void SetRoof(int x, int z, bool artificial)
+    {
+        bool canBePeak = false;
+        if (roofs[x,z] != null)
+        {
+            Roof r = roofs[x, z];
+            if (artificial)
+            {
+                if (r.artificial) return;
+                else
+                {
+                    Destroy(r.model);
+                    // #creating_new_model
+                    { // peaks checking
+                        Roof n = null;
+                        int peaksAround = 0;
+                        bool back = (z > 0), fwd = (z < CHUNK_SIZE - 1), left = (x > 0), right = (x < CHUNK_SIZE - 1);
+                        if (left)
+                        {
+                            n = roofs[x - 1, z]; if (n != null && n.peak) peaksAround++;
+                            if (fwd)
+                            {
+                                n = roofs[x - 1, z + 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                            if (back)
+                            {
+                                n = roofs[x - 1, z - 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                        }
+                        if (peaksAround == 0)
+                        {
+                            if (right)
+                            {
+                                n = roofs[x + 1, z]; if (n != null && n.peak) peaksAround++;
+                                if (fwd)
+                                {
+                                    n = roofs[x + 1, z + 1]; if (n != null && n.peak) peaksAround++;
+                                }
+                                if (back)
+                                {
+                                    n = roofs[x + 1, z - 1]; if (n != null && n.peak) peaksAround++;
+                                }
+                            }
+                        }
+                        if (peaksAround == 0)
+                        {
+                            if (fwd)
+                            {
+                                n = roofs[x, z + 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                            if (back)
+                            {
+                                n = roofs[x, z - 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                        }
+                        canBePeak = (peaksAround == 0);
+                    }
+
+                    GameObject newModel = PoolMaster.GetRooftop(canBePeak, true);
+                    newModel.transform.parent = roofObjectsHolder.transform;
+                    newModel.transform.localPosition = new Vector3(x * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, z * Block.QUAD_SIZE);
+                    float t = Random.value;
+                    if (t > 0.5f)
+                    {
+                        if (t >= 0.75f) t = 3;
+                        else t = 2;
+                    }
+                    else
+                    {
+                        if (t <= 0.25f) t = 1;
+                        else t = 0;
+                    }
+                    newModel.transform.localRotation = Quaternion.Euler(0, t * 90, 0);
+                    r.model = newModel;
+                    r.artificial = true;
+                    r.peak = canBePeak;
+                }
+            }
+            else
+            {
+                if (!r.artificial)
+                {
+                    return;
+                }
+                else
+                {
+                    Destroy(r.model);
+                    // #creating_new_model
+                    { // peaks checking
+                        Roof n = null;
+                        int peaksAround = 0;
+                        bool back = (z > 0), fwd = (z < CHUNK_SIZE - 1), left = (x > 0), right = (x < CHUNK_SIZE - 1);
+                        if (left)
+                        {
+                            n = roofs[x - 1, z]; if (n != null && n.peak) peaksAround++;
+                            if (fwd)
+                            {
+                                n = roofs[x - 1, z + 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                            if (back)
+                            {
+                                n = roofs[x - 1, z - 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                        }
+                        if (peaksAround == 0)
+                        {
+                            if (right)
+                            {
+                                n = roofs[x + 1, z]; if (n != null && n.peak) peaksAround++;
+                                if (fwd)
+                                {
+                                    n = roofs[x + 1, z + 1]; if (n != null && n.peak) peaksAround++;
+                                }
+                                if (back)
+                                {
+                                    n = roofs[x + 1, z - 1]; if (n != null && n.peak) peaksAround++;
+                                }
+                            }
+                        }
+                        if (peaksAround == 0)
+                        {
+                            if (fwd)
+                            {
+                                n = roofs[x, z + 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                            if (back)
+                            {
+                                n = roofs[x, z - 1]; if (n != null && n.peak) peaksAround++;
+                            }
+                        }
+                        canBePeak = (peaksAround == 0);
+                    }
+                    GameObject newModel = PoolMaster.GetRooftop(canBePeak, false);
+                    newModel.transform.parent = roofObjectsHolder.transform;
+                    newModel.transform.localPosition = new Vector3(x * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, z * Block.QUAD_SIZE);
+                    float t = Random.value;
+                    if (t > 0.5f)
+                    {
+                        if (t >= 0.75f) t = 3;
+                        else t = 2;
+                    }
+                    else
+                    {
+                        if (t <= 0.25f) t = 1;
+                        else t = 0;
+                    }
+                    newModel.transform.localRotation = Quaternion.Euler(0, t * 90, 0);
+                    r.model = newModel;
+                    r.artificial = true;
+                    r.peak = canBePeak;
+                }
+            }
+        }
+        else
+        {
+            Roof r = new Roof();            
+            // #creating_new_model
+            { // peaks checking
+                Roof n = null;
+                int peaksAround = 0;
+                bool back = (z > 0), fwd = (z < CHUNK_SIZE - 1), left = (x > 0), right = (x < CHUNK_SIZE - 1);
+                if (left)
+                {
+                    n = roofs[x - 1, z]; if (n != null && n.peak) peaksAround++;
+                    if (fwd)
+                    {
+                        n = roofs[x - 1, z + 1]; if (n != null && n.peak) peaksAround++;
+                    }
+                    if (back)
+                    {
+                        n = roofs[x - 1, z - 1]; if (n != null && n.peak) peaksAround++;
+                    }
+                }
+                if (peaksAround == 0)
+                {
+                    if (right)
+                    {
+                        n = roofs[x + 1, z]; if (n != null && n.peak) peaksAround++;
+                        if (fwd)
+                        {
+                            n = roofs[x + 1, z + 1]; if (n != null && n.peak) peaksAround++;
+                        }
+                        if (back)
+                        {
+                            n = roofs[x + 1, z - 1]; if (n != null && n.peak) peaksAround++;
+                        }
+                    }
+                }
+                if (peaksAround == 0)
+                {
+                    if (fwd)
+                    {
+                        n = roofs[x, z + 1]; if (n != null && n.peak) peaksAround++;
+                    }
+                    if (back)
+                    {
+                        n = roofs[x, z - 1]; if (n != null && n.peak) peaksAround++;
+                    }
+                }
+                canBePeak = (peaksAround == 0);
+            }
+            GameObject newModel = PoolMaster.GetRooftop(canBePeak, artificial);
+            newModel.transform.parent = roofObjectsHolder.transform;
+            newModel.transform.localPosition = new Vector3(x * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, z * Block.QUAD_SIZE);
+            float t = Random.value;
+            if (t > 0.5f)
+            {
+                if (t >= 0.75f) t = 3;
+                else t = 2;
+            }
+            else
+            {
+                if (t <= 0.25f) t = 1;
+                else t = 0;
+            }
+            newModel.transform.localRotation = Quaternion.Euler(0, t * 90, 0);
+            r.model = newModel;
+            r.artificial = true;
+            r.peak = canBePeak;
+            //
+            roofs[x, z] = r;
+        }
+    }
+    public void DeleteRoof(int x, int z)
+    {
+        if (roofs[x, z] != null) Destroy(roofs[x, z].model.transform.parent.gameObject);
     }
 
     /// <summary>
@@ -1396,10 +1637,10 @@ public sealed class Chunk : MonoBehaviour
     {
         if (cs == null) print("chunk serialization failed!");
         if (blocks != null) ClearChunk();
-        CHUNK_SIZE = cs.chunkSize;
-        blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-        surfaceBlocks = new List<SurfaceBlock>();
-        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+
+        CHUNK_SIZE = cs.chunkSize;        
+        Prepare();
+
         foreach (BlockSerializer bs in cs.blocksData)
         {
             Block b = AddBlock(bs.pos, bs.type, bs.material_id, true);

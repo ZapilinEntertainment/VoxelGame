@@ -847,7 +847,7 @@ public class Building : Structure
     {
         if (upgradedIndex == -1) return null;
         ResourceContainer[] cost = ResourcesCost.GetCost(upgradedIndex);
-        float discount = GameMaster.upgradeDiscount;
+        float discount = GameMaster.realMaster.upgradeDiscount;
         for (int i = 0; i < cost.Length; i++)
         {
             cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - discount));

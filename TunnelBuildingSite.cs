@@ -38,7 +38,7 @@ public class TunnelBuildingSite : Worksite {
 	}
 
 	protected override void RecalculateWorkspeed() {
-		workSpeed = GameMaster.CalculateWorkspeed(workersCount,WorkType.Digging);
+		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount,WorkType.Digging);
 	}
 
 	public void Set(CubeBlock block) {
@@ -125,7 +125,7 @@ public class TunnelBuildingSite : Worksite {
 	}
 	override protected void Load (WorksiteSerializer ws) {
 		LoadWorksiteData(ws);
-		Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as CubeBlock);
+		Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as CubeBlock);
 		int smask = ws.specificData[0];
 		if ((smask & 1) != 0) CreateSign(0);
 		if ((smask & 2 )!= 0) CreateSign(1);

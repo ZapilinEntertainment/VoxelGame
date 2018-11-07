@@ -81,7 +81,7 @@ public class GatherSite : Worksite
 
     protected override void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.CalculateWorkspeed(workersCount, WorkType.Gathering);
+        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Gathering);
     }
     public void Set(SurfaceBlock block)
     {
@@ -151,7 +151,7 @@ public class GatherSite : Worksite
     override protected void Load(WorksiteSerializer ws)
     {
         LoadWorksiteData(ws);
-        Set(GameMaster.mainChunk.GetBlock(ws.workObjectPos) as SurfaceBlock);
+        Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as SurfaceBlock);
         GatherSiteSerializer gss = new GatherSiteSerializer();
         GameMaster.DeserializeByteArray(ws.specificData, ref gss);
         destructionTimer = gss.destructionTimer;
