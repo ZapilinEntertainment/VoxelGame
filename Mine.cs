@@ -53,15 +53,18 @@ public class Mine : WorkBuilding {
 			}
 		}
 		if ( !isActive | !energySupplied ) return;
-		if ( workObject != null ) {
-			if (workersCount > 0 && !workFinished ) {
-				workflow += workSpeed  ;
-				if (workflow >= workflowToProcess) {
-					LabourResult();
-					workflow -= workflowToProcess;
-				}
-			}
-		}
+        if (workObject != null)
+        {
+            if (workersCount > 0 && !workFinished)
+            {
+                workflow += workSpeed;
+                if (workflow >= workflowToProcess)
+                {
+                    LabourResult();
+                    workflow -= workflowToProcess;
+                }
+            }
+        }
 	}
 
 override protected void LabourResult() {
@@ -69,7 +72,7 @@ override protected void LabourResult() {
 		float production = x;
 		production = workObject.Dig(x, false);
 		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
-		if ( workObject!=null & workObject.volume != 0) {
+		if ( workObject!=null && workObject.volume != 0) {
 		    float percent = workObject.volume / (float) CubeBlock.MAX_VOLUME;
 			if (showOnGUI) workbuildingObserver.SetActionLabel( string.Format("{0:0.##}", (1 - percent) * 100) + "% " + Localization.GetActionLabel(LocalizationActionLabels.Extracted)); 
 			workflow -= production;	
@@ -213,13 +216,13 @@ override protected void LabourResult() {
         if (destroyed) return;
         else destroyed = true;
         PrepareWorkbuildingForDestruction(forced);
-        if (elevators.Count > 0)
-        {
-            foreach (Structure s in elevators)
-            {
-                if (s != null) s.Annihilate(false);
-            }
-        }
+       // if (elevators.Count > 0)
+       // {
+       //     foreach (Structure s in elevators)
+         //   {
+         //       if (s != null) s.Annihilate(false);
+          //  }
+        //}
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

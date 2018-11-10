@@ -19,23 +19,23 @@ public class TunnelBuildingSite : Worksite {
             if (workersCount > 0)
             {
                 workflow += workSpeed;
-                if (workflow >= 1) LabourResult();
+                if (workflow >= 1) {
+                    // labour result
+                    int x = (int)workflow;
+                    float production = x;
+                    production = workObject.Dig(x, false);
+                    if (workObject == null)
+                    {
+                        StopWork();
+                        return;
+                    }
+                    GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
+                    workflow -= production;
+                    actionLabel = Localization.GetActionLabel(LocalizationActionLabels.DigInProgress) + " (" + ((int)(((float)workObject.volume / (float)CubeBlock.MAX_VOLUME) * 100)).ToString() + "%)";
+                }
             }
         }
 		}
-
-    void LabourResult() {
-        int x = (int)workflow;
-        float production = x;
-        production = workObject.Dig(x, false);
-        if (workObject == null) {
-            StopWork();
-            return;
-        }
-		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
-		workflow -= production;	
-		actionLabel = Localization.GetActionLabel(LocalizationActionLabels.DigInProgress) + " ("+((int) (((float)workObject.volume / (float)CubeBlock.MAX_VOLUME) * 100)).ToString()+"%)";
-	}
 
 	protected override void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount,WorkType.Digging);

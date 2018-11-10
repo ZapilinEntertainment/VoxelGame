@@ -28,6 +28,10 @@ public sealed class EditorUI : MonoBehaviour
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
         SaveSystemUI.Check(transform.root);
         SaveSystemUI.current.ingame = true;
+        ActionsPanel();
+
+        FollowingCamera.main.ResetTouchRightBorder();
+        FollowingCamera.camRotationBlocked = false;
     }
 
     public void Click()
@@ -38,7 +42,7 @@ public sealed class EditorUI : MonoBehaviour
             else
             {
                 Touch t = Input.GetTouch(0);
-                if (t.phase != TouchPhase.Ended | t.deltaPosition != Vector2.zero) return;
+                if (t.phase == TouchPhase.Moved) return;
             }
         }
         RaycastHit rh;
@@ -120,11 +124,12 @@ public sealed class EditorUI : MonoBehaviour
                         if (b != null)
                         {
                             Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
+                            Chunk c = GameMaster.mainChunk;
                             if (b.type == BlockType.Surface | b.type == BlockType.Cave)
                             {
-                                GameMaster.mainChunk.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
+                                c.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
                             }
-                            GameMaster.mainChunk.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
+                            c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
                         }
                         break;
                     }
@@ -190,7 +195,7 @@ public sealed class EditorUI : MonoBehaviour
                         if (cb != null)
                         {
                             float x = cb.myChunk.CalculateSupportPoints(cb.pos.x, cb.pos.y, cb.pos.z);
-                            if (x > 0.5f) cb.myChunk.ReplaceBlock(cb.pos, BlockType.Cave, cb.material_id, true);
+                            if (x >= Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING) cb.myChunk.ReplaceBlock(cb.pos, BlockType.Cave, cb.material_id, true);
                         }
                         break;
                     }
@@ -242,12 +247,12 @@ public sealed class EditorUI : MonoBehaviour
         if (!actionsPanel.activeSelf)
         {
             actionsPanel.SetActive(true);
-            menuPanel.SetActive(false);
+            menuPanel.SetActive(false);            
         }
         else
         {
             actionsPanel.SetActive(false);
-            listPanel.SetActive(false);
+            listPanel.SetActive(false);            
         }
     }
 
@@ -389,10 +394,12 @@ public sealed class EditorUI : MonoBehaviour
             menuPanel.SetActive(true);
             actionsPanel.SetActive(false);
             listPanel.SetActive(false);
+            FollowingCamera.camRotationBlocked = true;
         }
         else
         {
             menuPanel.SetActive(false);
+            FollowingCamera.camRotationBlocked = false;
         }
     }
     public void SaveTerrain()
@@ -405,7 +412,6 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void BackToMenu()
     {
-        GameMaster.realMaster.OnApplicationQuit();
-        SceneManager.LoadScene(0);
+        GameMaster.ChangeScene(GameLevel.Menu);
     }
 }

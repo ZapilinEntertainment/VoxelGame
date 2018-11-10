@@ -11,7 +11,6 @@ public sealed class FollowingCamera : MonoBehaviour {
     public static Vector3 camPos; // unprotected - HOT
     public static bool touchscreen { get; private set; }
     public static bool camRotationBlocked = false;
-    public static float touchRightBorder = 0;
 
     public float rotationSpeed = 65, zoomSpeed = 50, moveSpeed = 30;
 	float rotationSmoothCoefficient = 0;
@@ -20,6 +19,7 @@ public sealed class FollowingCamera : MonoBehaviour {
 	float zoomSmoothAcceleration = 0.05f;
 	Vector3 moveSmoothCoefficient = Vector3.zero;
 	float moveSmoothAcceleration= 0.03f;
+    private float touchRightBorder = Screen.width;
 	public Vector3 deltaLimits = new Vector3 (0.1f, 0.1f, 0.1f);
 	[SerializeField] private Vector3 camPoint = new Vector3(0,5,-5);
 
@@ -36,6 +36,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     private bool? verticalMovement = null;
     private List<Transform>  mastBillboards;
     private List<int>  mastBillboardsIDs;
+
     public delegate void CameraChangedHandler();
     public event CameraChangedHandler cameraChangedEvent;
 
@@ -175,14 +176,14 @@ public sealed class FollowingCamera : MonoBehaviour {
                                 if (delta != 0)
                                 {
                                     StopCameraMovement();
-                                    float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta * (-1);
-                                    cam.transform.Translate((cam.transform.position - transform.position) * zspeed, Space.World);
+                                    float zspeed = zoomSpeed * Time.deltaTime * (1 + zoomSmoothCoefficient) * delta;                                   
                                     float zl = cam.transform.localPosition.magnitude;
-                                    if (zl > MAX_FAR) cam.transform.localPosition *= MAX_FAR / zl;
+                                    if (zl + zspeed > MAX_FAR) zspeed = MAX_FAR - zl;
                                     else
                                     {
-                                        if (zl < MAX_ZOOM) cam.transform.localPosition *= MAX_ZOOM / zl;
+                                        if (zl + zspeed < MAX_ZOOM) zspeed = MAX_ZOOM - zspeed;
                                     }
+                                    cam.transform.Translate(Vector3.forward * zspeed, Space.Self);
 
                                     if (zoomSlider != null) // удалить ?
                                     {
@@ -390,7 +391,7 @@ public sealed class FollowingCamera : MonoBehaviour {
         if (useAutoZooming)
         {
             float d = cam.transform.localPosition.magnitude;
-            if (d / optimalDistance > 1 | d/optimalDistance < 0.5f) changingCamZoom = true;
+            if (d > optimalDistance) changingCamZoom = true;
         }
         verticalMovement = null;
 	}
@@ -435,6 +436,15 @@ public sealed class FollowingCamera : MonoBehaviour {
     public void StartMoveDown() { StopCameraMovement(); verticalMovement = false; }
     public void EndMoveDown() { StopCameraMovement(); if (verticalMovement == false) verticalMovement = null; }
 
+    public void SetTouchRightBorder(float f)
+    {
+        touchRightBorder = f;
+    }
+    public void ResetTouchRightBorder()
+    {
+        touchRightBorder = Screen.width;
+    }
+
     public static void SetOptimalDistance(float d)
     {
         if (d != optimalDistance)
@@ -448,5 +458,10 @@ public sealed class FollowingCamera : MonoBehaviour {
     private void OnDestroy()
     {
         PlayerPrefs.SetFloat(CAM_ZOOM_DIST_KEY, optimalDistance);
+    }
+
+    private void OnGUI()
+    {
+        GUILayout.Label(touchRightBorder.ToString());
     }
 }

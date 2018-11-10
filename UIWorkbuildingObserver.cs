@@ -68,9 +68,11 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         showingWorkersMaxCount = ws.GetMaxWorkers();
         showingWorkspeed = ws.workSpeed;
 
+        slider.enabled = false; // иначе будет вызывать ивент
+        slider.value = showingWorkersCount; 
         slider.minValue = 0;
         slider.maxValue = showingWorkersMaxCount;
-        slider.value = showingWorkersCount;
+        slider.enabled = true;
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
         workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
         workSpeedField.enabled = (showingWorkspeed > 0);
@@ -86,7 +88,10 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 		if ( !isObserving ) return;
         if (workbuildingMode)
         { // WORKBUILDING
-            if (observingWorkbuilding == null) SelfShutOff();
+            if (observingWorkbuilding == null)
+            {
+                SelfShutOff();                
+            }
             else
             {
                 if (showingWorkersCount != observingWorkbuilding.workersCount)
@@ -114,7 +119,10 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         }
         else
         {// WORKSITE
-            if (observingWorksite == null) SelfShutOff();
+            if (observingWorksite == null)
+            {
+                SelfShutOff();                
+            }
             else
             {
                 if (showingWorkersCount != observingWorksite.workersCount)
@@ -311,7 +319,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         {
             observingWorksite.StopWork();
             observingWorksite = null;
-            SelfShutOff();
+            SelfShutOff();            
         }
     }
     public void Slider_SetWorkersCount() {        

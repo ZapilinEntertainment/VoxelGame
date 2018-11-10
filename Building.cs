@@ -18,8 +18,8 @@ public class Building : Structure
     public float energySurplus = 0; // can be changed later (ex.: generator)
     public float energyCapacity = 0; // fixed by id
     public bool connectedToPowerGrid { get; protected set; }// установлено ли подключение к электросети
-    public int requiredBasementMaterialId = -1; // fixed by id
     public byte level { get; protected set; } // fixed by id (except for mine)
+    public bool specialBuildingConditions { get; protected set; }
 
     public static UIBuildingObserver buildingObserver;
 
@@ -105,6 +105,7 @@ public class Building : Structure
         isActive = false;
         energySupplied = false;
         connectedToPowerGrid = false;
+        specialBuildingConditions = false;
         switch (id)
         {
             case LANDED_ZEPPELIN_ID:
@@ -113,7 +114,6 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 10;
                     energyCapacity = 1000;
-                    requiredBasementMaterialId = -1;
                     level = 1;
                 }
                 break;
@@ -123,7 +123,6 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 25;
                     energyCapacity = 1500;
-                    requiredBasementMaterialId = -1;
                     level = 2;
                 }
                 break;
@@ -133,7 +132,6 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 50;
                     energyCapacity = 4000;
-                    requiredBasementMaterialId = -1;
                     level = 3;
                 }
                 break;
@@ -143,7 +141,6 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 100;
                     energyCapacity = 5000;
-                    requiredBasementMaterialId = -1;
                     level = 4;
                 }
                 break;
@@ -153,7 +150,6 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
                     level = 0;
                 }
                 break;
@@ -163,7 +159,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 1;
                 }
                 break;
@@ -173,7 +169,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -183,7 +179,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -193,7 +189,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 5;
                 }
                 break;
@@ -203,7 +199,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 0;
                 }
                 break;
@@ -213,7 +209,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 10;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 1;
                 }
                 break;
@@ -223,7 +219,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = -10;
                     energyCapacity = 100;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -233,7 +229,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = -20;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -243,7 +239,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = -200;
                     energyCapacity = 1500;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 5;
                 }
                 break;
@@ -253,7 +249,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -120;
                     energyCapacity = 240;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 1;
                 }
                 break;
@@ -263,7 +259,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 2000;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 1;
                 }
                 break;
@@ -273,7 +269,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 8000;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -283,7 +279,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 25000;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -293,7 +289,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -10;
                     energyCapacity = 100;
-                    requiredBasementMaterialId = ResourceType.DIRT_ID;
+                    specialBuildingConditions = true;
                     level = 1;
                 }
                 break;
@@ -303,7 +299,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -40;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = ResourceType.DIRT_ID;
+                    specialBuildingConditions = true;
                     level = 2;
                 }
                 break;
@@ -313,7 +309,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = ResourceType.DIRT_ID;
+                    specialBuildingConditions = true;
                     level = 3;
                 }
                 break;
@@ -323,7 +319,6 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -400;
                     energyCapacity = 1200;
-                    requiredBasementMaterialId = -1;
                     level = 4;
                 }
                 break;
@@ -333,7 +328,6 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = -1000;
                     energyCapacity = 3000;
-                    requiredBasementMaterialId = -1;
                     level = 5;
                 }
                 break;
@@ -343,7 +337,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -15;
                     energyCapacity = 100;
-                    requiredBasementMaterialId = ResourceType.DIRT_ID;
+                    specialBuildingConditions = true;
                     level = 1;
                 }
                 break;
@@ -353,7 +347,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -50;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = ResourceType.DIRT_ID;
+                    specialBuildingConditions = true;
                     level = 2;
                 }
                 break;
@@ -363,7 +357,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 800;
-                    requiredBasementMaterialId = ResourceType.DIRT_ID;
+                    specialBuildingConditions = true;
                     level = 3;
                 }
                 break;
@@ -373,7 +367,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 800;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -383,17 +377,16 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -800;
                     energyCapacity = 1600;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 5;
                 }
                 break;
             case MINE_ID:
                 {
-                    upgradedIndex = -1;
+                    upgradedIndex = 0;
                     canBePowerSwitched = true;
                     energySurplus = -20;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = ResourceType.STONE_ID;
                     level = 1;
                 }
                 break;
@@ -403,7 +396,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -75;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 1;
                 }
                 break;
@@ -413,7 +406,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -150;
                     energyCapacity = 600;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -423,7 +416,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -400;
                     energyCapacity = 1000;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -433,7 +426,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -800;
                     energyCapacity = 1600;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 5;
                 }
                 break;
@@ -443,7 +436,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 100;
                     energyCapacity = 100;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 1;
                 }
                 break;
@@ -453,7 +446,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 100;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -463,7 +456,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -60;
                     energyCapacity = 500;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -473,7 +466,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 100;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -483,7 +476,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -120;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -493,7 +486,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -80;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 2;
                 }
                 break;
@@ -503,7 +496,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 500;
                     energyCapacity = 1000;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -513,7 +506,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 500;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -523,7 +516,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 1000;
                     energyCapacity = 1000;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -533,7 +526,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -543,7 +536,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -250;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -553,7 +546,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -400;
                     energyCapacity = 800;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 5;
                 }
                 break;
@@ -563,7 +556,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -700;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -573,7 +566,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -100;
                     energyCapacity = 120;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 3;
                 }
                 break;
@@ -583,7 +576,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = 0;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 5;
                 }
                 break;
@@ -593,7 +586,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -603,7 +596,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -1;
                     energyCapacity = 10;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 6;
                 }
                 break;
@@ -613,7 +606,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -100;
                     energyCapacity = 400;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -623,7 +616,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -120;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -633,7 +626,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -120;
                     energyCapacity = 200;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;
@@ -643,7 +636,7 @@ public class Building : Structure
                     canBePowerSwitched = true;
                     energySurplus = -200;
                     energyCapacity = 0;
-                    requiredBasementMaterialId = -1;
+                    
                     level = 4;
                 }
                 break;

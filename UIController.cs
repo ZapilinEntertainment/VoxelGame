@@ -307,7 +307,7 @@ sealed public class UIController : MonoBehaviour {
     public void MenuButton() {
 		showMenuWindow = !showMenuWindow;
 		if (showMenuWindow) { // on
-            if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.touchRightBorder = Screen.width; }
+            if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
             if (showStorageInfo) StorageButton();
@@ -320,7 +320,7 @@ sealed public class UIController : MonoBehaviour {
         }
 		else { //off
             FollowingCamera.camRotationBlocked = false;
-            FollowingCamera.touchRightBorder = Screen.width;
+            FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
             optionsPanel.SetActive(false);
             SetMenuPanelSelection(MenuSection.NoSelection);
@@ -344,7 +344,7 @@ sealed public class UIController : MonoBehaviour {
     public void ToMainMenu()
     {
         SetMenuPanelSelection(MenuSection.NoSelection);
-        UnityEngine.SceneManagement.SceneManager.LoadScene(0);        
+        GameMaster.ChangeScene(GameLevel.Menu);  
     }
     public void ExitButton()
     {
@@ -506,7 +506,7 @@ sealed public class UIController : MonoBehaviour {
         if (newChosenType == ChosenObjectType.None)
         {
             rightPanel.SetActive(false);
-            FollowingCamera.touchRightBorder = Screen.width;
+            FollowingCamera.main.ResetTouchRightBorder();
             selectionFrame.gameObject.SetActive(false);
             chosenObjectType = ChosenObjectType.None;
             chosenWorksite = null;
@@ -518,7 +518,7 @@ sealed public class UIController : MonoBehaviour {
         }
         else
         {
-            FollowingCamera.touchRightBorder = rightPanel.GetComponent<RectTransform>().rect.x;
+            FollowingCamera.main.SetTouchRightBorder(rightPanel.GetComponent<RectTransform>().anchorMin.x * Screen.width);
             chosenObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
             rightPanel.SetActive(true);
@@ -601,7 +601,12 @@ sealed public class UIController : MonoBehaviour {
             selectionFrame.gameObject.SetActive(true);
         }
     }
-
+    public void ChangeChosenObject(CubeBlock cb)
+    {
+        chosenCube = cb;
+        faceIndex = 4;
+        ChangeChosenObject(ChosenObjectType.Cube);
+    }
     public void ShowWorksite(Worksite ws)
     {
         chosenWorksite = ws;

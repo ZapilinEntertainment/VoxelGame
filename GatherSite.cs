@@ -126,6 +126,7 @@ public class GatherSite : Worksite
         {
             observer.SelfShutOff();
             showOnGUI = false;
+            UIController.current.ChangeChosenObject(ChosenObjectType.Surface);
         }
         Destroy(this);
     }

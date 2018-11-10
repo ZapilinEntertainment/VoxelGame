@@ -125,6 +125,7 @@ public class CleanSite : Worksite {
             if (observer.observingWorksite == this)
             {
                 observer.SelfShutOff();
+                UIController.current.ChangeChosenObject(ChosenObjectType.Surface);
             }
             showOnGUI = false;
         }

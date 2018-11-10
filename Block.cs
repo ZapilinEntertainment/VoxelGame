@@ -12,7 +12,7 @@ public class Block : MonoBehaviour {
 	public Chunk myChunk {get; protected  set;}
 	public bool isTransparent {get;protected  set;} // <- замени на transparent map
 	public ChunkPos pos {get; protected  set;}
-    public Structure mainStructure;
+    public Structure mainStructure; // <---- ЗАМЕНИТЬ
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
 	public byte visibilityMask { get; protected set; } // видимость относительно других блоков

@@ -4,177 +4,255 @@ using UnityEngine;
 
 public class OakTree : Plant
 {
-    float timer;
-    private Transform modelTransform;
-
     private static List<OakTree> oaks;
 
-    private static Sprite[] stageSprites;
-    private static Mesh trunk_stage4, trunk_stage5, trunk_stage6, crones_stage4, crones_stage5, crones_stage6;
-    static bool modelsContainerReady = false; // хранит заготовленные меши для деревьев
-    private static GameObject modelsContainer;//
-    private static List<GameObject> treeBlanks;
-    private static LODController modelsLodController;
-    private static short oak4spritesIndex = -1, oak5spritesIndex = -1, oak6spritesIndex = -1;
+    private static Sprite[] startStageSprites;
+    private static Transform blankModelsContainer;// хранит неиспользуемые модели
+    private static List<GameObject> blankTrees_stage4, blankTrees_stage5, blankTrees_stage6;
+    private static Sprite[] lodPack_stage4, lodPack_stage5, lodPack_stage6;
+
+    private static bool modelsContainerReady = false;
     private static float growSpeed, decaySpeed; // fixed by class
     public static int maxLifeTransfer { get; protected set; }  // fixed by class
+
     public const byte HARVESTABLE_STAGE = 4;
     const byte TRANSIT_STAGE = 3;
-    //const int MAX_INACTIVE_BUFFERED = 25;
-    // myRenderers : 0 -sprite, 1 - crone, 2 - trunk
+    private const int MAX_INACTIVE_BUFFERED_STAGE4 = 12, MAX_INACTIVE_BUFFERED_STAGE5 = 6, MAX_INACTIVE_BUFFERED_STAGE6 = 3, CRITICAL_BUFFER_COUNT = 50;
+
+    private GameObject modelHolder;
+    private SpriteRenderer spriter;
+    private enum OakDrawMode { NoDraw, DrawStartSprite, DrawModel, DrawLOD }
+    private OakDrawMode drawmode;
+    private byte lodNumber = 0;
 
     public const byte MAX_STAGE = 6;
-    public const int CREATE_COST = 10, LUMBER = 100, FIRST_LIFEPOWER_TO_GROW = 10;
+    public const int CREATE_COST = 10, LUMBER = 100, FIRST_LIFEPOWER_TO_GROW = 10, SPRITER_CHILDNUMBER = 0, MODEL_CHILDNUMBER = 1;
+    private const float TREE_SPRITE_MAX_VISIBILITY = 6;
 
     static OakTree()
     {
         oaks = new List<OakTree>();
         maxLifeTransfer = 10;
         growSpeed = 0.1f;
-        decaySpeed = growSpeed / 10f;
-        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
+        decaySpeed = growSpeed / 10f;        
     }
     public static void ResetToDefaults_Static_OakTree()
     {
-        if (modelsContainer == null) modelsContainerReady = false;
+        if (blankModelsContainer == null)   modelsContainerReady = false;
         oaks.Clear();
     }
 
     // тоже можно рассовать по методам
     override protected void SetModel()
     {
-        // проверка на предыдущую модель не нужна
-        if (!modelsContainerReady)
+        // проверка на предыдущую модель не нужна        
+        if (!modelsContainerReady) // первая загрузка
         {
-            stageSprites = Resources.LoadAll<Sprite>("Textures/Plants/oakTree");
-            modelsContainer = new GameObject("oakTreesContainer");
+            startStageSprites = Resources.LoadAll<Sprite>("Textures/Plants/oakTree");
+            blankModelsContainer = new GameObject("oakTreesContainer").transform;
 
-            treeBlanks = new List<GameObject>();
-            modelsLodController = LODController.GetCurrent();
-            GameObject trunkPref = Load3DModel(4);
-            crones_stage4 = trunkPref.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh;
-            trunk_stage4 = trunkPref.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh;
-            ReturnModelToPool(trunkPref);
+            blankTrees_stage4 = new List<GameObject>();
+            blankTrees_stage5 = new List<GameObject>();
+            blankTrees_stage6 = new List<GameObject>();
 
-            trunkPref = Load3DModel(5);
-            crones_stage5 = trunkPref.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh;
-            trunk_stage5 = trunkPref.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh;
-            ReturnModelToPool(trunkPref);
+            //stage 4 model
+            GameObject model3d = LoadModel(4);
+            Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
+            Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
+            Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model3d, positions, angles, 0.25f, Color.green);
+            int size = spritesAtlas.width / 2;
 
-            trunkPref = Load3DModel(6);
-            crones_stage6 = trunkPref.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh;
-            trunk_stage6 = trunkPref.transform.GetChild(1).GetComponent<MeshFilter>().sharedMesh;
-            ReturnModelToPool(trunkPref);
+            lodPack_stage4 = new Sprite[4];
+            lodPack_stage4[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage4[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage4[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage4[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            GameObject fullModel = new GameObject("oak4");
+            fullModel.SetActive(false);
 
+            GameObject spriterCarrier = new GameObject("lodSpriter");
+            SpriteRenderer sr = spriterCarrier.AddComponent<SpriteRenderer>();
+            //сначала добавляется спрайт
+            sr.sprite = lodPack_stage4[0];
+            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            spriterCarrier.transform.parent = fullModel.transform;
+            spriterCarrier.transform.localPosition = Vector3.up * 0.211f;
+            // потом модель
+            model3d.transform.parent = fullModel.transform;
+            model3d.transform.localPosition = Vector3.zero;
+            model3d.transform.localRotation = Quaternion.identity;
+            fullModel.transform.parent = blankModelsContainer;
+            blankTrees_stage4.Add(fullModel);
+
+            // stage 5 model     
+            model3d = LoadModel(5);
+            positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
+            angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
+            spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model3d, positions, angles, 0.25f, Color.green);
+            size = spritesAtlas.width / 2;
+
+            lodPack_stage5 = new Sprite[4];
+            lodPack_stage5[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage5[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage5[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage5[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            fullModel = new GameObject("oak5");
+            fullModel.SetActive(false);
+            spriterCarrier = new GameObject("lodSpriter");
+            sr = spriterCarrier.AddComponent<SpriteRenderer>();
+            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            sr.sprite = lodPack_stage5[0];
+            spriterCarrier.transform.parent = fullModel.transform;
+            spriterCarrier.transform.localPosition = Vector3.up * 0.239f;
+            model3d.transform.parent = fullModel.transform;
+            model3d.transform.localPosition = Vector3.zero;
+            model3d.transform.localRotation = Quaternion.identity;
+            fullModel.transform.parent = blankModelsContainer;
+            blankTrees_stage5.Add(fullModel);
+
+            //stage 6 model
+            model3d = LoadModel(6);
+            positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
+            angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
+            spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model3d, positions, angles, 0.25f, Color.green);
+            size = spritesAtlas.width / 2;
+
+            lodPack_stage6 = new Sprite[4];
+            lodPack_stage6[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage6[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage6[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage6[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            fullModel = new GameObject("oak6");
+            fullModel.SetActive(false);
+            spriterCarrier = new GameObject("lodSpriter");
+            sr = spriterCarrier.AddComponent<SpriteRenderer>();
+            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            sr.sprite = lodPack_stage6[0];
+            spriterCarrier.transform.parent = fullModel.transform;
+            spriterCarrier.transform.localPosition = Vector3.up * 0.21f;
+            model3d.transform.parent = fullModel.transform;
+            model3d.transform.localPosition = Vector3.zero;
+            model3d.transform.localRotation = Quaternion.identity;
+            fullModel.transform.parent = blankModelsContainer;
+            blankTrees_stage6.Add(fullModel);
+            //
             modelsContainerReady = true;
+            FollowingCamera.main.cameraChangedEvent += CameraUpdate;
         }
-        GameObject model = null;
         if (stage > TRANSIT_STAGE)
         {
-            if (treeBlanks.Count == 0) model = Load3DModel(stage);
-            else {
-                int last = treeBlanks.Count - 1;
-                model = treeBlanks[last];
-                treeBlanks.RemoveAt(last);
-            }
-            Transform modelTransform = model.transform;
-            
-            short packIndex = -1;
             switch (stage)
             {
                 case 4:
-                    modelTransform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage4;
-                    modelTransform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage4;
-                    packIndex = oak4spritesIndex;
+                    if (blankTrees_stage4.Count > 1)
+                    {
+                        int lastIndex = blankTrees_stage4.Count - 1;
+                        modelHolder = blankTrees_stage4[lastIndex];
+                        blankTrees_stage4.RemoveAt(lastIndex);
+                        if (lastIndex > MAX_INACTIVE_BUFFERED_STAGE4)
+                        {
+                            Destroy(blankTrees_stage4[lastIndex - 1]);
+                            blankTrees_stage4.RemoveAt(lastIndex - 1);
+                        }
+                    }
+                    else modelHolder = Instantiate(blankTrees_stage4[0], Vector3.zero, Quaternion.identity, transform);
                     break;
                 case 5:
-                    modelTransform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage5;
-                    modelTransform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage5;
-                    packIndex = oak5spritesIndex;
+                    if (blankTrees_stage5.Count > 1)
+                    {
+                        int lastIndex = blankTrees_stage5.Count - 1;
+                        modelHolder = blankTrees_stage5[lastIndex];
+                        blankTrees_stage5.RemoveAt(lastIndex);
+                        if (lastIndex > MAX_INACTIVE_BUFFERED_STAGE5)
+                        {
+                            Destroy(blankTrees_stage5[lastIndex - 1]);
+                            blankTrees_stage5.RemoveAt(lastIndex - 1);
+                        }
+                    }
+                    else modelHolder = Instantiate(blankTrees_stage5[0], Vector3.zero, Quaternion.identity, transform);
                     break;
                 case 6:
-                    modelTransform.GetChild(0).GetComponent<MeshFilter>().sharedMesh = crones_stage6;
-                    modelTransform.GetChild(1).GetComponent<MeshFilter>().sharedMesh = trunk_stage6;
-                    packIndex = oak6spritesIndex;
+                    if (blankTrees_stage6.Count > 1)
+                    {
+                        int lastIndex = blankTrees_stage6.Count - 1;
+                        modelHolder = blankTrees_stage6[lastIndex];
+                        blankTrees_stage6.RemoveAt(lastIndex);
+                        if (lastIndex > MAX_INACTIVE_BUFFERED_STAGE6)
+                        {
+                            Destroy(blankTrees_stage6[lastIndex - 1]);
+                            blankTrees_stage6.RemoveAt(lastIndex - 1);
+                        }
+                    }
+                    else modelHolder = Instantiate(blankTrees_stage6[0], Vector3.zero, Quaternion.identity, transform);
                     break;
             }
-            modelsLodController.ChangeModelSpritePack(modelTransform, ModelType.Tree, packIndex);
-            model.transform.parent = transform;
-            model.transform.localPosition = Vector3.zero;
+            modelHolder.transform.parent = transform;
+            modelHolder.transform.localPosition = Vector3.zero;
+            modelHolder.transform.rotation = Quaternion.Euler(0, modelRotation * 90, 0);
+            spriter = modelHolder.transform.GetChild(SPRITER_CHILDNUMBER).GetComponent<SpriteRenderer>();
+            // # model draw mode check
+            float dist = (transform.position - FollowingCamera.camPos).magnitude;
+            if (dist < TREE_SPRITE_MAX_VISIBILITY * stage)
+            {
+                if (dist < LODController.lodDistance)
+                {
+                    modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true); // model
+                    spriter.enabled = false;  // lod sprite
+                    drawmode = OakDrawMode.DrawModel;
+                }
+                else
+                {
+                    modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false); // model                    
+                    // # setting lod (changed)
+                    drawmode = OakDrawMode.DrawLOD;
+                    byte spriteNumber = 0;
+                    float angle = Vector3.Angle(Vector3.up, FollowingCamera.camPos - transform.position);
+                    if (angle < 30)
+                    {
+                        if (angle < 10) spriteNumber = 3;
+                        else spriteNumber = 2;
+                    }
+                    else
+                    {
+                        if (angle > 80) spriteNumber = 0;
+                        else spriteNumber = 1;
+                    }
+                    switch (stage)
+                    {
+                        case 4: spriter.sprite = lodPack_stage4[spriteNumber]; break;
+                        case 5: spriter.sprite = lodPack_stage5[spriteNumber]; break;
+                        case 6: spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                    }
+                    lodNumber = spriteNumber;
+                    // eo setting lod
+                    spriter.enabled = true; // lod sprite
+                }
+            }
+            else
+            {
+                spriter.enabled = false;
+                drawmode = OakDrawMode.NoDraw;
+            }
+            modelHolder.SetActive(true);
         }
         else
         {
-            modelTransform = new GameObject("sprite").transform;
-            modelTransform.transform.parent = transform;
+            GameObject model = new GameObject("sprite");
+            Transform modelTransform = model.transform;
+            modelTransform.parent = transform;
             modelTransform.localPosition = Vector3.zero;
             //Vector3 cpos = modelTransform.InverseTransformPoint(FollowingCamera.camPos); cpos.y = 0;
             // modelTransform.LookAt(cpos);
-            SpriteRenderer sr = modelTransform.gameObject.AddComponent<SpriteRenderer>();
-            sr.sprite = stageSprites[stage];
-        }        
+            spriter = modelTransform.gameObject.AddComponent<SpriteRenderer>();
+            spriter.sprite = startStageSprites[stage];
+            spriter.enabled = ((transform.position - FollowingCamera.camPos).magnitude < TREE_SPRITE_MAX_VISIBILITY * stage);
+            drawmode = OakDrawMode.DrawStartSprite;
+        }
     }
 
-    static GameObject Load3DModel(byte stage)
+    static GameObject LoadModel(byte stage)
     {
-        GameObject loadedModel = null;
-        loadedModel = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
-        short modelSpritePack = 0;
-        switch (stage)
-        {
-            case 4:
-                if (oak4spritesIndex == -1)
-                {
-                    Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
-                    Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                    Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(loadedModel, positions, angles, 0.25f, Color.green);
-                    Sprite[] lodSprites = new Sprite[4];
-                    int size = spritesAtlas.width / 2;
-
-                    lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
-                    oak4spritesIndex = LODController.AddSpritePack(lodSprites);
-                }
-                modelSpritePack = oak4spritesIndex;
-                break;
-            case 5:
-                if (oak5spritesIndex == -1)
-                {
-                    Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
-                    Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                    Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(loadedModel, positions, angles, 0.25f, Color.green);
-                    Sprite[] lodSprites = new Sprite[4];
-                    int size = spritesAtlas.width / 2;
-
-                    lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
-                    oak5spritesIndex = LODController.AddSpritePack(lodSprites);
-                }
-                modelSpritePack = oak5spritesIndex;
-                break;
-            case 6:
-                if (oak6spritesIndex == -1)
-                {
-                    Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
-                    Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-                    Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(loadedModel, positions, angles, 0.25f, Color.green);
-                    Sprite[] lodSprites = new Sprite[4];
-                    int size = spritesAtlas.width / 2;
-
-                    lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
-                    lodSprites[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
-                    oak6spritesIndex = LODController.AddSpritePack(lodSprites);
-                }
-                modelSpritePack = oak6spritesIndex;
-                break;
-        }
-        modelsLodController.AddObject(loadedModel.transform.GetChild(2), ModelType.Tree, modelSpritePack);
-        return loadedModel;
+        return Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
     }
 
     override public void ResetToDefaults()
@@ -196,16 +274,15 @@ public class OakTree : Plant
         lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
         growth = 0;
     }
-
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
         //#setStructureData
         basement = b;
         innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.size);
-        if (transform.childCount == 0) SetModel();
+        if (spriter == null) SetModel();
         b.AddStructure(this);
-            // isbasement check deleted
+        // isbasement check deleted
         //---
         if (!addedToClassList)
         {
@@ -226,18 +303,16 @@ public class OakTree : Plant
         if (oaks.Count > 0)
         {
             int i = 0;
-            float theoreticalGrowth;          
+            float theoreticalGrowth;
             while (i < oaks.Count)
             {
                 OakTree oak = oaks[i];
                 if (oak == null)
                 {
                     oaks.RemoveAt(i);
-                    continue;
                 }
                 else
                 {
-                    oak.timer -= t;
                     theoreticalGrowth = oak.lifepower / oak.lifepowerToGrow;
                     if (oak.growth < theoreticalGrowth)
                     {
@@ -248,15 +323,11 @@ public class OakTree : Plant
                         oak.lifepower -= decaySpeed * t;
                         if (oak.lifepower <= 0) oak.Dry();
                     }
-                    if (oak.timer <= 0)
+                    if (oak.growth >= 1 & oak.stage < MAX_STAGE)
                     {
-                        if (oak.growth >= 1 & oak.stage < MAX_STAGE)
-                        {
-                            byte nextStage = oak.stage;
-                            nextStage++;
-                            oak.SetStage(nextStage);
-                        }
-                        oak.timer = oak.stage;
+                        byte nextStage = oak.stage;
+                        nextStage++;
+                        oak.SetStage(nextStage);
                     }
                     i++;
                 }
@@ -279,20 +350,100 @@ public class OakTree : Plant
         {
             int i = 0;
             Vector3 camPos = FollowingCamera.camPos;
-            Transform t = null;
+            Transform t;
             Vector3 cpos;
+            OakDrawMode newDrawMode = OakDrawMode.NoDraw;
+            float dist, lodDist = LODController.lodDistance;
             while (i < count)
             {
-                if (oaks[i] != null && oaks[i].stage <= TRANSIT_STAGE)
+                OakTree oak = oaks[i];
+                if (oak == null) { oaks.RemoveAt(i); continue; }
+                else
                 {
-                    t = oaks[i].transform.GetChild(0);
-                    if (t != null)
+                    if (!oak.visible) { i++; continue; }
+                    dist = (oak.transform.position - camPos).magnitude;
+                    if (oak.stage <= TRANSIT_STAGE)
                     {
-                        cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
-                        t.forward = cpos.normalized;
+                        if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage)
+                        {
+                            if (oak.drawmode != OakDrawMode.NoDraw)
+                            {
+                                oak.spriter.enabled = false;
+                                oak.drawmode = OakDrawMode.NoDraw;
+                            }
+                        }
+                        else
+                        {
+                            if (oak.drawmode != OakDrawMode.DrawStartSprite)
+                            {
+                                oak.drawmode = OakDrawMode.DrawStartSprite;
+                                oak.spriter.enabled = true;
+                            }
+                            t = oak.spriter.transform;
+                            cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
+                            t.forward = cpos.normalized;                            
+                        }
                     }
+                    else
+                    {                        // # change model draw mode
+
+                        if (dist > lodDist)
+                        {
+                            if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage) newDrawMode = OakDrawMode.NoDraw; else newDrawMode = OakDrawMode.DrawLOD;
+                        }
+                        else newDrawMode = OakDrawMode.DrawModel;
+                        if (newDrawMode != oak.drawmode)
+                        {
+                            if (newDrawMode == OakDrawMode.NoDraw)
+                            {
+                                oak.spriter.enabled = false;
+                                oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                            }
+                            else
+                            {
+                                if (newDrawMode == OakDrawMode.DrawModel)
+                                {
+                                    oak.spriter.enabled = false;
+                                    oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
+                                }
+                                else
+                                {
+                                    oak.spriter.enabled = true;
+                                    oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                                }
+                            }
+                            oak.drawmode = newDrawMode;
+                        }
+                        // # setting lod
+                        if (oak.drawmode == OakDrawMode.DrawLOD)
+                        {
+                            byte spriteNumber = 0;
+                            float angle = Vector3.Angle(Vector3.up, camPos - oak.transform.position);
+                            if (angle < 30)
+                            {
+                                if (angle < 10) spriteNumber = 3;
+                                else spriteNumber = 2;
+                            }
+                            else
+                            {
+                                if (angle > 80) spriteNumber = 0;
+                                else spriteNumber = 1;
+                            }
+                            if (spriteNumber != oak.lodNumber)
+                            {
+                                switch (oak.stage)
+                                {
+                                    case 4: oak.spriter.sprite = lodPack_stage4[spriteNumber]; break;
+                                    case 5: oak.spriter.sprite = lodPack_stage5[spriteNumber]; break;
+                                    case 6: oak.spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                                }
+                                oak.lodNumber = spriteNumber;
+                            }
+                        }
+                        // eo setting lod
+                    }
+                    i++;
                 }
-                i++;
             }
         }
     }
@@ -338,13 +489,20 @@ public class OakTree : Plant
     override public void SetStage(byte newStage)
     {
         if (newStage == stage) return;
-        if (transform.childCount != 0) {
+        if (transform.childCount != 0)
+        {
             if (stage > TRANSIT_STAGE) ReturnModelToPool();
-            else Destroy(transform.GetChild(0).gameObject);
+            else
+            {
+                Destroy(transform.GetChild(0).gameObject);
+                spriter = null;
+                modelHolder = null;
+            }
         }
-        stage = newStage;              
+        stage = newStage;
         SetModel();
-        transform.GetChild(0).gameObject.SetActive(visible);        
+        visible = !visible;
+        SetVisibility(!visible);
         lifepowerToGrow = GetLifepowerLevelForStage(stage);
         growth = lifepower / lifepowerToGrow;
     }
@@ -368,35 +526,37 @@ public class OakTree : Plant
     {
         if (destroyed) return;
         GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, CountLumber());
-        if (stage > TRANSIT_STAGE & transform.childCount != 0)
+        if (stage > TRANSIT_STAGE & modelHolder != null)
         {
-            Transform model = transform.GetChild(0);
-            model.transform.parent = null;
-            FallingTree ft = model.gameObject.AddComponent<FallingTree>();
+            modelHolder.transform.parent = null;
+            FallingTree ft = modelHolder.gameObject.AddComponent<FallingTree>();
+            ft.SetModelStage(stage);
             ft.returnFunction = ReturnModelToPool;
+            modelHolder = null;
+            spriter = null;
         }
         Annihilate(false);
     }
 
     override public void Dry()
     {
-        if (stage > 3)
+        if (stage > TRANSIT_STAGE)
         {
-            GameObject pref = Load3DModel(stage);
+            GameObject pref = LoadModel(stage);
             GameObject model3d = Instantiate(pref);
-            ReturnModelToPool(pref);
-            Transform t = model3d.transform.GetChild(1);            
+            ReturnModelToPool(pref, stage);
+            Transform t = model3d.transform.GetChild(1);
             HarvestableResource hr = new GameObject("dead oak tree").AddComponent<HarvestableResource>();
             t.parent = hr.transform;
             t.gameObject.SetActive(true);
             Destroy(model3d);
             t.localPosition = Vector3.zero;
-            
+
             MeshFilter mf = t.GetComponent<MeshFilter>();
             t.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mf, basement.illumination);
-            
+
             hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber()), false, innerPosition.size, model3d);
-            hr.SetModelRotation( modelRotation );
+            hr.SetModelRotation(modelRotation);
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
             // спрайтовый LOD?
         }
@@ -424,13 +584,60 @@ public class OakTree : Plant
         else
         {
             visible = x;
-            if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(visible);
+            if (modelHolder != null)
+            {
+                // # change model draw mode (changed)
+                float dist = (transform.position - FollowingCamera.camPos).magnitude;
+                if (dist > LODController.lodDistance)
+                {
+                    if (dist > TREE_SPRITE_MAX_VISIBILITY * stage)
+                    {
+                        drawmode = OakDrawMode.NoDraw;
+                        spriter.enabled = false;
+                        modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        drawmode = OakDrawMode.DrawLOD;
+                        spriter.enabled = true;
+                        modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                        // # setting lod(changed)
+                        byte spriteNumber = 0;
+                        float angle = Vector3.Angle(Vector3.up, FollowingCamera.camPos - transform.position);
+                        if (angle < 30)
+                        {
+                            if (angle < 10) spriteNumber = 3;
+                            else spriteNumber = 2;
+                        }
+                        else
+                        {
+                            if (angle > 80) spriteNumber = 0;
+                            else spriteNumber = 1;
+                        }
+                        switch (stage)
+                        {
+                            case 4: spriter.sprite = lodPack_stage4[spriteNumber]; break;
+                            case 5: spriter.sprite = lodPack_stage5[spriteNumber]; break;
+                            case 6: spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                        }
+                        lodNumber = spriteNumber;
+                        // eo setting lod
+                    }
+                }
+                else
+                {
+                    drawmode = OakDrawMode.DrawModel;
+                    spriter.enabled = false;
+                    modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
+                }
+            }
+            else spriter.enabled = visible;
         }
     }
 
     override public void Annihilate(bool forced)
     {
-        if (destroyed) return;
+        if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
         if (forced) { UnsetBasement(); }
         else
@@ -443,32 +650,51 @@ public class OakTree : Plant
         }
         if (addedToClassList)
         {
-            int index = oaks.IndexOf(this);
-            if (index > 0) oaks[index] = null;
+            if (oaks.Count > 0)
+            {
+                int index = GetInstanceID();
+                for (int i = 0; i < oaks.Count; i++)
+                {
+                    if (oaks[i].GetInstanceID() == index)
+                    {
+                        oaks.RemoveAt(i);
+                        break;
+                    }
+                } 
+            }           
             addedToClassList = false;
         }
         basement = null;
-        if (transform.childCount != 0)
-        {
-            if (stage > TRANSIT_STAGE & modelTransform == null) ReturnModelToPool();
-        }
+        ReturnModelToPool();
         Destroy(gameObject);
     }
 
-   private void ReturnModelToPool()
+    private void ReturnModelToPool()
     {
-        if (transform.childCount > 0) ReturnModelToPool( transform.GetChild(0).gameObject ); 
-    }
-    static void ReturnModelToPool(GameObject model)
-    {
-        // проверка на соответствие модели?
-        model.transform.parent = modelsContainer.transform;
-        treeBlanks.Add(model);
-        model.SetActive(false);
-        foreach (GameObject g in treeBlanks)
+        if (stage <= TRANSIT_STAGE | modelHolder == null) return;
+        modelHolder.transform.parent = blankModelsContainer;
+        modelHolder.gameObject.SetActive(false);
+        switch (stage)
         {
-            if (g == null) print("empty blank");
+            case 4: blankTrees_stage4.Add(modelHolder); break;
+            case 5: blankTrees_stage5.Add(modelHolder); break;
+            case 6: blankTrees_stage6.Add(modelHolder); break;
         }
+        modelHolder = null;
+        spriter = null;
+        drawmode = OakDrawMode.NoDraw;
+    }
+    public static void ReturnModelToPool(GameObject model, byte stage)
+    {
+        switch (stage)
+        {
+            case 4: blankTrees_stage4.Add(model); break;
+            case 5: blankTrees_stage5.Add(model); break;
+            case 6: blankTrees_stage6.Add(model); break;
+            default: Destroy(model); return;
+        }
+        model.SetActive(false);
+        model.transform.parent = blankModelsContainer;
     }
 }
 

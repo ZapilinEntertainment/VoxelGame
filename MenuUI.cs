@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using System.IO;
 
 
@@ -45,7 +44,7 @@ public sealed class MenuUI : MonoBehaviour
         if (newGameGenMode == ChunkGenerationMode.TerrainLoading & GameMaster.savename == string.Empty) return;
         GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value, roughnessSlider.value);
         GameMaster.gameStartSettings = gss;
-        SceneManager.LoadScene(SaveSystemUI.GAME_LEVEL_NUMBER);
+        GameMaster.ChangeScene(GameLevel.Playable);
     }
     public void NGPanelButton()
     {
@@ -89,7 +88,7 @@ public sealed class MenuUI : MonoBehaviour
     }
     public void EditorButton()
     {
-        SceneManager.LoadScene(SaveSystemUI.EDITOR_LEVEL_NUMBER);
+        GameMaster.ChangeScene(GameLevel.Editor);
     }
     public void ExitButton()
     {

@@ -24,7 +24,7 @@ public class Flag : MonoBehaviour {
 
     private void OnDestroy()
     {
-        if (GameMaster.applicationStopWorking) return;
+        if (GameMaster.sceneClearing) return;
         FollowingCamera.main.cameraChangedEvent -= CameraUpdate;
     }
 }

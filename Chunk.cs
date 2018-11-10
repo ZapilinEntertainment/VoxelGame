@@ -23,15 +23,21 @@ public sealed class ChunkSerializer
     public List<BlockSerializer> blocksData;
     public float lifepower;
     public byte chunkSize;
+    public List<RoofSerializer> roofsData;
 }
 
-sealed class Roof
+sealed class Roof : MonoBehaviour
 {
-    public GameObject model;
     public bool peak = false, artificial = false;
 }
+[System.Serializable]
+public sealed class RoofSerializer
+{
+    public bool peak, artificial;
+    public byte modelNumber, rotation, posx, posz;
+}
 
-public enum ChunkGenerationMode { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate}
+public enum ChunkGenerationMode { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate }
 
 public sealed class Chunk : MonoBehaviour
 {
@@ -39,9 +45,9 @@ public sealed class Chunk : MonoBehaviour
     public List<SurfaceBlock> surfaceBlocks { get; private set; }
     public byte prevBitmask = 63;
     public float lifePower = 0;
-    public static byte CHUNK_SIZE { get; private set; }  
+    public static byte CHUNK_SIZE { get; private set; }
     //private bool allGrasslandsCreated = false;
-    public byte[,,] lightMap { get; private set; }    
+    public byte[,,] lightMap { get; private set; }
     public int MAX_BLOCKS_COUNT = 100;
     public delegate void ChunkUpdateHandler(ChunkPos pos);
     public event ChunkUpdateHandler ChunkUpdateEvent;
@@ -50,11 +56,13 @@ public sealed class Chunk : MonoBehaviour
     private Roof[,] roofs;
     private GameObject roofObjectsHolder;
 
+    public const float SUPPORT_POINTS_ENOUGH_FOR_HANGING = 2;
+
     private void Prepare()
     {
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         surfaceBlocks = new List<SurfaceBlock>();
-        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];       
+        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         roofs = new Roof[CHUNK_SIZE, CHUNK_SIZE];
         if (roofObjectsHolder == null)
         {
@@ -68,7 +76,7 @@ public sealed class Chunk : MonoBehaviour
     }
 
     public void Awake()
-    {        
+    {
         FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
 
@@ -80,34 +88,34 @@ public sealed class Chunk : MonoBehaviour
 
     public void LifepowerUpdate()
     {
-       if (surfaceBlocks.Count > 0)
+        if (surfaceBlocks.Count > 0)
+        {
+            float grasslandLifepowerChanges = 0;
+            if (lifePower > 100)
             {
-                float grasslandLifepowerChanges = 0;
-                if (lifePower > 100)
+                // создание новых и снабжение существующих
+                List<SurfaceBlock> dirt_for_grassland = new List<SurfaceBlock>();
+                foreach (SurfaceBlock sb in surfaceBlocks)
                 {
-                    // создание новых и снабжение существующих
-                    List<SurfaceBlock> dirt_for_grassland = new List<SurfaceBlock>();
-                    foreach (SurfaceBlock sb in surfaceBlocks)
-                    {
-                        if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null) dirt_for_grassland.Add(sb);
-                    }
-                    if (dirt_for_grassland.Count > 0)
-                    {
-                        int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
-                        SurfaceBlock sb = dirt_for_grassland[pos];
-                        Grassland gl = Grassland.CreateOn(sb);
-                        int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
-                        if (lifePower > lifeTransfer) { gl.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
-                        else { gl.AddLifepower((int)lifePower); lifePower = 0; }
-                    }
-                    grasslandLifepowerChanges = lifePower * 0.75f;
+                    if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null) dirt_for_grassland.Add(sb);
                 }
-                if (lifePower < -100)
-                { // выкачивание жизненной силы обратно
-                    grasslandLifepowerChanges = lifePower / 2f;
+                if (dirt_for_grassland.Count > 0)
+                {
+                    int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
+                    SurfaceBlock sb = dirt_for_grassland[pos];
+                    Grassland gl = Grassland.CreateOn(sb);
+                    int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
+                    if (lifePower > lifeTransfer) { gl.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
+                    else { gl.AddLifepower((int)lifePower); lifePower = 0; }
                 }
-                lifePower = Grassland.GrasslandUpdate(grasslandLifepowerChanges);
+                grasslandLifepowerChanges = lifePower * 0.75f;
             }
+            if (lifePower < -100)
+            { // выкачивание жизненной силы обратно
+                grasslandLifepowerChanges = lifePower / 2f;
+            }
+            lifePower = Grassland.GrasslandUpdate(grasslandLifepowerChanges);
+        }
     }
 
     IEnumerator CullingUpdate() // фпс увеличивается, когда идет апдейт. То есть все-таки выделяет корутины в отдельный поток?
@@ -176,7 +184,7 @@ public sealed class Chunk : MonoBehaviour
             {
                 if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 2;
             }
-            bx = GetBlock(x , y, z - 1);
+            bx = GetBlock(x, y, z - 1);
             if (bx != null)
             {
                 if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 4;
@@ -187,11 +195,11 @@ public sealed class Chunk : MonoBehaviour
                 if (bx.type == BlockType.Cube & !bx.isTransparent) vmask -= 8;
             }
             // up and down
-            bx = GetBlock(x , y + 1, z);
+            bx = GetBlock(x, y + 1, z);
             if ((bx == null || bx.isTransparent) & y != CHUNK_SIZE - 1) vmask += 16;
 
             bx = GetBlock(x, y - 1, z);
-            if (bx == null ) vmask += 32;
+            if (bx == null) vmask += 32;
             else
             {
                 if (bx.type == BlockType.Surface)
@@ -215,7 +223,7 @@ public sealed class Chunk : MonoBehaviour
         b = GetBlock(x - 1, y, z); if (b != null) b.ChangeVisibilityMask(1, ((mask & 8) != 0));
         b = GetBlock(x, y + 1, z); if (b != null) b.ChangeVisibilityMask(5, ((mask & 16) != 0));
         b = GetBlock(x, y - 1, z); if (b != null) b.ChangeVisibilityMask(4, ((mask & 32) != 0));
-        if (ChunkUpdateEvent != null) ChunkUpdateEvent(new ChunkPos(x,y,z));
+        if (ChunkUpdateEvent != null) ChunkUpdateEvent(new ChunkPos(x, y, z));
     }
 
     public void ChunkLightmapFullRecalculation()
@@ -234,18 +242,19 @@ public sealed class Chunk : MonoBehaviour
         }
         // проход снизу
         Block b = null;
-        x = 0; y = 0;z = 0;
-       for (x = 0; x < CHUNK_SIZE; x++)
+        x = 0; y = 0; z = 0;
+        for (x = 0; x < CHUNK_SIZE; x++)
         {
             for (z = 0; z < CHUNK_SIZE; z++)
             {
                 for (y = 0; y < CHUNK_SIZE; y++)
                 {
                     b = blocks[x, y, z];
-                    if (b == null) lightMap[x, y, z] = DOWN_LIGHT ;
+                    if (b == null) lightMap[x, y, z] = DOWN_LIGHT;
                     else
                     {
-                        if (b.type == BlockType.Cave) {
+                        if (b.type == BlockType.Cave)
+                        {
                             if (!(b as CaveBlock).haveSurface)
                             {
                                 lightMap[x, y, z] = DOWN_LIGHT;
@@ -253,9 +262,10 @@ public sealed class Chunk : MonoBehaviour
                             }
                             else break;
                         }
-                        else {
+                        else
+                        {
                             if (b.type == BlockType.Shapeless) { lightMap[x, y, z] = DOWN_LIGHT; }
-                            else  break; 
+                            else break;
                         }
                     }
                 }
@@ -289,7 +299,7 @@ public sealed class Chunk : MonoBehaviour
         {
             for (y = 0; y < CHUNK_SIZE; y++)
             {
-                decreasedVal = (byte)(lightMap[x,y,CHUNK_SIZE - 1] * LIGHT_DECREASE_PER_BLOCK);
+                decreasedVal = (byte)(lightMap[x, y, CHUNK_SIZE - 1] * LIGHT_DECREASE_PER_BLOCK);
                 for (z = CHUNK_SIZE - 2; z >= 0; z--)
                 {
                     if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
@@ -315,7 +325,7 @@ public sealed class Chunk : MonoBehaviour
         {
             for (y = 0; y < CHUNK_SIZE; y++)
             {
-                decreasedVal = (byte)(lightMap[CHUNK_SIZE - 1, y,z] * LIGHT_DECREASE_PER_BLOCK);
+                decreasedVal = (byte)(lightMap[CHUNK_SIZE - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
                 for (x = CHUNK_SIZE - 2; x >= 0; x--)
                 {
                     b = blocks[x, y, z];
@@ -343,7 +353,7 @@ public sealed class Chunk : MonoBehaviour
         {
             for (y = 0; y < CHUNK_SIZE; y++)
             {
-                decreasedVal = (byte)(lightMap[0,y,z] * LIGHT_DECREASE_PER_BLOCK);
+                decreasedVal = (byte)(lightMap[0, y, z] * LIGHT_DECREASE_PER_BLOCK);
                 for (x = 1; x < CHUNK_SIZE; x++)
                 {
                     if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
@@ -376,7 +386,7 @@ public sealed class Chunk : MonoBehaviour
         CHUNK_SIZE = (byte)size;
         if (blocks != null) ClearChunk();
         Prepare();
-                
+
         for (int x = 0; x < size; x++)
         {
             for (int z = 0; z < size; z++)
@@ -384,7 +394,8 @@ public sealed class Chunk : MonoBehaviour
                 bool noBlockAbove = false;
                 for (int y = size - 1; y >= 0; y--)
                 {
-                    if (newData[x, y, z] == 0) {
+                    if (newData[x, y, z] == 0)
+                    {
                         noBlockAbove = true;
                         continue;
                     }
@@ -393,7 +404,8 @@ public sealed class Chunk : MonoBehaviour
                         CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
                         blocks[x, y, z] = cb;
                         cb.InitializeCubeBlock(this, new ChunkPos(x, y, z), newData[x, y, z], true);
-                        if (noBlockAbove) {
+                        if (noBlockAbove)
+                        {
                             if (y < size - 2 && newData[x, y + 2, z] != 0)
                             {
                                 CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
@@ -423,16 +435,16 @@ public sealed class Chunk : MonoBehaviour
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
                 int y = CHUNK_SIZE - 1;
-                    for (; y > GameMaster.layerCutHeight; y--)
-                    {
-                        if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(0);
-                    }
+                for (; y > GameMaster.layerCutHeight; y--)
+                {
+                    if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(0);
+                }
                 for (; y > -1; y--)
                 {
                     if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
                 }
             }
-        }        
+        }
         FollowingCamera.main.WeNeedUpdate();
     }
 
@@ -441,7 +453,7 @@ public sealed class Chunk : MonoBehaviour
     {
         if (x < 0 | x > CHUNK_SIZE - 1 | y < 0 | y > CHUNK_SIZE - 1 | z < 0 | z > CHUNK_SIZE - 1) return null;
         else { return blocks[x, y, z]; }
-    }  
+    }
 
     public Block AddBlock(ChunkPos f_pos, BlockType f_type, int material1_id, bool naturalGeneration)
     {
@@ -452,7 +464,26 @@ public sealed class Chunk : MonoBehaviour
         // никаких условий - так как загружает сохранения
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
-        if (GetBlock(x, y, z) != null) return ReplaceBlock(f_pos, f_type, i_floorMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+        Block prv = GetBlock(x, y, z);
+        if (prv != null)
+        {
+            if (prv.type != f_type) return ReplaceBlock(f_pos, f_type, i_floorMaterialID, i_ceilingMaterialID, i_naturalGeneration);
+            else
+            {
+                if (prv.type != BlockType.Cave | i_floorMaterialID == i_ceilingMaterialID)
+                {
+                    prv.ReplaceMaterial(i_floorMaterialID);
+                    return prv;
+                }
+                else
+                {
+                    CaveBlock cvb = prv as CaveBlock;
+                    if (cvb.material_id != i_floorMaterialID) cvb.ReplaceSurfaceMaterial(i_floorMaterialID);
+                    if (cvb.ceilingMaterial != i_ceilingMaterialID) cvb.ReplaceCeilingMaterial(i_ceilingMaterialID);
+                    return cvb;
+                }
+            }
+        }
         CubeBlock cb = null;
         Block b = null;
         byte visMask = GetVisibilityMask(x, y, z), influenceMask = 63; // видимость объекта, видимость стенок соседних объектов
@@ -477,18 +508,18 @@ public sealed class Chunk : MonoBehaviour
                 {
                     b = new GameObject().AddComponent<Block>();
                     blocks[x, y, z] = b;
-                    b.InitializeBlock(this, f_pos, i_floorMaterialID);                    
+                    b.InitializeBlock(this, f_pos, i_floorMaterialID);
 
                     //#shapeless light recalculation
                     byte light = lightMap[x, y, z];
                     if (light != 255)
                     {
                         if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
                         if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
                         if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
                         if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
-                        if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
                     }
                     if (light != lightMap[x, y, z])
                     {
@@ -506,7 +537,7 @@ public sealed class Chunk : MonoBehaviour
                         return null;
                     }
                     influenceMask = 31;
-                    
+
                     SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
                     sb.InitializeSurfaceBlock(this, f_pos, i_floorMaterialID);
                     blocks[x, y, z] = sb;
@@ -519,7 +550,7 @@ public sealed class Chunk : MonoBehaviour
                         if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
                         if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
                         if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
                         if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
                     }
                     if (light != lightMap[x, y, z])
@@ -532,9 +563,6 @@ public sealed class Chunk : MonoBehaviour
                 }
             case BlockType.Cave:
                 {
-                    float spoints = CalculateSupportPoints(x, y, z);
-                    if (spoints < 1) goto case BlockType.Surface;
-
                     Block lowerBlock = blocks[x, y - 1, z];
                     if (lowerBlock == null) i_floorMaterialID = -1;
                     CaveBlock caveb = new GameObject().AddComponent<CaveBlock>();
@@ -551,8 +579,8 @@ public sealed class Chunk : MonoBehaviour
                         if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
                         if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
                         if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z ] * LIGHT_DECREASE_PER_BLOCK);
-                        if (!caveb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z ] * LIGHT_DECREASE_PER_BLOCK);
+                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                        if (!caveb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
                     }
                     if (light != lightMap[x, y, z])
                     {
@@ -565,7 +593,7 @@ public sealed class Chunk : MonoBehaviour
         }
         b = blocks[x, y, z];
         b.SetVisibilityMask(visMask);
-        b.SetRenderBitmask(prevBitmask);        
+        b.SetRenderBitmask(prevBitmask);
         if (calculateUpperBlock)
         {
             if (GetBlock(x, y + 1, z) == null)
@@ -722,7 +750,7 @@ public sealed class Chunk : MonoBehaviour
                     // eo cave light recalculation
                 }
                 break;
-        }        
+        }
         blocks[x, y, z].MakeIndestructible(originalBlock.indestructible);
         originalBlock.Annihilate();
         originalBlock = null;
@@ -738,7 +766,7 @@ public sealed class Chunk : MonoBehaviour
                 else SetRoof(x, z, naturalGeneration);
             }
         }
-        
+
         return b;
     }
 
@@ -771,6 +799,10 @@ public sealed class Chunk : MonoBehaviour
         blocks[x, y, z].InitializeShapelessBlock(this, new ChunkPos(x, y, z), s);
     }
 
+    /// <summary>
+    /// занимается только удалением и побочными эффектами, никакого добавления-замещения
+    /// </summary>
+    /// <param name="pos"></param>
     public void DeleteBlock(ChunkPos pos)
     {
         // в сиквеле стоит пересмотреть всю иерархию классов ><
@@ -778,81 +810,83 @@ public sealed class Chunk : MonoBehaviour
         Block b = GetBlock(pos);
         if (b == null || b.indestructible == true) return;
         int x = pos.x, y = pos.y, z = pos.z;
-        bool neighboursSupportCalculation = (b.type == BlockType.Cube | b.type == BlockType.Cave) , makeSurface = false;
-        if (b.type == BlockType.Cube)
-                {
-                    Block upperBlock = GetBlock(x, y + 1, z);
-                    if (upperBlock != null)
-                    {
-                        if (upperBlock.type == BlockType.Surface) DeleteBlock(new ChunkPos(x, y + 1, z));
-                        else
-                        {
-                            if (upperBlock.type == BlockType.Cave) (upperBlock as CaveBlock).DestroySurface();
-                        }
-                    }
-                    else
-                    {
-                        if (y == CHUNK_SIZE - 1) DeleteRoof(x, z);
-                        Block lowerBlock = GetBlock(x, y - 1, z);
-                        if (lowerBlock != null)
-                        {
-                            SurfaceBlock surf = lowerBlock as SurfaceBlock;
-                            if (surf != null)
-                            {
-                                if (surf.cellsStatus != 0)
-                                {
-                                    foreach (Structure s in surf.surfaceObjects)
-                                    {
-                                        if (s == null) continue;
-                                        if (s.isBasement)
-                                        {
-                                            makeSurface = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (surf.type == BlockType.Cave) makeSurface = true;
-                            }
-                            else
-                            {
-                                if (lowerBlock.type == BlockType.Cube) makeSurface = true;
-                            }
-                        }
-                    }
-                }
 
+        bool neighboursInfluence = false, upperBlockInfluence = false, lowerBlockInfluence = false;
+        switch (b.type)
+        {
+            case BlockType.Cube:
+                upperBlockInfluence = true;
+                lowerBlockInfluence = true;
+                neighboursInfluence = true;
+                break;
+            case BlockType.Surface:
+                if ((b as SurfaceBlock).haveSupportingStructure) {
+                    upperBlockInfluence = true;
+                    neighboursInfluence = true;
+                }
+                lowerBlockInfluence = true;
+                break;
+            case BlockType.Cave:
+                neighboursInfluence = true;
+                upperBlockInfluence = true;
+                if ((b as CaveBlock).haveSurface) lowerBlockInfluence = true;
+                break;
+        }
         blocks[x, y, z].Annihilate();
         blocks[x, y, z] = null;
         ApplyVisibleInfluenceMask(x, y, z, 63);
 
-        if (neighboursSupportCalculation)
+        if (neighboursInfluence)
         {
             Block sideBlock = GetBlock(x, y, z + 1);
             if (sideBlock != null && sideBlock.type == BlockType.Cave)
             {
-                float supportPoints = CalculateSupportPoints(sideBlock.pos.x, sideBlock.pos.y, sideBlock.pos.z);
-                if (supportPoints < 1) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
+                float supportPoints = CalculateSupportPoints(sideBlock.pos.x, sideBlock.pos.y, sideBlock.pos.z + 1);
+                if (supportPoints < SUPPORT_POINTS_ENOUGH_FOR_HANGING) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
             }
             sideBlock = GetBlock(x + 1, y, z);
             if (sideBlock != null && sideBlock.type == BlockType.Cave)
             {
-                float supportPoints = CalculateSupportPoints(sideBlock.pos.x, sideBlock.pos.y, sideBlock.pos.z);
-                if (supportPoints < 1) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
+                float supportPoints = CalculateSupportPoints(sideBlock.pos.x + 1, sideBlock.pos.y, sideBlock.pos.z);
+                if (supportPoints < SUPPORT_POINTS_ENOUGH_FOR_HANGING) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
             }
             sideBlock = GetBlock(x, y, z - 1);
             if (sideBlock != null && sideBlock.type == BlockType.Cave)
             {
-                float supportPoints = CalculateSupportPoints(sideBlock.pos.x, sideBlock.pos.y, sideBlock.pos.z);
-                if (supportPoints < 1) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
+                float supportPoints = CalculateSupportPoints(sideBlock.pos.x, sideBlock.pos.y, sideBlock.pos.z - 1);
+                if (supportPoints < SUPPORT_POINTS_ENOUGH_FOR_HANGING) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
             }
             sideBlock = GetBlock(x - 1, y, z);
             if (sideBlock != null && sideBlock.type == BlockType.Cave)
             {
-                float supportPoints = CalculateSupportPoints(sideBlock.pos.x, sideBlock.pos.y, sideBlock.pos.z);
-                if (supportPoints < 1) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
+                float supportPoints = CalculateSupportPoints(sideBlock.pos.x - 1, sideBlock.pos.y, sideBlock.pos.z);
+                if (supportPoints < SUPPORT_POINTS_ENOUGH_FOR_HANGING) ReplaceBlock(sideBlock.pos, BlockType.Surface, sideBlock.material_id, false);
             }
         }
-        if (makeSurface) AddBlock(pos, BlockType.Surface, b.material_id, false);
+        if (upperBlockInfluence)
+        {
+            Block upperBlock = GetBlock(x, y + 1, z);
+            if (upperBlock != null)
+            {
+                if (upperBlock.type == BlockType.Surface) DeleteBlock(upperBlock.pos);
+                else
+                {
+                    CaveBlock cb = upperBlock as CaveBlock;
+                    if (cb != null)
+                    {
+                        if (cb.haveSurface) cb.DestroySurface();
+                    }
+                }
+            }
+        }
+        if (lowerBlockInfluence)
+        {
+            CaveBlock lowerBlock = GetBlock(x, y - 1, z) as CaveBlock;
+            if (lowerBlock != null && !lowerBlock.haveSurface)
+            {
+                DeleteBlock(lowerBlock.pos);
+            }
+        }
         ChunkLightmapFullRecalculation();
     }
     public void ClearChunk()
@@ -1024,21 +1058,21 @@ public sealed class Chunk : MonoBehaviour
     {
         float lifepowerPerBlock = GameMaster.LIFEPOWER_PER_BLOCK;
         int dirtID = ResourceType.DIRT_ID;
-       foreach (SurfaceBlock sb in surfaceBlocks)
+        foreach (SurfaceBlock sb in surfaceBlocks)
         {
             if (sb.material_id == dirtID)
             {
-                Grassland gl = Grassland.CreateOn(sb);                
+                Grassland gl = Grassland.CreateOn(sb);
                 if (gl != null)
                 {
-                    float lval = lifepowerPerBlock * (( 1 -(sb.transform.position - lifeSourcePos).magnitude / CHUNK_SIZE) * 0.5f + 0.5f);
+                    float lval = lifepowerPerBlock * ((1 - (sb.transform.position - lifeSourcePos).magnitude / CHUNK_SIZE) * 0.5f + 0.5f);
                     gl.AddLifepowerAndCalculate((int)lval);
                 }
             }
         }
-    }   
+    }
 
-    public void AddLifePower(int count) { lifePower += count;  }
+    public void AddLifePower(int count) { lifePower += count; }
     public int TakeLifePower(int count)
     {
         if (count < 0) return 0;
@@ -1081,15 +1115,16 @@ public sealed class Chunk : MonoBehaviour
     public void SetRoof(int x, int z, bool artificial)
     {
         bool canBePeak = false;
-        if (roofs[x,z] != null)
+        Roof r;
+        if (roofs[x, z] != null)
         {
-            Roof r = roofs[x, z];
+            r = roofs[x, z];
             if (artificial)
             {
                 if (r.artificial) return;
                 else
                 {
-                    Destroy(r.model);
+                    Destroy(r);
                     // #creating_new_model
                     { // peaks checking
                         Roof n = null;
@@ -1133,7 +1168,7 @@ public sealed class Chunk : MonoBehaviour
                                 n = roofs[x, z - 1]; if (n != null && n.peak) peaksAround++;
                             }
                         }
-                        canBePeak = (peaksAround == 0);
+                        canBePeak = (peaksAround == 0) & (Random.value > 0.4f);
                     }
 
                     GameObject newModel = PoolMaster.GetRooftop(canBePeak, true);
@@ -1151,9 +1186,10 @@ public sealed class Chunk : MonoBehaviour
                         else t = 0;
                     }
                     newModel.transform.localRotation = Quaternion.Euler(0, t * 90, 0);
-                    r.model = newModel;
-                    r.artificial = true;
+                    r = newModel.AddComponent<Roof>();
+                    r.artificial = artificial;
                     r.peak = canBePeak;
+                    roofs[x, z] = r;
                 }
             }
             else
@@ -1164,7 +1200,7 @@ public sealed class Chunk : MonoBehaviour
                 }
                 else
                 {
-                    Destroy(r.model);
+                    Destroy(r);
                     // #creating_new_model
                     { // peaks checking
                         Roof n = null;
@@ -1208,7 +1244,7 @@ public sealed class Chunk : MonoBehaviour
                                 n = roofs[x, z - 1]; if (n != null && n.peak) peaksAround++;
                             }
                         }
-                        canBePeak = (peaksAround == 0);
+                        canBePeak = (peaksAround == 0) & (Random.value > 0.4f);
                     }
                     GameObject newModel = PoolMaster.GetRooftop(canBePeak, false);
                     newModel.transform.parent = roofObjectsHolder.transform;
@@ -1225,15 +1261,15 @@ public sealed class Chunk : MonoBehaviour
                         else t = 0;
                     }
                     newModel.transform.localRotation = Quaternion.Euler(0, t * 90, 0);
-                    r.model = newModel;
-                    r.artificial = true;
+                    r = newModel.AddComponent<Roof>();
+                    r.artificial = artificial;
                     r.peak = canBePeak;
+                    roofs[x, z] = r;
                 }
             }
         }
         else
         {
-            Roof r = new Roof();            
             // #creating_new_model
             { // peaks checking
                 Roof n = null;
@@ -1277,7 +1313,7 @@ public sealed class Chunk : MonoBehaviour
                         n = roofs[x, z - 1]; if (n != null && n.peak) peaksAround++;
                     }
                 }
-                canBePeak = (peaksAround == 0);
+                canBePeak = (peaksAround == 0) & (Random.value > 0.4f);
             }
             GameObject newModel = PoolMaster.GetRooftop(canBePeak, artificial);
             newModel.transform.parent = roofObjectsHolder.transform;
@@ -1294,16 +1330,18 @@ public sealed class Chunk : MonoBehaviour
                 else t = 0;
             }
             newModel.transform.localRotation = Quaternion.Euler(0, t * 90, 0);
-            r.model = newModel;
-            r.artificial = true;
+            r = newModel.AddComponent<Roof>();
+            r.artificial = artificial;
             r.peak = canBePeak;
-            //
             roofs[x, z] = r;
         }
     }
     public void DeleteRoof(int x, int z)
     {
-        if (roofs[x, z] != null) Destroy(roofs[x, z].model.transform.parent.gameObject);
+        if (roofs[x, z] != null)
+        {
+            Destroy(roofs[x, z].gameObject);
+        }
     }
 
     /// <summary>
@@ -1313,7 +1351,7 @@ public sealed class Chunk : MonoBehaviour
     {
         int xStart = xpos; int xEnd = xStart + width;
         if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
-        int yStart = ypos; int yEnd = yStart + width ;
+        int yStart = ypos; int yEnd = yStart + width;
         if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
         if (xyAxis)
         {
@@ -1600,7 +1638,7 @@ public sealed class Chunk : MonoBehaviour
         }
         return true;
     }
-    public void ClearBlocksList( List<Block> list, bool clearMainStructureField)
+    public void ClearBlocksList(List<Block> list, bool clearMainStructureField)
     {
         foreach (Block b in list)
         {
@@ -1630,6 +1668,27 @@ public sealed class Chunk : MonoBehaviour
         }
         cs.chunkSize = CHUNK_SIZE;
         cs.lifepower = lifePower;
+        List<RoofSerializer> rsl = new List<RoofSerializer>();
+        for (byte i = 0; i < CHUNK_SIZE; i++)
+        {
+            for (byte j = 0; j < CHUNK_SIZE; j++)
+            {
+                if (roofs[i, j] == null) continue;
+                else
+                {
+                    RoofSerializer rs = new RoofSerializer();
+                    rs.posx = i;
+                    rs.posz = j;
+                    Roof r = roofs[i, j];
+                    rs.artificial = r.artificial;
+                    rs.peak = r.peak;
+                    rs.rotation = (byte)(r.transform.rotation.eulerAngles.y / 90);
+                    rs.modelNumber = byte.Parse(r.name[2].ToString());
+                    rsl.Add(rs);
+                }
+            }
+        }
+        cs.roofsData = rsl;
         return cs;
     }
 
@@ -1638,7 +1697,7 @@ public sealed class Chunk : MonoBehaviour
         if (cs == null) print("chunk serialization failed!");
         if (blocks != null) ClearChunk();
 
-        CHUNK_SIZE = cs.chunkSize;        
+        CHUNK_SIZE = cs.chunkSize;
         Prepare();
 
         foreach (BlockSerializer bs in cs.blocksData)
@@ -1647,6 +1706,22 @@ public sealed class Chunk : MonoBehaviour
             b.Load(bs);
         }
         lifePower = cs.lifepower;
+
+        List<RoofSerializer> rsl = cs.roofsData;
+        foreach (Roof r in roofs) { if (r != null) Destroy(r.gameObject); }
+        if (rsl.Count > 0)
+        {
+            foreach (RoofSerializer rs in rsl)
+            {
+                Roof r = PoolMaster.GetRooftop(rs.peak, rs.artificial, rs.modelNumber).AddComponent<Roof>();
+                r.peak = rs.peak;
+                r.artificial = rs.artificial;
+                r.transform.parent = roofObjectsHolder.transform;
+                r.transform.localPosition = new Vector3(rs.posx * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, rs.posz * Block.QUAD_SIZE);
+                r.transform.localRotation = Quaternion.Euler(0, rs.rotation * 90, 0);
+                roofs[rs.posx, rs.posz] = r;
+            }
+        }
     }
     #endregion
 
@@ -1657,11 +1732,11 @@ public sealed class Chunk : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (GameMaster.applicationStopWorking) return;
+        if (GameMaster.sceneClearing) return;
         //foreach (Block b in blocks)
         //{
         //    if (b != null) b.Annihilate();
-       // }
+        // }
         //surfaceBlocks.Clear();
         FollowingCamera.main.cameraChangedEvent -= CameraUpdate;
     }

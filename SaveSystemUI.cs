@@ -18,8 +18,7 @@ public class SaveSystemUI : MonoBehaviour
 #pragma warning restore 0649
     private int lastSelectedIndex = -1;
 
-    public const string SAVE_FNAME_EXTENSION = "sav", TERRAIN_FNAME_EXTENSION = "itd"; // island terrain data
-    public const int GAME_LEVEL_NUMBER = 1, EDITOR_LEVEL_NUMBER = 2;
+    public const string SAVE_FNAME_EXTENSION = "sav", TERRAIN_FNAME_EXTENSION = "itd"; // island terrain data    
 
     public static void Check(Transform canvas)
     {
@@ -233,7 +232,7 @@ public class SaveSystemUI : MonoBehaviour
                         GameMaster.SetSavename(saveNames[lastSelectedIndex]);
                         GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.TerrainLoading);
                         GameMaster.gameStartSettings = gss;
-                        SceneManager.LoadScene(EDITOR_LEVEL_NUMBER);
+                        GameMaster.ChangeScene(GameLevel.Editor);
                     }
                     else
                     {
@@ -265,7 +264,7 @@ public class SaveSystemUI : MonoBehaviour
                         GameMaster.SetSavename(saveNames[lastSelectedIndex]);
                         GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.GameLoading);
                         GameMaster.gameStartSettings = gss;
-                        SceneManager.LoadScene(GAME_LEVEL_NUMBER);
+                        GameMaster.ChangeScene(GameLevel.Playable);
                     }
                     else
                     {

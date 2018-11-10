@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum LOD_MakingSettings { Oak_stage4, Oak_stage5, Oak_stage6}
+
 public class LODSpriteMaker : MonoBehaviour {
     public static LODSpriteMaker current {get; private set;}
     Camera cam;

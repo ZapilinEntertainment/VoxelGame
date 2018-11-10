@@ -239,38 +239,24 @@ public sealed class PoolMaster : MonoBehaviour {
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
 	}
 
-	public static GameObject GetRooftop(bool peak, bool artificial) {
-		GameObject g = null;
-        if (artificial)
-        {
-            if (peak)
-            {
-                g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialPeak0")) as GameObject;
+    public static GameObject GetRooftop(bool peak, bool artificial)
+    {
+        if (artificial) return GetRooftop(peak, artificial, 0);
+        else {
+            if (peak) {
+                float f = Random.value;
+                byte n = 0;
+                if (f >= 0.77f) n = 2;
+                else if (f <= 0.33f) n = 0; else n = 1;
+                return GetRooftop(true, false, n);
             }
-            else
-            {
-                g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop0")) as GameObject;
-            }            
+            else { if (Random.value > 0.5f) return GetRooftop(false, false, 0); else return GetRooftop(false, false, 1); }
         }
-        else
-        {
-            if (peak)
-            {
-                float t = Random.value;
-                if (t <= 0.33f) g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalPeak0")) as GameObject;
-                else
-                {
-                    if (t >= 0.77f) g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalPeak1")) as GameObject;
-                    else g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalPeak2")) as GameObject;
-                }
-            }
-            else
-            {
-                if (Random.value > 0.5f) g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalRooftop0")) as GameObject;
-                else g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/naturalRooftop1")) as GameObject;
-            }
-        }
-		return g;
+    }
+    public static GameObject GetRooftop(bool peak, bool artificial, byte number) {
+        GameObject g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/" + (artificial ? "artificial" : "natural") + (peak ? "Peak" : "Rooftop") + number.ToString() ) );
+        g.name = (artificial ? "a" : "n") + (peak ? "p" : "r") + number.ToString();
+        return g;
 	}
 
     public static Material GetGreenMaterial(GreenMaterial mtype, MeshFilter mf, byte i_illumination)

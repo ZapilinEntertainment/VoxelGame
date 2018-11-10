@@ -2,6 +2,7 @@
 using UnityEngine; // классы Юнити
 using System.IO; // чтение-запись файлов
 using System.Runtime.Serialization.Formatters.Binary; // конверсия в поток байтов и обратно
+using UnityEngine.SceneManagement;
 
 public struct GameStartSettings  {
     public byte chunkSize;
@@ -32,13 +33,14 @@ public struct GameStartSettings  {
 public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart {Nothing, Zeppelin, Headquarters}
 public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
+public enum GameLevel { Menu, Playable, Editor}
 
 /// -----------------------------------------------------------------------------
 
 public sealed class GameMaster : MonoBehaviour {
 	public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
-    public static bool applicationStopWorking { get; private set; }
+    public static bool sceneClearing { get; private set; }
     public static bool editMode = false;
     public static string savename { get; protected set; }
     public static float LUCK_COEFFICIENT { get; private set; }
@@ -90,7 +92,6 @@ public sealed class GameMaster : MonoBehaviour {
 	// FOR TESTING
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources { get; private set; }
-    public bool treesOptimization = false;
 	public bool generateChunk = true;
     public byte test_size = 100;
     public bool _editMode = false;
@@ -119,7 +120,7 @@ public sealed class GameMaster : MonoBehaviour {
             return;
         }
         realMaster = this;
-        applicationStopWorking = false;
+        sceneClearing = false;
 	}
 
 	void Start() {
@@ -128,7 +129,7 @@ public sealed class GameMaster : MonoBehaviour {
 
         editMode = _editMode;
         if (!editMode)
-        {
+        {            
             lifeGrowCoefficient = 1;
             //Localization.ChangeLanguage(Language.English);
 
@@ -157,7 +158,11 @@ public sealed class GameMaster : MonoBehaviour {
                     }
                     else LoadTerrain(SaveSystemUI.GetTerrainsPath() + '/' + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
                 }
+
                 FollowingCamera.CenterCamera(sceneCenter);
+                FollowingCamera.main.ResetTouchRightBorder();
+                FollowingCamera.camRotationBlocked = false;
+
                 switch (difficulty)
                 {
                     case Difficulty.Utopia:
@@ -224,18 +229,18 @@ public sealed class GameMaster : MonoBehaviour {
 
                         if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
 
-                        //Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
-                        Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
+                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                        //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
                         b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
                         //test
-                        HeadQuarters hq = s as HeadQuarters;
-                        weNeedNoResources = true;
-                        hq.LevelUp(false);
-                        hq.LevelUp(false);
+                        //HeadQuarters hq = s as HeadQuarters;
+                        //weNeedNoResources = true;
+                        //hq.LevelUp(false);
+                        //hq.LevelUp(false);
                         //
 
                         colonyController.AddCitizens(START_WORKERS_COUNT);
@@ -596,7 +601,15 @@ public sealed class GameMaster : MonoBehaviour {
     public void OnApplicationQuit()
     {
         StopAllCoroutines();
-        applicationStopWorking = true;
+        sceneClearing = true;
+    }
+
+    public static void ChangeScene(GameLevel level)
+    {
+        sceneClearing = true;
+        SceneManager.LoadScene((int)level);
+        sceneClearing = false;
+        Structure.ResetToDefaults_Static();
     }
 }
 

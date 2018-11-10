@@ -10,28 +10,48 @@ public class CaveBlockSerializer
     public bool haveSurface;
 }
 
-public class CaveBlock : SurfaceBlock
+public sealed class CaveBlock : SurfaceBlock
 {
     MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west
     MeshRenderer ceilingRenderer;
     public bool haveSurface { get; private set; }
-    private int ceilingMaterial = 0;
+    public int ceilingMaterial { get; private set; }
 
     public override void ReplaceMaterial(int newId)
     {
         if (newId == material_id) return;
         material_id = newId;
-        if (grassland != null)
+        ceilingMaterial = newId;
+        if (grassland != null & material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID)
         {
             grassland.Annihilation();
         }
         foreach (MeshRenderer mr in faces)
         {
             if (mr == null) continue;
-            else mr.sharedMaterial = ResourceType.GetMaterialById(newId, mr.GetComponent<MeshFilter>(), illumination);
+            else mr.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, mr.GetComponent<MeshFilter>(), illumination);
         }
-        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
-        if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(newId, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
+        if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+    }
+    public void ReplaceSurfaceMaterial(int i_id)
+    {
+        material_id = i_id;
+        if (haveSurface) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+        if (grassland != null & material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID)
+        {
+            grassland.Annihilation();
+        }
+    }
+    public void ReplaceCeilingMaterial(int i_id)
+    {
+        ceilingMaterial = i_id;
+        foreach (MeshRenderer mr in faces)
+        {
+            if (mr == null) continue;
+            else mr.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, mr.GetComponent<MeshFilter>(), illumination);
+        }
+        ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
     }
 
     public void InitializeCaveBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_up_material_id, int f_down_material_id)

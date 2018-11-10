@@ -30,7 +30,7 @@ public class MastSpriter : MonoBehaviour {
 
     private void OnDestroy()
     {
-        if (GameMaster.applicationStopWorking) return;
+        if (GameMaster.sceneClearing) return;
         FollowingCamera.main.RemoveMastSprite(transform.GetInstanceID());
     }
 }

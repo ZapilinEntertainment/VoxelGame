@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ModelType { Tree, Boulder}
+public enum ModelType { Boulder}
 
 public class ModelWithLOD
 {
     public Transform transform;
-    public bool spriteIsActive;
+    public bool? drawStatus; // null - totally disabled, false - draw sprite, true - draw model;
     public byte drawingSpriteIndex;
     public short lodPackIndex;
     public ModelType type;
 
-    public ModelWithLOD(Transform i_transform, ModelType i_type, bool i_spriteIsActive, byte i_drawingSpriteIndex, short i_lodPackIndex)
+    public ModelWithLOD(Transform i_transform, ModelType i_type, bool? i_drawStatus, byte i_drawingSpriteIndex, short i_lodPackIndex)
     {
         transform = i_transform;
         type = i_type;
-        spriteIsActive = i_spriteIsActive;
+        drawStatus = i_drawStatus;
         drawingSpriteIndex = i_drawingSpriteIndex;
         lodPackIndex = i_lodPackIndex;
     }
@@ -28,8 +28,9 @@ public class LODController : MonoBehaviour {
 
     static List<Sprite[]> lodPacks = new List<Sprite[]>(); // not destroying between loads
     static LODController current; // singleton
-    public static float lodDistance { get; private set; }
+    public static float lodDistance { get; private set; } 
     const string LOD_DIST_KEY = "LOD distance";
+    const float BOULDER_SPRITE_MAX_VISIBILITY = 10;
 
     private void Awake()
     {
@@ -62,6 +63,10 @@ public class LODController : MonoBehaviour {
     public void CameraUpdate()
     {
         camPos = FollowingCamera.camPos;
+        Transform camTransform = FollowingCamera.camTransform;
+        float zpos, dist;
+        Vector3 mpos;
+        bool? newDrawStatus;
         if (models.Count > 0)
         {
             int i = 0;
@@ -74,10 +79,26 @@ public class LODController : MonoBehaviour {
                 }
                 else
                 {
-                    switch (models[i].type)
+                    ModelWithLOD m = models[i];
+                    if (m.transform.gameObject.activeSelf)
                     {
-                        case ModelType.Tree: TreeCheck(i); break; // какого фига? надо переделать на нормальные перечисления!
-                        case ModelType.Boulder: BoulderCheck(i);break;
+                        mpos = m.transform.position;
+                        zpos = camTransform.InverseTransformPoint(mpos).z;
+                        if (zpos > 0)
+                        {
+                            dist = (mpos - camPos).magnitude;
+                            switch (m.type)
+                            {
+                                case ModelType.Boulder:
+                                    if (dist > BOULDER_SPRITE_MAX_VISIBILITY) newDrawStatus = null;
+                                    else
+                                    {
+                                        if (dist > lodDistance) newDrawStatus = false;
+                                        else newDrawStatus = true;
+                                    }
+                                    break;
+                            }
+                        }
                     }
                     i++;
                 }
@@ -86,72 +107,30 @@ public class LODController : MonoBehaviour {
     }
 
 
-     void TreeCheck(int index)
-    {
-        ModelWithLOD tree = models[index];
-        Transform modelParent = tree.transform.parent, spriteTransform = tree.transform;
-        Vector3 treePos = spriteTransform.position;
-        if ((treePos - camPos).magnitude > lodDistance)
-        {
-            if (!tree.spriteIsActive)
-            {
-                modelParent.GetChild(0).gameObject.SetActive(false);
-                modelParent.GetChild(1).gameObject.SetActive(false);
-                spriteTransform.gameObject.SetActive(true);
-                tree.spriteIsActive = true;
-            }
-            byte spriteStatus = 0;
-            float angle = Vector3.Angle(Vector3.up, camPos - treePos);
-            if (angle < 30)
-            {
-                if (angle < 10) spriteStatus = 3;
-                else spriteStatus = 2;
-            }
-            else
-            {
-                if (angle > 80) spriteStatus = 0;
-                else spriteStatus = 1;
-            }
-            if (spriteStatus != tree.drawingSpriteIndex)
-            {
-                spriteTransform.GetComponent<SpriteRenderer>().sprite = lodPacks[tree.lodPackIndex][spriteStatus];
-                tree.drawingSpriteIndex = spriteStatus;
-            }
-        }
-        else
-        {
-            if (tree.spriteIsActive)
-            {
-                modelParent.GetChild(0).gameObject.SetActive(true);            
-                modelParent.GetChild(1).gameObject.SetActive(true);
-                spriteTransform.gameObject.SetActive(false);
-                tree.spriteIsActive = false;
-            }
-        }
-    }
     void BoulderCheck(int index)
     {
         ModelWithLOD m = models[index];
         Vector3 pos = m.transform.position;
-        if ((camPos - pos).magnitude > lodDistance)
-        {
-            if ( !m.spriteIsActive )
-            {
-                m.transform.GetChild(1).gameObject.SetActive(true);
-                m.transform.GetChild(0).gameObject.SetActive(false);
-                m.spriteIsActive = true;
-            }
+        float dist = (camPos - pos).magnitude;
+        //if (dist > lodDistance)
+        //{
+          //  if ( !m.spriteIsActive )
+           // {
+           //     m.transform.GetChild(1).gameObject.SetActive(true);
+            //    m.transform.GetChild(0).gameObject.SetActive(false);
+            //    m.spriteIsActive = true;
+           // }
             //m.transform.GetChild(1).LookAt(camPos);
-        }
-        else
-        {
-            if (m.spriteIsActive)
-            {
-                m.transform.GetChild(1).gameObject.SetActive(false);
-                m.transform.GetChild(0).gameObject.SetActive(true);
-                m.spriteIsActive = false;
-            }
-        }
+       // }
+       // else
+      //  {
+          //  if (m.spriteIsActive)
+         //   {
+             //   m.transform.GetChild(1).gameObject.SetActive(false);
+             //   m.transform.GetChild(0).gameObject.SetActive(true);
+            //    m.spriteIsActive = false;
+           // }
+        //}
     }
 
     /// <summary>
@@ -168,8 +147,6 @@ public class LODController : MonoBehaviour {
         models.Add(newModel);
         switch (type)
         {
-            case ModelType.Tree:
-                TreeCheck(models.Count - 1); break;
             case ModelType.Boulder:
                 SpriteRenderer sr = newModel.transform.GetChild(1).GetComponent<SpriteRenderer>();
                 sr.sprite = lodPacks[lodPackIndex][0];
@@ -208,7 +185,6 @@ public class LODController : MonoBehaviour {
                             if (models[i].lodPackIndex != newPackIndex)
                             {
                                 models[i].lodPackIndex = newPackIndex;
-                                TreeCheck(i);
                                 return;
                             }
                         }

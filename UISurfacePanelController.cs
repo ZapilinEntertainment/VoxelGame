@@ -131,10 +131,7 @@ public sealed class UISurfacePanelController : UIObserver {
                                 }
                                 break;
                             case BuildingCreateInfoMode.Unacceptable_Material:
-                                if ((chosenStructure as Building).requiredBasementMaterialId == observingSurface.material_id)
-                                {
-                                    SelectBuildingForConstruction(chosenStructure, selectedBuildingButton);
-                                }
+                                
                                 break;
                         }
                         //rotating window
@@ -632,46 +629,76 @@ public sealed class UISurfacePanelController : UIObserver {
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
 	
 			Building bd = chosenStructure as Building;
-			// material check :
-			if (bd != null & bd.requiredBasementMaterialId != -1 & bd.requiredBasementMaterialId != observingSurface.material_id) {
-				t.text = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
-				t.color = Color.yellow;
-				resourcesCostImage[0].uvRect = ResourceType.GetTextureRect(0);
-				resourcesCostImage[0].gameObject.SetActive(true);
-				for (int i = 1; i < resourcesCostImage.Length - 1; i++) {
-					resourcesCostImage[i].gameObject.SetActive(false);
-				}
-				int n = resourcesCostImage.Length - 1;
-				t = resourcesCostImage[n].transform.GetChild(0).GetComponent<Text>();
-				t.text = Localization.GetPhrase(LocalizedPhrase.RequiredSurface) + " : " + Localization.GetResourceName(bd.requiredBasementMaterialId);
-				resourcesCostImage[n].uvRect = ResourceType.GetTextureRect(bd.requiredBasementMaterialId);
-				resourcesCostImage[n].gameObject.SetActive(true);
-				t.color = Color.yellow;
-				buildingCreateMode = BuildingCreateInfoMode.Unacceptable_Material;
-				innerBuildButton.gameObject.SetActive(false);
-			} 
-			else {
-				// all conditions met
-				ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
-				//resource cost drawing
-				float[] storageResources = GameMaster.colonyController.storage.standartResources;
-				for (int i = 0; i < resourcesCostImage.Length; i++) {
-					if ( i < cost.Length) {						
-						resourcesCostImage[i].uvRect = ResourceType.GetTextureRect(cost[i].type.ID);
-						t = resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>();
-						t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
-						showingResourcesCount[i] = new Vector2(cost[i].type.ID, cost[i].volume);
-						if (storageResources[cost[i].type.ID] < cost[i].volume ) t.color =Color.red; else t.color = Color.white;
-						resourcesCostImage[i].gameObject.SetActive(true);
-					}
-					else {
-						resourcesCostImage[i].gameObject.SetActive(false);
-					}
-				}
+        if (bd != null)
+        {
+            bool acceptable = true;
+            string reason = "UNACCEPTABLE!";
+            if (bd.specialBuildingConditions)
+            {                
+                switch (bd.id)
+                {
+                    case Structure.FARM_1_ID:
+                    case Structure.FARM_2_ID:
+                    case Structure.FARM_3_ID:
+                    case Structure.LUMBERMILL_1_ID:
+                    case Structure.LUMBERMILL_2_ID:
+                    case Structure.LUMBERMILL_3_ID:
+                        int mid = observingSurface.material_id;
+                        if (mid != ResourceType.DIRT_ID & mid != ResourceType.FERTILE_SOIL_ID) {
+                            acceptable = false;
+                            reason = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
+                        }
+                        break;
+                }                
+            }
+            if (!acceptable)
+            {
+                t.text = reason;
+                t.color = Color.yellow;
+                resourcesCostImage[0].uvRect = ResourceType.GetTextureRect(0);
+                resourcesCostImage[0].gameObject.SetActive(true);
+                for (int i = 1; i < resourcesCostImage.Length - 1; i++)
+                {
+                    resourcesCostImage[i].gameObject.SetActive(false);
+                }
+                //---deleted
+                //int n = resourcesCostImage.Length - 1;
+                //t = resourcesCostImage[n].transform.GetChild(0).GetComponent<Text>();
+                //t.text = Localization.GetPhrase(LocalizedPhrase.RequiredSurface) + " : " + Localization.GetResourceName(bd.requiredBasementMaterialId);
+                //resourcesCostImage[n].uvRect = ResourceType.GetTextureRect(bd.requiredBasementMaterialId);
+                //resourcesCostImage[n].gameObject.SetActive(true);
+                //t.color = Color.yellow;
+                //---deleted
+                buildingCreateMode = BuildingCreateInfoMode.Unacceptable_Material;
+                innerBuildButton.gameObject.SetActive(false);
+            }
+            else
+            {
+                // all conditions met
+                ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
+                //resource cost drawing
+                float[] storageResources = GameMaster.colonyController.storage.standartResources;
+                for (int i = 0; i < resourcesCostImage.Length; i++)
+                {
+                    if (i < cost.Length)
+                    {
+                        resourcesCostImage[i].uvRect = ResourceType.GetTextureRect(cost[i].type.ID);
+                        t = resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>();
+                        t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
+                        showingResourcesCount[i] = new Vector2(cost[i].type.ID, cost[i].volume);
+                        if (storageResources[cost[i].type.ID] < cost[i].volume) t.color = Color.red; else t.color = Color.white;
+                        resourcesCostImage[i].gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        resourcesCostImage[i].gameObject.SetActive(false);
+                    }
+                }
                 lastStorageStatus = GameMaster.colonyController.storage.operationsDone;
-				buildingCreateMode = BuildingCreateInfoMode.Acceptable;
-				innerBuildButton.gameObject.SetActive(true);
-			}
+                buildingCreateMode = BuildingCreateInfoMode.Acceptable;
+                innerBuildButton.gameObject.SetActive(true);
+            }
+        }
 	}
     void DeselectBuildingButton()
     {
@@ -713,6 +740,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 {
                     PrepareConstructionPlane();
                 }
+                if (s.placeInCenter) ReturnButton();
             }
             else ReturnButton();
         }

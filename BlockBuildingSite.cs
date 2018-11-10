@@ -176,15 +176,12 @@ public class BlockBuildingSite : Worksite
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
             subscribedToUpdate = false;
         }
-        if (workObject != null)
-        {
-            if (workObject.worksite == this) workObject.ResetWorksite();
-            workObject = null;
-        }
+        if (workObject != null & workObject.worksite == this) workObject.ResetWorksite();
         if (showOnGUI)
         {
             observer.SelfShutOff();
             showOnGUI = false;
+            UIController.current.ChangeChosenObject(ChosenObjectType.None);
         }
         Destroy(this);
     }
