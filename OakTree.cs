@@ -13,11 +13,13 @@ public class OakTree : Plant
 
     private static bool modelsContainerReady = false;
     private static float growSpeed, decaySpeed; // fixed by class
+    private static float clearTimer = 0;
     public static int maxLifeTransfer { get; protected set; }  // fixed by class
 
     public const byte HARVESTABLE_STAGE = 4;
     const byte TRANSIT_STAGE = 3;
     private const int MAX_INACTIVE_BUFFERED_STAGE4 = 12, MAX_INACTIVE_BUFFERED_STAGE5 = 6, MAX_INACTIVE_BUFFERED_STAGE6 = 3, CRITICAL_BUFFER_COUNT = 50;
+    private const float CLEAR_BLANKS_TIME = 10;
 
     private GameObject modelHolder;
     private SpriteRenderer spriter;
@@ -342,6 +344,14 @@ public class OakTree : Plant
                 existingPlantsMask -= val;
             }
         }
+        clearTimer -= Time.deltaTime;
+        if (clearTimer <= 0)
+        {
+            if (blankTrees_stage4.Count > MAX_INACTIVE_BUFFERED_STAGE4) blankTrees_stage4.RemoveAt(blankTrees_stage4.Count - 1);
+            if (blankTrees_stage5.Count > MAX_INACTIVE_BUFFERED_STAGE5) blankTrees_stage5.RemoveAt(blankTrees_stage5.Count - 1);
+            if (blankTrees_stage6.Count > MAX_INACTIVE_BUFFERED_STAGE6) blankTrees_stage6.RemoveAt(blankTrees_stage6.Count - 1);
+            clearTimer = CLEAR_BLANKS_TIME;
+        }
     }
     public static void CameraUpdate()
     {
@@ -546,7 +556,8 @@ public class OakTree : Plant
             GameObject model3d = Instantiate(pref);
             ReturnModelToPool(pref, stage);
             Transform t = model3d.transform.GetChild(1);
-            HarvestableResource hr = new GameObject("dead oak tree").AddComponent<HarvestableResource>();
+            HarvestableResource hr = GetStructureByID(CONTAINER_ID) as HarvestableResource;
+            hr.name = "dead oak tree";
             t.parent = hr.transform;
             t.gameObject.SetActive(true);
             Destroy(model3d);
@@ -555,7 +566,7 @@ public class OakTree : Plant
             MeshFilter mf = t.GetComponent<MeshFilter>();
             t.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mf, basement.illumination);
 
-            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber()), false, innerPosition.size, model3d);
+            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber() * 0.9f * GameMaster.realMaster.environmentalConditions), false, innerPosition.size, model3d);
             hr.SetModelRotation(modelRotation);
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
             // спрайтовый LOD?
@@ -564,7 +575,8 @@ public class OakTree : Plant
         {
             Structure s = GetStructureByID(DRYED_PLANT_ID);
             s.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
-            s.gameObject.AddComponent<MastSpriter>();
+            StructureTimer st = s.gameObject.AddComponent<StructureTimer>();
+            st.timer = 5;
         }
     }
 
@@ -676,9 +688,9 @@ public class OakTree : Plant
         modelHolder.gameObject.SetActive(false);
         switch (stage)
         {
-            case 4: blankTrees_stage4.Add(modelHolder); break;
-            case 5: blankTrees_stage5.Add(modelHolder); break;
-            case 6: blankTrees_stage6.Add(modelHolder); break;
+            case 4: if (blankTrees_stage4.Count < CRITICAL_BUFFER_COUNT) blankTrees_stage4.Add(modelHolder); else Destroy(modelHolder); break;
+            case 5: if (blankTrees_stage5.Count < CRITICAL_BUFFER_COUNT) blankTrees_stage5.Add(modelHolder); else Destroy(modelHolder); break;
+            case 6: if (blankTrees_stage6.Count < CRITICAL_BUFFER_COUNT) blankTrees_stage6.Add(modelHolder); else Destroy(modelHolder); break;
         }
         modelHolder = null;
         spriter = null;
@@ -688,9 +700,9 @@ public class OakTree : Plant
     {
         switch (stage)
         {
-            case 4: blankTrees_stage4.Add(model); break;
-            case 5: blankTrees_stage5.Add(model); break;
-            case 6: blankTrees_stage6.Add(model); break;
+            case 4: if (blankTrees_stage4.Count < CRITICAL_BUFFER_COUNT) blankTrees_stage4.Add(model); else Destroy(model); break;
+            case 5: if (blankTrees_stage5.Count < CRITICAL_BUFFER_COUNT) blankTrees_stage5.Add(model); else Destroy(model); break;
+            case 6: if (blankTrees_stage6.Count < CRITICAL_BUFFER_COUNT) blankTrees_stage6.Add(model); else Destroy(model); break;
             default: Destroy(model); return;
         }
         model.SetActive(false);

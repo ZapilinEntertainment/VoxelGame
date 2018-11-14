@@ -19,9 +19,13 @@ public class FallingTree : MonoBehaviour {
 			transform.Translate(Vector3.down *0.01f* Time.deltaTime * GameMaster.gameSpeed, Space.World);
 		}
 		timer -= Time.deltaTime * GameMaster.gameSpeed;
-		if (timer <= 0) {			
-            returnFunction(gameObject, modelStage);
-            Destroy(this);
+		if (timer <= 0) {
+            if (returnFunction != null)
+            {
+                returnFunction(gameObject, modelStage);
+                Destroy(this);
+            }
+            else Destroy(gameObject);
         }
 	}
 

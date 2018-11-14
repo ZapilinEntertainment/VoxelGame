@@ -325,7 +325,7 @@ public class Building : Structure
             case FARM_5_ID:
                 {
                     upgradedIndex = -1;
-                    canBePowerSwitched = false;
+                    canBePowerSwitched = true;
                     energySurplus = -1000;
                     energyCapacity = 3000;
                     level = 5;

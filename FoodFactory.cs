@@ -54,6 +54,8 @@ public class FoodFactory : WorkBuilding {
             metalP_inputBuffer += storage.GetResources(ResourceType.metal_P, metalP_input * iterations - metalP_inputBuffer);
             int it_b = (int)(metalP_inputBuffer / metalP_input);
             if (it_a < it_b) iterations = it_a; else iterations = it_b;
+            food_inputBuffer -= iterations * food_input;
+            metalP_inputBuffer -= iterations * metalP_input;
             supplies_outputBuffer += iterations * supplies_output;
             supplies_outputBuffer = storage.AddResource(ResourceType.Supplies, supplies_outputBuffer);
         }

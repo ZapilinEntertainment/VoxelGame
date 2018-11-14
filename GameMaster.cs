@@ -229,21 +229,29 @@ public sealed class GameMaster : MonoBehaviour {
 
                         if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
 
-                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
-                        //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
+                        //Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                        Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
                         b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
                         //test
-                        //HeadQuarters hq = s as HeadQuarters;
-                        //weNeedNoResources = true;
-                        //hq.LevelUp(false);
-                        //hq.LevelUp(false);
+                       HeadQuarters hq = s as HeadQuarters;
+                        weNeedNoResources = true;
+                        hq.LevelUp(false);
+                        hq.LevelUp(false);
+                        Crew ncrew = new Crew();
+                        ncrew.SetCrew(colonyController, 100);
+                        Crew.freeCrewsList.Add(ncrew);
+                        ncrew = new Crew();
+                        ncrew.SetCrew(colonyController, 100);
+                        Crew.freeCrewsList.Add(ncrew);
+                        ncrew = new Crew();
+                        ncrew.SetCrew(colonyController, 100);
+                        Crew.freeCrewsList.Add(ncrew);
                         //
 
-                        colonyController.AddCitizens(START_WORKERS_COUNT);
 
                         sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos + 1);
                         if (sb == null)
@@ -279,19 +287,20 @@ public sealed class GameMaster : MonoBehaviour {
                             }
                         }
                         StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
-                        firstStorage.SetBasement(sb, PixelPosByte.zero);
-                        //start resources
-                        colonyController.storage.AddResource(ResourceType.metal_K, 100);
-                        colonyController.storage.AddResource(ResourceType.metal_M, 50);
-                        colonyController.storage.AddResource(ResourceType.metal_E, 20);
-                        colonyController.storage.AddResource(ResourceType.Plastics, 100);
-                        colonyController.storage.AddResource(ResourceType.Food, 200);
+                        firstStorage.SetBasement(sb, PixelPosByte.zero);                        
 
                         //UI ui = gameObject.AddComponent<UI>();
                         //ui.lineDrawer = systemDrawLR;
                         break;
                 }
                 FollowingCamera.main.WeNeedUpdate();
+                //start resources
+                colonyController.AddCitizens(START_WORKERS_COUNT);
+                colonyController.storage.AddResource(ResourceType.metal_K, 100);
+                colonyController.storage.AddResource(ResourceType.metal_M, 50);
+                colonyController.storage.AddResource(ResourceType.metal_E, 20);
+                colonyController.storage.AddResource(ResourceType.Plastics, 100);
+                colonyController.storage.AddResource(ResourceType.Food, 200);
             }
             else LoadGame(SaveSystemUI.GetSavesPath() + '/' + savename + ".sav");
             if (savename == null | savename == string.Empty) savename = "autosave";
@@ -396,7 +405,8 @@ public sealed class GameMaster : MonoBehaviour {
 
     public float CalculateWorkspeed(int workersCount, WorkType type) {
 		if (colonyController == null) return 0;
-		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * colonyController.gears_coefficient - ( colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
+		float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * (colonyController.gears_coefficient + colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
+        if (workspeed < 0) workspeed = 0.01f;
 		switch (type) {
 		case WorkType.Digging: workspeed  *= diggingSpeed;break;
 		case WorkType.Manufacturing: workspeed  *= manufacturingSpeed;break;

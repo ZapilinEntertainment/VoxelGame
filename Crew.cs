@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrewStatus {Idle_noShip, Idle_withShip, onMission}
+public enum CrewStatus {Free, Attributed, OnLandMission}
 
-public class Crew {
+public sealed class Crew {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
+    public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f;
 	public static int lastNumber {get;private set;}
-	public static List<Crew> crewsList{ get ;private set;}
-	public static int crewSlots {get;private set;}
+	public static List<Crew> freeCrewsList{ get ;private set;} // свободные неприписанные команды
+	public static int crewSlotsTotal {get;private set;}
+    public static int crewSlotsFree { get; private set; }
+    public static int totalOperations { get; private set; }
 
 	public float salary {get; private set;}
 	public int count {get;private set;}
@@ -31,16 +34,16 @@ public class Crew {
 
 	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
 	public int successfulOperations{get;private set;}
-	public int totalOperations{get;private set;}
 
     static Crew()
     {
-        crewsList = new List<Crew>();
+        freeCrewsList = new List<Crew>();
     }
 
 	public static void Reset() {
-		crewsList = new List<Crew>();
-		crewSlots = 0;
+		freeCrewsList = new List<Crew>();
+		crewSlotsTotal = 0;
+        crewSlotsFree = crewSlotsTotal;
 		lastNumber = 0;
 	}
 
@@ -61,12 +64,12 @@ public class Crew {
 		stamina = 0.9f + Random.value * 0.1f;
 		count = (int)( MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT) );
 		if (count > MAX_MEMBER_COUNT) count = MAX_MEMBER_COUNT;
-		crewSlots --;
+		crewSlotsFree--;
 	}
 
 	public bool AssignToShip(Shuttle s) {
-		if (s == null || (shuttle!= null & s == shuttle)) return false;
-		if (s.AddCrew(this) == false) return false;
+		if (s == null || (shuttle != null & s == shuttle)) return false;
+		if (s.AttributeCrew(this) == false) return false;
 		shuttle = s;
 		stamina -= 0.1f;
 		if (stamina < 0) stamina = 0;
@@ -74,26 +77,29 @@ public class Crew {
 	}
 
 	public static void AddCrewSlots(int x) {
-		crewSlots+=x;
+		crewSlotsTotal += x;
+        crewSlotsFree += x;
 	}
 	public static void RemoveCrewSlots(int x) {
-		crewSlots-=x;
-		if (crewSlots < 0) crewSlots = 0;
+		crewSlotsTotal -= x;
+		if (crewSlotsTotal < 0) crewSlotsTotal = 0;
+        crewSlotsFree -= x;
+        if (crewSlotsFree < 0) crewSlotsFree = 0;
 	}
 
 	#region save-load system
 	public static CrewStaticSerializer SaveStaticData() {
 		CrewStaticSerializer css = new CrewStaticSerializer();
 		css.haveCrews = false; css.crewsList = new List<CrewSerializer>();
-		if (crewsList != null && crewsList.Count > 0) {
+		if (freeCrewsList != null && freeCrewsList.Count > 0) {
 			int i = 0;
-			while (i < crewsList.Count) {
-				if (crewsList[i] == null) {
-					crewsList.RemoveAt(i);
+			while (i < freeCrewsList.Count) {
+				if (freeCrewsList[i] == null) {
+					freeCrewsList.RemoveAt(i);
 					continue;
 				}
 				else {
-					css.crewsList.Add(crewsList[i].Save());
+					css.crewsList.Add(freeCrewsList[i].Save());
 				}
 				i++;
 			}
@@ -103,13 +109,13 @@ public class Crew {
 		return css;
 	}
 	public static void LoadStaticData(CrewStaticSerializer css) {
-		crewsList = new List<Crew>();
+		freeCrewsList = new List<Crew>();
 		if (css.haveCrews) {
 			for (int i = 0; i < css.crewsList.Count; i++) {
-				crewsList.Add(new Crew().Load(css.crewsList[i]));
+				freeCrewsList.Add(new Crew().Load(css.crewsList[i]));
 			}
 		}
-        crewSlots -= crewsList.Count;
+        crewSlotsFree -= freeCrewsList.Count;
 		lastNumber = css.lastNumber;
 	}
 
@@ -160,7 +166,7 @@ public class Crew {
         if (cs.shuttleID != -1)
         {
             shuttle = Shuttle.GetShuttle(cs.shuttleID);
-            shuttle.AddCrew(this);
+            shuttle.AttributeCrew(this);
         }
         return this;
 	}
@@ -177,32 +183,29 @@ public class Crew {
 	public void Dismiss() {
 		GameMaster.colonyController.AddWorkers(count);
         count = 0;
-        if (status != CrewStatus.onMission)
+        if (status == CrewStatus.Free)
         {
-            crewsList.Remove(this);
-            crewSlots++;
+            freeCrewsList.Remove(this);
         }
-        if (shuttle != null)
+        else
         {
-            Shuttle s = shuttle;
-            shuttle = null;
-            s.DismissCrew(this);
+            if (shuttle != null)
+            {
+                Shuttle s = shuttle;
+                shuttle = null;
+                s.UnattributeCrew(this);
+            }
         }
+        crewSlotsFree++;
     }
 
-    public void Annihilate()
+    public void Disappear()
     {
-        if (status != CrewStatus.onMission)
+        if (status == CrewStatus.Free)
         {
-            crewsList.Remove(this);
-            crewSlots++;
+            freeCrewsList.Remove(this);            
         }
-    }
-
-    public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
-    {
-        ri.texture = UIController.current.iconsTexture;
-        ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
+        crewSlotsFree++;
     }
 }
 

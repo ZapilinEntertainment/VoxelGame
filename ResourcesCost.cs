@@ -35,7 +35,7 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.Plastics, 70)
 			};
 			break;
-		case Structure.QUANTUM_ENERGY_TRANSMITTER_ID:
+		case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 140), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 25),
 				new ResourceContainer(ResourceType.metal_N, 10), new ResourceContainer(ResourceType.Plastics, 15)
@@ -46,19 +46,19 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_M, 15), new ResourceContainer(ResourceType.Concrete, 60)
 			};
 			break;
-		case Structure.GRPH_ENRICHER_ID:
+		case Structure.GRPH_ENRICHER_3_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 30),
 				new ResourceContainer(ResourceType.metal_E, 16)
 			};
 			break;
-		case Structure.XSTATION_ID:
+		case Structure.XSTATION_3_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 75), new ResourceContainer(ResourceType.metal_K, 18), new ResourceContainer(ResourceType.Plastics, 40),
 				new ResourceContainer(ResourceType.metal_E, 12), new ResourceContainer(ResourceType.metal_N, 3)
 			};
 			break;
-		case Structure.CHEMICAL_FACTORY_ID:
+		case Structure.CHEMICAL_FACTORY_4_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 35),
 				new ResourceContainer(ResourceType.metal_E, 25)
@@ -253,7 +253,7 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.Concrete, 120), new ResourceContainer(ResourceType.metal_K, 15), new ResourceContainer(ResourceType.metal_E, 5)
 			};
 			break;
-		case Structure.MINI_GRPH_REACTOR_ID:
+		case Structure.MINI_GRPH_REACTOR_3_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.metal_K, 15), new ResourceContainer(ResourceType.metal_M, 5), new ResourceContainer(ResourceType.metal_N, 12)
 			};
@@ -276,23 +276,23 @@ public static class ResourcesCost {
 		case Structure.SWITCH_TOWER_ID:
 			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 10), new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.Plastics,10)};
 			break;
-		case Structure.SHUTTLE_HANGAR_ID:
+		case Structure.SHUTTLE_HANGAR_4_ID:
 			cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 300), new ResourceContainer(ResourceType.metal_K, 40), new ResourceContainer(ResourceType.Plastics, 250),
 				new ResourceContainer(ResourceType.metal_M, 30)
 			};
 			break;
-		case Structure.RECRUITING_CENTER_ID:
+		case Structure.RECRUITING_CENTER_4_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 340), new ResourceContainer(ResourceType.metal_K, 80), new ResourceContainer(ResourceType.Plastics, 250)
 			};
 			break;
-		case Structure.EXPEDITION_CORPUS_ID:
+		case Structure.EXPEDITION_CORPUS_4_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 350), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.Plastics, 250),
 				new ResourceContainer(ResourceType.metal_E, 20)
 			};
 			break;
-		case Structure.QUANTUM_TRANSMITTER_ID:
+		case Structure.QUANTUM_TRANSMITTER_4_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_S, 70),
 				new ResourceContainer(ResourceType.metal_N, 20)

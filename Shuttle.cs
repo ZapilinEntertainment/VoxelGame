@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ShipStatus {InPort, Leaving, Arriving, OnMission}
+public enum ShipStatus {InPort, OnMission}
 
 public class Shuttle : MonoBehaviour {
 	const float START_VOLUME = 20, STANDART_FUEL_CAPACITY = 100;
@@ -71,7 +71,7 @@ public class Shuttle : MonoBehaviour {
 		}
 	}
 
-	public bool AddCrew(Crew c) {
+	public bool AttributeCrew(Crew c) {
         if (crew != null) return false;
         else
         {
@@ -79,7 +79,7 @@ public class Shuttle : MonoBehaviour {
             return true;
         }
 	}
-    public void DismissCrew(Crew c)
+    public void UnattributeCrew(Crew c)
     {
         if (crew == c) crew = null;
     }
@@ -140,9 +140,9 @@ public class Shuttle : MonoBehaviour {
         }
     }
 
-    public void Annihilate()
+    public void Disappear() // исчезновение
     {
-        if (crew != null) crew.Annihilate();
+        if (crew != null) crew.Disappear();
         if (status == ShipStatus.InPort)
         {
             shuttlesList.Remove(this);            

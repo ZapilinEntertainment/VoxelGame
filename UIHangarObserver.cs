@@ -3,43 +3,33 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-enum HangarObserverMode { NoShuttle, BuildingShuttle, ShuttleInside, ShuttleOnMission }
+public enum HangarObserverMode : byte { NoShuttle, BuildingShuttle, ShuttleInside, ShuttleOnMission }
 
-public class UIHangarObserver : UIObserver
+public sealed class UIHangarObserver : UIObserver
 {
-    Hangar observingHangar;
+    public Hangar observingHangar { get; protected set; }
 #pragma warning disable 0649
-    [SerializeField] RawImage mainShuttleIcon; // fiti
     [SerializeField] InputField shuttleNameTextField; // fiti
     [SerializeField] Button constructButton, disassembleButton, repairButton; // fiti
-    [SerializeField] Text shuttleStatusText; // fiti
-    [SerializeField] RectTransform progressBar;//fiti
     [SerializeField] Transform resourceCostContainer;
 #pragma warning restore 0649
     Vector2[] showingResourcesCount;
-    int savedProgressBarValue = 100;
     float fullProgressBarLength = -1, startOffset = 0;
-    HangarObserverMode mode;
+    public HangarObserverMode mode { get; private set; }
 
     public static UIHangarObserver InitializeHangarObserverScript()
     {
         UIHangarObserver uho = Instantiate(Resources.Load<GameObject>("UIPrefs/hangarObserver"), UIController.current.rightPanel.transform).GetComponent<UIHangarObserver>();
-        Hangar.hangarObserver = uho;
         return uho;
     }
 
     private void Awake()
     {
-        showingResourcesCount = new Vector2[resourceCostContainer.childCount];
+        showingResourcesCount = new Vector2[resourceCostContainer.childCount - 1];
     }
 
     public void SetObservingHangar(Hangar h)
     {
-        if (fullProgressBarLength == -1)
-        {
-            fullProgressBarLength = progressBar.rect.width;
-            startOffset = progressBar.offsetMin.x;
-        }
         if (h == null)
         {
             SelfShutOff();
@@ -50,54 +40,9 @@ public class UIHangarObserver : UIObserver
         else uwb.gameObject.SetActive(true);
         observingHangar = h; isObserving = true;
         uwb.SetObservingWorkBuilding(h);
-
         PrepareHangarWindow();
 
         STATUS_UPDATE_TIME = 1f; timer = STATUS_UPDATE_TIME;
-    }
-
-    override protected void StatusUpdate()
-    {
-        if (!isObserving) return;
-        if (observingHangar == null) SelfShutOff();
-        else
-        {
-            if (observingHangar.shuttle == null)
-            {
-                if (mode != HangarObserverMode.NoShuttle) { PrepareHangarWindow(); }
-                else
-                {
-                    float progress = observingHangar.workflow / observingHangar.workflowToProcess;
-                    if (savedProgressBarValue != (int)(progress * 100))
-                    {
-                        savedProgressBarValue = (int)(progress * 100);
-                        shuttleStatusText.text = savedProgressBarValue.ToString() + '%';
-                        progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-                    }
-
-                    float[] onStorage = GameMaster.colonyController.storage.standartResources;
-                    for (int i = 0; i < resourceCostContainer.childCount; i++)
-                    {
-                        int rid = (int)showingResourcesCount[i].x;
-                        if (onStorage[rid] != showingResourcesCount[i].y)
-                        {
-                            resourceCostContainer.GetChild(i).GetChild(0).GetComponent<Text>().color = onStorage[rid] < showingResourcesCount[i].y ? Color.red : Color.white;
-                            showingResourcesCount[i].y = onStorage[rid];
-                        }
-                    }
-                }
-            }
-            else
-            {
-                int cond = (int)(observingHangar.shuttle.condition * 100);
-                if (savedProgressBarValue != cond)
-                {
-                    savedProgressBarValue = cond;
-                    shuttleStatusText.text = savedProgressBarValue.ToString() + '%';
-                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-                }
-            }
-        }
     }
 
     public void PrepareHangarWindow()
@@ -105,34 +50,34 @@ public class UIHangarObserver : UIObserver
         Shuttle shuttle = observingHangar.shuttle;
         bool haveShuttle = (shuttle != null);
 
-
         shuttleNameTextField.gameObject.SetActive(haveShuttle);
-        repairButton.gameObject.SetActive(haveShuttle);
+        repairButton.gameObject.SetActive(haveShuttle & (shuttle.condition < 1));
         disassembleButton.gameObject.SetActive(haveShuttle);
 
-        bool showProgressBar = false;
         if (haveShuttle)
         {
+            mode = shuttle.status == ShipStatus.InPort ? HangarObserverMode.ShuttleInside : HangarObserverMode.ShuttleOnMission;
             shuttleNameTextField.text = shuttle.name;
-            savedProgressBarValue = (int)(shuttle.condition * 100);
-            mainShuttleIcon.uvRect = UIController.GetTextureUV(shuttle.condition > 0.85 ? Icons.ShuttleGoodIcon : (shuttle.condition < 0.5 ? Icons.ShuttleBadIcon : Icons.ShuttleNormalIcon));
-            showProgressBar = true;
             resourceCostContainer.gameObject.SetActive(false);
-            mode = HangarObserverMode.ShuttleInside;
+            UIController.current.ActivateProgressPanel(ProgressPanelMode.Hangar);            
         }
         else
-        {
-            savedProgressBarValue = (int)(observingHangar.workflow / observingHangar.workflowToProcess * 100);
-            mainShuttleIcon.uvRect = Rect.zero;
-            showProgressBar = observingHangar.constructing;
-            constructButton.GetComponent<Image>().overrideSprite = showProgressBar ? PoolMaster.gui_overridingSprite : null;
-            resourceCostContainer.gameObject.SetActive(!showProgressBar);
-            if (!showProgressBar)
+        {            
+            if (observingHangar.constructing)
+            {
+                mode = HangarObserverMode.BuildingShuttle;
+                resourceCostContainer.gameObject.SetActive(false);
+                UIController.current.ActivateProgressPanel(ProgressPanelMode.Hangar);                
+            }
+            else
             {
                 mode = HangarObserverMode.NoShuttle;
+                resourceCostContainer.gameObject.SetActive(true);
+                constructButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ConstructShuttle) + " (" + Shuttle.STANDART_COST.ToString() + ')';
+                if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel();
+
                 ResourceContainer[] rc = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
-                int l = rc.Length;
-                for (int i = 0; i < resourceCostContainer.transform.childCount; i++)
+                for (int i = 1; i < resourceCostContainer.transform.childCount; i++)
                 {
                     Transform t = resourceCostContainer.GetChild(i);
                     if (i < rc.Length)
@@ -150,20 +95,42 @@ public class UIHangarObserver : UIObserver
                     {
                         t.gameObject.SetActive(false);
                     }
-                }
-                constructButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ConstructShuttle) + " (" + Shuttle.STANDART_COST.ToString() + ')';
+                }                
             }
-            else mode = HangarObserverMode.BuildingShuttle;
-        }
-        constructButton.gameObject.SetActive(!showProgressBar);
-        progressBar.transform.parent.gameObject.SetActive(showProgressBar);
-        if (showProgressBar)
-        {
-            shuttleStatusText.text = savedProgressBarValue.ToString() + '%';
-            progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-            shuttleStatusText.text = savedProgressBarValue.ToString() + '%';
         }
     }
+
+    override protected void StatusUpdate()
+    {
+        if (!isObserving) return;
+        if (observingHangar == null) SelfShutOff();
+        else
+        {
+            bool haveShuttle = (observingHangar.shuttle != null);
+            HangarObserverMode newMode;
+            if (haveShuttle)
+            {
+                if (observingHangar.shuttle.status == ShipStatus.InPort)
+                {
+                    newMode = HangarObserverMode.ShuttleInside;
+                }
+                else newMode = HangarObserverMode.ShuttleOnMission;
+            }
+            else
+            {
+                if (observingHangar.constructing)
+                {
+                    newMode = HangarObserverMode.BuildingShuttle;
+                }
+                else
+                {
+                    newMode = HangarObserverMode.NoShuttle;
+                    constructButton.interactable = observingHangar.correctLocation;
+                }
+            }
+            if (newMode != mode) PrepareHangarWindow();            
+        }
+    }    
 
     public void StartConstructing()
     {
@@ -188,7 +155,6 @@ public class UIHangarObserver : UIObserver
             else
             {
                 UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
-                constructButton.GetComponent<Image>().overrideSprite = null;
             }
         }
     }

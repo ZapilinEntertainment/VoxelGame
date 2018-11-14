@@ -1645,6 +1645,7 @@ public sealed class Chunk : MonoBehaviour
             if (b != null)
             {
                 if (clearMainStructureField) b.mainStructure = null;
+                // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
                 b.Annihilate();
             }
         }

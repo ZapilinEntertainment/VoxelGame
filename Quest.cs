@@ -256,12 +256,26 @@ public class Quest {
                         break;
                     case ProgressQuestID.Progress_FirstExpedition:
                         {
-                            byte completeness = 0;
-                            if (Crew.crewsList.Count > 0)
+                            byte completeness = 0;                       
+                            int crewsAboard = 0;
+                            if (Shuttle.shuttlesList.Count > 0)
+                            {
+                                completeness++;
+                                stepsFinished[1] = true;
+                                foreach (Shuttle s in Shuttle.shuttlesList) { if (s.crew != null) crewsAboard++; }
+                                stepsAddInfo[1] = Shuttle.shuttlesList.Count.ToString() + "/1";
+                            }
+                            else
+                            {
+                                stepsFinished[1] = false;
+                                stepsAddInfo[1] = "0/1";
+                            }
+                            crewsAboard += Crew.freeCrewsList.Count;
+                            if (crewsAboard > 0)
                             {
                                 completeness++;
                                 stepsFinished[0] = true;
-                                stepsAddInfo[0] = Crew.crewsList.Count.ToString() + "/1";
+                                stepsAddInfo[0] = crewsAboard.ToString() + "/1";
                             }
                             else
                             {
@@ -270,17 +284,6 @@ public class Quest {
                             }
 
 
-                            if (Shuttle.shuttlesList.Count > 0)
-                            {
-                                completeness++;
-                                stepsFinished[1] = true;
-                                stepsAddInfo[1] = Shuttle.shuttlesList.Count.ToString() + "/1";
-                            }
-                            else
-                            {
-                                stepsFinished[1] = false;
-                                stepsAddInfo[1] = "0/1";
-                            }
                             if (Expedition.expeditionsList.Count > 0)
                             {
                                 completeness++;

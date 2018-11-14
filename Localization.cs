@@ -2,11 +2,11 @@
 public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn}
 public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+ImproveGears, NoActivity, CrewSlots, NoFreeSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface
 }
 public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
-public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused, StorageOverloaded, ActionError };
+public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused, StorageOverloaded, ActionError, ShipArrived };
 public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
 
@@ -186,6 +186,7 @@ public static class Localization {
             case GameAnnouncements.GameUnpaused: return "Game unpaused";
             case GameAnnouncements.StorageOverloaded: return "Storage overloaded";
             case GameAnnouncements.ActionError: return "Error desu";
+            case GameAnnouncements.ShipArrived: return "Ship arrived";
         }
 	}
 
@@ -295,10 +296,12 @@ public static class Localization {
             case LocalizedPhrase.ImproveGears: return "Improve gears";
             case LocalizedPhrase.NoActivity: return "No activity";
             case LocalizedPhrase.CrewSlots: return "Crew slots";
+            case LocalizedPhrase.NoFreeSlots: return "No free slots";
             case LocalizedPhrase.HireNewCrew: return "Hire new crew";
             case LocalizedPhrase.ConstructShuttle: return "Construct shuttle";
             case LocalizedPhrase.ShuttleRepaired: return "A shuttle has been repaired";
             case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
+            case LocalizedPhrase.ShuttleOnMission: return "Shuttle on mission";
             case LocalizedPhrase.ObjectsLeft: return "Objects left";
             case LocalizedPhrase.NoSavesFound: return "No saves found";
             case LocalizedPhrase.CreateNewSave: return "Create new save";

@@ -58,7 +58,7 @@ public class Factory : WorkBuilding {
         if(outputResourcesBuffer > 0) {
             outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
         }
-        if (outputResourcesBuffer <= BUFFER_LIMIT)
+        if (outputResourcesBuffer <= BUFFER_LIMIT & workSpeed != 0)
         {
             if (isActive & energySupplied) workflow += workSpeed;
             if (workflow >= workflowToProcess) LabourResult();
@@ -76,6 +76,7 @@ public class Factory : WorkBuilding {
         {
             inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
             iterations = (int)(inputResourcesBuffer / recipe.inputValue);
+            inputResourcesBuffer -= iterations * recipe.inputValue;
             outputResourcesBuffer += iterations * recipe.outputValue;
             outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
         }

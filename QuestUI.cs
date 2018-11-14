@@ -379,13 +379,13 @@ public sealed class QuestUI : MonoBehaviour
         questAccessMap[1] = true; // trading
         questAccessMap[2] = true; // polytics
 
-        if (Crew.crewsList.Count > 3)
+        if (Crew.freeCrewsList.Count > 3)
         {
             int hqLevel = GameMaster.colonyController.hq.level;
             questAccessMap[3] = (hqLevel > 4); //exploring
             questAccessMap[4] = (hqLevel > 5); // problems or jokes
             questAccessMap[5] = (hqLevel > 6); // additional quests
-            if (Crew.crewsList.Count > 6 & QuantumTransmitter.transmittersList.Count > 3)
+            if (Crew.freeCrewsList.Count > 6 & QuantumTransmitter.transmittersList.Count > 3)
             {
                 questAccessMap[6] = (ChemicalFactory.current != null); // science
                 questAccessMap[7] = GameMaster.mainChunk.lifePower < 2000; // lifepower quests

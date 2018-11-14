@@ -334,7 +334,7 @@ public class SurfaceBlock : Block {
 			while ( i < surfaceObjects.Count ) {
 				if ( surfaceObjects[i] == null) {surfaceObjects.RemoveAt(i); continue;}
 				SurfaceRect sr = surfaceObjects[i].innerPosition;
-				if (sr.x <= pos.x && sr.z <= pos.y && sr.x + sr.size >= pos.x && sr.z+ sr.size >= pos.y) {
+				if (sr.x <= pos.x & sr.z <= pos.y & sr.x + sr.size > pos.x & sr.z+ sr.size > pos.y) {
 					if ( surfaceObjects[i].indestructible)
 					{	
 						s.Annihilate( true);
@@ -448,24 +448,6 @@ public class SurfaceBlock : Block {
 		if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
 		return GetAcceptablePosition(xsize, zsize);
 	}
-	public List<PixelPosByte> GetRandomPositions (byte xsize, byte zsize, int count) {
-		if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION || xsize < 1 || zsize < 1) return new List<PixelPosByte>();
-		List<PixelPosByte> acceptablePositions = GetAcceptablePositions(xsize,zsize, count);
-		if (acceptablePositions.Count <= count) return acceptablePositions;
-		else {
-			List<PixelPosByte> positions = new List<PixelPosByte>();
-			if (acceptablePositions.Count > count) {
-				int i = 0;
-				while ( i < count && acceptablePositions.Count > 0) {
-					int ppos = (int)(Random.value * (acceptablePositions.Count - 1));
-					positions.Add(acceptablePositions[ppos]);
-					acceptablePositions.RemoveAt(ppos);
-					i++;
-				}
-			}
-			return positions;
-		}
-	}
 
 	PixelPosByte GetAcceptablePosition (byte xsize, byte zsize) {
 		bool[,] map = GetBooleanMap();
@@ -499,8 +481,8 @@ public class SurfaceBlock : Block {
 
 	List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants) {
 		if (maxVariants > INNER_RESOLUTION * INNER_RESOLUTION) maxVariants = INNER_RESOLUTION * INNER_RESOLUTION;
-		if (xsize > INNER_RESOLUTION || zsize > INNER_RESOLUTION || xsize <=0 || zsize <= 0) return null;
-		bool[,] map = GetBooleanMap();
+		if (xsize > INNER_RESOLUTION | zsize > INNER_RESOLUTION | xsize <=0 | zsize <= 0) return null;
+		GetBooleanMap();
 		List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
 		for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++) {
 			int width = 0;
@@ -532,8 +514,9 @@ public class SurfaceBlock : Block {
 		return acceptablePositions;
 	}
 
-	List<PixelPosByte> GetAcceptablePositions(int count) {
+	public List<PixelPosByte> GetAcceptablePositions(int count) {
 		List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();
+        GetBooleanMap();
 		for (byte i = 0; i< INNER_RESOLUTION; i++) {
 			for (byte j =0; j < INNER_RESOLUTION; j++) {
 				if (map[i,j] == false) {acceptableVariants.Add(new PixelPosByte(i,j)); }

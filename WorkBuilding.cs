@@ -202,13 +202,13 @@ public abstract class WorkBuilding : Building {
                 break;
             case SHUTTLE_HANGAR_4_ID:
                 {
-                    workflowToProcess = 1;
+                    workflowToProcess = Hangar.BUILD_SHUTTLE_WORKFLOW;
                     maxWorkers = 45;
                 }
                 break;
             case RECRUITING_CENTER_4_ID:
                 {
-                    workflowToProcess = 1;
+                    workflowToProcess = RecruitingCenter.FIND_WORKFLOW;
                     maxWorkers = 40;
                 }
                 break;

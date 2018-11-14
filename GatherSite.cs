@@ -23,60 +23,55 @@ public class GatherSite : Worksite
         if (workersCount > 0)
         {
             workflow += workSpeed;
-                if (workflow >= 1)
+            if (workflow >= 1)
+            {
+                int i = 0;
+                bool resourcesFound = false;
+                List<Structure> strs = workObject.surfaceObjects;
+                while (i < strs.Count & workflow > 0)
                 {
-                    LabourResult();
+                    switch (strs[i].id)
+                    {
+                        case Structure.PLANT_ID:
+                            Plant p = strs[i] as Plant;
+                            if (p != null)
+                            {
+                                byte hstage = p.GetHarvestableStage();
+                                if (hstage != 255 & p.stage >= hstage)
+                                {
+                                    p.Harvest();
+                                    resourcesFound = true;
+                                    workflow--;
+                                }
+                            }
+                            break;
+                        case Structure.CONTAINER_ID:
+                            HarvestableResource hr = strs[i] as HarvestableResource;
+                            if (hr != null)
+                            {
+                                hr.Harvest();
+                                resourcesFound = true;
+                                workflow--;
+                            }
+                            break;
+                        case Structure.RESOURCE_STICK_ID:
+                            ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
+                            if (shr != null)
+                            {
+                                shr.Harvest();
+                                resourcesFound = true;
+                                workflow--;
+                            }
+                            break;
+                    }
+                    i++;
                 }
+                if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
+            }
         }
 
         destructionTimer -= GameMaster.LABOUR_TICK;
         if (destructionTimer <= 0) StopWork();
-    }
-
-    void LabourResult()
-    {
-        int i = 0;
-        bool resourcesFound = false;
-        List<Structure> strs = workObject.surfaceObjects;
-        while (i < strs.Count & workflow > 0 )
-        {
-            switch (strs[i].id)
-            {
-                case Structure.PLANT_ID:
-                    Plant p = strs[i] as Plant;
-                    if (p != null)
-                    {
-                        byte hstage = p.GetHarvestableStage();
-                        if (hstage != 255 & p.stage >= hstage)
-                        {
-                            p.Harvest();
-                            resourcesFound = true;
-                            workflow--;
-                        }
-                    }
-                    break;
-                case Structure.CONTAINER_ID:
-                    HarvestableResource hr = strs[i] as HarvestableResource;
-                    if (hr != null)
-                    {
-                        hr.Harvest();
-                        resourcesFound = true;
-                        workflow--;
-                    }
-                    break;
-                case Structure.RESOURCE_STICK_ID:
-                    ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
-                    if (shr != null)
-                    {
-                        shr.Harvest();
-                        resourcesFound = true;
-                        workflow--;
-                    }
-                    break;
-            }
-            i++;
-        }
-        if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
     }
 
     protected override void RecalculateWorkspeed()

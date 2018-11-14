@@ -97,13 +97,17 @@ public class Farm : WorkBuilding
                             }
                         }
                     }
+                    else
+                    {
+                        p.Harvest();
+                    }
                 }
                 i++;
             }
         }
         else
         {
-            List<PixelPosByte> pos = basement.GetRandomCells((int)(actionsPoints / PLANT_ACTIVITY_COST ));
+            List<PixelPosByte> pos = basement.GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
             int cost = Plant.GetCreateCost(crop_id);
             i = 0;
             while (i < pos.Count )
@@ -122,6 +126,7 @@ public class Farm : WorkBuilding
     {
         if (destroyed) return;
         else destroyed = true;
+        print("farm destruction");
         if (forced) { UnsetBasement(); }
         if (PrepareWorkbuildingForDestruction(forced))
         {

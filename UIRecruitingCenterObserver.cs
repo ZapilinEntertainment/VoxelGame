@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIRecruitingCenterObserver : UIObserver
+public sealed class UIRecruitingCenterObserver : UIObserver
 {
-    RecruitingCenter observingRCenter;
+    public enum RecruitingCenterObserverMode : byte { NoShowingCrew, HiringCrew, ShowingCrewInfo }
+    public RecruitingCenter observingRCenter { get; private set; }
 #pragma warning disable 0649
-    [SerializeField] RawImage mainCrewIcon; // fiti
     [SerializeField] InputField crewNameTextField; // fiti
     [SerializeField] Button hireButton, dismissButton; // fiti
-    [SerializeField] Text crewStatusText, crewSlotsText; // fiti
-    [SerializeField] RectTransform progressBar;//fiti
+    [SerializeField] Text  crewSlotsText; // fiti
     [SerializeField] Dropdown crewListDropdown; // fiti
+    [SerializeField] GameObject dropdownPseudoButton;
 #pragma warning restore 0649
-    Crew showingCrew;
-    int savedProgressBarValue = 100;
-    float fullProgressBarLength = -1, startOffset = 0;
+    public Crew showingCrew { get; private set; }
+    private int showingCrewSlots, showingTotalCrewSlots, lastCrewsUpdate = -1;
+    public RecruitingCenterObserverMode mode { get; private set; }
 
     public static UIRecruitingCenterObserver InitializeRCenterObserverScript()
     {
@@ -27,11 +27,6 @@ public class UIRecruitingCenterObserver : UIObserver
 
     public void SetObservingRCenter(RecruitingCenter rc)
     {
-        if (fullProgressBarLength == -1)
-        {
-            fullProgressBarLength = progressBar.rect.width;
-            startOffset = progressBar.offsetMin.x;
-        }
         if (rc == null)
         {
             SelfShutOff();
@@ -48,61 +43,91 @@ public class UIRecruitingCenterObserver : UIObserver
         STATUS_UPDATE_TIME = 1f; timer = STATUS_UPDATE_TIME;
     }
 
+    public void PrepareCrewsWindow()
+    {
+        switch (mode)
+        {
+            case RecruitingCenterObserverMode.NoShowingCrew:
+                if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel();
+                if (Crew.crewSlotsFree == 0)
+                {
+                    hireButton.interactable = false;
+                    hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoFreeSlots);
+                }
+                else
+                {
+                    hireButton.interactable = true;
+                    hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost().ToString() + ')';
+                }
+                hireButton.gameObject.SetActive(true);
+                dismissButton.gameObject.SetActive(false);
+                crewNameTextField.gameObject.SetActive(false);
+                dropdownPseudoButton.SetActive(Crew.freeCrewsList.Count > 0);
+                break;
+            case RecruitingCenterObserverMode.HiringCrew:
+                UIController.current.ActivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+                hireButton.gameObject.SetActive(false);
+                dismissButton.gameObject.SetActive(false);
+                crewNameTextField.gameObject.SetActive(false);
+                dropdownPseudoButton.SetActive(Crew.freeCrewsList.Count > 0);
+                break;
+            case RecruitingCenterObserverMode.ShowingCrewInfo:
+                UIController.current.ActivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+                hireButton.gameObject.SetActive(false);
+                dismissButton.gameObject.SetActive(true);
+                crewNameTextField.text = showingCrew.name;
+                crewNameTextField.gameObject.SetActive(true);
+                dropdownPseudoButton.SetActive(true);
+                break;
+        }
+        showingCrewSlots = Crew.crewSlotsFree;
+        showingTotalCrewSlots = Crew.crewSlotsTotal;
+        crewListDropdown.interactable = (Crew.freeCrewsList.Count > 0);
+        crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + showingCrewSlots.ToString() + " / " + showingTotalCrewSlots.ToString();
+
+        if (lastCrewsUpdate != Crew.totalOperations) PrepareCrewsDropdown();
+    }
+
     override protected void StatusUpdate()
     {
         if (!isObserving) return;
         if (observingRCenter == null) SelfShutOff();
         else
         {
-            if (showingCrew == null)
+            bool changeSlotsInfo = false;
+            if (showingCrewSlots != Crew.crewSlotsFree) { showingCrewSlots = Crew.crewSlotsFree; changeSlotsInfo = true; }
+            if (showingTotalCrewSlots != Crew.crewSlotsTotal) { showingTotalCrewSlots = Crew.crewSlotsTotal; changeSlotsInfo = true; }
+            if (changeSlotsInfo)
             {
-                if (savedProgressBarValue != (int)(observingRCenter.progress * 100))
-                {
-                    savedProgressBarValue = (int)(observingRCenter.progress * 100);
-                    crewStatusText.text = savedProgressBarValue.ToString() + '%';
-                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-                }
+                crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + showingCrewSlots.ToString() + " / " + showingTotalCrewSlots.ToString();
             }
+            crewListDropdown.interactable = (Crew.freeCrewsList.Count > 0);
+
+            RecruitingCenterObserverMode newMode = RecruitingCenterObserverMode.NoShowingCrew;
+            if (showingCrew != null)    newMode = RecruitingCenterObserverMode.ShowingCrewInfo;
             else
             {
-                if (savedProgressBarValue != (int)(showingCrew.stamina * 100))
-                {
-                    savedProgressBarValue = (int)(showingCrew.stamina * 100);
-                    crewStatusText.text = savedProgressBarValue.ToString() + '%';
-                    progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-                }
+                if (observingRCenter.finding) newMode = RecruitingCenterObserverMode.HiringCrew;
+            }
+            if (newMode != mode)
+            {
+                mode = newMode;
+                PrepareCrewsWindow();
+            }
+
+            if (lastCrewsUpdate != Crew.totalOperations)
+            {
+                PrepareCrewsDropdown();
+                dropdownPseudoButton.SetActive(Crew.freeCrewsList.Count > 0);
             }
         }
-    }
-
-    public void PrepareCrewsWindow()
-    {
-        showingCrew = null;
-        crewNameTextField.gameObject.SetActive(false);
-        hireButton.gameObject.SetActive(true);
-        hireButton.GetComponent<Image>().overrideSprite = (observingRCenter.finding) ? PoolMaster.gui_overridingSprite : null;
-        mainCrewIcon.enabled = false;
-        if (Crew.crewsList.Count == 0)
-        {
-            dismissButton.gameObject.SetActive(false);
-            crewListDropdown.interactable = false;
-        }
-        else
-        {
-            dismissButton.gameObject.SetActive(true);
-            crewListDropdown.interactable = true;
-        }
-        crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + Crew.crewSlots.ToString();
-        savedProgressBarValue = (int)(observingRCenter.progress * 100);
-        progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-        crewStatusText.text = savedProgressBarValue.ToString() + '%';
-    }
+    }    
 
     public void PrepareCrewsDropdown()
     {
         List<Dropdown.OptionData> crewButtons = new List<Dropdown.OptionData>();
         crewButtons.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost() + ')'));
-        var crews = Crew.crewsList;
+        var crews = Crew.freeCrewsList;
         if (crews.Count > 0)
         {
             for (int i = 0; i < crews.Count; i++)
@@ -111,77 +136,50 @@ public class UIRecruitingCenterObserver : UIObserver
             }
         }
         crewListDropdown.options = crewButtons;
+        lastCrewsUpdate = Crew.totalOperations;
     }
 
     public void SelectCrew(int i)
     {
         if (i == 0) // hire button
         {
-            PrepareCrewsWindow();
+            if (observingRCenter.StartHiring())
+            {
+                showingCrew = null;
+                mode = RecruitingCenterObserverMode.HiringCrew;
+                PrepareCrewsWindow();
+                
+            }
         }
         else
         {
             i--;
-            SelectCrew(Crew.crewsList[i]);
+            SelectCrew(Crew.freeCrewsList[i]);
         }
     }
-
     public void SelectCrew(Crew c)
     {
         showingCrew = c;
-        hireButton.gameObject.SetActive(false);
-        crewListDropdown.interactable = true;
-        crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + Crew.crewSlots.ToString();
-        crewNameTextField.gameObject.SetActive(true);
-        crewNameTextField.text = '\"' + showingCrew.name + '\"';
-
-        mainCrewIcon.enabled = true;
-        showingCrew.DrawCrewIcon(mainCrewIcon);
-
-        savedProgressBarValue = (int)(showingCrew.stamina * 100);
-        progressBar.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, startOffset, savedProgressBarValue / 100f * fullProgressBarLength);
-        crewStatusText.text = savedProgressBarValue.ToString() + '%';
+        mode = RecruitingCenterObserverMode.ShowingCrewInfo;
+        PrepareCrewsWindow();
     }
-
     public void StartHiring()
     {
-        if (observingRCenter.finding)
-        {
-            observingRCenter.finding = false;
-            hireButton.GetComponent<Image>().overrideSprite = null;
-            return;
-        }
-        else
-        {
-            if (Crew.crewSlots > 0)
-            {
-                if (GameMaster.colonyController.energyCrystalsCount >= RecruitingCenter.GetHireCost())
-                {
-                    GameMaster.colonyController.GetEnergyCrystals(RecruitingCenter.GetHireCost());
-                    observingRCenter.finding = true;
-                    hireButton.gameObject.SetActive(true);
-                    hireButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                }
-                else
-                {
-                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
-                    hireButton.GetComponent<Image>().overrideSprite = null;
-                }
-            }
-            else
-            {
-                UIController.current.MakeAnnouncement(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
-            }
-        }
+        if (observingRCenter != null) observingRCenter.StartHiring();
+        mode = RecruitingCenterObserverMode.HiringCrew;
+        PrepareCrewsWindow();
     }
 
     public void ChangeName()
     {
         showingCrew.name = crewNameTextField.text;
+        PrepareCrewsDropdown();
     }
     public void Dismiss()
     {
         showingCrew.Dismiss();
+        showingCrew = null;
+        mode = RecruitingCenterObserverMode.NoShowingCrew;
         PrepareCrewsWindow();
     }
 
@@ -190,6 +188,7 @@ public class UIRecruitingCenterObserver : UIObserver
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
+        if (mode != RecruitingCenterObserverMode.NoShowingCrew) UIController.current.DeactivateProgressPanel();
         gameObject.SetActive(false);
     }
 
@@ -198,6 +197,7 @@ public class UIRecruitingCenterObserver : UIObserver
         isObserving = false;
         observingRCenter = null;
         WorkBuilding.workbuildingObserver.ShutOff();
+        if (mode != RecruitingCenterObserverMode.NoShowingCrew) UIController.current.DeactivateProgressPanel();
         gameObject.SetActive(false);
     }
 

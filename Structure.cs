@@ -67,7 +67,10 @@ public class Structure : MonoBehaviour  {
         switch (id)
         {
             default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
-            case DRYED_PLANT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));break;
+            case DRYED_PLANT_ID:
+                model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));
+                FollowingCamera.main.AddMastSprite(model.transform);
+                break;
             case RESOURCE_STICK_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/resourcesStick"));break;
             case LANDED_ZEPPELIN_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));break;
             case TREE_OF_LIFE_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Tree of Life"));break;
@@ -186,15 +189,16 @@ public class Structure : MonoBehaviour  {
             case DOCK_ID: s = new GameObject("Dock").AddComponent<Dock>();break;
             case FARM_1_ID:
             case FARM_2_ID:
-            case FARM_3_ID:
-            case FARM_4_ID:
-            case FARM_5_ID:
+            case FARM_3_ID:            
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
-            case LUMBERMILL_3_ID:
+            case LUMBERMILL_3_ID:            
+                s = new GameObject("Farm").AddComponent<Farm>();break;
             case LUMBERMILL_4_ID:
             case LUMBERMILL_5_ID:
-                s = new GameObject("Farm").AddComponent<Farm>();break;
+            case FARM_4_ID:
+            case FARM_5_ID:
+                s = new GameObject("CoveredFarm").AddComponent<CoveredFarm>(); break;
             case MINE_ID:
                 s = new GameObject("Mine").AddComponent<Mine>();break;
             case SMELTERY_1_ID:
@@ -1060,12 +1064,15 @@ public class Structure : MonoBehaviour  {
 
     public void UnsetBasement()
     {
-        if (isBasement & basement != null & subscribedToChunkUpdate)
+        if (isBasement & basement != null )
         {
-            basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
-            subscribedToChunkUpdate = false;
-            BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
-            if (brc != null) basement.ClearStructureBlock(brc);
+            if (subscribedToChunkUpdate)
+            {
+                basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+                subscribedToChunkUpdate = false;
+                BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
+                if (brc != null) basement.ClearStructureBlock(brc);
+            }
             if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
         }
         basement = null;
@@ -1108,6 +1115,10 @@ public class Structure : MonoBehaviour  {
                 {
                     lastBasement.myChunk.DeleteBlock(upperBlock.pos);
                 }
+                else
+                {
+                    if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
+                }
             }
             return true;
         }
@@ -1123,6 +1134,7 @@ public class Structure : MonoBehaviour  {
         else destroyed = true;
         PrepareStructureForDestruction(forced);
         basement = null;
+        if (id == DRYED_PLANT_ID & transform.childCount == 1) FollowingCamera.main.RemoveMastSprite(transform.GetChild(0).GetInstanceID());
         Destroy(gameObject);
 	}
 }

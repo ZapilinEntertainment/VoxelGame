@@ -191,7 +191,9 @@ sealed public class Corn : Plant {
 
 	override public void Dry() {
 		Structure s = GetStructureByID(DRYED_PLANT_ID);
-		basement.AddCellStructure(s, new PixelPosByte(innerPosition.x, innerPosition.z));
+        s.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
+        StructureTimer st =  s.gameObject.AddComponent<StructureTimer>();
+        st.timer = 5;
 	}
 
     override public void Annihilate(bool forced)

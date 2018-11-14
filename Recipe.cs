@@ -57,9 +57,9 @@ public class Recipe {
 		oreRefiningRecipes[7] = MineralF_refining; oreRefiningRecipes[8] = MineralL_refining;
 
 		fuelFacilityRecipes = new Recipe[4];
-		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 100, 25);
-		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 90, 35);
-		Fuel_fromMineralF = new Recipe(ResourceType.mineral_F, ResourceType.Fuel,  FUEL_FROM_MINERAL_F_ID, 1, 10, 10);
+		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 100, 1000);
+		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 90, 3000);
+		Fuel_fromMineralF = new Recipe(ResourceType.mineral_F, ResourceType.Fuel,  FUEL_FROM_MINERAL_F_ID, 1, 10, 2700);
 		fuelFacilityRecipes[0] = NoRecipe;
 		fuelFacilityRecipes[1] = Fuel_fromNmetal;
 		fuelFacilityRecipes[2] = Fuel_fromNmetalOre;
@@ -104,4 +104,5 @@ public class Recipe {
 		default: return NoRecipe;
 		}
 	}
+    
 }

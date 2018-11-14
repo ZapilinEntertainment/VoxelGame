@@ -385,12 +385,12 @@ public class Grassland : MonoBehaviour
             Plant p = null;
             while (k < myBlock.surfaceObjects.Count)
             {
-                p = myBlock.surfaceObjects[k] as Plant;
-                if (p != null) p.Dry();
+                Structure s = myBlock.surfaceObjects[k];
+                if (s.id == Structure.PLANT_ID) s.Annihilate(forced);
                 k++;
             }
         }
-        myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+        if (myBlock.material_id == ResourceType.DIRT_ID) myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
         int i = grasslandList.IndexOf(this);
         if (i > 0)
         {

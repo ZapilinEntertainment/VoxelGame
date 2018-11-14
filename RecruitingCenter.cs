@@ -3,19 +3,19 @@
 [System.Serializable]
 public class RecruitingCenterSerializer {
 	public WorkBuildingSerializer workBuildingSerializer;
-	public float backupSpeed, progress;
+	public float backupSpeed;
 	public bool finding;
 }
 
 public sealed class RecruitingCenter : WorkBuilding {
     float backupSpeed = 0.02f;
-    public float progress{ get; private set; }
     public bool finding = false;
 	ColonyController colonyController;
 	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
-	static float hireCost = -1;
+	private static float hireCost = -1;
     public static UIRecruitingCenterObserver rcenterObserver;
     const float FIND_SPEED = 5;
+    public const float FIND_WORKFLOW = 10;
 
 	public static void ResetToDefaults_Static_RecruitingCenter() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
@@ -43,10 +43,10 @@ public sealed class RecruitingCenter : WorkBuilding {
             subscribedToUpdate = true;
         }
         colonyController = GameMaster.colonyController;
-        if (!movement) // здание не создавалось, а было перенесено
+        if (!movement) // здание не переносилось, а было построено
         {
             Crew.AddCrewSlots(CREW_SLOTS_FOR_BUILDING);
-            progress = 0;
+            workflow = 0;
         }
 	}
 
@@ -56,12 +56,12 @@ public sealed class RecruitingCenter : WorkBuilding {
 			if (finding) {
 				float candidatsCountFactor = colonyController.freeWorkers / Crew.OPTIMAL_CANDIDATS_COUNT;
 				if (candidatsCountFactor > 1) candidatsCountFactor = 1;
-				progress += ( FIND_SPEED * workSpeed * 0.3f + colonyController.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
-				if (progress >= 1) {
+				workflow += ( FIND_SPEED * workSpeed * 0.3f + colonyController.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
+				if (workflow >= workflowToProcess) {
 					Crew ncrew = new Crew();
 					ncrew.SetCrew(colonyController, hireCost);
-					Crew.crewsList.Add(ncrew);
-					progress = 0;
+					Crew.freeCrewsList.Add(ncrew);
+					workflow = 0;
 					finding = false;
                     UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
 					hireCost = hireCost * (1 + GameMaster.HIRE_COST_INCREASE);
@@ -71,9 +71,9 @@ public sealed class RecruitingCenter : WorkBuilding {
 			}
 		}
 		else {
-			if (progress > 0) {
-				progress -= backupSpeed * GameMaster.LABOUR_TICK;
-				if (progress < 0) progress = 0;
+			if (workflow > 0) {
+                workflow -= backupSpeed * GameMaster.LABOUR_TICK;
+				if (workflow < 0) workflow = 0;
 			}
 		}
 	}
@@ -89,6 +89,33 @@ public sealed class RecruitingCenter : WorkBuilding {
         rcenterObserver.SetObservingRCenter(this);
         showOnGUI = true;
         return rcenterObserver;
+    }
+
+    public bool StartHiring()
+    {
+        if (finding) return true;
+        else
+        {
+            if (Crew.crewSlotsFree > 0)
+            {
+                if (GameMaster.colonyController.energyCrystalsCount >= hireCost)
+                {
+                    GameMaster.colonyController.GetEnergyCrystals(hireCost);
+                    finding = true;
+                    return true;
+                }
+                else
+                {
+                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
+                    return false;
+                }
+            }
+            else
+            {
+                UIController.current.MakeAnnouncement(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
+                return false;
+            }
+        }
     }
 
 	#region save-load system
@@ -108,7 +135,6 @@ public sealed class RecruitingCenter : WorkBuilding {
 		LoadWorkBuildingData(rcs.workBuildingSerializer);
 		backupSpeed = rcs.backupSpeed;
 		finding = rcs.finding;
-		progress = rcs.progress;
 	}
 
 	RecruitingCenterSerializer GetRecruitingCenterSerializer() {
@@ -116,7 +142,6 @@ public sealed class RecruitingCenter : WorkBuilding {
 		rcs.workBuildingSerializer = GetWorkBuildingSerializer();
 		rcs.backupSpeed = backupSpeed;
 		rcs.finding = finding;
-		rcs.progress = progress;
 		return rcs;
 	}
 	#endregion

@@ -31,9 +31,10 @@ public sealed class PoolMaster : MonoBehaviour {
     private static Transform zoneCube;
     private static bool useTextureRotation = false;
 
-    const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;
+    public static readonly Color gameOrangeColor = new Color(0.933f, 0.5686f, 0.27f);
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
-    const int SHIPS_BUFFER_SIZE = 5;
+    private const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;    
+    private const int SHIPS_BUFFER_SIZE = 5;
 
     public void Load() {
 		if (current != null) return;

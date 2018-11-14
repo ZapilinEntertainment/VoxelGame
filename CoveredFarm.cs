@@ -22,8 +22,9 @@ public class CoveredFarm : WorkBuilding {
 	}
 
 	override protected void LabourResult() {
-		s.AddResource( new ResourceContainer (outputResource, output_value * workflow / workflowToProcess) );
-		workflow = 0;
+        int iterations = (int)(workflow / workflowToProcess);
+		s.AddResource( new ResourceContainer (outputResource, output_value * iterations) );
+		workflow -= iterations * workflowToProcess;
 	}
 
 	override protected void RecalculateWorkspeed() {

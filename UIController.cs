@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum ChosenObjectType{None,Surface, Cube, Structure, Worksite}
-public enum Icons {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted  }
-public enum ProgressPanelMode { Offline, Powerplant, Hangar}
+public enum ChosenObjectType : byte {None,Surface, Cube, Structure, Worksite}
+public enum Icons : byte {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted  }
+public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter}
 
 
 sealed public class UIController : MonoBehaviour {	
@@ -14,19 +14,26 @@ sealed public class UIController : MonoBehaviour {
 
 #pragma warning disable 0649
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
-    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText;
+    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText;
     [SerializeField] Text[] announcementStrings;
-    [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton;
+    [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill;
     [SerializeField] Transform storagePanelContent;
+    [SerializeField] RawImage progressPanelIcon;
 #pragma warning restore 0649
+
+    public ProgressPanelMode progressPanelMode { get; private set; }
+
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
     public Texture buildingsTexture { get; private set; }
-    float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf;
-    float updateTimer, moneyFlySpeed = 0;
+    public SurfaceBlock chosenSurface { get; private set; }
+
+    private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
+    updateTimer, moneyFlySpeed = 0;
+    private byte showingStorageOccupancy;
     Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
-    enum MenuSection { NoSelection, Save, Load, Options }
+    private enum MenuSection { NoSelection, Save, Load, Options }
     MenuSection selectedMenuSection = MenuSection.NoSelection;
 
     const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
@@ -34,12 +41,12 @@ sealed public class UIController : MonoBehaviour {
     bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, showLayerCut = false, activeAnnouncements = false, localized = false;
     public int interceptingConstructPlaneID = -1;
 
-	float saved_energySurplus;
-    int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
+	private float saved_energySurplus;
+    private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber;
-    ProgressPanelMode progressPanelMode;
+    
 
-	public SurfaceBlock chosenSurface{get;private set;}
+	
     [SerializeField] QuestUI _questUI;
     public QuestUI questUI { get; private set; }
 
@@ -73,170 +80,276 @@ sealed public class UIController : MonoBehaviour {
 
     void Update() {
         updateTimer -= Time.deltaTime;
-        if (updateTimer <= 0)
-        {
-            updateTimer = DATA_UPDATE_TIME;
-            ColonyController colony = GameMaster.colonyController;
-            if (showColonyInfo)
+        ColonyController colony = GameMaster.colonyController;
+        if (colony != null)
+        {            
+            if (updateTimer <= 0)
             {
-                if (colony != null)
-                {
-                    if (showingGearsCf != colony.gears_coefficient)
-                    {
-                        showingGearsCf = colony.gears_coefficient;
-                        gearsText.text = string.Format("{0:0.###}", showingGearsCf);
-                    }
-                    if (showingHappinessCf != colony.happiness_coefficient)
-                    {
-                        showingHappinessCf = colony.happiness_coefficient;
-                        happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
-                    }
-                    if (showingBirthrate != colony.realBirthrate)
-                    {
-                        showingBirthrate = colony.realBirthrate ;
-                        birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
-                    }
-                    if (showingHospitalCf != colony.hospitals_coefficient)
-                    {
-                        showingHospitalCf = colony.hospitals_coefficient;
-                        hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
-                    }
-                    if (showingHealthCf != colony.health_coefficient)
-                    {
-                        showingHealthCf = colony.health_coefficient;
-                        healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
-                    }
-                }
-            }
-            else
-            {
-                if (showStorageInfo)
-                {
-                    if (lastStorageOperationNumber != colony.storage.operationsDone)
-                    {
-                        RecalculateStoragePanel();
-                    }
-                }
-            }
+                Storage storage = colony.storage;
+                updateTimer = DATA_UPDATE_TIME;
 
-            if (progressPanel.activeSelf)
-            {
-                switch (progressPanelMode)
+                byte so = (byte)(storage.totalVolume / storage.maxVolume * 100);
+                if (showingStorageOccupancy != so)
                 {
-                    case ProgressPanelMode.Powerplant:
-                        UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
-                        if (uwb == null || (!uwb.gameObject.activeSelf | uwb.observingWorkbuilding.id != Structure.MINERAL_POWERPLANT_2_ID))
-                        {
-                            DeactivateProgressPanel();
-                            return;
-                        }
-                        else
-                        {
-                            Powerplant pp = uwb.observingWorkbuilding as Powerplant;
-                            RawImage ri = progressPanel.transform.GetChild(0).GetComponent<RawImage>();
-                            ri.texture = resourcesTexture;
-                            ri.uvRect = ResourceType.GetTextureRect(pp.GetFuelResourseID());
-                            Transform t = progressPanel.transform.GetChild(1);
-                            RectTransform rt = t.GetChild(0).GetComponent<RectTransform>();
-                            rt.offsetMax = new Vector2((pp.fuelLeft - 1) * rt.rect.width, 0);
-                            t.GetChild(1).GetComponent<Text>().text = string.Format("{0:0.###}", pp.fuelLeft * 100) + '%';
-                        }
-                        break;
+                    showingStorageOccupancy = so;
+                    float f = so / 100f;
+                    storageOccupancyFullfill.fillAmount = f;
+                    storageOccupancyFullfill.color = Color.Lerp(PoolMaster.gameOrangeColor, Color.red, f * f);
                 }
-            }
-            else
-            {
-                if (hospitalPanel.activeSelf)
+
+                if (showColonyInfo)
                 {
-                    int nhm = Hospital.GetBirthrateModeIndex();
-                    if (nhm != hospitalPanel_savedMode)
-                    {
-                        switch (nhm)
+                        if (showingGearsCf != colony.gears_coefficient)
                         {
-                            case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
-                            case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
-                            case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+                            showingGearsCf = colony.gears_coefficient;
+                            gearsText.text = string.Format("{0:0.###}", showingGearsCf);
                         }
-                        hospitalPanel_savedMode = nhm;
+                        if (showingHappinessCf != colony.happiness_coefficient)
+                        {
+                            showingHappinessCf = colony.happiness_coefficient;
+                            happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
+                        }
+                        if (showingBirthrate != colony.realBirthrate)
+                        {
+                            showingBirthrate = colony.realBirthrate;
+                            birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
+                        }
+                        if (showingHospitalCf != colony.hospitals_coefficient)
+                        {
+                            showingHospitalCf = colony.hospitals_coefficient;
+                            hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
+                        }
+                        if (showingHealthCf != colony.health_coefficient)
+                        {
+                            showingHealthCf = colony.health_coefficient;
+                            healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
+                        }
+                }
+                else
+                {
+                    if (showStorageInfo)
+                    {
+                        
+                        if (lastStorageOperationNumber != storage.operationsDone)
+                        {
+                            RecalculateStoragePanel();
+                        }
+                    }
+                }
+
+                if (progressPanel.activeSelf)
+                {
+                    switch (progressPanelMode)
+                    {
+                        case ProgressPanelMode.Powerplant:
+                            {
+                                UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
+                                if (uwb == null || (!uwb.gameObject.activeSelf))
+                                {
+                                    DeactivateProgressPanel();
+                                    return;
+                                }
+                                else
+                                {
+                                    Powerplant pp = uwb.observingWorkbuilding as Powerplant;
+                                    RawImage ri = progressPanel.transform.GetChild(0).GetComponent<RawImage>();
+                                    ri.texture = resourcesTexture;
+                                    ri.uvRect = ResourceType.GetTextureRect(pp.GetFuelResourseID());
+                                    progressPanelFullfill.fillAmount = pp.fuelLeft;
+                                    progressPanelText.text = string.Format("{0:0.###}", pp.fuelLeft * 100) + '%';
+                                }
+                                break;
+                            }
+                        case ProgressPanelMode.Hangar:
+                            {
+                                UIHangarObserver uho = Hangar.hangarObserver;
+                                if (uho == null)
+                                {
+                                    DeactivateProgressPanel();
+                                    return;
+                                }
+                                else
+                                {
+                                    switch (uho.mode)
+                                    {
+                                        case HangarObserverMode.BuildingShuttle:
+                                            {
+                                                float x = uho.observingHangar.workflow / uho.observingHangar.workflowToProcess;
+                                                progressPanelFullfill.fillAmount = x;
+                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                                break;
+                                            }
+                                        case HangarObserverMode.ShuttleInside:
+                                            {
+                                                float x = uho.observingHangar.shuttle.condition;
+                                                progressPanelFullfill.fillAmount = x;
+                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                                break;
+                                            }
+                                        case HangarObserverMode.NoShuttle:
+                                            DeactivateProgressPanel();
+                                            break;
+                                    }
+                                }
+                                break;
+                            }
+                        case ProgressPanelMode.RecruitingCenter:
+                            {
+                                UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
+                                if (urc == null | !urc.isObserving) return;
+                                else
+                                {
+                                    switch (urc.mode)
+                                    {
+                                        case UIRecruitingCenterObserver.RecruitingCenterObserverMode.NoShowingCrew:
+                                            DeactivateProgressPanel();
+                                            return;
+                                        case UIRecruitingCenterObserver.RecruitingCenterObserverMode.HiringCrew:
+                                            {
+                                                float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
+                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                                progressPanelFullfill.fillAmount = x;
+                                                break;
+                                            }
+                                        case UIRecruitingCenterObserver.RecruitingCenterObserverMode.ShowingCrewInfo:
+                                            {
+                                                float x = urc.showingCrew.stamina;
+                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                                progressPanelFullfill.fillAmount = x;
+                                                break;
+                                            }
+                                    }
+                                }
+                                break;
+                            }
                     }
                 }
                 else
                 {
-                    if (expeditionCorpusPanel.activeSelf)
+                    if (hospitalPanel.activeSelf)
                     {
-                        int x = Shuttle.shuttlesList.Count;
-                        if (exCorpus_savedShuttlesCount != x)
+                        int nhm = Hospital.GetBirthrateModeIndex();
+                        if (nhm != hospitalPanel_savedMode)
                         {
-                            exCorpus_savedShuttlesCount = x;
-                            expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
+                            switch (nhm)
+                            {
+                                case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
+                                case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
+                                case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+                            }
+                            hospitalPanel_savedMode = nhm;
                         }
-                        x = Crew.crewsList.Count;
-                        if (x != exCorpus_savedCrewsCount)
+                    }
+                    else
+                    {
+                        if (expeditionCorpusPanel.activeSelf)
                         {
-                            exCorpus_savedCrewsCount = x;
-                            expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
-                        }
-                        x = QuantumTransmitter.transmittersList.Count;
-                        if (x != exCorpus_savedTransmittersCount)
-                        {
-                            exCorpus_savedTransmittersCount = x;
-                            expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
+                            int x = Shuttle.shuttlesList.Count;
+                            if (exCorpus_savedShuttlesCount != x)
+                            {
+                                exCorpus_savedShuttlesCount = x;
+                                expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
+                            }
+                            x = Crew.freeCrewsList.Count;
+                            if (x != exCorpus_savedCrewsCount)
+                            {
+                                exCorpus_savedCrewsCount = x;
+                                expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
+                            }
+                            x = QuantumTransmitter.transmittersList.Count;
+                            if (x != exCorpus_savedTransmittersCount)
+                            {
+                                exCorpus_savedTransmittersCount = x;
+                                expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
+                            }
                         }
                     }
                 }
+
+                //up panel values:
+                {
+                    bool valuesChanged = false;
+                    if (saved_freeWorkersCount != colony.freeWorkers)
+                    {
+                        saved_freeWorkersCount = colony.freeWorkers;
+                        valuesChanged = true;
+                    }
+                    if (saved_citizenCount != colony.citizenCount)
+                    {
+                        saved_citizenCount = colony.citizenCount;
+                        valuesChanged = true;
+                    }
+                    if (saved_livespaceCount != colony.totalLivespace)
+                    {
+                        saved_livespaceCount = colony.totalLivespace;
+                        valuesChanged = true;
+                    }
+                    if (valuesChanged)
+                    {
+                        citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
+                    }
+
+                    valuesChanged = false;
+                    if (saved_energyCount != colony.energyStored)
+                    {
+                        saved_energyCount = (int)colony.energyStored;
+                        valuesChanged = true;
+                    }
+                    if (saved_energyMax != colony.totalEnergyCapacity)
+                    {
+                        saved_energyMax = (int)colony.totalEnergyCapacity;
+                        valuesChanged = true;
+                    }
+                    float es = (int)(colony.energySurplus * 10) / 10;
+                    if (saved_energySurplus != es)
+                    {
+                        saved_energySurplus = es;
+                        valuesChanged = true;
+                    }
+                    if (valuesChanged)
+                    {
+                        string surplus = es.ToString();
+                        if (es > 0) surplus = '+' + surplus;
+                        energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
+                    }
+
+                    if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
+                    {
+                        saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
+                        energyCrystalsString.text = saved_energyCrystalsCount.ToString();
+                    }
+                }
             }
-
-            //up panel values:
+            if (moneyFlySpeed != 0)
             {
-                bool valuesChanged = false;
-                if (saved_freeWorkersCount != colony.freeWorkers)
+                Vector3 pos = moneyFlyingText.rectTransform.position;
+                if (moneyFlySpeed > 0)
                 {
-                    saved_freeWorkersCount = colony.freeWorkers;
-                    valuesChanged = true;
+                    moneyFlySpeed -= Time.deltaTime / 5f;
+                    if (moneyFlySpeed < 0)
+                    {
+                        moneyFlySpeed = 0;
+                        moneyFlyingText.enabled = false;
+                    }
+                    else
+                    {
+                        moneyFlyingText.rectTransform.position = Vector3.Lerp(flyingMoneyOriginalPoint + 2 * Vector3.up, flyingMoneyOriginalPoint, moneyFlySpeed);
+                        moneyFlyingText.color = Color.Lerp(Color.green, new Color(0, 1, 0, 0), moneyFlySpeed);
+                    }
                 }
-                if (saved_citizenCount != colony.citizenCount)
+                else
                 {
-                    saved_citizenCount = colony.citizenCount;
-                    valuesChanged = true;
-                }
-                if (saved_livespaceCount != colony.totalLivespace)
-                {
-                    saved_livespaceCount = colony.totalLivespace;
-                    valuesChanged = true;
-                }
-                if (valuesChanged)
-                {
-                    citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
-                }
-
-                valuesChanged = false;
-                if (saved_energyCount != colony.energyStored)
-                {
-                    saved_energyCount = (int)colony.energyStored;
-                    valuesChanged = true;
-                }
-                if (saved_energyMax != colony.totalEnergyCapacity)
-                {
-                    saved_energyMax = (int)colony.totalEnergyCapacity;
-                    valuesChanged = true;
-                }
-                float es = (int)(colony.energySurplus * 10) / 10;
-                if (saved_energySurplus != es)
-                {
-                    saved_energySurplus = es;
-                    valuesChanged = true;
-                }
-                if (valuesChanged)
-                {
-                    string surplus = es.ToString();
-                    if (es > 0) surplus = '+' + surplus;
-                    energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
-                }
-
-                if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
-                {
-                    saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
-                    energyCrystalsString.text = saved_energyCrystalsCount.ToString();
+                    moneyFlySpeed += Time.deltaTime / 5f;
+                    if (moneyFlySpeed < 1)
+                    {
+                        moneyFlyingText.rectTransform.position = Vector3.Lerp(flyingMoneyOriginalPoint, flyingMoneyOriginalPoint + 2 * Vector3.up, moneyFlySpeed);
+                        moneyFlyingText.color = Color.Lerp(new Color(1, 0, 0, 0), Color.red, moneyFlySpeed);
+                    }
+                    else
+                    {
+                        moneyFlySpeed = 0;
+                        moneyFlyingText.enabled = false;
+                    }
                 }
             }
         }
@@ -268,39 +381,7 @@ sealed public class UIController : MonoBehaviour {
                     activeAnnouncements = false;
                 }
             }
-        }
-        if (moneyFlySpeed != 0)
-        {
-            Vector3 pos = moneyFlyingText.rectTransform.position;
-            if (moneyFlySpeed > 0)
-            {
-                moneyFlySpeed -= Time.deltaTime / 5f;
-                if (moneyFlySpeed < 0)
-                {
-                    moneyFlySpeed = 0;
-                    moneyFlyingText.enabled = false;
-                }
-                else
-                {
-                    moneyFlyingText.rectTransform.position = Vector3.Lerp(flyingMoneyOriginalPoint + 2 * Vector3.up, flyingMoneyOriginalPoint, moneyFlySpeed);
-                    moneyFlyingText.color = Color.Lerp(Color.green, new Color(0, 1, 0, 0), moneyFlySpeed);
-                }
-            }
-            else
-            {
-                moneyFlySpeed += Time.deltaTime/5f;
-                if (moneyFlySpeed < 1)
-                {
-                    moneyFlyingText.rectTransform.position = Vector3.Lerp(flyingMoneyOriginalPoint, flyingMoneyOriginalPoint + 2 * Vector3.up, moneyFlySpeed);
-                    moneyFlyingText.color = Color.Lerp(new Color(1, 0, 0, 0), Color.red,  moneyFlySpeed);
-                }
-                else
-                {
-                   moneyFlySpeed = 0;
-                    moneyFlyingText.enabled = false;
-                }
-            }
-        }
+        }        
     }
 
     #region menu
@@ -322,7 +403,6 @@ sealed public class UIController : MonoBehaviour {
             FollowingCamera.camRotationBlocked = false;
             FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
-            optionsPanel.SetActive(false);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
             Time.timeScale = 1;
@@ -368,10 +448,10 @@ sealed public class UIController : MonoBehaviour {
                     menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
                     SaveSystemUI.current.CloseButton();
                     break;
-               // case MenuSection.Options:
-                 //   menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                 //   optionsPanel.SetActive(false);
-                 //   break;
+                case MenuSection.Options:
+                    menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
+                    optionsPanel.SetActive(false);
+                    break;
             }
             selectedMenuSection = ms;
             switch (selectedMenuSection)
@@ -422,7 +502,7 @@ sealed public class UIController : MonoBehaviour {
                             case BlockType.Cave:
                             case BlockType.Surface:
                                 SurfaceBlock sb = b as SurfaceBlock;
-                                if (sb == chosenSurface) return;
+                                if (sb == chosenSurface & chosenObjectType == ChosenObjectType.Surface) return;
                                 else
                                 {
                                     chosenSurface = sb;
@@ -481,7 +561,6 @@ sealed public class UIController : MonoBehaviour {
 		}
 		else SelectedObjectLost();
 	}
-
 
     public void ChangeChosenObject(ChosenObjectType newChosenType)
     {  
@@ -611,44 +690,129 @@ sealed public class UIController : MonoBehaviour {
     {
         chosenWorksite = ws;
         ChangeChosenObject(ChosenObjectType.Worksite);
-    }
-
-    
+    }    
 
     #region auxiliary panels
     public void ActivateProgressPanel(ProgressPanelMode mode)
-    {        
+    {       
         switch (mode)
         {
             case ProgressPanelMode.Powerplant:
-                UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
-                if (uwb == null || !uwb.gameObject.activeSelf)
                 {
-                    DeactivateProgressPanel();
-                    return;
-                }
-                else
-                {
-                    Powerplant pp = uwb.observingWorkbuilding as Powerplant;
-                    Transform t = progressPanel.transform;
-                    RawImage ri = t.GetChild(0).GetComponent<RawImage>();
-                    ri.texture = resourcesTexture;
-                    int resourceID = pp.GetFuelResourseID();
-                    ri.uvRect = ResourceType.GetTextureRect(resourceID);
-                    ri.transform.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(resourceID);
-                    t = t.GetChild(1);
-                    RectTransform rt = t.GetChild(0).GetComponent<RectTransform>();
-                    rt.offsetMax = new Vector2((Mathf.Clamp(pp.fuelLeft,0,1) - 1) * rt.rect.width, 0);
-                    t.GetChild(1).GetComponent<Text>().text = string.Format("{0:0.###}", pp.fuelLeft) + '%';
+                    UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
+                    if (uwb == null || !uwb.isObserving)
+                    {
+                        DeactivateProgressPanel();
+                        return;
+                    }
+                    else
+                    {
+                        Powerplant pp = uwb.observingWorkbuilding as Powerplant;
+                        progressPanelIcon.texture = resourcesTexture;
+                        int resourceID = pp.GetFuelResourseID();
+                        progressPanelIcon.uvRect = ResourceType.GetTextureRect(resourceID);                        
+                        Text resourceNameText = progressPanelIcon.transform.GetChild(0).GetComponent<Text>();
+                        resourceNameText.text = Localization.GetResourceName(resourceID);
+                        resourceNameText.gameObject.SetActive(true);
 
-                    progressPanel.SetActive(true);
-                    progressPanelMode = mode;
+                        progressPanelFullfill.color = PoolMaster.gameOrangeColor;
+                        progressPanelFullfill.fillAmount = pp.fuelLeft;
+                        progressPanelText.text = string.Format("{0:0.###}", pp.fuelLeft) + '%';
+
+                        progressPanel.SetActive(true);
+                        progressPanelMode = mode;
+                    }
+                    break;
                 }
+            case ProgressPanelMode.Hangar:
+                {
+                    UIHangarObserver uho = Hangar.hangarObserver;
+                    if (uho == null || !uho.isObserving) { DeactivateProgressPanel(); return; }
+                    else
+                    {
+                        progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
+                        progressPanelIcon.texture = iconsTexture;
+                        Hangar h = uho.observingHangar;
+                        Shuttle sh = h.shuttle;
+                        bool haveShuttle = !(sh == null);
+                        if (haveShuttle)
+                        {
+                            progressPanelIcon.uvRect = GetTextureUV(sh.condition > 0.85 ? Icons.ShuttleGoodIcon : (sh.condition < 0.5 ? Icons.ShuttleBadIcon : Icons.ShuttleNormalIcon));
+                            if (uho.mode == HangarObserverMode.ShuttleOnMission)
+                            {
+                                progressPanelText.text = Localization.GetPhrase(LocalizedPhrase.ShuttleOnMission);
+                                progressPanelFullfill.fillAmount = 1;
+                                progressPanelFullfill.color = Color.white;
+                            }
+                            else
+                            {
+                                progressPanelText.text = ((int)(sh.condition * 100)).ToString() + '%';
+                                progressPanelFullfill.fillAmount = sh.condition;
+                                progressPanelFullfill.color = Color.green;
+                            }
+                        }
+                        else
+                        {
+                            progressPanelIcon.uvRect = GetTextureUV(Icons.TaskFrame);
+                            if (h.constructing)
+                            {
+                                float x = h.workflow / h.workflowToProcess;
+                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                progressPanelFullfill.fillAmount = x;
+                                progressPanelFullfill.color = PoolMaster.gameOrangeColor;
+                            }
+                            else
+                            {
+                                DeactivateProgressPanel();
+                                return;
+                            }
+                        }                        
+                    }
+                    break;
+                }
+            case ProgressPanelMode.RecruitingCenter:
+                {
+                    UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
+                    if (urc == null || !urc.isObserving) { DeactivateProgressPanel(); return; }
+                    else
+                    {
+                        progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
+                        switch (urc.mode)
+                        {
+                            case UIRecruitingCenterObserver.RecruitingCenterObserverMode.NoShowingCrew:
+                                DeactivateProgressPanel();
+                                return;
+                            case UIRecruitingCenterObserver.RecruitingCenterObserverMode.HiringCrew:
+                                {
+                                    progressPanelIcon.texture = iconsTexture;
+                                    progressPanelIcon.uvRect = GetTextureUV(Icons.TaskFrame);
+                                    float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
+                                    progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                    progressPanelFullfill.fillAmount = x;
+                                    progressPanelFullfill.color = PoolMaster.gameOrangeColor;
+                                    break;
+                                }
+                            case UIRecruitingCenterObserver.RecruitingCenterObserverMode.ShowingCrewInfo:
+                                {
+                                    progressPanelIcon.texture = iconsTexture;
+                                    float c = urc.showingCrew.stamina;
+                                    progressPanelIcon.uvRect = GetTextureUV(c > Crew.HIGH_STAMINA_VALUE ? Icons.CrewGoodIcon : (c < Crew.LOW_STAMINA_VALUE ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
+                                    progressPanelText.text = ((int)(c * 100)).ToString() + '%';
+                                    progressPanelFullfill.fillAmount = c;
+                                    progressPanelFullfill.color = Color.blue;
+                                    break;
+                                }
+                        }
+                    }
                 break;
+                }
         }
+        progressPanel.SetActive(true);
+        progressPanelMode = mode;
     }
     public void DeactivateProgressPanel()
     {
+        //print("detector");
         progressPanel.SetActive(false);
         progressPanelMode = ProgressPanelMode.Offline;
     }
@@ -703,7 +867,7 @@ sealed public class UIController : MonoBehaviour {
         expeditionCorpusPanel.SetActive(true);
         exCorpus_savedShuttlesCount = Shuttle.shuttlesList.Count;
         expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
-        exCorpus_savedCrewsCount = Crew.crewsList.Count;
+        exCorpus_savedCrewsCount = Crew.freeCrewsList.Count;
         expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
         exCorpus_savedTransmittersCount = QuantumTransmitter.transmittersList.Count;
         expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
@@ -736,11 +900,13 @@ sealed public class UIController : MonoBehaviour {
 
     public void ActivateTradePanel()
     {
+        FollowingCamera.camRotationBlocked = true;
         tradePanel.SetActive(true);
     }
     public void CloseTradePanel()
     {
         tradePanel.SetActive(false);
+        FollowingCamera.camRotationBlocked = false;
     }
     #endregion
 
@@ -862,6 +1028,7 @@ sealed public class UIController : MonoBehaviour {
             {
                 if (showLayerCut) LayerCutButton();
             }
+            FollowingCamera.camRotationBlocked = true;
             storageToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             storagePanel.SetActive(true);
             RecalculateStoragePanel();
@@ -870,6 +1037,7 @@ sealed public class UIController : MonoBehaviour {
         {
             storageToggleButton.overrideSprite = null;
             storagePanel.SetActive(false);
+            FollowingCamera.camRotationBlocked = false;
         }
     }
     public void LayerCutButton()

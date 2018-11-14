@@ -17,6 +17,8 @@ public sealed class Hangar : WorkBuilding {
     public static UIHangarObserver hangarObserver;
     private List<Block> dependentBlocksList;
 
+    public const float BUILD_SHUTTLE_WORKFLOW = 12000;
+
     public static void ResetToDefaults_Static_Hangar() {
 		hangarsCount = 0;
 	}
@@ -99,33 +101,16 @@ public sealed class Hangar : WorkBuilding {
             // end
         }
     }
-    override public void ChunkUpdated(ChunkPos pos)
+    public override void SectionDeleted(ChunkPos pos)
     {
-        if (basement == null) return;
-        // #checkPositionCorrectness - Hangar
-        if (dependentBlocksList != null)
+        if (correctLocation)
         {
-            if (dependentBlocksList.Count > 0)
-            {
-                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
-                dependentBlocksList.Clear();
-            }
-        }
-        else dependentBlocksList = new List<Block>();
-        switch (modelRotation)
-        {
-            case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z + 1), 0, 1, this, ref dependentBlocksList); break;
-            case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x + 1, basement.pos.y, basement.pos.z), 2, 1, this, ref dependentBlocksList); break;
-            case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z - 1), 4, 1, this, ref dependentBlocksList); break;
-            case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x - 1, basement.pos.y, basement.pos.z), 6, 1, this, ref dependentBlocksList); break;
-        }
-        if (showOnGUI)
-        {
-            if (!correctLocation)
+            correctLocation = false;
+            if (showOnGUI)
             {
                 //#incorrectLocationDisplaying - Hangar
                 float len = 1;
-                float x = basement.transform.position.x, y = basement.transform.position.y, z = basement.transform.position.z;
+                float x = basement.transform.position.x, y = transform.position.y, z = basement.transform.position.z;
                 switch (modelRotation)
                 {
                     case 0:
@@ -163,9 +148,12 @@ public sealed class Hangar : WorkBuilding {
                 }
                 //end
             }
-            else PoolMaster.current.DisableZone();
+            if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+            {
+                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                dependentBlocksList.Clear();
+            }
         }
-        // end
     }
 
     public void StartConstruction()
@@ -195,24 +183,88 @@ public sealed class Hangar : WorkBuilding {
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
+        Chunk c = b.myChunk;
+        if (c.GetBlock(b.pos.x, b.pos.y, b.pos.z + 1) == null) modelRotation = 0;
+        else
+        {
+            if (c.GetBlock(b.pos.x + 1, b.pos.y, b.pos.z) == null) modelRotation = 2;
+            else
+            {
+                if (c.GetBlock(b.pos.x , b.pos.y, b.pos.z - 1) == null) modelRotation = 4;
+                else
+                {
+                    if (c.GetBlock(b.pos.x - 1, b.pos.y, b.pos.z) == null) modelRotation = 6;
+                }
+            }
+        }
 		SetBuildingData(b, pos);
-		Transform modelTransform = transform.GetChild(0);
-		if (basement.pos.z == 0) {
-			modelTransform.transform.localRotation = Quaternion.Euler(0, 180,0); 
-		}
-		else {
-			if (basement.pos.z != Chunk.CHUNK_SIZE - 1) {
-				if (basement.pos.x == 0) {
-					modelTransform.transform.localRotation = Quaternion.Euler(0, -90,0); 
-				}
-				else {
-					if (basement.pos.x == Chunk.CHUNK_SIZE - 1) {
-						modelTransform.transform.localRotation = Quaternion.Euler(0, 90,0);
-					}
-				}
-			}
-		}
-		hangarsCount++;        
+        // #checkPositionCorrectness - Hangar
+        {
+            if (dependentBlocksList != null)
+            {
+                if (dependentBlocksList.Count > 0)
+                {
+                    basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                    dependentBlocksList.Clear();
+                }
+            }
+            else dependentBlocksList = new List<Block>();
+            switch (modelRotation)
+            {
+                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z + 1), 0, 1, this, ref dependentBlocksList); break;
+                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x + 1, basement.pos.y, basement.pos.z), 2, 1, this, ref dependentBlocksList); break;
+                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z - 1), 4, 1, this, ref dependentBlocksList); break;
+                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x - 1, basement.pos.y, basement.pos.z), 6, 1, this, ref dependentBlocksList); break;
+            }
+            if (showOnGUI)
+            {
+                if (!correctLocation)
+                {
+                    //#incorrectLocationDisplaying - Hangar
+                    float len = 1;
+                    float x = basement.transform.position.x, y = basement.transform.position.y, z = basement.transform.position.z;
+                    switch (modelRotation)
+                    {
+                        case 0:
+                            len = basement.pos.z * Block.QUAD_SIZE;
+                            PoolMaster.current.DrawZone(
+                        new Vector3(x, y, z + Block.QUAD_SIZE / 2f + len / 2f),
+                        new Vector3(1, 1, len),
+                        new Color(1, 0.076f, 0.076f, 0.4f)
+                        );
+                            break;
+                        case 2:
+                            len = (Chunk.CHUNK_SIZE - x - 1) * Block.QUAD_SIZE;
+                            PoolMaster.current.DrawZone(
+                            new Vector3(x + Block.QUAD_SIZE / 2f + len / 2f, y, z),
+                            new Vector3(len, 1, 1),
+                            new Color(1, 0.076f, 0.076f, 0.4f)
+                            );
+                            break;
+                        case 4:
+                            len = (Chunk.CHUNK_SIZE - z - 1) * Block.QUAD_SIZE;
+                            PoolMaster.current.DrawZone(
+                            new Vector3(x, y, z - Block.QUAD_SIZE / 2f - len / 2f),
+                            new Vector3(1, 1, len),
+                            new Color(1, 0.076f, 0.076f, 0.4f)
+                            );
+                            break;
+                        case 6:
+                            len = basement.pos.x * Block.QUAD_SIZE;
+                            PoolMaster.current.DrawZone(
+                            new Vector3(x - Block.QUAD_SIZE / 2f - len / 2f, y, z),
+                            new Vector3(len, 1, 1),
+                            new Color(1, 0.076f, 0.076f, 0.4f)
+                            );
+                            break;
+                    }
+                    //end
+                }
+                else PoolMaster.current.DisableZone();
+            }
+            // end
+        }
+        hangarsCount++;        
 	}
 
     public override void LabourUpdate() {
@@ -353,11 +405,6 @@ public sealed class Hangar : WorkBuilding {
         PrepareWorkbuildingForDestruction(forced);
         hangarsCount--;
         if (shuttle != null) shuttle.Deconstruct();
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
-            subscribedToUpdate = false;
-        }
         Destroy(gameObject);
     }
 }

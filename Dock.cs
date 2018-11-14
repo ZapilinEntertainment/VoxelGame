@@ -41,6 +41,7 @@ public sealed class Dock : WorkBuilding {
             if (r < 0) r += 8;
         }
         if (r == modelRotation) return;
+        else shipArrivingTimer = SHIP_ARRIVING_TIME / 2f;
         modelRotation = (byte)r;
         if ( basement != null)
         {
@@ -130,11 +131,6 @@ public sealed class Dock : WorkBuilding {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        if (!subscribedToChunkUpdate)
-        {
-            basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
-            subscribedToChunkUpdate = true;
-        }
         dependentBlocksList = new List<Block>();
         // #checkPositionCorrectness
         switch (modelRotation)
@@ -165,8 +161,8 @@ public sealed class Dock : WorkBuilding {
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
-					if ( immigrationPlan > 0  && immigrationEnabled ) {
-						if (Random.value < 0.3f || colony.totalLivespace > colony.citizenCount) sendImmigrants = true;
+					if ( immigrationPlan > 0  & immigrationEnabled ) {
+						if (Random.value < 0.3f | colony.totalLivespace > colony.citizenCount) sendImmigrants = true;
 					}
 					int transitionsCount = 0;
 					for (int x = 0; x < isForSale.Length; x++) {
@@ -203,37 +199,20 @@ public sealed class Dock : WorkBuilding {
 					if ( s!= null ) {
 						maintainingShip = true;
 						s.SetDestination( this );
+                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
 					}
-					//else print ("error:no ship given");
+                    //else print ("error:no ship given");
+                    shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.realMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f));
 				}
 			}
 		}
 	}
-
-    override public void ChunkUpdated(ChunkPos pos)
-    { 
-        if (basement == null) return;
-        // #checkPositionCorrectness - Dock
-        if (dependentBlocksList != null)
+    public override void SectionDeleted(ChunkPos pos)
+    {
+        if (correctLocation)
         {
-            if (dependentBlocksList.Count > 0)
-            {
-                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
-                dependentBlocksList.Clear();
-            }
-        }
-        else dependentBlocksList = new List<Block>();
-        switch (modelRotation)
-        {
-            case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
-            case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
-            case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - 2, basement.pos.y - 1, false, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
-            case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - 2, basement.pos.y - 1, true, SMALL_SHIPS_PATH_WIDTH, this, ref dependentBlocksList); break;
-        }
-        if (showOnGUI)
-        {
-            if (correctLocation) PoolMaster.current.DisableZone();
-            else
+            correctLocation = false;
+            if (showOnGUI)
             {
                 //#incorrectLocationDisplaying
                 switch (modelRotation)
@@ -270,8 +249,12 @@ public sealed class Dock : WorkBuilding {
                 }
                 //end
             }
+            if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+            {
+                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                dependentBlocksList.Clear();
+            }
         }
-        // end
     }
 
     public void ShipLoading(Ship s) {
@@ -519,11 +502,6 @@ public sealed class Dock : WorkBuilding {
         PrepareWorkbuildingForDestruction(forced);
         GameMaster.colonyController.RemoveDock(this);
         if (maintainingShip & loadingShip != null) loadingShip.Undock();        
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
-            subscribedToUpdate = false;
-        }
         Destroy(gameObject);
     }
 }
