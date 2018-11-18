@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BlockType {Shapeless, Cube, Surface, Cave}
+public enum BlockType : byte {Shapeless, Cube, Surface, Cave}
 
 public class Block : MonoBehaviour {
     public const float QUAD_SIZE = 1;
@@ -176,13 +176,30 @@ public class Block : MonoBehaviour {
 	}
     #endregion
 
+    virtual public void SetMainStructure(Structure ms)
+    {
+        if (mainStructure != null) mainStructure.SectionDeleted(pos);
+        mainStructure = ms;
+    }
+    virtual public void ResetMainStructure()
+    {
+        mainStructure = null;
+    }
+    /// <summary>
+    /// Don not use directly, use chunk.DeleteBlock() instead
+    /// </summary>
     virtual public void Annihilate()
     {
         //#block annihilate
-        if (destroyed) return;
+        if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
         if (worksite != null) worksite.StopWork();
-        if (mainStructure != null) mainStructure.SectionDeleted(pos);
+        if (mainStructure != null)
+        {
+            mainStructure.SectionDeleted(pos);
+            mainStructure = null;
+        }
+        if (pos.y == Chunk.CHUNK_SIZE - 1) myChunk.DeleteRoof(pos.x, pos.z);
         Destroy(gameObject);
     }
 }

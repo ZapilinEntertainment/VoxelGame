@@ -326,7 +326,7 @@ public class UIBuildingObserver : UIObserver {
             if (colony.energyStored != colony.totalEnergyCapacity)
             {
                 colony.GetEnergyCrystals(1);
-                colony.AddEnergy(GameMaster.ENERGY_IN_CRYSTAL);
+                colony.AddEnergy(GameConstants.ENERGY_IN_CRYSTAL);
             }
         }
         else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));

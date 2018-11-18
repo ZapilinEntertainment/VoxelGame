@@ -1,14 +1,14 @@
-﻿public enum Language{English, Russian};
-public enum LocalizedWord{Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limit, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn}
-public enum LocalizedPhrase { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, NoFreeSlots, HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface
+﻿public enum Language : short{English, Russian};
+public enum LocalizedWord : short {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
+Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day}
+public enum LocalizedPhrase : short { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
+ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+MakeSurface, BufferOverflow, NoEnergySupply
 }
-public enum LocalizationActionLabels {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
-public enum GameAnnouncements{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused, StorageOverloaded, ActionError, ShipArrived };
-public enum RestrictionKey{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
-public enum RefusalReason {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
+public enum LocalizationActionLabels : short {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
+public enum GameAnnouncements : short{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused, StorageOverloaded, ActionError, ShipArrived };
+public enum RestrictionKey : short{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
+public enum RefusalReason : short {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
 
 public static class Localization {
 
@@ -186,7 +186,7 @@ public static class Localization {
             case GameAnnouncements.GameUnpaused: return "Game unpaused";
             case GameAnnouncements.StorageOverloaded: return "Storage overloaded";
             case GameAnnouncements.ActionError: return "Error desu";
-            case GameAnnouncements.ShipArrived: return "Ship arrived";
+            case GameAnnouncements.ShipArrived: return "A ship has docked";
         }
 	}
 
@@ -247,7 +247,7 @@ public static class Localization {
             case LocalizedWord.Cancel: return "Cancel"; // cancel work and cancel save
             case LocalizedWord.Buy: return "Buy";
             case LocalizedWord.Sell: return "Sell";
-            case LocalizedWord.Limit: return "Limit"; // trade count limit
+            case LocalizedWord.Limitation: return "Limitation"; // trade count limit
             case LocalizedWord.Demand: return "Demand";
             case LocalizedWord.Price: return "Price";
             case LocalizedWord.Trading: return "Trading";
@@ -273,6 +273,10 @@ public static class Localization {
             case LocalizedWord.MainMenu: return "Main menu";
             case LocalizedWord.Accept: return "Accept";
             case LocalizedWord.PourIn: return "Pour In";// pour in the hole in cube block
+            case LocalizedWord.Year_short: return "Y:";
+            case LocalizedWord.Month_short: return "M:";
+            case LocalizedWord.Day_short: return "Day:";
+            case LocalizedWord.Day: return "Day";
 		default: return "...";
 		}
 	}
@@ -282,6 +286,7 @@ public static class Localization {
         {
             default: return "<...>";
             case LocalizedPhrase.PointsSec: return "points/sec";
+            case LocalizedPhrase.PerSecond: return "per second";
             case LocalizedPhrase.StopDig:return "Stop digging";
             case LocalizedPhrase.StopGather: return "Stop gathering";
             case LocalizedPhrase.RequiredSurface:return "Required surface";
@@ -310,6 +315,8 @@ public static class Localization {
             case LocalizedPhrase.GraphicQuality: return "Graphic quality";
             case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";
             case LocalizedPhrase.MakeSurface: return "Make surface";
+            case LocalizedPhrase.BufferOverflow: return "Buffer overflow"; // factory resource buffer overflowed
+            case LocalizedPhrase.NoEnergySupply: return "No energy supply";
         }
     }
 

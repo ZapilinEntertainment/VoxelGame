@@ -12,14 +12,14 @@ public class CleanSite : Worksite {
 			return;
 		}
 		if (workObject.surfaceObjects.Count == 0) {
-			Chunk ch = workObject.myChunk;			
+            int x = workObject.pos.x, y = workObject.pos.y, z = workObject.pos.z;
+            Chunk ch = workObject.myChunk;			
             destroyed = true; // чтобы скрипт игнорировал StopWork при удалении блока
             if (workObject.type != BlockType.Cave) ch.DeleteBlock(workObject.pos);
-            else (workObject as CaveBlock).DestroySurface();            
-            destroyed = false; // включаем обратно, чтобы удаление прошло нормально
-
-            int x = workObject.pos.x, y = workObject.pos.y, z = workObject.pos.z;
+            else (workObject as CaveBlock).DestroySurface();
             workObject = null;
+            destroyed = false; // включаем обратно, чтобы удаление прошло нормально           
+            
 
             if (diggingMission) {
 				Block basement = ch.GetBlock(x, y - 1, z);
@@ -42,6 +42,11 @@ public class CleanSite : Worksite {
         {
             workflow += workSpeed;
             Structure s = workObject.surfaceObjects[0];
+            if (s == null)
+            {
+                workObject.RecalculateSurface();
+                return;
+            }
             float workGained = 0;
             if (s.id == Structure.PLANT_ID)
             {

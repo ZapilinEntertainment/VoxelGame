@@ -14,16 +14,17 @@ public class ShipSerializer {
 }
 
 public class Ship : MonoBehaviour {
-	[SerializeField]
-	byte _level = 1; 
-	public byte level {get;private set;} // fixed by asset
-	[SerializeField]
-	ShipType _type;
+#pragma warning disable 0649
+    [SerializeField] byte _level = 1;
+    [SerializeField] float width = 0.5f, acceleration = 1; // fixed by asset
+    [SerializeField] int _volume = 50;
+    [SerializeField] ShipType _type;
+#pragma warning restore 0649
+
+    public byte level {get;private set;} // fixed by asset	
 	public ShipType type{get;private set;} // fixed by asset
 	const float DISTANCE_TO_ISLAND = 40;
-	[SerializeField] float width = 0.5f,  acceleration = 1; // fixed by asset
-	[SerializeField]
-	int _volume = 50;
+	
 	public int volume{get; private set;} // fixed by asset
 	bool xAxisMoving = false, docked = false, unloaded = false;
 	float speed = 0;
@@ -32,7 +33,6 @@ public class Ship : MonoBehaviour {
 
 	void Awake() {
 		level = _level;
-		type = _type;
 		type = _type;
 		volume = _volume;
 	}

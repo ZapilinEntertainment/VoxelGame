@@ -7,14 +7,13 @@ public enum HangarObserverMode : byte { NoShuttle, BuildingShuttle, ShuttleInsid
 
 public sealed class UIHangarObserver : UIObserver
 {
-    public Hangar observingHangar { get; protected set; }
+    public Hangar observingHangar { get; private set; }
 #pragma warning disable 0649
     [SerializeField] InputField shuttleNameTextField; // fiti
     [SerializeField] Button constructButton, disassembleButton, repairButton; // fiti
     [SerializeField] Transform resourceCostContainer;
 #pragma warning restore 0649
     Vector2[] showingResourcesCount;
-    float fullProgressBarLength = -1, startOffset = 0;
     public HangarObserverMode mode { get; private set; }
 
     public static UIHangarObserver InitializeHangarObserverScript()
@@ -177,6 +176,7 @@ public sealed class UIHangarObserver : UIObserver
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
+        if (UIController.current.progressPanelMode == ProgressPanelMode.Hangar) UIController.current.DeactivateProgressPanel();
         gameObject.SetActive(false);
     }
 
@@ -185,6 +185,7 @@ public sealed class UIHangarObserver : UIObserver
         isObserving = false;
         observingHangar = null;
         WorkBuilding.workbuildingObserver.ShutOff();
+        if (UIController.current.progressPanelMode == ProgressPanelMode.Hangar) UIController.current.DeactivateProgressPanel();
         gameObject.SetActive(false);
     }
 

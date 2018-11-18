@@ -64,7 +64,6 @@ public class CubeBlock : Block
                     else
                     {
                         myChunk.ReplaceBlock(pos, BlockType.Cave, -1, upperBlock.material_id, false);
-                        myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, ceilingMaterial, false);
                     }
                 }
                 else
@@ -395,10 +394,10 @@ public class CubeBlock : Block
     override public void Annihilate()
     {
         // #block annihilate
-        if (destroyed) return;
+        if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
         if (worksite != null) worksite.StopWork();
-        if (mainStructure != null) mainStructure.Annihilate(true);
+        if (mainStructure != null) mainStructure.SectionDeleted(pos);
         // end
         if (excavatingStatus == 0 & faces[4] != null) PoolMaster.ReturnQuadToPool(faces[4].gameObject);
         if (faces[0] != null) PoolMaster.ReturnQuadToPool(faces[0].gameObject);
@@ -406,6 +405,7 @@ public class CubeBlock : Block
         if (faces[2] != null) PoolMaster.ReturnQuadToPool(faces[2].gameObject);
         if (faces[3] != null) PoolMaster.ReturnQuadToPool(faces[3].gameObject);
         if (faces[5] != null) PoolMaster.ReturnQuadToPool(faces[5].gameObject);
+        if (pos.y == Chunk.CHUNK_SIZE - 1) myChunk.DeleteRoof(pos.x, pos.z);
         Destroy(gameObject);
     }
 

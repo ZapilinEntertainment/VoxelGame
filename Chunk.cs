@@ -97,14 +97,14 @@ public sealed class Chunk : MonoBehaviour
                 List<SurfaceBlock> dirt_for_grassland = new List<SurfaceBlock>();
                 foreach (SurfaceBlock sb in surfaceBlocks)
                 {
-                    if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null) dirt_for_grassland.Add(sb);
+                    if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null & sb.worksite == null) dirt_for_grassland.Add(sb);
                 }
                 if (dirt_for_grassland.Count > 0)
                 {
                     int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
                     SurfaceBlock sb = dirt_for_grassland[pos];
                     Grassland gl = Grassland.CreateOn(sb);
-                    int lifeTransfer = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
+                    int lifeTransfer = (int)(GameConstants.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
                     if (lifePower > lifeTransfer) { gl.AddLifepower(lifeTransfer); lifePower -= lifeTransfer; }
                     else { gl.AddLifepower((int)lifePower); lifePower = 0; }
                 }
@@ -610,22 +610,49 @@ public sealed class Chunk : MonoBehaviour
     {
         return ReplaceBlock(f_pos, f_newType, material1_id, material1_id, naturalGeneration);
     }
-    public Block ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int material1_id, int material2_id, bool naturalGeneration)
+    public Block ReplaceBlock(ChunkPos f_pos, BlockType f_newType, int surfaceMaterial_id, int ceilingMaterial_id, bool naturalGeneration)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (GetBlock(x, y, z) == null) return null;
         Block originalBlock = GetBlock(x, y, z);
-        if (originalBlock == null) return AddBlock(f_pos, f_newType, material1_id, material2_id, naturalGeneration);
+        if (originalBlock == null) {
+            return AddBlock(f_pos, f_newType, surfaceMaterial_id, ceilingMaterial_id, naturalGeneration);
+        }
+        bool mainStructurePassage = false;
         if (originalBlock.type == f_newType)
         {
-            originalBlock.ReplaceMaterial(material1_id);
-            return originalBlock;
+            if (originalBlock.type != BlockType.Cave | surfaceMaterial_id == ceilingMaterial_id)
+            {
+                originalBlock.ReplaceMaterial(surfaceMaterial_id);
+                return originalBlock;
+            }
+            else
+            {
+                CaveBlock ocb = originalBlock as CaveBlock;
+                ocb.ReplaceSurfaceMaterial(surfaceMaterial_id);
+                ocb.ReplaceCeilingMaterial(ceilingMaterial_id);
+                return originalBlock;
+            }
         }
         else
         {
             if (originalBlock.indestructible)
             {
-                if ((originalBlock.type == BlockType.Surface || originalBlock.type == BlockType.Cave) && f_newType != BlockType.Surface && f_newType != BlockType.Cave) return originalBlock;
+                if ((originalBlock.type == BlockType.Surface | originalBlock.type == BlockType.Cave) & f_newType != BlockType.Surface & f_newType != BlockType.Cave) return originalBlock;
+            }
+            if (originalBlock.type == BlockType.Surface & originalBlock.type == BlockType.Cave)
+            {
+                SurfaceBlock sb = originalBlock as SurfaceBlock;
+                if (sb.structureBlock != null | sb.haveSupportingStructure) return originalBlock;
+            }
+            Structure fillingStructure = originalBlock.mainStructure;
+            if (fillingStructure != null)
+            {
+                if (!fillingStructure.IsBlockTypeSuitable(f_newType))
+                {
+                    fillingStructure.SectionDeleted(originalBlock.pos);
+                    originalBlock.ResetMainStructure();
+                }
+                else mainStructurePassage = true;
             }
         }
         Block b = null;
@@ -637,7 +664,12 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Shapeless:
                 {
                     b = new GameObject().AddComponent<Block>();
-                    b.InitializeShapelessBlock(this, f_pos, null);
+                    if (!mainStructurePassage) b.InitializeShapelessBlock(this, f_pos, null);
+                    else
+                    {
+                        originalBlock.ResetMainStructure();
+                        b.InitializeShapelessBlock(this, f_pos, originalBlock.mainStructure);
+                    }
                     blocks[x, y, z] = b;
 
                     //#shapeless light recalculation
@@ -662,7 +694,7 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Surface:
                 {
                     SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-                    sb.InitializeSurfaceBlock(this, f_pos, material1_id);
+                    sb.InitializeSurfaceBlock(this, f_pos, surfaceMaterial_id);
                     surfaceBlocks.Add(sb);
                     b = sb;
                     blocks[x, y, z] = sb;
@@ -697,7 +729,7 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Cube:
                 {
                     CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
-                    cb.InitializeCubeBlock(this, f_pos, material1_id, naturalGeneration);
+                    cb.InitializeCubeBlock(this, f_pos, surfaceMaterial_id, naturalGeneration);
                     b = cb;
                     blocks[x, y, z] = cb;
                     influenceMask = 0;
@@ -709,7 +741,7 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Cave:
                 {
                     CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
-                    cvb.InitializeCaveBlock(this, f_pos, material2_id, material1_id);
+                    cvb.InitializeCaveBlock(this, f_pos, ceilingMaterial_id, surfaceMaterial_id);
                     surfaceBlocks.Add(cvb);
                     blocks[x, y, z] = cvb;
                     b = cvb;
@@ -762,7 +794,7 @@ public sealed class Chunk : MonoBehaviour
         {
             if (GetBlock(x, y + 1, z) == null)
             {
-                if (y < CHUNK_SIZE - 1) AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, material1_id, naturalGeneration);
+                if (y < CHUNK_SIZE - 1) AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, surfaceMaterial_id, naturalGeneration);
                 else SetRoof(x, z, naturalGeneration);
             }
         }
@@ -882,9 +914,10 @@ public sealed class Chunk : MonoBehaviour
         if (lowerBlockInfluence)
         {
             CaveBlock lowerBlock = GetBlock(x, y - 1, z) as CaveBlock;
-            if (lowerBlock != null && !lowerBlock.haveSurface)
+            if (lowerBlock != null )
             {
-                DeleteBlock(lowerBlock.pos);
+                if (!lowerBlock.haveSurface) DeleteBlock(lowerBlock.pos);
+                else ReplaceBlock(lowerBlock.pos, BlockType.Surface, lowerBlock.material_id, false);
             }
         }
         ChunkLightmapFullRecalculation();
@@ -1056,7 +1089,7 @@ public sealed class Chunk : MonoBehaviour
 
     public void GenerateNature(Vector3 lifeSourcePos)
     {
-        float lifepowerPerBlock = GameMaster.LIFEPOWER_PER_BLOCK;
+        float lifepowerPerBlock = GameConstants.LIFEPOWER_PER_BLOCK;
         int dirtID = ResourceType.DIRT_ID;
         foreach (SurfaceBlock sb in surfaceBlocks)
         {

@@ -92,7 +92,6 @@ public sealed class CaveBlock : SurfaceBlock
             faces[3] = t.GetChild(3).GetComponent<MeshRenderer>();
             ceilingRenderer = t.GetChild(4).GetComponent<MeshRenderer>();
             surfaceRenderer = t.GetChild(5).GetComponent<MeshRenderer>();
-            material_id = f_up_material_id;
             foreach (MeshRenderer mr in faces)
             {
                 mr.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, mr.GetComponent<MeshFilter>(), illumination); ;
@@ -102,13 +101,13 @@ public sealed class CaveBlock : SurfaceBlock
             {
                 haveSurface = true;
                 surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+                surfaceRenderer.gameObject.SetActive(true);
             }
             else
             {
-                if (surfaceObjects.Count != 0) ClearSurface(false);
+                if (surfaceObjects.Count != 0) ClearSurface(true);
                 haveSurface = false;
-                surfaceRenderer.GetComponent<Collider>().enabled = false;
-                surfaceRenderer.enabled = false;
+                surfaceRenderer.gameObject.SetActive(false);
             }
         }
 
@@ -240,9 +239,8 @@ public sealed class CaveBlock : SurfaceBlock
         if (!haveSurface) return;
         haveSurface = false;
         if (grassland != null) grassland.Annihilation();
-        if (surfaceObjects.Count != 0) ClearSurface(false);
-        surfaceRenderer.GetComponent<Collider>().enabled = false;
-        surfaceRenderer.enabled = false;
+        if (surfaceObjects.Count != 0) ClearSurface(true);
+        surfaceRenderer.gameObject.SetActive(false);
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 47);
     }
     public void RestoreSurface(int newMaterialID)
@@ -250,10 +248,9 @@ public sealed class CaveBlock : SurfaceBlock
         if (haveSurface) return;
         ceilingMaterial = newMaterialID;
         haveSurface = true;
-        surfaceRenderer.enabled = true;
         illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
         surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(ceilingMaterial, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
-        surfaceRenderer.GetComponent<Collider>().enabled = true;
+        surfaceRenderer.gameObject.SetActive(true);
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 15);
     }
 
@@ -321,15 +318,14 @@ public sealed class CaveBlock : SurfaceBlock
         LoadCaveBlockData(cbs);
     }
 
-    protected void LoadCaveBlockData(CaveBlockSerializer cbs)
+    private void LoadCaveBlockData(CaveBlockSerializer cbs)
     {
         LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
         ceilingRenderer.sharedMaterial = ResourceType.GetMaterialById(cbs.upMaterial_ID, ceilingRenderer.GetComponent<MeshFilter>(), illumination);
         haveSurface = cbs.haveSurface;
         if (!haveSurface)
         {
-            surfaceRenderer.enabled = false;
-            surfaceRenderer.GetComponent<Collider>().enabled = false;
+            surfaceRenderer.gameObject.SetActive(false);
         }
     }
     #endregion

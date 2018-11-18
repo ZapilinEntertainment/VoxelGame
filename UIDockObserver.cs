@@ -81,6 +81,7 @@ public sealed class UIDockObserver : UIObserver
         if (Dock.immigrationEnabled) {
             immigrationToggleButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ImmigrationEnabled);
             immigrationToggleButtonImage.overrideSprite = overridingSprite;
+            immigrationLimitInputField.text = Dock.immigrationPlan.ToString();
             immigrationLimitInputField.transform.parent.gameObject.SetActive(true);
             immigrationLimitText.enabled = true;
             immigrationLimitText.text = Localization.GetPhrase(LocalizedPhrase.TicketsLeft) + " : " + Dock.immigrationPlan.ToString();

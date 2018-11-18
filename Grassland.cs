@@ -77,7 +77,7 @@ public class Grassland : MonoBehaviour
             if (tax > 0)
             {
                 int pos = (int)(Random.value * (grasslandList.Count - 1));
-                int count = (int)(GameMaster.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
+                int count = (int)(GameConstants.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
                 grasslandList[pos].AddLifepower(count);
                 returnVal -= count;
             }
@@ -128,6 +128,7 @@ public class Grassland : MonoBehaviour
                         }
                         i++;
                     }
+                    gl.plantCreateCooldown -= lifepowerTick;
                     if (gl.plantCreateCooldown <= 0)
                     {
                         int cost = Plant.GetCreateCost(Plant.TREE_OAK_ID);
@@ -139,12 +140,11 @@ public class Grassland : MonoBehaviour
                                 Plant p = Plant.GetNewPlant(Plant.TREE_OAK_ID);
                                 p.SetBasement(myBlock, pos);
                                 gl.TakeLifepower(cost);
-                                gl.plantCreateCooldown = 10f / lifepowerTick;
+                                gl.plantCreateCooldown = LIFE_CREATION_TIMER;
                                 //MonoBehaviour.print("new plant created");
                             }
                         }
                     }
-                    else gl.plantCreateCooldown -= lifepowerTick;
                 }
             }
             else
@@ -222,6 +222,8 @@ public class Grassland : MonoBehaviour
     void SetGrassTexture(byte stage)
     {
         // не ставь проверки - иногда вызываются для обновления
+        if (myBlock.material_id != ResourceType.DIRT_ID) return;
+        //безобразие - берёт и подменяет текстуру без спроса! Костыль!
         switch (stage)
         {
             case 0:
@@ -382,7 +384,6 @@ public class Grassland : MonoBehaviour
         if (myBlock.cellsStatus != 0)
         {
             int k = 0;
-            Plant p = null;
             while (k < myBlock.surfaceObjects.Count)
             {
                 Structure s = myBlock.surfaceObjects[k];

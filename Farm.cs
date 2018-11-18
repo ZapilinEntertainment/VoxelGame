@@ -38,7 +38,7 @@ public class Farm : WorkBuilding
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
-        b.ClearSurface(!(innerPosition == SurfaceRect.full));
+        b.ClearSurface(true);
         SetBuildingData(b, pos);
         b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
         if (!subscribedToUpdate)
@@ -126,7 +126,6 @@ public class Farm : WorkBuilding
     {
         if (destroyed) return;
         else destroyed = true;
-        print("farm destruction");
         if (forced) { UnsetBasement(); }
         if (PrepareWorkbuildingForDestruction(forced))
         {

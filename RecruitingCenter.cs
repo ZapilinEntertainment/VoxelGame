@@ -64,7 +64,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 					workflow = 0;
 					finding = false;
                     UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
-					hireCost = hireCost * (1 + GameMaster.HIRE_COST_INCREASE);
+					hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
 					hireCost = ((int)(hireCost * 100)) / 100f;
                     if (showOnGUI) rcenterObserver.SelectCrew(ncrew);
 				}

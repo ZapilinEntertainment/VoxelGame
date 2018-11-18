@@ -30,10 +30,10 @@ public struct GameStartSettings  {
     }
     }
 
-public enum Difficulty{Utopia, Easy, Normal, Hard, Torture}
-public enum GameStart {Nothing, Zeppelin, Headquarters}
-public enum WorkType {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
-public enum GameLevel { Menu, Playable, Editor}
+public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
+public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
+public enum WorkType : byte {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
+public enum GameLevel : byte { Menu, Playable, Editor}
 
 /// -----------------------------------------------------------------------------
 
@@ -42,7 +42,8 @@ public sealed class GameMaster : MonoBehaviour {
 	public static float gameSpeed  {get; private set;}
     public static bool sceneClearing { get; private set; }
     public static bool editMode = false;
-    public static string savename { get; protected set; }
+    public static bool loading { get; private set; }
+    public static string savename { get; private set; }
     public static float LUCK_COEFFICIENT { get; private set; }
     public static float sellPriceCoefficient = 0.75f;
     public static int layerCutHeight = 16, prevCutHeight = 16;
@@ -59,14 +60,7 @@ public sealed class GameMaster : MonoBehaviour {
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
-    public Vector2 windVector { get; private set; }    
-
-    public const int LIFEPOWER_PER_BLOCK = 130; // 200
-	public const int LIFEPOWER_SPREAD_SPEED = 10,  CRITICAL_DEPTH = - 200;
-    public const float START_HAPPINESS = 1, GEARS_ANNUAL_DEGRADE = 0.1f, LIFE_DECAY_SPEED = 0.1f, DAY_LONG = 60, CAM_LOOK_SPEED = 10,
-    START_BIRTHRATE_COEFFICIENT = 0.001f, HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000;
-    public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
-    public const int START_WORKERS_COUNT = 70, MAX_LIFEPOWER_TRANSFER = 16, SURFACE_MATERIAL_REPLACE_COUNT = 256;
+    public Vector2 windVector { get; private set; }      
 
     public GameStart startGameWith = GameStart.Zeppelin;
 
@@ -78,13 +72,19 @@ public sealed class GameMaster : MonoBehaviour {
 	public float upgradeCostIncrease{get;private set;}
 	public float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public float warProximity{get;private set;} // 0 is far, 1 is nearby  
+    public float gearsDegradeSpeed { get; private set; }
     
-	private float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;    
-	private float timeGone;
-	private uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
-	public const byte DAYS_IN_WEEK = 7, WEEKS_IN_MONTH = 4, MONTHS_IN_YEAR = 12;
-    
+	private const float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
+	clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
+    //data
+    private float timeGone;
+    public byte day { get; private set; }
+    public byte month { get; private set; }
+    public uint year { get; private set; }
+	public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12;
+    public const float DAY_LONG = 60;
+    // updating
+    public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
     private float labourTimer = 0, lifepowerTimer = 0;    
     private float windTimer = 0, windChangeTime = 120;
     private bool firstSet = true;
@@ -173,6 +173,7 @@ public sealed class GameMaster : MonoBehaviour {
                         tradeVesselsTrafficCoefficient = 0.2f;
                         upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
                         environmentalConditions = 1;
+                        gearsDegradeSpeed = 0;
                         break;
                     case Difficulty.Easy:
                         LUCK_COEFFICIENT = 0.7f;
@@ -182,6 +183,7 @@ public sealed class GameMaster : MonoBehaviour {
                         tradeVesselsTrafficCoefficient = 0.4f;
                         upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
                         environmentalConditions = 1;
+                        gearsDegradeSpeed = 0.00001f;
                         break;
                     case Difficulty.Normal:
                         LUCK_COEFFICIENT = 0.5f;
@@ -191,6 +193,7 @@ public sealed class GameMaster : MonoBehaviour {
                         tradeVesselsTrafficCoefficient = 0.5f;
                         upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
                         environmentalConditions = 0.95f;
+                        gearsDegradeSpeed = 0.00002f;
                         break;
                     case Difficulty.Hard:
                         LUCK_COEFFICIENT = 0.1f;
@@ -200,6 +203,7 @@ public sealed class GameMaster : MonoBehaviour {
                         tradeVesselsTrafficCoefficient = 0.75f;
                         upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
                         environmentalConditions = 0.9f;
+                        gearsDegradeSpeed = 0.00003f;
                         break;
                     case Difficulty.Torture:
                         LUCK_COEFFICIENT = 0.01f;
@@ -209,6 +213,7 @@ public sealed class GameMaster : MonoBehaviour {
                         tradeVesselsTrafficCoefficient = 1;
                         upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
                         environmentalConditions = 0.8f;
+                        gearsDegradeSpeed = 0.00005f;
                         break;
                 }
                 warProximity = 0.01f;
@@ -229,27 +234,18 @@ public sealed class GameMaster : MonoBehaviour {
 
                         if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
 
-                        //Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
-                        Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
+                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                       // Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
                         b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
                         //test
-                       HeadQuarters hq = s as HeadQuarters;
-                        weNeedNoResources = true;
-                        hq.LevelUp(false);
-                        hq.LevelUp(false);
-                        Crew ncrew = new Crew();
-                        ncrew.SetCrew(colonyController, 100);
-                        Crew.freeCrewsList.Add(ncrew);
-                        ncrew = new Crew();
-                        ncrew.SetCrew(colonyController, 100);
-                        Crew.freeCrewsList.Add(ncrew);
-                        ncrew = new Crew();
-                        ncrew.SetCrew(colonyController, 100);
-                        Crew.freeCrewsList.Add(ncrew);
+                      // HeadQuarters hq = s as HeadQuarters;
+                        //weNeedNoResources = true;
+                       // hq.LevelUp(false);
+                       // hq.LevelUp(false);
                         //
 
 
@@ -287,20 +283,13 @@ public sealed class GameMaster : MonoBehaviour {
                             }
                         }
                         StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
-                        firstStorage.SetBasement(sb, PixelPosByte.zero);                        
-
+                        firstStorage.SetBasement(sb, PixelPosByte.zero);
+                        SetStartResources();
                         //UI ui = gameObject.AddComponent<UI>();
                         //ui.lineDrawer = systemDrawLR;
                         break;
                 }
-                FollowingCamera.main.WeNeedUpdate();
-                //start resources
-                colonyController.AddCitizens(START_WORKERS_COUNT);
-                colonyController.storage.AddResource(ResourceType.metal_K, 100);
-                colonyController.storage.AddResource(ResourceType.metal_M, 50);
-                colonyController.storage.AddResource(ResourceType.metal_E, 20);
-                colonyController.storage.AddResource(ResourceType.Plastics, 100);
-                colonyController.storage.AddResource(ResourceType.Food, 200);
+                FollowingCamera.main.WeNeedUpdate();                
             }
             else LoadGame(SaveSystemUI.GetSavesPath() + '/' + savename + ".sav");
             if (savename == null | savename == string.Empty) savename = "autosave";
@@ -336,43 +325,36 @@ public sealed class GameMaster : MonoBehaviour {
     {
         if (gameSpeed != 0 & !editMode)
         {
-            timeGone += Time.deltaTime * gameSpeed;
+            float fixedTime = Time.fixedDeltaTime * gameSpeed;
+            timeGone += fixedTime;
 
             if (timeGone >= DAY_LONG)
             {
                 uint daysDelta = (uint)(timeGone / DAY_LONG);
-                day += daysDelta;
-                timeGone = timeGone % DAY_LONG;
-                if (day >= DAYS_IN_WEEK)
+                if (daysDelta > 0 & colonyController != null)
                 {
-                    week += day / DAYS_IN_WEEK;
-                    day = day % DAYS_IN_WEEK;
-                    if (week >= WEEKS_IN_MONTH)
-                    {
-                        month += week / WEEKS_IN_MONTH;
-                        week = week % WEEKS_IN_MONTH;
-                        if (month > MONTHS_IN_YEAR)
-                        {
-                            uint yearsDelta = (uint)month / MONTHS_IN_YEAR;
-                            year += yearsDelta;
-                            month = month % MONTHS_IN_YEAR;
-                            if (year > 1000)
-                            {
-                                millenium += year / 1000;
-                                year = year % 1000;
-                            }
-                            if (yearsDelta < 2) colonyController.EveryYearUpdate();
-                            else print("unexpected - more than one year coming in one frame");
-                        }
-                    }
+                    colonyController.EverydayUpdate(daysDelta);
                 }
-                //day Update
-                if (daysDelta < 2) colonyController.EverydayUpdate();
-                else print("unexpected - more than one day coming in one frame");
-                //eo day update
+                uint sum = day + daysDelta;
+                if (sum >=  DAYS_IN_MONTH)
+                {
+                    day = (byte)(sum % DAYS_IN_MONTH);
+                    sum /= DAYS_IN_MONTH;
+                    sum += month;
+                    if (sum >= MONTHS_IN_YEAR)
+                    {
+                        month = (byte)(sum % MONTHS_IN_YEAR);
+                        year = sum / MONTHS_IN_YEAR;
+                    }
+                    else month = (byte)sum;
+                }
+                else
+                {
+                    day = (byte)sum;
+                }
+                timeGone = timeGone % DAY_LONG;
             }
-
-            float fixedTime = Time.fixedDeltaTime * gameSpeed;
+            
             windTimer -= fixedTime;
             labourTimer -= fixedTime;
             lifepowerTimer -= fixedTime;
@@ -421,6 +403,55 @@ public sealed class GameMaster : MonoBehaviour {
 		return workspeed ;
 	}    
 
+    public void SetStartResources()
+    {
+        //start resources
+        switch (difficulty)
+        {
+            case Difficulty.Utopia:
+                colonyController.AddCitizens(100);
+                colonyController.storage.AddResource(ResourceType.metal_K, 100);
+                colonyController.storage.AddResource(ResourceType.metal_M, 100);
+                colonyController.storage.AddResource(ResourceType.metal_E, 50);
+                colonyController.storage.AddResource(ResourceType.metal_N, 1);
+                colonyController.storage.AddResource(ResourceType.Plastics, 200);
+                colonyController.storage.AddResource(ResourceType.Food, 1000);
+                break;
+            case Difficulty.Easy:
+                colonyController.AddCitizens(70);
+                colonyController.storage.AddResource(ResourceType.metal_K, 100);
+                colonyController.storage.AddResource(ResourceType.metal_M, 60);
+                colonyController.storage.AddResource(ResourceType.metal_E, 30);
+                colonyController.storage.AddResource(ResourceType.Plastics, 150);
+                colonyController.storage.AddResource(ResourceType.Food, 500);
+                break;
+            case Difficulty.Normal:
+                colonyController.AddCitizens(50);
+                colonyController.storage.AddResource(ResourceType.metal_K, 100);
+                colonyController.storage.AddResource(ResourceType.metal_M, 50);
+                colonyController.storage.AddResource(ResourceType.metal_E, 20);
+                colonyController.storage.AddResource(ResourceType.Plastics, 100);
+                colonyController.storage.AddResource(ResourceType.Food, 250);
+                break;
+            case Difficulty.Hard:
+                colonyController.AddCitizens(40);
+                colonyController.storage.AddResource(ResourceType.metal_K, 50);
+                colonyController.storage.AddResource(ResourceType.metal_M, 20);
+                colonyController.storage.AddResource(ResourceType.metal_E, 2);
+                colonyController.storage.AddResource(ResourceType.Plastics, 10);
+                colonyController.storage.AddResource(ResourceType.Food, 200);
+                break;
+            case Difficulty.Torture:
+                colonyController.AddCitizens(30);
+                colonyController.storage.AddResource(ResourceType.metal_K, 40);
+                colonyController.storage.AddResource(ResourceType.metal_M, 20);
+                colonyController.storage.AddResource(ResourceType.metal_E, 10);
+                colonyController.storage.AddResource(ResourceType.Food, 200);
+                break;
+        }
+        
+    }
+
     #region save-load system
     public bool SaveGame() { return SaveGame("autosave"); }
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
@@ -441,16 +472,10 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.difficulty = difficulty;
 		gms.startGameWith = startGameWith;
 		gms.prevCutHeight = prevCutHeight;
-		gms.diggingSpeed = diggingSpeed;
-		gms.pouringSpeed = pouringSpeed;
-		gms.manufacturingSpeed = manufacturingSpeed;
-		gms.clearingSpeed = clearingSpeed;
-		gms.gatheringSpeed = gatheringSpeed;
-		gms.miningSpeed = miningSpeed;
-		gms.machineConstructingSpeed = machineConstructingSpeed;
-		gms.day = day; gms.week = week; gms.month = month; gms.year = year; gms.millenium = millenium; gms.t = timeGone;
+		gms.day = day; gms.month = month; gms.year = year; gms.t = timeGone;
         gms.windVector_x = windVector.x;
         gms.windVector_z = windVector.y;
+        gms.gearsDegradeSpeed = gearsDegradeSpeed;
 
 		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
         gms.labourTimer = labourTimer;
@@ -484,6 +509,7 @@ public sealed class GameMaster : MonoBehaviour {
         if (true) // <- тут будет функция проверки
         {
             Time.timeScale = 0; gameSpeed = 0;
+            loading = true;
             // ОЧИСТКА
             StopAllCoroutines();
             if (mainChunk != null) mainChunk.ClearChunk();
@@ -518,14 +544,8 @@ public sealed class GameMaster : MonoBehaviour {
             difficulty = gms.difficulty;
             startGameWith = gms.startGameWith;
             prevCutHeight = gms.prevCutHeight;
-            diggingSpeed = gms.diggingSpeed;
-            pouringSpeed = gms.pouringSpeed;
-            manufacturingSpeed = gms.manufacturingSpeed;
-            clearingSpeed = gms.clearingSpeed;
-            gatheringSpeed = gms.gatheringSpeed;
-            miningSpeed = gms.miningSpeed;
-            machineConstructingSpeed = gms.machineConstructingSpeed;
-            day = gms.day; week = gms.week; month = gms.month; year = gms.year; millenium = gms.millenium; timeGone = gms.t;
+            day = gms.day;  month = gms.month; year = gms.year; timeGone = gms.t;
+            gearsDegradeSpeed = gms.gearsDegradeSpeed;
 
             windVector = new Vector2(gms.windVector_x, gms.windVector_z);
             windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
@@ -550,6 +570,7 @@ public sealed class GameMaster : MonoBehaviour {
 
             FollowingCamera.main.WeNeedUpdate();
             Time.timeScale = 1; gameSpeed = 1;
+            loading = false;
 
             savename = fullname;
             return true;
@@ -627,13 +648,12 @@ public sealed class GameMaster : MonoBehaviour {
 class GameMasterSerializer {
 	public float gameSpeed;
 	public float lifeGrowCoefficient, demolitionLossesPercent, lifepowerLossesPercent, luckCoefficient, sellPriceCoefficient,
-	tradeVesselsTrafficCoefficient, upgradeDiscount, upgradeCostIncrease, environmentalConditions, warProximity;
+	tradeVesselsTrafficCoefficient, upgradeDiscount, upgradeCostIncrease, environmentalConditions, warProximity, gearsDegradeSpeed;
 	public Difficulty difficulty;
 	public GameStart startGameWith;
 	public int prevCutHeight = 16;
-	public float diggingSpeed = 1f, pouringSpeed = 1f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 20, gatheringSpeed = 5f, miningSpeed = 0.5f, machineConstructingSpeed = 1;
-	public uint day = 0, week = 0, month = 0, year = 0, millenium = 0;
+    public byte day = 0, month = 0;
+    public uint year = 0;
     public float t;
     public float windVector_x, windVector_z; // cause serialization error
 	public float windTimer = 0, windChangeTime = 120, labourTimer, lifepowerTimer;

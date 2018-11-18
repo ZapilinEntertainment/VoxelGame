@@ -3,22 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum ChosenObjectType : byte {None,Surface, Cube, Structure, Worksite}
-public enum Icons : byte {  GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted  }
-public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter}
+public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
+public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted }
+public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
 
 
-sealed public class UIController : MonoBehaviour {	
-	public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
-	public Button closePanelButton; // fill in the Inspector
+sealed public class UIController : MonoBehaviour
+{
+    public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
+    public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
-    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText;
+    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill;
     [SerializeField] Transform storagePanelContent;
     [SerializeField] RawImage progressPanelIcon;
+    [SerializeField] QuestUI _questUI;
 #pragma warning restore 0649
 
     public ProgressPanelMode progressPanelMode { get; private set; }
@@ -41,32 +43,30 @@ sealed public class UIController : MonoBehaviour {
     bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, showLayerCut = false, activeAnnouncements = false, localized = false;
     public int interceptingConstructPlaneID = -1;
 
-	private float saved_energySurplus;
+    private float saved_energySurplus;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber;
     
-
-	
-    [SerializeField] QuestUI _questUI;
     public QuestUI questUI { get; private set; }
 
-	CubeBlock chosenCube; byte faceIndex = 10;
-	Structure chosenStructure; 
-	UIObserver workingObserver;
-	Worksite chosenWorksite;
-	ChosenObjectType chosenObjectType;
-	Transform selectionFrame; Material selectionFrameMaterial;
+    CubeBlock chosenCube; byte faceIndex = 10;
+    Structure chosenStructure;
+    UIObserver workingObserver;
+    Worksite chosenWorksite;
+    ChosenObjectType chosenObjectType;
+    Transform selectionFrame; Material selectionFrameMaterial;
 
-	public static UIController current;
+    public static UIController current;
 
     const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 5;
 
-	void Awake() {
-		current = this;
+    void Awake()
+    {
+        current = this;
         LocalizeButtonTitles();
-		selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
-		selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
-		selectionFrame.gameObject.SetActive(false);
+        selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
+        selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
+        selectionFrame.gameObject.SetActive(false);
         iconsTexture = Resources.Load<Texture>("Textures/Icons");
         resourcesTexture = Resources.Load<Texture>("Textures/resourcesIcons");
         buildingsTexture = Resources.Load<Texture>("Textures/buildingIcons");
@@ -78,11 +78,12 @@ sealed public class UIController : MonoBehaviour {
         if (!localized) LocalizeButtonTitles();
     }
 
-    void Update() {
+    void Update()
+    {
         updateTimer -= Time.deltaTime;
         ColonyController colony = GameMaster.colonyController;
         if (colony != null)
-        {            
+        {
             if (updateTimer <= 0)
             {
                 Storage storage = colony.storage;
@@ -99,37 +100,37 @@ sealed public class UIController : MonoBehaviour {
 
                 if (showColonyInfo)
                 {
-                        if (showingGearsCf != colony.gears_coefficient)
-                        {
-                            showingGearsCf = colony.gears_coefficient;
-                            gearsText.text = string.Format("{0:0.###}", showingGearsCf);
-                        }
-                        if (showingHappinessCf != colony.happiness_coefficient)
-                        {
-                            showingHappinessCf = colony.happiness_coefficient;
-                            happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
-                        }
-                        if (showingBirthrate != colony.realBirthrate)
-                        {
-                            showingBirthrate = colony.realBirthrate;
-                            birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
-                        }
-                        if (showingHospitalCf != colony.hospitals_coefficient)
-                        {
-                            showingHospitalCf = colony.hospitals_coefficient;
-                            hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
-                        }
-                        if (showingHealthCf != colony.health_coefficient)
-                        {
-                            showingHealthCf = colony.health_coefficient;
-                            healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
-                        }
+                    if (showingGearsCf != colony.gears_coefficient)
+                    {
+                        showingGearsCf = colony.gears_coefficient;
+                        gearsText.text = string.Format("{0:0.###}", showingGearsCf);
+                    }
+                    if (showingHappinessCf != colony.happiness_coefficient)
+                    {
+                        showingHappinessCf = colony.happiness_coefficient;
+                        happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
+                    }
+                    if (showingBirthrate != colony.realBirthrate)
+                    {
+                        showingBirthrate = colony.realBirthrate;
+                        birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
+                    }
+                    if (showingHospitalCf != colony.hospitals_coefficient)
+                    {
+                        showingHospitalCf = colony.hospitals_coefficient;
+                        hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
+                    }
+                    if (showingHealthCf != colony.health_coefficient)
+                    {
+                        showingHealthCf = colony.health_coefficient;
+                        healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
+                    }
                 }
                 else
                 {
                     if (showStorageInfo)
                     {
-                        
+
                         if (lastStorageOperationNumber != storage.operationsDone)
                         {
                             RecalculateStoragePanel();
@@ -318,6 +319,26 @@ sealed public class UIController : MonoBehaviour {
                         saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
                         energyCrystalsString.text = saved_energyCrystalsCount.ToString();
                     }
+
+                    GameMaster gm = GameMaster.realMaster;
+                    if (gm.year > 0)
+                    {
+                        dataString.text = Localization.GetWord(LocalizedWord.Year_short) + ' ' + gm.year.ToString() + ' ' 
+                            + Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' ' 
+                            + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
+                    }
+                    else
+                    {
+                        if (gm.month > 0)
+                        {
+                            dataString.text = Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
+                            + Localization.GetWord(LocalizedWord.Day_short) +' ' + gm.day.ToString();
+                        }
+                        else
+                        {
+                            dataString.text = Localization.GetWord(LocalizedWord.Day) + ' ' + gm.day.ToString();
+                        }
+                    }
                 }
             }
             if (moneyFlySpeed != 0)
@@ -357,10 +378,10 @@ sealed public class UIController : MonoBehaviour {
         {
             Text t = announcementStrings[0];
             Color c = t.color;
-            c.a = Mathf.Lerp(c.a, 0, DISSAPPEAR_SPEED * Time.deltaTime * GameMaster.gameSpeed * (2 - c.a) * (2- c.a));
-            if (c.a > 0.05f)  t.color = c;
+            c.a = Mathf.Lerp(c.a, 0, DISSAPPEAR_SPEED * Time.deltaTime * GameMaster.gameSpeed * (2 - c.a) * (2 - c.a));
+            if (c.a > 0.05f) t.color = c;
             else
-            {                
+            {
                 if (announcementStrings[1].enabled)
                 {
                     int lastIndex = 1;
@@ -371,7 +392,7 @@ sealed public class UIController : MonoBehaviour {
                         if (!announcementStrings[i].enabled) break;
                         else lastIndex = i;
                         announcementStrings[i - 1].text = announcementStrings[i].text;
-                        i++;                        
+                        i++;
                     }
                     announcementStrings[lastIndex].enabled = false;
                 }
@@ -381,25 +402,29 @@ sealed public class UIController : MonoBehaviour {
                     activeAnnouncements = false;
                 }
             }
-        }        
+        }
     }
 
     #region menu
-    public void MenuButton() {
-		showMenuWindow = !showMenuWindow;
-		if (showMenuWindow) { // on
+    public void MenuButton()
+    {
+        showMenuWindow = !showMenuWindow;
+        if (showMenuWindow)
+        { // on
             if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
             if (showStorageInfo) StorageButton();
-			menuPanel.SetActive(true);
+            if (tradePanel.activeSelf) tradePanel.SetActive(false);
+            menuPanel.SetActive(true);
             FollowingCamera.camRotationBlocked = true;
             //menuButton.transform.SetAsLastSibling();
             Time.timeScale = 0;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
             SetMenuPanelSelection(MenuSection.NoSelection);
         }
-		else { //off
+        else
+        { //off
             FollowingCamera.camRotationBlocked = false;
             FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
@@ -407,24 +432,27 @@ sealed public class UIController : MonoBehaviour {
             menuButton.GetComponent<Image>().overrideSprite = null;
             Time.timeScale = 1;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
-        }        
-	}
-	public void SaveButton() {
+        }
+    }
+    public void SaveButton()
+    {
         SaveSystemUI.current.Activate(true, false);
         SetMenuPanelSelection(MenuSection.Save);
     }
-	public void LoadButton(){
+    public void LoadButton()
+    {
         SaveSystemUI.current.Activate(false, false);
         SetMenuPanelSelection(MenuSection.Load);
     }
-    public void OptionsButton() {
+    public void OptionsButton()
+    {
         optionsPanel.SetActive(true);
         SetMenuPanelSelection(MenuSection.Options);
     }
     public void ToMainMenu()
     {
         SetMenuPanelSelection(MenuSection.NoSelection);
-        GameMaster.ChangeScene(GameLevel.Menu);  
+        GameMaster.ChangeScene(GameLevel.Menu);
     }
     public void ExitButton()
     {
@@ -462,19 +490,22 @@ sealed public class UIController : MonoBehaviour {
             }
         }
     }
-   
-	#endregion
 
-	public void Raycasting() {
+    #endregion
+
+    public void Raycasting()
+    {
         if (GameMaster.colonyController == null || GameMaster.colonyController.hq == null) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
-		Vector2 mpos = Input.mousePosition;
-		RaycastHit rh;
-		if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh)) {            
-            GameObject collided = rh.collider.gameObject;   
-            
-            switch (collided.tag) {
-			case "Structure":
+        Vector2 mpos = Input.mousePosition;
+        RaycastHit rh;
+        if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
+        {
+            GameObject collided = rh.collider.gameObject;
+
+            switch (collided.tag)
+            {
+                case "Structure":
                     {
                         Structure s = collided.transform.parent.GetComponent<Structure>();
                         if (s == null) ChangeChosenObject(ChosenObjectType.None);
@@ -492,7 +523,7 @@ sealed public class UIController : MonoBehaviour {
                         }
                         break;
                     }
-			case "BlockCollider":
+                case "BlockCollider":
                     {
                         Block b = collided.transform.parent.GetComponent<Block>();
                         if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block
@@ -507,7 +538,7 @@ sealed public class UIController : MonoBehaviour {
                                 {
                                     chosenSurface = sb;
                                     chosenStructure = null;
-                                    chosenCube = null;                                    
+                                    chosenCube = null;
                                     chosenWorksite = sb.worksite;
                                     ChangeChosenObject(ChosenObjectType.Surface);
                                 }
@@ -515,7 +546,8 @@ sealed public class UIController : MonoBehaviour {
                             case BlockType.Cube:
                                 CubeBlock cb = b as CubeBlock;
                                 if (cb == chosenCube) return;
-                                else {
+                                else
+                                {
                                     chosenCube = cb;
                                     chosenSurface = null;
                                     chosenStructure = null;
@@ -532,8 +564,8 @@ sealed public class UIController : MonoBehaviour {
                                 break;
                         }
                     }
-				break;
-			case "WorksiteSign":
+                    break;
+                case "WorksiteSign":
                     {
                         WorksiteSign ws = collided.GetComponent<WorksiteSign>();
                         if (ws != null)
@@ -550,20 +582,20 @@ sealed public class UIController : MonoBehaviour {
                         }
                         else ChangeChosenObject(ChosenObjectType.None);
                     }
-				break;
+                    break;
                 default:
                     if (collided.transform.parent != null)
                     {
                         if (collided.transform.parent.gameObject.GetInstanceID() == interceptingConstructPlaneID) UISurfacePanelController.current.ConstructingPlaneTouch(rh.point);
                     }
                     break;
-			}
-		}
-		else SelectedObjectLost();
-	}
+            }
+        }
+        else SelectedObjectLost();
+    }
 
     public void ChangeChosenObject(ChosenObjectType newChosenType)
-    {  
+    {
 
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
         else
@@ -581,7 +613,7 @@ sealed public class UIController : MonoBehaviour {
             workingObserver.ShutOff();
             workingObserver = null;
         }
-        bool disableCubeMenuButtons = true, changeFrameColor = true; 
+        bool disableCubeMenuButtons = true, changeFrameColor = true;
         if (newChosenType == ChosenObjectType.None)
         {
             rightPanel.SetActive(false);
@@ -618,8 +650,8 @@ sealed public class UIController : MonoBehaviour {
                     selectionFrame.position = chosenSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
                     selectionFrame.rotation = Quaternion.identity;
                     selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
-                    sframeColor = new Vector3(140f / 255f, 1, 1);             
-                    
+                    sframeColor = new Vector3(140f / 255f, 1, 1);
+
                     workingObserver = chosenSurface.ShowOnGUI();
                     FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
                 }
@@ -627,18 +659,23 @@ sealed public class UIController : MonoBehaviour {
 
             case ChosenObjectType.Cube:
                 {
-                    selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
-                    switch (faceIndex)
+                    if (chosenCube.faces[faceIndex] != null)
                     {
-                        case 0: selectionFrame.transform.rotation = Quaternion.Euler(90, 0, 0); break;
-                        case 1: selectionFrame.transform.rotation = Quaternion.Euler(0, 0, -90); break;
-                        case 2: selectionFrame.transform.rotation = Quaternion.Euler(-90, 0, 0); break;
-                        case 3: selectionFrame.transform.rotation = Quaternion.Euler(0, 0, 90); break;
-                        case 4: selectionFrame.transform.rotation = Quaternion.identity; break;
-                        case 5: selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0); break;
+                        selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
+                        switch (faceIndex)
+                        {
+                            case 0: selectionFrame.transform.rotation = Quaternion.Euler(90, 0, 0); break;
+                            case 1: selectionFrame.transform.rotation = Quaternion.Euler(0, 0, -90); break;
+                            case 2: selectionFrame.transform.rotation = Quaternion.Euler(-90, 0, 0); break;
+                            case 3: selectionFrame.transform.rotation = Quaternion.Euler(0, 0, 90); break;
+                            case 4: selectionFrame.transform.rotation = Quaternion.identity; break;
+                            case 5: selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0); break;
+                        }
+                        selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
+                        sframeColor = new Vector3(140f / 255f, 1, 0.9f);
                     }
-                    selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
-                    sframeColor = new Vector3(140f / 255f, 1, 0.9f);
+                    else selectionFrame.gameObject.SetActive(false);
+
                     FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
 
                     Transform t = rightPanel.transform;
@@ -690,11 +727,11 @@ sealed public class UIController : MonoBehaviour {
     {
         chosenWorksite = ws;
         ChangeChosenObject(ChosenObjectType.Worksite);
-    }    
+    }
 
     #region auxiliary panels
     public void ActivateProgressPanel(ProgressPanelMode mode)
-    {       
+    {
         switch (mode)
         {
             case ProgressPanelMode.Powerplant:
@@ -710,7 +747,7 @@ sealed public class UIController : MonoBehaviour {
                         Powerplant pp = uwb.observingWorkbuilding as Powerplant;
                         progressPanelIcon.texture = resourcesTexture;
                         int resourceID = pp.GetFuelResourseID();
-                        progressPanelIcon.uvRect = ResourceType.GetTextureRect(resourceID);                        
+                        progressPanelIcon.uvRect = ResourceType.GetTextureRect(resourceID);
                         Text resourceNameText = progressPanelIcon.transform.GetChild(0).GetComponent<Text>();
                         resourceNameText.text = Localization.GetResourceName(resourceID);
                         resourceNameText.gameObject.SetActive(true);
@@ -766,7 +803,7 @@ sealed public class UIController : MonoBehaviour {
                                 DeactivateProgressPanel();
                                 return;
                             }
-                        }                        
+                        }
                     }
                     break;
                 }
@@ -804,7 +841,7 @@ sealed public class UIController : MonoBehaviour {
                                 }
                         }
                     }
-                break;
+                    break;
                 }
         }
         progressPanel.SetActive(true);
@@ -844,7 +881,8 @@ sealed public class UIController : MonoBehaviour {
             DeactivateRollingShopPanel();
             return;
         }
-        else { // уу, костыли!
+        else
+        { // уу, костыли!
             RollingShop rs = wbo.observingWorkbuilding as RollingShop;
             if (rs == null)
             {
@@ -895,7 +933,7 @@ sealed public class UIController : MonoBehaviour {
     }
     public void Hospital_SetBirthrateMode(int i)
     {
-        if (i != Hospital.GetBirthrateModeIndex())   Hospital.SetBirthrateMode(i);
+        if (i != Hospital.GetBirthrateModeIndex()) Hospital.SetBirthrateMode(i);
     }
 
     public void ActivateTradePanel()
@@ -910,26 +948,26 @@ sealed public class UIController : MonoBehaviour {
     }
     #endregion
 
-    public static Rect GetTextureUV (Icons i)
+    public static Rect GetTextureUV(Icons i)
     {
         float p = 0.125f;
         switch (i)
         {
             default: return Rect.zero;
-            case Icons.GreenArrow: return new Rect(6 * p, 7 *p, p,p);
+            case Icons.GreenArrow: return new Rect(6 * p, 7 * p, p, p);
             case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
-            case Icons.PowerOff: return new Rect(2 * p, 7 *p, p,p);
+            case Icons.PowerOff: return new Rect(2 * p, 7 * p, p, p);
             case Icons.PowerOn: return new Rect(3 * p, 7 * p, p, p);
-            case Icons.Citizen: return new Rect(p, 6*p,p,p);
-            case Icons.RedArrow: return new Rect(2 * p, 6 *p,p,p);
-            case Icons.CrewBadIcon: return new Rect(p, 5 *p,p,p);
+            case Icons.Citizen: return new Rect(p, 6 * p, p, p);
+            case Icons.RedArrow: return new Rect(2 * p, 6 * p, p, p);
+            case Icons.CrewBadIcon: return new Rect(p, 5 * p, p, p);
             case Icons.CrewNormalIcon: return new Rect(2 * p, 5 * p, p, p);
-            case Icons.CrewGoodIcon: return new Rect(3 * p, 5 *p, p,p);
-            case Icons.ShuttleBadIcon: return new Rect(4 *p, 5 *p,p,p);
+            case Icons.CrewGoodIcon: return new Rect(3 * p, 5 * p, p, p);
+            case Icons.ShuttleBadIcon: return new Rect(4 * p, 5 * p, p, p);
             case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
             case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
-            case Icons.TaskFrame: return new Rect(3 * p, 4 *p,p,p);
-            case Icons.TaskCompleted: return new Rect(4 * p, 4 *p,p,p);
+            case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
+            case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
         }
     }
 
@@ -965,7 +1003,7 @@ sealed public class UIController : MonoBehaviour {
             moneyFlyingText.color = Color.green;
             moneyFlyingText.text = '+' + string.Format("{0:0.##}", f);
             moneyFlySpeed = 1;
-            moneyFlyingText.rectTransform.position =flyingMoneyOriginalPoint - Vector3.up * 2; 
+            moneyFlyingText.rectTransform.position = flyingMoneyOriginalPoint - Vector3.up * 2;
         }
         else
         {
@@ -1043,7 +1081,7 @@ sealed public class UIController : MonoBehaviour {
     public void LayerCutButton()
     {
         showLayerCut = !showLayerCut;
-        if (showLayerCut) 
+        if (showLayerCut)
         { // layercut on
             if (showColonyInfo) ColonyButton();
             else
@@ -1156,7 +1194,7 @@ sealed public class UIController : MonoBehaviour {
     public void LocalizeButtonTitles()
     {
         Transform t = hospitalPanel.transform;
-        t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase (LocalizedPhrase.BirthrateMode ) + " :";
+        t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.BirthrateMode) + " :";
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
@@ -1182,10 +1220,11 @@ sealed public class UIController : MonoBehaviour {
     }
 
     #region right panel
-    public void SelectedObjectLost() {
-		if (chosenObjectType == ChosenObjectType.None) return;
-		ChangeChosenObject(ChosenObjectType.None);
-	}
+    public void SelectedObjectLost()
+    {
+        if (chosenObjectType == ChosenObjectType.None) return;
+        ChangeChosenObject(ChosenObjectType.None);
+    }
 
     public void DigCube()
     {
@@ -1232,7 +1271,7 @@ sealed public class UIController : MonoBehaviour {
     }
     public void MakeSurfaceOnCube()
     {
-       Block b = chosenCube.myChunk.AddBlock(new ChunkPos(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z), BlockType.Surface, chosenCube.material_id, false);
+        Block b = chosenCube.myChunk.AddBlock(new ChunkPos(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z), BlockType.Surface, chosenCube.material_id, false);
         if (b != null)
         {
             chosenSurface = b as SurfaceBlock;

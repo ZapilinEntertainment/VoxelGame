@@ -9,6 +9,7 @@ public class UIStructureObserver : UIObserver {
     [SerializeField] Text nameField, sizeField;
     [SerializeField]  Button demolishButton;
 #pragma warning restore 0649
+    const int ROTATE_BUTTON_CHILDINDEX = 3;
 
     public static UIStructureObserver InitializeStructureObserverScript()
     {
@@ -25,6 +26,16 @@ public class UIStructureObserver : UIObserver {
 			nameField.text = Localization.GetStructureName(s.id);
 			demolishButton.gameObject.SetActive(!s.indestructible);
             sizeField.text = s.innerPosition.size.ToString() + " x " + s.innerPosition.size.ToString();
+            if (s.isArtificial)
+            {
+                transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(true);
+                transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(true);
+            }
+            else
+            {
+                transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(false);
+                transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(false);
+            }
 		}
 	}
 

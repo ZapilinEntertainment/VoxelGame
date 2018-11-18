@@ -34,7 +34,7 @@ public class UITradeWindow : UIObserver {
     public void LocalizeButtonTitles() {
         buyButtonText.text = Localization.GetWord(LocalizedWord.Buy);
         sellButtonText.text = Localization.GetWord(LocalizedWord.Sell);
-        limitText.text = Localization.GetWord(LocalizedWord.Limit);
+        limitText.text = Localization.GetWord(LocalizedWord.Limitation);
         priceText.text = Localization.GetWord(LocalizedWord.Price);
         demandText.text = Localization.GetWord(LocalizedWord.Demand);
     }

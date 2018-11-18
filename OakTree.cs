@@ -657,7 +657,7 @@ public class OakTree : Plant
             if (basement != null)
             {
                 basement.RemoveStructure(this);
-                basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
+                if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
             }
         }
         if (addedToClassList)

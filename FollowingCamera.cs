@@ -26,9 +26,11 @@ public sealed class FollowingCamera : MonoBehaviour {
 	Vector3 lookPoint;
 	bool changingBasePos = false, changingCamZoom = false, zoom_oneChangeIgnore = false;
 	public static float optimalDistance { get; private set; }
+#pragma warning disable 0649
     [SerializeField] bool useAutoZooming = true;
     [SerializeField] UnityEngine.UI.Slider zoomSlider, xSlider; // fiti
     [SerializeField] Transform cloudCamera;
+#pragma warning restore 0649
     const string CAM_ZOOM_DIST_KEY = "CameraZoomDistance";
     const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50;
 
@@ -181,7 +183,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                                     if (zl + zspeed > MAX_FAR) zspeed = MAX_FAR - zl;
                                     else
                                     {
-                                        if (zl + zspeed < MAX_ZOOM) zspeed = MAX_ZOOM - zspeed;
+                                        if (zl + zspeed < MAX_ZOOM & zl + zspeed > 0) zspeed = MAX_ZOOM - zspeed;
                                     }
                                     cam.transform.Translate(Vector3.forward * zspeed, Space.Self);
 

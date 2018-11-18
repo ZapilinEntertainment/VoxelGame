@@ -7,14 +7,14 @@ public class FactorySerializer {
 	public float inputResourcesBuffer,outputResourcesBuffer;
 }
 
-public class Factory : WorkBuilding {	
-	public Recipe recipe { get; private set; }
-	protected Storage storage;
-	protected const float BUFFER_LIMIT = 10;
-	public float inputResourcesBuffer  {get; protected set;}
-	protected bool gui_showRecipesList = false;
-	public FactorySpecialization specialization; // fixed by id
-	protected float outputResourcesBuffer = 0;
+public class Factory : WorkBuilding {
+    public Recipe recipe { get; private set; }
+    protected Storage storage;
+    public const float BUFFER_LIMIT = 10;
+    public float inputResourcesBuffer { get; protected set; }
+    protected bool gui_showRecipesList = false;
+    public FactorySpecialization specialization {get;protected set;}
+	public float outputResourcesBuffer { get; protected set; }
 
     public static UIFactoryObserver factoryObserver;
 

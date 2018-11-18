@@ -3,7 +3,7 @@
 [System.Serializable]
 public class StructureSerializer {
 	public PixelPosByte pos;
-	public bool undestructible;
+	public bool indestructible;
 	public float hp, maxHp;
     public int id;
 	public byte[] specificData;
@@ -46,11 +46,18 @@ public class Structure : MonoBehaviour  {
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
 	RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65;
 	public const int TOTAL_STRUCTURES_COUNT = 66;
-	public static UIStructureObserver structureObserver;  
+
+	public static UIStructureObserver structureObserver;
+    private static bool firstLaunch = true;
 
 
     public static void ResetToDefaults_Static()
     {
+        if (firstLaunch)
+        {
+            firstLaunch = false;
+            return;
+        }
         OakTree.ResetToDefaults_Static_OakTree();
         Corn.ResetToDefaults_Static_Corn();
         Hospital.ResetToDefaults_Static_Hospital();
@@ -1027,8 +1034,9 @@ public class Structure : MonoBehaviour  {
 	}
     // в финальном виде копипастить в потомков
     protected void LoadStructureData(StructureSerializer ss, SurfaceBlock sblock) {
+        Prepare();
         modelRotation = ss.modelRotation;
-        indestructible = ss.undestructible;
+        indestructible = ss.indestructible;
 		SetBasement(sblock, ss.pos);
 		maxHp = ss.maxHp; hp = ss.maxHp;       
 	}
@@ -1037,7 +1045,7 @@ public class Structure : MonoBehaviour  {
     protected StructureSerializer GetStructureSerializer() {
 		StructureSerializer ss = new StructureSerializer();
 		ss.pos = new PixelPosByte(innerPosition.x, innerPosition.z);
-		ss.undestructible = indestructible;
+		ss.indestructible = indestructible;
 		ss.hp = hp;
 		ss.maxHp = maxHp;
         ss.modelRotation = modelRotation;
@@ -1080,6 +1088,7 @@ public class Structure : MonoBehaviour  {
     }
 
     virtual public void SectionDeleted(ChunkPos pos)   {    } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
+    virtual public bool IsBlockTypeSuitable(BlockType btype) { return (btype == BlockType.Surface | btype == BlockType.Cave); } // для main-структур
 
     // в финальном виде копипастить в потомков
     protected bool PrepareStructureForDestruction( bool forced )

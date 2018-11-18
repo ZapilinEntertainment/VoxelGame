@@ -15,7 +15,7 @@
 	public void LifepowerUpdate () {
         tick++;
         basement.myChunk.AddLifePower(lifepowerPerTick);
-        if (tick == MAXIMUM_TICKS) Annihilate(true);
+        if (tick == MAXIMUM_TICKS) Annihilate(false);
 	}
 
     override public void Annihilate(bool forced)

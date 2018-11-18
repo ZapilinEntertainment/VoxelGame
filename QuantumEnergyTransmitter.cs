@@ -31,11 +31,11 @@ public sealed class QuantumEnergyTransmitter : Building {
     {
         if (!isActive) return;
         charge += chargeSpeed * colony.energySurplus;
-        if (charge > GameMaster.ENERGY_IN_CRYSTAL)
+        if (charge > GameConstants.ENERGY_IN_CRYSTAL)
         {
-            int count = (int)(charge / GameMaster.ENERGY_IN_CRYSTAL);
+            int count = (int)(charge / GameConstants.ENERGY_IN_CRYSTAL);
             colony.AddEnergyCrystals(count);
-            charge -= count * GameMaster.ENERGY_IN_CRYSTAL;
+            charge -= count * GameConstants.ENERGY_IN_CRYSTAL;
         }
         else
         {

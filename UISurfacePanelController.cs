@@ -428,7 +428,7 @@ public sealed class UISurfacePanelController : UIObserver {
         costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = costPanel.transform.GetChild(2);// build button
         t.gameObject.SetActive(true);
-        t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? GameMaster.SURFACE_MATERIAL_REPLACE_COUNT : CubeBlock.MAX_VOLUME ) + ')';
+        t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION : CubeBlock.MAX_VOLUME ) + ')';
     }
     public void CostPanel_Build()
     {        
@@ -436,7 +436,7 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             case CostPanelMode.SurfaceMaterialChanging:
                     ResourceType rt = ResourceType.GetResourceTypeById(costPanel_selectedButton.y);
-                    if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, GameMaster.SURFACE_MATERIAL_REPLACE_COUNT) }))
+                    if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION) }))
                     {
                         observingSurface.ReplaceMaterial(rt.ID);
                         costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
@@ -529,11 +529,11 @@ public sealed class UISurfacePanelController : UIObserver {
     }
     bool IsBlockCreatingAvailable()
     {
-        return ((hq.level > 4) & (GameMaster.colonyController.gears_coefficient == 3));
+        return ((hq.level > GameConstants.HQ_LEVEL_TO_CREATE_BLOCK) & (GameMaster.colonyController.gears_coefficient == GameConstants.GEARS_LEVEL_TO_CREATE_BLOCK));
     }
     bool IsChangeSurfaceMaterialAvalable()
     {
-        return (GameMaster.colonyController.gears_coefficient >= 2);
+        return (GameMaster.colonyController.gears_coefficient >= GameConstants.GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL);
     }
     #endregion
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 [System.Serializable]
 public class PlantSerializer {
-	public int id;
+	public int plant_id;
 	public float lifepower, growth;
 	public byte stage;
 }
@@ -14,21 +14,21 @@ public abstract class Plant : Structure {
 	public byte stage;	
     protected bool addedToClassList = false;
 
-    public const int CROP_CORN_ID = 0, TREE_OAK_ID = 1, 
+    public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2, 
         TOTAL_PLANT_TYPES = 2;  // при создании нового добавить во все статические функции внизу
     public static int existingPlantsMask = 0;
 
-    public static Plant GetNewPlant(int i_id)
+    public static Plant GetNewPlant(int i_plant_id)
     {
         Plant p;
-        switch (i_id)
+        switch (i_plant_id)
         {
             default: return null;
             case CROP_CORN_ID: p = new GameObject("Corn").AddComponent<Corn>(); break;
             case TREE_OAK_ID: p = new GameObject("Oak Tree").AddComponent<OakTree>(); break;
         }
         p.id = PLANT_ID;
-        p.plant_ID = i_id;
+        p.plant_ID = i_plant_id;
         p.Prepare();
         return p;
     }
@@ -126,22 +126,21 @@ public abstract class Plant : Structure {
 		}
 		return ss;
 	}
-	override public void Load (StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss,sblock);
-        PlantSerializer ps = new PlantSerializer();
-        GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
-        LoadPlantData(ps);
+	public static void Load (StructureSerializer i_ss, PlantSerializer i_ps, SurfaceBlock sblock) {
+        Plant p = GetNewPlant(i_ps.plant_id);
+		p.LoadStructureData(i_ss,sblock);
+        p.LoadPlantData(i_ps);
     }
 
 	protected void LoadPlantData(PlantSerializer ps) {
-		lifepower = ps.lifepower;
+        lifepower = ps.lifepower;
 		SetStage(ps.stage);
 		growth = ps.growth;
 	}
 
 	protected PlantSerializer GetPlantSerializer() {
 		PlantSerializer ps = new PlantSerializer();
-		ps.id = plant_ID;
+		ps.plant_id = plant_ID;
 		ps.lifepower = lifepower;
 		ps.growth = growth;
 		ps.stage = stage;

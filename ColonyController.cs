@@ -23,7 +23,7 @@ public sealed class ColonyController : MonoBehaviour {
     public string cityName { get; private set; }
 	public Storage storage{get;private set;}
 	public HeadQuarters hq{get;private set;}
-	public float gears_coefficient {get; private set;}
+    public float gears_coefficient; // hot
 	public float hospitals_coefficient{get;private set;}
 	public float labourEfficientcy_coefficient {get;private set;}
 	public float happiness_coefficient {get;private set;}
@@ -58,7 +58,7 @@ public sealed class ColonyController : MonoBehaviour {
             labourEfficientcy_coefficient = 1;
             health_coefficient = 1;
             hospitals_coefficient = 0;
-            birthrateCoefficient = GameMaster.START_BIRTHRATE_COEFFICIENT;
+            birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
             energyCrystalsCount = 1000;          
 
@@ -81,10 +81,17 @@ public sealed class ColonyController : MonoBehaviour {
 		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
 	}
 
-	void Update() {
-		if (GameMaster.gameSpeed == 0) return;
+    #region updating
+    void Update() {
+		if (GameMaster.gameSpeed == 0 | hq == null) return;
         float t = Time.deltaTime * GameMaster.gameSpeed;
 
+        if (gears_coefficient > 1)
+        {
+            GameMaster gm = GameMaster.realMaster;
+            gears_coefficient -= gm.gearsDegradeSpeed * t * (2 - gm.environmentalConditions);
+        }
+        gears_coefficient = Mathf.Clamp(gears_coefficient, GameConstants.GEARS_LOWER_LIMIT, GameConstants.GEARS_UP_LIMIT);
         // ENERGY CONSUMPTION
         {
             if (energySurplus > 0)
@@ -128,8 +135,8 @@ public sealed class ColonyController : MonoBehaviour {
             }
             else
             {
-                float monthFoodReserves = citizenCount * FOOD_CONSUMPTION * GameMaster.DAYS_IN_WEEK * GameMaster.WEEKS_IN_MONTH;
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + (1 - FOOD_PROBLEM_HAPPINESS_LIMIT) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
+                float monthFoodReserves = citizenCount * FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
+                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + (1 - FOOD_PROBLEM_HAPPINESS_LIMIT) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);                
             }
         }
         //HOUSING PROBLEM
@@ -203,6 +210,7 @@ public sealed class ColonyController : MonoBehaviour {
 		if (housingHappiness < happiness_coefficient) happiness_coefficient = housingHappiness;
 		if (healthcareHappiness < happiness_coefficient ) happiness_coefficient = healthcareHappiness;
 		if (foodSupplyHappiness < happiness_coefficient) happiness_coefficient = foodSupplyHappiness;
+        happiness_coefficient = Mathf.Clamp01(happiness_coefficient);
 
         //  BIRTHRATE
         {
@@ -231,8 +239,28 @@ public sealed class ColonyController : MonoBehaviour {
             peopleSurplus += realBirthrate;
         }
 	}
+    public void EverydayUpdate(uint daysGone)
+    {
+        if (!GameMaster.realMaster.weNeedNoResources)
+        {
+            //   FOOD  CONSUMPTION
+            float fc = FOOD_CONSUMPTION * citizenCount * daysGone;
+            fc -= storage.GetResources(ResourceType.Food, fc);
+            if (fc > 0)
+            {
+                fc -= storage.GetResources(ResourceType.Supplies, fc);
+                if (fc > 0)
+                {
+                    if (starvationTimer <= 0) starvationTimer = starvationTime;
+                }
+                starvationTimer = 0;
+            }
+            else starvationTimer = 0;
+        }
+    }
+    #endregion
 
-	public void AddCitizens(int x) {
+    public void AddCitizens(int x) {
 		citizenCount += x;
 		freeWorkers += x;
 	}
@@ -257,26 +285,7 @@ public sealed class ColonyController : MonoBehaviour {
         if (freeWorkers == 0 | w == null) return;
         if (x > freeWorkers) x = freeWorkers;
         freeWorkers = freeWorkers - x + w.AddWorkers(x);
-    }
-
-    public void EverydayUpdate() {
-		if (!GameMaster.realMaster.weNeedNoResources) {
-			//   FOOD  CONSUMPTION
-			float fc = FOOD_CONSUMPTION * citizenCount;
-			fc -= storage.GetResources(ResourceType.Food, fc);
-			if (fc > 0) {
-				fc -= storage.GetResources(ResourceType.Supplies, fc);
-				if (fc > 0) {
-					if (starvationTimer <= 0) starvationTimer = starvationTime;
-				}
-				starvationTimer = 0;
-			}
-			else starvationTimer = 0;
-		}
-	}
-	public void EveryYearUpdate() {
-		gears_coefficient -= GameMaster.GEARS_ANNUAL_DEGRADE;
-	}
+    }  
 
 	void ElementPowerSwitch( int index, bool energySupply) {
 		if ( !powerGrid[index].isActive ) return;
@@ -336,7 +345,7 @@ public sealed class ColonyController : MonoBehaviour {
             }
             i++;
         }
-        if (tents.Count > 0 & normalLivespace > citizenCount)
+        if (tents.Count > 0 & normalLivespace > citizenCount & !GameMaster.loading)
         {
             i = 0;
             int tentIndexDelta = 0; // смещение индексов влево из-за удаления
@@ -573,10 +582,6 @@ public sealed class ColonyController : MonoBehaviour {
 		if (new_hq != null) hq = new_hq;
         QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
     }
-
-	public void ImproveGearsCoefficient (float f) {
-		if (f > 0) gears_coefficient += f;
-	}
 
 	public void AddEnergyCrystals(float v) {
 		if (v <=0) return;

@@ -14,9 +14,10 @@ public class Shuttle : MonoBehaviour {
 	public float fuelCapacity{get;private set;}
 	public int ID{get;private set;}
 	public float condition{get;private set;} // общее состояние
-	[SerializeField]
-	Renderer[] renderers;
-	public Crew crew{get; private set;}
+#pragma warning disable 0649
+    [SerializeField] Renderer[] renderers;
+#pragma warning restore 0649
+    public Crew crew{get; private set;}
 	public Hangar hangar{get;private set;}
 	public ShipStatus status{get;private set;}
 	public Expedition assignedToExpedition{get;private set;}

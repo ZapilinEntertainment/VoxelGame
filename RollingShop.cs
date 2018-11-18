@@ -10,10 +10,12 @@ public class RollingShopSerializer {
 	public RollingShopMode mode;
 }
 
-public class RollingShop : WorkBuilding {
-	RollingShopMode mode;
+public sealed class RollingShop : WorkBuilding {	
     public static RollingShop current;
-	const float GEARS_UP_LIMIT = 3, GEARS_UPGRADE_STEP = 0.1f;
+
+    private RollingShopMode mode;
+    private ColonyController colony;
+    private const float GEARS_UPGRADE_SPEED = 0.1f;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -30,35 +32,21 @@ public class RollingShop : WorkBuilding {
         }
         if (current != null & current != this) current.Annihilate(false);
         current = this;
+        colony = GameMaster.colonyController;
 	}
 
     override public void LabourUpdate()
     {
         if (isActive & energySupplied)
         {
-            workflow += workSpeed;
-            if (workflow >= workflowToProcess)
+            if (colony.gears_coefficient < GameConstants.GEARS_UP_LIMIT)
             {
-                LabourResult();
+                colony.gears_coefficient += workSpeed; 
             }
         }
     }
 
     override protected void LabourResult() {
-        int steps = (int)(workflow / workflowToProcess);
-        if (steps == 0) return;
-		switch (mode) {
-		case RollingShopMode.GearsUpgrade:
-                float total = GEARS_UPGRADE_STEP * steps;
-                float ck = GameMaster.colonyController.gears_coefficient;
-                if (ck < GEARS_UP_LIMIT)
-                {
-                    if (ck + total > GEARS_UP_LIMIT) total = GEARS_UP_LIMIT - ck;
-                    GameMaster.colonyController.ImproveGearsCoefficient(total);
-                }
-			break;
-		}
-        workflow -= workflowToProcess;
 	}
 
     public int GetModeIndex()

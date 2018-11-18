@@ -175,7 +175,6 @@ sealed public class Corn : Plant {
 		if (newStage == stage) return;
 		stage = newStage;
         if (model != null) model.GetComponent<SpriteRenderer>().sprite = stageSprites[stage];
-        else SetModel();
 		lifepowerToGrow  = GetLifepowerLevelForStage(stage);
 		growth = lifepower / lifepowerToGrow;
 	}

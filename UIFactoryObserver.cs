@@ -66,7 +66,19 @@ public class UIFactoryObserver : UIObserver
         if (observingFactory == null) SelfShutOff();
         else
         {
-            workflowString.text = string.Format("{0:0.##}", observingFactory.workflow / observingFactory.workflowToProcess * 100) + '%';
+            if (observingFactory.recipe != Recipe.NoRecipe) {
+                if (observingFactory.outputResourcesBuffer < Factory.BUFFER_LIMIT)
+                {
+                    if (observingFactory.isActive & observingFactory.energySupplied)
+                    {
+                        float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                        workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+                    }
+                    else workflowString.text = Localization.GetPhrase(LocalizedPhrase.NoEnergySupply);
+                }
+                else workflowString.text = Localization.GetPhrase(LocalizedPhrase.BufferOverflow);
+            }
+            else workflowString.text = string.Empty;           
         }
     }
 

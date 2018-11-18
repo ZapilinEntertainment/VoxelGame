@@ -62,6 +62,7 @@ public class LODController : MonoBehaviour {
 
     public void CameraUpdate()
     {
+        // ДОДЕЛАТЬ
         camPos = FollowingCamera.camPos;
         Transform camTransform = FollowingCamera.camTransform;
         float zpos, dist;
