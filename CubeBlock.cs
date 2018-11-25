@@ -90,7 +90,6 @@ public class CubeBlock : Block
         visibilityMask = 0;
         excavatingStatus = 0;
         naturalFossils = MAX_VOLUME;
-        isTransparent = false;
         volume = MAX_VOLUME; career = false;
         type = BlockType.Cube;
 
@@ -189,7 +188,7 @@ public class CubeBlock : Block
     void CreateFace(int i)
     {
         GameObject g = PoolMaster.GetQuad();
-        g.tag = "BlockCollider";
+        g.tag = BLOCK_COLLIDER_TAG;
         Transform t = g.transform;
         t.parent = transform;
         faces[i] = g.GetComponent<MeshRenderer>();
@@ -374,16 +373,10 @@ public class CubeBlock : Block
         return bs;
     }
 
-    override public void Load(BlockSerializer bs)
+    public void LoadCubeBlockData(BlockSerializer bs)
     {
-        LoadBlockData(bs);
         CubeBlockSerializer cbs = new CubeBlockSerializer();
         GameMaster.DeserializeByteArray<CubeBlockSerializer>(bs.specificData, ref cbs);
-        LoadCubeBlockData(cbs);
-    }
-
-    protected void LoadCubeBlockData(CubeBlockSerializer cbs)
-    {
         career = cbs.career;
         naturalFossils = cbs.naturalFossils;
         volume = cbs.volume;

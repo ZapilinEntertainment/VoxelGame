@@ -20,14 +20,21 @@ public class HeadQuarters : House {
 		PrepareHouse(b,pos);
 		if (level > 3 ) {
 			if (rooftop == null) {
-				rooftop = PoolMaster.GetRooftop(true, true);
-				rooftop.transform.parent = transform.GetChild(0);
-				rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
+                if (b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + 1), b.pos.z, this))
+                {
+                    rooftop = PoolMaster.GetRooftop(true, true);
+                    rooftop.transform.parent = transform.GetChild(0);
+                    rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
+                }
 			}
 			if (level > 4) {
 				int i = 5;
 				while (i <= level) {
-					b.myChunk.BlockByStructure( b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this);
+                    if (b.myChunk.GetBlock(b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z) != null && b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this) == false)
+                    {
+                        UIController.current.MakeAnnouncement("error desu: hq addon cannot be created");
+                        return;
+                    }
 					GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
 					addon.transform.parent = transform.GetChild(0);
 					addon.transform.localPosition = Vector3.zero + (i - 3.5f) * Vector3.up * Block.QUAD_SIZE;
@@ -98,14 +105,10 @@ public class HeadQuarters : House {
                 {
                     ChunkPos upperPos = new ChunkPos(basement.pos.x, basement.pos.y + (level - 3), basement.pos.z);
                     Block upperBlock = basement.myChunk.GetBlock(upperPos.x, upperPos.y, upperPos.z);
-                    if (upperBlock != null)
+                    if (upperBlock != null && upperBlock.type == BlockType.Cube)
                     {
-                        if (upperBlock.type == BlockType.Cube)
-                        {
-                            refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
-                            return false;
-                        }
-                        else return true;
+                        refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                        return false;
                     }
                     else return true;
                 }
@@ -152,10 +155,7 @@ public class HeadQuarters : House {
                 Chunk chunk = basement.myChunk;
                 ChunkPos upperPos = new ChunkPos(basement.pos.x, basement.pos.y + (level - 3), basement.pos.z);
                 Block upperBlock = chunk.GetBlock(upperPos.x, upperPos.y, upperPos.z);
-                if (upperBlock != null)
-                {
-                    chunk.BlockByStructure(upperPos.x, upperPos.y, upperPos.z, this);
-                }
+                chunk.BlockByStructure(upperPos.x, upperPos.y, upperPos.z, this);
                 Transform model = transform.GetChild(0);
                 GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
                 addon.transform.parent = model;

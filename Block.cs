@@ -6,11 +6,11 @@ public enum BlockType : byte {Shapeless, Cube, Surface, Cave}
 
 public class Block : MonoBehaviour {
     public const float QUAD_SIZE = 1;
+    public const string BLOCK_COLLIDER_TAG = "BlockCollider";
 
     public BlockType type { get; protected set; }
     public Worksite worksite {get;protected set;}
 	public Chunk myChunk {get; protected  set;}
-	public bool isTransparent {get;protected  set;} // <- замени на transparent map
 	public ChunkPos pos {get; protected  set;}
     public Structure mainStructure; // <---- ЗАМЕНИТЬ
 	public bool blockedByStructure {get;protected  set;}
@@ -27,7 +27,6 @@ public class Block : MonoBehaviour {
 
 	public void InitializeShapelessBlock (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
         type = BlockType.Shapeless;
-        isTransparent = true;
         material_id = 0;
         illumination = 255;
 		myChunk = f_chunk; 
@@ -41,7 +40,6 @@ public class Block : MonoBehaviour {
 }
 	public virtual void InitializeBlock (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
         type = BlockType.Shapeless;
-		isTransparent = true;
         material_id = 0;
         illumination = 255;
 		myChunk = f_chunk;
@@ -156,20 +154,11 @@ public class Block : MonoBehaviour {
     #region save-load
     virtual public BlockSerializer Save() {
 		return GetBlockSerializer();
-	} 
-
-	virtual public void Load(BlockSerializer bs) {
-		LoadBlockData(bs);
 	}
-
-	protected void LoadBlockData(BlockSerializer bs) {
-		isTransparent = bs.isTransparent;
-	} 
 
     protected BlockSerializer GetBlockSerializer() {
 		BlockSerializer bs = new BlockSerializer();
 		bs.type = type;
-		bs.isTransparent = isTransparent;
 		bs.pos = pos;
 		bs.material_id = material_id;
 		return bs;

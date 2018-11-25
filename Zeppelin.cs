@@ -3,117 +3,231 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Zeppelin : MonoBehaviour {
-	SurfaceBlock landingPlace, s_place1;
-	bool landing = false, anchored = false, landed = false;
-	public Transform anchor, leftScrew,rightScrew, body;
-	public LineRenderer anchorChain;
-	float anchorSpeed = 0, flySpeed = 1, landingSpeed = 1;
-	Vector3 anchorStartPos = Vector3.zero;
-	public AudioSource propeller_as, anchorChain_as;
-	public AudioClip anchorLanded_ac;
+#pragma warning disable 0649
+    [SerializeField] private Transform leftScrew,rightScrew, body;
+    [SerializeField] private AudioSource propeller_as;
+#pragma warning restore 0649
 
-	void Start() {
-		transform.position = Vector3.one * Chunk.CHUNK_SIZE + Vector3.up;
+    private float flySpeed = 1, destructionTimer;
+    private bool landPointSet = false, destroyed = false;
+    private bool? landingByZAxis = null;
+
+    private const float SCREWS_ROTATION_SPEED = 500;
+
+    private SurfaceBlock landingSurface;
+    private GameObject landingMarkObject;
+    private LineRenderer lineDrawer;
+    private Rect landButtonRect;
+
+    void Start() {
+        Vector2 pos = Random.insideUnitCircle;
+        transform.position = new Vector3(pos.x, 0, pos.y) * Chunk.CHUNK_SIZE * 1.1f ;
 		Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
 		transform.forward = v;
-		anchorStartPos = transform.InverseTransformPoint(anchor.transform.position);
 		leftScrew.Rotate(0, Random.value * 360, 0);
 		rightScrew.Rotate(0, Random.value * 360, 0);
-		LandingUI.current.startTransport = this;
-		LandingUI.current.landing = true;
-	}
+
+        landingMarkObject = Instantiate(Resources.Load<GameObject>("Prefs/LandingX")) as GameObject;
+        landingMarkObject.SetActive(false);
+        landButtonRect = new Rect(0, 0, 0, 0);
+
+        UIController.current.transform.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(Click);
+        lineDrawer = GetComponent<LineRenderer>();
+    }
 
 	void Update() {
-		if ( !landed ) {
-			if ( !landing) {
-				Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
-				transform.forward = Quaternion.AngleAxis(90, Vector3.up) * v;
-				transform.Translate(Vector3.forward * flySpeed * Time.deltaTime * GameMaster.gameSpeed,Space.Self);
-				if (anchor.transform.localPosition != anchorStartPos) { 
-					anchor.transform.localPosition = Vector3.MoveTowards(anchor.transform.localPosition, anchorStartPos, 2 * Time.deltaTime * GameMaster.gameSpeed); 
-					anchorChain_as.enabled = true;
-				}
-				else anchorChain_as.enabled = false;
-				if (transform.position.y < Chunk.CHUNK_SIZE) transform.Translate(Vector3.up * landingSpeed/2f * Time.deltaTime * GameMaster.gameSpeed);
-				leftScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
-				rightScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
-			}
-			else {
-				Vector3 stopPoint = new Vector3(landingPlace.pos.x, transform.position.y, landingPlace.pos.z);
-				if (Vector3.Distance(transform.position, stopPoint) > 0.01f) {
-					transform.position = Vector3.MoveTowards(transform.position, stopPoint, flySpeed * Time.deltaTime);
-					transform.forward = stopPoint - transform.position;
-					leftScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
-					rightScrew.Rotate(0, 500 * Time.deltaTime * GameMaster.gameSpeed,0);
-				}
-				else {
-					if ( !anchored ) {
-						anchorChain_as.enabled = true;
-						anchorSpeed += 9.8f * Time.deltaTime;
-						float speed = anchorSpeed * Time.deltaTime * GameMaster.gameSpeed;
-						RaycastHit rh;
-						if (Physics.Raycast(transform.position, Vector3.down, out rh, Chunk.CHUNK_SIZE * 2)) {
-							float delta = (anchor.transform.position - rh.point).y;
-							if (delta <= speed) {
-								anchored = true; 
-								AudioSource.PlayClipAtPoint(anchorLanded_ac, anchor.transform.position);
-								anchorChain_as.enabled = false;
-								anchor.transform.position = rh.point + Vector3.up * 0.01f;
-                                anchor.transform.parent = null;
-								propeller_as.enabled = false;
-							} 
-							else anchor.Translate(Vector3.down * speed);
-						}
-						else {landingPlace = null; landing = false;}
-					}
-					else {
-						RaycastHit rh;
-						if (Physics.Raycast(transform.position, Vector3.down, out rh, Chunk.CHUNK_SIZE * 2)) {
-							float speed = landingSpeed * Time.deltaTime * GameMaster.gameSpeed;
-							float delta = (transform.position - rh.point).y;
-							if (delta <= speed) { // zeppelin landed
-								landed = true;
-								anchor.gameObject.SetActive(false);
-								anchorChain_as.enabled = false;
-                                Structure hq = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
-                                hq.SetModelRotation((byte)(transform.rotation.eulerAngles.y / 45f));
-								hq.SetBasement(landingPlace, PixelPosByte.zero);
-
-								landingPlace.MakeIndestructible(true);
-								landingPlace.myChunk.GetBlock(landingPlace.pos.x, landingPlace.pos.y - 1,landingPlace.pos.z).MakeIndestructible(true);
-
-								Chunk c = landingPlace.myChunk;
-
-                                Structure storage = Structure.GetStructureByID(Structure.STORAGE_0_ID);
-								storage.SetBasement(s_place1, PixelPosByte.zero);
-                                GameMaster.realMaster.SetStartResources();
-                            } 
-							else transform.Translate (Vector3.down * speed);
-						}
-						else {
-							landingPlace = null; landing = false; anchored = false;
-						}
-					}
-			}
-		}
-		anchorChain.SetPosition(0, transform.TransformPoint(anchorStartPos));
-		anchorChain.SetPosition(1, anchor.transform.position);
-		}
-		else {
-			Vector3 cs = body.transform.localScale;
-			cs -= Vector3.one * Time.deltaTime;
-            if (cs.x < 0.1f)
+        if (destroyed) return;
+        if (!landPointSet)
+        {
+            Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
+            transform.forward = Quaternion.AngleAxis(90, Vector3.up) * v;
+            transform.Translate(Vector3.forward * flySpeed * Time.deltaTime * GameMaster.gameSpeed, Space.Self);
+            leftScrew.Rotate(0, SCREWS_ROTATION_SPEED * Time.deltaTime * GameMaster.gameSpeed, 0);
+            rightScrew.Rotate(0, SCREWS_ROTATION_SPEED * Time.deltaTime * GameMaster.gameSpeed, 0);
+        }
+        else
+        {
+            if (destructionTimer > 0)
             {
-                Destroy(anchor.gameObject);
-                Destroy(gameObject);
+                destructionTimer -= Time.deltaTime * GameMaster.gameSpeed;
+                if (destructionTimer <= 0)
+                {
+                    destroyed = true;
+                    //hq
+                    Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                    if (landingByZAxis == true) s.SetModelRotation(0); else s.SetModelRotation(2);
+                    s.SetBasement(landingSurface, PixelPosByte.zero);
+                    //storage
+                    s = Structure.GetStructureByID(Structure.STORAGE_0_ID);
+                    SurfaceBlock sb = (landingByZAxis == true) ?
+                        landingSurface.myChunk.GetSurfaceBlock(landingSurface.pos.x, landingSurface.pos.z + 1)
+                        :
+                        landingSurface.myChunk.GetSurfaceBlock(landingSurface.pos.x + 1, landingSurface.pos.z);
+                    s.SetBasement(sb, PixelPosByte.zero);
+                    
+                    GameMaster.realMaster.SetStartResources();
+                    PoolMaster.current.BuildSplash(transform.position);
+                    if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSound(NotificationSound.ColonyFounded);
+                    Destroy(gameObject);
+                }
             }
-            else body.transform.localScale = cs;
-		}
-	}
+        }
+    }
 
-	public void SetLandingPlace(SurfaceBlock block, SurfaceBlock block2, SurfaceBlock block3) {
-		landingPlace = block;
-		s_place1 = block2;
-		landing = true;
-	} 
+    public void Click()
+    {
+        if (landPointSet | destroyed) return;
+        RaycastHit rh;
+        if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
+        {
+            GameObject collided = rh.collider.gameObject;
+            if (collided.tag == Block.BLOCK_COLLIDER_TAG)
+            {
+                Block b = collided.transform.parent.GetComponent<Block>();
+                if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block                
+                if (b != null && (b is SurfaceBlock))
+                {
+                    landingSurface = null;
+                    landingByZAxis = null;
+                    Chunk chunk = b.myChunk;
+                    Block minusTwoBlock, minusOneBlock, plusOneBlock, plusTwoBlock;
+                    int x = b.pos.x, y = b.pos.y, z = b.pos.z;
+                    bool[] suitable = new bool[5];
+                    suitable[2] = true;
+                    // direction 0 - fwd    
+                    {
+                        minusOneBlock = chunk.GetBlock(x, y, z - 1); suitable[1] = (minusOneBlock != null) && (minusOneBlock is SurfaceBlock);
+                        minusTwoBlock = chunk.GetBlock(x, y, z - 2); suitable[0] = (minusTwoBlock != null) && (minusTwoBlock is SurfaceBlock);
+                        plusOneBlock = chunk.GetBlock(x, y, z + 1); suitable[3] = (plusOneBlock != null) && (plusOneBlock is SurfaceBlock);
+                        plusTwoBlock = chunk.GetBlock(x, y, z + 2); suitable[4] = (plusTwoBlock != null) && (plusTwoBlock is SurfaceBlock);
+                        if (suitable[1])
+                        {
+                            if (suitable[0])
+                            {
+                                landingByZAxis = true;
+                                landingSurface = minusOneBlock as SurfaceBlock;
+                                goto DRAW_LINE;
+                            }
+                            else
+                            {
+                                if (suitable[3])
+                                {
+                                    landingByZAxis = true;
+                                    landingSurface = b as SurfaceBlock;
+                                    goto DRAW_LINE;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (suitable[3])
+                            {
+                                if (suitable[4])
+                                {
+                                    landingByZAxis = true;
+                                    landingSurface = plusOneBlock as SurfaceBlock;
+                                    goto DRAW_LINE;
+                                }
+                            }
+                        }
+                    }
+                    //direction 2 - right
+                    {
+                        minusOneBlock = chunk.GetBlock(x - 1, y, z); suitable[1] = (minusOneBlock != null) && (minusOneBlock is SurfaceBlock);
+                        minusTwoBlock = chunk.GetBlock(x - 2, y, z - 2); suitable[0] = (minusTwoBlock != null) && (minusTwoBlock is SurfaceBlock);
+                        plusOneBlock = chunk.GetBlock(x + 1, y, z); suitable[3] = (plusOneBlock != null) && (plusOneBlock is SurfaceBlock);
+                        plusTwoBlock = chunk.GetBlock(x + 2, y, z + 2); suitable[4] = (plusTwoBlock != null) && (plusTwoBlock is SurfaceBlock);
+                        if (suitable[1])
+                        {
+                            if (suitable[0])
+                            {
+                                landingByZAxis = false;
+                                landingSurface = minusOneBlock as SurfaceBlock;
+                                goto DRAW_LINE;
+                            }
+                            else
+                            {
+                                if (suitable[3])
+                                {
+                                    landingByZAxis = false;
+                                    landingSurface = b as SurfaceBlock;
+                                    goto DRAW_LINE;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (suitable[3])
+                            {
+                                if (suitable[4])
+                                {
+                                    landingByZAxis = false;
+                                    landingSurface = plusOneBlock as SurfaceBlock;
+                                    goto DRAW_LINE;
+                                }
+                            }
+                        }
+                    }
+                    if (landingSurface == null)
+                    {
+                        lineDrawer.enabled = false;
+                        return;
+                    }
+                    DRAW_LINE:
+                    Vector3[] positions = new Vector3[4];
+                    Vector3 cpos = landingSurface.transform.position;
+                    float q = Block.QUAD_SIZE;
+                    float h = cpos.y - 0.5f * q;
+                    if (landingByZAxis == false)
+                    {
+                        positions[0] = new Vector3( cpos.x - 1.5f * q, h, cpos.z + 0.5f * q );
+                        positions[1] = new Vector3(cpos.x + 1.5f * q, h, cpos.z + 0.5f * q);
+                        positions[2] = new Vector3(cpos.x + 1.5f * q, h, cpos.z - 0.5f * q);
+                        positions[3] = new Vector3(cpos.x - 1.5f * q, h, cpos.z - 0.5f * q);
+                        //positions[4] = positions[0];
+                    }
+                    else
+                    {
+                        positions[0] = new Vector3(cpos.x - 0.5f * q, h, cpos.z + 1.5f * q);
+                        positions[1] = new Vector3(cpos.x + 0.5f * q, h, cpos.z + 1.5f * q);
+                        positions[2] = new Vector3(cpos.x + 0.5f * q, h, cpos.z - 1.5f * q);
+                        positions[3] = new Vector3(cpos.x - 0.5f * q, h, cpos.z - 1.5f * q);
+                        //positions[4] = positions[0];
+                    }
+                    lineDrawer.SetPositions(positions);
+                    lineDrawer.enabled = true;
+                }
+            }
+        }
+    }
+
+    void OnGUI()
+    {
+        if (!landPointSet & !destroyed)
+        {
+            if (landingSurface != null)
+            {
+                Vector3 sc_pos = FollowingCamera.cam.WorldToScreenPoint(landingSurface.transform.position);
+                sc_pos.y = Screen.height - sc_pos.y;
+                landButtonRect = new Rect(sc_pos.x, sc_pos.y, 256, 64);
+                if (GUI.Button(landButtonRect, "Land"))
+                {
+                    landPointSet = true;
+                    Vector3 newPos = landingSurface.transform.position;
+                    PoolMaster.current.BuildSplash(newPos);
+                    transform.position = newPos;
+                    if (landingByZAxis == true) transform.rotation = Quaternion.identity;
+                    else transform.rotation = Quaternion.Euler(0, 90, 0);
+                    lineDrawer.enabled = false;
+                    destructionTimer = 3;
+                }
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (GameMaster.sceneClearing) return;
+        UIController.current.transform.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.RemoveListener(Click);
+    }
 }

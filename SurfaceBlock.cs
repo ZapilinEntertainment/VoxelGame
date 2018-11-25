@@ -61,8 +61,7 @@ public class SurfaceBlock : Block {
         material_id = 0;
         illumination = 255;
         surfaceObjects = new List<Structure>();
-        artificialStructures = 0;
-        isTransparent = false;            
+        artificialStructures = 0;         
         type = BlockType.Surface;
         myChunk = f_chunk;
         transform.parent = f_chunk.transform;
@@ -74,13 +73,14 @@ public class SurfaceBlock : Block {
         {
             GameObject g = PoolMaster.GetQuad();
             surfaceRenderer = g.GetComponent<MeshRenderer>();
+            surfaceRenderer.enabled = true;
             surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             Transform meshTransform = g.transform;
             meshTransform.parent = transform;
             meshTransform.localPosition = new Vector3(0, -QUAD_SIZE / 2f, 0);
             meshTransform.localRotation = Quaternion.Euler(90, 0, 0);
             g.name = "upper_plane";
-            g.tag = "BlockCollider";
+            g.tag = BLOCK_COLLIDER_TAG;
         }
         material_id = f_material_id;
         surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
@@ -643,13 +643,15 @@ public class SurfaceBlock : Block {
 		return bs;
 	} 
 
-	override public void Load(BlockSerializer bs) {
-		LoadBlockData(bs);
-		SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();
-		GameMaster.DeserializeByteArray<SurfaceBlockSerializer>(bs.specificData, ref sbs);
-		LoadSurfaceBlockData(sbs);
-		if (sbs.haveStructures) {
-			foreach (StructureSerializer ss in sbs.structuresList) {
+	public void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) { 
+        if (sbs.haveGrassland) {
+            grassland = Grassland.CreateOn(this);
+			grassland.Load(sbs.grasslandSerializer);
+		}
+        if (sbs.haveStructures)
+        {
+            foreach (StructureSerializer ss in sbs.structuresList)
+            {
                 if (ss.id != Structure.PLANT_ID)
                 {
                     Structure s = Structure.GetStructureByID(ss.id);
@@ -661,16 +663,9 @@ public class SurfaceBlock : Block {
                     GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
                     Plant.Load(ss, ps, this);
                 }
-			}
-		}
-	}
-
-	protected void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) {
-		if (sbs.haveGrassland) {
-            grassland = Grassland.CreateOn(this);
-			grassland.Load(sbs.grasslandSerializer);
-		}
-	}
+            }
+        }
+    }
 
 	public SurfaceBlockSerializer GetSurfaceBlockSerializer() {
 		SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();

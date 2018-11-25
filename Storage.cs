@@ -20,7 +20,7 @@ public sealed class Storage : MonoBehaviour {
 		maxVolume = 0;
 		standartResources = new float[ResourceType.resourceTypesArray.Length];
 		warehouses = new List<StorageHouse>();
-	}
+    }
 
     private void Update()
     {

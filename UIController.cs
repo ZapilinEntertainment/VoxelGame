@@ -29,24 +29,25 @@ sealed public class UIController : MonoBehaviour
     public Texture resourcesTexture { get; private set; }
     public Texture buildingsTexture { get; private set; }
     public SurfaceBlock chosenSurface { get; private set; }
-
-    private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
-    updateTimer, moneyFlySpeed = 0;
-    private byte showingStorageOccupancy;
+    
     Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
     private enum MenuSection { NoSelection, Save, Load, Options }
     MenuSection selectedMenuSection = MenuSection.NoSelection;
 
-    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;
-
-    bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, showLayerCut = false, activeAnnouncements = false, localized = false;
+    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;    
     public int interceptingConstructPlaneID = -1;
 
+    private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
+    updateTimer, moneyFlySpeed = 0;
+    private byte showingStorageOccupancy;
     private float saved_energySurplus;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
-        hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber;
-    
+        hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber
+        ;
+    private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, showLayerCut = false, activeAnnouncements = false, 
+        localized = false, storagePositionsPrepared = false;
+
     public QuestUI questUI { get; private set; }
 
     CubeBlock chosenCube; byte faceIndex = 10;
@@ -75,7 +76,7 @@ sealed public class UIController : MonoBehaviour
 
         SaveSystemUI.Check(transform.root);
 
-        if (!localized) LocalizeButtonTitles();
+        if (!localized) LocalizeButtonTitles();        
     }
 
     void Update()
@@ -411,6 +412,7 @@ sealed public class UIController : MonoBehaviour
         showMenuWindow = !showMenuWindow;
         if (showMenuWindow)
         { // on
+            GameMaster.SetPause(true);
             if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
@@ -419,18 +421,17 @@ sealed public class UIController : MonoBehaviour
             menuPanel.SetActive(true);
             FollowingCamera.camRotationBlocked = true;
             //menuButton.transform.SetAsLastSibling();
-            Time.timeScale = 0;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
             SetMenuPanelSelection(MenuSection.NoSelection);
         }
         else
         { //off
+            GameMaster.SetPause(false);
             FollowingCamera.camRotationBlocked = false;
             FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
-            Time.timeScale = 1;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
         }
     }
@@ -497,12 +498,15 @@ sealed public class UIController : MonoBehaviour
     {
         if (GameMaster.colonyController == null || GameMaster.colonyController.hq == null) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
+        if (FollowingCamera.touchscreen )
+        {
+            if (Input.touchCount != 1 | FollowingCamera.camRotateTrace > 0) return;
+        }
         Vector2 mpos = Input.mousePosition;
         RaycastHit rh;
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
         {
             GameObject collided = rh.collider.gameObject;
-
             switch (collided.tag)
             {
                 case "Structure":
@@ -523,7 +527,7 @@ sealed public class UIController : MonoBehaviour
                         }
                         break;
                     }
-                case "BlockCollider":
+                case Block.BLOCK_COLLIDER_TAG:
                     {
                         Block b = collided.transform.parent.GetComponent<Block>();
                         if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block
@@ -1020,6 +1024,7 @@ sealed public class UIController : MonoBehaviour
     {
         questUI.Activate();
         leftPanel.SetActive(false);
+        storagePanel.SetActive(false);
     }
     public void ActivateLeftPanel()
     {
@@ -1124,69 +1129,66 @@ sealed public class UIController : MonoBehaviour
 
     void RecalculateStoragePanel()
     {
-        Storage st = GameMaster.colonyController.storage;
-        float[] resources = st.standartResources;
-        int i = 0, b = 0, buttonsCount = storagePanelContent.childCount;
-        while (i < resources.Length)
+        int i = 0;
+        if (!storagePositionsPrepared)
         {
-            if (resources[i] != 0)
+            storagePanelContent.gameObject.SetActive(false);
+            RectTransform t = null;
+            for (; i < ResourceType.resourceTypesArray.Length; i++)
             {
-                Transform t;
-                if (b < buttonsCount) t = storagePanelContent.GetChild(b);
-                else
-                {
-                    t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
-                    RectTransform rt = (t as RectTransform);
-                    t.localPosition += Vector3.down * b * rt.rect.height;
-                }
-                t.gameObject.SetActive(true);
-                b++;
-                t.GetChild(0).GetComponent<RawImage>().enabled = true;
-                t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(i);
-                t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(i);
-                t.GetChild(2).GetComponent<Text>().text = ((int)(resources[i] * 10) / 10f).ToString(); // why not format? I think no need
+                t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent) as RectTransform;
+                t.localPosition += Vector3.down * (i + 1) * t.rect.height;
             }
-            i++;
+            (storagePanelContent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, i * t.rect.height);
+            storagePanelContent.gameObject.SetActive(true);
+            storagePositionsPrepared = true;
         }
-        // "Total" string
+        Storage st = GameMaster.colonyController.storage;        
+        if (st.totalVolume == 0)
         {
-            Transform t;
-            if (b < buttonsCount) t = storagePanelContent.GetChild(b);
-            else
+            //empty storage
+            for (i = 0; i < storagePanelContent.childCount + 1; i++)
             {
-                t = Instantiate(storagePanelContent.GetChild(0), storagePanelContent);
-                RectTransform rt = (t as RectTransform);
-                t.localPosition += Vector3.down * b * rt.rect.height;
+                storagePanelContent.GetChild(i).gameObject.SetActive(false);
             }
-            t.gameObject.SetActive(true);
-            b++;
+            Transform t = storagePanelContent.GetChild(0);
             t.GetChild(0).GetComponent<RawImage>().enabled = false;
             t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
             t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString();
         }
-
+        else
         {
-            RectTransform rt = storagePanel.transform.GetChild(0) as RectTransform;
-            float listSize = b * (storagePanelContent.GetChild(0) as RectTransform).rect.height;
-            float freeSpace = Screen.height - upPanel.GetComponent<RectTransform>().rect.height * 0.7f;
-            if (listSize < freeSpace)
+            List<int> resourceIDs = new List<int>();
+            float[] resources = st.standartResources;
+            for(i = 0; i < resources.Length; i++)
             {
-                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
+                if (resources[i] > 0) resourceIDs.Add(i);
             }
-            else
+            Transform t;
+            int resourceID;
+            // redraw 
+            for (i = 0; i < resourceIDs.Count; i++)
             {
-                rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, freeSpace);
+                resourceID = resourceIDs[i];
+                t = storagePanelContent.GetChild(i);
+                t.GetChild(0).GetComponent<RawImage>().enabled = true;
+                t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(resourceID);
+                t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(resourceID);
+                t.GetChild(2).GetComponent<Text>().text = ((int)(resources[resourceID] * 10) / 10f).ToString();
+                t.gameObject.SetActive(true);
             }
-            (storagePanelContent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, listSize);
-            //rt.offsetMin = new Vector2(rt.offsetMin.x, rt.offsetMax.y -  b * (storagePanelContent.GetChild(0) as RectTransform).rect.height);
-        }
-        lastStorageOperationNumber = st.operationsDone;
-        if (b < buttonsCount)
-        {
-            for (; b < buttonsCount; b++)
+            t = storagePanelContent.GetChild(i);
+            t.GetChild(0).GetComponent<RawImage>().enabled = false;
+            t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
+            t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString();
+            t.gameObject.SetActive(true);
+            i++;
+            if (i < storagePanelContent.childCount)
             {
-                storagePanelContent.GetChild(b).gameObject.SetActive(false);
+                for (int j = i; j < storagePanelContent.childCount; j++)
+                    storagePanelContent.GetChild(j).gameObject.SetActive(false);
             }
+            //storagePanel.transform.GetChild(0).GetChild(1).GetComponent<Scrollbar>().size = 
         }
     }
     #endregion

@@ -17,7 +17,7 @@ public sealed class EditorUI : MonoBehaviour
     private ClickAction currentAction;
     private int chosenMaterialId = ResourceType.STONE_ID, firstInListPos = 0, chosenListPosition = 0;
     private int[] idsArray;
-    private bool blockEditMode = true;
+    private bool blockEditMode = true, visualBorderDrawn = false;
 
     private const int LIST_POSITIONS = 10, LIFEPOWER_PORTION = 100, LISTPANEL_DEFAULT_CHILDCOUNT = 3;
 
@@ -36,14 +36,10 @@ public sealed class EditorUI : MonoBehaviour
 
     public void Click()
     {
+        if (menuPanel.activeSelf) return;
         if (FollowingCamera.touchscreen)
         {
-            if (Input.touchCount != 1) return;
-            else
-            {
-                Touch t = Input.GetTouch(0);
-                if (t.phase == TouchPhase.Moved) return;
-            }
+            if (Input.touchCount > 1 | FollowingCamera.camRotateTrace > 0) return;
         }
         RaycastHit rh;
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
@@ -125,11 +121,12 @@ public sealed class EditorUI : MonoBehaviour
                         {
                             Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
                             Chunk c = GameMaster.mainChunk;
-                            if (b.type == BlockType.Surface | b.type == BlockType.Cave)
+                            Block lowerBlock = c.GetBlock(cpos.x, cpos.y - 1, cpos.z);                            
+                            if ( (b.type == BlockType.Surface | b.type == BlockType.Cave) && (lowerBlock.type == BlockType.Cube | lowerBlock.type == BlockType.Cave ))
                             {
                                 c.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
                             }
-                            c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
+                            else  c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
                         }
                         break;
                     }
@@ -149,6 +146,7 @@ public sealed class EditorUI : MonoBehaviour
                             }
                             if (sb != null && sb.grassland == null)
                             {
+                                if (sb.material_id != ResourceType.DIRT_ID | sb.material_id != ResourceType.FERTILE_SOIL_ID) sb.ReplaceMaterial(ResourceType.DIRT_ID);
                                 Grassland.CreateOn(sb);
                                 sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
                             }
@@ -228,6 +226,12 @@ public sealed class EditorUI : MonoBehaviour
                         break;
                     }
             }
+        }
+
+        if (!visualBorderDrawn)
+        {
+            GameMaster.mainChunk.DrawBorder();
+            visualBorderDrawn = true;
         }
     }
 
@@ -368,6 +372,7 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void PlayWithThisTerrain()
     {
+        if (visualBorderDrawn) GameMaster.mainChunk.HideBorderLine();
         Destroy(transform.root.gameObject);
         GameMaster.realMaster.ChangeModeToPlay();
         Instantiate(Resources.Load<GameObject>("UIPrefs/gameCanvas"));

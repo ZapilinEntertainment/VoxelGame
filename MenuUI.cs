@@ -9,16 +9,17 @@ public sealed class MenuUI : MonoBehaviour
 {
     private int currentGraphicsLevel = 0;
 #pragma warning disable 0649
-    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage;
-    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel;
+    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton;
+    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel;
     [SerializeField] private Slider sizeSlider, roughnessSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown;
     [SerializeField] private Sprite overridingSprite;
     [SerializeField] private Text sizeSliderVal, roughSliderVal;
     [SerializeField] private Button gameStartButton;
+    [SerializeField] private InputField editorSizeInputField;
 #pragma warning restore 0649
 
-    enum MenuSection { NoSelection, NewGame, Loading, Options }
+    enum MenuSection { NoSelection, NewGame, Loading, Options, Editor }
     private MenuSection currentSection = MenuSection.NoSelection;
     private ChunkGenerationMode newGameGenMode;
     private List<ChunkGenerationMode> availableGenerationModes;
@@ -36,7 +37,7 @@ public sealed class MenuUI : MonoBehaviour
         generationTypeDropdown.value = 0;
         newGameGenMode = availableGenerationModes[0];
 
-        Time.timeScale = 1;
+        GameMaster.SetPause(false);
     }
 
     public void StartGame()
@@ -46,49 +47,25 @@ public sealed class MenuUI : MonoBehaviour
         GameMaster.gameStartSettings = gss;
         GameMaster.ChangeScene(GameLevel.Playable);
     }
-    public void NGPanelButton()
+    public void NewGameButton()
     {
-        if (currentSection == MenuSection.NewGame)
-        {
-            SwitchVisualSelection(MenuSection.NoSelection);
-            newGamePanel.SetActive(false);
-        }
-        else
-        {
-            SwitchVisualSelection(MenuSection.NewGame);
-            newGamePanel.SetActive(true);
-        }
+        if (currentSection == MenuSection.NewGame)    SwitchVisualSelection(MenuSection.NoSelection);
+        else SwitchVisualSelection(MenuSection.NewGame);
     }
     public void OptionsButton()
     {
-        if (currentSection == MenuSection.Options)
-        {
-            SwitchVisualSelection(MenuSection.NoSelection);
-            optionsPanel.SetActive(false);
-        }
-        else
-        {
-            SwitchVisualSelection(MenuSection.Options);
-            optionsPanel.SetActive(true);
-        }
+        if (currentSection == MenuSection.Options)  SwitchVisualSelection(MenuSection.NoSelection);
+        else    SwitchVisualSelection(MenuSection.Options);
     }
     public void LoadPanelButton()
     {
-        if (currentSection == MenuSection.Loading)
-        {
-            SwitchVisualSelection(MenuSection.NoSelection);
-            SaveSystemUI.current.gameObject.SetActive(false);
-        }
-        else
-        {
-            SwitchVisualSelection(MenuSection.Loading);
-            SaveSystemUI.current.Activate(false, false);
-        }
-
+        if (currentSection == MenuSection.Loading)  SwitchVisualSelection(MenuSection.NoSelection);
+        else   SwitchVisualSelection(MenuSection.Loading);
     }
     public void EditorButton()
     {
-        GameMaster.ChangeScene(GameLevel.Editor);
+        if (currentSection == MenuSection.Editor)      SwitchVisualSelection(MenuSection.NoSelection);
+        else   SwitchVisualSelection(MenuSection.Editor);
     }
     public void ExitButton()
     {
@@ -205,6 +182,36 @@ public sealed class MenuUI : MonoBehaviour
         newGameGenMode = availableGenerationModes[generationTypeDropdown.value];
     }
 
+    public void Editor_InputFieldValueChanged()
+    {
+        int x = int.Parse(editorSizeInputField.text);
+        if (x < 0)
+        {
+            x *= -1;
+            editorSizeInputField.text = x.ToString();
+        }
+        if (x != Chunk.CHUNK_SIZE) Chunk.SetChunkSizeValue((byte)x);
+    }
+    public void Editor_SizePlusButton()
+    {
+        if (Chunk.CHUNK_SIZE < 99)
+        {
+            Chunk.SetChunkSizeValue((byte)(Chunk.CHUNK_SIZE + 1));
+            editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
+        }
+    }
+    public void Editor_SizeMinusButton()
+    {
+        if (Chunk.CHUNK_SIZE > Chunk.MIN_CHUNK_SIZE) {
+            Chunk.SetChunkSizeValue((byte)(Chunk.CHUNK_SIZE - 1));
+            editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
+        }
+    }
+    public void Editor_Start()
+    {
+        GameMaster.ChangeScene(GameLevel.Editor);
+    }
+
     public void QualityDropdownChanged()
     {
         graphicsApplyButton.SetActive(qualityDropdown.value != currentGraphicsLevel);
@@ -243,6 +250,10 @@ public sealed class MenuUI : MonoBehaviour
                     optionsButton.overrideSprite = null;
                     optionsPanel.SetActive(false);
                     break;
+                case MenuSection.Editor:
+                    editorButton.overrideSprite = null;
+                    editorSettingPanel.SetActive(false);
+                    break;
             }
         }
         currentSection = ms;
@@ -250,10 +261,22 @@ public sealed class MenuUI : MonoBehaviour
         {
             case MenuSection.NewGame:
                 newGameButton.overrideSprite = overridingSprite;
+                newGamePanel.SetActive(true);
                 NG_GenerateButton();
                 break;
-            case MenuSection.Loading: loadButton.overrideSprite = overridingSprite; break;
-            case MenuSection.Options: optionsButton.overrideSprite = overridingSprite; break;
+            case MenuSection.Loading:
+                loadButton.overrideSprite = overridingSprite;
+                SaveSystemUI.current.Activate(false, false);
+                break;
+            case MenuSection.Options:
+                optionsButton.overrideSprite = overridingSprite;
+                optionsPanel.SetActive(true);
+                break;
+            case MenuSection.Editor:
+                editorButton.overrideSprite = overridingSprite;
+                editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
+                editorSettingPanel.SetActive(true);
+                break;
         }
     }
 }

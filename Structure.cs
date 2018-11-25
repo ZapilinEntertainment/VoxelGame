@@ -1008,7 +1008,7 @@ public class Structure : MonoBehaviour  {
 		if ( hp <= 0 ) Annihilate(false);
 	}
 
-	virtual public void ChunkUpdated( ChunkPos pos) { // проверка?
+	virtual public void ChunkUpdated() { 
 		if ( basement == null) return;
 		Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y+1, basement.pos.z);
 		if (upperBlock == null) {
@@ -1072,7 +1072,7 @@ public class Structure : MonoBehaviour  {
 
     public void UnsetBasement()
     {
-        if (isBasement & basement != null )
+        if (basement != null )
         {
             if (subscribedToChunkUpdate)
             {
@@ -1081,7 +1081,10 @@ public class Structure : MonoBehaviour  {
                 BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
                 if (brc != null) basement.ClearStructureBlock(brc);
             }
-            if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
+            if (isBasement)
+            {
+                if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
+            }
         }
         basement = null;
         innerPosition = new SurfaceRect(0, 0, innerPosition.size);
@@ -1106,14 +1109,15 @@ public class Structure : MonoBehaviour  {
                 GameMaster.colonyController.storage.AddResources(resourcesLeft);
             }
         }
-        if (!forced & (basement != null))
+        bool haveBasement = basement != null;
+        if (subscribedToChunkUpdate & haveBasement)
         {
-            basement.RemoveStructure(this);
-            if (subscribedToChunkUpdate)
-            {
-                basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
-                subscribedToChunkUpdate = false;
-            }
+            basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+            subscribedToChunkUpdate = false;
+        }
+        if (!forced & haveBasement)
+        {
+            basement.RemoveStructure(this);            
             SurfaceBlock lastBasement = basement;
             if (isBasement)
             {

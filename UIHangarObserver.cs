@@ -50,7 +50,7 @@ public sealed class UIHangarObserver : UIObserver
         bool haveShuttle = (shuttle != null);
 
         shuttleNameTextField.gameObject.SetActive(haveShuttle);
-        repairButton.gameObject.SetActive(haveShuttle & (shuttle.condition < 1));
+        repairButton.gameObject.SetActive(haveShuttle && (shuttle.condition < 1));
         disassembleButton.gameObject.SetActive(haveShuttle);
 
         if (haveShuttle)

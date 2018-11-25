@@ -43,18 +43,22 @@ public sealed class GameMaster : MonoBehaviour {
     public static bool sceneClearing { get; private set; }
     public static bool editMode = false;
     public static bool loading { get; private set; }
+    public static bool soundEnabled { get; private set; }
     public static string savename { get; private set; }
     public static float LUCK_COEFFICIENT { get; private set; }
     public static float sellPriceCoefficient = 0.75f;
     public static int layerCutHeight = 16, prevCutHeight = 16;
+
     public static Vector3 sceneCenter { get { return Vector3.one * Chunk.CHUNK_SIZE / 2f; } } // SCENE CENTER
     public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
     public static Difficulty difficulty { get; private set; }
     public static Chunk mainChunk { get; private set; } 
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
+    public static Audiomaster audiomaster;
 
-	public LineRenderer systemDrawLR;
+    private static byte pauseRequests = 0;
+
     public Constructor constructor;
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
@@ -88,7 +92,6 @@ public sealed class GameMaster : MonoBehaviour {
     private float labourTimer = 0, lifepowerTimer = 0;    
     private float windTimer = 0, windChangeTime = 120;
     private bool firstSet = true;
-
 	// FOR TESTING
 	public float newGameSpeed = 1;
 	public bool weNeedNoResources { get; private set; }
@@ -101,6 +104,25 @@ public sealed class GameMaster : MonoBehaviour {
         savename = s;
     }
     public static void SetMainChunk(Chunk c) { mainChunk = c; }
+
+    public static void SetPause(bool pause)
+    {
+        if (pause)
+        {
+            pauseRequests++;
+            Time.timeScale = 0;
+            gameSpeed = 0;
+        }
+        else
+        {
+            if (pauseRequests > 0) pauseRequests--;
+            if (pauseRequests == 0)
+            {
+                Time.timeScale = 1;
+                gameSpeed = 1;
+            }
+        }
+    }
 
     public void ChangeModeToPlay()
     {
@@ -125,7 +147,11 @@ public sealed class GameMaster : MonoBehaviour {
 
 	void Start() {
         if (!firstSet) return;
+        Time.timeScale = 1;
         gameSpeed = 1;
+        pauseRequests = 0;
+        audiomaster = gameObject.AddComponent<Audiomaster>();
+        audiomaster.Prepare();
 
         editMode = _editMode;
         if (!editMode)
@@ -158,8 +184,6 @@ public sealed class GameMaster : MonoBehaviour {
                     }
                     else LoadTerrain(SaveSystemUI.GetTerrainsPath() + '/' + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
                 }
-
-                FollowingCamera.CenterCamera(sceneCenter);
                 FollowingCamera.main.ResetTouchRightBorder();
                 FollowingCamera.camRotationBlocked = false;
 
@@ -218,11 +242,10 @@ public sealed class GameMaster : MonoBehaviour {
                 }
                 warProximity = 0.01f;
                 layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
+                if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
                 switch (startGameWith)
                 {
                     case GameStart.Zeppelin:
-                        LandingUI lui = gameObject.AddComponent<LandingUI>();
-                        lui.lineDrawer = systemDrawLR;
                         Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
                         break;
 
@@ -230,20 +253,18 @@ public sealed class GameMaster : MonoBehaviour {
                         List<SurfaceBlock> sblocks = mainChunk.surfaceBlocks;
                         SurfaceBlock sb = sblocks[(int)(Random.value * (sblocks.Count - 1))];
                         int xpos = sb.pos.x;
-                        int zpos = sb.pos.z;
-
-                        if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
+                        int zpos = sb.pos.z;                       
 
                         Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
-                       // Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
+                        //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
                         b.MakeIndestructible(true);
                         b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
                         //test
-                      // HeadQuarters hq = s as HeadQuarters;
-                        //weNeedNoResources = true;
+                       //HeadQuarters hq = s as HeadQuarters;
+                       //weNeedNoResources = true;
                        // hq.LevelUp(false);
                        // hq.LevelUp(false);
                         //
@@ -298,15 +319,17 @@ public sealed class GameMaster : MonoBehaviour {
         {
             gameObject.AddComponent<PoolMaster>().Load();           
             mainChunk = new GameObject("chunk").AddComponent<Chunk>();
-            int size = 16;
+            int size = Chunk.CHUNK_SIZE;
             int[,,] blocksArray = new int[size,size,size];
             size /= 2;
             blocksArray[size,size,size] = ResourceType.STONE_ID;
-            mainChunk.SetChunk(blocksArray); // временно, потом сделать возможность выбирать размер
-
-            FollowingCamera.CenterCamera(sceneCenter);
+            mainChunk.CreateNewChunk(blocksArray); 
         }
-	}
+
+        { // set look point
+            FollowingCamera.camBasisTransform.position = sceneCenter;
+        }
+    }
 
     #region updates
     private void Update()
@@ -455,7 +478,7 @@ public sealed class GameMaster : MonoBehaviour {
     #region save-load system
     public bool SaveGame() { return SaveGame("autosave"); }
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
-		Time.timeScale = 0;
+        SetPause(true);
 		GameMasterSerializer gms = new GameMasterSerializer();
 		#region gms mainPartFilling
 		gms.gameSpeed = gameSpeed;
@@ -500,7 +523,7 @@ public sealed class GameMaster : MonoBehaviour {
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
 		fs.Close();
-		Time.timeScale = 1;
+        SetPause(false);
 		return true;
 	}
     public bool LoadGame() { return LoadGame("autosave"); }
@@ -508,7 +531,7 @@ public sealed class GameMaster : MonoBehaviour {
     {  // отдельно функцию проверки и коррекции сейв-файла
         if (true) // <- тут будет функция проверки
         {
-            Time.timeScale = 0; gameSpeed = 0;
+            SetPause(true); 
             loading = true;
             // ОЧИСТКА
             StopAllCoroutines();
@@ -568,11 +591,11 @@ public sealed class GameMaster : MonoBehaviour {
             QuestUI.current.Load(gms.questStaticSerializer);
             Expedition.LoadStaticData(gms.expeditionStaticSerializer);
 
-            FollowingCamera.main.WeNeedUpdate();
-            Time.timeScale = 1; gameSpeed = 1;
+            FollowingCamera.main.WeNeedUpdate();            
             loading = false;
-
             savename = fullname;
+            SetPause(false);
+
             return true;
         }
         else
@@ -609,9 +632,7 @@ public sealed class GameMaster : MonoBehaviour {
         mainChunk.LoadChunkData(cs);
         FollowingCamera.main.WeNeedUpdate();
         return true;
-    }
-
-    
+    }    
 
 	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
 		using (MemoryStream stream = new MemoryStream(data))
@@ -633,6 +654,9 @@ public sealed class GameMaster : MonoBehaviour {
     {
         StopAllCoroutines();
         sceneClearing = true;
+        Time.timeScale = 1;
+        gameSpeed = 1;
+        pauseRequests = 0;
     }
 
     public static void ChangeScene(GameLevel level)
