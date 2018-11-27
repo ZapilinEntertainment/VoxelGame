@@ -21,7 +21,7 @@ sealed public class Corn : Plant {
         corns = new List<Corn>();
         maxLifeTransfer = 1;
         growSpeed = 0.03f;
-        decaySpeed = growSpeed;
+        decaySpeed = growSpeed * 0.01f;
         FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
 
@@ -76,7 +76,10 @@ sealed public class Corn : Plant {
                     else
                     {
                         c.lifepower -= decaySpeed * t;
-                        if (c.lifepower <= 0) c.Dry();
+                        if (c.lifepower <= 0)
+                        {
+                            c.Dry();
+                        }
                     }
                     if (c.growth >= 1 & c.stage < MAX_STAGE) c.SetStage((byte)(c.stage + 1));
                     i++;

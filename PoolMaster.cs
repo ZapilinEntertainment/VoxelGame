@@ -7,31 +7,34 @@ public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS}
 public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow}
 
 public sealed class PoolMaster : MonoBehaviour {
-    List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
-        lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные	
-    float shipsClearTimer = 0, clearTime = 30;
-    ParticleSystem buildEmitter;    
-
-    public static PoolMaster current;
-	GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
-    public static List<GameObject> quadsPool;
-    private static GameObject quad_pref;
+    public static PoolMaster current;	
+    public static List<GameObject> quadsPool;    
 	public static GameObject mineElevator_pref {get;private set;}
     public static GameObject cavePref { get; private set; }
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
     public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
         glass_material, glass_offline_material;
-    public static Material billboardMaterial { get; private set; }
-    private static Material[] basic_illuminated, green_illuminated, metal_illuminated;
-    private static Material metal_material, green_material, darkness_material;
+    public static Material billboardMaterial { get; private set; }    
+    public static Material starsBillboardMaterial { get; private set; }
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
     public static Sprite gui_overridingSprite;
+    public static readonly Color gameOrangeColor = new Color(0.933f, 0.5686f, 0.27f);
+
     private static Transform zoneCube;
     private static bool useTextureRotation = false;
+    private static Material[] basic_illuminated, green_illuminated, metal_illuminated;
+    private static Material metal_material, green_material, darkness_material;
+    private static GameObject quad_pref;    
 
-    public static readonly Color gameOrangeColor = new Color(0.933f, 0.5686f, 0.27f);
+    private GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
+    private List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
+        lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные	
+    private float shipsClearTimer = 0, clearTime = 30;
+    private ParticleSystem buildEmitter;
+    private Sprite[] starsSprites;
+
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
     private const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;    
     private const int SHIPS_BUFFER_SIZE = 5;
@@ -78,6 +81,7 @@ public sealed class PoolMaster : MonoBehaviour {
         metal_material = Resources.Load<Material>("Materials/Metal");
         green_material = Resources.Load<Material>("Materials/Green");
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
+        starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");
 
         basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
         green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
@@ -86,6 +90,7 @@ public sealed class PoolMaster : MonoBehaviour {
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         QuestUI.LoadTextures();
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
+        starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 	}
 
 	void Update() {
@@ -142,6 +147,11 @@ public sealed class PoolMaster : MonoBehaviour {
     public static Mesh GetOriginalQuadMesh()
     {
         return quadsPool[0].GetComponent<MeshFilter>().sharedMesh;
+    }
+
+    public Sprite GetStarSprite()
+    {
+        return (starsSprites[(int)(Random.value * (starsSprites.Length - 1))]);
     }
 
     public void BuildSplash(Vector3 pos)

@@ -34,7 +34,20 @@ public class Block : MonoBehaviour {
 		pos = f_chunkPos; transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
 		mainStructure = f_mainStructure;
-		if (mainStructure != null) blockedByStructure = true; else blockedByStructure = false;
+        if (mainStructure != null)
+        {
+            blockedByStructure = true;
+            if (transform.childCount == 0)
+            {
+                GameObject spriteHolder = new GameObject("mark");
+                SpriteRenderer sr = spriteHolder.AddComponent<SpriteRenderer>();
+                sr.sprite = PoolMaster.current.GetStarSprite();
+                sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
+                spriteHolder.transform.parent = transform;
+                spriteHolder.transform.localPosition = Vector3.zero;
+            }
+        }
+        else blockedByStructure = false;
 		
 		name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 }

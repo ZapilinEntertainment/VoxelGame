@@ -983,7 +983,7 @@ public class Structure : MonoBehaviour  {
                 subscribedToChunkUpdate = true;
             }
             if (basement is CaveBlock) {
-				basement.myChunk.ReplaceBlock(basement.pos, BlockType.Surface, basement.material_id, false);
+				basement = basement.myChunk.ReplaceBlock(basement.pos, BlockType.Surface, basement.material_id, false) as SurfaceBlock;
 			}
 			if (basement.pos.y + 1 < Chunk.CHUNK_SIZE) {
 				ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);

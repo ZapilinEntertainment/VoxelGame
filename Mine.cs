@@ -42,14 +42,38 @@ public class Mine : WorkBuilding {
 	override public void LabourUpdate() {
 		if (awaitingElevatorBuilding) {
 			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y, lastWorkObjectPos.z);
-			if ( b != null ) {
-				if (b.type == BlockType.Cave | b.type == BlockType.Surface ) {
-					Structure s = GetStructureByID(MINE_ELEVATOR_ID);
-					s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.size/2, SurfaceBlock.INNER_RESOLUTION/2 - s.innerPosition.size/2));
-					elevators.Add(s);
-					awaitingElevatorBuilding = false;
+			if ( b != null ) {                
+                if (b.type == BlockType.Surface)
+                {
+                    Structure s = GetStructureByID(MINE_ELEVATOR_ID);
+                    s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
+                    elevators.Add(s);
+                    awaitingElevatorBuilding = false;
                     UIController.current.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
-				}
+                }
+                else
+                {
+                    if (b.type == BlockType.Cave)
+                    {
+                        CaveBlock cvb = b as CaveBlock;
+                        if (cvb.haveSurface)
+                        {
+                            Structure s = GetStructureByID(MINE_ELEVATOR_ID);
+                            s.SetBasement(cvb, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
+                            elevators.Add(s);
+                            awaitingElevatorBuilding = false;
+                            UIController.current.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
+                        }
+                        else
+                        {
+                            workFinished = true;
+                            awaitingElevatorBuilding = false;
+                            SetActivationStatus(false);
+                            FreeWorkers();
+                            if (showOnGUI) workbuildingObserver.SetActionLabel(Localization.GetRefusalReason(RefusalReason.NoBlockBelow));
+                        }
+                    }
+                }
 			}
 		}
 		if ( !isActive | !energySupplied ) return;

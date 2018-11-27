@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
 public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
+public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu}
 
 
 sealed public class UIController : MonoBehaviour
@@ -23,13 +24,15 @@ sealed public class UIController : MonoBehaviour
     [SerializeField] QuestUI _questUI;
 #pragma warning restore 0649
 
+    public bool showLayerCut { get; private set; }
+    public ActiveWindowMode currentActiveWindowMode { get; private set; }
     public ProgressPanelMode progressPanelMode { get; private set; }
-
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
     public Texture buildingsTexture { get; private set; }
     public SurfaceBlock chosenSurface { get; private set; }
-    
+    public QuestUI questUI { get; private set; }
+
     Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
     private enum MenuSection { NoSelection, Save, Load, Options }
@@ -45,10 +48,9 @@ sealed public class UIController : MonoBehaviour
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber
         ;
-    private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, showLayerCut = false, activeAnnouncements = false, 
+    private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false, 
         localized = false, storagePositionsPrepared = false;
-
-    public QuestUI questUI { get; private set; }
+    
 
     CubeBlock chosenCube; byte faceIndex = 10;
     Structure chosenStructure;
@@ -414,25 +416,25 @@ sealed public class UIController : MonoBehaviour
         { // on
             GameMaster.SetPause(true);
             if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
+            if (leftPanel.activeSelf) leftPanel.SetActive(false);
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
-            if (showStorageInfo) StorageButton();
-            if (tradePanel.activeSelf) tradePanel.SetActive(false);
+            ChangeActiveWindow(ActiveWindowMode.GameMenu);
             menuPanel.SetActive(true);
-            FollowingCamera.camRotationBlocked = true;
             //menuButton.transform.SetAsLastSibling();
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
             SetMenuPanelSelection(MenuSection.NoSelection);
         }
         else
         { //off
-            GameMaster.SetPause(false);
-            FollowingCamera.camRotationBlocked = false;
+            GameMaster.SetPause(false);            
             FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
+            leftPanel.SetActive(true);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
+            DropActiveWindow(ActiveWindowMode.GameMenu);
         }
     }
     public void SaveButton()
@@ -733,6 +735,48 @@ sealed public class UIController : MonoBehaviour
         ChangeChosenObject(ChosenObjectType.Worksite);
     }
 
+    public void ChangeActiveWindow(ActiveWindowMode mode)
+    {
+        if (mode == currentActiveWindowMode) return;
+        //deactivating previous panel
+        if (currentActiveWindowMode != ActiveWindowMode.NoWindow)       
+        {
+            switch (currentActiveWindowMode)
+            {
+                case ActiveWindowMode.BuildPanel:
+                    UISurfacePanelController.current.ChangeMode(SurfacePanelMode.SelectAction);
+                    break;
+                case ActiveWindowMode.QuestPanel:
+                    questUI.Deactivate();
+                    break;
+                case ActiveWindowMode.SpecificBuildPanel:
+                    UISurfacePanelController.current.SetCostPanelMode(CostPanelMode.Disabled);
+                    break;
+                case ActiveWindowMode.StoragePanel:
+                    if (showStorageInfo) StorageButton();
+                    break;
+                case ActiveWindowMode.TradePanel:
+                    if (tradePanel.activeSelf) CloseTradePanel();
+                    break;
+            }
+        }
+        currentActiveWindowMode = mode;
+        bool deactivating = (mode == ActiveWindowMode.NoWindow);
+        FollowingCamera fc = FollowingCamera.main;
+        fc.ControllerStickActivity(deactivating);
+        fc.CameraRotationBlock(!deactivating);
+    }
+    public void DropActiveWindow(ActiveWindowMode droppingMode)
+    {
+        if (droppingMode == currentActiveWindowMode)
+        {
+            currentActiveWindowMode = ActiveWindowMode.NoWindow;
+        }
+        FollowingCamera fc = FollowingCamera.main;
+        fc.ControllerStickActivity(true);
+        fc.CameraRotationBlock(false);
+    }
+
     #region auxiliary panels
     public void ActivateProgressPanel(ProgressPanelMode mode)
     {
@@ -942,13 +986,11 @@ sealed public class UIController : MonoBehaviour
 
     public void ActivateTradePanel()
     {
-        FollowingCamera.camRotationBlocked = true;
         tradePanel.SetActive(true);
     }
     public void CloseTradePanel()
     {
         tradePanel.SetActive(false);
-        FollowingCamera.camRotationBlocked = false;
     }
     #endregion
 
@@ -1071,16 +1113,16 @@ sealed public class UIController : MonoBehaviour
             {
                 if (showLayerCut) LayerCutButton();
             }
-            FollowingCamera.camRotationBlocked = true;
+            ChangeActiveWindow(ActiveWindowMode.StoragePanel);
             storageToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             storagePanel.SetActive(true);
             RecalculateStoragePanel();
         }
         else
         {
+            DropActiveWindow(ActiveWindowMode.StoragePanel);
             storageToggleButton.overrideSprite = null;
-            storagePanel.SetActive(false);
-            FollowingCamera.camRotationBlocked = false;
+            storagePanel.SetActive(false);            
         }
     }
     public void LayerCutButton()

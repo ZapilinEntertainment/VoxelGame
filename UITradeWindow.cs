@@ -255,6 +255,11 @@ public class UITradeWindow : UIObserver {
     {
         transform.SetAsLastSibling();
         UpdateResourceButtons();
+        UIController.current.ChangeActiveWindow(ActiveWindowMode.TradePanel);
+    }
+    private void OnDisable()
+    {
+        if (UIController.current.currentActiveWindowMode == ActiveWindowMode.TradePanel) UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
     }
 
     public override void SelfShutOff() {
@@ -266,6 +271,7 @@ public class UITradeWindow : UIObserver {
         chosenResourceID = -1;
         resourceInfoPanel.SetActive(false);
         isObserving = false;
+        UIController.current.DropActiveWindow(ActiveWindowMode.TradePanel);
         gameObject.SetActive(false);
     }
 }

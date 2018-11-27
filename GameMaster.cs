@@ -185,7 +185,7 @@ public sealed class GameMaster : MonoBehaviour {
                     else LoadTerrain(SaveSystemUI.GetTerrainsPath() + '/' + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
                 }
                 FollowingCamera.main.ResetTouchRightBorder();
-                FollowingCamera.camRotationBlocked = false;
+                FollowingCamera.main.CameraRotationBlock(false);
 
                 switch (difficulty)
                 {
@@ -454,7 +454,7 @@ public sealed class GameMaster : MonoBehaviour {
                 colonyController.storage.AddResource(ResourceType.metal_M, 50);
                 colonyController.storage.AddResource(ResourceType.metal_E, 20);
                 colonyController.storage.AddResource(ResourceType.Plastics, 100);
-                colonyController.storage.AddResource(ResourceType.Food, 250);
+                colonyController.storage.AddResource(ResourceType.Food, 500);
                 break;
             case Difficulty.Hard:
                 colonyController.AddCitizens(40);
@@ -462,14 +462,14 @@ public sealed class GameMaster : MonoBehaviour {
                 colonyController.storage.AddResource(ResourceType.metal_M, 20);
                 colonyController.storage.AddResource(ResourceType.metal_E, 2);
                 colonyController.storage.AddResource(ResourceType.Plastics, 10);
-                colonyController.storage.AddResource(ResourceType.Food, 200);
+                colonyController.storage.AddResource(ResourceType.Food, 700);
                 break;
             case Difficulty.Torture:
                 colonyController.AddCitizens(30);
                 colonyController.storage.AddResource(ResourceType.metal_K, 40);
                 colonyController.storage.AddResource(ResourceType.metal_M, 20);
                 colonyController.storage.AddResource(ResourceType.metal_E, 10);
-                colonyController.storage.AddResource(ResourceType.Food, 200);
+                colonyController.storage.AddResource(ResourceType.Food, 750);
                 break;
         }
         

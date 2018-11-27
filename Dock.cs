@@ -8,18 +8,19 @@ public sealed class Dock : WorkBuilding {
 	public static int[] minValueForTrading{get; private set;}	
 	public static int immigrationPlan {get; private set;} 
 	public static bool immigrationEnabled{get; private set;}
+    public static UIDockObserver dockObserver;
     private static bool announceNewShips = true;
 
 	public bool maintainingShip{get; private set;}
-    ColonyController colony;
-    Ship loadingShip;
-	const float LOADING_TIME = 10;
-	public float loadingTimer = 0, shipArrivingTimer = 0;
-	const float SHIP_ARRIVING_TIME = 300;
-	int preparingResourceIndex;
-    public static UIDockObserver dockObserver;
+    public bool correctLocation { get; private set; }
+    public float shipArrivingTimer { get; private set; }
+   
+	private const float LOADING_TIME = 10, SHIP_ARRIVING_TIME = 300;
+    private float loadingTimer = 0;    
+	private int preparingResourceIndex;
+    private ColonyController colony;
+    private Ship loadingShip;
     private List<Block> dependentBlocksList;
-    private bool correctLocation = false;
 
     public const int SMALL_SHIPS_PATH_WIDTH = 2;
 
@@ -91,7 +92,7 @@ public sealed class Dock : WorkBuilding {
 		if ( !energySupplied ) return;
 		if ( maintainingShip ) {
 			if (loadingTimer > 0) {
-					loadingTimer -= (1 + workSpeed) * GameMaster.LABOUR_TICK;
+					loadingTimer -= GameMaster.LABOUR_TICK;
 					if (loadingTimer <= 0) {
 						if (loadingShip != null) ShipLoading(loadingShip);
 						loadingTimer = 0;
@@ -292,7 +293,8 @@ public sealed class Dock : WorkBuilding {
             return;
 		}
 		int peopleBefore = immigrationPlan;
-		switch (s.type) {
+        float tradeVolume = s.volume * (0.01f + 0.99f * (workersCount / maxWorkers));
+        switch (s.type) {
 		case ShipType.Passenger:
                 {
                     if (immigrationPlan > 0)
@@ -308,7 +310,7 @@ public sealed class Dock : WorkBuilding {
                     break;
                 }
 		case ShipType.Cargo:
-                {
+                {                    
                     float totalDemand = 0;
                     List<int> buyPositions = new List<int>();
                     for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
@@ -328,12 +330,12 @@ public sealed class Dock : WorkBuilding {
                         float demandPiece = 1 / totalDemand;
                         for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
                         {
-                            if (isForSale[i] == true) SellResource(ResourceType.resourceTypesArray[i], ResourceType.demand[i] * demandPiece * s.volume);
+                            if (isForSale[i] == true) SellResource(ResourceType.resourceTypesArray[i], ResourceType.demand[i] * demandPiece * tradeVolume);
                         }
                     }
                     if (buyPositions.Count > 0)
                     {
-                        float v = s.volume;
+                        float v = tradeVolume;
                         while (v > 0 && buyPositions.Count > 0)
                         {
                             int buyIndex = (int)(Random.value * buyPositions.Count - 1); // index in index arrays
@@ -356,7 +358,7 @@ public sealed class Dock : WorkBuilding {
                         if (veterans > immigrationPlan) veterans = immigrationPlan;
                         colony.AddCitizens(veterans);
                     }
-                    if (isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, s.volume * 0.5f * (Random.value * 0.5f + 0.5f));
+                    if (isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, tradeVolume * 0.5f * (Random.value * 0.5f + 0.5f));
                     if (GameMaster.realMaster.warProximity > 0.5f)
                     {
                         if (isForSale[ResourceType.METAL_S_ID] == true) SellResource(ResourceType.metal_S, s.volume * 0.1f);
@@ -366,8 +368,8 @@ public sealed class Dock : WorkBuilding {
                     break;
                 }
 		case ShipType.Private:
-			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, s.volume * 0.8f);
-			if ( isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Fuel, s.volume * 0.15f);
+			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, tradeVolume * 0.8f);
+			if ( isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Fuel, tradeVolume * 0.15f);
 			break;
 		}
 		loadingShip = null;

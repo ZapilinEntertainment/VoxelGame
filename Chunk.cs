@@ -1758,7 +1758,7 @@ public sealed class Chunk : MonoBehaviour
                 for (int z = CHUNK_SIZE - 1; z >= 0; z--)
                 {
                     Block b = GetBlock(x, y, z);
-                    if (b != null)
+                    if (b != null && b.type != BlockType.Shapeless)
                     {
                         cs.blocksData.Add(b.Save());
                     }
@@ -1797,6 +1797,7 @@ public sealed class Chunk : MonoBehaviour
         if (blocks != null) ClearChunk();        
         CHUNK_SIZE = cs.chunkSize;
         Prepare();
+        surfaceBlocks = new List<SurfaceBlock>();
         List<Block> loadedBlocks = new List<Block>();
         foreach (BlockSerializer bserializer in cs.blocksData)
         {
@@ -1828,6 +1829,7 @@ public sealed class Chunk : MonoBehaviour
                         GameMaster.DeserializeByteArray<SurfaceBlockSerializer>(bserializer.specificData, ref sbs);
                         sb.LoadSurfaceBlockData(sbs);
                         loadedBlocks.Add(sb);
+                        surfaceBlocks.Add(sb);
                         break;
                     }
                 case BlockType.Cave:
@@ -1839,6 +1841,7 @@ public sealed class Chunk : MonoBehaviour
                         cvb.InitializeCaveBlock(this, bserializer.pos, cbs.upMaterial_ID, bserializer.material_id);
                         cvb.LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
                         loadedBlocks.Add(cvb);
+                        surfaceBlocks.Add(cvb);
                         break;
                     }
             }

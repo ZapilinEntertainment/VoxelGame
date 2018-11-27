@@ -106,14 +106,14 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                     slider.maxValue = showingWorkersMaxCount;
                 }
                 if (showingWorkspeed != observingWorkbuilding.workSpeed)
-                {
-                    showingWorkspeed = observingWorkbuilding.workSpeed;
-                    if (showingWorkspeed == 0) workSpeedField.enabled = false;
-                    else
-                    {
-                        workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
-                        workSpeedField.enabled = true;
-                    }
+                {                    
+                        showingWorkspeed = observingWorkbuilding.workSpeed;
+                        if (showingWorkspeed == 0) workSpeedField.enabled = false;
+                        else
+                        {
+                            workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
+                            workSpeedField.enabled = true;
+                        }
                 }
             }
         }

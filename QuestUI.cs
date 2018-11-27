@@ -7,7 +7,7 @@ public sealed class QuestUI : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] RectTransform[] questButtons; // fiti
-    [SerializeField] GameObject questInfoPanel, shuttlesOrCrewsOptions; // fiti
+    [SerializeField] GameObject questInfoPanel; // fiti
     [SerializeField] RectTransform stepsContainer, listContainer; // fiti
     [SerializeField] Text questName, questDescription, timer, rewardText; // fiti    
 #pragma warning restore 0649
@@ -63,6 +63,21 @@ public sealed class QuestUI : MonoBehaviour
     {
         GetComponent<Image>().enabled = true;
         PrepareBasicQuestWindow();
+        UIController.current.ChangeActiveWindow(ActiveWindowMode.QuestPanel);
+    }
+    public void Deactivate()
+    {
+        GetComponent<Image>().enabled = false;
+        questButtons[0].transform.parent.gameObject.SetActive(false);
+        questInfoPanel.SetActive(false);
+        UIController controller = UIController.current;
+        controller.ActivateLeftPanel();
+        controller.DropActiveWindow(ActiveWindowMode.NoWindow);
+    }
+    public void CloseQuestWindow()
+    {
+        if (openedQuest == -1) Deactivate();
+        else ReturnToQuestList();
     }
 
     void Update()
@@ -187,29 +202,6 @@ public sealed class QuestUI : MonoBehaviour
         questDescription.text = q.description;
         rewardText.text = Localization.GetWord(LocalizedWord.Reward) + " : " + ((int)q.reward).ToString();
         if (timers[index] != -1) timer.text = string.Format("{0:0.00}", timers[index]);
-        if (q.shuttlesRequired == 0)
-        {
-            if (q.crewsRequired == 0)
-            {
-                shuttlesOrCrewsOptions.SetActive(false);
-                stepsContainer.anchorMax = Vector2.one;
-            }
-            else
-            {
-                shuttlesOrCrewsOptions.SetActive(true);
-                stepsContainer.anchorMax = new Vector2(0.5f, 1);
-                shuttlesOrCrewsOptions.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Crews);
-                prepareCrewsList = true;
-            }
-        }
-        else
-        {
-            shuttlesOrCrewsOptions.SetActive(true);
-            stepsContainer.anchorMax = new Vector2(0.5f, 1);
-            shuttlesOrCrewsOptions.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Shuttles);
-            prepareCrewsList = false;
-        }
-        PrepareList();
         PrepareStepsList(q);
         // цена и кнопка запуска
 
@@ -230,105 +222,6 @@ public sealed class QuestUI : MonoBehaviour
             else so.SetActive(false);
         }
     }
-    private void PrepareList()
-    {
-        Quest q = visibleQuests[openedQuest];
-        if (prepareCrewsList)
-        {
-            int count = q.crews.Count, i = 0;
-            if (count != 0)
-            {
-                for (; i < count; i++)
-                {
-                    Transform t = listContainer.GetChild(i + 1);
-                    if (t == null) t = Instantiate(listContainer.GetChild(1), listContainer).transform;
-                    t.GetComponent<Text>().text = '\"' + q.crews[i].name + '\"';
-                    int rindex = i;
-                    t.GetChild(0).GetComponent<Button>().onClick.AddListener(() =>
-                    {
-                        this.RemoveItemFromList(rindex);
-                    });
-                }
-            }
-            count = listContainer.childCount;
-            if (i < count)
-            {
-                for (; i < count; i++)
-                {
-                    listContainer.GetChild(i).gameObject.SetActive(false);
-                }
-            }
-        }
-        else
-        {
-            Expedition e = q.expedition;
-            int count = 0, i = 0;
-            if (e != null)
-            {
-                count = e.shuttles.Count;
-                if (count != 0)
-                {
-                    for (; i < count; i++)
-                    {
-                        Transform t = listContainer.GetChild(i + 1);
-                        if (t == null) t = Instantiate(listContainer.GetChild(1), listContainer).transform;
-                        t.GetComponent<Text>().text = '\"' + e.shuttles[i].name + '\"';
-                        int rindex = i;
-                        t.GetChild(0).GetComponent<Button>().onClick.AddListener(() =>
-                        {
-                            this.RemoveItemFromList(rindex);
-                        });
-                    }
-                }
-            }
-            count = listContainer.childCount;
-            if (i < count)
-            {
-                for (; i < count; i++)
-                {
-                    listContainer.GetChild(i).gameObject.SetActive(false);
-                }
-            }
-        }
-    }
-    public void RemoveItemFromList(int index)
-    {
-        if (prepareCrewsList) visibleQuests[openedQuest].RemoveCrew(index);
-        else visibleQuests[openedQuest].expedition.DetachShuttle(index);
-    }
-    public void PrepareDropdown()
-    {
-        Quest q = visibleQuests[openedQuest];
-        List<Dropdown.OptionData> buttons = new List<Dropdown.OptionData>();
-        if (prepareCrewsList)
-        {
-            // готовить список команд            
-            var crews = q.crews;
-            if (crews.Count > 0)
-            {
-                for (int i = 0; i < crews.Count; i++)
-                {
-                    buttons.Add(new Dropdown.OptionData('\"' + crews[i].name + '\"'));
-                }
-            }
-        }
-        else
-        {
-            // готовить список челноков
-            var shuttles = q.expedition.shuttles;
-            if (shuttles.Count > 0)
-            {
-                for (int i = 0; i < shuttles.Count; i++)
-                {
-                    buttons.Add(new Dropdown.OptionData('\"' + shuttles[i].name + '\"'));
-                }
-            }
-        }
-        Dropdown d = listContainer.GetChild(0).GetComponent<Dropdown>();
-        d.options = buttons;
-        d.RefreshShownValue();
-    }
-
 
     public IEnumerator WaitForNewQuest(int i)
     {
@@ -410,19 +303,7 @@ public sealed class QuestUI : MonoBehaviour
         }
         // добавить проверки на новые квесты для разблокированных ячеек
 
-    }
-
-    public void CloseQuestWindow()
-    {
-        if (openedQuest == -1)
-        {
-            GetComponent<Image>().enabled = false;
-            questButtons[0].transform.parent.gameObject.SetActive(false);
-            questInfoPanel.SetActive(false);
-            UIController.current.ActivateLeftPanel();
-        }
-        else ReturnToQuestList();
-    }
+    }   
 
     void ReturnToQuestList()
     {

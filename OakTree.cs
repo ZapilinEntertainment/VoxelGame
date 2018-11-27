@@ -552,21 +552,13 @@ public class OakTree : Plant
     {
         if (stage > TRANSIT_STAGE)
         {
-            GameObject pref = LoadModel(stage);
-            GameObject model3d = Instantiate(pref);
-            ReturnModelToPool(pref, stage);
-            Transform t = model3d.transform.GetChild(1);
+            Transform model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString() + "_dead")).transform;
             HarvestableResource hr = GetStructureByID(CONTAINER_ID) as HarvestableResource;
             hr.name = "dead oak tree";
-            t.parent = hr.transform;
-            t.gameObject.SetActive(true);
-            Destroy(model3d);
-            t.localPosition = Vector3.zero;
+            model.parent = hr.transform;
+            model.localPosition = Vector3.zero;
 
-            MeshFilter mf = t.GetComponent<MeshFilter>();
-            t.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mf, basement.illumination);
-
-            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber() * 0.9f * GameMaster.realMaster.environmentalConditions), false, innerPosition.size, model3d);
+            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber() * 0.9f * GameMaster.realMaster.environmentalConditions), false, innerPosition.size, model.gameObject);
             hr.SetModelRotation(modelRotation);
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
             // спрайтовый LOD?
@@ -592,7 +584,7 @@ public class OakTree : Plant
     }
     override public void SetVisibility(bool x)
     {
-        if (x == visible) return;
+        if (destroyed | x == visible) return;
         else
         {
             visible = x;

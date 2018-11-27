@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public sealed class UIDockObserver : UIObserver
 {
     #pragma warning disable 0649
-    [SerializeField] Text tradingButtonText, immigrationButtonText, immigrationLimitText;
+    [SerializeField] Text tradingButtonText, immigrationButtonText, immigrationLimitText, nextShipTimer;
     [SerializeField] GameObject tradingListPanel, immigrationPanel, tradingPanelContent;
     [SerializeField] Image immigrationToggleButtonImage;
     [SerializeField] InputField immigrationLimitInputField;
@@ -58,7 +58,6 @@ public sealed class UIDockObserver : UIObserver
         immigrationButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         RecalculateTradingPanelContent();
         UIController.current.ActivateTradePanel();
-        FollowingCamera.camRotationBlocked = true;
     }
     public void PrepareImmigrationPanel()
     {
@@ -75,7 +74,6 @@ public sealed class UIDockObserver : UIObserver
         if (tradingListPanel.activeSelf)
         {
             tradingListPanel.SetActive(false);
-            FollowingCamera.camRotationBlocked = false;
             tradingButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         }        
         if (Dock.immigrationEnabled) {
@@ -122,6 +120,7 @@ public sealed class UIDockObserver : UIObserver
                     PrepareImmigrationPanel();
                 }
             }
+            if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
         }
     } 
 
@@ -226,8 +225,7 @@ public sealed class UIDockObserver : UIObserver
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
-        UIController.current.CloseTradePanel();
-        FollowingCamera.camRotationBlocked = false;
+        UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
         gameObject.SetActive(false);
     }
 
@@ -236,8 +234,7 @@ public sealed class UIDockObserver : UIObserver
         isObserving = false;
         observingDock = null;
         WorkBuilding.workbuildingObserver.ShutOff();
-        UIController.current.CloseTradePanel();
-        FollowingCamera.camRotationBlocked = false;
+        UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
         gameObject.SetActive(false);
     }
 

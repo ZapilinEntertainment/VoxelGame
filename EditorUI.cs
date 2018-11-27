@@ -31,7 +31,7 @@ public sealed class EditorUI : MonoBehaviour
         ActionsPanel();
 
         FollowingCamera.main.ResetTouchRightBorder();
-        FollowingCamera.camRotationBlocked = false;
+        FollowingCamera.main.CameraRotationBlock(false);
     }
 
     public void Click()
@@ -399,12 +399,12 @@ public sealed class EditorUI : MonoBehaviour
             menuPanel.SetActive(true);
             actionsPanel.SetActive(false);
             listPanel.SetActive(false);
-            FollowingCamera.camRotationBlocked = true;
+            FollowingCamera.main.CameraRotationBlock(true);
         }
         else
         {
             menuPanel.SetActive(false);
-            FollowingCamera.camRotationBlocked = false;
+            FollowingCamera.main.CameraRotationBlock(false);
         }
     }
     public void SaveTerrain()

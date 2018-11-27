@@ -10,7 +10,6 @@ public sealed class FollowingCamera : MonoBehaviour {
     public static Transform camBasisTransform { get; private set; }
     public static Vector3 camPos; // unprotected - HOT
     public static bool touchscreen { get; private set; }
-    public static bool camRotationBlocked = false;
 
     public float rotationSpeed = 65, zoomSpeed = 50, moveSpeed = 30;   
     float rotationSmoothCoefficient = 0;
@@ -22,7 +21,7 @@ public sealed class FollowingCamera : MonoBehaviour {
 	[SerializeField] private Vector3 camPoint = new Vector3(0,5,-5);
 
 	Vector3 lookPoint;
-	bool changingBasePos = false, changingCamZoom = false, zoom_oneChangeIgnore = false;
+	bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false;
 	public static float optimalDistance { get; private set; }
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
@@ -132,7 +131,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             if (Input.touchCount > 0 & !camRotationBlocked)
             {
                 Touch t = Input.GetTouch(0);
-                if (t.position.x < touchRightBorder)
+                if (t.position.x < touchRightBorder & t.position.x > 0.4f *Screen.height)
                 {
                     if (Input.touchCount == 1)
                     {
@@ -246,23 +245,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             }
             else moveSmoothCoefficient.x = moveSmoothAcceleration * moveSmoothAcceleration;
         }
-        if (changingCamZoom)
-        {
-            Vector3 endPoint = camTransform.localPosition.normalized * optimalDistance;
-            float zl = cam.transform.localPosition.magnitude;
-            float x = (1 - zl / (MAX_FAR - MAX_ZOOM));
-            float zoomSmoothCoefficient = 1f / (x * x);
-            cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, endPoint, zoomSpeed / 5f * Time.deltaTime * (1 + zoomSmoothCoefficient));
-            cam.transform.LookAt(transform.position);
-            if (zl / endPoint.magnitude == 1)
-            {
-                changingCamZoom = false;
-            }
-            else
-            {
-                zoom_oneChangeIgnore = true;
-            }
-        }
+       
         cloudCamera.rotation = camTransform.rotation;
         //if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
 
@@ -345,11 +328,6 @@ public sealed class FollowingCamera : MonoBehaviour {
 		Vector3 camPrevPos = cam.transform.position;
 		lookPoint = point;        
         if (lookPoint != transform.position) changingBasePos = true;
-        if (useAutoZooming)
-        {
-            float d = cam.transform.localPosition.magnitude;
-            if (d > optimalDistance) changingCamZoom = true;
-        }
         verticalMovement = null;
 	}
 
@@ -360,11 +338,6 @@ public sealed class FollowingCamera : MonoBehaviour {
         {
             changingBasePos = false;
             moveSmoothCoefficient = Vector3.zero;
-        }
-        if (changingCamZoom)
-        {
-            changingCamZoom = false;
-            rotationSmoothCoefficient = 0;
         }
         verticalMovement = null;
         //#endregion
@@ -393,6 +366,14 @@ public sealed class FollowingCamera : MonoBehaviour {
     public void StartMoveDown() { StopCameraMovement(); verticalMovement = false; }
     public void EndMoveDown() { StopCameraMovement(); if (verticalMovement == false) verticalMovement = null; }
 
+    public void CameraRotationBlock (bool blocking)
+    {
+        camRotationBlocked = blocking;
+    }
+    public void ControllerStickActivity(bool enabled)
+    {
+        controllerBack.transform.parent.gameObject.SetActive(enabled);
+    }
     public void CamControllerDrag()
     {
         if (touchscreen)

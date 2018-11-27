@@ -74,6 +74,7 @@ public class SurfaceBlock : Block {
             GameObject g = PoolMaster.GetQuad();
             surfaceRenderer = g.GetComponent<MeshRenderer>();
             surfaceRenderer.enabled = true;
+            surfaceRenderer.GetComponent<Collider>().enabled = true;
             surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             Transform meshTransform = g.transform;
             meshTransform.parent = transform;

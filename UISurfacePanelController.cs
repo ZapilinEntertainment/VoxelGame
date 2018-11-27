@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-enum CostPanelMode { Disabled, ColumnBuilding, SurfaceMaterialChanging, BlockBuilding }
-public enum SurfacePanelMode {SelectAction, Build}
-enum BuildingCreateInfoMode {Acceptable, Unacceptable_SideBlock, Unacceptable_Material}
+public enum CostPanelMode : byte { Disabled, ColumnBuilding, SurfaceMaterialChanging, BlockBuilding }
+public enum SurfacePanelMode : byte {SelectAction, Build}
+enum BuildingCreateInfoMode : byte {Acceptable, Unacceptable_SideBlock, Unacceptable_Material}
 
 public sealed class UISurfacePanelController : UIObserver {
 	public Button buildButton, gatherButton, digButton, blockCreateButton, columnCreateButton, changeMaterialButton;
@@ -55,6 +55,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 this.SetCostPanelMode(CostPanelMode.BlockBuilding);
             });
             constructionPlane.transform.parent = null;
+            constructionPlane.transform.localScale = Vector3.one * Block.QUAD_SIZE;
             //constructionPlane.transform.GetChild(0).GetComponent<MeshFilter>().mesh.uv = new Vector2[] { Vector2.zero, Vector2.up, Vector2.one, Vector2.right };
             current = this;
             firstSet = false;
@@ -269,9 +270,13 @@ public sealed class UISurfacePanelController : UIObserver {
 
     #region panels setting    
 
-    void SetCostPanelMode(CostPanelMode m)
-    {        
-        if (m != CostPanelMode.Disabled) costPanel.gameObject.SetActive(true);
+    public void SetCostPanelMode(CostPanelMode m)
+    {
+        if (m != CostPanelMode.Disabled)
+        {
+            costPanel.gameObject.SetActive(true);
+            UIController.current.ChangeActiveWindow(ActiveWindowMode.SpecificBuildPanel);
+        }
         else
         {
             costPanel.transform.GetChild(0).gameObject.SetActive(false);
@@ -282,6 +287,7 @@ public sealed class UISurfacePanelController : UIObserver {
             blockCreateButton.GetComponent<Image>().overrideSprite = null;
             costPanel.SetActive(false);
             costPanelMode = CostPanelMode.Disabled;
+            UIController.current.DropActiveWindow(ActiveWindowMode.SpecificBuildPanel);
             return;
         }
         Transform t;        
@@ -475,7 +481,7 @@ public sealed class UISurfacePanelController : UIObserver {
     void SetBuildPanelStatus ( bool working ) {
 		buildingsLevelToggles[0].transform.parent.gameObject.SetActive(working);
 		returnButton.gameObject.SetActive( working );
-		surfaceBuildingPanel.SetActive( working );       
+		surfaceBuildingPanel.SetActive( working );        
         if (!working) {
             infoPanel.SetActive(false); // включаются по select building
             if (selectedBuildingButton != -1) {
@@ -484,10 +490,12 @@ public sealed class UISurfacePanelController : UIObserver {
 				chosenStructure = null;
 			}
             if (exampleBuildingsContainer != null) Destroy(exampleBuildingsContainer.gameObject);
+            UIController.current.DropActiveWindow(ActiveWindowMode.BuildPanel);
 		}
         else
         {
             if (costPanelMode != CostPanelMode.Disabled) SetCostPanelMode(CostPanelMode.Disabled);
+            UIController.current.ChangeActiveWindow(ActiveWindowMode.BuildPanel);
         }
 	}
 	void SetActionPanelStatus ( bool working ) {
@@ -818,6 +826,25 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
     #endregion
+
+    /// <summary>
+	/// Call from outside
+	/// </summary>
+	override public void ShutOff()
+    {
+        isObserving = false;
+        if (constructionPlane.activeSelf) constructionPlane.SetActive(false);
+        gameObject.SetActive(false);
+    }
+    /// <summary>
+    /// Call from inheritors
+    /// </summary>
+    override public void SelfShutOff()
+    {
+        isObserving = false;
+        if (constructionPlane.activeSelf) constructionPlane.SetActive(false);
+        gameObject.SetActive(false);
+    }
 
     void LocalizeButtonTitles()
     {

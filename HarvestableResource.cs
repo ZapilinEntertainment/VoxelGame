@@ -44,7 +44,7 @@ public class HarvestableResource : Structure
     }
 
     protected override void SetModel()
-    {
+    {        
         if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
         int material_ID = mainResource.ID;
         bool modelIsSprite = false;
@@ -145,8 +145,8 @@ public class HarvestableResource : Structure
     {        
         HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
         GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
-        SetResources(ResourceType.GetResourceTypeById(hrs.mainResource_id), hrs.count);
         LoadStructureData(ss, sblock);
+        SetResources(ResourceType.GetResourceTypeById(hrs.mainResource_id), hrs.count);       
     }
 
 
