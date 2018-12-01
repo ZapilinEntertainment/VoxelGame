@@ -6,7 +6,7 @@ public class Farm : WorkBuilding
 {
     public int crop_id = -1;
     byte harvestableStage = 0;
-    float lifepowerBoost = 0;
+    float lifepowerBoost = 1;
     const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1, PLANT_ACTIVITY_COST = 1;
 
     override public void Prepare()
@@ -73,7 +73,21 @@ public class Farm : WorkBuilding
         workflow = 0;
         List<Structure> structures = basement.surfaceObjects;   
         
-        if (basement.cellsStatus == 1)
+        if (basement.cellsStatus != 1)
+        {
+            List<PixelPosByte> pos = basement.GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
+            int cost = Plant.GetCreateCost(crop_id);
+            i = 0;
+            while (i < pos.Count )
+            {
+                Plant p = Plant.GetNewPlant(crop_id);
+                p.Prepare();
+                p.SetBasement(basement, pos[i]);
+                totalCost += cost;
+                i++;
+            }
+        }
+        if (actionsPoints > HARVEST_ACTIVITY_COST)
         {
             while (i < structures.Count & actionsPoints > 0)
             {
@@ -102,20 +116,6 @@ public class Farm : WorkBuilding
                         p.Harvest();
                     }
                 }
-                i++;
-            }
-        }
-        else
-        {
-            List<PixelPosByte> pos = basement.GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
-            int cost = Plant.GetCreateCost(crop_id);
-            i = 0;
-            while (i < pos.Count )
-            {
-                Plant p = Plant.GetNewPlant(crop_id);
-                p.Prepare();
-                p.SetBasement(basement, pos[i]);
-                totalCost += cost;
                 i++;
             }
         }

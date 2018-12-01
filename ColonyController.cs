@@ -11,13 +11,13 @@ public sealed class ColonyControllerSerializer{
 	public float energyStored,energyCrystalsCount;
 	public WorksiteSerializer[] worksites;
 
-	public int freeWorkers, citizenCount,deathCredit;
-	public float peopleSurplus = 0, housingTimer = 0,starvationTimer, starvationTime = 600, real_birthrate = 0;
+	public int freeWorkers, citizenCount;
+	public float peopleSurplus = 0, housingTimer = 0,starvationTimer, real_birthrate = 0;
 }
 
 public sealed class ColonyController : MonoBehaviour {
-	const float FOOD_CONSUMPTION = 1,  HOUSING_TIME = 7;
-	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happines wouldnt raised upper this level if condition is not met
+	const float HOUSING_TIME = 5;
+	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happiness wouldnt raised upper this level if condition is not met
 	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
 
     public string cityName { get; private set; }
@@ -43,13 +43,13 @@ public sealed class ColonyController : MonoBehaviour {
 	public int citizenCount {get; private set;}
     float birthrateCoefficient;
     public float realBirthrate { get; private set; }
-	public int deathCredit{get;private set;}
 	float peopleSurplus = 0, housingTimer = 0;
 	public int totalLivespace{get;private set;}
-	List<House> houses; List<Hospital> hospitals;
-	Rect myRect;
-    float starvationTimer, starvationTime = 600;
-    bool thisIsFirstSet = true;
+	private List<House> houses; List<Hospital> hospitals;
+    private float starvationTimer;
+    private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false;
+    private const byte MAX_HOUSING_LEVEL = 5;
+
 
 	void Awake() {
         if (thisIsFirstSet)
@@ -77,8 +77,9 @@ public sealed class ColonyController : MonoBehaviour {
         if (hospitals != null) hospitals.Clear();
     }
 
-	public void CreateStorage() { // call from game master
+	public void Prepare() { // call from game master
 		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
+        UIController.current.Prepare();
 	}
 
     #region updating
@@ -124,36 +125,49 @@ public sealed class ColonyController : MonoBehaviour {
             if (starvationTimer > 0)
             {
                 starvationTimer -= t;
-                if (starvationTimer < 0) starvationTimer = starvationTime;
-                float pc = starvationTimer / starvationTime;
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT * pc;
-                if (pc < 0.5f)
-                {
-                    pc /= 2f;
-                    KillCitizens((int)(citizenCount * (1 - pc)));
+                if (starvationTimer < 0)
+                {                    
+                    if (citizenCount == 1)
+                    {
+                        citizenCount = 0;
+                        PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
+                        GameMaster.realMaster.MakeGameOver(Localization.GetDefeatReason(DefeatReason.NoCitizen));
+                        return;
+                    }
+                    else
+                    {
+                        starvationTimer = GameConstants.STARVATION_TIME;
+                        if (freeWorkers > 0) { freeWorkers--; citizenCount--; }
+                        else StartCoroutine(DeportateWorkingCitizen());
+                        PoolMaster.current.CitizenLeaveEffect(houses[(int)(Random.value * (houses.Count - 1))].transform.position);
+                    }
                 }
+                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT;
+                realBirthrate = 0;
             }
             else
             {
-                float monthFoodReserves = citizenCount * FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
+                float monthFoodReserves = citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
                 foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + (1 - FOOD_PROBLEM_HAPPINESS_LIMIT) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);                
             }
         }
         //HOUSING PROBLEM
         float housingHappiness = 1;
         {
+            int housingDemand = citizenCount - totalLivespace;
             housingTimer -= t;
             if (housingTimer <= 0)
-            {
-                if (totalLivespace < citizenCount)
+            {                
+                if (housingDemand > 0)
                 {
-                    int tentsCount = (citizenCount - totalLivespace) / 4;
+                    int tentsCount = housingDemand / House.TENT_VOLUME;
+                    if (tentsCount * House.TENT_VOLUME < housingDemand) tentsCount++;
                     if (tentsCount > 0)
                     {
                         int step = 1, xpos, zpos;
                         xpos = hq.basement.pos.x; zpos = hq.basement.pos.z;
                         Chunk colonyChunk = hq.basement.myChunk;
-                        while (step < Chunk.CHUNK_SIZE / 2 && tentsCount > 0)
+                        while (step < Chunk.CHUNK_SIZE / 2 & tentsCount > 0)
                         {
                             for (int n = 0; n < (step * 2 + 1); n++)
                             {
@@ -168,16 +182,28 @@ public sealed class ColonyController : MonoBehaviour {
                                     if (positions.Count > 0)
                                     {
                                         tentsCount -= positions.Count;
+                                        ignoreHousingRequest = true;
                                         for (int j = 0; j < positions.Count; j++)
                                         {
-                                            House tent = Structure.GetStructureByID(Structure.HOUSE_0_ID) as House;
+                                            House tent = Structure.GetStructureByID(Structure.TENT_ID) as House;
                                             tent.SetBasement(correctSurface, positions[j]);
+                                            houses.Add(tent);
                                         }
+                                        ignoreHousingRequest = false;
+                                        RecalculateHousing();
                                     }
                                 }
                             }
                             step++;
                         }
+                    }
+                }
+                else
+                {
+                    housingDemand *= -1;
+                    if (temporaryHousing & housingDemand >= House.TENT_VOLUME)
+                    {
+                        RecalculateHousing();
                     }
                 }
                 housingTimer = HOUSING_TIME;
@@ -190,8 +216,7 @@ public sealed class ColonyController : MonoBehaviour {
             {
                 if (totalLivespace < citizenCount)
                 {
-                    float demand = citizenCount - totalLivespace;
-                    housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT + (1 - HOUSE_PROBLEM_HAPPINESS_LIMIT) * (1 - demand / ((float)(citizenCount)));
+                    housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT + (1 - HOUSE_PROBLEM_HAPPINESS_LIMIT) * (1f - housingDemand / ((float)(citizenCount)));
                 }
                 else
                 {
@@ -214,10 +239,8 @@ public sealed class ColonyController : MonoBehaviour {
 
         //  BIRTHRATE
         {
-            if (birthrateCoefficient != 0)
+            if (birthrateCoefficient != 0 & starvationTimer <= 0)
             {
-                if (birthrateCoefficient > 0)
-                {
                     realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * t;
                     if (peopleSurplus > 1)
                     {
@@ -225,35 +248,28 @@ public sealed class ColonyController : MonoBehaviour {
                         AddCitizens(newborns);
                         peopleSurplus -= newborns;
                     }
-                }
-                else
-                {
-                    realBirthrate = birthrateCoefficient * (1.1f - health_coefficient) * t;
-                    if (peopleSurplus < -1)
-                    {
-                        deathCredit++;
-                        peopleSurplus++;
-                    }
-                }
             }
             peopleSurplus += realBirthrate;
         }
 	}
-    public void EverydayUpdate(uint daysGone)
+    public void EverydayUpdate()
     {
         if (!GameMaster.realMaster.weNeedNoResources)
         {
-            //   FOOD  CONSUMPTION
-            float fc = FOOD_CONSUMPTION * citizenCount * daysGone;
-            fc -= storage.GetResources(ResourceType.Food, fc);
-            if (fc > 0)
+            float foodConsumption = GameConstants.FOOD_CONSUMPTION * citizenCount;
+            float foodDemand = foodConsumption - storage.GetResources(ResourceType.Food, foodConsumption);
+            if (foodDemand > 0)
             {
-                fc -= storage.GetResources(ResourceType.Supplies, fc);
-                if (fc > 0)
+                foodDemand -= storage.GetResources(ResourceType.Supplies, foodDemand);
+                if (foodDemand > 0)
                 {
-                    if (starvationTimer <= 0) starvationTimer = starvationTime;
+                    if (starvationTimer <= 0)
+                    {
+                        starvationTimer = GameConstants.STARVATION_TIME;
+                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
+                    }
                 }
-                starvationTimer = 0;
+                else  starvationTimer = 0;
             }
             else starvationTimer = 0;
         }
@@ -264,13 +280,56 @@ public sealed class ColonyController : MonoBehaviour {
 		citizenCount += x;
 		freeWorkers += x;
 	}
-	public void KillCitizens(int x) {
-		if (freeWorkers < x) {			
-			deathCredit += x - freeWorkers;
-			freeWorkers = 0;
-		}
-		else freeWorkers -= x;
-	}
+    private IEnumerator DeportateWorkingCitizen() // чтобы не тормозить апдейт
+    {
+        bool found = false;
+        Block[,,] blocks = GameMaster.realMaster.mainChunk.blocks;
+        SurfaceBlock sb = null;
+        WorkBuilding wb = null;
+        foreach (Block b in blocks)
+        {
+            sb = b as SurfaceBlock;
+            if (sb == null || sb.cellsStatus == 0) continue;
+            foreach (Structure s in sb.surfaceObjects)
+            {
+                wb = s as WorkBuilding;
+                if (wb == null || wb.workersCount == 0) continue;
+                wb.FreeWorkers(1);// knock-knock, whos there? ME ME ME ME ME HAHAHA
+                found = true;
+                break;
+            }
+        }
+        if (found)
+        {
+            if (freeWorkers > 0)
+            {
+                freeWorkers--;
+                citizenCount--;
+            }
+        }
+        else
+        {
+            if (Worksite.worksitesList.Count > 0)
+            {
+                foreach (Worksite w in Worksite.worksitesList)
+                {
+                    if (w == null || w.workersCount == 0) continue;
+                    else
+                    {
+                        w.FreeWorkers();
+                        if (freeWorkers > 0)
+                        {
+                            freeWorkers--;
+                            citizenCount--;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        yield return null;
+    }
 
 	public void AddWorkers(int x) {
 		freeWorkers += x;
@@ -304,7 +363,7 @@ public sealed class ColonyController : MonoBehaviour {
 	#region AddingToLists
 
 	public void AddHousing(House h) {
-		if (h== null) return;
+		if ( ignoreHousingRequest) return;
 		if ( houses.Count > 0) {
 			foreach ( House eh in houses) {
 				if ( eh == h ) return;
@@ -314,7 +373,8 @@ public sealed class ColonyController : MonoBehaviour {
 		RecalculateHousing();
 	}
 	public void DeleteHousing(House h) {
-		int i = 0;
+        if (ignoreHousingRequest) return;
+        int i = 0;
 		while (i < houses.Count)  {
 			if ( houses[i] == h) {
 				houses.RemoveAt(i);
@@ -325,46 +385,52 @@ public sealed class ColonyController : MonoBehaviour {
 		}
 	}
     public void RecalculateHousing()
-    {
+    {        
         totalLivespace = 0;
         housingLevel = 0;
-        if (houses.Count == 0) return;
+        if (hq == null) return;
         int i = 0, normalLivespace = 0;
-        List<int> tents = new List<int>();
-        float[] housingVolumes = new float[6];
+        List<int> tentsIndexes = new List<int>();
+        float[] housingVolumes = new float[MAX_HOUSING_LEVEL + 1];
+
         while (i < houses.Count)
         {
             House h = houses[i];
             if (h.isActive)
             {
                 totalLivespace += h.housing;
-                if (h.level == 0) tents.Add(i);
+                if (h.id == Structure.TENT_ID) tentsIndexes.Add(i);
                 else normalLivespace += h.housing;
-                if (h is HeadQuarters == false) housingVolumes[h.level] += h.housing;
-                else housingVolumes[5] += h.housing;
+                if (h.level < MAX_HOUSING_LEVEL) housingVolumes[h.level] += h.housing;
+                else housingVolumes[MAX_HOUSING_LEVEL] += h.housing;
             }
             i++;
         }
-        if (tents.Count > 0 & normalLivespace > citizenCount & !GameMaster.loading)
+        if (tentsIndexes.Count > 0 & (normalLivespace - citizenCount >= House.TENT_VOLUME) & !GameMaster.loading)
         {
             i = 0;
             int tentIndexDelta = 0; // смещение индексов влево из-за удаления
-            while (i < tents.Count & normalLivespace > citizenCount)
+            ignoreHousingRequest = true;
+            while (i < tentsIndexes.Count & (totalLivespace - citizenCount >= House.TENT_VOLUME))
             {
-                int realIndex = tents[i] + tentIndexDelta;
+                int realIndex = tentsIndexes[i] + tentIndexDelta;
                 House h = houses[realIndex];
-                if (normalLivespace - citizenCount >= h.housing)
-                {
-                    normalLivespace -= h.housing;
-                    housingVolumes[0] -= h.housing;
-                    h.Annihilate(false);
-                    tentIndexDelta--;
-                }
-                else break;
+                houses.RemoveAt(realIndex);
+                totalLivespace -= House.TENT_VOLUME;
+                housingVolumes[0] -= h.housing;
+                h.Annihilate(false);                
+                tentIndexDelta--;
                 i++;
             }
+            ignoreHousingRequest = false;
         }
-        if (housingVolumes[0] < 0) housingVolumes[0] = 0;
+        if (housingVolumes[0] < 0)
+        {
+            housingVolumes[0] = 0;
+        }
+        temporaryHousing = (housingVolumes[0] == 0);
+
+
         float allLivespace = totalLivespace;
         float usingLivespace = 0;
         // принимается, что все расселены от максимального уровня к минимальному
@@ -616,11 +682,9 @@ public sealed class ColonyController : MonoBehaviour {
         ccs.worksites = Worksite.StaticSave();
 		ccs.freeWorkers = freeWorkers;
 		ccs.citizenCount = citizenCount;
-		ccs.deathCredit = deathCredit;
 		ccs.peopleSurplus = peopleSurplus;
 		ccs.housingTimer = housingTimer;
 		ccs.starvationTimer = starvationTimer;
-		ccs.starvationTime = starvationTime;
 		ccs.real_birthrate = realBirthrate;
         ccs.birthrateCoefficient = birthrateCoefficient;
 		return ccs;
@@ -639,11 +703,9 @@ public sealed class ColonyController : MonoBehaviour {
         if (ccs.worksites.Length > 0) Worksite.StaticLoad(ccs.worksites);
 		freeWorkers = ccs.freeWorkers;
 		citizenCount = ccs.citizenCount;
-		deathCredit = ccs.deathCredit;
 		peopleSurplus = ccs.peopleSurplus;
 		housingTimer = ccs.housingTimer;
 		starvationTimer = ccs.starvationTimer;
-		starvationTime = ccs.starvationTime;
 		realBirthrate = ccs.realBirthrate;
         birthrateCoefficient = ccs.birthrateCoefficient;
 	}

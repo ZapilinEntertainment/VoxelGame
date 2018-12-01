@@ -356,7 +356,7 @@ public class Quest {
                     case ProgressQuestID.Progress_SecondFloor:
                         {
                             List<ChunkPos> checkForBuildings = new List<ChunkPos>();
-                            foreach (SurfaceBlock sb in GameMaster.mainChunk.surfaceBlocks)
+                            foreach (SurfaceBlock sb in GameMaster.realMaster.mainChunk.surfaceBlocks)
                             {
                                 if (sb == null || sb.cellsStatus == 0) continue;
                                 else
@@ -373,7 +373,7 @@ public class Quest {
                             }
                             if (checkForBuildings.Count > 0)
                             {
-                                Chunk ch = GameMaster.mainChunk;
+                                Chunk ch = GameMaster.realMaster.mainChunk;
                                 foreach (ChunkPos cpos in checkForBuildings)
                                 {
                                     Block b = ch.GetBlock(cpos);

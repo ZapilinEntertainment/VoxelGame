@@ -458,7 +458,7 @@ public sealed class UISurfacePanelController : UIObserver {
                        // {
                             Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
                             s.SetBasement(observingSurface, new PixelPosByte(7, 7));
-                            PoolMaster.current.BuildSplash(observingSurface.transform.position);
+                            PoolMaster.current.BuildSplash(s.transform.position);
                         SetCostPanelMode(CostPanelMode.Disabled);
                         // }
                         //   else
@@ -741,7 +741,7 @@ public sealed class UISurfacePanelController : UIObserver {
             GameMaster.colonyController.storage.GetResources(cost);
             Structure s = Structure.GetStructureByID(chosenStructure.id);
             s.SetBasement(observingSurface, new PixelPosByte(x, z));
-            PoolMaster.current.BuildSplash(observingSurface.transform.position);
+            PoolMaster.current.BuildSplash(s.transform.position);
             if (s.innerPosition.size != SurfaceBlock.INNER_RESOLUTION & observingSurface.cellsStatus != 0)
             {
                 if (constructionPlane.activeSelf)

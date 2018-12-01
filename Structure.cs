@@ -34,7 +34,7 @@ public class Structure : MonoBehaviour  {
 	// - texture rect
     // список построек
 	public const int  PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, LANDED_ZEPPELIN_ID = 5,
-	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, HOUSE_0_ID = 11, 
+	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11, 
 	DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19, 
 	WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, 	MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
 	ROLLING_SHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
@@ -88,7 +88,7 @@ public class Structure : MonoBehaviour  {
             case STORAGE_5_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Blocks/storageBlock_level_5"));break;
             case MINE_ELEVATOR_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/MineElevator"));break;
             case LIFESTONE_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/LifeStone"));break;
-            case HOUSE_0_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/House_level_0"));break;
+            case TENT_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/House_level_0"));break;
             case HOUSE_1_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_1"));break;
             case HOUSE_2_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_2"));break;
             case HOUSE_3_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_3"));break;
@@ -187,7 +187,7 @@ public class Structure : MonoBehaviour  {
                 s = new GameObject("Storage").AddComponent<StorageHouse>();break;
             case CONTAINER_ID:
                 s = new GameObject("Container").AddComponent<HarvestableResource>();break;
-            case HOUSE_0_ID:
+            case TENT_ID:
             case HOUSE_1_ID:
             case HOUSE_2_ID:
             case HOUSE_3_ID:
@@ -399,7 +399,7 @@ public class Structure : MonoBehaviour  {
                     indestructible = true;
                 }
                 break;
-            case HOUSE_0_ID:
+            case TENT_ID:
                 {
                     maxHp = 5;
                     innerPosition = SurfaceRect.one;
@@ -920,7 +920,7 @@ public class Structure : MonoBehaviour  {
 		case HOUSE_2_ID :
 		case HOUSE_3_ID :
 		case HOUSE_5_ID :
-		case HOUSE_0_ID : return new Rect(7 * p, 7* p, p, p);
+		case TENT_ID : return new Rect(7 * p, 7* p, p, p);
             case DOCK_ID : return new Rect(0, 6 *p,p,p);
             case ENERGY_CAPACITOR_3_ID:
 		case ENERGY_CAPACITOR_2_ID:

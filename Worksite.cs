@@ -26,7 +26,7 @@ public abstract class Worksite : MonoBehaviour {
     
 
     public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
-    protected static List<Worksite> worksitesList;
+    public static List<Worksite> worksitesList { get; protected set; }
 
     static Worksite()
     {

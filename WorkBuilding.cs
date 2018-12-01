@@ -34,7 +34,7 @@ public abstract class WorkBuilding : Building {
                 break;
             case FARM_1_ID:
                 {
-                    workflowToProcess = 16;
+                    workflowToProcess = 20;
                     maxWorkers = 100;
                 }
                 break;
@@ -46,7 +46,7 @@ public abstract class WorkBuilding : Building {
                 break;
             case FARM_3_ID:
                 {
-                    workflowToProcess = 14;
+                    workflowToProcess = 13;
                     maxWorkers = 70;
                 }
                 break;
@@ -58,7 +58,7 @@ public abstract class WorkBuilding : Building {
                 break;
             case FARM_5_ID:
                 {
-                    workflowToProcess = 11;
+                    workflowToProcess = 10;
                     maxWorkers = 300;
                 }
                 break;

@@ -32,7 +32,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
         lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные	
     private float shipsClearTimer = 0, clearTime = 30;
-    private ParticleSystem buildEmitter;
+    private ParticleSystem buildEmitter, citizensLeavingEmitter;
     private Sprite[] starsSprites;
 
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
@@ -154,6 +154,13 @@ public sealed class PoolMaster : MonoBehaviour {
         return (starsSprites[(int)(Random.value * (starsSprites.Length - 1))]);
     }
 
+    #region effects
+    public void CitizenLeaveEffect(Vector3 pos)
+    {
+        if (citizensLeavingEmitter == null) citizensLeavingEmitter = Instantiate(Resources.Load<ParticleSystem>("Prefs/citizensLeavingEmitter")) as ParticleSystem;
+        citizensLeavingEmitter.transform.position = pos;
+        citizensLeavingEmitter.Emit(1);
+    }
     public void BuildSplash(Vector3 pos)
     {
         buildEmitter.transform.position = pos;
@@ -167,6 +174,7 @@ public sealed class PoolMaster : MonoBehaviour {
         zoneCube.gameObject.SetActive(true);
     }
     public void DisableZone() { zoneCube.gameObject.SetActive(false); }
+    #endregion
 
     public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;

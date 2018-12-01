@@ -31,7 +31,7 @@ public class Zeppelin : MonoBehaviour {
         landingMarkObject.SetActive(false);
         landButtonRect = new Rect(0, 0, 0, 0);
 
-        UIController.current.transform.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(Click);
+        UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(Click);
         lineDrawer = GetComponent<LineRenderer>();
     }
 
@@ -213,7 +213,7 @@ public class Zeppelin : MonoBehaviour {
                 if (GUI.Button(landButtonRect, "Land"))
                 {
                     landPointSet = true;
-                    Vector3 newPos = landingSurface.transform.position;
+                    Vector3 newPos = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
                     PoolMaster.current.BuildSplash(newPos);
                     transform.position = newPos;
                     if (landingByZAxis == true) transform.rotation = Quaternion.identity;
@@ -228,6 +228,6 @@ public class Zeppelin : MonoBehaviour {
     private void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;
-        UIController.current.transform.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.RemoveListener(Click);
+        UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.RemoveListener(Click);
     }
 }

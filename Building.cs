@@ -193,7 +193,7 @@ public class Building : Structure
                     level = 5;
                 }
                 break;
-            case HOUSE_0_ID:
+            case TENT_ID:
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;

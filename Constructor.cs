@@ -25,7 +25,7 @@ public class Constructor : MonoBehaviour {
         }
 		GameObject g = new GameObject("chunk");
 		c = g.AddComponent<Chunk>();
-		GameMaster.SetMainChunk(c);
+		GameMaster.realMaster.SetMainChunk(c);
 		c.CreateNewChunk(dat);
 		NatureCreation(c);
 	}

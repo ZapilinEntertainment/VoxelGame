@@ -136,7 +136,7 @@ public class Expedition {
 		}
 		progress = es.progress;
 		if (es.haveTransmitter) {
-			SurfaceBlock transmitterBasis = GameMaster.mainChunk.GetBlock(es.transmitterPosition) as SurfaceBlock;
+			SurfaceBlock transmitterBasis = GameMaster.realMaster.mainChunk.GetBlock(es.transmitterPosition) as SurfaceBlock;
 			foreach (Structure s in transmitterBasis.surfaceObjects) {
 				if (s is QuantumTransmitter) {
 					transmitter = s as QuantumTransmitter;

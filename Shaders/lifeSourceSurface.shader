@@ -9,7 +9,7 @@ Shader "Custom/lifeSourceSurface"
 	}
 		SubShader
 	{
-		Tags { "RenderType" = "Opaque" }
+		Tags { "RenderType" = "Opaque"  "DisableBatching" = "true"}
 		LOD 100
 
 		Pass
@@ -25,7 +25,7 @@ Shader "Custom/lifeSourceSurface"
 			struct v2f
 			{
 				float2 uv : TEXCOORD0;
-				float2 effectUV : TEXCOORD1;
+				float effectUV : TEXCOORD1;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -34,13 +34,13 @@ Shader "Custom/lifeSourceSurface"
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = v.texcoord;
-				o.effectUV = length(v.vertex) * (1,1) * sin (0.03 * _Time);
+				o.effectUV = length(v.vertex)   * sin (_Time / 10);
 				return o;
 			}
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				fixed4 streamcol = tex2D(_streamTexture, i.effectUV);
+				fixed4 streamcol = tex2D(_streamTexture, i.effectUV * (1,1));
 				fixed4 col = tex2D(_backgroundTexture, i.uv);
 				col.xyz = col.xyz * (1 - streamcol.w) + streamcol.xyz * streamcol.w ;
 				return col;

@@ -16,9 +16,9 @@ sealed public class UIController : MonoBehaviour
 
 #pragma warning disable 0649
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
-    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
+    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Text[] announcementStrings;
-    [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill;
+    [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] Transform storagePanelContent;
     [SerializeField] RawImage progressPanelIcon;
     [SerializeField] QuestUI _questUI;
@@ -30,6 +30,7 @@ sealed public class UIController : MonoBehaviour
     public Texture iconsTexture { get; private set; }
     public Texture resourcesTexture { get; private set; }
     public Texture buildingsTexture { get; private set; }
+    public Transform mainCanvas { get; private set; }
     public SurfaceBlock chosenSurface { get; private set; }
     public QuestUI questUI { get; private set; }
 
@@ -42,18 +43,21 @@ sealed public class UIController : MonoBehaviour
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
-    updateTimer, moneyFlySpeed = 0;
-    private byte showingStorageOccupancy;
+    updateTimer, moneyFlySpeed = 0, showingHousingCf;
+    private byte showingStorageOccupancy, faceIndex = 10;
     private float saved_energySurplus;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
-        hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber
+        hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
+        saved_citizenCountBeforeStarvation
         ;
     private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false, 
-        localized = false, storagePositionsPrepared = false;
+        localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
     
 
-    CubeBlock chosenCube; byte faceIndex = 10;
-    Structure chosenStructure;
+    private CubeBlock chosenCube;
+    private ColonyController colony;
+    private Structure chosenStructure;
+    private Storage storage;
     UIObserver workingObserver;
     Worksite chosenWorksite;
     ChosenObjectType chosenObjectType;
@@ -63,7 +67,7 @@ sealed public class UIController : MonoBehaviour
 
     const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 5;
 
-    void Awake()
+    public void Awake()
     {
         current = this;
         LocalizeButtonTitles();
@@ -75,21 +79,27 @@ sealed public class UIController : MonoBehaviour
         buildingsTexture = Resources.Load<Texture>("Textures/buildingIcons");
         questUI = _questUI;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
+        mainCanvas = transform.GetChild(1);
 
-        SaveSystemUI.Check(transform.root);
+        SaveSystemUI.Check(mainCanvas);
 
         if (!localized) LocalizeButtonTitles();        
+    }
+
+    public void Prepare()
+    {
+        colony = GameMaster.colonyController;
+        storage = colony.storage;
+        linksReady = true;
     }
 
     void Update()
     {
         updateTimer -= Time.deltaTime;
-        ColonyController colony = GameMaster.colonyController;
-        if (colony != null)
+        if (linksReady & colony != null)
         {
             if (updateTimer <= 0)
             {
-                Storage storage = colony.storage;
                 updateTimer = DATA_UPDATE_TIME;
 
                 byte so = (byte)(storage.totalVolume / storage.maxVolume * 100);
@@ -117,6 +127,11 @@ sealed public class UIController : MonoBehaviour
                     {
                         showingBirthrate = colony.realBirthrate;
                         birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
+                    }
+                    if (showingHousingCf != colony.housingLevel)
+                    {
+                        showingHousingCf = colony.housingLevel;
+                        housingText.text = string.Format("{0:0.##}", showingHousingCf);
                     }
                     if (showingHospitalCf != colony.hospitals_coefficient)
                     {
@@ -322,7 +337,7 @@ sealed public class UIController : MonoBehaviour
                         saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
                         energyCrystalsString.text = saved_energyCrystalsCount.ToString();
                     }
-
+                    //date
                     GameMaster gm = GameMaster.realMaster;
                     if (gm.year > 0)
                     {
@@ -340,6 +355,32 @@ sealed public class UIController : MonoBehaviour
                         else
                         {
                             dataString.text = Localization.GetWord(LocalizedWord.Day) + ' ' + gm.day.ToString();
+                        }
+                    }
+                    //food val
+                    float foodValue = storage.standartResources[ResourceType.FOOD_ID] + storage.standartResources[ResourceType.SUPPLIES_ID];
+                    if (foodValue == 0)
+                    {
+                        if (!starvationSignal) {
+                            saved_citizenCountBeforeStarvation = colony.citizenCount;
+                            foodIconFullfill.color = Color.red;                            
+                            starvationSignal = true;
+                        }
+                        if (saved_citizenCountBeforeStarvation != 0)
+                        {
+                            foodIconFullfill.fillAmount = colony.citizenCount / saved_citizenCountBeforeStarvation;
+                        }
+                    }
+                    else
+                    {
+                        if (starvationSignal)
+                        {
+                            starvationSignal = false;
+                            foodIconFullfill.color = Color.white;
+                        }
+                        if (colony.citizenCount != 0)
+                        {
+                            foodIconFullfill.fillAmount = foodValue / (colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH);
                         }
                     }
                 }
@@ -777,6 +818,15 @@ sealed public class UIController : MonoBehaviour
         fc.CameraRotationBlock(false);
     }
 
+    public void FullDeactivation()
+    {
+        ChangeChosenObject(ChosenObjectType.None);
+        ChangeActiveWindow(ActiveWindowMode.NoWindow);
+        leftPanel.SetActive(false);
+        menuPanel.SetActive(false);
+        upPanel.SetActive(false);
+    }
+
     #region auxiliary panels
     public void ActivateProgressPanel(ProgressPanelMode mode)
     {
@@ -1019,6 +1069,10 @@ sealed public class UIController : MonoBehaviour
 
     public void MakeAnnouncement(string s)
     {
+        MakeAnnouncement(s, Color.black);
+    }
+    public void MakeAnnouncement(string s, Color col)
+    {
         int lastIndex = 0, len = announcementStrings.Length;
         for (int i = 0; i < len; i++)
         {
@@ -1030,15 +1084,17 @@ sealed public class UIController : MonoBehaviour
             for (int i = 1; i < len; i++)
             {
                 announcementStrings[i - 1].text = announcementStrings[i].text;
+                announcementStrings[i - 1].color = announcementStrings[i].color;
             }
             announcementStrings[len - 1].text = s;
+            announcementStrings[len - 1].color = col;
         }
         else
         {
             Text t = announcementStrings[lastIndex];
             t.enabled = true;
             t.text = s;
-            t.color = Color.black;
+            t.color = col;
         }
         activeAnnouncements = true;
     }
@@ -1091,9 +1147,11 @@ sealed public class UIController : MonoBehaviour
             showingBirthrate = colony.realBirthrate;
             showingHospitalCf = colony.hospitals_coefficient;
             showingHealthCf = colony.health_coefficient;
+            showingHousingCf = colony.housingLevel;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
             happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
             birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
+            housingText.text = string.Format("{0:0.##}", showingHousingCf);
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
             healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
         }
@@ -1138,14 +1196,14 @@ sealed public class UIController : MonoBehaviour
             layerCutToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             int p = GameMaster.layerCutHeight;
             GameMaster.layerCutHeight = GameMaster.prevCutHeight;
-            if (GameMaster.layerCutHeight != p) GameMaster.mainChunk.LayersCut();
+            if (GameMaster.layerCutHeight != p) GameMaster.realMaster.mainChunk.LayersCut();
         }
         else // off
         {
             layerCutToggleButton.overrideSprite = null;
             GameMaster.prevCutHeight = GameMaster.layerCutHeight;
             GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
-            GameMaster.mainChunk.LayersCut();
+            GameMaster.realMaster.mainChunk.LayersCut();
         }
 
         Transform t = layerCutToggleButton.transform;
@@ -1158,14 +1216,14 @@ sealed public class UIController : MonoBehaviour
     {
         GameMaster.layerCutHeight++;
         if (GameMaster.layerCutHeight > Chunk.CHUNK_SIZE) GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
-        else GameMaster.mainChunk.LayersCut();
+        else GameMaster.realMaster.mainChunk.LayersCut();
         layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
     }
     public void LayerCutMinus()
     {
         GameMaster.layerCutHeight--;
         if (GameMaster.layerCutHeight < 0) GameMaster.layerCutHeight = 0;
-        else GameMaster.mainChunk.LayersCut();
+        else GameMaster.realMaster.mainChunk.LayersCut();
         layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
     }
 

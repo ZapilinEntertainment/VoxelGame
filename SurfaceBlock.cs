@@ -626,7 +626,7 @@ public class SurfaceBlock : Block {
 
     public UIObserver ShowOnGUI() {
 		if (surfaceObserver == null) {
-			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.transform).GetComponent<UISurfacePanelController>();
+			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.mainCanvas).GetComponent<UISurfacePanelController>();
 		}
 		else surfaceObserver.gameObject.SetActive(true);
 		surfaceObserver.SetObservingSurface(this);

@@ -101,11 +101,11 @@ public sealed class EditorUI : MonoBehaviour
                                         if (cpos.y < 0) return;
                                     }
                                 }
-                                GameMaster.mainChunk.AddBlock(new ChunkPos(cpos.x, cpos.y, cpos.z), BlockType.Cube, chosenMaterialId, true);
+                                GameMaster.realMaster.mainChunk.AddBlock(new ChunkPos(cpos.x, cpos.y, cpos.z), BlockType.Cube, chosenMaterialId, true);
                             }
                             else // surface block
                             {
-                                GameMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, chosenMaterialId, true);
+                                GameMaster.realMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, chosenMaterialId, true);
                             }
                         }
                         break;
@@ -120,7 +120,7 @@ public sealed class EditorUI : MonoBehaviour
                         if (b != null)
                         {
                             Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
-                            Chunk c = GameMaster.mainChunk;
+                            Chunk c = GameMaster.realMaster.mainChunk;
                             Block lowerBlock = c.GetBlock(cpos.x, cpos.y - 1, cpos.z);                            
                             if ( (b.type == BlockType.Surface | b.type == BlockType.Cave) && (lowerBlock.type == BlockType.Cube | lowerBlock.type == BlockType.Cave ))
                             {
@@ -230,7 +230,7 @@ public sealed class EditorUI : MonoBehaviour
 
         if (!visualBorderDrawn)
         {
-            GameMaster.mainChunk.DrawBorder();
+            GameMaster.realMaster.mainChunk.DrawBorder();
             visualBorderDrawn = true;
         }
     }
@@ -372,10 +372,9 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void PlayWithThisTerrain()
     {
-        if (visualBorderDrawn) GameMaster.mainChunk.HideBorderLine();
+        if (visualBorderDrawn) GameMaster.realMaster.mainChunk.HideBorderLine();
         Destroy(transform.root.gameObject);
-        GameMaster.realMaster.ChangeModeToPlay();
-        Instantiate(Resources.Load<GameObject>("UIPrefs/gameCanvas"));
+        GameMaster.realMaster.ChangeModeToPlay();        
     }
 
     public void ChangeMaterial(int id, int pos)

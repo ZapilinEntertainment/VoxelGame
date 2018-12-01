@@ -281,7 +281,7 @@ public sealed class QuestUI : MonoBehaviour
             if (Crew.freeCrewsList.Count > 6 & QuantumTransmitter.transmittersList.Count > 3)
             {
                 questAccessMap[6] = (ChemicalFactory.current != null); // science
-                questAccessMap[7] = GameMaster.mainChunk.lifePower < 2000; // lifepower quests
+                questAccessMap[7] = GameMaster.realMaster.mainChunk.lifePower < 2000; // lifepower quests
                 float hc = GameMaster.colonyController.happiness_coefficient;
                 questAccessMap[8] = (hc > 0.5f & hc < 1); // himitsu quests
             }

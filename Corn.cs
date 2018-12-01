@@ -9,7 +9,7 @@ sealed public class Corn : Plant {
     static bool spritePackLoaded = false;
     private static List<Corn> corns;
 
-    private static float growSpeed, decaySpeed; // fixed by class
+    private static float growSpeed, decaySpeed; // in tick
     public static int maxLifeTransfer { get; private set; }  // fixed by class
     public const byte HARVESTABLE_STAGE = 3;
 
@@ -20,7 +20,7 @@ sealed public class Corn : Plant {
     {
         corns = new List<Corn>();
         maxLifeTransfer = 1;
-        growSpeed = 0.03f;
+        growSpeed = 0.01f;
         decaySpeed = growSpeed * 0.01f;
         FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }
@@ -71,17 +71,20 @@ sealed public class Corn : Plant {
                     float theoreticalGrowth = c.lifepower / c.lifepowerToGrow;
                     if (c.growth < theoreticalGrowth)
                     {
-                        c.growth = Mathf.MoveTowards(c.growth, theoreticalGrowth, growSpeed * t);
+                        c.growth = Mathf.MoveTowards(c.growth, theoreticalGrowth, growSpeed);                       
                     }
                     else
                     {
-                        c.lifepower -= decaySpeed * t;
+                        c.growth = Mathf.MoveTowards(c.growth, theoreticalGrowth, decaySpeed);
                         if (c.lifepower <= 0)
                         {
                             c.Dry();
                         }
                     }
-                    if (c.growth >= 1 & c.stage < MAX_STAGE) c.SetStage((byte)(c.stage + 1));
+                    if (c.growth >= 1 & c.stage < MAX_STAGE)
+                    {
+                        c.SetStage((byte)(c.stage + 1));
+                    }
                     i++;
                 }
             }
@@ -182,7 +185,7 @@ sealed public class Corn : Plant {
 		growth = lifepower / lifepowerToGrow;
 	}
 	public static float GetLifepowerLevelForStage(byte st) {
-		return (st+1);
+		return (st + 1);
 	}
 	#endregion
 

@@ -44,12 +44,12 @@ public class Ship : MonoBehaviour {
             case 0:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, (cpos.z + 1) * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f* Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
                     transform.forward = Vector3.right;
                 }
                 else
                 {
-                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, (cpos.z + 1) * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
                     transform.forward = Vector3.left;
                 }
                 xAxisMoving = true;
@@ -57,12 +57,12 @@ public class Ship : MonoBehaviour {
             case 2:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3((cpos.x + 1) * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.forward;
                 }
                 else
                 {
-                    transform.position = new Vector3((cpos.x + 1) * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.z + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;
@@ -70,12 +70,12 @@ public class Ship : MonoBehaviour {
             case 4:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, cpos.z * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
                     transform.forward = Vector3.right;
                 }
                 else
                 {
-                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, cpos.z * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
                     transform.forward = Vector3.left;
                 }
                 xAxisMoving = true;
@@ -83,12 +83,12 @@ public class Ship : MonoBehaviour {
             case 6:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(cpos.x * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.z - 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.forward;
                 }
                 else
                 {
-                    transform.position = new Vector3(cpos.x * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.z - 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;

@@ -1,14 +1,16 @@
 ﻿public enum Language : short{English, Russian};
 public enum LocalizedWord : short {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day}
+Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score}
 public enum LocalizedPhrase : short { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply
 }
 public enum LocalizationActionLabels : short {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
-public enum GameAnnouncements : short{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused, GameUnpaused, StorageOverloaded, ActionError, ShipArrived };
+public enum GameAnnouncements : short{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused,
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood };
 public enum RestrictionKey : short{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : short {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
+public enum DefeatReason : byte { Default, NoCitizen }
 
 public static class Localization {
 
@@ -36,7 +38,7 @@ public static class Localization {
             case Structure.CONTAINER_ID: return "Container";
             case Structure.MINE_ELEVATOR_ID: return "Mine elevator";
             case Structure.LIFESTONE_ID: return "Life stone";
-            case Structure.HOUSE_0_ID: return "Tent";
+            case Structure.TENT_ID: return "Tent";
             case Structure.HOUSE_1_ID: return "Small house";
             case Structure.HOUSE_2_ID: return "House";
             case Structure.HOUSE_3_ID: return "Advanced house";
@@ -174,8 +176,9 @@ public static class Localization {
 	public static string GetAnnouncementString( GameAnnouncements announce) {
 		switch (announce) {
 		    default: return "<announcement not found>";
-		    case GameAnnouncements.NotEnoughResources : return "Not enough resources!";
+		    case GameAnnouncements.NotEnoughResources : return "Not enough resources";
             case GameAnnouncements.NotEnoughEnergyCrystals: return "Not enough energy crystals";
+            case GameAnnouncements.NotEnoughFood: return "Not enough food!";
             case GameAnnouncements.GameSaved: return "Game saved";
             case GameAnnouncements.GameLoaded: return "Load successful";
             case GameAnnouncements.SavingFailed: return "Saving failed";
@@ -186,7 +189,7 @@ public static class Localization {
             case GameAnnouncements.GameUnpaused: return "Game unpaused";
             case GameAnnouncements.StorageOverloaded: return "Storage overloaded";
             case GameAnnouncements.ActionError: return "Error desu";
-            case GameAnnouncements.ShipArrived: return "A ship has docked";
+            case GameAnnouncements.ShipArrived: return "A ship has docked";            
         }
 	}
 
@@ -277,6 +280,7 @@ public static class Localization {
             case LocalizedWord.Month_short: return "M:";
             case LocalizedWord.Day_short: return "Day:";
             case LocalizedWord.Day: return "Day";
+            case LocalizedWord.Score: return "Score";
 		default: return "...";
 		}
 	}
@@ -351,6 +355,15 @@ public static class Localization {
             case LocalizationActionLabels.DigInProgress: return "Dig in progress";
             case LocalizationActionLabels.GatherInProgress: return "Gather in progress";
             case LocalizationActionLabels.PouringInProgress: return "Pouring in progress";
+        }
+    }
+
+    public static string GetDefeatReason(DefeatReason dr)
+    {
+        switch (dr)
+        {
+            case DefeatReason.NoCitizen: return "All citizens gone.";
+            default: return "Error 43: reasons stack overflow";
         }
     }
 

@@ -51,23 +51,21 @@ public sealed class GameMaster : MonoBehaviour {
 
     public static Vector3 sceneCenter { get { return Vector3.one * Chunk.CHUNK_SIZE / 2f; } } // SCENE CENTER
     public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
-    public static Difficulty difficulty { get; private set; }
-    public static Chunk mainChunk { get; private set; } 
+    public static Difficulty difficulty { get; private set; }    
 	public static ColonyController colonyController{get;private set;}
 	public static GeologyModule geologyModule;
     public static Audiomaster audiomaster;
 
     private static byte pauseRequests = 0;
 
+    public Chunk mainChunk { get; private set; }
     public Constructor constructor;
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
-    public Vector2 windVector { get; private set; }      
-
+    public Vector2 windVector { get; private set; } 
     public GameStart startGameWith = GameStart.Zeppelin;
-
     public float lifeGrowCoefficient {get;private set;}
 	public float demolitionLossesPercent {get;private set;}
 	public float lifepowerLossesPercent{get;private set;}
@@ -77,7 +75,8 @@ public sealed class GameMaster : MonoBehaviour {
 	public float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public float warProximity{get;private set;} // 0 is far, 1 is nearby  
     public float gearsDegradeSpeed { get; private set; }
-    
+
+    private double score;
 	private const float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     //data
@@ -98,13 +97,12 @@ public sealed class GameMaster : MonoBehaviour {
 	public bool generateChunk = true;
     public byte test_size = 100;
     public bool _editMode = false;
-         
+
+    #region static functions
     public static void SetSavename(string s)
     {
         savename = s;
     }
-    public static void SetMainChunk(Chunk c) { mainChunk = c; }
-
     public static void SetPause(bool pause)
     {
         if (pause)
@@ -123,10 +121,19 @@ public sealed class GameMaster : MonoBehaviour {
             }
         }
     }
+    public static void ChangeScene(GameLevel level)
+    {
+        sceneClearing = true;
+        SceneManager.LoadScene((int)level);
+        sceneClearing = false;
+        Structure.ResetToDefaults_Static();
+    }
+    #endregion
 
     public void ChangeModeToPlay()
     {
         if (!editMode) return;
+        UIController uic = Instantiate(Resources.Load<GameObject>("UIPrefs/UIController")).GetComponent<UIController>();
         _editMode = false;
         firstSet = true;
         gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
@@ -164,7 +171,7 @@ public sealed class GameMaster : MonoBehaviour {
             if (colonyController == null)
             {
                 colonyController = gameObject.AddComponent<ColonyController>();
-                colonyController.CreateStorage();
+                colonyController.Prepare();
             }
             if (PoolMaster.current == null)
             {
@@ -331,6 +338,8 @@ public sealed class GameMaster : MonoBehaviour {
         }
     }
 
+    public void SetMainChunk(Chunk c) { mainChunk = c; }
+
     #region updates
     private void Update()
     {
@@ -356,7 +365,8 @@ public sealed class GameMaster : MonoBehaviour {
                 uint daysDelta = (uint)(timeGone / DAY_LONG);
                 if (daysDelta > 0 & colonyController != null)
                 {
-                    colonyController.EverydayUpdate(daysDelta);
+                    // счет количества дней в ускорении отменен
+                    colonyController.EverydayUpdate();
                 }
                 uint sum = day + daysDelta;
                 if (sum >=  DAYS_IN_MONTH)
@@ -650,6 +660,21 @@ public sealed class GameMaster : MonoBehaviour {
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
     }
 
+    public void MakeGameOver(string reason)
+    {
+        gameSpeed = 0;
+        StopAllCoroutines();
+        UIController.current.FullDeactivation();
+        Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
+        failpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
+        failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+        failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
+    }
+    public void ReturnToMenuAfterGameOver()
+    {
+        ChangeScene(GameLevel.Menu);
+    }
+
     public void OnApplicationQuit()
     {
         StopAllCoroutines();
@@ -657,15 +682,7 @@ public sealed class GameMaster : MonoBehaviour {
         Time.timeScale = 1;
         gameSpeed = 1;
         pauseRequests = 0;
-    }
-
-    public static void ChangeScene(GameLevel level)
-    {
-        sceneClearing = true;
-        SceneManager.LoadScene((int)level);
-        sceneClearing = false;
-        Structure.ResetToDefaults_Static();
-    }
+    }    
 }
 
 [System.Serializable]
