@@ -40,7 +40,8 @@ public sealed class UIDockObserver : UIObserver
             uwb.SetObservingWorkBuilding(observingDock);
             if (tradingListPanel.activeSelf) PrepareTradingPanel();
             else PrepareImmigrationPanel();
-            
+            if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
+
             STATUS_UPDATE_TIME = 1.5f; timer = STATUS_UPDATE_TIME;
         }
     }

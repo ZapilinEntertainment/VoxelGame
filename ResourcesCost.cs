@@ -29,7 +29,7 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 25)
 			};
 			break;
-		case Structure.ROLLING_SHOP_ID:
+		case Structure.WORKSHOP_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 70), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 20),
 				new ResourceContainer(ResourceType.Plastics, 70)

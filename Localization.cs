@@ -70,7 +70,7 @@ public static class Localization {
             case Structure.HOSPITAL_2_ID: return "Hospital";
             case Structure.MINERAL_POWERPLANT_2_ID: return "Mineral F powerplant";
             case Structure.ORE_ENRICHER_2_ID: return "Ore enricher";
-            case Structure.ROLLING_SHOP_ID: return "Rolling shop";
+            case Structure.WORKSHOP_ID: return "Workshop";
             case Structure.MINI_GRPH_REACTOR_3_ID: return "Small Graphonum reactor";
             case Structure.FUEL_FACILITY_3_ID: return "Fuel facility";
             case Structure.GRPH_REACTOR_4_ID: return "Graphonium reactor";
@@ -330,7 +330,7 @@ public static class Localization {
             case RefusalReason.Unavailable: return "Unavailable";
             case RefusalReason.MaxLevel: return "Maximum level reached";
             case RefusalReason.HQ_RR1: return "No docks built";
-            case RefusalReason.HQ_RR2: return "No rolling shops built";
+            case RefusalReason.HQ_RR2: return "No workshops built";
             case RefusalReason.HQ_RR3: return "No graphonium enrichers built";
             case RefusalReason.HQ_RR4: return "No chemical factories";
             case RefusalReason.HQ_RR5: return "No reason, just prohibited;";

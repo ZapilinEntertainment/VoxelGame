@@ -83,12 +83,12 @@ public class Ship : MonoBehaviour {
             case 6:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(d.transform.position.z - 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.forward;
                 }
                 else
                 {
-                    transform.position = new Vector3(d.transform.position.z - 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;

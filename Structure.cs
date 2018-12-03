@@ -37,7 +37,7 @@ public class Structure : MonoBehaviour  {
 	TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11, 
 	DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19, 
 	WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, 	MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
-	ROLLING_SHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
+	WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
 	FOOD_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
 	STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41, 
 	HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
@@ -120,7 +120,7 @@ public class Structure : MonoBehaviour  {
             case HOSPITAL_2_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/Hospital_level_2"));break;
             case MINERAL_POWERPLANT_2_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/mineralPP_level_2"));break;
             case ORE_ENRICHER_2_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/oreEnricher_level_2"));break;
-            case ROLLING_SHOP_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/rollingShop_level_2"));break;
+            case WORKSHOP_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/rollingShop_level_2"));break;
             case MINI_GRPH_REACTOR_3_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/miniReactor_level_3"));break;
             case FUEL_FACILITY_3_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/fuelFacility_level_3"));break;
             case GRPH_REACTOR_4_ID: model =  Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumReactor_level_4"));break;
@@ -227,8 +227,8 @@ public class Structure : MonoBehaviour  {
                 s = new GameObject("Powerplant").AddComponent<Powerplant>();break;
             case HOSPITAL_2_ID:
                 s = new GameObject("Hospital").AddComponent<Hospital>();break;
-            case ROLLING_SHOP_ID:
-                s = new GameObject("Rolling Shop").AddComponent<RollingShop>();break;
+            case WORKSHOP_ID:
+                s = new GameObject("Rolling Shop").AddComponent<Workshop>();break;
             case MINI_GRPH_REACTOR_3_ID:
             case ENERGY_CAPACITOR_1_ID:
             case ENERGY_CAPACITOR_2_ID:
@@ -722,7 +722,7 @@ public class Structure : MonoBehaviour  {
                     isBasement = false;
                 }
                 break;
-            case ROLLING_SHOP_ID:
+            case WORKSHOP_ID:
                 {
                     maxHp = 1200;
                     innerPosition = SurfaceRect.full;
@@ -944,7 +944,7 @@ public class Structure : MonoBehaviour  {
             case HOSPITAL_2_ID : return new Rect(7 *p, 6 *p, p, p);
             case MINERAL_POWERPLANT_2_ID :return new Rect(0, 5 *p, p, p);
             case ORE_ENRICHER_2_ID : return new Rect(p, 5 *p, p, p);
-            case ROLLING_SHOP_ID : return new Rect(2 * p, 5 *p, p, p);
+            case WORKSHOP_ID : return new Rect(2 * p, 5 *p, p, p);
             case MINI_GRPH_REACTOR_3_ID : return new Rect(3 * p, 5 *p, p, p);
             case FUEL_FACILITY_3_ID : return new Rect(4 * p, 5 *p, p, p);
             case GRPH_REACTOR_4_ID : return new Rect(5 * p, 5 *p, p, p);

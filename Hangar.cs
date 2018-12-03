@@ -141,7 +141,7 @@ public sealed class Hangar : WorkBuilding
                 }
             }
         }
-        SetBuildingData(b, pos);
+        SetWorkbuildingData(b, pos);
         CheckPositionCorrectness();
         hangarsCount++;
     }

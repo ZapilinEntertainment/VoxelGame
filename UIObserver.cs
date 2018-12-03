@@ -35,4 +35,7 @@ public abstract class UIObserver : MonoBehaviour {
 	void OnEnable() {
 		transform.SetAsLastSibling();
 	}
+
+    virtual public void LocalizeContent()
+    {    }
 }

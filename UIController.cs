@@ -954,15 +954,17 @@ sealed public class UIController : MonoBehaviour
 
     public void ActivateRollingShopPanel()
     {
-        UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
+        UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;        
         if (wbo != null && wbo.gameObject.activeSelf)
         { // уу, костыли!
-            // и вообще надо переделать на dropdown
-            RollingShop rs = wbo.observingWorkbuilding as RollingShop;
+            // и вообще надо переделать на dropdown           
+            Workshop rs = wbo.observingWorkbuilding as Workshop;
             if (rs != null)
             {
                 rollingShopPanel.SetActive(true);
-                rollingShopPanel.transform.GetChild(rs.GetModeIndex()).GetComponent<Toggle>().isOn = true;
+                Transform t = rollingShopPanel.transform.GetChild((byte)rs.mode);
+                if (t != null) t.GetComponent<Toggle>().isOn = true;
+                else print("no transform");
             }
         }
         rollingShopPanel.SetActive(true);
@@ -971,8 +973,9 @@ sealed public class UIController : MonoBehaviour
     {
         rollingShopPanel.SetActive(false);
     }
-    public void RollingShop_SetActivity(int x)
+    public void RollingShop_SetActivity(int input)
     {
+        byte x = (byte)input;
         UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
         if (wbo == null | !wbo.gameObject.activeSelf)
         {
@@ -981,7 +984,7 @@ sealed public class UIController : MonoBehaviour
         }
         else
         { // уу, костыли!
-            RollingShop rs = wbo.observingWorkbuilding as RollingShop;
+            Workshop rs = wbo.observingWorkbuilding as Workshop;
             if (rs == null)
             {
                 DeactivateRollingShopPanel();
@@ -989,7 +992,7 @@ sealed public class UIController : MonoBehaviour
             }
             else
             {
-                if (rs.GetModeIndex() != x)
+                if ( ((byte)(rs.mode)) != x)
                 {
                     rs.SetMode(x);
                     rollingShopPanel.transform.GetChild(x).GetComponent<Toggle>().isOn = true;

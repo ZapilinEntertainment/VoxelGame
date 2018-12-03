@@ -18,7 +18,6 @@ public sealed class Dock : WorkBuilding {
 	private const float LOADING_TIME = 10, SHIP_ARRIVING_TIME = 300;
     private float loadingTimer = 0;    
 	private int preparingResourceIndex;
-    private ColonyController colony;
     private Ship loadingShip;
     private List<Block> dependentBlocksList;
 
@@ -73,9 +72,8 @@ public sealed class Dock : WorkBuilding {
                 }
             }
         }
-		SetBuildingData(b, pos);	
+		SetWorkbuildingData(b, pos);	
 		basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
-		colony = GameMaster.colonyController;
 		colony.AddDock(this);		
         if (!subscribedToUpdate)
         {
@@ -450,12 +448,15 @@ public sealed class Dock : WorkBuilding {
 	void LoadDockData(DockSerializer ds) {
 		LoadWorkBuildingData(ds.workBuildingSerializer);
 		correctLocation = ds.correctLocation;
-		maintainingShip =ds.maintainingShip;
+		maintainingShip = ds.maintainingShip;
 		if (maintainingShip) {
 			ShipSerializer ss = ds.loadingShip;
-			Ship s = PoolMaster.current.GetShip( ss.level, ss.type );
-			s.Load(ss, this);
-			loadingShip = s;
+            if (ss != null)
+            {
+                Ship s = PoolMaster.current.GetShip(ss.level, ss.type);
+                s.Load(ss, this);
+                loadingShip = s;
+            }
 		}
 		loadingTimer =  ds.loadingTimer;
 		shipArrivingTimer = ds.shipArrivingTimer;
@@ -465,8 +466,12 @@ public sealed class Dock : WorkBuilding {
 		DockSerializer ds = new DockSerializer();
 		ds.workBuildingSerializer = GetWorkBuildingSerializer();
 		ds.correctLocation = correctLocation;
-		ds.maintainingShip = maintainingShip;
-		if (maintainingShip && loadingShip != null) ds.loadingShip =  loadingShip.GetShipSerializer();
+        if (maintainingShip & loadingShip != null)
+        {
+            ds.loadingShip = loadingShip.GetShipSerializer();
+            ds.maintainingShip = true;
+        }
+        else ds.maintainingShip = false;
 		ds.loadingTimer = loadingTimer;
 		ds.shipArrivingTimer = shipArrivingTimer;
 		return ds;

@@ -50,7 +50,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(BIOGENERATOR_2_ID) as Building);
                 blist.Add(GetStructureByID(MINERAL_POWERPLANT_2_ID) as Building);
                 blist.Add(GetStructureByID(HOSPITAL_2_ID) as Building);
-                blist.Add(GetStructureByID(ROLLING_SHOP_ID) as Building);
+                blist.Add(GetStructureByID(WORKSHOP_ID) as Building);
                 break;
             case 3:
                 blist.Add(GetStructureByID(STORAGE_3_ID) as Building);
@@ -480,7 +480,7 @@ public class Building : Structure
                     level = 2;
                 }
                 break;
-            case ROLLING_SHOP_ID:
+            case WORKSHOP_ID:
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;

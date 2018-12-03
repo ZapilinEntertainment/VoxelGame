@@ -17,7 +17,7 @@ public class Hospital : WorkBuilding {
 
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
-        SetBuildingData(b, pos);
+        SetWorkbuildingData(b, pos);
         coverage = 0;
 		GameMaster.colonyController.AddHospital(this);
 	}
@@ -26,22 +26,22 @@ public class Hospital : WorkBuilding {
     {
         if (x > workersCount) x = workersCount;
         workersCount -= x;
-        GameMaster.colonyController.AddWorkers(x);
+        colony.AddWorkers(x);
         RecalculateWorkspeed();
-        GameMaster.colonyController.RecalculateHospitals();
+        colony.RecalculateHospitals();
     }
 
     override public void SetActivationStatus(bool x) {
 		if (isActive == x) return;
 		isActive = x;
-		GameMaster.colonyController.RecalculateHospitals();
+		colony.RecalculateHospitals();
 	}
 
     override protected void RecalculateWorkspeed()
     {
         float prevCoverage = coverage;
         coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
-        if (prevCoverage != coverage) GameMaster.colonyController.RecalculateHospitals();
+        if (prevCoverage != coverage) colony.RecalculateHospitals();
     }
 
     public static void SetBirthrateMode(int x) {

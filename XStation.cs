@@ -4,7 +4,7 @@
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetBuildingData(b, pos);
+        SetWorkbuildingData(b, pos);
         if (current != null & current != this) current.Annihilate(false);
         current = this;
     }

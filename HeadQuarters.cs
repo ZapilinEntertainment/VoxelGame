@@ -57,7 +57,7 @@ public class HeadQuarters : House {
         {
             default: return false;
             case 1: return (colony.docks.Count != 0);
-            case 2: return (RollingShop.current != null );
+            case 2: return (Workshop.current != null );
             case 3: return (GraphoniumEnricher.current != null);
             case 4: return (ChemicalFactory.current != null);
             case 5: return true;

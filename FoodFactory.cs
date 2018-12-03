@@ -18,7 +18,7 @@ public class FoodFactory : WorkBuilding {
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetBuildingData(b, pos);
+        SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;

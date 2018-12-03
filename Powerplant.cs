@@ -34,7 +34,7 @@ public class Powerplant : WorkBuilding {
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetBuildingData(b, pos);
+        SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
@@ -48,13 +48,13 @@ public class Powerplant : WorkBuilding {
         {
             if (workersCount > 0 & isActive)
             {
-                float fuelTaken = GameMaster.colonyController.storage.GetResources(fuel, fuelNeeds * (workersCount / (float)maxWorkers));
+                float fuelTaken = colony.storage.GetResources(fuel, fuelNeeds * (workersCount / (float)maxWorkers));
                 tickTimer = fuelBurnTime * (fuelTaken / fuelNeeds);                
             }
             if (tickTimer == 0 & energySurplus != 0)
             {
                 energySurplus = 0;
-                GameMaster.colonyController.RecalculatePowerGrid();
+                colony.RecalculatePowerGrid();
             }
         }
         else
@@ -94,7 +94,7 @@ public class Powerplant : WorkBuilding {
             if (newEnergySurplus != energySurplus)
             {
                 energySurplus = newEnergySurplus;
-                GameMaster.colonyController.RecalculatePowerGrid();
+                colony.RecalculatePowerGrid();
             }
         }
         fuelLeft = tickTimer / fuelBurnTime;
@@ -118,7 +118,7 @@ public class Powerplant : WorkBuilding {
     { // не используется recalculate workspeed
         if (x > workersCount) x = workersCount;
 		workersCount -= x;
-		GameMaster.colonyController.AddWorkers(x);
+		colony.AddWorkers(x);
 	}
 
 	#region save-load system

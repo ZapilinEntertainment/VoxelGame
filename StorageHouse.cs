@@ -10,7 +10,7 @@ public sealed class StorageHouse : Building {
             case STORAGE_1_ID: volume = 5000; break;
             case STORAGE_2_ID: volume = 20000; break;
             case STORAGE_3_ID: volume = 50000; break;
-            case STORAGE_5_ID: volume = 20000;break;
+            case STORAGE_5_ID: volume = 200000;break;
         }
     }
 

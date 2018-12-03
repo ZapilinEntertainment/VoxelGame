@@ -10,7 +10,6 @@ public class RecruitingCenterSerializer {
 public sealed class RecruitingCenter : WorkBuilding {
     float backupSpeed = 0.02f;
     public bool finding = false;
-	ColonyController colonyController;
 	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
 	private static float hireCost = -1;
     public static UIRecruitingCenterObserver rcenterObserver;
@@ -36,13 +35,12 @@ public sealed class RecruitingCenter : WorkBuilding {
 		bool movement = false;
 		if (basement != null) movement = true;
 		if (b == null) return;
-		SetBuildingData(b, pos);
+		SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        colonyController = GameMaster.colonyController;
         if (!movement) // здание не переносилось, а было построено
         {
             Crew.AddCrewSlots(CREW_SLOTS_FOR_BUILDING);
@@ -54,12 +52,12 @@ public sealed class RecruitingCenter : WorkBuilding {
 		if ( !isActive | !energySupplied) return;
 		if (workersCount > 0) {
 			if (finding) {
-				float candidatsCountFactor = colonyController.freeWorkers / Crew.OPTIMAL_CANDIDATS_COUNT;
+				float candidatsCountFactor = colony.freeWorkers / Crew.OPTIMAL_CANDIDATS_COUNT;
 				if (candidatsCountFactor > 1) candidatsCountFactor = 1;
-				workflow += ( FIND_SPEED * workSpeed * 0.3f + colonyController.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
+				workflow += ( FIND_SPEED * workSpeed * 0.3f + colony.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
 				if (workflow >= workflowToProcess) {
 					Crew ncrew = new Crew();
-					ncrew.SetCrew(colonyController, hireCost);
+					ncrew.SetCrew(colony, hireCost);
 					Crew.freeCrewsList.Add(ncrew);
 					workflow = 0;
 					finding = false;

@@ -10,12 +10,14 @@ public class WorkBuildingSerializer {
 }
 
 public abstract class WorkBuilding : Building {
-	public float workflow {get;protected set;} 
+    public static UIWorkbuildingObserver workbuildingObserver;
+
+    public float workflow {get;protected set;} 
 	public float workSpeed {get;protected set;}
 	public float workflowToProcess{get; protected set;}
 	public int maxWorkers { get; protected set; }
-	public int workersCount {get; protected set;} 
-    public static UIWorkbuildingObserver workbuildingObserver;
+	public int workersCount {get; protected set;}
+    protected ColonyController colony;    
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -146,7 +148,7 @@ public abstract class WorkBuilding : Building {
                     maxWorkers = 80;
                 }
                 break;
-            case ROLLING_SHOP_ID:
+            case WORKSHOP_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 40;
@@ -224,12 +226,18 @@ public abstract class WorkBuilding : Building {
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetBuildingData(b, pos);
+        SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
+    }
+
+    protected void SetWorkbuildingData(SurfaceBlock sb, PixelPosByte pos)
+    {
+        SetBuildingData(sb, pos);
+        colony = GameMaster.colonyController;
     }
 
     virtual public void LabourUpdate()
@@ -274,7 +282,7 @@ public abstract class WorkBuilding : Building {
 	virtual public void FreeWorkers(int x) {
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
-		GameMaster.colonyController.AddWorkers(x);
+		colony.AddWorkers(x);
 		RecalculateWorkspeed();
 	}
 	virtual protected void RecalculateWorkspeed() {
@@ -334,7 +342,7 @@ public abstract class WorkBuilding : Building {
         if (!GameMaster.realMaster.weNeedNoResources)
         {
             ResourceContainer[] cost = GetUpgradeCost();
-            if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+            if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
                 UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                 return;
@@ -357,7 +365,7 @@ public abstract class WorkBuilding : Building {
     }
 
     protected bool PrepareWorkbuildingForDestruction(bool forced) {		
-		if (workersCount != 0) GameMaster.colonyController.AddWorkers(workersCount);
+		if (workersCount != 0) colony.AddWorkers(workersCount);
         return PrepareBuildingForDestruction(forced);
     }
 

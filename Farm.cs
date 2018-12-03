@@ -38,8 +38,30 @@ public class Farm : WorkBuilding
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
-        b.ClearSurface(true);
-        SetBuildingData(b, pos);
+        if (b.cellsStatus != 0)
+        {
+            int i = 0;
+            Plant p = null;
+            while (i < b.surfaceObjects.Count)
+            {
+                if (b.surfaceObjects[i] == null)
+                {
+                    i++;
+                    continue;
+                }
+                else
+                {
+                    p = b.surfaceObjects[i] as Plant;
+                    if (p != null && p.plant_ID == crop_id)
+                    {
+                        i++;
+                        continue;
+                    }
+                    else b.surfaceObjects[i].Annihilate(false);
+                }
+            }
+        }
+        SetWorkbuildingData(b, pos);
         b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
         if (!subscribedToUpdate)
         {

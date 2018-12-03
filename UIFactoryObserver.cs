@@ -3,19 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIFactoryObserver : UIObserver
-{
-    Factory observingFactory;
+public sealed class UIFactoryObserver : UIObserver
+{    
 #pragma warning disable 0649
+    [SerializeField] GameObject limitPanel;
     [SerializeField] RawImage inputIcon, outputIcon;
     [SerializeField] Text inputValueString, outputValueString, workflowString;
-    [SerializeField] Dropdown recipesDropdown;
+    [SerializeField] Dropdown recipesDropdown, modesDropdown;
+    [SerializeField] InputField limitInputField;
 #pragma warning restore 0649
+    private Factory observingFactory;
+    private int showingProductionValue;
 
     public static UIFactoryObserver InitializeFactoryObserverScript()
     {
         UIFactoryObserver ufo = Instantiate(Resources.Load<GameObject>("UIPrefs/factoryObserver"), UIController.current.rightPanel.transform).GetComponent<UIFactoryObserver>();
         Factory.factoryObserver = ufo;
+        ufo.LocalizeContent();
         return ufo;
     }
 
@@ -55,10 +59,69 @@ public class UIFactoryObserver : UIObserver
         outputValueString.text = r.outputValue.ToString();
         recipesDropdown.value = positionInDropdown;
 
+        modesDropdown.value = (int)observingFactory.productionMode;
+        if (observingFactory.productionMode == FactoryProductionMode.NoLimit)
+        {
+            limitPanel.SetActive(false);
+        }
+        else
+        {
+            showingProductionValue = observingFactory.productionModeValue;
+            limitInputField.text = showingProductionValue.ToString();
+            limitPanel.SetActive(true);
+        }
+
         STATUS_UPDATE_TIME = 0.1f; timer = STATUS_UPDATE_TIME;
     }
 
+    public void SetRecipe(int x)
+    {
+        observingFactory.SetRecipe(x);
+        Recipe r = observingFactory.recipe;
+        inputIcon.uvRect = ResourceType.GetTextureRect(r.input.ID);
+        inputValueString.text = r.inputValue.ToString();
+        outputIcon.uvRect = ResourceType.GetTextureRect(r.output.ID);
+        outputValueString.text = r.outputValue.ToString();
+    }
 
+    public void SetProductionMode(int x)
+    {
+        FactoryProductionMode fmode = (FactoryProductionMode)x;
+        observingFactory.SetProductionMode(fmode);
+        if (fmode == FactoryProductionMode.NoLimit)
+        {
+            limitPanel.SetActive(false);
+        }
+        else
+        {
+            showingProductionValue = observingFactory.productionModeValue;
+            limitInputField.text = showingProductionValue.ToString();
+            limitPanel.SetActive(true);
+        }
+    }
+
+    public void ChangeProductionValue(int delta)
+    {
+        int x = observingFactory.productionModeValue + delta;
+        if (x < 0) x = 0;
+        if (x != observingFactory.productionModeValue)
+        {
+            observingFactory.SetProductionValue(x);
+            showingProductionValue = x;
+            limitInputField.text = showingProductionValue.ToString();
+        }
+    }
+    public void ProductionInputFieldChanged(string s)
+    {
+        int x = int.Parse(s); // проверка не нужна, так как поле выставлено на integer
+        if (x < 0) { x = 0; limitInputField.text = x.ToString(); }
+        if (x != observingFactory.productionModeValue)
+        {
+            observingFactory.SetProductionValue(x);
+            showingProductionValue = x;
+            limitInputField.text = showingProductionValue.ToString();
+        }
+    }
 
     override protected void StatusUpdate()
     {
@@ -74,9 +137,21 @@ public class UIFactoryObserver : UIObserver
                         float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
                         workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
                     }
-                    else workflowString.text = Localization.GetPhrase(LocalizedPhrase.NoEnergySupply);
+                    else
+                    {
+                        workflowString.text = Localization.GetPhrase(LocalizedPhrase.NoEnergySupply);
+                    }
                 }
                 else workflowString.text = Localization.GetPhrase(LocalizedPhrase.BufferOverflow);
+                if (observingFactory.productionMode != FactoryProductionMode.NoLimit)
+                {
+                    int pmv = observingFactory.productionModeValue;
+                    if (showingProductionValue != pmv)
+                    {
+                        showingProductionValue = pmv;
+                        limitInputField.text = pmv.ToString();
+                    }
+                }
             }
             else workflowString.text = string.Empty;           
         }
@@ -95,15 +170,10 @@ public class UIFactoryObserver : UIObserver
         observingFactory = null;
         WorkBuilding.workbuildingObserver.ShutOff();
         gameObject.SetActive(false);
-    }
+    }    
 
-    public void SetRecipe(int x)
+    public override void LocalizeContent()
     {
-        observingFactory.SetRecipe(x);
-        Recipe r = observingFactory.recipe;
-        inputIcon.uvRect = ResourceType.GetTextureRect(r.input.ID);
-        inputValueString.text = r.inputValue.ToString();
-        outputIcon.uvRect = ResourceType.GetTextureRect(r.output.ID);
-        outputValueString.text = r.outputValue.ToString();
+       
     }
 }
