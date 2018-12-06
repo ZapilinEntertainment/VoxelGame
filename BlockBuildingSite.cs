@@ -111,7 +111,7 @@ public class BlockBuildingSite : Worksite
                                 shr.AddResource(rtype, count);
                                 shr.SetBasement(workObject, new PixelPosByte(a * 2, b * 2));
                             }
-                            count = GameMaster.colonyController.storage.GetResources(rtype, count);
+                            count = GameMaster.realMaster.colonyController.storage.GetResources(rtype, count);
                             if (count == 0)
                             {
                                 if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources);
@@ -140,7 +140,7 @@ public class BlockBuildingSite : Worksite
         workObject.SetWorksite(this);
         rtype = type;
         actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
-        GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+        GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
         {
@@ -166,10 +166,10 @@ public class BlockBuildingSite : Worksite
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.colonyController.AddWorkers(workersCount);
+            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Object.Destroy(sign.gameObject);
+        if (sign != null) Destroy(sign.gameObject);
         if (worksitesList.Contains(this)) worksitesList.Remove(this);
         if (subscribedToUpdate)
         {

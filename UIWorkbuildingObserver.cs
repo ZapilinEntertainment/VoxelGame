@@ -192,7 +192,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             {
                 if (observingWorkbuilding.workersCount < observingWorkbuilding.maxWorkers)
                 {
-                    GameMaster.colonyController.SendWorkers(1, observingWorkbuilding);
+                    GameMaster.realMaster.colonyController.SendWorkers(1, observingWorkbuilding);
                 }
                 timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
@@ -208,7 +208,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             {
                 if (observingWorksite.workersCount < observingWorksite.GetMaxWorkers())
                 {
-                    GameMaster.colonyController.SendWorkers(1, observingWorksite);
+                    GameMaster.realMaster.colonyController.SendWorkers(1, observingWorksite);
                 }
                 timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
@@ -226,7 +226,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             {
                 if (observingWorkbuilding.workersCount < observingWorkbuilding.maxWorkers)
                 {
-                    GameMaster.colonyController.SendWorkers(observingWorkbuilding.maxWorkers - observingWorkbuilding.workersCount, observingWorkbuilding);
+                    GameMaster.realMaster.colonyController.SendWorkers(observingWorkbuilding.maxWorkers - observingWorkbuilding.workersCount, observingWorkbuilding);
                 }
                 timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
@@ -243,7 +243,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 int maxWorkers = observingWorksite.GetMaxWorkers();
                 if (observingWorksite.workersCount < maxWorkers)
                 {
-                    GameMaster.colonyController.SendWorkers(maxWorkers - observingWorksite.workersCount, observingWorksite);
+                    GameMaster.realMaster.colonyController.SendWorkers(maxWorkers - observingWorksite.workersCount, observingWorksite);
                 }
                 timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
@@ -339,7 +339,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     if (x < 0) x = 0;
                 }
-                if (x > observingWorkbuilding.workersCount) GameMaster.colonyController.SendWorkers(x - observingWorkbuilding.workersCount, observingWorkbuilding);
+                if (x > observingWorkbuilding.workersCount) GameMaster.realMaster.colonyController.SendWorkers(x - observingWorkbuilding.workersCount, observingWorkbuilding);
                 else observingWorkbuilding.FreeWorkers(observingWorkbuilding.workersCount - x);
                 showingWorkersCount = observingWorkbuilding.workersCount;
                 workersCountField.text = showingWorkersCount.ToString();
@@ -356,7 +356,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     if (x < 0) x = 0;
                 }
-                if (x > observingWorksite.workersCount) GameMaster.colonyController.SendWorkers(x - observingWorksite.workersCount, observingWorksite);
+                if (x > observingWorksite.workersCount) GameMaster.realMaster.colonyController.SendWorkers(x - observingWorksite.workersCount, observingWorksite);
                 else observingWorksite.FreeWorkers(observingWorksite.workersCount - x);
                 showingWorkersCount = observingWorksite.workersCount;
                 workersCountField.text = showingWorkersCount.ToString();

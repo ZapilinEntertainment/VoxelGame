@@ -274,7 +274,7 @@ public sealed class QuestUI : MonoBehaviour
 
         if (Crew.freeCrewsList.Count > 3)
         {
-            int hqLevel = GameMaster.colonyController.hq.level;
+            int hqLevel = GameMaster.realMaster.colonyController.hq.level;
             questAccessMap[3] = (hqLevel > 4); //exploring
             questAccessMap[4] = (hqLevel > 5); // problems or jokes
             questAccessMap[5] = (hqLevel > 6); // additional quests
@@ -282,7 +282,7 @@ public sealed class QuestUI : MonoBehaviour
             {
                 questAccessMap[6] = (ChemicalFactory.current != null); // science
                 questAccessMap[7] = GameMaster.realMaster.mainChunk.lifePower < 2000; // lifepower quests
-                float hc = GameMaster.colonyController.happiness_coefficient;
+                float hc = GameMaster.realMaster.colonyController.happiness_coefficient;
                 questAccessMap[8] = (hc > 0.5f & hc < 1); // himitsu quests
             }
             else

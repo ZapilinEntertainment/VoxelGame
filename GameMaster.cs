@@ -51,14 +51,14 @@ public sealed class GameMaster : MonoBehaviour {
 
     public static Vector3 sceneCenter { get { return Vector3.one * Chunk.CHUNK_SIZE / 2f; } } // SCENE CENTER
     public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
-    public static Difficulty difficulty { get; private set; }    
-	public static ColonyController colonyController{get;private set;}
+    public static Difficulty difficulty { get; private set; }    	
 	public static GeologyModule geologyModule;
     public static Audiomaster audiomaster;
 
     private static byte pauseRequests = 0;
 
     public Chunk mainChunk { get; private set; }
+    public ColonyController colonyController { get; private set; }
     public Constructor constructor;
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
@@ -76,7 +76,6 @@ public sealed class GameMaster : MonoBehaviour {
 	public float warProximity{get;private set;} // 0 is far, 1 is nearby  
     public float gearsDegradeSpeed { get; private set; }
 
-    private double score;
 	private const float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
 	clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     //data
@@ -168,11 +167,6 @@ public sealed class GameMaster : MonoBehaviour {
 
             if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
             difficulty = gameStartSettings.difficulty;
-            if (colonyController == null)
-            {
-                colonyController = gameObject.AddComponent<ColonyController>();
-                colonyController.Prepare();
-            }
             if (PoolMaster.current == null)
             {
                 PoolMaster pm = gameObject.AddComponent<PoolMaster>();
@@ -248,8 +242,7 @@ public sealed class GameMaster : MonoBehaviour {
                         break;
                 }
                 warProximity = 0.01f;
-                layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
-                if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
+                layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;                
                 switch (startGameWith)
                 {
                     case GameStart.Zeppelin:
@@ -339,6 +332,7 @@ public sealed class GameMaster : MonoBehaviour {
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
+    public void SetColonyController(ColonyController c) { colonyController = c; }
 
     #region updates
     private void Update()
@@ -667,7 +661,8 @@ public sealed class GameMaster : MonoBehaviour {
         UIController.current.FullDeactivation();
         Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
         failpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
-        failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+        double score = new ScoreCalculator().GetScore(this);
+        failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + (score).ToString();
         failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
     }
     public void ReturnToMenuAfterGameOver()

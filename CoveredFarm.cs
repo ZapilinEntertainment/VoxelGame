@@ -18,7 +18,7 @@ public class CoveredFarm : WorkBuilding {
                 outputResource = ResourceType.Lumber;
                 break;
         }		
-		s = GameMaster.colonyController.storage;
+		s = colony.storage;
 	}
 
 	override protected void LabourResult() {

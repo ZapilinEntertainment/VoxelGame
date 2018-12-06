@@ -63,7 +63,7 @@ public abstract class Worksite : MonoBehaviour {
 	public void FreeWorkers(int x) { 
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
-		GameMaster.colonyController.AddWorkers(x);
+		GameMaster.realMaster.colonyController.AddWorkers(x);
 		RecalculateWorkspeed();
 	}
 
@@ -75,7 +75,7 @@ public abstract class Worksite : MonoBehaviour {
         int sum = destination.workersCount + x;
         int maxWorkers = destination.GetMaxWorkers();
         if (sum > maxWorkers) {
-            GameMaster.colonyController.AddWorkers(sum - maxWorkers);
+            GameMaster.realMaster.colonyController.AddWorkers(sum - maxWorkers);
             sum = maxWorkers;
         }
         destination.workersCount = sum; 
@@ -165,7 +165,7 @@ public abstract class Worksite : MonoBehaviour {
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.colonyController.AddWorkers(workersCount);
+            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null) Destroy(sign.gameObject);

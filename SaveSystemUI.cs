@@ -161,7 +161,7 @@ public class SaveSystemUI : MonoBehaviour
     public void CreateNewSave()
     {
         inputFieldPanel.SetActive(true);
-        inputFieldPanel.GetComponent<InputField>().text = terrainsLoading ? "new terrain" : GameMaster.colonyController.cityName;
+        inputFieldPanel.GetComponent<InputField>().text = terrainsLoading ? "new terrain" : GameMaster.realMaster.colonyController.cityName;
     }
     public void InputField_SaveGame()
     {

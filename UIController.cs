@@ -70,6 +70,8 @@ sealed public class UIController : MonoBehaviour
     public void Awake()
     {
         current = this;
+        leftPanel.SetActive(false);
+        upPanel.SetActive(false);
         LocalizeButtonTitles();
         selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
         selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
@@ -88,9 +90,11 @@ sealed public class UIController : MonoBehaviour
 
     public void Prepare()
     {
-        colony = GameMaster.colonyController;
+        colony = GameMaster.realMaster.colonyController;
         storage = colony.storage;
         linksReady = true;
+        leftPanel.SetActive(true);
+        upPanel.SetActive(true);
     }
 
     void Update()
@@ -539,7 +543,7 @@ sealed public class UIController : MonoBehaviour
 
     public void Raycasting()
     {
-        if (GameMaster.colonyController == null || GameMaster.colonyController.hq == null) return;
+        if (colony == null || colony.hq == null) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
         if (FollowingCamera.touchscreen )
         {
@@ -1143,7 +1147,6 @@ sealed public class UIController : MonoBehaviour
             }
             colonyPanel.SetActive(true);
             colonyToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
-            ColonyController colony = GameMaster.colonyController;
             if (colony == null) return;
             showingGearsCf = colony.gears_coefficient;
             showingHappinessCf = colony.happiness_coefficient;
@@ -1246,7 +1249,7 @@ sealed public class UIController : MonoBehaviour
             storagePanelContent.gameObject.SetActive(true);
             storagePositionsPrepared = true;
         }
-        Storage st = GameMaster.colonyController.storage;        
+        Storage st = colony.storage;        
         if (st.totalVolume == 0)
         {
             //empty storage

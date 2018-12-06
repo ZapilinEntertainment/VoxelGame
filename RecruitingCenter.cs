@@ -96,9 +96,9 @@ public sealed class RecruitingCenter : WorkBuilding {
         {
             if (Crew.crewSlotsFree > 0)
             {
-                if (GameMaster.colonyController.energyCrystalsCount >= hireCost)
+                if (colony.energyCrystalsCount >= hireCost)
                 {
-                    GameMaster.colonyController.GetEnergyCrystals(hireCost);
+                    colony.GetEnergyCrystals(hireCost);
                     finding = true;
                     return true;
                 }

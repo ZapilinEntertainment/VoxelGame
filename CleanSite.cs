@@ -86,7 +86,7 @@ public class CleanSite : Worksite {
         //FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
 
         diggingMission = f_diggingMission;
-		if (workersCount < START_WORKERS_COUNT) GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+		if (workersCount < START_WORKERS_COUNT) GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
         {
@@ -106,7 +106,7 @@ public class CleanSite : Worksite {
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.colonyController.AddWorkers(workersCount);
+            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null)

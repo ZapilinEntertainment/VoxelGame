@@ -30,7 +30,7 @@ public class QuantumTransmitter : Building {
 	override public void SetActivationStatus(bool x) {
 		if ( x == true & tracingExpedition == null & isActive == false) return; // невозможно включить вхолостую
 		isActive = x;
-		GameMaster.colonyController.RecalculatePowerGrid();
+		GameMaster.realMaster.colonyController.RecalculatePowerGrid();
 		transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works",x);
 		ChangeRenderersView(x);
 	}

@@ -17,7 +17,13 @@ public class HeadQuarters : House {
 	
 	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
 		if (b == null) return;
-		PrepareHouse(b,pos);
+        colony = GameMaster.realMaster.colonyController;
+        if (colony == null)
+        {
+            colony = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
+            colony.Prepare();
+        }
+        PrepareHouse(b,pos);
 		if (level > 3 ) {
 			if (rooftop == null) {
                 if (b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + 1), b.pos.z, this))
@@ -45,9 +51,8 @@ public class HeadQuarters : House {
 				bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE/2f;
 				bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE );
 			}
-		}
-		colony = GameMaster.colonyController;
-		colony.SetHQ(this);
+		}		        
+        colony.SetHQ(this);
 	}
 
 
@@ -138,7 +143,7 @@ public class HeadQuarters : House {
         if ( !GameMaster.realMaster.weNeedNoResources )
         {
             ResourceContainer[] cost = GetUpgradeCost() ;
-                if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+                if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                 {
                     UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                     return;

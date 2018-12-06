@@ -53,7 +53,7 @@ public class Shuttle : MonoBehaviour {
 		cost =STANDART_COST;
         maintenance = cost / 10f;
 		fuelCapacity = STANDART_FUEL_CAPACITY;
-		fuelReserves = GameMaster.colonyController.storage.GetResources(ResourceType.Fuel, fuelCapacity);
+		fuelReserves = GameMaster.realMaster.colonyController.storage.GetResources(ResourceType.Fuel, fuelCapacity);
 		shuttlesList.Add(this);
 	}
 
@@ -61,14 +61,14 @@ public class Shuttle : MonoBehaviour {
 	public void RepairForCoins() {
         if (condition == 1) return;
         float repairCost = (1 - condition) * cost;
-        float availableSum = GameMaster.colonyController.GetEnergyCrystals(repairCost);
+        float availableSum = GameMaster.realMaster.colonyController.GetEnergyCrystals(repairCost);
         condition += availableSum / repairCost * (1 - condition);
         UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleRepaired) + ", " + Localization.GetWord(LocalizedWord.Price) + ": " + string.Format("{0:0.##}", availableSum));
     }
 	public void Refuel() {
 		float shortage = fuelCapacity - fuelReserves;
 		if (shortage > 0) {
-			fuelReserves += GameMaster.colonyController.storage.GetResources(ResourceType.Fuel, shortage);
+			fuelReserves += GameMaster.realMaster.colonyController.storage.GetResources(ResourceType.Fuel, shortage);
 		}
 	}
 
@@ -122,12 +122,12 @@ public class Shuttle : MonoBehaviour {
         float pc = GameMaster.realMaster.demolitionLossesPercent;
         if (pc != 1) {
             ResourceContainer[] compensation = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
-            Storage s = GameMaster.colonyController.storage;
+            Storage s = GameMaster.realMaster.colonyController.storage;
             for (int i = 0; i < compensation.Length; i++)
             {
                 s.AddResource(compensation[i].type, compensation[i].volume * GameMaster.realMaster.demolitionLossesPercent);
             }
-            GameMaster.colonyController.AddEnergyCrystals(cost * pc);
+            GameMaster.realMaster.colonyController.AddEnergyCrystals(cost * pc);
          }
         if (status == ShipStatus.InPort)
         {

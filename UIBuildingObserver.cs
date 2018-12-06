@@ -191,7 +191,7 @@ public class UIBuildingObserver : UIObserver {
             else
             {
                 if (resourceCostIndicator[0].activeSelf) {
-                    float[] storageVal = GameMaster.colonyController.storage.standartResources;
+                    float[] storageVal = GameMaster.realMaster.colonyController.storage.standartResources;
                     for (int i = 0; i < resourceCostIndicator.Length; i++) {
                         GameObject g = resourceCostIndicator[i];
                         if (g.activeSelf) {
@@ -224,7 +224,7 @@ public class UIBuildingObserver : UIObserver {
         ResourceContainer[] cost = observingBuilding.GetUpgradeCost();
         if (cost != null && cost.Length != 0)
         {
-            float[] storageVolume = GameMaster.colonyController.storage.standartResources;
+            float[] storageVolume = GameMaster.realMaster.colonyController.storage.standartResources;
             for (int i = 0; i < resourceCostIndicator.Length; i++)
             {
                 if (i < cost.Length)
@@ -320,7 +320,7 @@ public class UIBuildingObserver : UIObserver {
     }
     public void Charge()
     {
-        ColonyController colony = GameMaster.colonyController;
+        ColonyController colony = GameMaster.realMaster.colonyController;
         if (colony.energyCrystalsCount >= 1)
         {
             if (colony.energyStored != colony.totalEnergyCapacity)

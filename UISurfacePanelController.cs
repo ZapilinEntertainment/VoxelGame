@@ -35,6 +35,7 @@ public sealed class UISurfacePanelController : UIObserver {
     public Text nameField, description, gridTextField, energyTextField, housingTextField; // fiti
     public RawImage[] resourcesCostImage; // fiti
     private HeadQuarters hq;
+    private ColonyController colony;
 
     public static UISurfacePanelController current { get; private set; }
 
@@ -69,7 +70,8 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-			hq = GameMaster.colonyController.hq;
+            colony = GameMaster.realMaster.colonyController;
+			hq = colony.hq;
 			observingSurface = sb;
 			isObserving = true;
 			ChangeMode (SurfacePanelMode.SelectAction);
@@ -91,7 +93,7 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             case SurfacePanelMode.SelectAction:
                 {
-                    hq = GameMaster.colonyController.hq;
+                    hq = colony.hq;
                     CheckGatherButton();
 
                     CleanSite cs = observingSurface.worksite as CleanSite;
@@ -119,7 +121,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         switch (buildingCreateMode)
                         {
                             case BuildingCreateInfoMode.Acceptable:
-                                Storage storage = GameMaster.colonyController.storage;
+                                Storage storage = colony.storage;
                                 if (lastStorageStatus != storage.operationsDone)
                                 {
                                     float[] onStorage = storage.standartResources;
@@ -224,7 +226,7 @@ public sealed class UISurfacePanelController : UIObserver {
             case SurfacePanelMode.Build:
                 {
                     int i = 0;
-                    hq = GameMaster.colonyController.hq;
+                    hq = colony.hq;
                     buildingsLevelToggles[0].transform.parent.gameObject.SetActive(true);
                     while (i < buildingsLevelToggles.Length)
                     {
@@ -256,7 +258,6 @@ public sealed class UISurfacePanelController : UIObserver {
                 SetActionPanelStatus(true);                
                 mode = SurfacePanelMode.SelectAction;
                 CheckGatherButton();
-                ColonyController colony = GameMaster.colonyController;
                 if (colony.gears_coefficient >= 2)
                 {
                     changeMaterialButton.gameObject.SetActive(true);
@@ -362,7 +363,7 @@ public sealed class UISurfacePanelController : UIObserver {
                             r.GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(id);
                             Text tx = r.GetChild(0).GetComponent<Text>();
                             tx.text= Localization.GetResourceName(id) + " : " + rc[i].volume.ToString();
-                            float[] storageResource = GameMaster.colonyController.storage.standartResources;
+                            float[] storageResource = colony.storage.standartResources;
                             tx.color = (rc[i].volume > storageResource[rc[i].type.ID]) ? Color.red : Color.white;
                         }
                         else
@@ -442,7 +443,7 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             case CostPanelMode.SurfaceMaterialChanging:
                     ResourceType rt = ResourceType.GetResourceTypeById(costPanel_selectedButton.y);
-                    if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION) }))
+                    if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION) }))
                     {
                         observingSurface.ReplaceMaterial(rt.ID);
                         costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
@@ -451,7 +452,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 break;
                 case CostPanelMode.ColumnBuilding:
                 {
-                    if (GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(Structure.COLUMN_ID)))
+                    if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(Structure.COLUMN_ID)))
                     {
                        // float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
                        // if (supportPoints <= 1)
@@ -537,11 +538,11 @@ public sealed class UISurfacePanelController : UIObserver {
     }
     bool IsBlockCreatingAvailable()
     {
-        return ((hq.level > GameConstants.HQ_LEVEL_TO_CREATE_BLOCK) & (GameMaster.colonyController.gears_coefficient == GameConstants.GEARS_LEVEL_TO_CREATE_BLOCK));
+        return ((hq.level > GameConstants.HQ_LEVEL_TO_CREATE_BLOCK) & (colony.gears_coefficient == GameConstants.GEARS_LEVEL_TO_CREATE_BLOCK));
     }
     bool IsChangeSurfaceMaterialAvalable()
     {
-        return (GameMaster.colonyController.gears_coefficient >= GameConstants.GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL);
+        return (colony.gears_coefficient >= GameConstants.GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL);
     }
     #endregion
 
@@ -685,7 +686,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 // all conditions met
                 ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
                 //resource cost drawing
-                float[] storageResources = GameMaster.colonyController.storage.standartResources;
+                float[] storageResources = colony.storage.standartResources;
                 for (int i = 0; i < resourcesCostImage.Length; i++)
                 {
                     if (i < cost.Length)
@@ -702,7 +703,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         resourcesCostImage[i].gameObject.SetActive(false);
                     }
                 }
-                lastStorageStatus = GameMaster.colonyController.storage.operationsDone;
+                lastStorageStatus = colony.storage.operationsDone;
                 buildingCreateMode = BuildingCreateInfoMode.Acceptable;
                 innerBuildButton.gameObject.SetActive(true);
             }
@@ -736,9 +737,9 @@ public sealed class UISurfacePanelController : UIObserver {
     public void CreateSelectedBuilding(byte x, byte z)
     {
         ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
-        if (GameMaster.colonyController.storage.CheckSpendPossibility(cost))
+        if (colony.storage.CheckSpendPossibility(cost))
         {
-            GameMaster.colonyController.storage.GetResources(cost);
+            colony.storage.GetResources(cost);
             Structure s = Structure.GetStructureByID(chosenStructure.id);
             s.SetBasement(observingSurface, new PixelPosByte(x, z));
             PoolMaster.current.BuildSplash(s.transform.position);

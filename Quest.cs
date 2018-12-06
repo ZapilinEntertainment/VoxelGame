@@ -121,7 +121,7 @@ public class Quest {
     
     public void CheckQuestConditions()
     {
-        ColonyController colony = GameMaster.colonyController;
+        ColonyController colony = GameMaster.realMaster.colonyController;
         switch (type)
         {
             case QuestType.Progress:
@@ -417,7 +417,7 @@ public class Quest {
                 if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
                 break;
         }
-        GameMaster.colonyController.AddEnergyCrystals(reward);
+        GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
     }
 
     public void Stop()
@@ -473,7 +473,7 @@ public class Quest {
 
         if (complementQuests.Count > 0)
         {
-            ColonyController colony = GameMaster.colonyController;
+            ColonyController colony = GameMaster.realMaster.colonyController;
             int lvl = colony.hq.level;
             List<ProgressQuestID> acceptableQuest = new List<ProgressQuestID>();
             for (int i = 0; i< complementQuests.Count;i++ )

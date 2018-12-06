@@ -85,7 +85,7 @@ public sealed class UIHangarObserver : UIObserver
                         t.GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(rid);
                         Text tx = t.GetChild(0).GetComponent<Text>();
                         tx.text = Localization.GetResourceName(rid) + " : " + rc[i].volume.ToString();
-                        float[] storageResources = GameMaster.colonyController.storage.standartResources;
+                        float[] storageResources = GameMaster.realMaster.colonyController.storage.standartResources;
                         showingResourcesCount[i] = new Vector2(rid, rc[i].volume);
                         if (storageResources[rid] < rc[i].volume) tx.color = Color.red; else tx.color = Color.white;
                         t.gameObject.SetActive(true);
@@ -140,9 +140,9 @@ public sealed class UIHangarObserver : UIObserver
         }
         else
         {
-            if (GameMaster.colonyController.energyCrystalsCount >= Shuttle.STANDART_COST)
+            if (GameMaster.realMaster.colonyController.energyCrystalsCount >= Shuttle.STANDART_COST)
             {
-                ColonyController colony = GameMaster.colonyController;
+                ColonyController colony = GameMaster.realMaster.colonyController;
                 colony.GetEnergyCrystals(Shuttle.STANDART_COST);
                 if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID)))
                 {

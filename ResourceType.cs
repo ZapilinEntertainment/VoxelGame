@@ -22,6 +22,7 @@ public class ResourceType {
 	//- ID
 	// - localization - name & description
 	// - texture rect
+    // - score calculator
 
 	public ResourceType( int f_id, float f_mass, float f_toughness) {
 		ID = f_id;

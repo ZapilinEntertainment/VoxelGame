@@ -31,7 +31,6 @@ public sealed class Workshop : WorkBuilding {
         }
         if (current != null & current != this) current.Annihilate(false);
         current = this;
-        colony = GameMaster.colonyController;
 	}
 
     override public void LabourUpdate()

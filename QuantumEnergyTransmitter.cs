@@ -22,7 +22,7 @@ public sealed class QuantumEnergyTransmitter : Building {
             current.Annihilate(false);
         }
         current = this;
-        colony = GameMaster.colonyController;
+        colony = GameMaster.realMaster.colonyController;
         colony.accumulateEnergy = false;
         connectedToPowerGrid = true;
     }

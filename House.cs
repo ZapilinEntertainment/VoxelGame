@@ -9,7 +9,7 @@ public class House : Building {
 	}
 	protected void PrepareHouse(SurfaceBlock b, PixelPosByte pos) {
 		SetBuildingData(b,pos);
-		GameMaster.colonyController.AddHousing(this);
+        GameMaster.realMaster.colonyController.AddHousing(this);
         switch (id)
         {
             case LANDED_ZEPPELIN_ID: housing = 10;break;
@@ -21,13 +21,15 @@ public class House : Building {
             case HOUSE_2_ID: housing = 50;break;
             case HOUSE_3_ID: housing = 100;break;
             case HOUSE_5_ID: housing = 800;break;
+            case HOTEL_BLOCK_6_ID: housing = 600; break; // temporary
+            case HOUSING_MAST_6_ID: housing = 2200; break;
         }
 	}
 
 	override public void SetActivationStatus(bool x) {
 		if (isActive == x) return;
 		isActive = x;
-		GameMaster.colonyController.RecalculateHousing();
+        GameMaster.realMaster.colonyController.RecalculateHousing();
 		ChangeRenderersView(x);
 	}
     override public void Annihilate(bool forced)
@@ -35,7 +37,7 @@ public class House : Building {
         if (destroyed) return;
         else destroyed = true;
         PrepareBuildingForDestruction(forced);
-        GameMaster.colonyController.DeleteHousing(this);
+        GameMaster.realMaster.colonyController.DeleteHousing(this);
         Destroy(gameObject);
     }
 }

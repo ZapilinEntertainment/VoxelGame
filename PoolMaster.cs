@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum GreenMaterial { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20}
-public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS}
-public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow}
+public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS, WhiteMetal}
+public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow, WhiteWall, Basis}
 
 public sealed class PoolMaster : MonoBehaviour {
     public static PoolMaster current;	
@@ -91,11 +91,15 @@ public sealed class PoolMaster : MonoBehaviour {
         QuestUI.LoadTextures();
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
+
+        GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
 	}
 
-	void Update() {
-        if (GameMaster.editMode) return;
-		int docksCount = GameMaster.colonyController.docks.Count;
+	void LabourUpdate() {
+        if (GameMaster.editMode ) return;
+        ColonyController colony = GameMaster.realMaster.colonyController;
+        if (colony == null) return;
+		int docksCount = colony.docks.Count;
 		if (shipsClearTimer > 0) {
 			shipsClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (shipsClearTimer <= 0) {
@@ -398,7 +402,10 @@ public sealed class PoolMaster : MonoBehaviour {
                 case MetalMaterial.MetalS:
                     borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
                     break;
-            }
+                case MetalMaterial.WhiteMetal:
+                    borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                    break;
+        }
             bool isQuad = (quad.uv.Length == 4);
             Vector2[] uvEdited = quad.uv;
             if (isQuad)
@@ -501,6 +508,12 @@ public sealed class PoolMaster : MonoBehaviour {
                 case BasicMaterial.Snow:
                     borders = new Vector2[] { new Vector2(piece, piece), new Vector2(piece, 2 * piece), new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, piece) };
                     break;
+                case BasicMaterial.WhiteWall:
+                    borders = new Vector2[] { new Vector2(2 * piece, piece), new Vector2(2 *piece, 2 * piece), new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, piece) };
+                    break;
+                case BasicMaterial.Basis:
+                    borders = new Vector2[] { new Vector2(3 * piece, piece), new Vector2(3 *piece, 2 * piece), new Vector2(4 * piece, 2 * piece), new Vector2(4 * piece, piece) };
+                    break;
             }
             bool isQuad = (quad.uv.Length == 4);
             Vector2[] uvEdited = quad.uv;
@@ -557,6 +570,15 @@ public sealed class PoolMaster : MonoBehaviour {
                 }
                 return basic_illuminated[pos];
             }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (GameMaster.sceneClearing) return;
+        else
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
         }
     }
 }

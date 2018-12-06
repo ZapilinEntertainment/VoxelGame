@@ -181,7 +181,7 @@ public sealed class Crew {
 	public void AddMember() {}
 
 	public void Dismiss() {
-		GameMaster.colonyController.AddWorkers(count);
+        GameMaster.realMaster.colonyController.AddWorkers(count);
         count = 0;
         if (status == CrewStatus.Free)
         {

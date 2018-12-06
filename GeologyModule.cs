@@ -137,7 +137,8 @@ public class GeologyModule : MonoBehaviour {
 
 	public void CalculateOutput(float production, CubeBlock workObject, Storage storage) {
         if (workObject == null) return;
-		if (workObject.naturalFossils > 0) {
+        ColonyController colony = GameMaster.realMaster.colonyController;
+        if (workObject.naturalFossils > 0) {            
 			float v = Random.value - GameMaster.LUCK_COEFFICIENT; 
 			float m = 0;
 			switch (workObject.material_id) {
@@ -175,34 +176,34 @@ public class GeologyModule : MonoBehaviour {
 					storage.AddResource(ResourceType.mineral_L, m); production -= m;
 				}
 				if (production > 0) {
-					GameMaster.colonyController.storage.AddResource(ResourceType.Stone, production); 
+					colony.storage.AddResource(ResourceType.Stone, production); 
 				}
 				break;
 			case ResourceType.DIRT_ID:
 				if (metalK_abundance >= v) {
 					m= metalK_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					GameMaster.colonyController.storage.AddResource(ResourceType.metal_K_ore, m); production -= m;
+                        colony.storage.AddResource(ResourceType.metal_K_ore, m); production -= m;
 				}
 				if (metalP_abundance >= v) {
 					m= metalP_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					GameMaster.colonyController.storage.AddResource(ResourceType.metal_P, m); production -= m;
+                        colony.storage.AddResource(ResourceType.metal_P, m); production -= m;
 				}
 				if (mineralL_abundance >= v) {
 					m= mineralL_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
-					GameMaster.colonyController.storage.AddResource(ResourceType.mineral_L, m); production -= m;
+                        colony.storage.AddResource(ResourceType.mineral_L, m); production -= m;
 				}
 				if (production > 0) {
-					GameMaster.colonyController.storage.AddResource(ResourceType.Dirt, production); 
+                        colony.storage.AddResource(ResourceType.Dirt, production); 
 				}
 				break;
 			default:
-				GameMaster.colonyController.storage.AddResource(ResourceType.GetResourceTypeById(workObject.material_id), production); 
+                    colony.storage.AddResource(ResourceType.GetResourceTypeById(workObject.material_id), production); 
 				break;
 			}
 			workObject.naturalFossils -= production;
 		}
 		else { // no fossils
-			GameMaster.colonyController.storage.AddResource(ResourceType.GetResourceTypeById(workObject.material_id), production); 
+            colony.storage.AddResource(ResourceType.GetResourceTypeById(workObject.material_id), production); 
 		}
 	}
 }

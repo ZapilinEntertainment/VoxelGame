@@ -221,6 +221,7 @@ public abstract class WorkBuilding : Building {
                 }
                 break;
         }
+        colony = GameMaster.realMaster.colonyController;
     }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
@@ -237,7 +238,6 @@ public abstract class WorkBuilding : Building {
     protected void SetWorkbuildingData(SurfaceBlock sb, PixelPosByte pos)
     {
         SetBuildingData(sb, pos);
-        colony = GameMaster.colonyController;
     }
 
     virtual public void LabourUpdate()

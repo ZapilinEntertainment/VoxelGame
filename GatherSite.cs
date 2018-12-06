@@ -86,7 +86,7 @@ public class GatherSite : Worksite
         sign.worksite = this;
         sign.transform.position = workObject.transform.position + Vector3.down / 2f * Block.QUAD_SIZE;
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
-        GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+        GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
         {
@@ -102,7 +102,7 @@ public class GatherSite : Worksite
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.colonyController.AddWorkers(workersCount);
+            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null) Destroy(sign.gameObject);

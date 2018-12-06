@@ -12,7 +12,7 @@ public class FoodFactory : WorkBuilding {
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
-		storage = GameMaster.colonyController.storage;
+		storage = colony.storage;
 	}
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)

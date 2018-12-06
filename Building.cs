@@ -25,6 +25,7 @@ public class Building : Structure
 
     public static List<Building> GetApplicableBuildingsList(byte i_level)
     {
+        //относительно ужасное решение
         List<Building> blist = new List<Building>();
         switch (i_level)
         {
@@ -75,6 +76,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(EXPEDITION_CORPUS_4_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
                 blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
+                blist.Add(GetStructureByID(DOCK_ADDON_1) as Building);
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_5_ID) as Building);
@@ -84,8 +86,15 @@ public class Building : Structure
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
                 blist.Add(GetStructureByID(FOOD_FACTORY_5_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);
+                blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
+                blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
                 break;
             case 6:
+                blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
+                blist.Add(GetStructureByID(COMMAND_CENTER_6_ID) as Building);
+                blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
+                blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
+                blist.Add(GetStructureByID(DOCK_ADDON_2) as Building);
                 blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
                 break;
         }
@@ -217,7 +226,7 @@ public class Building : Structure
                 {
                     upgradedIndex = HOUSE_3_ID;
                     canBePowerSwitched = false;
-                    energySurplus = -10;
+                    energySurplus = -50;
                     energyCapacity = 100;
                     
                     level = 2;
@@ -227,7 +236,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = -20;
+                    energySurplus = -80;
                     energyCapacity = 200;
                     
                     level = 3;
@@ -237,7 +246,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = -200;
+                    energySurplus = -500;
                     energyCapacity = 1500;
                     
                     level = 5;
@@ -635,9 +644,86 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
                     energySurplus = -200;
-                    energyCapacity = 0;
-                    
+                    energyCapacity = 0;                    
                     level = 4;
+                }
+                break;
+            case REACTOR_BLOCK_5_ID:
+                {
+                    upgradedIndex = -1;
+                    canBePowerSwitched = false;
+                    energySurplus = 4096;
+                    energyCapacity = 2000;
+                    level = 5;
+                }
+                break;
+            case FOUNDATION_BLOCK_5_ID:
+                {
+                    upgradedIndex = -1;
+                    canBePowerSwitched = false;
+                    energySurplus = 100;
+                    energyCapacity = 100;
+                    level = 5;
+                }
+                break;
+            case CONNECT_TOWER_6_ID:
+                {
+                    specialBuildingConditions = true;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = -640;
+                    energyCapacity = 1920;
+                    level = 6;
+                }
+                break;
+            case COMMAND_CENTER_6_ID:
+                {
+                    specialBuildingConditions = true;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = -400;
+                    energyCapacity = 2400;
+                    level = 6;
+                }
+                break;
+            case HOTEL_BLOCK_6_ID:
+                {
+                    specialBuildingConditions = true;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = -700;
+                    energyCapacity = 3000;
+                    level = 6;
+                }
+                break;
+            case HOUSING_MAST_6_ID:
+                {
+                    specialBuildingConditions = true;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = false;
+                    energySurplus = -1200;
+                    energyCapacity = 10000;
+                    level = 6;
+                }
+                break;
+            case DOCK_ADDON_1:
+                {
+                    specialBuildingConditions = false;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = false;
+                    energySurplus = 0;
+                    energyCapacity = 1000;
+                    level = 4;
+                }
+                break;
+            case DOCK_ADDON_2:
+                {
+                    specialBuildingConditions = false;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = false;
+                    energySurplus = 0;
+                    energyCapacity = 1000;
+                    level = 6;
                 }
                 break;
         }
@@ -655,7 +741,7 @@ public class Building : Structure
         isActive = true;
         if (energySurplus != 0 || energyCapacity > 0)
         {
-            GameMaster.colonyController.AddToPowerGrid(this);
+            GameMaster.realMaster.colonyController.AddToPowerGrid(this);
             connectedToPowerGrid = true;
         }
     }
@@ -664,7 +750,7 @@ public class Building : Structure
         isActive = x;
         if (connectedToPowerGrid)
         {
-            GameMaster.colonyController.RecalculatePowerGrid();
+            GameMaster.realMaster.colonyController.RecalculatePowerGrid();
         }
         ChangeRenderersView(x);
     }
@@ -806,7 +892,7 @@ public class Building : Structure
 
     public virtual bool IsLevelUpPossible(ref string refusalReason)
     {
-        if (level < GameMaster.colonyController.hq.level) return true;
+        if (level < GameMaster.realMaster.colonyController.hq.level) return true;
         else
         {
             refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
@@ -819,7 +905,7 @@ public class Building : Structure
         if (!GameMaster.realMaster.weNeedNoResources)
         {
             ResourceContainer[] cost = GetUpgradeCost();
-            if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+            if (!GameMaster.realMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
                 UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                 return;
@@ -850,7 +936,7 @@ public class Building : Structure
 
     protected bool PrepareBuildingForDestruction(bool forced)
     {
-        if (connectedToPowerGrid) GameMaster.colonyController.DisconnectFromPowerGrid(this);
+        if (connectedToPowerGrid) GameMaster.realMaster.colonyController.DisconnectFromPowerGrid(this);
         return PrepareStructureForDestruction(forced);
     }
     override public void Annihilate(bool forced)

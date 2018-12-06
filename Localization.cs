@@ -88,6 +88,14 @@ public static class Localization {
             case Structure.RECRUITING_CENTER_4_ID: return "Recruiting Center";
             case Structure.EXPEDITION_CORPUS_4_ID: return "Expedition Corpus";
             case Structure.QUANTUM_TRANSMITTER_4_ID: return "Long-range transmitter";
+            case Structure.REACTOR_BLOCK_5_ID: return "Reactor block";
+            case Structure.FOUNDATION_BLOCK_5_ID: return "Foundation block";
+            case Structure.CONNECT_TOWER_6_ID: return "Connect Tower";
+            case Structure.COMMAND_CENTER_6_ID: return "Command center";
+            case Structure.HOTEL_BLOCK_6_ID: return "Hotel block";
+            case Structure.HOUSING_MAST_6_ID: return "Housing mast";
+            case Structure.DOCK_ADDON_1: return "Dock addon 1";
+            case Structure.DOCK_ADDON_2: return "Dock addon 2";
         }
     }
 	public static string GetStructureDescription(int id) {

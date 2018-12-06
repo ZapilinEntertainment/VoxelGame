@@ -95,7 +95,7 @@ override protected void LabourResult() {
 		int x = (int) workflow;
 		float production = x;
 		production = workObject.Dig(x, false);
-		GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
+		GameMaster.geologyModule.CalculateOutput(production, workObject, colony.storage);
 		if ( workObject!=null && workObject.volume != 0) {
 		    float percent = workObject.volume / (float) CubeBlock.MAX_VOLUME;
 			if (showOnGUI) workbuildingObserver.SetActionLabel( string.Format("{0:0.##}", (1 - percent) * 100) + "% " + Localization.GetActionLabel(LocalizationActionLabels.Extracted)); 
@@ -211,7 +211,7 @@ override protected void LabourResult() {
                 ResourceContainer[] cost = GetUpgradeCost();
                 if (cost != null && cost.Length != 0)
                 {
-                    if (!GameMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+                    if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                     {
                         UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
                         return;

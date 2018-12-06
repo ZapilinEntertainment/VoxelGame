@@ -19,7 +19,7 @@ public class Hospital : WorkBuilding {
 		if (b == null) return;
         SetWorkbuildingData(b, pos);
         coverage = 0;
-		GameMaster.colonyController.AddHospital(this);
+		colony.AddHospital(this);
 	}
 
     override public void FreeWorkers(int x)

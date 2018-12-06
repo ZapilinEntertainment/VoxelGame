@@ -535,7 +535,7 @@ public class OakTree : Plant
     override public void Harvest()
     {
         if (destroyed) return;
-        GameMaster.colonyController.storage.AddResource(ResourceType.Lumber, CountLumber());
+        GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Lumber, CountLumber());
         if (stage > TRANSIT_STAGE & modelHolder != null)
         {
             modelHolder.transform.parent = null;

@@ -79,6 +79,7 @@ public sealed class ColonyController : MonoBehaviour {
 
 	public void Prepare() { // call from game master
 		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
+        GameMaster.realMaster.SetColonyController(this);
         UIController.current.Prepare();
 	}
 

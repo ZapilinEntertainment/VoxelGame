@@ -112,11 +112,11 @@ public static class ResourcesCost {
 			};
 			break;
 		case Structure.HOUSE_5_ID:
-			cost = new ResourceContainer[]{
-				new ResourceContainer(ResourceType.Plastics, 420), new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_E, 12),
-				new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_M, 10)
-			} ;
-			break;
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Plastics, 420), new ResourceContainer(ResourceType.metal_K, 280), new ResourceContainer(ResourceType.metal_E, 40),
+                new ResourceContainer(ResourceType.Concrete, 2500)
+            };
+                break;
 		case Structure.ENERGY_CAPACITOR_1_ID: 
 			cost = new ResourceContainer[] {
 				new ResourceContainer(ResourceType.metal_K, 1), new ResourceContainer(ResourceType.metal_E, 2), new ResourceContainer(ResourceType.Plastics, 8)
@@ -295,11 +295,62 @@ public static class ResourcesCost {
 		case Structure.QUANTUM_TRANSMITTER_4_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_S, 70),
-				new ResourceContainer(ResourceType.metal_N, 20)
-			};
+				new ResourceContainer(ResourceType.metal_N, 10), new ResourceContainer(ResourceType.metal_E, 40)
+            };
 			break;
-
-		}
+            case Structure.REACTOR_BLOCK_5_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_M, 120), new ResourceContainer(ResourceType.metal_N, 60),
+                new ResourceContainer(ResourceType.Concrete, 1200), new ResourceContainer(ResourceType.Plastics, 250)
+            };
+           break;
+            case Structure.FOUNDATION_BLOCK_5_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.metal_K, 300), new ResourceContainer(ResourceType.metal_M, 100), new ResourceContainer(ResourceType.metal_E, 50),
+                new ResourceContainer(ResourceType.Concrete, 2000),
+            };
+                break;
+            case Structure.CONNECT_TOWER_6_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.metal_S, 300),
+                new ResourceContainer(ResourceType.metal_N, 20), new ResourceContainer(ResourceType.metal_E, 100)
+            };
+                break;
+            case Structure.COMMAND_CENTER_6_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
+                new ResourceContainer(ResourceType.metal_E, 50),
+            };
+                break;
+            case Structure.HOTEL_BLOCK_6_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Plastics, 600), new ResourceContainer(ResourceType.metal_K, 325), new ResourceContainer(ResourceType.metal_E, 80),
+                new ResourceContainer(ResourceType.Concrete, 1200)
+            };
+            break;
+            case Structure.HOUSING_MAST_6_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Plastics, 2100), new ResourceContainer(ResourceType.metal_K, 850), new ResourceContainer(ResourceType.metal_E, 180),
+                new ResourceContainer(ResourceType.Concrete, 3200)
+            };
+             break;
+            case Structure.DOCK_ADDON_1:
+                {
+                    cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.metal_K, 60), new ResourceContainer(ResourceType.metal_M, 20), new ResourceContainer(ResourceType.metal_N, 10),
+                new ResourceContainer(ResourceType.Concrete, 400)
+            };
+                }
+                break;
+            case Structure.DOCK_ADDON_2:
+                {
+                    cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.metal_K, 120), new ResourceContainer(ResourceType.metal_M, 40), new ResourceContainer(ResourceType.metal_N, 20),
+                new ResourceContainer(ResourceType.Concrete, 400)
+                };
+                }
+            break;
+        }
 		return cost;
 	}
 }

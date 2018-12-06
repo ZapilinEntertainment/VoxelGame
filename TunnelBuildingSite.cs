@@ -29,7 +29,7 @@ public class TunnelBuildingSite : Worksite {
                         StopWork();
                         return;
                     }
-                    GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.colonyController.storage);
+                    GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.realMaster.colonyController.storage);
                     workflow -= production;
                     actionLabel = Localization.GetActionLabel(LocalizationActionLabels.DigInProgress) + " (" + ((int)(((float)workObject.volume / (float)CubeBlock.MAX_VOLUME) * 100)).ToString() + "%)";
                 }
@@ -44,7 +44,7 @@ public class TunnelBuildingSite : Worksite {
 	public void Set(CubeBlock block) {
 		workObject = block;
         workObject.SetWorksite(this);
-		GameMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+		GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate) {
             GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
@@ -88,7 +88,7 @@ public class TunnelBuildingSite : Worksite {
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.colonyController.AddWorkers(workersCount);
+            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null) Destroy(sign.gameObject);

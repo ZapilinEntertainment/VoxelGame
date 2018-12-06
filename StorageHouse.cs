@@ -17,7 +17,7 @@ public sealed class StorageHouse : Building {
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
-		GameMaster.colonyController.storage.AddWarehouse(this);
+        GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
 	}
 
 	override public void SetActivationStatus(bool x) {
@@ -31,7 +31,7 @@ public sealed class StorageHouse : Building {
         if (forced) { UnsetBasement(); }
         if (PrepareBuildingForDestruction(forced))
         {
-            GameMaster.colonyController.storage.RemoveWarehouse(this);
+            GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
         }
         Destroy(gameObject);
     }

@@ -297,8 +297,8 @@ public sealed class Dock : WorkBuilding {
                 {
                     if (immigrationPlan > 0)
                     {
-                        if (s.volume > immigrationPlan) { GameMaster.colonyController.AddCitizens(immigrationPlan); immigrationPlan = 0; }
-                        else { GameMaster.colonyController.AddCitizens(s.volume); immigrationPlan -= s.volume; }
+                        if (s.volume > immigrationPlan) { colony.AddCitizens(immigrationPlan); immigrationPlan = 0; }
+                        else { colony.AddCitizens(s.volume); immigrationPlan -= s.volume; }
                     }
                     if (isForSale[ResourceType.FOOD_ID] != null)
                     {
@@ -552,7 +552,7 @@ public sealed class Dock : WorkBuilding {
         if (showOnGUI & !correctLocation) PoolMaster.current.DisableZone();
         if (forced) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(forced);
-        GameMaster.colonyController.RemoveDock(this);
+        colony.RemoveDock(this);
         if (maintainingShip & loadingShip != null) loadingShip.Undock();        
         Destroy(gameObject);
     }

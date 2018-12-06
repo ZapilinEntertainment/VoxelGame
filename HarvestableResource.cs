@@ -116,7 +116,7 @@ public class HarvestableResource : Structure
 
     public void Harvest()
     {
-        resourceCount = GameMaster.colonyController.storage.AddResource(mainResource, resourceCount);
+        resourceCount = GameMaster.realMaster.colonyController.storage.AddResource(mainResource, resourceCount);
         if (resourceCount <= 0) Annihilate(false); // может быть переполнение и не все соберется
     }
 

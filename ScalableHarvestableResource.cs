@@ -62,7 +62,7 @@ public class ScalableHarvestableResource : Structure {
 		return volume - addingVolume;
 	}
 	public void Harvest() {
-		resourceCount -= GameMaster.colonyController.storage.AddResource(mainResource,resourceCount);
+		resourceCount -= GameMaster.realMaster.colonyController.storage.AddResource(mainResource,resourceCount);
 		if (resourceCount == 0) Annihilate(false);
 	}
 
@@ -96,7 +96,7 @@ public class ScalableHarvestableResource : Structure {
         if (destroyed) return;
         else destroyed = true;
         if (forced) basement = null;
-		else GameMaster.colonyController.storage.AddResource(mainResource, resourceCount);
+		else GameMaster.realMaster.colonyController.storage.AddResource(mainResource, resourceCount);
         Destroy(gameObject);
     }
 
