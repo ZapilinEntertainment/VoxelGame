@@ -31,7 +31,7 @@ public class Recipe {
 
 		List<Recipe> smelteryRecipesList = new List<Recipe>();
 		smelteryRecipesList.Add(NoRecipe);
-		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 4, 2,  10); smelteryRecipesList.Add(StoneToConcrete);
+		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 3, 2,  8); smelteryRecipesList.Add(StoneToConcrete);
 		LumberToPlastics = new Recipe(ResourceType.Lumber, ResourceType.Plastics, LUMBER_TO_PLASTICS_ID, 3, 1,  15);  smelteryRecipesList.Add(LumberToPlastics);
 		MetalK_smelting = new Recipe(ResourceType.metal_K_ore, ResourceType.metal_K, METAL_K_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalK_smelting);
 		MetalE_smelting = new Recipe(ResourceType.metal_E_ore, ResourceType.metal_E, METAL_E_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalE_smelting);

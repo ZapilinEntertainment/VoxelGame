@@ -1,4 +1,6 @@
-﻿public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
+﻿using UnityEngine;
+
+public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
 
 [System.Serializable]
 public class FactorySerializer {
@@ -11,6 +13,7 @@ public class FactorySerializer {
 public enum FactoryProductionMode : byte { NoLimit, Limit, Iterations} // if changing, change UIFactoryObserver prefab also
 
 public class Factory : WorkBuilding {
+    public bool workPaused { get; protected set; }
     public int productionModeValue { get; protected set; } // limit or iterations
     public float inputResourcesBuffer { get; protected set; }
     public float outputResourcesBuffer { get; protected set; }
@@ -19,10 +22,9 @@ public class Factory : WorkBuilding {
     public Recipe recipe { get; private set; }
 
     public const float BUFFER_LIMIT = 10;
-      
-    protected bool gui_showRecipesList = false;    
 
     public static UIFactoryObserver factoryObserver;
+
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -56,7 +58,7 @@ public class Factory : WorkBuilding {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        SetActivationStatus(false);
+        SetActivationStatus(false, true);
 	}
 
 	override public void LabourUpdate() {
@@ -69,17 +71,29 @@ public class Factory : WorkBuilding {
         {
             if (isActive)
             {
-                if (energySupplied)
+                if (isEnergySupplied)
                 {
-                    workflow += workSpeed;
-                    if (workflow >= workflowToProcess) LabourResult();
-                }
-            }
-            else
-            {
-                if (productionMode == FactoryProductionMode.Limit)
-                {
-                    if (storage.standartResources[recipe.output.ID] < productionModeValue) SetActivationStatus(true);
+                    if (productionMode == FactoryProductionMode.Limit)
+                    {
+                        if (!workPaused)
+                        {
+                            workflow += workSpeed;
+                            if (workflow >= workflowToProcess) LabourResult();
+                        }
+                        else
+                        {
+                            if (storage.standartResources[recipe.output.ID] < productionModeValue) {
+                                workPaused = false;
+                                workflow += workSpeed;
+                                if (workflow >= workflowToProcess) LabourResult();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        workflow += workSpeed;
+                        if (workflow >= workflowToProcess) LabourResult();
+                    }
                 }
             }
         }
@@ -92,7 +106,7 @@ public class Factory : WorkBuilding {
         if (storage.standartResources[recipe.input.ID] + inputResourcesBuffer >= recipe.inputValue)
         {
             inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
-            iterations = (int)(inputResourcesBuffer / recipe.inputValue);
+            iterations =  Mathf.FloorToInt( inputResourcesBuffer / recipe.inputValue);
             switch (productionMode)
             {
                 case FactoryProductionMode.Limit:
@@ -120,14 +134,14 @@ public class Factory : WorkBuilding {
         switch (productionMode)
         {
             case FactoryProductionMode.Limit:
-                if (storage.standartResources[recipe.output.ID] >= productionModeValue) SetActivationStatus(false);
+                workPaused = (storage.standartResources[recipe.output.ID] >= productionModeValue ) ;
                 break;
             case FactoryProductionMode.Iterations:
                 productionModeValue -= iterations;
                 if (productionModeValue <= 0)
                 {
                     productionModeValue = 0;
-                    SetActivationStatus(false);
+                    SetActivationStatus(false, true);
                 }
                 break;
         }
@@ -151,6 +165,7 @@ public class Factory : WorkBuilding {
 		recipe = r;
         productionModeValue = 0;
 		workflowToProcess = r.workflowToResult;
+        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[r.output.ID] >= productionModeValue;
 	}
     public void SetRecipe(int x)
     {
@@ -166,7 +181,7 @@ public class Factory : WorkBuilding {
         {
             productionMode = m;
             productionModeValue = 0;
-
+            workPaused = false;
         }
     }
     public void SetProductionValue(int x)

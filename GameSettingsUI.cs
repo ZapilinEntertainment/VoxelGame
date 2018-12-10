@@ -49,7 +49,7 @@ public sealed class GameSettingsUI : MonoBehaviour
     public void Options_ApplyGraphicsChange()
     {
         QualitySettings.SetQualityLevel(transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value);
-        transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).gameObject.SetActive(false);
+        transform.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false); // apply button
     }
 
     public void LocalizeTitles()

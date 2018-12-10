@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
-public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerOn, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted }
+public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted, DisabledBuilding }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu}
 
@@ -465,6 +465,7 @@ sealed public class UIController : MonoBehaviour
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
             ChangeActiveWindow(ActiveWindowMode.GameMenu);
+            menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
             menuPanel.SetActive(true);
             //menuButton.transform.SetAsLastSibling();
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
@@ -680,6 +681,13 @@ sealed public class UIController : MonoBehaviour
         }
         else
         {
+            switch (newChosenType)
+            {
+                case ChosenObjectType.Cube: if (chosenCube == null) return; else break;
+                case ChosenObjectType.Structure: if (chosenStructure == null) return; else break;
+                case ChosenObjectType.Surface: if (chosenSurface == null) return; else break;
+                case ChosenObjectType.Worksite: if (chosenWorksite == null) return; else break;
+            }
             FollowingCamera.main.SetTouchRightBorder(rightPanel.GetComponent<RectTransform>().anchorMin.x * Screen.width);
             chosenObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
@@ -829,6 +837,12 @@ sealed public class UIController : MonoBehaviour
         leftPanel.SetActive(false);
         menuPanel.SetActive(false);
         upPanel.SetActive(false);
+    }
+    public void FullReactivation()
+    {
+        leftPanel.SetActive(true);
+        menuPanel.SetActive(true);
+        upPanel.SetActive(true);
     }
 
     #region auxiliary panels
@@ -1060,7 +1074,8 @@ sealed public class UIController : MonoBehaviour
             case Icons.GreenArrow: return new Rect(6 * p, 7 * p, p, p);
             case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
             case Icons.PowerOff: return new Rect(2 * p, 7 * p, p, p);
-            case Icons.PowerOn: return new Rect(3 * p, 7 * p, p, p);
+            case Icons.PowerPlus: return new Rect(3 * p, 7 * p, p, p);
+            case Icons.PowerMinus: return new Rect(4 * p, 7 * p, p, p);
             case Icons.Citizen: return new Rect(p, 6 * p, p, p);
             case Icons.RedArrow: return new Rect(2 * p, 6 * p, p, p);
             case Icons.CrewBadIcon: return new Rect(p, 5 * p, p, p);
@@ -1071,6 +1086,7 @@ sealed public class UIController : MonoBehaviour
             case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
             case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
             case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
+            case Icons.DisabledBuilding: return new Rect(p, 3*p, p,p);
         }
     }
 

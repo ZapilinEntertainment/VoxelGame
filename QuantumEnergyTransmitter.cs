@@ -44,7 +44,7 @@ public sealed class QuantumEnergyTransmitter : Building {
         energySurplus = charge;
     }
 
-    override public void SetActivationStatus(bool x)
+    override public void SetActivationStatus(bool x, bool recalculateAfter)
     {
         isActive = x;
         colony.accumulateEnergy = !x;

@@ -316,7 +316,7 @@ public static class ResourcesCost {
                 new ResourceContainer(ResourceType.metal_N, 20), new ResourceContainer(ResourceType.metal_E, 100)
             };
                 break;
-            case Structure.COMMAND_CENTER_6_ID:
+            case Structure.CONTROL_CENTER_6_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
                 new ResourceContainer(ResourceType.metal_E, 50),

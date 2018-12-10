@@ -20,9 +20,10 @@ public sealed class StorageHouse : Building {
         GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
 	}
 
-	override public void SetActivationStatus(bool x) {
+	override public void SetActivationStatus(bool x, bool recalculateAfter) {
 		isActive = x;
-	}
+        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+    }
 
     override public void Annihilate(bool forced)
     {

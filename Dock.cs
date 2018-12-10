@@ -15,7 +15,7 @@ public sealed class Dock : WorkBuilding {
     public bool correctLocation { get; private set; }
     public float shipArrivingTimer { get; private set; }
    
-	private const float LOADING_TIME = 10, SHIP_ARRIVING_TIME = 300;
+	private const float LOADING_TIME = 10;
     private float loadingTimer = 0;    
 	private int preparingResourceIndex;
     private Ship loadingShip;
@@ -45,7 +45,7 @@ public sealed class Dock : WorkBuilding {
             if (r < 0) r += 8;
         }
         if (r == modelRotation) return;
-        else shipArrivingTimer = SHIP_ARRIVING_TIME / 2f;
+        else shipArrivingTimer = GameConstants.GetShipArrivingTimer();
         modelRotation = (byte)r;
         if ( basement != null)
         {
@@ -83,11 +83,11 @@ public sealed class Dock : WorkBuilding {
         dependentBlocksList = new List<Block>();
 
         CheckPositionCorrectness();
-        if (correctLocation) shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.realMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f)) / 2f;
+        if (correctLocation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
     }
 
 	override public void LabourUpdate () {
-		if ( !energySupplied ) return;
+		if ( !isEnergySupplied ) return;
 		if ( maintainingShip ) {
 			if (loadingTimer > 0) {
 					loadingTimer -= GameMaster.LABOUR_TICK;
@@ -138,13 +138,14 @@ public sealed class Dock : WorkBuilding {
 						}
 					}
 					Ship s = PoolMaster.current.GetShip( level, stype );
+                    s.gameObject.SetActive(true);
 					if ( s!= null ) {
 						maintainingShip = true;
 						s.SetDestination( this );                       
 					}
                     //else print ("error:no ship given");
-                    shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.realMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f));
-				}
+                    shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+                }
 			}
 		}
 	}
@@ -374,7 +375,7 @@ public sealed class Dock : WorkBuilding {
 		maintainingShip = false;
 		s.Undock();
 
-		shipArrivingTimer = SHIP_ARRIVING_TIME * GameMaster.realMaster.tradeVesselsTrafficCoefficient * (1 - (colony.docksLevel * 2 / 100f))  ;
+		shipArrivingTimer = GameConstants.GetShipArrivingTimer();
 		float f = 1;
 		if (colony.docks.Count != 0) f /= (float)colony.docks.Count;
 		if ( f < 0.1f ) f = 0.1f;
@@ -407,7 +408,7 @@ public sealed class Dock : WorkBuilding {
         {
             isForSale[index] = val;
         }
-    }
+    }    
 
 	#region save-load system
 	public static DockStaticSerializer SaveStaticDockData() {

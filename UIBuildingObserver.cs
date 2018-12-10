@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class UIBuildingObserver : UIObserver {
 	Building observingBuilding;
-    bool status_connectedToPowerGrid = false, status_energySupplied = false, isHouse = false, canBeUpgraded = false;
+    bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, isHouse = false, canBeUpgraded = false;
 	float showingEnergySurplus = 0;
 	int showingHousing = 0;
     byte savedLevel = 0;
@@ -41,37 +41,63 @@ public class UIBuildingObserver : UIObserver {
         else us.gameObject.SetActive(true);
 		observingBuilding = b; isObserving = true;
 		us.SetObservingStructure(observingBuilding);
+
+        // #redraw
 		status_connectedToPowerGrid = b.connectedToPowerGrid;
-		if (status_connectedToPowerGrid) {
-            if (b.id == Structure.ENERGY_CAPACITOR_1_ID | b.id == Structure.ENERGY_CAPACITOR_2_ID | b.id == Structure.ENERGY_CAPACITOR_3_ID)
+        status_active = b.isActive;
+        status_energySupplied = b.isEnergySupplied;
+
+        if (status_active)
+        {
+            if (status_connectedToPowerGrid)
             {
-                chargeButton.SetActive(true);
-                energyValue.enabled = false;
-            }
-            else { 
-            showingEnergySurplus = b.energySurplus;
-                status_energySupplied = b.energySupplied;
-                if (status_energySupplied)
+                if (b.id == Structure.ENERGY_CAPACITOR_1_ID | b.id == Structure.ENERGY_CAPACITOR_2_ID | b.id == Structure.ENERGY_CAPACITOR_3_ID)
                 {
-                    energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
-                    if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                    else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                    chargeButton.SetActive(true);
+                    energyValue.enabled = false;
                 }
                 else
                 {
-                    energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                    energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                    showingEnergySurplus = b.energySurplus;
+                    if (status_energySupplied)
+                    {
+                        if (showingEnergySurplus <= 0)
+                        {
+                            energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                        }
+                        else
+                        {
+                            energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                        }
+                    }
+                    else
+                    {
+                        energyValue.text = Localization.GetWord(LocalizedWord.Offline);
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                    }
+                    energyValue.enabled = true;
+                    chargeButton.SetActive(false);
                 }
-                energyValue.enabled = true;
-                chargeButton.SetActive(false);
+                energyImage.enabled = true;
             }
-			energyImage.enabled = true;
-		}
-		else {
-			energyValue.enabled = false;
-			energyImage.enabled = false;
-		}
+            else
+            {
+                energyValue.enabled = false;
+                energyImage.enabled = false;
+            }
+        }
+        else
+        {
+            chargeButton.SetActive(false);
+            energyValue.text = Localization.GetWord(LocalizedWord.Disabled);
+            energyValue.enabled = true;            
+            energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
+            energyImage.enabled = true;
+        }
         energyButton.interactable = observingBuilding.canBePowerSwitched;
+        //# eo redraw
 
 		if (b is House) {
 			isHouse = true;
@@ -99,71 +125,74 @@ public class UIBuildingObserver : UIObserver {
         }
         else
         {
-            if (status_connectedToPowerGrid != observingBuilding.connectedToPowerGrid)
-            {
-                status_connectedToPowerGrid = observingBuilding.connectedToPowerGrid;
-                if (status_connectedToPowerGrid)
-                {
-                    showingEnergySurplus = observingBuilding.energySurplus;
-                    status_energySupplied = observingBuilding.energySupplied;
-                    if (status_energySupplied)
-                    {
-                        if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                        else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
-                    }
-                    else
-                    {
-                        energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
-                    }
-                    energyValue.enabled = true;
-                    energyImage.enabled = true;
-                }
-                else
-                {
-                    energyValue.enabled = false;
-                    energyImage.enabled = false;
-                }
-            }
+            bool mustBeRedrawn = false;
+            if (status_active != observingBuilding.isActive)    mustBeRedrawn = true;
             else
             {
-                    if (status_energySupplied != observingBuilding.energySupplied)
+                if (status_active )
+                {
+                    if (status_connectedToPowerGrid != observingBuilding.connectedToPowerGrid) mustBeRedrawn = true;
+                    else
                     {
-                        status_energySupplied = observingBuilding.energySupplied;
+                        if (status_connectedToPowerGrid)
+                        {
+                            if (status_energySupplied != observingBuilding.isEnergySupplied) mustBeRedrawn = true;
+                            else
+                            {
+                                if (status_energySupplied & showingEnergySurplus != observingBuilding.energySurplus) mustBeRedrawn = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (mustBeRedrawn)
+            {
+                // #redraw - changed
+                status_connectedToPowerGrid = observingBuilding.connectedToPowerGrid;
+                status_active = observingBuilding.isActive;
+                status_energySupplied = observingBuilding.isEnergySupplied;
+
+                if (status_active)
+                {
+                    if (status_connectedToPowerGrid)
+                    {
                         if (status_energySupplied)
                         {
-                            showingEnergySurplus = observingBuilding.energySurplus;
-                            if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                            else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                            energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
+                            if (showingEnergySurplus > 0)
+                            {
+                                energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                            }
+                            else
+                            {
+                                energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                            }
                         }
                         else
                         {
                             energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                            energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerOff);
                         }
                     }
                     else
                     {
-                        if (showingEnergySurplus != observingBuilding.energySurplus)
-                        {
-                            showingEnergySurplus = observingBuilding.energySurplus;
-                            if (showingEnergySurplus <= 0) energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                            else energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                            energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(observingBuilding.isActive ? Icons.PowerOn : Icons.PowerOff);
-                        }
+                        energyValue.text = "-//-";
+                        energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
                     }
-            }
-            if (isHouse)
-            {
-                int h = (observingBuilding as House).housing;
-                if (showingHousing != h)
+                }
+                else
                 {
-                    showingHousing = h;
-                    housingValue.text = showingHousing.ToString();
+                    chargeButton.SetActive(false);
+                    energyValue.text = Localization.GetWord(LocalizedWord.Disabled);
+                    energyValue.enabled = true;
+                    energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
+                    energyImage.enabled = true;
                 }
             }
+            //# eo redraw
+
             if (canBeUpgraded) {
                 string s = upgradeButtonText.text;
                 string answer = string.Empty;
@@ -306,15 +335,60 @@ public class UIBuildingObserver : UIObserver {
             if ( !observingBuilding.canBePowerSwitched ) return;
             if (!observingBuilding.isActive)
             {
-                energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOn);
-                observingBuilding.SetActivationStatus(true);                
+                observingBuilding.SetActivationStatus(true, true);
+                if (status_active == false)
+                {
+                    status_active = true;
+                    if (status_energySupplied != observingBuilding.isEnergySupplied)
+                    {
+                        status_energySupplied = observingBuilding.isEnergySupplied;
+                        showingEnergySurplus = observingBuilding.energySurplus;                        
+                    }
+                    if (showingEnergySurplus > 0)
+                    {
+                        energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                        energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                    }
+                    else
+                    {
+                        energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+                        energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                    }
+                }
             }
             else
             {
-                energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
-                observingBuilding.SetActivationStatus(false);
+                if (observingBuilding.isEnergySupplied)
+                {
+                    observingBuilding.SetActivationStatus(false, true);
+                    if (status_active == true)
+                    {
+                        status_active = false;
+                        energyValue.text = Localization.GetWord(LocalizedWord.Disabled);
+                        energyImage.uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                    }
+                }
+                else
+                {
+                    observingBuilding.SetEnergySupply(true, true);
+
+                    if (status_energySupplied == false)
+                    {
+                        status_energySupplied = true;
+                        showingEnergySurplus = observingBuilding.energySurplus;
+                        if (showingEnergySurplus > 0)
+                        {
+                            energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                        }
+                        else
+                        {
+                            energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                        }
+                    }
+                }
             }
-            StatusUpdate();
             timer = STATUS_UPDATE_TIME / 2f;
         }
     }

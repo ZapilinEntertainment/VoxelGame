@@ -1,16 +1,17 @@
-﻿public enum Language : short{English, Russian};
-public enum LocalizedWord : short {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score}
-public enum LocalizedPhrase : short { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
+﻿public enum Language : ushort{English, Russian};
+public enum LocalizedWord : ushort {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
+Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled}
+public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply
 }
-public enum LocalizationActionLabels : short {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
-public enum GameAnnouncements : short{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused,
+public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
+public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused,
     GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood };
-public enum RestrictionKey : short{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
-public enum RefusalReason : short {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
+public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
+public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
 public enum DefeatReason : byte { Default, NoCitizen }
+public enum WinNote : byte { Default, TransportHubVictory }
 
 public static class Localization {
 
@@ -91,7 +92,7 @@ public static class Localization {
             case Structure.REACTOR_BLOCK_5_ID: return "Reactor block";
             case Structure.FOUNDATION_BLOCK_5_ID: return "Foundation block";
             case Structure.CONNECT_TOWER_6_ID: return "Connect Tower";
-            case Structure.COMMAND_CENTER_6_ID: return "Command center";
+            case Structure.CONTROL_CENTER_6_ID: return "Control center";
             case Structure.HOTEL_BLOCK_6_ID: return "Hotel block";
             case Structure.HOUSING_MAST_6_ID: return "Housing mast";
             case Structure.DOCK_ADDON_1: return "Dock addon 1";
@@ -289,6 +290,7 @@ public static class Localization {
             case LocalizedWord.Day_short: return "Day:";
             case LocalizedWord.Day: return "Day";
             case LocalizedWord.Score: return "Score";
+            case LocalizedWord.Disabled: return "Disabled"; // when building is not active
 		default: return "...";
 		}
 	}
@@ -372,6 +374,15 @@ public static class Localization {
         {
             case DefeatReason.NoCitizen: return "All citizens gone.";
             default: return "Error 43: reasons stack overflow";
+        }
+    }
+
+    public static string GetWinNote(WinNote wn)
+    {
+        switch(wn)
+        {
+            case WinNote.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You can be free after this point.";
+            default: return "Unbreakable victory";
         }
     }
 
@@ -482,6 +493,31 @@ public static class Localization {
                         q.description = "Construct a building onto the column";
                         q.steps[0] = "Column constructed ";
                         q.steps[1] = "Building over it completed ";
+                        break;
+                }
+                break;
+            case QuestType.Endgame:
+                switch ((EndgameQuestID)q.subIndex)
+                {
+                    case EndgameQuestID.Endgame_TransportHub_step1:
+                        q.name = "Transport Hub way 1 - start";
+                        q.description = "Stabling your city as solid port make it's future certain and life will be safe here. Chosing this path requires third-stage dock and attendant infrastructure first.";
+                        q.steps[0] = "Docks count (any level) ";
+                        q.steps[1] = "Third stage dock built ";
+                        q.steps[2] = "Storage blocks count ";
+                        break;
+                    case EndgameQuestID.Endgame_TransportHub_step2:
+                        q.name = "Transport Hub way 2";
+                        q.description = "Second step means your port needs strict management and reliable connection hardware. Build the Connection Tower and a control center.";
+                        q.steps[0] = "Control center built ";
+                        q.steps[1] = "Connect Tower built ";
+                        break;
+                    case EndgameQuestID.Endgame_TransportHub_step3:
+                        q.name = "Transport Hub way 3 - final";
+                        q.description = "At the end, you city must be prepared to place lot of people. Built new housing skyscrapers and at least one hotel complex. Also you shall care about power supply, so it will be good decision to built a reactor block.";
+                        q.steps[0] = "Reactor block built ";
+                        q.steps[1] = "Housing masts built ";
+                        q.steps[2] = "Hotel block built ";
                         break;
                 }
                 break;

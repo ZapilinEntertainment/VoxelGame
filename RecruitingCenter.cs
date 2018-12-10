@@ -49,7 +49,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 	}
 
 	override public void LabourUpdate() {
-		if ( !isActive | !energySupplied) return;
+		if ( !isActive | !isEnergySupplied) return;
 		if (workersCount > 0) {
 			if (finding) {
 				float candidatsCountFactor = colony.freeWorkers / Crew.OPTIMAL_CANDIDATS_COUNT;

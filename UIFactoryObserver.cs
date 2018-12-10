@@ -132,10 +132,14 @@ public sealed class UIFactoryObserver : UIObserver
             if (observingFactory.recipe != Recipe.NoRecipe) {
                 if (observingFactory.outputResourcesBuffer < Factory.BUFFER_LIMIT)
                 {
-                    if (observingFactory.isActive & observingFactory.energySupplied)
+                    if (observingFactory.isActive & observingFactory.isEnergySupplied)
                     {
-                        float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
-                        workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+                        if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
+                        else
+                        {
+                            float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                            workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+                        }
                     }
                     else
                     {

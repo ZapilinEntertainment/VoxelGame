@@ -10,7 +10,7 @@ public class ScoreCalculator  {
         // подготовка
         #region arrays preparing
         double[] resourcesCosts = new double[ResourceType.resourceTypesArray.Length];
-            double val = 0.000001;
+            double val = 0.000000001;
             resourcesCosts[ResourceType.SNOW_ID] = val;
             resourcesCosts[ResourceType.FOOD_ID] = val * 2;
             resourcesCosts[ResourceType.STONE_ID] = val * 4;
@@ -75,7 +75,7 @@ public class ScoreCalculator  {
             structuresCost[Structure.SHUTTLE_HANGAR_4_ID] = val * 40;
             structuresCost[Structure.RECRUITING_CENTER_4_ID] = val * 45;
             structuresCost[Structure.EXPEDITION_CORPUS_4_ID] = val * 48;
-            structuresCost[Structure.COMMAND_CENTER_6_ID] = val * 60;
+            structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
 
 
             structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];

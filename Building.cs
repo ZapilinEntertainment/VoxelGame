@@ -11,15 +11,17 @@ public class BuildingSerializer
 
 public class Building : Structure
 {
-    public int upgradedIndex { get; private set; } // fixed by id
-    public bool canBePowerSwitched = true; // fixed by id
+    public int upgradedIndex { get; private set; } 
+    public bool canBePowerSwitched { get; protected set; } 
     public bool isActive { get; protected set; }
-    public bool energySupplied { get; protected set; } // подключение, контролирующееся Colony Controller'ом
-    public float energySurplus = 0; // can be changed later (ex.: generator)
-    public float energyCapacity = 0; // fixed by id
+    public bool isEnergySupplied { get; protected set; } //управляется только ColonyController'ом
     public bool connectedToPowerGrid { get; protected set; }// установлено ли подключение к электросети
-    public byte level { get; protected set; } // fixed by id (except for mine)
+    public float energySurplus = 0; 
+    public float energyCapacity = 0;     
+    public byte level { get; protected set; } 
     public bool specialBuildingConditions { get; protected set; }
+
+    public const byte DOCK_ADDON1_LEVEL = 4, DOCK_ADDON2_LEVEL = 6;
 
     public static UIBuildingObserver buildingObserver;
 
@@ -91,7 +93,7 @@ public class Building : Structure
                 break;
             case 6:
                 blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
-                blist.Add(GetStructureByID(COMMAND_CENTER_6_ID) as Building);
+                blist.Add(GetStructureByID(CONTROL_CENTER_6_ID) as Building);
                 blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2) as Building);
@@ -112,7 +114,7 @@ public class Building : Structure
     {
         PrepareStructure();
         isActive = false;
-        energySupplied = false;
+        isEnergySupplied = false;
         connectedToPowerGrid = false;
         specialBuildingConditions = false;
         switch (id)
@@ -676,7 +678,7 @@ public class Building : Structure
                     level = 6;
                 }
                 break;
-            case COMMAND_CENTER_6_ID:
+            case CONTROL_CENTER_6_ID:
                 {
                     specialBuildingConditions = true;
                     upgradedIndex = -1;
@@ -713,7 +715,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 1000;
-                    level = 4;
+                    level = DOCK_ADDON1_LEVEL;
                 }
                 break;
             case DOCK_ADDON_2:
@@ -723,7 +725,7 @@ public class Building : Structure
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 1000;
-                    level = 6;
+                    level = DOCK_ADDON2_LEVEL;
                 }
                 break;
         }
@@ -739,25 +741,27 @@ public class Building : Structure
     {
         SetStructureData(b, pos);
         isActive = true;
-        if (energySurplus != 0 || energyCapacity > 0)
+        if (energySurplus != 0 | energyCapacity > 0)
         {
             GameMaster.realMaster.colonyController.AddToPowerGrid(this);
             connectedToPowerGrid = true;
         }
     }
-    virtual public void SetActivationStatus(bool x)
+    virtual public void SetActivationStatus(bool x, bool recalculateAfter)
     {
         isActive = x;
-        if (connectedToPowerGrid)
+        if (connectedToPowerGrid & recalculateAfter)
         {
             GameMaster.realMaster.colonyController.RecalculatePowerGrid();
         }
-        ChangeRenderersView(x);
+        ChangeRenderersView( x & isEnergySupplied );
     }
-    public virtual void SetEnergySupply(bool x)
+
+    public virtual void SetEnergySupply(bool x, bool recalculateAfter)
     {
-        energySupplied = x;
-        ChangeRenderersView(x);
+        isEnergySupplied = x;
+        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+        ChangeRenderersView(x & isActive);
     }
 
     protected void ChangeRenderersView(bool setOnline)
@@ -868,7 +872,7 @@ public class Building : Structure
     protected void LoadBuildingData(BuildingSerializer bs)
     {
         energySurplus = bs.energySurplus;
-        SetActivationStatus(bs.isActive);
+        SetActivationStatus(bs.isActive, true);
     }
 
     protected BuildingSerializer GetBuildingSerializer()

@@ -60,9 +60,9 @@ public class Zeppelin : MonoBehaviour {
                     //storage
                     s = Structure.GetStructureByID(Structure.STORAGE_0_ID);
                     SurfaceBlock sb = (landingByZAxis == true) ?
-                        landingSurface.myChunk.GetSurfaceBlock(landingSurface.pos.x, landingSurface.pos.z + 1)
+                        landingSurface.myChunk.GetBlock(landingSurface.pos.x, landingSurface.pos.y, landingSurface.pos.z + 1) as SurfaceBlock
                         :
-                        landingSurface.myChunk.GetSurfaceBlock(landingSurface.pos.x + 1, landingSurface.pos.z);
+                        landingSurface.myChunk.GetBlock(landingSurface.pos.x + 1, landingSurface.pos.y, landingSurface.pos.z) as SurfaceBlock;
                     s.SetBasement(sb, PixelPosByte.zero);
                     
                     GameMaster.realMaster.SetStartResources();
@@ -215,7 +215,7 @@ public class Zeppelin : MonoBehaviour {
                     landPointSet = true;
                     Vector3 newPos = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
                     PoolMaster.current.BuildSplash(newPos);
-                    transform.position = newPos;
+                    transform.position = newPos + Vector3.up * 0.5f;
                     if (landingByZAxis == true) transform.rotation = Quaternion.identity;
                     else transform.rotation = Quaternion.Euler(0, 90, 0);
                     lineDrawer.enabled = false;
@@ -228,6 +228,12 @@ public class Zeppelin : MonoBehaviour {
     private void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;
-        UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.RemoveListener(Click);
+        else
+        {
+            if (UIController.current != null)
+            {
+                UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.RemoveListener(Click);
+            }
+        }
     }
 }

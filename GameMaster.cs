@@ -37,7 +37,7 @@ public enum GameLevel : byte { Menu, Playable, Editor}
 
 /// -----------------------------------------------------------------------------
 
-public sealed class GameMaster : MonoBehaviour {
+public sealed class GameMaster : MonoBehaviour { 
 	public static  GameMaster realMaster;
 	public static float gameSpeed  {get; private set;}
     public static bool sceneClearing { get; private set; }
@@ -59,12 +59,10 @@ public sealed class GameMaster : MonoBehaviour {
 
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
+    public EnvironmentMaster environmentMaster { get; private set; }
     public Constructor constructor;
     public delegate void StructureUpdateHandler();
-    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
-    public delegate void WindChangeHandler(Vector2 newVector);
-    public event WindChangeHandler WindUpdateEvent;
-    public Vector2 windVector { get; private set; } 
+    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;        
     public GameStart startGameWith = GameStart.Zeppelin;
     public float lifeGrowCoefficient {get;private set;}
 	public float demolitionLossesPercent {get;private set;}
@@ -72,12 +70,11 @@ public sealed class GameMaster : MonoBehaviour {
 	public float tradeVesselsTrafficCoefficient{get;private set;}
 	public float upgradeDiscount{get;private set;}
 	public float upgradeCostIncrease{get;private set;}
-	public float environmentalConditions{get; private set;} // 0 is hell, 1 is very favourable
 	public float warProximity{get;private set;} // 0 is far, 1 is nearby  
     public float gearsDegradeSpeed { get; private set; }
 
 	private const float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f, 
-	clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
+	clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;   
     //data
     private float timeGone;
     public byte day { get; private set; }
@@ -87,8 +84,7 @@ public sealed class GameMaster : MonoBehaviour {
     public const float DAY_LONG = 60;
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
-    private float labourTimer = 0, lifepowerTimer = 0;    
-    private float windTimer = 0, windChangeTime = 120;
+    private float labourTimer = 0, lifepowerTimer = 0;   
     private bool firstSet = true;
 	// FOR TESTING
 	public float newGameSpeed = 1;
@@ -149,7 +145,9 @@ public sealed class GameMaster : MonoBehaviour {
         }
         realMaster = this;
         sceneClearing = false;
-	}
+        if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
+        environmentMaster.Prepare();
+    }
 
 	void Start() {
         if (!firstSet) return;
@@ -195,9 +193,9 @@ public sealed class GameMaster : MonoBehaviour {
                         demolitionLossesPercent = 0;
                         lifepowerLossesPercent = 0;
                         sellPriceCoefficient = 1;
-                        tradeVesselsTrafficCoefficient = 0.2f;
+                        tradeVesselsTrafficCoefficient = 2;
                         upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
-                        environmentalConditions = 1;
+                        environmentMaster.SetEnvironmentalConditions(1);
                         gearsDegradeSpeed = 0;
                         break;
                     case Difficulty.Easy:
@@ -205,9 +203,9 @@ public sealed class GameMaster : MonoBehaviour {
                         demolitionLossesPercent = 0.2f;
                         lifepowerLossesPercent = 0.1f;
                         sellPriceCoefficient = 0.9f;
-                        tradeVesselsTrafficCoefficient = 0.4f;
+                        tradeVesselsTrafficCoefficient = 1.5f;
                         upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
-                        environmentalConditions = 1;
+                        environmentMaster.SetEnvironmentalConditions(1);
                         gearsDegradeSpeed = 0.00001f;
                         break;
                     case Difficulty.Normal:
@@ -215,9 +213,9 @@ public sealed class GameMaster : MonoBehaviour {
                         demolitionLossesPercent = 0.4f;
                         lifepowerLossesPercent = 0.3f;
                         sellPriceCoefficient = 0.75f;
-                        tradeVesselsTrafficCoefficient = 0.5f;
+                        tradeVesselsTrafficCoefficient = 1;
                         upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
-                        environmentalConditions = 0.95f;
+                        environmentMaster.SetEnvironmentalConditions(0.95f);
                         gearsDegradeSpeed = 0.00002f;
                         break;
                     case Difficulty.Hard:
@@ -225,9 +223,9 @@ public sealed class GameMaster : MonoBehaviour {
                         demolitionLossesPercent = 0.7f;
                         lifepowerLossesPercent = 0.5f;
                         sellPriceCoefficient = 0.5f;
-                        tradeVesselsTrafficCoefficient = 0.75f;
+                        tradeVesselsTrafficCoefficient = 0.9f;
                         upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
-                        environmentalConditions = 0.9f;
+                        environmentMaster.SetEnvironmentalConditions(0.9f);
                         gearsDegradeSpeed = 0.00003f;
                         break;
                     case Difficulty.Torture:
@@ -235,9 +233,9 @@ public sealed class GameMaster : MonoBehaviour {
                         demolitionLossesPercent = 1;
                         lifepowerLossesPercent = 0.85f;
                         sellPriceCoefficient = 0.33f;
-                        tradeVesselsTrafficCoefficient = 1;
+                        tradeVesselsTrafficCoefficient = 0.75f;
                         upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
-                        environmentalConditions = 0.8f;
+                        environmentMaster.SetEnvironmentalConditions(0.8f);
                         gearsDegradeSpeed = 0.00005f;
                         break;
                 }
@@ -344,71 +342,61 @@ public sealed class GameMaster : MonoBehaviour {
         if (Input.GetKeyDown("m")) { layerCutHeight = 0; mainChunk.LayersCut(); }
         // eo testzone
 
-        //float frameTime = Time.deltaTime * gameSpeed;
-    }
+        //float frameTime = Time.deltaTime * gameSpeed;       
+    }   
 
     private void FixedUpdate()
     {
-        if (gameSpeed != 0 & !editMode)
+        if (gameSpeed != 0 )
         {
-            float fixedTime = Time.fixedDeltaTime * gameSpeed;
-            timeGone += fixedTime;
-
-            if (timeGone >= DAY_LONG)
+            float fixedTime = Time.fixedDeltaTime * gameSpeed;    
+            if (!editMode)
             {
-                uint daysDelta = (uint)(timeGone / DAY_LONG);
-                if (daysDelta > 0 & colonyController != null)
+                labourTimer -= fixedTime;
+                lifepowerTimer -= fixedTime;
+                if (labourTimer <= 0)
                 {
-                    // счет количества дней в ускорении отменен
-                    colonyController.EverydayUpdate();
+                    labourTimer = LABOUR_TICK;
+                    if (labourUpdateEvent != null) labourUpdateEvent();
                 }
-                uint sum = day + daysDelta;
-                if (sum >=  DAYS_IN_MONTH)
+                if (lifepowerTimer <= 0)
                 {
-                    day = (byte)(sum % DAYS_IN_MONTH);
-                    sum /= DAYS_IN_MONTH;
-                    sum += month;
-                    if (sum >= MONTHS_IN_YEAR)
+                    lifepowerTimer = LIFEPOWER_TICK;
+                    Plant.PlantUpdate();
+                    if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
+                    if (lifepowerUpdateEvent != null) lifepowerUpdateEvent();
+                }
+                timeGone += fixedTime;
+
+                if (timeGone >= DAY_LONG)
+                {
+                    uint daysDelta = (uint)(timeGone / DAY_LONG);
+                    if (daysDelta > 0 & colonyController != null)
                     {
-                        month = (byte)(sum % MONTHS_IN_YEAR);
-                        year = sum / MONTHS_IN_YEAR;
+                        // счет количества дней в ускорении отменен
+                        colonyController.EverydayUpdate();
                     }
-                    else month = (byte)sum;
-                }
-                else
-                {
-                    day = (byte)sum;
-                }
-                timeGone = timeGone % DAY_LONG;
-            }
-            
-            windTimer -= fixedTime;
-            labourTimer -= fixedTime;
-            lifepowerTimer -= fixedTime;
-
-            if (windTimer <= 0)
-            {
-                windTimer = windChangeTime * (0.7f + Random.value * 1.3f);
-                windVector = Random.insideUnitCircle;
-                windTimer = windChangeTime + Random.value * windChangeTime;
-                if (WindUpdateEvent != null)
-                {
-                    WindUpdateEvent(windVector);
+                    uint sum = day + daysDelta;
+                    if (sum >= DAYS_IN_MONTH)
+                    {
+                        day = (byte)(sum % DAYS_IN_MONTH);
+                        sum /= DAYS_IN_MONTH;
+                        sum += month;
+                        if (sum >= MONTHS_IN_YEAR)
+                        {
+                            month = (byte)(sum % MONTHS_IN_YEAR);
+                            year = sum / MONTHS_IN_YEAR;
+                        }
+                        else month = (byte)sum;
+                    }
+                    else
+                    {
+                        day = (byte)sum;
+                    }
+                    timeGone = timeGone % DAY_LONG;
                 }
             }
-          if (labourTimer <= 0)
-            {
-                labourTimer = LABOUR_TICK;
-                if (labourUpdateEvent != null) labourUpdateEvent();
-            }
-          if (lifepowerTimer <= 0)
-            {
-                lifepowerTimer = LIFEPOWER_TICK;
-                Plant.PlantUpdate();
-                if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
-                if (lifepowerUpdateEvent != null) lifepowerUpdateEvent();
-            }
-        }
+        }        
     }  
     #endregion
 
@@ -424,7 +412,7 @@ public sealed class GameMaster : MonoBehaviour {
 		case WorkType.Clearing: workspeed  *= clearingSpeed;break;
 		case WorkType.Gathering : workspeed  *= gatheringSpeed;break;
 		case WorkType.Mining: workspeed  *= miningSpeed;break; // digging inside mine
-		case WorkType.Farming : workspeed *= lifeGrowCoefficient * environmentalConditions;break;
+		case WorkType.Farming : workspeed *= lifeGrowCoefficient * environmentMaster.environmentalConditions;break;
 		case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed;break;
 		}
 		return workspeed ;
@@ -494,23 +482,20 @@ public sealed class GameMaster : MonoBehaviour {
 		gms.tradeVesselsTrafficCoefficient = tradeVesselsTrafficCoefficient;
 		gms.upgradeDiscount = upgradeDiscount;
 		gms.upgradeCostIncrease = upgradeCostIncrease;
-		gms.environmentalConditions = environmentalConditions;
 		gms.warProximity = warProximity;
 		gms.difficulty = difficulty;
 		gms.startGameWith = startGameWith;
 		gms.prevCutHeight = prevCutHeight;
 		gms.day = day; gms.month = month; gms.year = year; gms.t = timeGone;
-        gms.windVector_x = windVector.x;
-        gms.windVector_z = windVector.y;
         gms.gearsDegradeSpeed = gearsDegradeSpeed;
 
-		gms.windTimer = windTimer;gms.windChangeTime = windChangeTime;
         gms.labourTimer = labourTimer;
         gms.lifepowerTimer = lifepowerTimer;
 
 		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
 		#endregion
 		gms.chunkSerializer = mainChunk.SaveChunkData();
+        gms.environmentalMasterSerializer = environmentMaster.Save();
 		gms.colonyControllerSerializer = colonyController.Save();
 		gms.dockStaticSerializer = Dock.SaveStaticDockData();
 		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
@@ -545,7 +530,12 @@ public sealed class GameMaster : MonoBehaviour {
             Grassland.ScriptReset();
             Expedition.GameReset();
             Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
-            colonyController.ResetToDefaults(); // подчищает все списки
+            if (colonyController != null) colonyController.ResetToDefaults(); // подчищает все списки
+            else
+            {
+                colonyController = gameObject.AddComponent<ColonyController>();
+                colonyController.Prepare();
+            }
             FollowingCamera.main.ResetLists();
             //UI.current.Reset();
 
@@ -566,19 +556,17 @@ public sealed class GameMaster : MonoBehaviour {
             tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient;
             upgradeDiscount = gms.upgradeDiscount;
             upgradeCostIncrease = gms.upgradeCostIncrease;
-            environmentalConditions = gms.environmentalConditions;
             warProximity = gms.warProximity;
             difficulty = gms.difficulty;
             startGameWith = gms.startGameWith;
             prevCutHeight = gms.prevCutHeight;
             day = gms.day;  month = gms.month; year = gms.year; timeGone = gms.t;
             gearsDegradeSpeed = gms.gearsDegradeSpeed;
-
-            windVector = new Vector2(gms.windVector_x, gms.windVector_z);
-            windTimer = gms.windTimer; windChangeTime = gms.windChangeTime;
             lifepowerTimer = gms.lifepowerTimer;
             labourTimer = gms.labourTimer;
             #endregion
+            if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
+            environmentMaster.Load(gms.environmentalMasterSerializer);
             RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
             Crew.LoadStaticData(gms.crewStaticSerializer);
             Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
@@ -654,6 +642,17 @@ public sealed class GameMaster : MonoBehaviour {
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
     }
 
+    public void MakeGameCompleted(string note)
+    {
+        gameSpeed = 0;
+        UIController.current.FullDeactivation();
+        Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
+        endpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = note;
+        double score = new ScoreCalculator().GetScore(this);
+        endpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+        endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
+        endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>().onClick.AddListener( () => { ContinueGameAfterEnd(endpanel.gameObject); });
+    }
     public void MakeGameOver(string reason)
     {
         gameSpeed = 0;
@@ -662,12 +661,20 @@ public sealed class GameMaster : MonoBehaviour {
         Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
         failpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
         double score = new ScoreCalculator().GetScore(this);
-        failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + (score).ToString();
+        failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
         failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
     }
     public void ReturnToMenuAfterGameOver()
     {
+        sceneClearing = true;
         ChangeScene(GameLevel.Menu);
+        sceneClearing = false;
+    }
+    public void ContinueGameAfterEnd(GameObject panel)
+    {
+        Destroy(panel);
+        UIController.current.FullReactivation();
+        gameSpeed = 1;
     }
 
     public void OnApplicationQuit()
@@ -684,7 +691,7 @@ public sealed class GameMaster : MonoBehaviour {
 class GameMasterSerializer {
 	public float gameSpeed;
 	public float lifeGrowCoefficient, demolitionLossesPercent, lifepowerLossesPercent, luckCoefficient, sellPriceCoefficient,
-	tradeVesselsTrafficCoefficient, upgradeDiscount, upgradeCostIncrease, environmentalConditions, warProximity, gearsDegradeSpeed;
+	tradeVesselsTrafficCoefficient, upgradeDiscount, upgradeCostIncrease, warProximity, gearsDegradeSpeed;
 	public Difficulty difficulty;
 	public GameStart startGameWith;
 	public int prevCutHeight = 16;
@@ -695,6 +702,7 @@ class GameMasterSerializer {
 	public float windTimer = 0, windChangeTime = 120, labourTimer, lifepowerTimer;
 
 	public ChunkSerializer chunkSerializer;
+    public EnvironmentMasterSerializer environmentalMasterSerializer;
 	public ColonyControllerSerializer colonyControllerSerializer;
 	public DockStaticSerializer dockStaticSerializer;
 	public CrewStaticSerializer crewStaticSerializer;

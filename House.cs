@@ -26,12 +26,15 @@ public class House : Building {
         }
 	}
 
-	override public void SetActivationStatus(bool x) {
+	override public void SetActivationStatus(bool x, bool recalculateAfter) {
 		if (isActive == x) return;
 		isActive = x;
-        GameMaster.realMaster.colonyController.RecalculateHousing();
+        ColonyController colony = GameMaster.realMaster.colonyController;
+        if (connectedToPowerGrid & recalculateAfter) colony.RecalculatePowerGrid();
+        colony.RecalculateHousing();
 		ChangeRenderersView(x);
 	}
+
     override public void Annihilate(bool forced)
     {
         if (destroyed) return;

@@ -242,7 +242,7 @@ public abstract class WorkBuilding : Building {
 
     virtual public void LabourUpdate()
     {
-		if ( !isActive | !energySupplied) return;
+		if ( !isActive | !isEnergySupplied) return;
 		if (workersCount > 0) {
 			workflow += workSpeed;
 			if (workflow >= workflowToProcess) {

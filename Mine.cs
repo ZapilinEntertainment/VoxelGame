@@ -68,7 +68,7 @@ public class Mine : WorkBuilding {
                         {
                             workFinished = true;
                             awaitingElevatorBuilding = false;
-                            SetActivationStatus(false);
+                            SetActivationStatus(false, true);
                             FreeWorkers();
                             if (showOnGUI) workbuildingObserver.SetActionLabel(Localization.GetRefusalReason(RefusalReason.NoBlockBelow));
                         }
@@ -76,7 +76,7 @@ public class Mine : WorkBuilding {
                 }
 			}
 		}
-		if ( !isActive | !energySupplied ) return;
+		if ( !isActive | !isEnergySupplied ) return;
         if (workObject != null)
         {
             if (workersCount > 0 && !workFinished)
@@ -177,7 +177,7 @@ override protected void LabourResult() {
             if (model != null) Destroy(model.gameObject);
             GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);			
             newModelGO.SetActive(visible);
-            if (!isActive | !energySupplied) ChangeRenderersView(false);
+            if (!isActive | !isEnergySupplied) ChangeRenderersView(false);
         }		
 		level = f_level;
 	}

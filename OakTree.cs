@@ -558,7 +558,7 @@ public class OakTree : Plant
             model.parent = hr.transform;
             model.localPosition = Vector3.zero;
 
-            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber() * 0.9f * GameMaster.realMaster.environmentalConditions), false, innerPosition.size, model.gameObject);
+            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber() * 0.9f * GameMaster.realMaster.environmentMaster.environmentalConditions), false, innerPosition.size, model.gameObject);
             hr.SetModelRotation(modelRotation);
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
             // спрайтовый LOD?

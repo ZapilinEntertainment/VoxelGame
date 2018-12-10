@@ -28,6 +28,7 @@ public class Constructor : MonoBehaviour {
 		GameMaster.realMaster.SetMainChunk(c);
 		c.CreateNewChunk(dat);
 		NatureCreation(c);
+        // + должна быть проверка для возможности посадки
 	}
 
     private void GenerateSpirals(int size, ref int[,,] data)
@@ -174,22 +175,6 @@ public class Constructor : MonoBehaviour {
             if (x < size - 1 && data[x + 1, y, z] == 0) data[x + 1, y, z] = Random.value > 0.3f ? ResourceType.STONE_ID : ResourceType.DIRT_ID;
             if (x > 0 && data[x - 1, y, z] == 0) data[x - 1, y, z] = Random.value > 0.3f ? ResourceType.STONE_ID : ResourceType.DIRT_ID;
         }
-
-        // чистка места под lifesource
-        x = size / 2; y = x; z = x;
-        for (int a = -1; a < 2; a++)
-        {
-            for (int b = 1; b < 3; b++)
-            {
-                for (int c = -1; c < 2; c++)
-                {
-                    if (data[x + a, y + b, z + c] != 0)
-                    {
-                        data[x + a, y + b, z + c] = 0;
-                    }
-                }
-            }
-        }
     }
 
     private void GeneratePyramid(int size, ref int[,,] data)
@@ -225,17 +210,132 @@ public class Constructor : MonoBehaviour {
     }
 
 	void NatureCreation(Chunk chunk) {
-		byte x = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
-		byte z = (byte)(Random.value * (Chunk.CHUNK_SIZE-2) + 1);
-		x = (byte)(Chunk.CHUNK_SIZE / 2) ;z = (byte)(Chunk.CHUNK_SIZE/2);
-		//surface[x,z].ReplaceMaterial(PoolMaster.grass_material);
-		//chunk.SpreadBlocks(x,z, PoolMaster.GRASS_ID);		
+		LifeSource ls = null;
+        Block[,,] blocks = chunk.blocks;
+        int dirtID = ResourceType.DIRT_ID, size = Chunk.CHUNK_SIZE;
+        if (Random.value > 0.5f)
+        {
+            ls = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as LifeSource;
+            for (int x = size - 2; x > 0; x--)
+            {
+                for (int z = size - 2; z > 0; z--)
+                {
+                    for (int y = size - 1; y > 1; y--)
+                    {
+                        if (blocks[x, y, z] == null) continue;
+                        if (blocks[x, y, z].type == BlockType.Surface)
+                        {
+                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
 
-		MultiblockStructure ms = null;
-		if (Random.value > 0.5f) ms = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as MultiblockStructure;
-		else ms = Structure.GetStructureByID(Structure.LIFESTONE_ID) as MultiblockStructure;
-		SurfaceBlock sb = chunk.GetSurfaceBlock(x,z);
-		ms.SetBasement(sb, PixelPosByte.zero);
-        chunk.GenerateNature(ms.transform.position);
+                            chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
+
+                            if (y + 1 < size)
+                            {
+                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));                            
+                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));                            
+                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));                            
+                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));                            
+                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));                            
+                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));                            
+                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));                            
+                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));                              
+                                if (y + 2 < size)
+                                {
+                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
+                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
+                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
+                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
+                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
+                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
+                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
+                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
+                                }
+                            }                            
+                            ls.SetBasement(blocks[x, y, z] as SurfaceBlock, PixelPosByte.zero);
+                            x = 0;
+                            z = 0;
+                            chunk.GenerateNature(ls.transform.position);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            ls = Structure.GetStructureByID(Structure.LIFESTONE_ID) as LifeSource;
+            for (int x = 1; x < size - 1 ; x++)
+            {
+                for (int z = 1; z < size - 1; z++)
+                {
+                    for (int y = 1; y < size; y++)
+                    {
+                        if (blocks[x, y, z] == null) continue;
+                        if (blocks[x, y, z].type == BlockType.Surface)
+                        {
+                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
+
+                            chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
+                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
+
+                            if (y + 1 < size)
+                            {
+                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
+                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
+                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
+                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));
+                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));
+                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));
+                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));
+                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
+                                if (y + 2 < size)
+                                {
+                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
+                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
+                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
+                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
+                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
+                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
+                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
+                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
+                                }
+                            }                            
+                            ls.SetBasement(blocks[x,y,z] as SurfaceBlock, PixelPosByte.zero);
+                            x = size;
+                            z = size;
+                            chunk.GenerateNature(ls.transform.position);
+                            break;
+                        }
+                    }
+                }
+            }
+        }        
     }
 }

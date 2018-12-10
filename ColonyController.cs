@@ -3,55 +3,59 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public sealed class ColonyControllerSerializer{
-	public StorageSerializer storageSerializer;
-	public float gears_coefficient, labourEfficientcy_coefficient,
-	happiness_coefficient, health_coefficient, birthrateCoefficient, realBirthrate;
+public sealed class ColonyControllerSerializer
+{
+    public StorageSerializer storageSerializer;
+    public float gears_coefficient, labourEfficientcy_coefficient,
+    happiness_coefficient, health_coefficient, birthrateCoefficient, realBirthrate;
 
-	public float energyStored,energyCrystalsCount;
-	public WorksiteSerializer[] worksites;
+    public float energyStored, energyCrystalsCount;
+    public WorksiteSerializer[] worksites;
 
-	public int freeWorkers, citizenCount;
-	public float peopleSurplus = 0, housingTimer = 0,starvationTimer, real_birthrate = 0;
+    public int freeWorkers, citizenCount;
+    public float peopleSurplus = 0, housingTimer = 0, starvationTimer, real_birthrate = 0;
 }
 
-public sealed class ColonyController : MonoBehaviour {
-	const float HOUSING_TIME = 5;
-	const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happiness wouldnt raised upper this level if condition is not met
-	HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
+public sealed class ColonyController : MonoBehaviour
+{
+    const float HOUSING_TIME = 5;
+    const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happiness wouldnt raised upper this level if condition is not met
+    HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
 
     public string cityName { get; private set; }
-	public Storage storage{get;private set;}
-	public HeadQuarters hq{get;private set;}
+    public Storage storage { get; private set; }
+    public HeadQuarters hq { get; private set; }
     public float gears_coefficient; // hot
-	public float hospitals_coefficient{get;private set;}
-	public float labourEfficientcy_coefficient {get;private set;}
-	public float happiness_coefficient {get;private set;}
-	public float health_coefficient{get;private set;}
-    public bool  accumulateEnergy = true;
+    public float hospitals_coefficient { get; private set; }
+    public float labourEfficientcy_coefficient { get; private set; }
+    public float happiness_coefficient { get; private set; }
+    public float health_coefficient { get; private set; }
+    public bool accumulateEnergy = true;
 
-	public float energyStored {get;private set;}
-	public float energySurplus {get;private set;}
-	public float totalEnergyCapacity {get;private set;}
-	public float energyCrystalsCount {get;private set;}
-	public List<Building> powerGrid { get; private set; }
-	public List<Dock> docks{get;private set;}
-	public byte docksLevel{get; private set;}
-	public float housingLevel { get; private set; }
+    public float energyStored { get; private set; }
+    public float energySurplus { get; private set; }
+    public float totalEnergyCapacity { get; private set; }
+    public float energyCrystalsCount { get; private set; }
+    public List<Building> powerGrid { get; private set; }
+    public List<Dock> docks { get; private set; }
+    public List<House> houses { get; private set; }
+    public byte docksLevel { get; private set; }
+    public float housingLevel { get; private set; }
 
-	public int freeWorkers{get;private set;}
-	public int citizenCount {get; private set;}
+    public int freeWorkers { get; private set; }
+    public int citizenCount { get; private set; }
     float birthrateCoefficient;
     public float realBirthrate { get; private set; }
-	float peopleSurplus = 0, housingTimer = 0;
-	public int totalLivespace{get;private set;}
-	private List<House> houses; List<Hospital> hospitals;
+    float peopleSurplus = 0, housingTimer = 0;
+    public int totalLivespace { get; private set; }
+    List<Hospital> hospitals;
     private float starvationTimer;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false;
     private const byte MAX_HOUSING_LEVEL = 5;
 
 
-	void Awake() {
+    void Awake()
+    {
         if (thisIsFirstSet)
         {
             gears_coefficient = 2;
@@ -60,7 +64,7 @@ public sealed class ColonyController : MonoBehaviour {
             hospitals_coefficient = 0;
             birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
-            energyCrystalsCount = 1000;          
+            energyCrystalsCount = 1000;
 
             cityName = "default city"; // lol
         }
@@ -77,21 +81,23 @@ public sealed class ColonyController : MonoBehaviour {
         if (hospitals != null) hospitals.Clear();
     }
 
-	public void Prepare() { // call from game master
-		if (storage == null) 	storage = gameObject.AddComponent<Storage>();
+    public void Prepare()
+    { // call from game master
+        if (storage == null) storage = gameObject.AddComponent<Storage>();
         GameMaster.realMaster.SetColonyController(this);
         UIController.current.Prepare();
-	}
+    }
 
     #region updating
-    void Update() {
-		if (GameMaster.gameSpeed == 0 | hq == null) return;
+    void Update()
+    {
+        if (GameMaster.gameSpeed == 0 | hq == null) return;
         float t = Time.deltaTime * GameMaster.gameSpeed;
 
         if (gears_coefficient > 1)
         {
             GameMaster gm = GameMaster.realMaster;
-            gears_coefficient -= gm.gearsDegradeSpeed * t * (2 - gm.environmentalConditions);
+            gears_coefficient -= gm.gearsDegradeSpeed * t * (2 - gm.environmentMaster.environmentalConditions);
         }
         gears_coefficient = Mathf.Clamp(gears_coefficient, GameConstants.GEARS_LOWER_LIMIT, GameConstants.GEARS_UP_LIMIT);
         // ENERGY CONSUMPTION
@@ -112,22 +118,38 @@ public sealed class ColonyController : MonoBehaviour {
                     UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.PowerFailure));
                     energyStored = 0;
                     int i = powerGrid.Count - 1;
-                    while (i >= 0 && energySurplus < 0)
+                    bool powerGridChanged = false;
+                    while (i >= 0 & energySurplus < 0)
                     {
-                        if (powerGrid[i].energySurplus < 0) ElementPowerSwitch(i, false);
+                        Building b = powerGrid[i];
+                        if (b == null)
+                        {
+                            powerGrid.RemoveAt(i);
+                            powerGridChanged = true;
+                        }
+                        else
+                        {
+                            if (b.isActive & b.energySurplus < 0)
+                            {
+                                energySurplus -= b.energySurplus;
+                                b.SetEnergySupply(false, false);                                
+                                powerGridChanged = true;
+                            }                         
+                        }
                         i--;
                     }
+                    if (powerGridChanged) RecalculatePowerGrid();
                 }
             }
         }
         //   STARVATION PROBLEM
         float foodSupplyHappiness = 1;
-        {            
+        {
             if (starvationTimer > 0)
             {
                 starvationTimer -= t;
                 if (starvationTimer < 0)
-                {                    
+                {
                     if (citizenCount == 1)
                     {
                         citizenCount = 0;
@@ -149,7 +171,7 @@ public sealed class ColonyController : MonoBehaviour {
             else
             {
                 float monthFoodReserves = citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + (1 - FOOD_PROBLEM_HAPPINESS_LIMIT) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);                
+                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + (1 - FOOD_PROBLEM_HAPPINESS_LIMIT) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
             }
         }
         //HOUSING PROBLEM
@@ -158,7 +180,7 @@ public sealed class ColonyController : MonoBehaviour {
             int housingDemand = citizenCount - totalLivespace;
             housingTimer -= t;
             if (housingTimer <= 0)
-            {                
+            {
                 if (housingDemand > 0)
                 {
                     int tentsCount = housingDemand / House.TENT_VOLUME;
@@ -208,7 +230,7 @@ public sealed class ColonyController : MonoBehaviour {
                     }
                 }
                 housingTimer = HOUSING_TIME;
-            }            
+            }
             if (housingLevel == 0)
             {
                 housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT;
@@ -225,34 +247,35 @@ public sealed class ColonyController : MonoBehaviour {
                 }
             }
         }
-		//HEALTHCARE
-		if (health_coefficient < 1 && hospitals_coefficient > 0) {
-			health_coefficient += hospitals_coefficient * t * gears_coefficient * 0.001f;
-		}
-		float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT) * hospitals_coefficient;
-		healthcareHappiness *= health_coefficient;	
-		// HAPPINESS CALCULATION
-		happiness_coefficient = 1;
-		if (housingHappiness < happiness_coefficient) happiness_coefficient = housingHappiness;
-		if (healthcareHappiness < happiness_coefficient ) happiness_coefficient = healthcareHappiness;
-		if (foodSupplyHappiness < happiness_coefficient) happiness_coefficient = foodSupplyHappiness;
+        //HEALTHCARE
+        if (health_coefficient < 1 && hospitals_coefficient > 0)
+        {
+            health_coefficient += hospitals_coefficient * t * gears_coefficient * 0.001f;
+        }
+        float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT) * hospitals_coefficient;
+        healthcareHappiness *= health_coefficient;
+        // HAPPINESS CALCULATION
+        happiness_coefficient = 1;
+        if (housingHappiness < happiness_coefficient) happiness_coefficient = housingHappiness;
+        if (healthcareHappiness < happiness_coefficient) happiness_coefficient = healthcareHappiness;
+        if (foodSupplyHappiness < happiness_coefficient) happiness_coefficient = foodSupplyHappiness;
         happiness_coefficient = Mathf.Clamp01(happiness_coefficient);
 
         //  BIRTHRATE
         {
             if (birthrateCoefficient != 0 & starvationTimer <= 0)
             {
-                    realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * t;
-                    if (peopleSurplus > 1)
-                    {
-                        int newborns = (int)peopleSurplus;
-                        AddCitizens(newborns);
-                        peopleSurplus -= newborns;
-                    }
+                realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * t;
+                if (peopleSurplus > 1)
+                {
+                    int newborns = (int)peopleSurplus;
+                    AddCitizens(newborns);
+                    peopleSurplus -= newborns;
+                }
             }
             peopleSurplus += realBirthrate;
         }
-	}
+    }
     public void EverydayUpdate()
     {
         if (!GameMaster.realMaster.weNeedNoResources)
@@ -270,17 +293,18 @@ public sealed class ColonyController : MonoBehaviour {
                         UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
                     }
                 }
-                else  starvationTimer = 0;
+                else starvationTimer = 0;
             }
             else starvationTimer = 0;
         }
     }
     #endregion
 
-    public void AddCitizens(int x) {
-		citizenCount += x;
-		freeWorkers += x;
-	}
+    public void AddCitizens(int x)
+    {
+        citizenCount += x;
+        freeWorkers += x;
+    }
     private IEnumerator DeportateWorkingCitizen() // чтобы не тормозить апдейт
     {
         bool found = false;
@@ -332,61 +356,55 @@ public sealed class ColonyController : MonoBehaviour {
         yield return null;
     }
 
-	public void AddWorkers(int x) {
-		freeWorkers += x;
-	}
-	public void SendWorkers( int x, WorkBuilding w ) {
-		if (freeWorkers == 0 | w == null) return;
-		if (x > freeWorkers) x = freeWorkers;
-		freeWorkers = freeWorkers - x + w.AddWorkers(x);
-	}
+    public void AddWorkers(int x)
+    {
+        freeWorkers += x;
+    }
+    public void SendWorkers(int x, WorkBuilding w)
+    {
+        if (freeWorkers == 0 | w == null) return;
+        if (x > freeWorkers) x = freeWorkers;
+        freeWorkers = freeWorkers - x + w.AddWorkers(x);
+    }
     public void SendWorkers(int x, Worksite w)
     {
         if (freeWorkers == 0 | w == null) return;
         if (x > freeWorkers) x = freeWorkers;
         freeWorkers = freeWorkers - x + w.AddWorkers(x);
-    }  
-
-	void ElementPowerSwitch( int index, bool energySupply) {
-		if ( !powerGrid[index].isActive ) return;
-		powerGrid[index].SetEnergySupply(energySupply);
-		if (energySupply) {
-			energySurplus += powerGrid[index].energySurplus;
-			totalEnergyCapacity += powerGrid[index].energyCapacity;
-		}
-		else {
-			energySurplus -= powerGrid[index].energySurplus;
-			totalEnergyCapacity -= powerGrid[index].energyCapacity;
-		}
-        if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
     }
 
-	#region AddingToLists
+    #region AddingToLists
 
-	public void AddHousing(House h) {
-		if ( ignoreHousingRequest) return;
-		if ( houses.Count > 0) {
-			foreach ( House eh in houses) {
-				if ( eh == h ) return;
-			}
-		}
-		houses.Add(h);
-		RecalculateHousing();
-	}
-	public void DeleteHousing(House h) {
+    public void AddHousing(House h)
+    {
+        if (ignoreHousingRequest) return;
+        if (houses.Count > 0)
+        {
+            foreach (House eh in houses)
+            {
+                if (eh == h) return;
+            }
+        }
+        houses.Add(h);
+        RecalculateHousing();
+    }
+    public void DeleteHousing(House h)
+    {
         if (ignoreHousingRequest) return;
         int i = 0;
-		while (i < houses.Count)  {
-			if ( houses[i] == h) {
-				houses.RemoveAt(i);
-				RecalculateHousing();
-				break;
-			}
-			else i++;
-		}
-	}
+        while (i < houses.Count)
+        {
+            if (houses[i] == h)
+            {
+                houses.RemoveAt(i);
+                RecalculateHousing();
+                break;
+            }
+            else i++;
+        }
+    }
     public void RecalculateHousing()
-    {        
+    {
         totalLivespace = 0;
         housingLevel = 0;
         if (hq == null) return;
@@ -419,7 +437,7 @@ public sealed class ColonyController : MonoBehaviour {
                 houses.RemoveAt(realIndex);
                 totalLivespace -= House.TENT_VOLUME;
                 housingVolumes[0] -= h.housing;
-                h.Annihilate(false);                
+                h.Annihilate(false);
                 tentIndexDelta--;
                 i++;
             }
@@ -517,199 +535,238 @@ public sealed class ColonyController : MonoBehaviour {
         housingLevel = housingVolumes[5] / usingLivespace * 5 + housingVolumes[4] / usingLivespace * 4 + housingVolumes[3] / usingLivespace * 3 + housingVolumes[2] / usingLivespace * 2 + housingVolumes[1] / usingLivespace;
     }
 
-    public void AddHospital(Hospital h) {
-		if (h == null) return;
-		if (hospitals == null) hospitals = new List<Hospital>();
-		if ( hospitals.Count > 0) {
-			foreach ( Hospital eh in hospitals) {
-				if ( eh == h ) return;
-			}
-		}
-		hospitals.Add(h);
-		RecalculateHospitals();
-	}
-	public void DeleteHospital(Hospital h) {
-		int i = 0;
-		while (i < hospitals.Count)  {
-			if ( hospitals[i] == h) {
-				hospitals.RemoveAt(i);
-				RecalculateHospitals();
-				break;
-			}
-			else i++;
-		}
-	}
-	public void RecalculateHospitals() {
-		hospitals_coefficient = 0;
-		if (hospitals.Count == 0  ) return;
+    public void AddHospital(Hospital h)
+    {
+        if (h == null) return;
+        if (hospitals == null) hospitals = new List<Hospital>();
+        if (hospitals.Count > 0)
+        {
+            foreach (Hospital eh in hospitals)
+            {
+                if (eh == h) return;
+            }
+        }
+        hospitals.Add(h);
+        RecalculateHospitals();
+    }
+    public void DeleteHospital(Hospital h)
+    {
+        int i = 0;
+        while (i < hospitals.Count)
+        {
+            if (hospitals[i] == h)
+            {
+                hospitals.RemoveAt(i);
+                RecalculateHospitals();
+                break;
+            }
+            else i++;
+        }
+    }
+    public void RecalculateHospitals()
+    {
+        hospitals_coefficient = 0;
+        if (hospitals.Count == 0) return;
         int i = 0;
         float hospitalsCoverage = 0;
-		while (i <hospitals.Count) {
-			if ( hospitals[i].isActive ) hospitalsCoverage += hospitals[i].coverage;
-			i++;
-		}
+        while (i < hospitals.Count)
+        {
+            if (hospitals[i].isActive) hospitalsCoverage += hospitals[i].coverage;
+            i++;
+        }
         if (citizenCount != 0)
         {
             hospitals_coefficient = (float)hospitalsCoverage / (float)citizenCount;
         }
         else hospitals_coefficient = 0;
-	}
+    }
 
-	public void AddToPowerGrid(Building b) {
-		if (b == null) return;
-		int i = 0;
-		while ( i < powerGrid.Count ) {
-			if (powerGrid[i] == null) {
-				powerGrid.RemoveAt(i);
-				continue;
-			}
-			else {
-				if (powerGrid[i] == b) return;
-				i++;
-			}
-		}
-		powerGrid.Add(b);
-		ElementPowerSwitch(powerGrid.Count - 1, true);
-	}
-	public void DisconnectFromPowerGrid(Building b) {
-		if (b == null ) return;
-		int i = 0;
-		while (i < powerGrid.Count)  {
-			if (powerGrid[i] == null) {powerGrid.RemoveAt(i); continue;}
-			if ( powerGrid[i] == b) {
-				ElementPowerSwitch(i, false);
-				powerGrid.RemoveAt(i);
-				return;
-			}
-			else i++;
-		}
-	}
-	public void RecalculatePowerGrid() {
-		energySurplus = 0; totalEnergyCapacity = 0;
-		if (powerGrid.Count == 0) return;
-		int i =0; 
-		while ( i < powerGrid.Count ) {
-			if (powerGrid[i] == null) {
-				powerGrid.RemoveAt(i);
-				continue;
-			}
-			if (powerGrid[i].energySurplus >= 0 ) { //producent
-				energySurplus += powerGrid[i].energySurplus;
-				totalEnergyCapacity += powerGrid[i].energyCapacity;
-			}
-			else { // consument
-				if (powerGrid[i].isActive) {
-					if ( powerGrid[i].energySupplied ) {
-						energySurplus += powerGrid[i].energySurplus;
-						totalEnergyCapacity += powerGrid[i].energyCapacity;
-					}
-					else {
-						if ( powerGrid[i].energySurplus < 0 && energyStored >= Mathf.Abs(powerGrid[i].energySurplus)) { 
-							powerGrid[i].SetEnergySupply(true); 
-							energySurplus += powerGrid[i].energySurplus;
-							totalEnergyCapacity += powerGrid[i].energyCapacity;
-						} 
-					}
-				}
-			}
-			i++;
-		}
+    public void AddToPowerGrid(Building b)
+    {
+        if (b == null) return;
+        int i = 0;
+        while (i < powerGrid.Count)
+        {
+            if (powerGrid[i] == null)
+            {
+                powerGrid.RemoveAt(i);
+                continue;
+            }
+            else
+            {
+                if (powerGrid[i] == b) return;
+                i++;
+            }
+        }
+        powerGrid.Add(b);
+        b.SetEnergySupply(true, false);
+        RecalculatePowerGrid();
+    }
+    public void DisconnectFromPowerGrid(Building b)
+    {
+        if (b == null) return;
+        int i = 0;
+        while (i < powerGrid.Count)
+        {
+            if (powerGrid[i] == null) { powerGrid.RemoveAt(i); continue; }
+            if (powerGrid[i] == b)
+            {
+                b.SetEnergySupply(false, false);
+                powerGrid.RemoveAt(i);
+                RecalculatePowerGrid();
+                return;
+            }
+            else i++;
+        }
+    }
+    public void RecalculatePowerGrid()
+    {
+        energySurplus = 0; totalEnergyCapacity = 0;
+        if (powerGrid.Count == 0) return;
+        int i = 0;
+        while (i < powerGrid.Count)
+        {
+            if (powerGrid[i] == null)
+            {
+                powerGrid.RemoveAt(i);
+                continue;
+            }
+            else
+            {
+                if (powerGrid[i].energySurplus >= 0)
+                { //producent
+                    energySurplus += powerGrid[i].energySurplus;
+                    totalEnergyCapacity += powerGrid[i].energyCapacity;
+                }
+                else
+                { // consument
+                    if (powerGrid[i].isActive)
+                    {
+                        totalEnergyCapacity += powerGrid[i].energyCapacity;
+                        if (powerGrid[i].isEnergySupplied)
+                        {
+                            energySurplus += powerGrid[i].energySurplus;
+                        }
+                        else
+                        {
+                            if (powerGrid[i].energySurplus < 0 & energyStored >= Mathf.Abs(powerGrid[i].energySurplus) * 2)
+                            {
+                                powerGrid[i].SetEnergySupply(true, false);
+                                energySurplus += powerGrid[i].energySurplus;
+                            }
+                        }
+                    }
+                }
+                i++;
+            }           
+        }
         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
-	}
+    }
     public void AddEnergy(float f)
     {
         energyStored += f;
         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
     }
 
-	public void AddDock( Dock d ) {
-		if ( d == null ) return;
-		if ( docks.Count > 0) {
-			foreach ( Dock ed in docks) {
-				if ( ed == d ) return;
-			}
-		}
-		docks.Add(d);
-		if (d.level > docksLevel) docksLevel = d.level;
-	}
-	public void RemoveDock( Dock d) {
-		if ( d == null || docks.Count == 0) return;
-		int i = 0;
-		while (i < docks.Count) {
-			if (docks[i] == d) {
-				docks.RemoveAt(i);
-				return;
-			}
-			i++;
-		}
-	}
-	#endregion
+    public void AddDock(Dock d)
+    {
+        if (d == null) return;
+        if (docks.Count > 0)
+        {
+            foreach (Dock ed in docks)
+            {
+                if (ed == d) return;
+            }
+        }
+        docks.Add(d);
+        if (d.level > docksLevel) docksLevel = d.level;
+    }
+    public void RemoveDock(Dock d)
+    {
+        if (d == null || docks.Count == 0) return;
+        int i = 0;
+        while (i < docks.Count)
+        {
+            if (docks[i] == d)
+            {
+                docks.RemoveAt(i);
+                return;
+            }
+            i++;
+        }
+    }
+    #endregion
 
-	public void SetHQ (HeadQuarters new_hq) {
-		if (new_hq != null) hq = new_hq;
+    public void SetHQ(HeadQuarters new_hq)
+    {
+        if (new_hq != null) hq = new_hq;
         QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
     }
 
-	public void AddEnergyCrystals(float v) {
-		if (v <=0) return;
-		energyCrystalsCount += v;
+    public void AddEnergyCrystals(float v)
+    {
+        if (v <= 0) return;
+        energyCrystalsCount += v;
         if (v > 1) UIController.current.MoneyChanging(v);
-	}
+    }
 
     /// <summary>
     /// returns the available residue of asked sum
     /// </summary>
     /// <param name="v"></param>
     /// <returns></returns>
-	public float GetEnergyCrystals(float v) {
-		if (v > energyCrystalsCount) {v = energyCrystalsCount;energyCrystalsCount = 0;}
-		else energyCrystalsCount -= v;
+	public float GetEnergyCrystals(float v)
+    {
+        if (v > energyCrystalsCount) { v = energyCrystalsCount; energyCrystalsCount = 0; }
+        else energyCrystalsCount -= v;
         if (v >= 1) UIController.current.MoneyChanging(-v);
         return v;
-	}
+    }
 
-	#region save-load system
-	public ColonyControllerSerializer Save() {
-		ColonyControllerSerializer ccs = new ColonyControllerSerializer();
-		ccs.storageSerializer = storage.Save();
-		ccs.gears_coefficient = gears_coefficient;
-		ccs.labourEfficientcy_coefficient = labourEfficientcy_coefficient;
-		ccs.happiness_coefficient = happiness_coefficient;
-		ccs.health_coefficient = health_coefficient;
-		ccs.birthrateCoefficient = birthrateCoefficient;
-
-		ccs.energyStored = energyStored;
-		ccs.energyCrystalsCount = energyCrystalsCount;
-        ccs.worksites = Worksite.StaticSave();
-		ccs.freeWorkers = freeWorkers;
-		ccs.citizenCount = citizenCount;
-		ccs.peopleSurplus = peopleSurplus;
-		ccs.housingTimer = housingTimer;
-		ccs.starvationTimer = starvationTimer;
-		ccs.real_birthrate = realBirthrate;
+    #region save-load system
+    public ColonyControllerSerializer Save()
+    {
+        ColonyControllerSerializer ccs = new ColonyControllerSerializer();
+        ccs.storageSerializer = storage.Save();
+        ccs.gears_coefficient = gears_coefficient;
+        ccs.labourEfficientcy_coefficient = labourEfficientcy_coefficient;
+        ccs.happiness_coefficient = happiness_coefficient;
+        ccs.health_coefficient = health_coefficient;
         ccs.birthrateCoefficient = birthrateCoefficient;
-		return ccs;
-	}
-	public void Load(ColonyControllerSerializer ccs) {
-		if (storage == null) storage = gameObject.AddComponent<Storage>();
-		storage.Load(ccs.storageSerializer);
-		gears_coefficient = ccs.gears_coefficient;
-		labourEfficientcy_coefficient = ccs.labourEfficientcy_coefficient;
-		happiness_coefficient = ccs.happiness_coefficient;
-		health_coefficient = ccs.health_coefficient;
-		birthrateCoefficient = ccs.birthrateCoefficient;
 
-		energyStored = ccs.energyStored;
-		energyCrystalsCount = ccs.energyCrystalsCount;
-        if (ccs.worksites.Length > 0) Worksite.StaticLoad(ccs.worksites);
-		freeWorkers = ccs.freeWorkers;
-		citizenCount = ccs.citizenCount;
-		peopleSurplus = ccs.peopleSurplus;
-		housingTimer = ccs.housingTimer;
-		starvationTimer = ccs.starvationTimer;
-		realBirthrate = ccs.realBirthrate;
+        ccs.energyStored = energyStored;
+        ccs.energyCrystalsCount = energyCrystalsCount;
+        ccs.worksites = Worksite.StaticSave();
+        ccs.freeWorkers = freeWorkers;
+        ccs.citizenCount = citizenCount;
+        ccs.peopleSurplus = peopleSurplus;
+        ccs.housingTimer = housingTimer;
+        ccs.starvationTimer = starvationTimer;
+        ccs.real_birthrate = realBirthrate;
+        ccs.birthrateCoefficient = birthrateCoefficient;
+        return ccs;
+    }
+    public void Load(ColonyControllerSerializer ccs)
+    {
+        if (storage == null) storage = gameObject.AddComponent<Storage>();
+        storage.Load(ccs.storageSerializer);
+        gears_coefficient = ccs.gears_coefficient;
+        labourEfficientcy_coefficient = ccs.labourEfficientcy_coefficient;
+        happiness_coefficient = ccs.happiness_coefficient;
+        health_coefficient = ccs.health_coefficient;
         birthrateCoefficient = ccs.birthrateCoefficient;
-	}
-	#endregion
+
+        energyStored = ccs.energyStored;
+        energyCrystalsCount = ccs.energyCrystalsCount;
+        if (ccs.worksites.Length > 0) Worksite.StaticLoad(ccs.worksites);
+        freeWorkers = ccs.freeWorkers;
+        citizenCount = ccs.citizenCount;
+        peopleSurplus = ccs.peopleSurplus;
+        housingTimer = ccs.housingTimer;
+        starvationTimer = ccs.starvationTimer;
+        realBirthrate = ccs.realBirthrate;
+        birthrateCoefficient = ccs.birthrateCoefficient;
+    }
+    #endregion
 
 }

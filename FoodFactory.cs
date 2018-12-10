@@ -34,7 +34,7 @@ public class FoodFactory : WorkBuilding {
         }
         if (supplies_outputBuffer <= BUFFER_LIMIT)
         {
-            if (isActive & energySupplied) workflow += workSpeed;
+            if (isActive & isEnergySupplied) workflow += workSpeed;
             if (workflow >= workflowToProcess) LabourResult();
         }
     }

@@ -77,7 +77,7 @@ public class Farm : WorkBuilding
 
     override public void LabourUpdate()
     {
-        if (isActive & energySupplied)
+        if (isActive & isEnergySupplied)
         {
             workflow += workSpeed;
             if (workflow >= workflowToProcess)

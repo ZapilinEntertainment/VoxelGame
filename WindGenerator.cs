@@ -20,7 +20,7 @@ public class WindGenerator : Building {
         subscribedToUpdate = true;
         if (!subscribedToWindUpdate)
         {
-            GameMaster.realMaster.WindUpdateEvent += this.WindUpdate;            
+            GameMaster.realMaster.environmentMaster.WindUpdateEvent += this.WindUpdate;            
             subscribedToWindUpdate = true;
             head = transform.GetChild(0).GetChild(0);
             screw = head.transform.GetChild(0);
@@ -28,15 +28,15 @@ public class WindGenerator : Building {
         float hf = Chunk.CHUNK_SIZE / 2f;
 		height_coefficient = (basement.pos.y - hf) / hf;
         if (height_coefficient < 0) height_coefficient /= 4f;
-		WindUpdate(GameMaster.realMaster.windVector);
+		WindUpdate(GameMaster.realMaster.environmentMaster.windVector);
 	}
 
 	void Update() {
         if (!subscribedToUpdate) return;
 		if ( rotateHead ) {
-            Vector3 windDir = new Vector3(windDirection.x, 0, windDirection.y).normalized;
-            head.transform.forward = Vector3.MoveTowards(head.transform.forward, windDir, HEAD_ROTATE_SPEED * Time.deltaTime);            
-			if (head.transform.forward == windDir) rotateHead = false;
+            Vector3 newDir = new Vector3(-windDirection.x, 0, -windDirection.y).normalized;
+            head.transform.forward = Vector3.MoveTowards(head.transform.forward, newDir, HEAD_ROTATE_SPEED * Time.deltaTime);            
+			if (head.transform.forward == newDir) rotateHead = false;
 		}
 		if (rotateScrew) {
 			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * Time.deltaTime * GameMaster.gameSpeed);
@@ -77,7 +77,7 @@ public class WindGenerator : Building {
         PrepareBuildingForDestruction(forced);
         if (subscribedToWindUpdate)
         {
-            GameMaster.realMaster.WindUpdateEvent -= this.WindUpdate;
+            GameMaster.realMaster.environmentMaster.WindUpdateEvent -= this.WindUpdate;
             subscribedToWindUpdate = false;
         }
         Destroy(gameObject);

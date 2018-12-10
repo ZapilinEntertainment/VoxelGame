@@ -35,7 +35,7 @@ public sealed class Workshop : WorkBuilding {
 
     override public void LabourUpdate()
     {
-        if (isActive & energySupplied)
+        if (isActive & isEnergySupplied)
         {
             if (colony.gears_coefficient < GameConstants.GEARS_UP_LIMIT)
             {

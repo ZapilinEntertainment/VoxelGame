@@ -237,7 +237,7 @@ public sealed class Hangar : WorkBuilding
 
     public override void LabourUpdate()
     {
-        if (isActive & energySupplied & constructing)
+        if (isActive & isEnergySupplied & constructing)
         {
             workflow += workSpeed;
             if (workflow >= workflowToProcess)

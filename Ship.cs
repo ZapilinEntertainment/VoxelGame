@@ -62,7 +62,7 @@ public class Ship : MonoBehaviour {
                 }
                 else
                 {
-                    transform.position = new Vector3(d.transform.position.z + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;
@@ -107,7 +107,7 @@ public class Ship : MonoBehaviour {
             float dist = 0;
             if (xAxisMoving) dist = Mathf.Abs(transform.position.x - destination.transform.position.x);
             else dist = Mathf.Abs(transform.position.z - destination.transform.position.z);
-            if (dist <= 0.1f)
+            if (dist <= speed * Time.deltaTime * GameMaster.gameSpeed)
             {
                 if (!unloaded)
                 { // еще не разгрузился
@@ -125,11 +125,7 @@ public class Ship : MonoBehaviour {
                     PoolMaster.current.ReturnShipToPool(this);
                 }
             }
-            if (speed * speed / 2 / acceleration > dist) speed -= acceleration * Time.deltaTime * GameMaster.gameSpeed;
-            else
-            {
-                if (speed < 100) speed += acceleration * Time.deltaTime * GameMaster.gameSpeed;
-            }
+            if (speed * speed / 2 / acceleration >= dist) speed -= acceleration * Time.deltaTime * GameMaster.gameSpeed;
         }
         else
         {
