@@ -9,14 +9,14 @@ public class Powerplant : WorkBuilding {
 		switch (id) {
 		case BIOGENERATOR_2_ID:
                 fuel = ResourceType.Food;
-                output = 50;
+                output = 400;
                 fuelNeeds = 10;
                 fuelLeft = 0;
                 fuelBurnTime = 30 * 1f / GameMaster.LABOUR_TICK; // 30 sec
                 break;
 		case MINERAL_POWERPLANT_2_ID:
                 fuel = ResourceType.mineral_F;
-                output = 100;
+                output = 400;
                 fuelNeeds = 1;
                 fuelLeft = 0;
                 fuelBurnTime = 6 * 1f / GameMaster.LABOUR_TICK; // 6 sec

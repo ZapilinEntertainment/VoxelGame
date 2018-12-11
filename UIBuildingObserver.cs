@@ -140,6 +140,14 @@ public class UIBuildingObserver : UIObserver {
                             else
                             {
                                 if (status_energySupplied & showingEnergySurplus != observingBuilding.energySurplus) mustBeRedrawn = true;
+                                else
+                                {
+                                    if (showingEnergySurplus != observingBuilding.energySurplus)
+                                    {
+                                        showingEnergySurplus = observingBuilding.energySurplus;
+                                        energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                                    }
+                                }
                             }
                         }
                     }

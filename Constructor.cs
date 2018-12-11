@@ -2,34 +2,38 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Constructor : MonoBehaviour {
-	public static Constructor main;
-	public float TERRAIN_ROUGHNESS = 0.3f;
-	Chunk c;
-	public float seed = 1.1f;
+public class Constructor : MonoBehaviour
+{
+    public static Constructor main;
+    public float TERRAIN_ROUGHNESS = 0.3f;
+    Chunk c;
+    public float seed = 1.1f;
 
-	// Use this for initialization
-	void Awake () {
-		if (main != null) {Destroy(main); main = this;} // singleton pattern
-		seed += System.DateTime.Now.Second;
-	}
+    // Use this for initialization
+    void Awake()
+    {
+        if (main != null) { Destroy(main); main = this; } // singleton pattern
+        seed += System.DateTime.Now.Second;
+    }
 
-    public void ConstructChunk(byte chunkSize, ChunkGenerationMode mode) {
+    public void ConstructChunk(byte chunkSize, ChunkGenerationMode mode)
+    {
         seed += System.DateTime.Now.Second;
         TERRAIN_ROUGHNESS = GameMaster.gameStartSettings.terrainRoughness;
         int size = chunkSize;
         int[,,] dat = new int[size, size, size];
-        switch (mode) {
-            case ChunkGenerationMode.Standart: GenerateSpirals(size, ref dat);  break;
+        switch (mode)
+        {
+            case ChunkGenerationMode.Standart: GenerateSpirals(size, ref dat); break;
             case ChunkGenerationMode.Pyramid: GeneratePyramid(size, ref dat); break;
         }
-		GameObject g = new GameObject("chunk");
-		c = g.AddComponent<Chunk>();
-		GameMaster.realMaster.SetMainChunk(c);
-		c.CreateNewChunk(dat);
-		NatureCreation(c);
+        GameObject g = new GameObject("chunk");
+        c = g.AddComponent<Chunk>();
+        GameMaster.realMaster.SetMainChunk(c);
+        c.CreateNewChunk(dat);
+        NatureCreation(c);
         // + должна быть проверка для возможности посадки
-	}
+    }
 
     private void GenerateSpirals(int size, ref int[,,] data)
     {
@@ -41,15 +45,15 @@ public class Constructor : MonoBehaviour {
         int x = size / 2, y = x, z = x;
         List<Vector3Int> skeleton = new List<Vector3Int>();
         data[x, y, z] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x, y, z));
-        data[x+1, y, z] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x+1, y, z));
-        data[x-1, y, z] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x-1, y, z));
-        data[x, y, z+1] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x, y, z+1));
-        data[x, y, z-1] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x, y, z-1));
+        data[x + 1, y, z] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x + 1, y, z));
+        data[x - 1, y, z] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x - 1, y, z));
+        data[x, y, z + 1] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x, y, z + 1));
+        data[x, y, z - 1] = ResourceType.DIRT_ID; skeleton.Add(new Vector3Int(x, y, z - 1));
 
-        int[] allVariants = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,14,15,16,17,18,19,20,21,22,23,24,25 };
-        
+        int[] allVariants = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+
         List<int> crossroadVariants = new List<int>();
-        crossroadVariants.AddRange(allVariants);        
+        crossroadVariants.AddRange(allVariants);
         for (int i = 0; i < arms; i++)
         {
             int x2 = x, y2 = y, z2 = z;
@@ -85,13 +89,13 @@ public class Constructor : MonoBehaviour {
                 case 24: y2--; z2--; break;
                 case 25: x2++; y2--; z2--; break;
             }
-            int j = (int)(size * (armsLength * 0.5f + Random.value * 0.5f) + 1) ;
-            while (j > 0 )
+            int j = (int)(size * (armsLength * 0.5f + Random.value * 0.5f) + 1);
+            while (j > 0)
             {
                 j--;
                 rval = (int)(Random.value * (allVariants.Length - 1));
-                direction = allVariants[rval];                
-                int len = (int)((8 * armsLength) * ( 0.125f + Random.value * 0.875f));
+                direction = allVariants[rval];
+                int len = (int)((8 * armsLength) * (0.125f + Random.value * 0.875f));
                 for (int k = 0; k < len; k++)
                 {
                     Vector3Int left, right;
@@ -100,30 +104,30 @@ public class Constructor : MonoBehaviour {
                         case 0: x2--; y2++; z2++; left = new Vector3Int(-1, 0, -1); right = new Vector3Int(1, 0, 1); break;
                         case 1: y2++; z2++; left = new Vector3Int(-1, 0, 0); right = new Vector3Int(1, 0, 0); break;
                         case 2: x2++; y2++; z2++; left = new Vector3Int(-1, 0, 1); right = new Vector3Int(1, 0, -1); break;
-                        case 3: x2--; y2++; left = new Vector3Int(0 , 0, -1); right = new Vector3Int(0 , 0, 1); break;
-                        case 4: y2++; left = new Vector3Int(-1, 0,0 ); right = new Vector3Int(1, 0,0 ); break;
+                        case 3: x2--; y2++; left = new Vector3Int(0, 0, -1); right = new Vector3Int(0, 0, 1); break;
+                        case 4: y2++; left = new Vector3Int(-1, 0, 0); right = new Vector3Int(1, 0, 0); break;
                         case 5: x2++; y2++; left = new Vector3Int(1, 0, 1); right = new Vector3Int(1, 0, -1); break;
                         case 6: x2--; y2++; z2--; left = new Vector3Int(1, 0, -1); right = new Vector3Int(-1, 0, 1); break;
-                        case 7: y2++; z2--; left = new Vector3Int(1, 0,0 ); right = new Vector3Int(-1, 0,0 ); break;
+                        case 7: y2++; z2--; left = new Vector3Int(1, 0, 0); right = new Vector3Int(-1, 0, 0); break;
                         case 8: x2++; y2++; z2--; left = new Vector3Int(1, 0, 1); right = new Vector3Int(-1, 0, -1); break;
                         case 9: x2--; z2++; left = new Vector3Int(-1, 0, -1); right = new Vector3Int(1, 0, 1); break;
-                        case 10: z2++; left = new Vector3Int(-1, 0,0 ); right = new Vector3Int(1, 0,0 ); break;
+                        case 10: z2++; left = new Vector3Int(-1, 0, 0); right = new Vector3Int(1, 0, 0); break;
                         case 11: x2++; z2++; left = new Vector3Int(-1, 0, 1); right = new Vector3Int(1, 0, -1); break;
-                        case 12: x2--; left = new Vector3Int(0 , 0, -1); right = new Vector3Int(0 , 0, 1); break;
-                        case 13: x2++; left = new Vector3Int(0 , 0, 1); right = new Vector3Int(0 , 0, -1); break;
+                        case 12: x2--; left = new Vector3Int(0, 0, -1); right = new Vector3Int(0, 0, 1); break;
+                        case 13: x2++; left = new Vector3Int(0, 0, 1); right = new Vector3Int(0, 0, -1); break;
                         case 14: x2--; z2--; left = new Vector3Int(1, 0, -1); right = new Vector3Int(-1, 0, 1); break;
-                        case 15: z2--; left = new Vector3Int(1, 0,0 ); right = new Vector3Int(-1, 0,0 ); break;
+                        case 15: z2--; left = new Vector3Int(1, 0, 0); right = new Vector3Int(-1, 0, 0); break;
                         case 16: x2++; z2--; left = new Vector3Int(1, 0, 1); right = new Vector3Int(-1, 0, -1); break;
                         case 17: x2--; y2--; z2++; left = new Vector3Int(-1, 0, -1); right = new Vector3Int(1, 0, 1); break;
-                        case 18: y2--; z2++; left = new Vector3Int(-1, 0,0 ); right = new Vector3Int(1, 0,0 ); break;
-                        case 19: x2++; y2--; z2++; left = new Vector3Int(-1, 0,0); right = new Vector3Int(1, 0, -1); break;
-                        case 20: x2--; y2--; left = new Vector3Int(0 , 0, -1); right = new Vector3Int(0 , 0, 1); break;
-                        case 21: y2--; left = new Vector3Int(-1, 0,0 ); right = new Vector3Int(1, 0,0 ); break;
-                        case 22: x2++; y2--; left = new Vector3Int(0 , 0, 1); right = new Vector3Int(0 , 0, -1); break;
+                        case 18: y2--; z2++; left = new Vector3Int(-1, 0, 0); right = new Vector3Int(1, 0, 0); break;
+                        case 19: x2++; y2--; z2++; left = new Vector3Int(-1, 0, 0); right = new Vector3Int(1, 0, -1); break;
+                        case 20: x2--; y2--; left = new Vector3Int(0, 0, -1); right = new Vector3Int(0, 0, 1); break;
+                        case 21: y2--; left = new Vector3Int(-1, 0, 0); right = new Vector3Int(1, 0, 0); break;
+                        case 22: x2++; y2--; left = new Vector3Int(0, 0, 1); right = new Vector3Int(0, 0, -1); break;
                         case 23: x2--; y2--; z2--; left = new Vector3Int(1, 0, -1); right = new Vector3Int(-1, 0, 1); break;
-                        case 24: y2--; z2--; left = new Vector3Int(1, 0,0 ); right = new Vector3Int(-1, 0,0 ); break;
+                        case 24: y2--; z2--; left = new Vector3Int(1, 0, 0); right = new Vector3Int(-1, 0, 0); break;
                         case 25: x2++; y2--; z2--; left = new Vector3Int(1, 0, 1); right = new Vector3Int(-1, 0, -1); break;
-                        default: right = new Vector3Int(1,0,0); left= new Vector3Int(-1, 0, 0);break;
+                        default: right = new Vector3Int(1, 0, 0); left = new Vector3Int(-1, 0, 0); break;
                     }
                     if (x2 > 0 & y2 > 0 & z2 > 0 & x2 < size & y2 < size & z2 < size)
                     {
@@ -155,10 +159,10 @@ public class Constructor : MonoBehaviour {
                                 else leftAppliable = false;
                             }
                         }
-                        
+
                     }
                     else break;
-                }                
+                }
             }
         }
         // обработка
@@ -209,133 +213,140 @@ public class Constructor : MonoBehaviour {
         }
     }
 
-	void NatureCreation(Chunk chunk) {
-		LifeSource ls = null;
+    void NatureCreation(Chunk chunk)
+    {
+        LifeSource ls = null;
         Block[,,] blocks = chunk.blocks;
-        int dirtID = ResourceType.DIRT_ID, size = Chunk.CHUNK_SIZE;
+        int dirtID = ResourceType.DIRT_ID, size = blocks.GetLength(0);
+        int y = 0, x, z;
+        SurfaceBlock chosenSurface = null;
         if (Random.value > 0.5f)
         {
-            ls = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as LifeSource;
-            for (int x = size - 2; x > 0; x--)
+            foreach (SurfaceBlock sblock in chunk.surfaceBlocks)
             {
-                for (int z = size - 2; z > 0; z--)
+                if (sblock != null && sblock.pos.y > y)
                 {
-                    for (int y = size - 1; y > 1; y--)
+                    if (sblock.pos.x > 0 & sblock.pos.x < size - 1 & sblock.pos.z > 0 & sblock.pos.z < size - 1)
                     {
-                        if (blocks[x, y, z] == null) continue;
-                        if (blocks[x, y, z].type == BlockType.Surface)
-                        {
-                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
-
-                            chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
-
-                            if (y + 1 < size)
-                            {
-                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));                            
-                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));                            
-                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));                            
-                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));                            
-                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));                            
-                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));                            
-                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));                            
-                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));                              
-                                if (y + 2 < size)
-                                {
-                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
-                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
-                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
-                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
-                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
-                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
-                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
-                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
-                                }
-                            }                            
-                            ls.SetBasement(blocks[x, y, z] as SurfaceBlock, PixelPosByte.zero);
-                            x = 0;
-                            z = 0;
-                            chunk.GenerateNature(ls.transform.position);
-                            break;
-                        }
+                        chosenSurface = sblock;
+                        y = sblock.pos.y;
                     }
                 }
+            }
+            if (chosenSurface != null)
+            {
+                x = chosenSurface.pos.x;
+                z = chosenSurface.pos.z;
+                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
+
+                chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
+
+                if (y + 1 < size)
+                {
+                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
+                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
+                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
+                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));
+                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));
+                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));
+                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));
+                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
+                    if (y + 2 < size)
+                    {
+                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
+                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
+                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
+                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
+                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
+                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
+                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
+                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
+                    }
+                }
+                chosenSurface.ReplaceMaterial(dirtID);
+                ls = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as LifeSource;
+                ls.SetBasement(chosenSurface, PixelPosByte.zero);
+                chunk.GenerateNature(ls.transform.position);
             }
         }
         else
         {
-            ls = Structure.GetStructureByID(Structure.LIFESTONE_ID) as LifeSource;
-            for (int x = 1; x < size - 1 ; x++)
+            y = size;
+            foreach (SurfaceBlock sblock in chunk.surfaceBlocks)
             {
-                for (int z = 1; z < size - 1; z++)
+                if (sblock != null && sblock.pos.y < size)
                 {
-                    for (int y = 1; y < size; y++)
+                    if (sblock.pos.x > 0 & sblock.pos.x < size - 1 & sblock.pos.z > 0 & sblock.pos.z < size - 1)
                     {
-                        if (blocks[x, y, z] == null) continue;
-                        if (blocks[x, y, z].type == BlockType.Surface)
-                        {
-                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
-
-                            chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
-                            chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
-
-                            if (y + 1 < size)
-                            {
-                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
-                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
-                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
-                                chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));
-                                chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));
-                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));
-                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));
-                                chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
-                                if (y + 2 < size)
-                                {
-                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
-                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
-                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
-                                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
-                                    chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
-                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
-                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
-                                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
-                                }
-                            }                            
-                            ls.SetBasement(blocks[x,y,z] as SurfaceBlock, PixelPosByte.zero);
-                            x = size;
-                            z = size;
-                            chunk.GenerateNature(ls.transform.position);
-                            break;
-                        }
+                        chosenSurface = sblock;
+                        y = sblock.pos.y;
                     }
                 }
             }
-        }        
+            if (chosenSurface != null)
+            {
+                x = chosenSurface.pos.x;
+                z = chosenSurface.pos.z;
+                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
+
+                chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
+                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
+
+                if (y + 1 < size)
+                {
+                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
+                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
+                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
+                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));
+                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));
+                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));
+                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));
+                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
+                    if (y + 2 < size)
+                    {
+                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
+                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
+                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
+                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
+                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
+                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
+                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
+                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
+                    }
+                }
+                chosenSurface.ReplaceMaterial(dirtID);
+                ls = Structure.GetStructureByID(Structure.LIFESTONE_ID) as LifeSource;
+                ls.SetBasement(chosenSurface, PixelPosByte.zero);
+                chunk.GenerateNature(ls.transform.position);
+                return;
+            }
+        }
     }
 }

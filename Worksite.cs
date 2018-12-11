@@ -118,10 +118,10 @@ public abstract class Worksite : MonoBehaviour {
     }
     public static void StaticLoad(WorksiteSerializer[] wdata)
     {
-        worksitesList = new List<Worksite>(wdata.Length);
+        worksitesList = new List<Worksite>();
         Worksite w = null;
         Chunk chunk = GameMaster.realMaster.mainChunk;
-        for (int i = 0; i < worksitesList.Count; i++)
+        for (int i = 0; i < wdata.Length; i++)
         {
             WorksiteSerializer ws = wdata[i];
             ChunkPos cpos = ws.workObjectPos;
@@ -134,7 +134,7 @@ public abstract class Worksite : MonoBehaviour {
                         if (sblock != null)
                         {
                             w = sblock.gameObject.AddComponent<BlockBuildingSite>();
-                            worksitesList[i] = w;
+                            worksitesList.Add(w);
                             w.Load(ws);
                         }
                         else continue;
@@ -146,7 +146,7 @@ public abstract class Worksite : MonoBehaviour {
                         if (sblock != null)
                         {
                             w = sblock.gameObject.AddComponent<CleanSite>();
-                            worksitesList[i] = w;
+                            worksitesList.Add(w);
                             w.Load(ws);
                         }
                         else continue;
@@ -158,7 +158,7 @@ public abstract class Worksite : MonoBehaviour {
                         if (cb != null)
                         {
                             w = cb.gameObject.AddComponent<DigSite>();
-                            worksitesList[i] = w;
+                            worksitesList.Add(w);
                             w.Load(ws);
                         }
                         else continue;
@@ -170,7 +170,7 @@ public abstract class Worksite : MonoBehaviour {
                         if (sblock != null)
                         {
                             w = sblock.gameObject.AddComponent<GatherSite>();
-                            worksitesList[i] = w;
+                            worksitesList.Add(w);
                             w.Load(ws);
                         }
                         else continue;
@@ -182,7 +182,7 @@ public abstract class Worksite : MonoBehaviour {
                         if (cb != null)
                         {
                             w = cb.gameObject.AddComponent<TunnelBuildingSite>();
-                            worksitesList[i] = w;
+                            worksitesList.Add(w);
                             w.Load(ws);
                         }
                         else continue;

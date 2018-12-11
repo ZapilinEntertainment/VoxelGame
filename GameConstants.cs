@@ -18,6 +18,6 @@
     public static float GetShipArrivingTimer()
     {
         GameMaster gm = GameMaster.realMaster;
-        return ((SHIP_ARRIVING_TIME / (gm.tradeVesselsTrafficCoefficient)) * (gm.colonyController.docksLevel + 1) / 2f);
+        return ((SHIP_ARRIVING_TIME / (gm.tradeVesselsTrafficCoefficient)) / (gm.colonyController.docksLevel + 1) / 2f);
     }
 }

@@ -9,7 +9,7 @@ public class Hospital : WorkBuilding {
 	public static  BirthrateMode birthrateMode{get; private set;}
 
 	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
-    const int STANDART_COVERAGE = 100;
+    const int STANDART_COVERAGE = 1000;
 
 	public static void ResetToDefaults_Static_Hospital() {
 		SetBirthrateMode(0);

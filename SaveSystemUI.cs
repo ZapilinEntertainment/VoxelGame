@@ -344,6 +344,15 @@ public class SaveSystemUI : MonoBehaviour
 
     public void CloseButton()
     {
+        if (lastSelectedIndex != -1)
+        {
+            Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
+            if (t != null)
+            {
+                t.GetComponent<Image>().color = Color.white;
+                t.GetChild(0).GetComponent<Text>().color = Color.white;
+            }
+        }
         gameObject.SetActive(false);
     }
 

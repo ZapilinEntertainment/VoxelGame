@@ -403,65 +403,19 @@ public sealed class Chunk : MonoBehaviour
         if (blocks != null) ClearChunk();
         Prepare();
 
-        for (int x = 0; x < size; x++)
+        for (int y = size - 1; y > -1; y--)
         {
-            for (int z = 0; z < size; z++)
+            for (int x = 0; x < size; x++)
             {
-                bool noBlockAbove = false;
-                for (int y = size - 1; y >= 0; y--)
+                for (int z = 0; z < size; z++)
                 {
-                    if (newData[x, y, z] == 0)
+                    if (newData[x,y,z] != 0)
                     {
-                        noBlockAbove = true;
-                        continue;
-                    }
-                    else
-                    {
-                        CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
-                        blocks[x, y, z] = cb;
-                        cb.InitializeCubeBlock(this, new ChunkPos(x, y, z), newData[x, y, z], true);
-                        if (noBlockAbove)
-                        {
-                            if (y < size - 2 && newData[x, y + 2, z] != 0)
-                            {
-                                CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
-                                blocks[x, y + 1, z] = cvb;
-                                cvb.InitializeCaveBlock(this, new ChunkPos(x, y + 1, z), newData[x, y + 2, z], newData[x, y, z]);
-                                surfaceBlocks.Add(cvb);
-                                if (!GameMaster.editMode) GameMaster.geologyModule.SpreadMinerals(cvb); // <- замена на пещерные структуры
-                            }
-                            else
-                            {
-                                SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-                                blocks[x, y + 1, z] = sb;
-                                sb.InitializeSurfaceBlock(this, new ChunkPos(x, y + 1, z), newData[x, y, z]);
-                                surfaceBlocks.Add(sb);
-                                if (!GameMaster.editMode) GameMaster.geologyModule.SpreadMinerals(sb);
-                            }
-                        }
-                        noBlockAbove = false;
+                        AddBlock(new ChunkPos(x, y, z), BlockType.Cube, newData[x, y, z], true);
                     }
                 }
-                if (newData[x, size - 1, z] != 0) SetRoof(x, z, false);
             }
-        }
-        ChunkLightmapFullRecalculation();
-        for (int x = 0; x < CHUNK_SIZE; x++)
-        {
-            for (int z = 0; z < CHUNK_SIZE; z++)
-            {
-                int y = CHUNK_SIZE - 1;
-                for (; y > GameMaster.layerCutHeight; y--)
-                {
-                    if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(0);
-                }
-                for (; y > -1; y--)
-                {
-                    if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));
-                }
-            }
-        }
-        chunkUpdated = true;
+        }       
         FollowingCamera.main.WeNeedUpdate();
     }
 
@@ -613,7 +567,6 @@ public sealed class Chunk : MonoBehaviour
                 if (y < CHUNK_SIZE - 1) AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
                 else SetRoof(x, z, !i_naturalGeneration);
             }
-            else print(GetBlock(x, y + 1, z).type);
         }
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
         chunkUpdated = true;

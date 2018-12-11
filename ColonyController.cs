@@ -91,7 +91,7 @@ public sealed class ColonyController : MonoBehaviour
     #region updating
     void Update()
     {
-        if (GameMaster.gameSpeed == 0 | hq == null) return;
+        if (GameMaster.gameSpeed == 0 | hq == null | GameMaster.loading) return;
         float t = Time.deltaTime * GameMaster.gameSpeed;
 
         if (gears_coefficient > 1)
@@ -177,57 +177,12 @@ public sealed class ColonyController : MonoBehaviour
         //HOUSING PROBLEM
         float housingHappiness = 1;
         {
-            int housingDemand = citizenCount - totalLivespace;
             housingTimer -= t;
             if (housingTimer <= 0)
             {
-                if (housingDemand > 0)
+                if (temporaryHousing | citizenCount > totalLivespace)
                 {
-                    int tentsCount = housingDemand / House.TENT_VOLUME;
-                    if (tentsCount * House.TENT_VOLUME < housingDemand) tentsCount++;
-                    if (tentsCount > 0)
-                    {
-                        int step = 1, xpos, zpos;
-                        xpos = hq.basement.pos.x; zpos = hq.basement.pos.z;
-                        Chunk colonyChunk = hq.basement.myChunk;
-                        while (step < Chunk.CHUNK_SIZE / 2 & tentsCount > 0)
-                        {
-                            for (int n = 0; n < (step * 2 + 1); n++)
-                            {
-                                SurfaceBlock correctSurface = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos + step);
-                                if (correctSurface == null)
-                                {
-                                    correctSurface = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos - step);
-                                }
-                                if (correctSurface != null)
-                                {
-                                    List<PixelPosByte> positions = correctSurface.GetRandomCells(tentsCount);
-                                    if (positions.Count > 0)
-                                    {
-                                        tentsCount -= positions.Count;
-                                        ignoreHousingRequest = true;
-                                        for (int j = 0; j < positions.Count; j++)
-                                        {
-                                            House tent = Structure.GetStructureByID(Structure.TENT_ID) as House;
-                                            tent.SetBasement(correctSurface, positions[j]);
-                                            houses.Add(tent);
-                                        }
-                                        ignoreHousingRequest = false;
-                                        RecalculateHousing();
-                                    }
-                                }
-                            }
-                            step++;
-                        }
-                    }
-                }
-                else
-                {
-                    housingDemand *= -1;
-                    if (temporaryHousing & housingDemand >= House.TENT_VOLUME)
-                    {
-                        RecalculateHousing();
-                    }
+                    RecalculateHousing();
                 }
                 housingTimer = HOUSING_TIME;
             }
@@ -239,13 +194,17 @@ public sealed class ColonyController : MonoBehaviour
             {
                 if (totalLivespace < citizenCount)
                 {
-                    housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT + (1 - HOUSE_PROBLEM_HAPPINESS_LIMIT) * (1f - housingDemand / ((float)(citizenCount)));
+                    float demand = citizenCount - totalLivespace;
+                    housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT * ( 2 - demand / citizenCount);
                 }
                 else
                 {
-                    housingHappiness = housingLevel / 5f;
+                    byte l = hq.level;
+                    if (l > MAX_HOUSING_LEVEL) l = MAX_HOUSING_LEVEL;
+                    housingHappiness = housingLevel / l;
                 }
             }
+            housingHappiness = Mathf.Clamp(housingHappiness, HOUSE_PROBLEM_HAPPINESS_LIMIT, 1);
         }
         //HEALTHCARE
         if (health_coefficient < 1 && hospitals_coefficient > 0)
@@ -408,49 +367,125 @@ public sealed class ColonyController : MonoBehaviour
         totalLivespace = 0;
         housingLevel = 0;
         if (hq == null) return;
-        int i = 0, normalLivespace = 0;
-        List<int> tentsIndexes = new List<int>();
-        float[] housingVolumes = new float[MAX_HOUSING_LEVEL + 1];
 
+        int[] housingVolumes = new int[MAX_HOUSING_LEVEL + 1];
+
+        int i = 0, objectHousing = 0;
+        byte objectLevel = 0;
+        House h = null;
+        ignoreHousingRequest = true;
         while (i < houses.Count)
         {
-            House h = houses[i];
-            if (h.isActive)
+            h = houses[i];
+            if (h == null)
             {
-                totalLivespace += h.housing;
-                if (h.id == Structure.TENT_ID) tentsIndexes.Add(i);
-                else normalLivespace += h.housing;
-                if (h.level < MAX_HOUSING_LEVEL) housingVolumes[h.level] += h.housing;
-                else housingVolumes[MAX_HOUSING_LEVEL] += h.housing;
+                houses.RemoveAt(i);
+                continue;
             }
-            i++;
-        }
-        if (tentsIndexes.Count > 0 & (normalLivespace - citizenCount >= House.TENT_VOLUME) & !GameMaster.loading)
-        {
-            i = 0;
-            int tentIndexDelta = 0; // смещение индексов влево из-за удаления
-            ignoreHousingRequest = true;
-            while (i < tentsIndexes.Count & (totalLivespace - citizenCount >= House.TENT_VOLUME))
+            else
             {
-                int realIndex = tentsIndexes[i] + tentIndexDelta;
-                House h = houses[realIndex];
-                houses.RemoveAt(realIndex);
-                totalLivespace -= House.TENT_VOLUME;
-                housingVolumes[0] -= h.housing;
-                h.Annihilate(false);
-                tentIndexDelta--;
+                objectHousing = h.housing;
+                objectLevel = h.level;
                 i++;
+                if (objectLevel == 0)
+                {
+                    housingVolumes[0] += objectHousing;
+                }
+                else
+                {
+                    if (h.isActive & h.isEnergySupplied)
+                    {
+                        totalLivespace += objectHousing;
+                        if (objectLevel < MAX_HOUSING_LEVEL) housingVolumes[objectLevel] += objectHousing;
+                        else housingVolumes[MAX_HOUSING_LEVEL] += objectHousing;
+                    }
+                }
             }
-            ignoreHousingRequest = false;
         }
-        if (housingVolumes[0] < 0)
+
+        int housingDemand = citizenCount - totalLivespace;
+        int temporaryHousingValue = housingVolumes[0];
+        int newTentsCount = 0;
+
+        if (housingDemand > 0)
+        {// недостаток жилья
+            if (temporaryHousingValue - housingDemand >= House.TENT_VOLUME)
+            { // но есть временное жилье, которого даже больше, чем нужно
+                newTentsCount = -1 * Mathf.CeilToInt((temporaryHousingValue - housingDemand) / House.TENT_VOLUME );
+            }
+            else
+            { // даже если временное есть, его недостаточно
+                newTentsCount = Mathf.CeilToInt((housingDemand - temporaryHousingValue) / House.TENT_VOLUME);
+            }
+        }
+        else
         {
-            housingVolumes[0] = 0;
+            if (housingDemand < 0 & temporaryHousingValue > 0) // избыток жилья и еще стоит временное
+            {
+                housingDemand *= -1;
+                newTentsCount = -1 * temporaryHousingValue / House.TENT_VOLUME;
+            }
         }
-        temporaryHousing = (housingVolumes[0] == 0);
+        totalLivespace += temporaryHousingValue;
+        if (newTentsCount != 0)
+        {
+            if (newTentsCount > 0)
+            {// добавление новых палаток
+                int step = 1, xpos, zpos;
+                xpos = hq.basement.pos.x; zpos = hq.basement.pos.z;
+                Chunk colonyChunk = hq.basement.myChunk;
+                while (step < Chunk.CHUNK_SIZE / 2 & newTentsCount > 0)
+                {
+                    for (int n = 0; n < (step * 2 + 1); n++)
+                    {
+                        SurfaceBlock correctSurface = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos + step);
+                        if (correctSurface == null)
+                        {
+                            correctSurface = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos - step);
+                        }
+                        if (correctSurface != null)
+                        {
+                            List<PixelPosByte> positions = correctSurface.GetRandomCells(newTentsCount);
+                            if (positions.Count > 0)
+                            {
+                                newTentsCount -= positions.Count;
+                                for (int j = 0; j < positions.Count; j++)
+                                {
+                                    House tent = Structure.GetStructureByID(Structure.TENT_ID) as House;
+                                    tent.SetBasement(correctSurface, positions[j]);
+                                    houses.Add(tent);
+                                    housingVolumes[0] += tent.housing;
+                                    totalLivespace += tent.housing;
+                                }
+                            }
+                        }
+                    }
+                    step++;
+                }
+            }
+            else
+            { // удаление палаток
+                i = 0;
+                h = null;
+                while (i < houses.Count & newTentsCount < 0)
+                {
+                    h = houses[i];
+                    if (h != null && h.level == 0)
+                    {                        
+                        housingVolumes[0] -= h.housing;
+                        totalLivespace -= h.housing;
+                        h.Annihilate(false);
+                        houses.RemoveAt(i);
+                        newTentsCount++;
+                    }
+                    else i++;
+                }
+            }
+        }
+        ignoreHousingRequest = false;
+        temporaryHousing = (housingVolumes[0] > 0);
 
-
-        float allLivespace = totalLivespace;
+        int allLivespace = totalLivespace;
         float usingLivespace = 0;
         // принимается, что все расселены от максимального уровня к минимальному
         if (housingVolumes[5] >= allLivespace)
@@ -766,6 +801,7 @@ public sealed class ColonyController : MonoBehaviour
         starvationTimer = ccs.starvationTimer;
         realBirthrate = ccs.realBirthrate;
         birthrateCoefficient = ccs.birthrateCoefficient;
+        RecalculateHousing();
     }
     #endregion
 

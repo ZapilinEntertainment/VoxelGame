@@ -43,11 +43,21 @@ public class HarvestableResource : Structure
         mainResource = rc.type;
     }
 
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        //#setStructureData
+        basement = b;
+        innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.size);
+        if (transform.childCount == 0) SetModel();
+        b.AddStructure(this);
+    }
+
     protected override void SetModel()
     {        
         if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
         int material_ID = mainResource.ID;
-        bool modelIsSprite = false;
+        bool createSpriteLOD = true;
         GameObject model;
         switch (material_ID)
         {
@@ -66,16 +76,22 @@ public class HarvestableResource : Structure
                 break;
             case ResourceType.FOOD_ID:
                 model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
-                modelIsSprite = true;
+                createSpriteLOD = false;
+                break;
+            case ResourceType.LUMBER_ID:
+                // ?
+                model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
+                createSpriteLOD = false;
                 break;
             default:
                 model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
+                createSpriteLOD = false;
                 break;
         }
         model.transform.parent = transform;
         model.transform.localPosition = Vector3.zero;
         model.transform.localRotation = Quaternion.Euler(Vector3.zero);
-        if (!modelIsSprite)
+        if (createSpriteLOD)
         {
             Transform meshTransform = model.transform.GetChild(0);
             meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(material_ID, meshTransform.GetComponent<MeshFilter>(), 255);
@@ -93,12 +109,6 @@ public class HarvestableResource : Structure
                 materialBasedLods.Add(mainResource, packIndex);
             }
             modelController.AddObject(model.transform, ModelType.Boulder, packIndex);
-        }
-        else
-        {
-            //replaced by shader
-            //FollowingCamera.main.AddSprite(model.transform);
-            //haveSprite = true;
         }
     }
 
@@ -145,8 +155,13 @@ public class HarvestableResource : Structure
     {        
         HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
         GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
-        LoadStructureData(ss, sblock);
-        SetResources(ResourceType.GetResourceTypeById(hrs.mainResource_id), hrs.count);       
+        mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
+        resourceCount = hrs.count;        
+        SetModel();
+        modelRotation = ss.modelRotation;
+        indestructible = ss.indestructible;
+        SetBasement(sblock, ss.pos);
+        maxHp = ss.maxHp; hp = ss.maxHp;
     }
 
 

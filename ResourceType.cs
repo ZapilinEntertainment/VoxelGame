@@ -34,23 +34,24 @@ public class ResourceType {
 		static ResourceType() {
 		resourceTypesArray = new ResourceType[RTYPES_COUNT];
 		prices = new float[RTYPES_COUNT]; demand = new float[RTYPES_COUNT];
-		Nothing = new ResourceType(0, 0, 0); 
+		Nothing = new ResourceType(0, 0, 0);
+        float p = 0.01f;
 
 		Food = new ResourceType(FOOD_ID, 0.1f, 0.1f);
-		prices[FOOD_ID] = 1; demand[FOOD_ID] = 2;
+		prices[FOOD_ID] = p; demand[FOOD_ID] = 2;
 
 		metal_K = new ResourceType( METAL_K_ID, 0.7f, 50);
-		prices[METAL_K_ID] = 3; demand[METAL_K_ID] = 5;
+		prices[METAL_K_ID] = 3 * p; demand[METAL_K_ID] = 5;
 		metal_M = new ResourceType( METAL_M_ID, 0.6f, 35);
-		prices[METAL_M_ID] = 5; demand[METAL_M_ID] = 5;
+		prices[METAL_M_ID] = 5 * p; demand[METAL_M_ID] = 5;
 		metal_E = new ResourceType( METAL_E_ID, 0.3f, 3);
-		prices[METAL_E_ID] = 7; demand[METAL_E_ID] = 5;
+		prices[METAL_E_ID] = 7 * p; demand[METAL_E_ID] = 5;
 		metal_N = new ResourceType( METAL_N_ID, 2, 3);
-		prices[METAL_N_ID] = 25; demand[METAL_N_ID] = 10;
+		prices[METAL_N_ID] = 25 * p; demand[METAL_N_ID] = 10;
 		metal_P = new ResourceType( METAL_P_ID, 0.63f, 32);
-		prices[METAL_P_ID] = 5; demand[METAL_P_ID] = 1;
+		prices[METAL_P_ID] = 5 * p; demand[METAL_P_ID] = 1;
 		metal_S= new ResourceType( METAL_S_ID, 0.2f, 40);
-		prices[METAL_S_ID] = 15; demand[METAL_S_ID] = 4;
+		prices[METAL_S_ID] = 15 * p; demand[METAL_S_ID] = 4;
 
 		float lowK = 0.7f, ore_lowK = 0.5f;
 		metal_K_ore = new ResourceType( METAL_K_ORE_ID, 2.7f, 25);
@@ -67,24 +68,24 @@ public class ResourceType {
 		prices[METAL_S_ORE_ID] = prices[METAL_S_ID] * lowK; demand[METAL_S_ORE_ID] = demand[METAL_S_ID] * ore_lowK;
 
 		mineral_F = new ResourceType( MINERAL_F_ID,1.1f, 1);
-		prices[MINERAL_F_ID] = 3; demand[MINERAL_F_ID] = 10;
+		prices[MINERAL_F_ID] = 3 * p; demand[MINERAL_F_ID] = 10;
 		Fuel = new ResourceType( FUEL_ID, 0.1f, 0);
 		prices[FUEL_ID] = prices[MINERAL_F_ID] * 4; demand[FUEL_ID] = 45;
 
 		Plastics = new ResourceType( PLASTICS_ID ,0.5f, 10);
-		prices[PLASTICS_ID] = 1.5f; demand[PLASTICS_ID] = 2;
+		prices[PLASTICS_ID] = 1.5f * p; demand[PLASTICS_ID] = 2;
 		Lumber = new ResourceType( LUMBER_ID, 0.5f, 5); 
 		prices[LUMBER_ID] = prices[PLASTICS_ID] / 10f; demand[LUMBER_ID] = demand[PLASTICS_ID] / 6f;
 		mineral_L = new ResourceType(  MINERAL_L_ID ,1, 2);
 		prices[MINERAL_L_ID] = prices[PLASTICS_ID] / 2f; demand [MINERAL_L_ID] = demand[PLASTICS_ID] *ore_lowK;
 
 		Stone = new ResourceType( STONE_ID, 2.5f, 30);
-		prices[STONE_ID] = 0.2f; demand[STONE_ID] = 0.5f;
+		prices[STONE_ID] = 0.2f * p; demand[STONE_ID] = 0.5f;
 		Concrete = new ResourceType( CONCRETE_ID, 3, 38);
 		prices[CONCRETE_ID] = prices[STONE_ID] * 1.5f; demand[CONCRETE_ID] = demand[STONE_ID] * 1.8f;
 
 		Dirt = new ResourceType (DIRT_ID, 1, 1);
-		prices[DIRT_ID] = 0.5f; demand[DIRT_ID] = 1;
+		prices[DIRT_ID] = 0.5f * p; demand[DIRT_ID] = 1;
 		FertileSoil = new ResourceType( FERTILE_SOIL_ID, 1, 1);
 		prices[FERTILE_SOIL_ID] = prices[DIRT_ID]; demand[FERTILE_SOIL_ID] = demand[DIRT_ID];
 

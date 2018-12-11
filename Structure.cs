@@ -1170,6 +1170,7 @@ public class Structure : MonoBehaviour
     // в финальном виде копипастить в потомков
     protected void LoadStructureData(StructureSerializer ss, SurfaceBlock sblock)
     {
+        //исключен в harvestable resource. load
         Prepare();
         modelRotation = ss.modelRotation;
         indestructible = ss.indestructible;

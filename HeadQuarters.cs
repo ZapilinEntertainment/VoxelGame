@@ -23,8 +23,12 @@ public class HeadQuarters : House {
             colony = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
             colony.Prepare();
         }
-        PrepareHouse(b,pos);
-		if (level > 3 ) {
+        //#set house data
+        SetBuildingData(b, pos);
+        GameMaster.realMaster.colonyController.AddHousing(this);
+        //#
+
+        if (level > 3 ) {
 			if (rooftop == null) {
                 if (b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + 1), b.pos.z, this))
                 {
@@ -54,7 +58,6 @@ public class HeadQuarters : House {
 		}		        
         colony.SetHQ(this);
 	}
-
 
     bool CheckUpgradeCondition()
     {
@@ -209,5 +212,14 @@ public class HeadQuarters : House {
         buildingObserver.SetObservingBuilding(this);
         showOnGUI = true;
         return buildingObserver;
+    }
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareBuildingForDestruction(forced);
+        // removed colony.RemoveHousing because of dropping hq field
+        Destroy(gameObject);
     }
 }

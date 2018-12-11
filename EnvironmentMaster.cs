@@ -5,7 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public sealed class EnvironmentMasterSerializer
 {
-    public Vector2 newWindVector, windVector;
+    public float newWindVector_x, newWindVector_y, windVector_x, windVector_y;
     public float environmentalConditions, windTimer;
 }
 
@@ -35,7 +35,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         {
             cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity);
         }
-        cloudEmitter.forward = windVector;
+        cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x,0, windVector.y), Vector3.up);
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         cloudEmitterMainModule.simulationSpeed = 1;
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
@@ -72,16 +72,18 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public EnvironmentMasterSerializer Save()
     {
         EnvironmentMasterSerializer ems = new EnvironmentMasterSerializer();
-        ems.newWindVector = newWindVector;
-        ems.windVector = windVector;
+        ems.newWindVector_x = newWindVector.x;
+        ems.newWindVector_y = newWindVector.y;
+        ems.windVector_x = windVector.x;
+        ems.windVector_y = windVector.y;
         ems.environmentalConditions = environmentalConditions;
         ems.windTimer = windTimer;
         return ems;
     }
     public void Load(EnvironmentMasterSerializer ems)
     {
-        newWindVector = ems.newWindVector;
-        windVector = ems.windVector;
+        newWindVector = new Vector2(ems.newWindVector_x, ems.newWindVector_y);
+        windVector = new Vector2(ems.windVector_x, ems.windVector_y);
         environmentalConditions = ems.environmentalConditions;
         windTimer = ems.windTimer;
 
@@ -90,7 +92,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         {
             cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity);
         }
-        cloudEmitter.forward = windVector;
+        cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x, 0, windVector.y), Vector3.up);
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         float windPower = windVector.magnitude;
         cloudEmitterMainModule.simulationSpeed = windPower;

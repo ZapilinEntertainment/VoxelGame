@@ -292,7 +292,7 @@ public sealed class Dock : WorkBuilding {
             return;
 		}
 		int peopleBefore = immigrationPlan;
-        float tradeVolume = s.volume * (0.01f + 0.99f * (workersCount / maxWorkers));
+        float tradeVolume = s.volume * (0.01f + 0.99f * ((float)workersCount / (float)maxWorkers));
         switch (s.type) {
 		case ShipType.Passenger:
                 {
