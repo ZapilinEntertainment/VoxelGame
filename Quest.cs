@@ -48,6 +48,11 @@ public sealed class Quest {
         questsCompletenessMask = new uint[2];
 	}    
 
+    public static void SetCompletenessMask(uint[] m)
+    {
+        questsCompletenessMask = m;
+    }
+
     public Quest( QuestType i_type, byte subID)
     {
         type = i_type;
@@ -777,24 +782,6 @@ public sealed class Quest {
         buttonImage.overrideSprite = overridingSprite;
     }
 
-    #region save-load system
-    /// <summary>
-    /// use only in QuestUI.current.Save()
-    /// </summary>
-    /// <returns></returns>
-    public static QuestStaticSerializer SaveStaticData() {
-		QuestStaticSerializer qss = new QuestStaticSerializer();
-        qss.questsCompletenessMask = questsCompletenessMask;	
-		return qss;
-	}
-    /// <summary>
-    /// use only on QuestUI.current.Load();
-    /// </summary>
-    /// <param name="qss"></param>
-	public static void LoadStaticData(QuestStaticSerializer qss) {
-        questsCompletenessMask = qss.questsCompletenessMask;
-	}
-
 	public QuestSerializer Save() {
 		QuestSerializer qs = new QuestSerializer();
         qs.picked = picked;
@@ -811,7 +798,7 @@ public sealed class Quest {
         q.picked = qs.picked;
 		return q;
 	}
-	#endregion
+
 }
 
 [System.Serializable]
@@ -820,10 +807,5 @@ public class QuestSerializer {
     public bool[] stepsFinished;
     public QuestType type;
     public byte subIndex;    
-}
-[System.Serializable]
-public class QuestStaticSerializer {
-    public uint[] questsCompletenessMask; // до 32-х квестов на ветку
-    public QuestSerializer[] visibleQuests;
 }
 

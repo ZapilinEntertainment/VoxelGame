@@ -2,48 +2,134 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ModelType { Boulder}
 
-public class ModelWithLOD
+public sealed class ModelWithLOD
 {
     public Transform transform;
+    public SpriteRenderer spriteRenderer;
     public bool? drawStatus; // null - totally disabled, false - draw sprite, true - draw model;
     public byte drawingSpriteIndex;
-    public short lodPackIndex;
-    public ModelType type;
+    public Sprite[] sprites;
+    public int ticketIndex = -1;
+}
 
-    public ModelWithLOD(Transform i_transform, ModelType i_type, bool? i_drawStatus, byte i_drawingSpriteIndex, short i_lodPackIndex)
+public struct LODRegisterInfo
+{
+    public int modelTypeID { get; private set; }
+    public int modelSubID { get; private set; }
+    public int addInfo { get; private set; }
+
+    public LODRegisterInfo(int i_modelTypeID, int i_modelSubID, int i_addInfo)
     {
-        transform = i_transform;
-        type = i_type;
-        drawStatus = i_drawStatus;
-        drawingSpriteIndex = i_drawingSpriteIndex;
-        lodPackIndex = i_lodPackIndex;
+        modelTypeID = i_modelTypeID;
+        modelSubID = i_modelSubID;
+        addInfo = i_addInfo;
+    }
+
+    public static bool operator == (LODRegisterInfo A, LODRegisterInfo B)
+    {
+        return ( (A.modelTypeID == B.modelTypeID) && (A.modelSubID == B.modelSubID) && (A.addInfo == B.addInfo) );
+    }
+    public static bool operator != (LODRegisterInfo A, LODRegisterInfo B)
+    {
+        return !(A == B);
+    }
+    public override int GetHashCode()
+    {
+        var hashCode = 67631244;
+        hashCode = hashCode * -1521134295 + modelTypeID.GetHashCode();
+        hashCode = hashCode * -1521134295 + modelSubID.GetHashCode();
+        hashCode = hashCode * -1521134295 + addInfo.GetHashCode();
+        return hashCode;
+    }
+    public override bool Equals(object obj)
+    {
+        if (!(obj is LODRegisterInfo))
+        {
+            return false;
+        }
+
+        var info = (LODRegisterInfo)obj;
+        return modelTypeID == info.modelTypeID &&
+               modelSubID == info.modelSubID &&
+               addInfo == info.addInfo;
     }
 }
 
-public class LODController : MonoBehaviour {
-    List<ModelWithLOD> models = new List<ModelWithLOD>();
-    Vector3 camPos;
+public sealed class LODRegistrationTicket
+{
+    public LODRegisterInfo registerInfo { get; private set; }
+    public Texture2D spriteAtlas { get; private set; }
+    public Sprite[] sprites { get; private set; }
+    public LODPackType lodPackType { get; private set; }
+    public int activeUsers = 0; // для очистки ненужных текстур
 
-    static List<Sprite[]> lodPacks = new List<Sprite[]>(); // not destroying between loads
-    static LODController current; // singleton
-    public static float lodDistance { get; private set; } 
-    const string LOD_DIST_KEY = "LOD distance";
-    const float BOULDER_SPRITE_MAX_VISIBILITY = 10;
+    public LODRegistrationTicket(LODRegisterInfo regInfo, Texture2D i_spriteAtlas, LODPackType i_packType)
+    {
+        registerInfo = regInfo;
+        spriteAtlas = i_spriteAtlas;
+        lodPackType = i_packType;
+        switch (lodPackType)
+        {
+            case LODPackType.Full:
+                {
+                    sprites = new Sprite[32];
+                    int index = 0;
+                    float p = spriteAtlas.width / 4;
+                    Vector3 pivot = Vector3.one * 0.5f;
+                    for (int i = 0; i < 8; i++)
+                    {
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(0, i * p, p, p), pivot);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(p, i * p, p, p), pivot);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(2 * p, i * p, p, p), pivot);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(3 * p, i * p, p, p), pivot);
+                    }
+                    break;
+                }
+            case LODPackType.OneSide:
+                {
+                    sprites = new Sprite[4];
+                    float p = spriteAtlas.width / 2;
+                    Vector3 pivot = Vector3.one * 0.5f;
+                    sprites[0] = Sprite.Create(spriteAtlas, new Rect(0, 0, p, p), pivot);
+                    sprites[1] = Sprite.Create(spriteAtlas, new Rect(p, 0, p, p), pivot);
+                    sprites[2] = Sprite.Create(spriteAtlas, new Rect(0, p, p, p), pivot);
+                    sprites[3] = Sprite.Create(spriteAtlas, new Rect(p, p, p, p), pivot);
+                    break;
+                }
+            default:
+                sprites = new Sprite[1];
+                break;
+        }
+    }
+}
+
+public sealed class LODController : MonoBehaviour {
+    private static LODController current; // singleton
+    public static float lodCoefficient { get; private set; } // 0 is always lod, 1 is when it matches its real pixelsize
+
+    public const float SECOND_LOD_ANGLE = 22.5f, THIRD_LOD_ANGLE = 45, FOURTH_LOD_ANGLE = 85;
+    public const int CONTAINER_MODEL_ID = 1, OAK_MODEL_ID = 2;
+
+    public List<LODRegistrationTicket> registeredLODs { get; private set; }
+
+    private List<ModelWithLOD> models = new List<ModelWithLOD>();
+    private Vector3 camPos;    
+    private const string LOD_DIST_KEY = "LOD distance";
+    
 
     private void Awake()
     {
-        if (PlayerPrefs.HasKey(LOD_DIST_KEY)) lodDistance = PlayerPrefs.GetFloat(LOD_DIST_KEY);
-        else lodDistance = 5;
+        if (PlayerPrefs.HasKey(LOD_DIST_KEY)) lodCoefficient = PlayerPrefs.GetFloat(LOD_DIST_KEY);
+        else lodCoefficient = 1;
     }
 
     public static void SetLODdistance(float f)
     {
-        if (f != lodDistance)
+        if (f != lodCoefficient)
         {
-            lodDistance = f;
-            PlayerPrefs.SetFloat(LOD_DIST_KEY, lodDistance);
+            lodCoefficient = f;
+            PlayerPrefs.SetFloat(LOD_DIST_KEY, lodCoefficient);
             current.CameraUpdate();
         }
     }
@@ -62,137 +148,67 @@ public class LODController : MonoBehaviour {
 
     public void CameraUpdate()
     {
-        // ДОДЕЛАТЬ
         camPos = FollowingCamera.camPos;
         Transform camTransform = FollowingCamera.camTransform;
-        float zpos, dist;
-        Vector3 mpos;
-        bool? newDrawStatus;
-        if (models.Count > 0)
+        int count = models.Count;
+        if (count > 0)
         {
             int i = 0;
-            while (i < models.Count)
+            ModelWithLOD mwl;
+            Vector3 pos;
+            while (i < count)
             {
-                if (models[i].transform == null)
+                mwl = models[i];
+                if (mwl.transform == null)
                 {
+                    if (mwl.ticketIndex > 0)
+                    {
+                        LODRegistrationTicket ticket = registeredLODs[mwl.ticketIndex];
+                        ticket.activeUsers--;
+                        // надо впаять таймер удаления, чтобы не гонять лоды туда-сюда
+                    }
                     models.RemoveAt(i);
                     continue;
                 }
                 else
                 {
-                    ModelWithLOD m = models[i];
-                    if (m.transform.gameObject.activeSelf)
-                    {
-                        mpos = m.transform.position;
-                        zpos = camTransform.InverseTransformPoint(mpos).z;
-                        if (zpos > 0)
-                        {
-                            dist = (mpos - camPos).magnitude;
-                            switch (m.type)
-                            {
-                                case ModelType.Boulder:
-                                    if (dist > BOULDER_SPRITE_MAX_VISIBILITY) newDrawStatus = null;
-                                    else
-                                    {
-                                        if (dist > lodDistance) newDrawStatus = false;
-                                        else newDrawStatus = true;
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                    i++;
+                    pos = mwl.transform.position;
+                    //....awaiting
                 }
             }
         }
     }
 
-
-    void BoulderCheck(int index)
+    public int LOD_existanceCheck(LODRegisterInfo i_regInfo)
     {
-        ModelWithLOD m = models[index];
-        Vector3 pos = m.transform.position;
-        float dist = (camPos - pos).magnitude;
-        //if (dist > lodDistance)
-        //{
-          //  if ( !m.spriteIsActive )
-           // {
-           //     m.transform.GetChild(1).gameObject.SetActive(true);
-            //    m.transform.GetChild(0).gameObject.SetActive(false);
-            //    m.spriteIsActive = true;
-           // }
-            //m.transform.GetChild(1).LookAt(camPos);
-       // }
-       // else
-      //  {
-          //  if (m.spriteIsActive)
-         //   {
-             //   m.transform.GetChild(1).gameObject.SetActive(false);
-             //   m.transform.GetChild(0).gameObject.SetActive(true);
-            //    m.spriteIsActive = false;
-           // }
-        //}
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="t"> Transform of the lod sprite GO </param>
-    /// <param name="type"></param>
-    /// <param name="lodPackIndex"></param>
-    public void AddObject(Transform t, ModelType type, short lodPackIndex)
-    {
-        if (t == null) return;
-        ModelWithLOD newModel = new ModelWithLOD(t, type, false, 0, lodPackIndex);
-        //GameMaster.realMaster.standartSpritesList.Add(t.gameObject);
-        models.Add(newModel);
-        switch (type)
-        {
-            case ModelType.Boulder:
-                SpriteRenderer sr = newModel.transform.GetChild(1).GetComponent<SpriteRenderer>();
-                sr.sprite = lodPacks[lodPackIndex][0];
-                sr.sharedMaterial = PoolMaster.billboardMaterial;
-                BoulderCheck(models.Count - 1);
-                break;
-        }               
-    }
-
-    public static short AddSpritePack(Sprite[] sprites)
-    {
-        lodPacks.Add(sprites);
-        return (short)(lodPacks.Count - 1);
-    }
-    
-    public void ChangeModelSpritePack(Transform t, ModelType ftype, short newPackIndex)
-    {
-        if (models.Count == 0) return;
+        if (registeredLODs.Count == 0) return -1;
         else
         {
-            int i = 0;
-            while (i < models.Count)
+            for (int i = 0; i < registeredLODs.Count; i++)
             {
-                Transform mt = models[i].transform;
-                if (mt == null)
-                {
-                    models.RemoveAt(i);
-                    continue;
-                }
-                else
-                {
-                    if (models[i].type == ftype)
-                    {
-                        if (mt == t)
-                        {
-                            if (models[i].lodPackIndex != newPackIndex)
-                            {
-                                models[i].lodPackIndex = newPackIndex;
-                                return;
-                            }
-                        }
-                    }
-                    i++;
-                }
+                 if (registeredLODs[i].registerInfo == i_regInfo) return i;
             }
+            return -1;
         }
+    }
+    public int RegisterLOD(LODRegistrationTicket lticket)
+    {
+        registeredLODs.Add(lticket);
+        return registeredLODs.Count - 1;
+    }
+
+    public void TakeCare(Transform modelHolder, int indexInRegistered)
+    {
+        if (indexInRegistered == -1 | modelHolder == null) return;
+        ModelWithLOD mwl = new ModelWithLOD();
+        mwl.transform = modelHolder;
+        mwl.spriteRenderer = modelHolder.GetChild(1).GetComponent<SpriteRenderer>();
+        LODRegistrationTicket ticket = registeredLODs[indexInRegistered];
+        mwl.sprites = ticket.sprites;
+        ticket.activeUsers++;
+        mwl.drawingSpriteIndex = 0;
+        mwl.spriteRenderer.sprite = mwl.sprites[0];
+        mwl.drawStatus = true;
+        models.Add(mwl);
     }
 }

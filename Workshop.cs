@@ -1,11 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public enum WorkshopMode : byte {NoActivity, GearsUpgrade}
+﻿public enum WorkshopMode : byte {NoActivity, GearsUpgrade}
+//при добавлении вписать в UIController.LocalizeTitles
 
 [System.Serializable]
-public class RollingShopSerializer {
+public class WorkshopSerializer {
 	public WorkBuildingSerializer workBuildingSerializer;
 	public WorkshopMode mode;
 }
@@ -57,21 +54,21 @@ public sealed class Workshop : WorkBuilding {
 		StructureSerializer ss = GetStructureSerializer();
 		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
 		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetRollingShopSerializer());
+			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorkshopSerializer());
 			ss.specificData =  stream.ToArray();
 		}
 		return ss;
 	}
 	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
 		LoadStructureData(ss, sblock);
-		RollingShopSerializer rss = new RollingShopSerializer();
-		GameMaster.DeserializeByteArray<RollingShopSerializer>(ss.specificData, ref rss);
+		WorkshopSerializer rss = new WorkshopSerializer();
+		GameMaster.DeserializeByteArray<WorkshopSerializer>(ss.specificData, ref rss);
 		LoadWorkBuildingData(rss.workBuildingSerializer);
 		mode = rss.mode;
 	}
 
-	protected RollingShopSerializer GetRollingShopSerializer() {
-		RollingShopSerializer rss = new RollingShopSerializer();
+	private WorkshopSerializer GetWorkshopSerializer() {
+		WorkshopSerializer rss = new WorkshopSerializer();
 		rss.workBuildingSerializer = GetWorkBuildingSerializer();
 		rss.mode = mode;
 		return rss;
@@ -99,7 +96,7 @@ public sealed class Workshop : WorkBuilding {
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;
-        UIController.current.ActivateRollingShopPanel();
+        UIController.current.ActivateWorkshopPanel();
         return workbuildingObserver;
     }
 }

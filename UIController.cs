@@ -655,7 +655,7 @@ sealed public class UIController : MonoBehaviour
             if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
             else
             {
-                if (rollingShopPanel.activeSelf) DeactivateRollingShopPanel();
+                if (rollingShopPanel.activeSelf) DeactivateWorkshopPanel();
             }
         }
 
@@ -970,7 +970,7 @@ sealed public class UIController : MonoBehaviour
         progressPanelMode = ProgressPanelMode.Offline;
     }
 
-    public void ActivateRollingShopPanel()
+    public void ActivateWorkshopPanel()
     {
         UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;        
         if (wbo != null && wbo.gameObject.activeSelf)
@@ -979,42 +979,37 @@ sealed public class UIController : MonoBehaviour
             Workshop rs = wbo.observingWorkbuilding as Workshop;
             if (rs != null)
             {
+                Dropdown d = rollingShopPanel.transform.GetChild(0).GetComponent<Dropdown>();
+                d.value = (int)rs.mode;             
                 rollingShopPanel.SetActive(true);
-                Transform t = rollingShopPanel.transform.GetChild((byte)rs.mode);
-                if (t != null) t.GetComponent<Toggle>().isOn = true;
-                else print("no transform");
             }
         }
         rollingShopPanel.SetActive(true);
     }
-    public void DeactivateRollingShopPanel()
+    public void DeactivateWorkshopPanel()
     {
         rollingShopPanel.SetActive(false);
     }
-    public void RollingShop_SetActivity(int input)
+    public void Workshop_SetActivity(int input)
     {
         byte x = (byte)input;
         UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
         if (wbo == null | !wbo.gameObject.activeSelf)
         {
-            DeactivateRollingShopPanel();
+            DeactivateWorkshopPanel();
             return;
         }
         else
-        { // уу, костыли!
+        { 
             Workshop rs = wbo.observingWorkbuilding as Workshop;
             if (rs == null)
             {
-                DeactivateRollingShopPanel();
+                DeactivateWorkshopPanel();
                 return;
             }
             else
             {
-                if ( ((byte)(rs.mode)) != x)
-                {
-                    rs.SetMode(x);
-                    rollingShopPanel.transform.GetChild(x).GetComponent<Toggle>().isOn = true;
-                }
+                rs.SetMode((byte)input);
             }
         }
     }
@@ -1323,10 +1318,6 @@ sealed public class UIController : MonoBehaviour
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
 
-        t = rollingShopPanel.transform;
-        t.GetChild(0).GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoActivity);
-        t.GetChild(1).GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ImproveGears);
-
         t = menuPanel.transform;
         t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
@@ -1340,6 +1331,11 @@ sealed public class UIController : MonoBehaviour
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.PourIn);
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.MakeSurface);
+
+        Dropdown d = rollingShopPanel.transform.GetChild(0).GetComponent<Dropdown>();
+        d.options = new List<Dropdown.OptionData>();
+        d.options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoActivity)));
+        d.options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.ImproveGears)));
         localized = true;
     }
 

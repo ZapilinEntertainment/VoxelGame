@@ -43,10 +43,10 @@ public class Structure : MonoBehaviour
     DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
-    FOOD_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
+    SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
     STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41,
     HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
-    LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, FOOD_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
+    LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
@@ -131,8 +131,8 @@ public class Structure : MonoBehaviour
             case FUEL_FACILITY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/fuelFacility_level_3")); break;
             case GRPH_REACTOR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumReactor_level_4")); break;
             case PLASTICS_FACTORY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/plasticsFactory_level_3")); break;
-            case FOOD_FACTORY_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/foodFactory_level_4")); break;
-            case FOOD_FACTORY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foodFactoryBlock_level_5")); break;
+            case SUPPLIES_FACTORY_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/foodFactory_level_4")); break;
+            case SUPPLIES_FACTORY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foodFactoryBlock_level_5")); break;
             case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
             case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;
@@ -201,6 +201,7 @@ public class Structure : MonoBehaviour
             case STORAGE_5_ID:
                 s = new GameObject("Storage").AddComponent<StorageHouse>(); break;
             case CONTAINER_ID:
+                //use HarvestableResource.ConstructContainer instead
                 s = new GameObject("Container").AddComponent<HarvestableResource>(); break;
             case TENT_ID:
             case HOUSE_1_ID:
@@ -231,8 +232,8 @@ public class Structure : MonoBehaviour
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_3_ID:
                 s = new GameObject("Factory").AddComponent<Factory>(); break;
-            case FOOD_FACTORY_4_ID:
-            case FOOD_FACTORY_5_ID:
+            case SUPPLIES_FACTORY_4_ID:
+            case SUPPLIES_FACTORY_5_ID:
                 s = new GameObject().AddComponent<FoodFactory>(); break;
             case WIND_GENERATOR_1_ID:
                 s = new GameObject().AddComponent<WindGenerator>(); break;
@@ -339,7 +340,7 @@ public class Structure : MonoBehaviour
                 break;
             case TREE_OF_LIFE_ID:
                 {
-                    maxHp = 25000;
+                    maxHp = LifeSource.MAX_HP;
                     innerPosition = SurfaceRect.full;
                     isArtificial = false;
                     isBasement = false;
@@ -421,7 +422,7 @@ public class Structure : MonoBehaviour
                 break;
             case LIFESTONE_ID:
                 {
-                    maxHp = 45000;
+                    maxHp = LifeSource.MAX_HP;
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
@@ -803,7 +804,7 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case FOOD_FACTORY_4_ID:
+            case SUPPLIES_FACTORY_4_ID:
                 {
                     maxHp = 1500;
                     innerPosition = SurfaceRect.full;
@@ -813,7 +814,7 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case FOOD_FACTORY_5_ID:
+            case SUPPLIES_FACTORY_5_ID:
                 {
                     maxHp = 4000;
                     innerPosition = SurfaceRect.full;
@@ -1062,8 +1063,8 @@ public class Structure : MonoBehaviour
             case FUEL_FACILITY_3_ID: return new Rect(4 * p, 5 * p, p, p);
             case GRPH_REACTOR_4_ID: return new Rect(5 * p, 5 * p, p, p);
             case PLASTICS_FACTORY_3_ID: return new Rect(6 * p, 5 * p, p, p);
-            case FOOD_FACTORY_5_ID:
-            case FOOD_FACTORY_4_ID: return new Rect(7 * p, 5 * p, p, p);
+            case SUPPLIES_FACTORY_5_ID:
+            case SUPPLIES_FACTORY_4_ID: return new Rect(7 * p, 5 * p, p, p);
             case GRPH_ENRICHER_3_ID: return new Rect(0, 4 * p, p, p);
             case XSTATION_3_ID: return new Rect(p, 4 * p, p, p);
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: return new Rect(2 * p, 4 * p, p, p);

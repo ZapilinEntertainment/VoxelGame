@@ -71,7 +71,7 @@ public class Building : Structure
             case 4:
                 blist.Add(GetStructureByID(FARM_4_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_4_ID) as Building);
-                blist.Add(GetStructureByID(FOOD_FACTORY_4_ID) as Building);
+                blist.Add(GetStructureByID(SUPPLIES_FACTORY_4_ID) as Building);
                 blist.Add(GetStructureByID(GRPH_REACTOR_4_ID) as Building);
                 blist.Add(GetStructureByID(SHUTTLE_HANGAR_4_ID) as Building);
                 blist.Add(GetStructureByID(RECRUITING_CENTER_4_ID) as Building);
@@ -86,7 +86,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(FARM_5_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
-                blist.Add(GetStructureByID(FOOD_FACTORY_5_ID) as Building);
+                blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);
                 blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
@@ -541,9 +541,9 @@ public class Building : Structure
                     level = 3;
                 }
                 break;
-            case FOOD_FACTORY_4_ID:
+            case SUPPLIES_FACTORY_4_ID:
                 {
-                    upgradedIndex = FOOD_FACTORY_5_ID;
+                    upgradedIndex = SUPPLIES_FACTORY_5_ID;
                     canBePowerSwitched = true;
                     energySurplus = -250;
                     energyCapacity = 200;
@@ -551,7 +551,7 @@ public class Building : Structure
                     level = 4;
                 }
                 break;
-            case FOOD_FACTORY_5_ID:
+            case SUPPLIES_FACTORY_5_ID:
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;

@@ -76,8 +76,8 @@ public static class Localization {
             case Structure.FUEL_FACILITY_3_ID: return "Fuel facility";
             case Structure.GRPH_REACTOR_4_ID: return "Graphonium reactor";
             case Structure.PLASTICS_FACTORY_3_ID: return "Plastics factory";
-            case Structure.FOOD_FACTORY_4_ID: return "Food factory";
-            case Structure.FOOD_FACTORY_5_ID: return "Food factory Block";
+            case Structure.SUPPLIES_FACTORY_4_ID: return "Supplies factory";
+            case Structure.SUPPLIES_FACTORY_5_ID: return "Supplies factory Block";
             case Structure.GRPH_ENRICHER_3_ID: return "Graphonium enricher";
             case Structure.XSTATION_3_ID: return "Experimental station";
             case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Quantum energy transmitter";

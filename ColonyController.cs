@@ -801,7 +801,9 @@ public sealed class ColonyController : MonoBehaviour
         starvationTimer = ccs.starvationTimer;
         realBirthrate = ccs.realBirthrate;
         birthrateCoefficient = ccs.birthrateCoefficient;
+        RecalculatePowerGrid();
         RecalculateHousing();
+        if (hospitals != null) RecalculateHospitals();
     }
     #endregion
 

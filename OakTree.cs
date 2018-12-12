@@ -14,7 +14,11 @@ public class OakTree : Plant
     private static bool modelsContainerReady = false;
     private static float growSpeed, decaySpeed; // fixed by class
     private static float clearTimer = 0;
+
     public static int maxLifeTransfer { get; protected set; }  // fixed by class
+    public static readonly LODRegisterInfo oak4_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 4, 0);
+    public static readonly LODRegisterInfo oak5_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 5, 0);
+    public static readonly LODRegisterInfo oak6_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 6, 0);
 
     public const byte HARVESTABLE_STAGE = 4;
     const byte TRANSIT_STAGE = 3;
@@ -59,11 +63,8 @@ public class OakTree : Plant
 
             //stage 4 model
             GameObject model3d = LoadModel(4);
-            Vector3[] positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
-            Vector3[] angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-            Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model3d, positions, angles, 0.25f, Color.green);
+            Texture2D spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, Color.green, oak4_lod_regInfo);
             int size = spritesAtlas.width / 2;
-
             lodPack_stage4 = new Sprite[4];
             lodPack_stage4[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
             lodPack_stage4[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
@@ -88,9 +89,7 @@ public class OakTree : Plant
 
             // stage 5 model     
             model3d = LoadModel(5);
-            positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
-            angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-            spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model3d, positions, angles, 0.25f, Color.green);
+            spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, Color.green, oak5_lod_regInfo);
             size = spritesAtlas.width / 2;
 
             lodPack_stage5 = new Sprite[4];
@@ -114,9 +113,7 @@ public class OakTree : Plant
 
             //stage 6 model
             model3d = LoadModel(6);
-            positions = new Vector3[] { new Vector3(0, 0.222f, -0.48f), new Vector3(0, 0.479f, -0.434f), new Vector3(0, 0.458f, -0.232f), new Vector3(0, 0.551f, -0.074f) };
-            angles = new Vector3[] { Vector3.zero, new Vector3(30, 0, 0), new Vector3(45, 0, 0), new Vector3(75, 0, 0) };
-            spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model3d, positions, angles, 0.25f, Color.green);
+            spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, Color.green, oak6_lod_regInfo);
             size = spritesAtlas.width / 2;
 
             lodPack_stage6 = new Sprite[4];
@@ -157,7 +154,10 @@ public class OakTree : Plant
                             blankTrees_stage4.RemoveAt(lastIndex - 1);
                         }
                     }
-                    else modelHolder = Instantiate(blankTrees_stage4[0], Vector3.zero, Quaternion.identity, transform);
+                    else
+                    {
+                        modelHolder = Instantiate(blankTrees_stage4[0], Vector3.zero, Quaternion.identity, transform);
+                    }
                     break;
                 case 5:
                     if (blankTrees_stage5.Count > 1)
@@ -196,7 +196,7 @@ public class OakTree : Plant
             float dist = (transform.position - FollowingCamera.camPos).magnitude;
             if (dist < TREE_SPRITE_MAX_VISIBILITY * stage)
             {
-                if (dist < LODController.lodDistance)
+                if (dist < LODController.lodCoefficient)
                 {
                     modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true); // model
                     spriter.enabled = false;  // lod sprite
@@ -363,7 +363,7 @@ public class OakTree : Plant
             Transform t;
             Vector3 cpos;
             OakDrawMode newDrawMode = OakDrawMode.NoDraw;
-            float dist, lodDist = LODController.lodDistance;
+            float dist, lodDist = LODController.lodCoefficient;
             while (i < count)
             {
                 OakTree oak = oaks[i];
@@ -552,13 +552,14 @@ public class OakTree : Plant
     {
         if (stage > TRANSIT_STAGE)
         {
-            Transform model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString() + "_dead")).transform;
-            HarvestableResource hr = GetStructureByID(CONTAINER_ID) as HarvestableResource;
-            hr.name = "dead oak tree";
-            model.parent = hr.transform;
-            model.localPosition = Vector3.zero;
-
-            hr.PrepareContainer(hp, new ResourceContainer(ResourceType.Lumber, CountLumber() * 0.9f * GameMaster.realMaster.environmentMaster.environmentalConditions), false, innerPosition.size, model.gameObject);
+            ContainerModelType cmtype;
+            if (stage == 4) cmtype = ContainerModelType.DeadOak4;
+            else
+            {
+                if (stage == 5) cmtype = ContainerModelType.DeadOak5;
+                else cmtype = ContainerModelType.DeadOak6;
+            }
+            HarvestableResource hr = HarvestableResource.ConstructContainer(cmtype, ResourceType.Lumber, CountLumber() * GameMaster.realMaster.environmentMaster.environmentalConditions);
             hr.SetModelRotation(modelRotation);
             hr.SetBasement(basement, new PixelPosByte(innerPosition.x, innerPosition.z));
             // спрайтовый LOD?
@@ -592,7 +593,7 @@ public class OakTree : Plant
             {
                 // # change model draw mode (changed)
                 float dist = (transform.position - FollowingCamera.camPos).magnitude;
-                if (dist > LODController.lodDistance)
+                if (dist > LODController.lodCoefficient)
                 {
                     if (dist > TREE_SPRITE_MAX_VISIBILITY * stage)
                     {

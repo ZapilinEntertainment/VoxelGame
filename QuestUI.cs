@@ -340,28 +340,36 @@ public sealed class QuestUI : MonoBehaviour
 
     public QuestStaticSerializer Save()
     {
-        QuestStaticSerializer qss = Quest.SaveStaticData();
-        qss.visibleQuests = new QuestSerializer[activeQuests.Length];
-        for (int i = 0; i < qss.visibleQuests.Length; i++)
+        QuestStaticSerializer qss = new QuestStaticSerializer();
+        qss.questsCompletenessMask = Quest.questsCompletenessMask;
+        qss.activeQuests = new QuestSerializer[activeQuests.Length];
+        for (int i = 0; i < qss.activeQuests.Length; i++)
         {
-            if (activeQuests[i] != null) qss.visibleQuests[i] = activeQuests[i].Save();
-            else qss.visibleQuests[i] = null;
+            if (activeQuests[i] != null) qss.activeQuests[i] = activeQuests[i].Save();
+            else qss.activeQuests[i] = null;
         }
         return qss;
     }
     public void Load(QuestStaticSerializer qss)
-    {
-        Quest.LoadStaticData(qss);
+    {        
         activeQuests = new Quest[questButtons.Length];
-        for (int i = 0; i < qss.visibleQuests.Length; i++)
+        for (int i = 0; i < qss.activeQuests.Length; i++)
         {
-            if (qss.visibleQuests[i] == null) continue;
+            if (qss.activeQuests[i] == null) continue;
             else
             {
-                activeQuests[i] = Quest.Load(qss.visibleQuests[i]);
+                activeQuests[i] = Quest.Load(qss.activeQuests[i]);
             }
         }
+        Quest.SetCompletenessMask(qss.questsCompletenessMask);
         if (GetComponent<Image>().enabled) PrepareBasicQuestWindow();
     }
+}
+
+[System.Serializable]
+public class QuestStaticSerializer
+{
+    public uint[] questsCompletenessMask;
+    public QuestSerializer[] activeQuests;
 }
 

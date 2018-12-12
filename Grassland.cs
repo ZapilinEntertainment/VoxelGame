@@ -296,8 +296,7 @@ public class Grassland : MonoBehaviour
                     }
                     else
                     {
-                        HarvestableResource hr = Structure.GetStructureByID(Structure.CONTAINER_ID) as HarvestableResource;
-                        hr.SetResources(ResourceType.Food, 10);
+                        HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.BerryBush, ResourceType.Food, 10 + Random.value * 10);
                         hr.SetBasement(myBlock, positions[i]);
                         freeEnergy -= BERRY_BUSH_LIFECOST;
                     }

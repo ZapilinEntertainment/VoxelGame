@@ -7,18 +7,134 @@ public class HarvestableResourceSerializer
 {
     public int mainResource_id;
     public float count;
+    public ContainerModelType model_id;
 }
+public enum ContainerModelType : ushort { Default, Boulder, Pile, DeadOak4, DeadOak5, DeadOak6, BerryBush, DeadTreeOfLife, DeadLifestone }
 
 public class HarvestableResource : Structure
 {
     public ResourceType mainResource { get; protected set; }
     public float resourceCount;
+    private ContainerModelType model_id;
 
-    static Dictionary<ResourceType, short> materialBasedLods = new Dictionary<ResourceType, short>();
-    static LODController modelController;
+    public static HarvestableResource ConstructContainer(ContainerModelType i_modelType, ResourceType i_rtype, float i_count)
+    {
+        HarvestableResource hr = new GameObject().AddComponent<HarvestableResource>();
+        hr.PrepareStructure();
+        hr.mainResource = i_rtype;
+        hr.resourceCount = i_count;               
+        GameObject model;
+        bool createSpriteLOD = true;
+        LODPackType lpackType = LODPackType.Point;
+        hr.model_id = i_modelType;
+        switch (hr.model_id)
+        {
+            case ContainerModelType.DeadLifestone:
+                {
+                    hr.gameObject.name = "dead Lifestone";
+                    model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone"));   
+                    Destroy(model.transform.GetChild(0).gameObject);
+                    Destroy(model.transform.GetChild(1).gameObject);
+                    MeshRenderer[] mrrs = model.GetComponentsInChildren<MeshRenderer>();
+                    foreach (MeshRenderer mr in mrrs)
+                    {
+                        mr.sharedMaterial = PoolMaster.basic_material;
+                    }
+                    createSpriteLOD = false;
+                    byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
+                    hr.innerPosition = new SurfaceRect(c, c, (byte)(c + c));
+                    hr.maxHp = LifeSource.MAX_HP * 0.9f;
+                    break;
+                }
+            case ContainerModelType.DeadTreeOfLife:
+                {
+                    hr.gameObject.name = "dead Tree of Life";
+                    model = Instantiate(Resources.Load<GameObject>("Lifeforms/dead_treeOfLife"));
+                    createSpriteLOD = false;
+                    byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
+                    hr.innerPosition = new SurfaceRect(c, c, (byte)(c+c));
+                    hr.maxHp = LifeSource.MAX_HP * 0.9f ;
+                    break;
+                }
+            case ContainerModelType.DeadOak4:
+                hr.gameObject.name = "dead oak 4";
+                model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-4_dead"));
+                lpackType = LODPackType.OneSide;
+                hr.innerPosition = SurfaceRect.one;
+                hr.maxHp = 50;
+                break;
+            case ContainerModelType.DeadOak5:
+                hr.gameObject.name = "dead oak 5";
+                model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-6_dead"));
+                lpackType = LODPackType.OneSide;
+                hr.innerPosition = SurfaceRect.one;
+                hr.maxHp = 100;
+                break;
+            case ContainerModelType.DeadOak6:
+                hr.gameObject.name = "dead oak 6";
+                model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-6_dead"));
+                lpackType = LODPackType.OneSide;
+                hr.innerPosition = SurfaceRect.one;
+                hr.maxHp = 200;
+                break;
+            case ContainerModelType.Pile:
+                {
+                    hr.gameObject.name = "pile";
+                    model = Instantiate(Resources.Load<GameObject>("Prefs/pilePref"));
+                    lpackType = LODPackType.Point;
+                    Transform meshTransform = model.transform.GetChild(0);
+                    meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+                    hr.maxHp = 30;
+                    hr.innerPosition = SurfaceRect.one;
+                    break;
+                }
+            case ContainerModelType.BerryBush:
+                hr.gameObject.name = "berry bush";
+                model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
+                createSpriteLOD = false;
+                hr.maxHp = 10;
+                hr.innerPosition = SurfaceRect.one;
+                break;
+            case ContainerModelType.Boulder:
+                {
+                    hr.gameObject.name = "boulder";
+                    model = Instantiate(Resources.Load<GameObject>("Prefs/boulderPref"));
+                    Transform meshTransform = model.transform.GetChild(0);
+                    meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+                    lpackType = LODPackType.Point;
+                    hr.maxHp = 50;
+                    hr.innerPosition = SurfaceRect.one;
+                    break;
+                }
+            default:
+                {
+                    hr.gameObject.name = "default container";
+                    model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
+                    Transform meshTransform = model.transform.GetChild(0);
+                    meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+                    hr.model_id = ContainerModelType.Default;
+                    createSpriteLOD = false;
+                    hr.maxHp = 10;
+                    hr.innerPosition = SurfaceRect.one;
+                    break;
+                }
+        }
+        hr.hp = hr.maxHp;
+        if (createSpriteLOD)
+        {
+            SpriteRenderer sr = new GameObject("lod").AddComponent<SpriteRenderer>();
+            sr.transform.parent = model.transform;
+            sr.transform.localPosition = Vector3.zero;
+            sr.sharedMaterial = PoolMaster.billboardMaterial;
+        }
+        model.transform.parent = hr.transform;
+        model.transform.localPosition = Vector3.zero;
+        model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        return hr;
+    }
 
     override public void Prepare()
-    { 
+    {
         PrepareStructure();
         maxHp = 10;
         innerPosition = SurfaceRect.one;
@@ -27,20 +143,7 @@ public class HarvestableResource : Structure
         mainResource = ResourceType.Nothing;
         hp = maxHp;
         resourceCount = 0;
-        if (modelController == null) modelController = LODController.GetCurrent();
-    }
-
-    public void PrepareContainer(float i_maxhp, ResourceContainer rc, bool i_isArtificial, byte size, GameObject i_model )
-    {
-        PrepareStructure();
-        maxHp = i_maxhp;
-        innerPosition = new SurfaceRect(0,0,size);
-        isArtificial = i_isArtificial;
-        i_model.transform.parent = transform;
-        i_model.transform.localPosition = Vector3.zero;
-        // вращение не устанавливать 
-        resourceCount = rc.volume;
-        mainResource = rc.type;
+        model_id = ContainerModelType.Default;
     }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
@@ -54,74 +157,14 @@ public class HarvestableResource : Structure
     }
 
     protected override void SetModel()
-    {        
-        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
-        int material_ID = mainResource.ID;
-        bool createSpriteLOD = true;
-        GameObject model;
-        switch (material_ID)
-        {
-            case ResourceType.STONE_ID:
-            case ResourceType.METAL_K_ORE_ID:
-            case ResourceType.METAL_S_ORE_ID:
-            case ResourceType.METAL_P_ORE_ID:
-            case ResourceType.METAL_N_ORE_ID:
-            case ResourceType.METAL_E_ORE_ID:
-            case ResourceType.METAL_M_ORE_ID:
-                model = Instantiate(Resources.Load<GameObject>("Prefs/boulderPref"));
-                break;
-            case ResourceType.MINERAL_F_ID:
-            case ResourceType.MINERAL_L_ID:
-                model = Instantiate(Resources.Load<GameObject>("Prefs/pilePref"));
-                break;
-            case ResourceType.FOOD_ID:
-                model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
-                createSpriteLOD = false;
-                break;
-            case ResourceType.LUMBER_ID:
-                // ?
-                model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
-                createSpriteLOD = false;
-                break;
-            default:
-                model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
-                createSpriteLOD = false;
-                break;
-        }
-        model.transform.parent = transform;
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.Euler(Vector3.zero);
-        if (createSpriteLOD)
-        {
-            Transform meshTransform = model.transform.GetChild(0);
-            meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(material_ID, meshTransform.GetComponent<MeshFilter>(), 255);
-
-            short packIndex = -1;
-            if (!materialBasedLods.TryGetValue(mainResource, out packIndex))
-            {
-                Vector3[] positions = new Vector3[] { new Vector3(0, 0.084f, -0.063f) };
-                Vector3[] angles = new Vector3[] { new Vector3(45, 0, 0) };
-                Texture2D spritesAtlas = LODSpriteMaker.current.MakeSpriteLODs(model, positions, angles, 0.06f, Color.grey);
-                Sprite[] lodSprites = new Sprite[1];
-
-                lodSprites[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, spritesAtlas.width, spritesAtlas.height), new Vector2(0.5f, 0.5f), 512);
-                packIndex = LODController.AddSpritePack(lodSprites);
-                materialBasedLods.Add(mainResource, packIndex);
-            }
-            modelController.AddObject(model.transform, ModelType.Boulder, packIndex);
-        }
-    }
-
-    public void SetResources(ResourceType resType, float f_count1)
     {
-        ResourceType prevResType = mainResource;
-        mainResource = resType;
-        resourceCount = f_count1;
-        if (prevResType != resType ) // замена модели
-        {  
-            SetModel();
-            transform.GetChild(0).gameObject.SetActive(visible);
-        }        
+        Transform model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer")).transform;
+        Transform meshTransform = model.transform.GetChild(0);
+        meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(mainResource.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+        model_id = ContainerModelType.Default;
+        model.parent = transform;
+        model.localPosition = Vector3.zero;
+        model.localRotation = Quaternion.Euler(Vector3.zero);
     }
 
     public void Harvest()
@@ -152,11 +195,11 @@ public class HarvestableResource : Structure
     }
 
     override public void Load(StructureSerializer ss, SurfaceBlock sblock)
-    {        
+    {
         HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
         GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
         mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
-        resourceCount = hrs.count;        
+        resourceCount = hrs.count;
         SetModel();
         modelRotation = ss.modelRotation;
         indestructible = ss.indestructible;

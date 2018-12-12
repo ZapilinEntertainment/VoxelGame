@@ -19,7 +19,7 @@ public sealed class GameSettingsUI : MonoBehaviour
         settingsButton.overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = transform;
         t.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value = FollowingCamera.optimalDistance;
-        t.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodDistance;
+        t.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodCoefficient;
         t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
         t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
     }

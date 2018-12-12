@@ -83,8 +83,8 @@ public class ScoreCalculator  {
             structuresCost[Structure.HQ_3_ID] = structuresCost[Structure.HQ_3_ID] * 4;
             structuresCost[Structure.HQ_4_ID] = structuresCost[Structure.HQ_3_ID] * 4;
             structuresCost[Structure.PLASTICS_FACTORY_3_ID] = structuresCost[Structure.FUEL_FACILITY_3_ID];
-            structuresCost[Structure.FOOD_FACTORY_4_ID] = structuresCost[Structure.FARM_4_ID];
-            structuresCost[Structure.FOOD_FACTORY_5_ID] = structuresCost[Structure.FOOD_FACTORY_4_ID] * 4;
+            structuresCost[Structure.SUPPLIES_FACTORY_4_ID] = structuresCost[Structure.FARM_4_ID];
+            structuresCost[Structure.SUPPLIES_FACTORY_5_ID] = structuresCost[Structure.SUPPLIES_FACTORY_4_ID] * 4;
             structuresCost[Structure.GRPH_ENRICHER_3_ID] = structuresCost[Structure.WORKSHOP_ID] * 4;
             structuresCost[Structure.CHEMICAL_FACTORY_4_ID] = structuresCost[Structure.GRPH_ENRICHER_3_ID] * 4;
             structuresCost[Structure.STORAGE_2_ID] = structuresCost[Structure.STORAGE_1_ID] * 2;

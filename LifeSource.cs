@@ -3,6 +3,7 @@
 public sealed class LifeSource : MultiblockStructure {
     private int tick = 0, lifepowerPerTick = 500;
     const int MAXIMUM_TICKS = 1000;
+    public const float MAX_HP = 25000;
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (b == null) return;

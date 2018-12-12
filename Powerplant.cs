@@ -1,8 +1,9 @@
 ﻿using UnityEngine; // mathf
 public class Powerplant : WorkBuilding {
 	ResourceType fuel;
-    private float output, fuelNeeds, fuelBurnTime, tickTimer;
+    private float output, fuelNeeds, fuelBurnTime;
     public float fuelLeft { get; private set; }
+    private int tickTimer = 0;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -12,21 +13,21 @@ public class Powerplant : WorkBuilding {
                 output = 400;
                 fuelNeeds = 10;
                 fuelLeft = 0;
-                fuelBurnTime = 30 * 1f / GameMaster.LABOUR_TICK; // 30 sec
+                fuelBurnTime = 1000; // ticks
                 break;
 		case MINERAL_POWERPLANT_2_ID:
                 fuel = ResourceType.mineral_F;
                 output = 400;
                 fuelNeeds = 1;
                 fuelLeft = 0;
-                fuelBurnTime = 6 * 1f / GameMaster.LABOUR_TICK; // 6 sec
+                fuelBurnTime = 600; // ticks
                 break;
 		case GRPH_REACTOR_4_ID :
                 fuel = ResourceType.Graphonium;
                 output = 4000;
                 fuelNeeds = 1;
                 fuelLeft = 0;
-                fuelBurnTime = 60 * 1f / GameMaster.LABOUR_TICK; // 60 sec
+                fuelBurnTime = 6000 ; //ticks
                 break;
 		}
 	}
@@ -49,7 +50,7 @@ public class Powerplant : WorkBuilding {
             if (workersCount > 0 & isActive)
             {
                 float fuelTaken = colony.storage.GetResources(fuel, fuelNeeds * (workersCount / (float)maxWorkers));
-                tickTimer = fuelBurnTime * (fuelTaken / fuelNeeds);                
+                tickTimer = (int)(fuelBurnTime * (fuelTaken / fuelNeeds));                
             }
             if (tickTimer == 0 & energySurplus != 0)
             {

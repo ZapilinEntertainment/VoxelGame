@@ -190,13 +190,13 @@ public static class ResourcesCost {
 				new ResourceContainer(ResourceType.Concrete, 50)
 			} ;
 			break;
-		case Structure.FOOD_FACTORY_4_ID:
+		case Structure.SUPPLIES_FACTORY_4_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Plastics, 40), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 10),
 				new ResourceContainer(ResourceType.Concrete, 50), new ResourceContainer(ResourceType.metal_E, 10)
 			} ;
 			break;
-		case Structure.FOOD_FACTORY_5_ID:
+		case Structure.SUPPLIES_FACTORY_5_ID:
 			cost = new ResourceContainer[]{
 				new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_E, 20),
 				new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_M, 30)
