@@ -24,8 +24,11 @@ public class HarvestableResource : Structure
         hr.mainResource = i_rtype;
         hr.resourceCount = i_count;               
         GameObject model;
+
         bool createSpriteLOD = true;
         LODPackType lpackType = LODPackType.Point;
+        float size = 0;
+
         hr.model_id = i_modelType;
         switch (hr.model_id)
         {
@@ -82,6 +85,7 @@ public class HarvestableResource : Structure
                     hr.gameObject.name = "pile";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/pilePref"));
                     lpackType = LODPackType.Point;
+                    size = 0.05f;
                     Transform meshTransform = model.transform.GetChild(0);
                     meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
                     hr.maxHp = 30;
@@ -89,12 +93,14 @@ public class HarvestableResource : Structure
                     break;
                 }
             case ContainerModelType.BerryBush:
-                hr.gameObject.name = "berry bush";
-                model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
-                createSpriteLOD = false;
-                hr.maxHp = 10;
-                hr.innerPosition = SurfaceRect.one;
-                break;
+                {
+                    hr.gameObject.name = "berry bush";
+                    model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
+                    createSpriteLOD = false;
+                    hr.maxHp = 10;
+                    hr.innerPosition = SurfaceRect.one;
+                    break;
+                }
             case ContainerModelType.Boulder:
                 {
                     hr.gameObject.name = "boulder";
@@ -102,6 +108,7 @@ public class HarvestableResource : Structure
                     Transform meshTransform = model.transform.GetChild(0);
                     meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
                     lpackType = LODPackType.Point;
+                    size = 0.1f;
                     hr.maxHp = 50;
                     hr.innerPosition = SurfaceRect.one;
                     break;

@@ -63,13 +63,19 @@ public class OakTree : Plant
 
             //stage 4 model
             GameObject model3d = LoadModel(4);
-            Texture2D spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, Color.green, oak4_lod_regInfo);
+            RenderPoint[] rpoints = new RenderPoint[] {
+                new RenderPoint(new Vector3(0, 0.222f, -0.48f), Vector3.zero),
+                 new RenderPoint(new Vector3(0, 0.479f, -0.434f), new Vector3(30, 0, 0)),
+                  new RenderPoint(new Vector3(0, 0.458f, -0.232f), new Vector3(45, 0, 0)),
+                   new RenderPoint(new Vector3(0, 0.551f, -0.074f), new Vector3(75, 0, 0))
+            };
+        Texture2D spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, rpoints , 32, 0.25f, Color.green, oak4_lod_regInfo);
             int size = spritesAtlas.width / 2;
             lodPack_stage4 = new Sprite[4];
-            lodPack_stage4[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage4[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage4[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage4[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage4[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage4[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage4[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage4[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 64);
             GameObject fullModel = new GameObject("oak4");
             fullModel.SetActive(false);
 
@@ -79,7 +85,7 @@ public class OakTree : Plant
             sr.sprite = lodPack_stage4[0];
             sr.sharedMaterial = PoolMaster.billboardMaterial;
             spriterCarrier.transform.parent = fullModel.transform;
-            spriterCarrier.transform.localPosition = Vector3.up * 0.211f;
+            spriterCarrier.transform.localPosition = Vector3.zero;
             // потом модель
             model3d.transform.parent = fullModel.transform;
             model3d.transform.localPosition = Vector3.zero;
@@ -89,14 +95,15 @@ public class OakTree : Plant
 
             // stage 5 model     
             model3d = LoadModel(5);
-            spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, Color.green, oak5_lod_regInfo);
+            //rpoint not changed
+            spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, rpoints, 32, 0.3f, Color.green, oak5_lod_regInfo);
             size = spritesAtlas.width / 2;
 
             lodPack_stage5 = new Sprite[4];
-            lodPack_stage5[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage5[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage5[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage5[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage5[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage5[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage5[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage5[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 64);
             fullModel = new GameObject("oak5");
             fullModel.SetActive(false);
             spriterCarrier = new GameObject("lodSpriter");
@@ -113,14 +120,15 @@ public class OakTree : Plant
 
             //stage 6 model
             model3d = LoadModel(6);
-            spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, Color.green, oak6_lod_regInfo);
+            //rpoints not changed
+            spritesAtlas = LODSpriteMaker.current.CreateLODPack(LODPackType.OneSide, model3d, rpoints, 64, 0.5f, Color.green, oak6_lod_regInfo);
             size = spritesAtlas.width / 2;
 
             lodPack_stage6 = new Sprite[4];
-            lodPack_stage6[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage6[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage6[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 128);
-            lodPack_stage6[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 128);
+            lodPack_stage6[0] = Sprite.Create(spritesAtlas, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage6[1] = Sprite.Create(spritesAtlas, new Rect(size, 0, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage6[2] = Sprite.Create(spritesAtlas, new Rect(0, size, size, size), new Vector2(0.5f, 0.5f), 64);
+            lodPack_stage6[3] = Sprite.Create(spritesAtlas, new Rect(size, size, size, size), new Vector2(0.5f, 0.5f), 64);
             fullModel = new GameObject("oak6");
             fullModel.SetActive(false);
             spriterCarrier = new GameObject("lodSpriter");
@@ -436,7 +444,7 @@ public class OakTree : Plant
                             }
                             else
                             {
-                                if (angle > 80) spriteNumber = 0;
+                                if (angle > 85) spriteNumber = 0;
                                 else spriteNumber = 1;
                             }
                             if (spriteNumber != oak.lodNumber)

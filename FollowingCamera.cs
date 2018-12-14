@@ -22,7 +22,6 @@ public sealed class FollowingCamera : MonoBehaviour {
 
 	Vector3 lookPoint;
 	bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false;
-	public static float optimalDistance { get; private set; }
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
     [SerializeField] bool useAutoZooming = true;
@@ -30,7 +29,6 @@ public sealed class FollowingCamera : MonoBehaviour {
     [SerializeField] Transform cloudCamera;
     [SerializeField] RectTransform controllerBack, controllerStick;
 #pragma warning restore 0649
-    const string CAM_ZOOM_DIST_KEY = "CameraZoomDistance";
     const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50;
 
     private bool handleSprites = false, camPosChanged = false;
@@ -60,8 +58,6 @@ public sealed class FollowingCamera : MonoBehaviour {
 
     void Start()
     {		
-        if (PlayerPrefs.HasKey(CAM_ZOOM_DIST_KEY)) optimalDistance = PlayerPrefs.GetFloat(CAM_ZOOM_DIST_KEY);
-        else optimalDistance = 5;
 		camTransform.position = transform.position + transform.TransformDirection(camPoint);
 		camTransform.LookAt(transform.position);
 
@@ -412,25 +408,5 @@ public sealed class FollowingCamera : MonoBehaviour {
     public void ResetTouchRightBorder()
     {
         touchRightBorder = Screen.width;
-    }
-
-    public static void SetOptimalDistance(float d)
-    {
-        if (d != optimalDistance)
-        {
-            optimalDistance = d;
-            PlayerPrefs.SetFloat(CAM_ZOOM_DIST_KEY, optimalDistance);
-            main.SetLookPoint(main.lookPoint);
-        }
-    }
-
-    private void OnDestroy()
-    {
-        PlayerPrefs.SetFloat(CAM_ZOOM_DIST_KEY, optimalDistance);
-    }
-
-    private void OnGUI()
-    {
-        GUILayout.Label(touchRightBorder.ToString());
     }
 }

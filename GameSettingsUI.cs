@@ -11,14 +11,12 @@ public sealed class GameSettingsUI : MonoBehaviour
     [SerializeField] Image settingsButton;
 #pragma warning restore 0649
 
-    private const int OPTIONS_CAMZOOM_SLIDER_INDEX = 0,
-        OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 2, OPTIONS_QUALITY_DROPDOWN_INDEX = 4;
+    private const int   OPTIONS_LOD_DISTANCE_SLIDER_INDEX = 0, OPTIONS_QUALITY_DROPDOWN_INDEX = 2;
 
     void OnEnable()
     {
         settingsButton.overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = transform;
-        t.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value = FollowingCamera.optimalDistance;
         t.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value = LODController.lodCoefficient;
         t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX).GetComponent<Dropdown>().value = QualitySettings.GetQualityLevel();
         t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);
@@ -29,14 +27,6 @@ public sealed class GameSettingsUI : MonoBehaviour
         settingsButton.overrideSprite = null;
     }
 
-    public void Options_CamZoomChanged()
-    {
-        float val = transform.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX).GetComponent<Slider>().value;
-        FollowingCamera.SetOptimalDistance(val);
-        Transform t = FollowingCamera.camTransform;
-        t.localPosition = t.localPosition.normalized * val;
-        t.LookAt(FollowingCamera.camBasisTransform);
-    }
     public void Options_LODdistChanged()
     {
         LODController.SetLODdistance(transform.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX).GetComponent<Slider>().value);
@@ -55,7 +45,6 @@ public sealed class GameSettingsUI : MonoBehaviour
     public void LocalizeTitles()
     {
         Transform t = transform;
-        t.GetChild(OPTIONS_CAMZOOM_SLIDER_INDEX + 1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CameraZoom);
         t.GetChild(OPTIONS_LOD_DISTANCE_SLIDER_INDEX + 1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.LODdistance);
         t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
         t.GetChild(OPTIONS_QUALITY_DROPDOWN_INDEX + 2).gameObject.SetActive(false);

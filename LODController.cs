@@ -62,13 +62,14 @@ public sealed class LODRegistrationTicket
     public Texture2D spriteAtlas { get; private set; }
     public Sprite[] sprites { get; private set; }
     public LODPackType lodPackType { get; private set; }
-    public int activeUsers = 0; // для очистки ненужных текстур
+    public int activeUsers = 0; // для очистки ненужных текстур    
 
     public LODRegistrationTicket(LODRegisterInfo regInfo, Texture2D i_spriteAtlas, LODPackType i_packType)
     {
         registerInfo = regInfo;
         spriteAtlas = i_spriteAtlas;
         lodPackType = i_packType;
+        float PIXELS_PER_UNIT = LODSpriteMaker.PIXELS_PER_UNIT;
         switch (lodPackType)
         {
             case LODPackType.Full:
@@ -76,13 +77,13 @@ public sealed class LODRegistrationTicket
                     sprites = new Sprite[32];
                     int index = 0;
                     float p = spriteAtlas.width / 4;
-                    Vector3 pivot = Vector3.one * 0.5f;
+                    Vector3 pivot = Vector2.one * 0.5f;
                     for (int i = 0; i < 8; i++)
                     {
-                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(0, i * p, p, p), pivot);
-                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(p, i * p, p, p), pivot);
-                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(2 * p, i * p, p, p), pivot);
-                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(3 * p, i * p, p, p), pivot);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(0, i * p, p, p), pivot, PIXELS_PER_UNIT);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(p, i * p, p, p), pivot, PIXELS_PER_UNIT);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(2 * p, i * p, p, p), pivot, PIXELS_PER_UNIT);
+                        sprites[index++] = Sprite.Create(spriteAtlas, new Rect(3 * p, i * p, p, p), pivot, PIXELS_PER_UNIT);
                     }
                     break;
                 }
@@ -90,15 +91,16 @@ public sealed class LODRegistrationTicket
                 {
                     sprites = new Sprite[4];
                     float p = spriteAtlas.width / 2;
-                    Vector3 pivot = Vector3.one * 0.5f;
-                    sprites[0] = Sprite.Create(spriteAtlas, new Rect(0, 0, p, p), pivot);
-                    sprites[1] = Sprite.Create(spriteAtlas, new Rect(p, 0, p, p), pivot);
-                    sprites[2] = Sprite.Create(spriteAtlas, new Rect(0, p, p, p), pivot);
-                    sprites[3] = Sprite.Create(spriteAtlas, new Rect(p, p, p, p), pivot);
+                    Vector3 pivot = Vector2.one * 0.5f;
+                    sprites[0] = Sprite.Create(spriteAtlas, new Rect(0, 0, p, p), pivot, PIXELS_PER_UNIT);
+                    sprites[1] = Sprite.Create(spriteAtlas, new Rect(p, 0, p, p), pivot, PIXELS_PER_UNIT);
+                    sprites[2] = Sprite.Create(spriteAtlas, new Rect(0, p, p, p), pivot, PIXELS_PER_UNIT);
+                    sprites[3] = Sprite.Create(spriteAtlas, new Rect(p, p, p, p), pivot, PIXELS_PER_UNIT);
                     break;
                 }
             default:
                 sprites = new Sprite[1];
+                sprites[0] = Sprite.Create(spriteAtlas, new Rect(0, 0, spriteAtlas.width, spriteAtlas.height), Vector2.one * 0.5f, PIXELS_PER_UNIT);
                 break;
         }
     }
@@ -141,7 +143,8 @@ public sealed class LODController : MonoBehaviour {
             GameObject g = new GameObject("lodController");
             current = g.AddComponent<LODController>();
             current.models = new List<ModelWithLOD>();
-            FollowingCamera.main.cameraChangedEvent += current.CameraUpdate;
+            current.registeredLODs = new List<LODRegistrationTicket>();
+            FollowingCamera.main.cameraChangedEvent += current.CameraUpdate;            
         }
         return current;
     }
@@ -203,6 +206,7 @@ public sealed class LODController : MonoBehaviour {
         ModelWithLOD mwl = new ModelWithLOD();
         mwl.transform = modelHolder;
         mwl.spriteRenderer = modelHolder.GetChild(1).GetComponent<SpriteRenderer>();
+        if (mwl.spriteRenderer == null) return;
         LODRegistrationTicket ticket = registeredLODs[indexInRegistered];
         mwl.sprites = ticket.sprites;
         ticket.activeUsers++;
