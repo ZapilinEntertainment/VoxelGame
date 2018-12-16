@@ -21,13 +21,12 @@ public class Building : Structure
     public byte level { get; protected set; } 
     public bool specialBuildingConditions { get; protected set; }
 
-    public const byte DOCK_ADDON1_LEVEL = 4, DOCK_ADDON2_LEVEL = 6;
-
     public static UIBuildingObserver buildingObserver;
 
     public static List<Building> GetApplicableBuildingsList(byte i_level)
     {
         //относительно ужасное решение
+        // хотя создаются всего лишь экземпляры классов, без моделей и привязок
         List<Building> blist = new List<Building>();
         switch (i_level)
         {
@@ -78,7 +77,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(EXPEDITION_CORPUS_4_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
                 blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
-                blist.Add(GetStructureByID(DOCK_ADDON_1) as Building);
+                blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_5_ID) as Building);
@@ -96,7 +95,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(CONTROL_CENTER_6_ID) as Building);
                 blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
-                blist.Add(GetStructureByID(DOCK_ADDON_2) as Building);
+                blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
                 blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
                 break;
         }
@@ -259,9 +258,26 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
                     energySurplus = -120;
-                    energyCapacity = 240;
-                    
+                    energyCapacity = 240;                    
                     level = 1;
+                }
+                break;
+            case DOCK_2_ID:
+                {
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = -200;
+                    energyCapacity = 800;
+                    level = 2;
+                }
+                break;
+            case DOCK_3_ID:
+                {
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = -300;
+                    energyCapacity = 1500;
+                    level = 3;
                 }
                 break;
             case ENERGY_CAPACITOR_1_ID:
@@ -708,24 +724,24 @@ public class Building : Structure
                     level = 6;
                 }
                 break;
-            case DOCK_ADDON_1:
+            case DOCK_ADDON_1_ID:
                 {
                     specialBuildingConditions = false;
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 1000;
-                    level = DOCK_ADDON1_LEVEL;
+                    level = 1;
                 }
                 break;
-            case DOCK_ADDON_2:
+            case DOCK_ADDON_2_ID:
                 {
                     specialBuildingConditions = false;
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
                     energyCapacity = 1000;
-                    level = DOCK_ADDON2_LEVEL;
+                    level = 2;
                 }
                 break;
         }

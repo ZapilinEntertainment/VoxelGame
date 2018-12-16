@@ -18,14 +18,9 @@ public enum EndgameQuestID : byte
     Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3
 }
 
-public sealed class Quest {
-    public string name = string.Empty;
-    public string description = string.Empty;
-    public bool picked = false;
-    public bool completed { get; private set; }
-    public bool canBeDelayed { get; private set; }
-    public float questLifeTimer { get; private set; }
-    public float questRealizationTimer { get; private set; }
+public class Quest {
+    public string name;
+    public string description;
     public float reward { get; private set; }
 
     public string[] steps { get; private set; }
@@ -39,6 +34,7 @@ public sealed class Quest {
     public readonly byte subIndex;
 
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
+    public static readonly Quest NoQuest;
 
     //при добавлении квеста дополнить:
     // Localization -> Fill quest data
@@ -46,6 +42,7 @@ public sealed class Quest {
 
     static Quest () {
         questsCompletenessMask = new uint[2];
+        NoQuest = new Quest();
 	}    
 
     public static void SetCompletenessMask(uint[] m)
@@ -58,7 +55,6 @@ public sealed class Quest {
         type = i_type;
         subIndex = subID;
         crews = new List<Crew>();
-        completed = false;
         byte stepsCount = 1;
         switch (i_type)
         {
@@ -90,8 +86,6 @@ public sealed class Quest {
                             stepsCount = 4;
                             shuttlesRequired = 0;
                             crewsRequired = 0;
-                            questLifeTimer = -1;
-                            questRealizationTimer = -1;
                             reward = 400;
                             break;
                         case ProgressQuestID.Progress_Tier5: reward = 960; break;
@@ -100,8 +94,6 @@ public sealed class Quest {
                             stepsCount = 2;
                             shuttlesRequired = 0;
                             crewsRequired = 0;
-                            questLifeTimer = -1;
-                            questRealizationTimer = -1;
                             reward = 960;
                             break;
                         case ProgressQuestID.Progress_SecondFloor:
@@ -109,8 +101,6 @@ public sealed class Quest {
                             stepsCount = 2;
                             shuttlesRequired = 0;
                             crewsRequired = 0;
-                            questLifeTimer = -1;
-                            questRealizationTimer = -1;
                             reward = 420;
                             break;
                     }
@@ -120,8 +110,6 @@ public sealed class Quest {
                         stepsCount = 1;
                         shuttlesRequired = 0;
                         crewsRequired = 0;
-                        questLifeTimer = -1;
-                        questRealizationTimer = -1;
                     }                    
                     break;
                 }
@@ -132,34 +120,31 @@ public sealed class Quest {
                         stepsCount = 3;
                         shuttlesRequired = 0;
                         crewsRequired = 0;
-                        questLifeTimer = -1;
-                        questRealizationTimer = -1;
                         reward = 1000;
                         break;
                     case EndgameQuestID.Endgame_TransportHub_step2:
                         stepsCount = 2;
                         shuttlesRequired = 0;
                         crewsRequired = 0;
-                        questLifeTimer = -1;
-                        questRealizationTimer = -1;
                         reward = 1000;
                         break;
                     case EndgameQuestID.Endgame_TransportHub_step3:
                         stepsCount = 3;
                         shuttlesRequired = 0;
                         crewsRequired = 0;
-                        questLifeTimer = -1;
-                        questRealizationTimer = -1;
                         reward = 1000;
                         break;
                 }
                 break;
         }
-        canBeDelayed = true;
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
         Localization.FillProgressQuest(this);
+    }
+    private Quest()
+    {
+        name = "no-quest";
     }
     
     public void CheckQuestConditions()
@@ -435,7 +420,9 @@ public sealed class Quest {
                                         }
                                     }
                                 }
+                                stepsFinished[0] = true;
                             }
+                            else stepsFinished[0] = false;
                         }
                         break;
                 }
@@ -457,7 +444,7 @@ public sealed class Quest {
                             else stepsFinished[0] = false;
                             stepsAddInfo[0] = docksCount.ToString() + " / " + docksNeeded.ToString();
 
-                            if (colony.docksLevel >= Building.DOCK_ADDON1_LEVEL)
+                            if (colony.docksLevel >= 3)
                             {
                                 stepsFinished[1] = true;
                                 conditionsMet++;
@@ -550,50 +537,11 @@ public sealed class Quest {
 
     public void MakeQuestCompleted()
     {
-        completed = true;
         UIController.current.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
+        QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
-    }
-
-    public void Stop()
-    {
-        if (!picked) return;
-        if (canBeDelayed)
-        {
-            switch (type)
-            {
-                case QuestType.Progress:
-                    switch ((ProgressQuestID)subIndex)
-                    {
-                        case ProgressQuestID.Progress_HousesToMax:
-                        case ProgressQuestID.Progress_2Docks:
-                        case ProgressQuestID.Progress_2Storages:
-                        case ProgressQuestID.Progress_Tier2:
-                        case ProgressQuestID.Progress_300Population:
-                        case ProgressQuestID.Progress_OreRefiner:
-                        case ProgressQuestID.Progress_HospitalCoverage:
-                        case ProgressQuestID.Progress_Tier3:
-                        case ProgressQuestID.Progress_4MiniReactors:
-                        case ProgressQuestID.Progress_100Fuel:
-                        case ProgressQuestID.Progress_XStation:
-                        case ProgressQuestID.Progress_Tier4:
-                        case ProgressQuestID.Progress_CoveredFarm:
-                        case ProgressQuestID.Progress_CoveredLumbermill:
-                        case ProgressQuestID.Progress_Reactor:
-                        case ProgressQuestID.Progress_FirstExpedition:
-                        case ProgressQuestID.Progress_Tier5:
-                        case ProgressQuestID.Progress_FactoryComplex:
-                        case ProgressQuestID.Progress_SecondFloor:
-                            // nothing happens?
-                            break;
-                        default: break;
-                    }
-                    break;
-                default: break;
-            }
-        }
     }
 
     #region allQuestList
@@ -646,7 +594,6 @@ public sealed class Quest {
             {
                 ProgressQuestID pqi = acceptableQuest[(int)(Random.value * acceptableQuest.Count)];
                 Quest q = new Quest(QuestType.Progress, (byte)pqi);                              
-                q.picked = true;
                 q.CheckQuestConditions();
                 return q;
             }
@@ -784,7 +731,6 @@ public sealed class Quest {
 
 	public QuestSerializer Save() {
 		QuestSerializer qs = new QuestSerializer();
-        qs.picked = picked;
         qs.completed = completed;
         qs.stepsFinished = stepsFinished;
         qs.type = type;
@@ -795,7 +741,6 @@ public sealed class Quest {
         Quest q = new Quest(qs.type, qs.subIndex);
         q.stepsFinished = qs.stepsFinished;
         q.completed = qs.completed;
-        q.picked = qs.picked;
 		return q;
 	}
 
@@ -803,7 +748,7 @@ public sealed class Quest {
 
 [System.Serializable]
 public class QuestSerializer {
-    public bool picked, completed;
+    public bool completed;
     public bool[] stepsFinished;
     public QuestType type;
     public byte subIndex;    

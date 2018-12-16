@@ -25,9 +25,9 @@ public class HarvestableResource : Structure
         hr.resourceCount = i_count;               
         GameObject model;
 
-        bool createSpriteLOD = true;
-        LODPackType lpackType = LODPackType.Point;
-        float size = 0;
+        bool createSpriteLOD = false;        
+        LODRegisterInfo regInfo = new LODRegisterInfo(0, 0, 0);
+        float height = 0;
 
         hr.model_id = i_modelType;
         switch (hr.model_id)
@@ -43,7 +43,6 @@ public class HarvestableResource : Structure
                     {
                         mr.sharedMaterial = PoolMaster.basic_material;
                     }
-                    createSpriteLOD = false;
                     byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
                     hr.innerPosition = new SurfaceRect(c, c, (byte)(c + c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f;
@@ -53,7 +52,6 @@ public class HarvestableResource : Structure
                 {
                     hr.gameObject.name = "dead Tree of Life";
                     model = Instantiate(Resources.Load<GameObject>("Lifeforms/dead_treeOfLife"));
-                    createSpriteLOD = false;
                     byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
                     hr.innerPosition = new SurfaceRect(c, c, (byte)(c+c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f ;
@@ -62,30 +60,42 @@ public class HarvestableResource : Structure
             case ContainerModelType.DeadOak4:
                 hr.gameObject.name = "dead oak 4";
                 model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-4_dead"));
-                lpackType = LODPackType.OneSide;
                 hr.innerPosition = SurfaceRect.one;
                 hr.maxHp = 50;
+
+                createSpriteLOD = true;
+                regInfo = new LODRegisterInfo(LODController.CONTAINER_MODEL_ID, (int)ContainerModelType.DeadOak4, 0);
+                height = 0.211f;
                 break;
             case ContainerModelType.DeadOak5:
                 hr.gameObject.name = "dead oak 5";
                 model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-6_dead"));
-                lpackType = LODPackType.OneSide;
                 hr.innerPosition = SurfaceRect.one;
                 hr.maxHp = 100;
+
+                createSpriteLOD = true;
+                regInfo = new LODRegisterInfo(LODController.CONTAINER_MODEL_ID, (int)ContainerModelType.DeadOak5, 0);
+                height = 0.211f;
                 break;
             case ContainerModelType.DeadOak6:
                 hr.gameObject.name = "dead oak 6";
                 model = Instantiate(Resources.Load<GameObject>("Lifeforms/oak-6_dead"));
-                lpackType = LODPackType.OneSide;
                 hr.innerPosition = SurfaceRect.one;
                 hr.maxHp = 200;
+
+                createSpriteLOD = true;
+                regInfo = new LODRegisterInfo(LODController.CONTAINER_MODEL_ID, (int)ContainerModelType.DeadOak6, 0);
+                height = 0.211f;
                 break;
             case ContainerModelType.Pile:
                 {
                     hr.gameObject.name = "pile";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/pilePref"));
-                    lpackType = LODPackType.Point;
-                    size = 0.05f;
+
+                    createSpriteLOD = true;
+                    regInfo = new LODRegisterInfo((int)ContainerModelType.Pile, 0, hr.mainResource.ID);
+                    height = 0.047f;
+
                     Transform meshTransform = model.transform.GetChild(0);
                     meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
                     hr.maxHp = 30;
@@ -96,7 +106,6 @@ public class HarvestableResource : Structure
                 {
                     hr.gameObject.name = "berry bush";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
-                    createSpriteLOD = false;
                     hr.maxHp = 10;
                     hr.innerPosition = SurfaceRect.one;
                     break;
@@ -107,8 +116,11 @@ public class HarvestableResource : Structure
                     model = Instantiate(Resources.Load<GameObject>("Prefs/boulderPref"));
                     Transform meshTransform = model.transform.GetChild(0);
                     meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
-                    lpackType = LODPackType.Point;
-                    size = 0.1f;
+                   
+                    regInfo = new LODRegisterInfo((int)ContainerModelType.Boulder, 0, hr.mainResource.ID);
+                    createSpriteLOD = true;
+                    height = 0.047f;
+
                     hr.maxHp = 50;
                     hr.innerPosition = SurfaceRect.one;
                     break;
@@ -119,24 +131,100 @@ public class HarvestableResource : Structure
                     model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
                     Transform meshTransform = model.transform.GetChild(0);
                     meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+
                     hr.model_id = ContainerModelType.Default;
-                    createSpriteLOD = false;
+
                     hr.maxHp = 10;
                     hr.innerPosition = SurfaceRect.one;
                     break;
                 }
         }
         hr.hp = hr.maxHp;
+
         if (createSpriteLOD)
         {
             SpriteRenderer sr = new GameObject("lod").AddComponent<SpriteRenderer>();
             sr.transform.parent = model.transform;
-            sr.transform.localPosition = Vector3.zero;
+            sr.transform.localPosition = Vector3.up * height;
             sr.sharedMaterial = PoolMaster.billboardMaterial;
+            LODController currentLC = LODController.GetCurrent();
+            LODPackType lpackType = LODPackType.Point;
+            int indexInRegistered = currentLC.LOD_existanceCheck(regInfo);
+            float lodDistance = 3, visibilityDistance = 12;
+      
+            if (indexInRegistered == -1)
+            {
+                int resolution = 8;
+                float size = 0.05f;
+                Color backgroundColor = Color.gray;                
+                RenderPoint[] renderpoints = new RenderPoint[] { };
+
+                switch (hr.model_id)
+                {
+                    case ContainerModelType.Pile:
+                        {                            
+                            renderpoints = new RenderPoint[] { new RenderPoint(new Vector3(0, 0.084f, -0.063f), new Vector3(45, 0, 0)) };
+                            break;
+                        }
+                    case ContainerModelType.Boulder:
+                        {
+                            renderpoints = new RenderPoint[] { new RenderPoint(new Vector3(0, 0.084f, -0.063f), new Vector3(45, 0, 0)) };
+                            break;
+                        }
+                    case ContainerModelType.DeadOak4:
+                        {
+                            renderpoints = new RenderPoint[] {
+                            new RenderPoint(new Vector3(0, 0.222f, -0.48f), Vector3.zero),
+                             new RenderPoint(new Vector3(0, 0.479f, -0.434f), new Vector3(30, 0, 0)),
+                              new RenderPoint(new Vector3(0, 0.458f, -0.232f), new Vector3(45, 0, 0)),
+                               new RenderPoint(new Vector3(0, 0.551f, -0.074f), new Vector3(75, 0, 0))
+                            };
+                            size = 0.2f;
+                            resolution = 32;
+                            lpackType = LODPackType.OneSide;
+                            break;
+                        }
+                    case ContainerModelType.DeadOak5:
+                        {
+                            renderpoints = new RenderPoint[] {
+                            new RenderPoint(new Vector3(0, 0.222f, -0.48f), Vector3.zero),
+                             new RenderPoint(new Vector3(0, 0.479f, -0.434f), new Vector3(30, 0, 0)),
+                              new RenderPoint(new Vector3(0, 0.458f, -0.232f), new Vector3(45, 0, 0)),
+                               new RenderPoint(new Vector3(0, 0.551f, -0.074f), new Vector3(75, 0, 0))
+                            };
+                            size = 0.25f;
+                            resolution = 32;
+                            lpackType = LODPackType.OneSide;
+                            break;
+                        }
+                    case ContainerModelType.DeadOak6:
+                        {
+                            renderpoints = new RenderPoint[] {
+                            new RenderPoint(new Vector3(0, 0.222f, -0.48f), Vector3.zero),
+                             new RenderPoint(new Vector3(0, 0.479f, -0.434f), new Vector3(30, 0, 0)),
+                              new RenderPoint(new Vector3(0, 0.458f, -0.232f), new Vector3(45, 0, 0)),
+                               new RenderPoint(new Vector3(0, 0.551f, -0.074f), new Vector3(75, 0, 0))
+                            };
+                            size = 0.4f;
+                            resolution = 64;
+                            lpackType = LODPackType.OneSide;
+                            break;
+                        }
+                }
+                
+                indexInRegistered = LODSpriteMaker.current.CreateLODPack(lpackType, model, renderpoints, resolution, size, backgroundColor, regInfo);
+            }
+            model.transform.parent = hr.transform;
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            LODController.GetCurrent().TakeCare(model.transform, indexInRegistered, lodDistance, visibilityDistance);
         }
-        model.transform.parent = hr.transform;
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        else
+        {
+            model.transform.parent = hr.transform;
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        }
         return hr;
     }
 

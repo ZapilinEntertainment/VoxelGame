@@ -37,7 +37,7 @@ public class Structure : MonoBehaviour
     // - texture rect
     // -building - get applicable buildings list
     // -resource cost
-    // score 
+    // score calculator
     public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, LANDED_ZEPPELIN_ID = 5,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
     DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
@@ -50,8 +50,8 @@ public class Structure : MonoBehaviour
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
-        CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1 = 72, DOCK_ADDON_2 = 73;
-    public const int TOTAL_STRUCTURES_COUNT = 74;
+        CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75;
+    public const int TOTAL_STRUCTURES_COUNT = 76;
 
     public static UIStructureObserver structureObserver;
     private static bool firstLaunch = true;
@@ -99,7 +99,9 @@ public class Structure : MonoBehaviour
             case HOUSE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_2")); break;
             case HOUSE_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_3")); break;
             case HOUSE_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/houseBlock_level_5")); break;
-            case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Dock_level_1")); break;
+            case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
+            case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
+            case DOCK_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_3")); break;
             case ENERGY_CAPACITOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/EnergyCapacitor_level_1")); break;
             case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/EnergyCapacitor_level_2")); break;
             case ENERGY_CAPACITOR_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/EnergyCapacitor_level_3")); break;
@@ -149,8 +151,8 @@ public class Structure : MonoBehaviour
             case CONTROL_CENTER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/commandCenter")); break;
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
-            case DOCK_ADDON_1: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
-            case DOCK_ADDON_2: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
+            case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
+            case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -209,7 +211,10 @@ public class Structure : MonoBehaviour
             case HOUSE_3_ID:
             case HOUSE_5_ID:
                 s = new GameObject("House").AddComponent<House>(); break;
-            case DOCK_ID: s = new GameObject("Dock").AddComponent<Dock>(); break;
+            case DOCK_ID:
+            case DOCK_2_ID:
+            case DOCK_3_ID:
+                s = new GameObject("Dock").AddComponent<Dock>(); break;
             case FARM_1_ID:
             case FARM_2_ID:
             case FARM_3_ID:
@@ -250,15 +255,23 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_2_ID:
             case ENERGY_CAPACITOR_3_ID:
                 s = new GameObject("Energy capacitor").AddComponent<Building>(); break;
-            case GRPH_ENRICHER_3_ID: s = new GameObject("Graphonium Enricher").AddComponent<GraphoniumEnricher>(); break;
-            case XSTATION_3_ID: s = new GameObject("XStation").AddComponent<XStation>(); break;
+            case GRPH_ENRICHER_3_ID:
+                s = new GameObject("Graphonium Enricher").AddComponent<GraphoniumEnricher>(); break;
+            case XSTATION_3_ID:
+                s = new GameObject("XStation").AddComponent<XStation>(); break; // AWAITING
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: s = new GameObject("Quantum energy transmitter").AddComponent<QuantumEnergyTransmitter>(); break;
-            case CHEMICAL_FACTORY_4_ID: s = new GameObject("Chemical factory").AddComponent<ChemicalFactory>(); break;
-            case QUANTUM_TRANSMITTER_4_ID: s = new GameObject("Quantum transmitter").AddComponent<QuantumTransmitter>(); break;
-            case SWITCH_TOWER_ID: s = new GameObject("Switch tower").AddComponent<SwitchTower>(); break;
-            case SHUTTLE_HANGAR_4_ID: s = new GameObject("Shuttle hangar").AddComponent<Hangar>(); break;
-            case RECRUITING_CENTER_4_ID: s = new GameObject("Recruiting center").AddComponent<RecruitingCenter>(); break;
-            case EXPEDITION_CORPUS_4_ID: s = new GameObject("Expedition corpus").AddComponent<ExpeditionCorpus>(); break;
+            case CHEMICAL_FACTORY_4_ID:
+                s = new GameObject("Chemical factory").AddComponent<ChemicalFactory>(); break; // AWAITING
+            case QUANTUM_TRANSMITTER_4_ID:
+                s = new GameObject("Quantum transmitter").AddComponent<QuantumTransmitter>(); break;
+            case SWITCH_TOWER_ID:
+                s = new GameObject("Switch tower").AddComponent<SwitchTower>(); break;
+            case SHUTTLE_HANGAR_4_ID:
+                s = new GameObject("Shuttle hangar").AddComponent<Hangar>(); break;
+            case RECRUITING_CENTER_4_ID:
+                s = new GameObject("Recruiting center").AddComponent<RecruitingCenter>(); break;
+            case EXPEDITION_CORPUS_4_ID:
+                s = new GameObject("Expedition corpus").AddComponent<ExpeditionCorpus>(); break;
             case REACTOR_BLOCK_5_ID:
                 s = new GameObject("Reactor block").AddComponent<Powerplant>(); break;
             case FOUNDATION_BLOCK_5_ID:
@@ -271,10 +284,10 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Hotel block").AddComponent<House>(); break; // AWAITING
             case HOUSING_MAST_6_ID:
                 s = new GameObject("Housing mast").AddComponent<House>(); break;
-            case DOCK_ADDON_1:
-                s = new GameObject("Dock Addon 1").AddComponent<Building>(); break; // AWAITING
-            case DOCK_ADDON_2:
-                s = new GameObject("Dock Addon 2").AddComponent<Building>(); break; // AWAITING
+            case DOCK_ADDON_1_ID:
+                s = new GameObject("Dock Addon 1").AddComponent<DockAddon>(); break; 
+            case DOCK_ADDON_2_ID:
+                s = new GameObject("Dock Addon 2").AddComponent<DockAddon>(); break; 
             default: return null;
         }
         s.id = i_id;
@@ -984,7 +997,7 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case DOCK_ADDON_1:
+            case DOCK_ADDON_1_ID:
                 {
                     maxHp = 2000;
                     innerPosition = SurfaceRect.full;
@@ -994,9 +1007,29 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case DOCK_ADDON_2:
+            case DOCK_ADDON_2_ID:
                 {
                     maxHp = 2200;
+                    innerPosition = SurfaceRect.full;
+                    placeInCenter = true;
+                    rotate90only = true;
+                    isArtificial = true;
+                    isBasement = false;
+                }
+                break;
+            case DOCK_2_ID:
+                {
+                    maxHp = 2400;
+                    innerPosition = SurfaceRect.full;
+                    placeInCenter = true;
+                    rotate90only = true;
+                    isArtificial = true;
+                    isBasement = false;
+                }
+                break;
+            case DOCK_3_ID:
+                {
+                    maxHp = 5000;
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
@@ -1082,8 +1115,10 @@ public class Structure : MonoBehaviour
             case CONTROL_CENTER_6_ID: return new Rect(6 * p, 3 * p, p, p);
             case HOTEL_BLOCK_6_ID: return new Rect(7 *p, 3 *p,p,p);
             case HOUSING_MAST_6_ID: return new Rect(0, 2 * p, p, p);
-            case DOCK_ADDON_1:
-            case DOCK_ADDON_2:
+            case DOCK_ADDON_1_ID:
+            case DOCK_ADDON_2_ID:
+            case DOCK_2_ID:
+            case DOCK_3_ID:
                 return new Rect(p, 2 * p, p, p);
         }
     }

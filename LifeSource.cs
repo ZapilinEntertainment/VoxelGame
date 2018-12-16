@@ -18,34 +18,30 @@ public sealed class LifeSource : MultiblockStructure {
 	public void LifepowerUpdate () {
         tick++;
         basement.myChunk.AddLifePower(lifepowerPerTick);
-        if (tick == MAXIMUM_TICKS)
+        if (tick == MAXIMUM_TICKS & !destroyed)
         { // dry
+            destroyed= true;
             GameMaster.realMaster.lifepowerUpdateEvent -= LifepowerUpdate;
             subscribedToUpdate = false;
-            Transform model, mesh;
+            PrepareStructureForDestruction(false);
             switch (id)
             {
                 case TREE_OF_LIFE_ID:
                     {
-                        model = transform.GetChild(0).GetChild(0);
-                        mesh = model.GetChild(1);
-                        mesh.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.DeadLumber, mesh.GetComponent<MeshFilter>(), 1);
-                        Destroy(model.GetChild(0).gameObject);
+                        HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.DeadTreeOfLife, ResourceType.Lumber, 5000);
+                        hr.SetModelRotation(modelRotation);
+                        hr.SetBasement(basement, new PixelPosByte(hr.innerPosition.x, hr.innerPosition.z));
                         break;
                     }
                 case LIFESTONE_ID:
                     {
-                        model = transform.GetChild(0).GetChild(0);
-                        for (int i = 0; i < model.childCount; i++)
-                        {
-                            mesh = model.GetChild(i);
-                            if (mesh.GetComponent<MeshRenderer>().sharedMaterial == PoolMaster.energy_material)
-                                mesh.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.energy_offline_material;
-                            else mesh.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Stone, mesh.GetComponent<MeshFilter>(), 1);
-                        }
+                        HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.DeadLifestone, ResourceType.Stone, 5000);
+                        hr.SetModelRotation(modelRotation);
+                        hr.SetBasement(basement, new PixelPosByte(hr.innerPosition.x, hr.innerPosition.z));
                         break;
                     }
             }
+            Destroy(gameObject);
         }
 	}
 

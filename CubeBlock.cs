@@ -20,6 +20,8 @@ public class CubeBlock : Block
     public static readonly int MAX_VOLUME;
     public bool career { get; private set; } // изменена ли верхняя поверхность на котлован?
 
+    public const string FWD_PLANE_NAME = "forwardPlane", RIGHT_PLANE_NAME = "rightPlane", BACK_PLANE_NAME = "backPlane", LEFT_PLANE_NAME = "leftPlane", UP_PLANE_NAME = "upperPlane", DOWN_PLANE_NAME = "bottomPlane";
+
     static CubeBlock()
     {
         MAX_VOLUME = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION;
@@ -198,31 +200,31 @@ public class CubeBlock : Block
         switch (i)
         {
             case 0: // fwd
-                g.name = "north_plane";
+                g.name = FWD_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 180, 0);
                 t.localPosition = new Vector3(0, 0, QUAD_SIZE / 2f);
                 if (pos.z != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z + 1];
                 break;
             case 1: // right
-                g.name = "east_plane";
+                g.name = RIGHT_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 270, 0);
                 t.localPosition = new Vector3(QUAD_SIZE / 2f, 0, 0);
                 if (pos.x != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x + 1, pos.y, pos.z];
                 break;
             case 2: // back
-                g.name = "south_plane";
+                g.name = BACK_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 0, 0);
                 t.localPosition = new Vector3(0, 0, -QUAD_SIZE / 2f);
                 if (pos.z != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z - 1];
                 break;
             case 3: // left
-                g.name = "west_plane";
+                g.name = LEFT_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 90, 0);
                 t.localPosition = new Vector3(-QUAD_SIZE / 2f, 0, 0);
                 if (pos.x != 0) faceIllumination = myChunk.lightMap[pos.x - 1, pos.y, pos.z];
                 break;
             case 4: // up
-                g.name = "upper_plane";
+                g.name = UP_PLANE_NAME;
                 t.localPosition = new Vector3(0, QUAD_SIZE / 2f, 0);
                 t.localRotation = Quaternion.Euler(90, 0, 0);
                 if (pos.y != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y + 1, pos.z];
@@ -233,7 +235,7 @@ public class CubeBlock : Block
                 }
                 break;
             case 5: // down
-                g.name = "bottom_plane";
+                g.name = DOWN_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(-90, 0, 0);
                 t.localPosition = new Vector3(0, -QUAD_SIZE / 2f, 0);
                 if (pos.y != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y - 1, pos.z];

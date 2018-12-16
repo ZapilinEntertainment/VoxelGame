@@ -34,6 +34,18 @@ public abstract class WorkBuilding : Building {
                     maxWorkers = 40;
                  }
                 break;
+            case DOCK_2_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 80;
+                }
+                break;
+            case DOCK_3_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 120;
+                }
+                break;
             case FARM_1_ID:
                 {
                     workflowToProcess = 20;
@@ -280,6 +292,7 @@ public abstract class WorkBuilding : Building {
 		FreeWorkers(workersCount);
 	}
 	virtual public void FreeWorkers(int x) {
+        if (workersCount == 0) return;
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		colony.AddWorkers(x);

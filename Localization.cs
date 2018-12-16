@@ -44,7 +44,9 @@ public static class Localization {
             case Structure.HOUSE_2_ID: return "House";
             case Structure.HOUSE_3_ID: return "Advanced house";
             case Structure.HOUSE_5_ID: return "Residential Block";
-            case Structure.DOCK_ID: return "Basic dock";
+            case Structure.DOCK_ID: return "Dock";
+            case Structure.DOCK_2_ID: return "Improved dock";
+            case Structure.DOCK_3_ID: return "Advanced dock";
             case Structure.ENERGY_CAPACITOR_1_ID: return "Power capacitor";
             case Structure.ENERGY_CAPACITOR_2_ID: return "Power capacitor";
             case Structure.ENERGY_CAPACITOR_3_ID: return "Power capacitor";
@@ -95,8 +97,8 @@ public static class Localization {
             case Structure.CONTROL_CENTER_6_ID: return "Control center";
             case Structure.HOTEL_BLOCK_6_ID: return "Hotel block";
             case Structure.HOUSING_MAST_6_ID: return "Housing mast";
-            case Structure.DOCK_ADDON_1: return "Dock addon 1";
-            case Structure.DOCK_ADDON_2: return "Dock addon 2";
+            case Structure.DOCK_ADDON_1_ID: return "Dock addon 1";
+            case Structure.DOCK_ADDON_2_ID: return "Dock addon 2";
         }
     }
 	public static string GetStructureDescription(int id) {

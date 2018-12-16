@@ -158,12 +158,11 @@ public sealed class GameMaster : MonoBehaviour {
         audiomaster.Prepare();
 
         editMode = _editMode;
+        //Localization.ChangeLanguage(Language.English);   
+        if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
         if (!editMode)
         {            
-            lifeGrowCoefficient = 1;
-            //Localization.ChangeLanguage(Language.English);
-
-            if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
+            lifeGrowCoefficient = 1;                     
             difficulty = gameStartSettings.difficulty;
             if (PoolMaster.current == null)
             {

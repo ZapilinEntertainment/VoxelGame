@@ -10,7 +10,7 @@ public class Recipe {
 		public readonly float workflowToResult;
 		public readonly int ID;
 
-	public static readonly Recipe[] smelteryRecipes, oreRefiningRecipes, fuelFacilityRecipes, plasticFactoryRecipes;
+	public static readonly Recipe[] smelteryRecipes, oreRefiningRecipes, fuelFacilityRecipes, plasticFactoryRecipes, graphoniumEnricherRecipes;
 
 	public static readonly Recipe NoRecipe;
 	public static readonly Recipe StoneToConcrete;
@@ -18,13 +18,14 @@ public class Recipe {
 	public static readonly Recipe MetalK_smelting, MetalE_smelting, MetalN_smelting, MetalM_smelting,MetalP_smelting, MetalS_smelting;
 	public static readonly Recipe MetalK_refining, MetalE_refining,MetalN_refining,MetalM_refining,MetalP_refining,MetalS_refining;
 	public static readonly Recipe MineralF_refining, MineralL_refining;
-	public static readonly Recipe Fuel_fromNmetal, Fuel_fromNmetalOre, Fuel_fromMineralF;
+	public static readonly Recipe Fuel_fromNmetal, Fuel_fromNmetalOre, Fuel_fromMineralF, Fuel_fromGraphonium;
+    public static readonly Recipe Graphonium_fromNmetal, Graphonium_fromNmetalOre;
 
 	public const int STONE_TO_CONCRETE_ID = 1, LUMBER_TO_PLASTICS_ID = 2, MINERAL_L_TO_PLASTICS_ID = 3, METAL_K_SMELTING_ID = 4,
 	METAL_E_SMELTING_ID = 5, METAL_N_SMELTING_ID = 6, METAL_M_SMELTING_ID = 7, METAL_P_SMELTING_ID = 8, METAL_S_SMELTING_ID = 9,
 	METAL_K_REFINIG_ID = 10, METAL_E_REFINING_ID = 11, METAL_N_REFINING_ID = 12, METAL_M_REFINING_ID = 13, METAL_P_REFINING_ID = 14,
 	METAL_S_REFINING_ID = 15, MINERAL_F_REFINING_ID = 16, MINERAL_L_REFINING_ID = 17, FUEL_FROM_NMETAL_ID = 18, FUEL_FROM_NMETAL_ORE_ID = 19,
-	FUEL_FROM_MINERAL_F_ID = 20;
+	FUEL_FROM_MINERAL_F_ID = 20, GRAPHONIUM_FROM_NMETAL_ID = 21, GRAPHONIUM_FRON_NMETAL_ORE_ID = 22, FUEL_FROM_GRAPHONIUM = 23;
 
 	static Recipe() {
 		NoRecipe = new Recipe(ResourceType.Nothing, ResourceType.Nothing,0, 0,0,  0);
@@ -56,20 +57,29 @@ public class Recipe {
 		oreRefiningRecipes[5] = MetalP_refining; oreRefiningRecipes[6] = MetalS_refining;
 		oreRefiningRecipes[7] = MineralF_refining; oreRefiningRecipes[8] = MineralL_refining;
 
-		fuelFacilityRecipes = new Recipe[4];
+		fuelFacilityRecipes = new Recipe[5];
 		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 100, 1000);
 		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 90, 3000);
 		Fuel_fromMineralF = new Recipe(ResourceType.mineral_F, ResourceType.Fuel,  FUEL_FROM_MINERAL_F_ID, 1, 10, 2700);
+        Fuel_fromGraphonium = new Recipe(ResourceType.Graphonium, ResourceType.Fuel, FUEL_FROM_GRAPHONIUM, 1, 6400, 6000);
 		fuelFacilityRecipes[0] = NoRecipe;
 		fuelFacilityRecipes[1] = Fuel_fromNmetal;
 		fuelFacilityRecipes[2] = Fuel_fromNmetalOre;
 		fuelFacilityRecipes[3] = Fuel_fromMineralF;
+        fuelFacilityRecipes[4] = Fuel_fromGraphonium;
 
 		plasticFactoryRecipes = new Recipe[3];
 		plasticFactoryRecipes[0] = NoRecipe;
 		plasticFactoryRecipes[1] = LumberToPlastics;
 		MineralLToPlastics = new Recipe(ResourceType.mineral_L, ResourceType.Plastics, MINERAL_L_TO_PLASTICS_ID, 1, 2, 8);
 		plasticFactoryRecipes[2] = MineralLToPlastics;
+
+        graphoniumEnricherRecipes = new Recipe[3];
+        Graphonium_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Graphonium, GRAPHONIUM_FROM_NMETAL_ID, 10, 1, 5000);
+        Graphonium_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Graphonium, GRAPHONIUM_FRON_NMETAL_ORE_ID, 11, 1, 6400);
+        graphoniumEnricherRecipes[0] = NoRecipe;
+        graphoniumEnricherRecipes[1] = Graphonium_fromNmetal;
+        graphoniumEnricherRecipes[2] = Graphonium_fromNmetalOre;
 	}
 
 	public Recipe (ResourceType res_input, ResourceType res_output,int f_id, float val_input, float val_output,  float workflowNeeded) {
@@ -101,6 +111,7 @@ public class Recipe {
 		case FUEL_FROM_NMETAL_ID: return Fuel_fromNmetal;
 		case FUEL_FROM_NMETAL_ORE_ID: return Fuel_fromNmetalOre;
 		case FUEL_FROM_MINERAL_F_ID: return Fuel_fromMineralF;
+        case GRAPHONIUM_FROM_NMETAL_ID: return Graphonium_fromNmetal;
 		default: return NoRecipe;
 		}
 	}

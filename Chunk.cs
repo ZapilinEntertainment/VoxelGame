@@ -84,6 +84,8 @@ public sealed class Chunk : MonoBehaviour
         }
         GameMaster.layerCutHeight = CHUNK_SIZE;
         GameMaster.prevCutHeight = CHUNK_SIZE;
+
+        Grassland.ScriptReset();
     }
 
     public void Awake()
@@ -434,7 +436,7 @@ public sealed class Chunk : MonoBehaviour
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
-        Block prv = GetBlock(x, y, z);
+        Block prv = GetBlock(x, y, z);        
         if (prv != null)
         {
             if (prv.type != f_type) return ReplaceBlock(f_pos, f_type, i_floorMaterialID, i_ceilingMaterialID, i_naturalGeneration);
@@ -525,6 +527,7 @@ public sealed class Chunk : MonoBehaviour
                         RecalculateIlluminationAtPoint(sb.pos);
                     }
                     // eo surface light recalculation
+                    if (i_naturalGeneration) GameMaster.geologyModule.SpreadMinerals(sb);
                     break;
                 }
             case BlockType.Cave:

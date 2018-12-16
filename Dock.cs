@@ -21,7 +21,7 @@ public sealed class Dock : WorkBuilding {
     private Ship loadingShip;
     private List<Block> dependentBlocksList;
 
-    public const int SMALL_SHIPS_PATH_WIDTH = 2;
+    public const int SMALL_SHIPS_PATH_WIDTH = 2, MEDIUM_SHIPS_PATH_WIDTH = 3, HEAVY_SHIPS_PATH_WIDTH = 4;
 
 	public static void ResetToDefaults_Static_Dock() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
@@ -58,6 +58,7 @@ public sealed class Dock : WorkBuilding {
 		if (b == null) return;
         if (!GameMaster.loading)
         {
+            if (CheckAddons(b)) return;
             Chunk c = b.myChunk;
             if (c.GetBlock(b.pos.x, b.pos.y, b.pos.z + 1) != null)
             {
@@ -282,7 +283,95 @@ public sealed class Dock : WorkBuilding {
             }
         }
     }
+    public bool CheckAddons(SurfaceBlock sb)
+    {
+        Chunk c = sb.myChunk;
+        int x = sb.pos.x, y = sb.pos.y, z = sb.pos.z;
 
+        Block nearblock = c.GetBlock(x, y, z + 1);
+        SurfaceBlock nearSurfaceBlock = nearblock as SurfaceBlock;
+        DockAddon da;
+        bool haveAddon1 = false, haveAddon2 = false;
+        if (nearSurfaceBlock != null && nearSurfaceBlock.cellsStatus != 0)
+        {
+            da = nearSurfaceBlock.surfaceObjects[0] as DockAddon;
+            if (da != null )
+            {
+                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+            }
+        }
+
+        nearblock = c.GetBlock(x + 1, y, z);
+        nearSurfaceBlock = nearblock as SurfaceBlock;
+        if (nearSurfaceBlock != null && nearSurfaceBlock.cellsStatus != 0)
+        {
+            da = nearSurfaceBlock.surfaceObjects[0] as DockAddon;
+            if (da != null )
+            {
+                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+            }
+        }
+
+        nearblock = c.GetBlock(x, y, z - 1);
+        nearSurfaceBlock = nearblock as SurfaceBlock;
+        if (nearSurfaceBlock != null && nearSurfaceBlock.cellsStatus != 0)
+        {
+            da = nearSurfaceBlock.surfaceObjects[0] as DockAddon;
+            if (da != null )
+            {
+                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+            }
+        }
+
+        nearblock = c.GetBlock(x - 1, y, z);
+        nearSurfaceBlock = nearblock as SurfaceBlock;
+        if (nearSurfaceBlock != null && nearSurfaceBlock.cellsStatus != 0)
+        {
+            da = nearSurfaceBlock.surfaceObjects[0] as DockAddon;
+            if (da != null )
+            {
+                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+            }
+        }
+
+        byte newDockLevel;
+        if (haveAddon1)
+        {
+            if (haveAddon2) newDockLevel = 3;
+            else newDockLevel = 2;
+        }
+        else newDockLevel = 1;
+
+        if (newDockLevel != level)
+        {
+            int wCount = workersCount;
+            Dock d;
+            switch (newDockLevel)
+            {
+                case 1:
+                    FreeWorkers();
+                    d = GetStructureByID(DOCK_ID) as Dock;
+                    d.SetModelRotation(modelRotation);
+                    d.SetBasement(sb, PixelPosByte.zero);
+                    colony.SendWorkers(wCount, d);
+                    return true;
+                case 2:
+                    d = GetStructureByID(DOCK_2_ID) as Dock;
+                    d.SetBasement(sb, PixelPosByte.zero);
+                    d.SetModelRotation(modelRotation);
+                    colony.SendWorkers(wCount, d);
+                    return true;
+                case 3:
+                    d = GetStructureByID(DOCK_3_ID) as Dock;
+                    d.SetBasement(sb, PixelPosByte.zero);
+                    d.SetModelRotation(modelRotation);
+                    colony.SendWorkers(wCount, d);
+                    return true;
+                default: return false;
+            }
+        }
+        else return false;
+    }
 
     public void ShipLoading(Ship s) {
 		if (loadingShip == null) {

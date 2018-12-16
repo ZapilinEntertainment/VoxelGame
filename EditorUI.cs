@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public sealed class EditorUI : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel;
+    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel,settingsPanel;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
+    [SerializeField] Image saveButtonImage, loadButtonImage;
     [SerializeField] Text materialNameTextField;
 #pragma warning restore 0649  
 
@@ -56,52 +56,20 @@ public sealed class EditorUI : MonoBehaviour
                         }
                         if (b != null)
                         {
-                            Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
                             if (b.type == BlockType.Cube)
                             {
-                                float coordsDelta = rh.point.z - b.transform.position.z;
-                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
+                                ChunkPos cpos;
+                                switch (collided.name)
                                 {
-                                    if (coordsDelta > 0)
-                                    {
-                                        cpos.z += 1;
-                                        if (cpos.z >= Chunk.CHUNK_SIZE) return;
-                                    }
-                                    else
-                                    {
-                                        cpos.z -= 1;
-                                        if (cpos.z < 0) return;
-                                    }
+                                    case CubeBlock.FWD_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1); break;
+                                    case CubeBlock.RIGHT_PLANE_NAME: cpos = new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z); break;
+                                    case CubeBlock.BACK_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z - 1); break;
+                                    case CubeBlock.LEFT_PLANE_NAME: cpos = new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z); break;
+                                    case CubeBlock.UP_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z); break;
+                                    case CubeBlock.DOWN_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y - 1, b.pos.z); break;
+                                    default: cpos = b.pos; break;
                                 }
-                                coordsDelta = rh.point.x - b.transform.position.x;
-                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
-                                {
-                                    if (coordsDelta > 0)
-                                    {
-                                        cpos.x += 1;
-                                        if (cpos.x >= Chunk.CHUNK_SIZE) return;
-                                    }
-                                    else
-                                    {
-                                        cpos.x -= 1;
-                                        if (cpos.x < 0) return;
-                                    }
-                                }
-                                coordsDelta = rh.point.y - b.transform.position.y;
-                                if (Mathf.Abs(coordsDelta) >= Block.QUAD_SIZE / 2f)
-                                {
-                                    if (coordsDelta > 0)
-                                    {
-                                        cpos.y += 1;
-                                        if (cpos.y >= Chunk.CHUNK_SIZE) return;
-                                    }
-                                    else
-                                    {
-                                        cpos.y -= 1;
-                                        if (cpos.y < 0) return;
-                                    }
-                                }
-                                GameMaster.realMaster.mainChunk.AddBlock(new ChunkPos(cpos.x, cpos.y, cpos.z), BlockType.Cube, chosenMaterialId, true);
+                                GameMaster.realMaster.mainChunk.AddBlock(cpos, BlockType.Cube, chosenMaterialId, true);
                             }
                             else // surface block
                             {
@@ -403,16 +371,33 @@ public sealed class EditorUI : MonoBehaviour
         else
         {
             menuPanel.SetActive(false);
+            saveButtonImage.overrideSprite = null;
+            loadButtonImage.overrideSprite = null;
+            settingsPanel.SetActive(false);
             FollowingCamera.main.CameraRotationBlock(false);
         }
     }
     public void SaveTerrain()
     {
         SaveSystemUI.current.Activate(true, true);
+        saveButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+        loadButtonImage.overrideSprite = null;
     }
     public void LoadTerrain()
     {
         SaveSystemUI.current.Activate(false, true);
+        loadButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+        saveButtonImage.overrideSprite = null;
+    }
+    public void SettingsButton()
+    {
+        if (SaveSystemUI.current.gameObject.activeSelf)
+        {
+            SaveSystemUI.current.CloseButton();
+            saveButtonImage.overrideSprite = null;
+            loadButtonImage.overrideSprite = null;
+        }
+        settingsPanel.SetActive(!settingsPanel.activeSelf);
     }
     public void BackToMenu()
     {

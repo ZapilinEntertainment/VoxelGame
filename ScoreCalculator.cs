@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class ScoreCalculator  {
+﻿public class ScoreCalculator  {
 
     public double GetScore(GameMaster gm)
     {
@@ -110,8 +106,10 @@ public class ScoreCalculator  {
             structuresCost[Structure.SMELTERY_3_ID] = structuresCost[Structure.SMELTERY_2_ID] * 2;
             structuresCost[Structure.SMELTERY_5_ID] = structuresCost[Structure.SMELTERY_3_ID] * 4;
             structuresCost[Structure.REACTOR_BLOCK_5_ID] = structuresCost[Structure.GRPH_REACTOR_4_ID] * 4;
-            structuresCost[Structure.DOCK_ADDON_1] = structuresCost[Structure.DOCK_ADDON_1] * 4;
-            structuresCost[Structure.DOCK_ADDON_2] = structuresCost[Structure.DOCK_ADDON_1] * 4;
+            structuresCost[Structure.DOCK_ADDON_1_ID] = structuresCost[Structure.DOCK_ID] * 4;
+            structuresCost[Structure.DOCK_ADDON_2_ID] = structuresCost[Structure.DOCK_ADDON_1_ID] * 4;
+        structuresCost[Structure.DOCK_2_ID] = structuresCost[Structure.DOCK_ADDON_1_ID] * 2;
+        structuresCost[Structure.DOCK_3_ID] = structuresCost[Structure.DOCK_ADDON_2_ID] * 2;
         #endregion
 
         Chunk c = gm.mainChunk;

@@ -15,13 +15,14 @@ public class GeologyModule : MonoBehaviour {
 	}
 
 	public void SpreadMinerals(SurfaceBlock surface) {
-		if (surface == null) return;
+        if (surface == null) return;
 		int maxObjectsCount = SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION / 2, positionsLeft;
 		List<PixelPosByte> positions = surface.GetRandomCells(maxObjectsCount);
 		if (positions.Count == 0) return;
 		maxObjectsCount = positions.Count; 
 		positionsLeft = maxObjectsCount;
 		List<HarvestableResource> allBoulders = new List<HarvestableResource>();
+
 
 		int containersCount = 0;
 		if (Random.value < metalK_abundance * 10) {

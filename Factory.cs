@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory}
+public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher}
 
 [System.Serializable]
 public class FactorySerializer {
@@ -45,6 +45,9 @@ public class Factory : WorkBuilding {
                 break;
             case FUEL_FACILITY_3_ID:
                 specialization = FactorySpecialization.FuelFacility;
+                break;
+            case GRPH_ENRICHER_3_ID:
+                specialization = FactorySpecialization.GraphoniumEnricher;
                 break;
         }
 		inputResourcesBuffer = 0;

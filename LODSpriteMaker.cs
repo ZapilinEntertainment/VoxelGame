@@ -19,7 +19,7 @@ public class LODSpriteMaker : MonoBehaviour {
     Camera cam;
     //[SerializeField]   Texture2D lastResult; // для тестов    
     public Texture2D a, b, c; // тоже для тестов
-    public const float PIXELS_PER_UNIT = 128;
+    public const float PIXELS_PER_UNIT = 64;
 
     private void Awake()
     {
@@ -27,11 +27,12 @@ public class LODSpriteMaker : MonoBehaviour {
         cam = GetComponent<Camera>();
     }
     
-    public Texture2D CreateLODPack(LODPackType i_lpackType, GameObject model, RenderPoint[] renderPoints, int resolution, float shotSize, Color backgroundColor, LODRegisterInfo regInfo)
+    /// <summary>
+    /// Make checks before invoking
+    /// </summary>
+    public int CreateLODPack(LODPackType i_lpackType, GameObject model, RenderPoint[] renderPoints, int resolution, float shotSize, Color backgroundColor, LODRegisterInfo regInfo)
     {
         LODController lcontroller = LODController.GetCurrent();
-        int registeredIndex = lcontroller.LOD_existanceCheck(regInfo);
-        if (registeredIndex != -1)  return lcontroller.registeredLODs[registeredIndex].spriteAtlas;
 
         backgroundColor.a = 0;      
         int savedLayer = model.layer;
@@ -177,7 +178,7 @@ public class LODSpriteMaker : MonoBehaviour {
                     atlas.PackTextures(spriteRenders, 0, 8 * resolution, false);                    
                     break;
                 }
-            default: return null;
+            default: return -1;
         }
         cam.enabled = false;
         cam.transform.parent = null;
@@ -187,19 +188,7 @@ public class LODSpriteMaker : MonoBehaviour {
         {
             r.gameObject.layer = layerNumber;
         }
-        lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
-        //lastResult = atlas;
-        return atlas;
-    }
-
-    void ChangeLayerRecursively(Transform t, int layerNumber)
-    {        
-        for ( int i = 0; i < t.childCount; i++)
-        {
-            Transform child = t.GetChild(i);
-                child.gameObject.layer = layerNumber;
-            if (child.childCount > 0) ChangeLayerRecursively(child, layerNumber);
-        }
+         return lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
     }
 
 }

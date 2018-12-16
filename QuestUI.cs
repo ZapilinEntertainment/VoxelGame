@@ -61,9 +61,7 @@ public sealed class QuestUI : MonoBehaviour
                 this.QuestButton_OpenQuest(index);
             });
         }
-    }
-
-   
+    }   
 
     void Update()
     {
@@ -215,15 +213,6 @@ public sealed class QuestUI : MonoBehaviour
         yield return new WaitForSeconds(QUEST_REFRESH_TIME);
         if (activeQuests[i] == null) SetNewQuest(i);
     }
-    public void DropQuest(int i)
-    {
-        if (activeQuests[i] == null) return;
-        activeQuests[i].Stop();
-        activeQuests[i] = null;
-        if (openedQuest == -1 | openedQuest == i) PrepareBasicQuestWindow();
-        timers[i] = -1;
-        StartCoroutine(WaitForNewQuest(i));
-    }
 
     public void UnblockQuestButton(QuestSection qs)
     {
@@ -231,6 +220,18 @@ public sealed class QuestUI : MonoBehaviour
         int index = (int)qs;
         questAccessMap[index] = true;
         if (activeQuests[index] == null & timers[index] != QUEST_AWAITING_TIMERVAL) StartCoroutine(WaitForNewQuest(index));
+    }
+    public void ResetQuestCell(Quest q)
+    {
+        if (q == Quest.NoQuest) return;
+        for(int i = 0; i < activeQuests.Length; i++)
+        {
+            if (activeQuests[i] == q)
+            {
+                activeQuests[i] = Quest.NoQuest;
+                WaitForNewQuest(i);
+            }
+        }
     }
 
     private void SetNewQuest(int i)
@@ -343,6 +344,7 @@ public sealed class QuestUI : MonoBehaviour
         QuestStaticSerializer qss = new QuestStaticSerializer();
         qss.questsCompletenessMask = Quest.questsCompletenessMask;
         qss.activeQuests = new QuestSerializer[activeQuests.Length];
+        qss.questAccessMap = questAccessMap;
         for (int i = 0; i < qss.activeQuests.Length; i++)
         {
             if (activeQuests[i] != null) qss.activeQuests[i] = activeQuests[i].Save();
@@ -351,8 +353,10 @@ public sealed class QuestUI : MonoBehaviour
         return qss;
     }
     public void Load(QuestStaticSerializer qss)
-    {        
-        activeQuests = new Quest[questButtons.Length];
+    {
+        questAccessMap = qss.questAccessMap;
+        Quest.SetCompletenessMask(qss.questsCompletenessMask);
+        activeQuests = new Quest[questButtons.Length];        
         for (int i = 0; i < qss.activeQuests.Length; i++)
         {
             if (qss.activeQuests[i] == null) continue;
@@ -360,9 +364,7 @@ public sealed class QuestUI : MonoBehaviour
             {
                 activeQuests[i] = Quest.Load(qss.activeQuests[i]);
             }
-        }
-        Quest.SetCompletenessMask(qss.questsCompletenessMask);
-        if (GetComponent<Image>().enabled) PrepareBasicQuestWindow();
+        }        
     }
 }
 
@@ -371,5 +373,6 @@ public class QuestStaticSerializer
 {
     public uint[] questsCompletenessMask;
     public QuestSerializer[] activeQuests;
+    public bool[] questAccessMap;
 }
 
