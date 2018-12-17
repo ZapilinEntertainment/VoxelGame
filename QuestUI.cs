@@ -11,7 +11,7 @@ public sealed class QuestUI : MonoBehaviour
     [SerializeField] RectTransform[] questButtons; // fiti
     [SerializeField] GameObject questInfoPanel; // fiti
     [SerializeField] RectTransform stepsContainer, listContainer; // fiti
-    [SerializeField] Text questName, questDescription, timer, rewardText; // fiti    
+    [SerializeField] Text questName, questDescription, rewardText; // fiti    
 #pragma warning restore 0649
 
     public bool[] questAccessMap { get; private set; }
@@ -22,7 +22,6 @@ public sealed class QuestUI : MonoBehaviour
     private RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
     private bool transformingRectInProgress = false;
     private bool prepareCrewsList = false; // else prepare shuttles list        
-    private float[] timers;
     private float questUpdateTimer = 0;
 
     private const float QUEST_REFRESH_TIME = 30, QUEST_UPDATE_TIME = 1, QUEST_EMPTY_TIMERVAL = -1, QUEST_AWAITING_TIMERVAL = -2;
@@ -47,9 +46,12 @@ public sealed class QuestUI : MonoBehaviour
         openedQuest = -1;
         int totalCount = (int)QuestSection.TotalCount;
         activeQuests = new Quest[totalCount];
+        for (int i = 0; i < activeQuests.Length; i++)
+        {
+            activeQuests[i] = Quest.NoQuest;
+        }
         questAccessMap = new bool[totalCount];
         questAccessMap[(int)QuestSection.Progress] = true ;
-        timers = new float[totalCount];
         questUpdateTimer = QUEST_UPDATE_TIME;
         
         for (int i = 0; i < questButtons.Length; i++)
@@ -92,29 +94,12 @@ public sealed class QuestUI : MonoBehaviour
         for (sbyte i = 0; i < activeQuests.Length; i++)
         {
             Quest q = activeQuests[i];
-            if (q == null) continue;
-            if (q.completed)
-            {
-                activeQuests[i] = null;
-                if (GetComponent<Image>().enabled & (openedQuest == -1)) PrepareBasicQuestWindow();
-                StartCoroutine(WaitForNewQuest(i));
-                continue;
-            }
+            if (q == Quest.NoQuest | q == Quest.AwaitingQuest) continue;
             if (checkConditions) q.CheckQuestConditions();
 
             if (openedQuest == i)
             {
                 PrepareStepsList(q);
-            }
-
-            f = timers[i];
-            if (f != -1)
-            {
-                f -= t;
-                if (f <= 0)
-                {
-                    DropQuest(i);
-                }
             }
         }       
 
@@ -160,7 +145,6 @@ public sealed class QuestUI : MonoBehaviour
                     Quest.SetQuestTexture(q, btn.GetComponent<Image>(), rt.GetChild(0).GetComponent<RawImage>());
                     Text t = rt.GetChild(1).GetComponent<Text>();
                     t.text = q.name;
-                    t.color = (q.picked ? Color.cyan : Color.white);
                 }
                 else
                 {
@@ -183,12 +167,14 @@ public sealed class QuestUI : MonoBehaviour
     }
     public void QuestButton_OpenQuest(sbyte index)
     {
+        Quest q = activeQuests[index];
+        if (q == Quest.NoQuest | q == Quest.AwaitingQuest) return;
+        openedQuest = index;
         transformingRect = questButtons[index];
         transformingRectInProgress = true;
         transformingProgress = 0;
         resultingAnchorMin = Vector2.zero;
-        resultingAnchorMax = Vector2.one;
-        openedQuest = index;
+        resultingAnchorMax = Vector2.one;        
         for (int i = 0; i < questButtons.Length; i++)
         {
             if (i == index) continue;
@@ -197,21 +183,20 @@ public sealed class QuestUI : MonoBehaviour
                 questButtons[i].gameObject.SetActive(false);
             }
         }
-
-        Quest q = activeQuests[openedQuest];
+        
         questName.text = q.name;
         questDescription.text = q.description;
         rewardText.text = Localization.GetWord(LocalizedWord.Reward) + " : " + ((int)q.reward).ToString();
-        if (timers[index] != -1) timer.text = string.Format("{0:0.00}", timers[index]);
         PrepareStepsList(q);
         // цена и кнопка запуска
 
     }
     public IEnumerator WaitForNewQuest(int i)
     {
-        timers[i] = QUEST_AWAITING_TIMERVAL;
+        if (activeQuests[i] == Quest.AwaitingQuest | activeQuests[i] != Quest.NoQuest) yield break;
+        else activeQuests[i] = Quest.AwaitingQuest;
         yield return new WaitForSeconds(QUEST_REFRESH_TIME);
-        if (activeQuests[i] == null) SetNewQuest(i);
+        if (activeQuests[i] == Quest.NoQuest) SetNewQuest(i);
     }
 
     public void UnblockQuestButton(QuestSection qs)
@@ -219,7 +204,7 @@ public sealed class QuestUI : MonoBehaviour
         if (qs == QuestSection.TotalCount) return;
         int index = (int)qs;
         questAccessMap[index] = true;
-        if (activeQuests[index] == null & timers[index] != QUEST_AWAITING_TIMERVAL) StartCoroutine(WaitForNewQuest(index));
+        if (activeQuests[index] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(index));
     }
     public void ResetQuestCell(Quest q)
     {
@@ -238,12 +223,11 @@ public sealed class QuestUI : MonoBehaviour
     {
         if (questAccessMap[i] == false)
         {
-            activeQuests[i] = null;
-            timers[i] = QUEST_EMPTY_TIMERVAL;
+            activeQuests[i] = Quest.NoQuest;
             return;
         }
         // поиск подходящих среди отложенных
-        Quest q = null;
+        Quest q = Quest.NoQuest;
         switch ((QuestType)i) {
             case QuestType.Progress: q = Quest.GetProgressQuest(); break;
             case QuestType.Endgame:
@@ -255,20 +239,14 @@ public sealed class QuestUI : MonoBehaviour
                 }
                 break;
         }
-        if (q == null )
+        
+        if (q == Quest.NoQuest )
         {
-            if (timers[i] != QUEST_AWAITING_TIMERVAL) StartCoroutine(WaitForNewQuest(i));
+            StartCoroutine(WaitForNewQuest(i));
             return;
         }
-        if (!q.picked)
-        {
-            timers[i] = q.questLifeTimer;
-        }
-        else // autopicked quests
-        {
-            timers[i] = q.questRealizationTimer;
-        }
-        activeQuests[i] = q;
+        else activeQuests[i] = q;
+
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
         UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));
     }   
@@ -347,7 +325,7 @@ public sealed class QuestUI : MonoBehaviour
         qss.questAccessMap = questAccessMap;
         for (int i = 0; i < qss.activeQuests.Length; i++)
         {
-            if (activeQuests[i] != null) qss.activeQuests[i] = activeQuests[i].Save();
+            if (activeQuests[i] != Quest.NoQuest) qss.activeQuests[i] = activeQuests[i].Save();
             else qss.activeQuests[i] = null;
         }
         return qss;
@@ -359,7 +337,7 @@ public sealed class QuestUI : MonoBehaviour
         activeQuests = new Quest[questButtons.Length];        
         for (int i = 0; i < qss.activeQuests.Length; i++)
         {
-            if (qss.activeQuests[i] == null) continue;
+            if (qss.activeQuests[i] == null) activeQuests[i] = Quest.NoQuest;
             else
             {
                 activeQuests[i] = Quest.Load(qss.activeQuests[i]);

@@ -864,41 +864,7 @@ public class Building : Structure
                 transform.GetChild(0).gameObject.SetActive(visible);
             }
         }
-    }
-
-    #region save-load system
-    override public StructureSerializer Save()
-    {
-        StructureSerializer ss = GetStructureSerializer();
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetBuildingSerializer());
-            ss.specificData = stream.ToArray();
-        }
-        return ss;
-    }
-
-    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
-    {
-        LoadStructureData(ss, sblock);
-        BuildingSerializer bs = new BuildingSerializer();
-        GameMaster.DeserializeByteArray<BuildingSerializer>(ss.specificData, ref bs);
-        LoadBuildingData(bs);
-    }
-    protected void LoadBuildingData(BuildingSerializer bs)
-    {
-        energySurplus = bs.energySurplus;
-        SetActivationStatus(bs.isActive, true);
-    }
-
-    protected BuildingSerializer GetBuildingSerializer()
-    {
-        BuildingSerializer bs = new BuildingSerializer();
-        bs.isActive = isActive;
-        bs.energySurplus = energySurplus;
-        return bs;
-    }
-    #endregion
+    }  
 
     public override UIObserver ShowOnGUI()
     {
@@ -966,4 +932,38 @@ public class Building : Structure
         PrepareBuildingForDestruction(forced);
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public StructureSerializer Save()
+    {
+        StructureSerializer ss = GetStructureSerializer();
+        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+        {
+            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetBuildingSerializer());
+            ss.specificData = stream.ToArray();
+        }
+        return ss;
+    }
+
+    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
+    {
+        LoadStructureData(ss, sblock);
+        BuildingSerializer bs = new BuildingSerializer();
+        GameMaster.DeserializeByteArray<BuildingSerializer>(ss.specificData, ref bs);
+        LoadBuildingData(bs);
+    }
+    protected void LoadBuildingData(BuildingSerializer bs)
+    {
+        energySurplus = bs.energySurplus;
+        SetActivationStatus(bs.isActive, true);
+    }
+
+    protected BuildingSerializer GetBuildingSerializer()
+    {
+        BuildingSerializer bs = new BuildingSerializer();
+        bs.isActive = isActive;
+        bs.energySurplus = energySurplus;
+        return bs;
+    }
+    #endregion
 }

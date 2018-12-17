@@ -587,7 +587,6 @@ public sealed class Chunk : MonoBehaviour
         if (originalBlock == null) {
             return AddBlock(f_pos, f_newType, surfaceMaterial_id, ceilingMaterial_id, naturalGeneration);
         }
-        bool mainStructurePassage = false;
         if (originalBlock.type == f_newType)
         {
             if (originalBlock.type != BlockType.Cave | surfaceMaterial_id == ceilingMaterial_id)
@@ -615,15 +614,6 @@ public sealed class Chunk : MonoBehaviour
                 if (sb.structureBlock != null | sb.haveSupportingStructure) return originalBlock;
             }
             Structure fillingStructure = originalBlock.mainStructure;
-            if (fillingStructure != null)
-            {
-                if (!fillingStructure.IsBlockTypeSuitable(f_newType))
-                {
-                    fillingStructure.SectionDeleted(originalBlock.pos);
-                    originalBlock.ResetMainStructure();
-                }
-                else mainStructurePassage = true;
-            }
         }
         Block b = null;
         byte influenceMask = 63;
@@ -634,12 +624,6 @@ public sealed class Chunk : MonoBehaviour
             case BlockType.Shapeless:
                 {
                     b = new GameObject().AddComponent<Block>();
-                    if (!mainStructurePassage) b.InitializeShapelessBlock(this, f_pos, null);
-                    else
-                    {
-                        originalBlock.ResetMainStructure();
-                        b.InitializeShapelessBlock(this, f_pos, originalBlock.mainStructure);
-                    }
                     blocks[x, y, z] = b;
 
                     //#shapeless light recalculation
@@ -800,13 +784,9 @@ public sealed class Chunk : MonoBehaviour
         else b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
         if (b != null)
         {
-            if (s.IsBlockTypeSuitable(b.type))
-            {
-                b.SetMainStructure(s);
-                chunkUpdated = true;
-                return true;
-            }
-            else return false;
+            b.SetMainStructure(s);
+            chunkUpdated = true;
+            return true;
         }
         else return false;
     }
@@ -1662,7 +1642,7 @@ public sealed class Chunk : MonoBehaviour
         {
             if (b != null)
             {
-                if (clearMainStructureField) b.mainStructure = null;
+                if (clearMainStructureField) b.ResetMainStructure();
                 // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
                 b.Annihilate();
                 actions = true;

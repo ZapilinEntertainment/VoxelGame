@@ -734,8 +734,11 @@ public sealed class ColonyController : MonoBehaviour
 
     public void SetHQ(HeadQuarters new_hq)
     {
-        if (new_hq != null) hq = new_hq;
-        if (QuestUI.current.activeQuests[0] == null) QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
+        if (new_hq != null)
+        {
+            hq = new_hq;
+        }
+        if (QuestUI.current.activeQuests[0] == Quest.NoQuest) QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
     }
 
     public void AddEnergyCrystals(float v)

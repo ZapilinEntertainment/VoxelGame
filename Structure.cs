@@ -1191,42 +1191,7 @@ public class Structure : MonoBehaviour
             visible = x;
             if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(visible);
         }
-    }
-
-    #region save-load system
-    public virtual StructureSerializer Save()
-    {
-        return GetStructureSerializer();
-    }
-
-    public virtual void Load(StructureSerializer ss, SurfaceBlock sblock)
-    {
-        LoadStructureData(ss, sblock);
-    }
-    // в финальном виде копипастить в потомков
-    protected void LoadStructureData(StructureSerializer ss, SurfaceBlock sblock)
-    {
-        //исключен в harvestable resource. load
-        Prepare();
-        modelRotation = ss.modelRotation;
-        indestructible = ss.indestructible;
-        SetBasement(sblock, ss.pos);
-        maxHp = ss.maxHp; hp = ss.maxHp;
-    }
-
-    // в финальном виде копипастить в потомков
-    protected StructureSerializer GetStructureSerializer()
-    {
-        StructureSerializer ss = new StructureSerializer();
-        ss.pos = new PixelPosByte(innerPosition.x, innerPosition.z);
-        ss.indestructible = indestructible;
-        ss.hp = hp;
-        ss.maxHp = maxHp;
-        ss.modelRotation = modelRotation;
-        ss.id = id;
-        return ss;
-    }
-    #endregion
+    }   
 
     virtual public UIObserver ShowOnGUI()
     {
@@ -1267,7 +1232,6 @@ public class Structure : MonoBehaviour
     }
 
     virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
-    virtual public bool IsBlockTypeSuitable(BlockType btype) { return (btype == BlockType.Surface | btype == BlockType.Cave); } // для main-структур
 
     // в финальном виде копипастить в потомков
     protected bool PrepareStructureForDestruction(bool forced)
@@ -1327,4 +1291,39 @@ public class Structure : MonoBehaviour
         if (id == DRYED_PLANT_ID & transform.childCount == 1) FollowingCamera.main.RemoveMastSprite(transform.GetChild(0).GetInstanceID());
         Destroy(gameObject);
     }
+
+    #region save-load system
+    public virtual StructureSerializer Save()
+    {
+        return GetStructureSerializer();
+    }
+
+    public virtual void Load(StructureSerializer ss, SurfaceBlock sblock)
+    {
+        LoadStructureData(ss, sblock);
+    }
+    // в финальном виде копипастить в потомков
+    protected void LoadStructureData(StructureSerializer ss, SurfaceBlock sblock)
+    {
+        //исключен в harvestable resource. load
+        Prepare();
+        modelRotation = ss.modelRotation;
+        indestructible = ss.indestructible;
+        SetBasement(sblock, ss.pos);
+        maxHp = ss.maxHp; hp = ss.maxHp;
+    }
+
+    // в финальном виде копипастить в потомков
+    protected StructureSerializer GetStructureSerializer()
+    {
+        StructureSerializer ss = new StructureSerializer();
+        ss.pos = new PixelPosByte(innerPosition.x, innerPosition.z);
+        ss.indestructible = indestructible;
+        ss.hp = hp;
+        ss.maxHp = maxHp;
+        ss.modelRotation = modelRotation;
+        ss.id = id;
+        return ss;
+    }
+    #endregion
 }

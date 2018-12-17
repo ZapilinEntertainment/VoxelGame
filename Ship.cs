@@ -39,17 +39,23 @@ public class Ship : MonoBehaviour {
 
 	public void SetDestination(Dock d) {
 		ChunkPos cpos = d.basement.pos;
+        float width = Dock.SMALL_SHIPS_PATH_WIDTH;
+        if (level > 1)
+        {
+            if (level == 2) width = Dock.MEDIUM_SHIPS_PATH_WIDTH;
+            else width = Dock.HEAVY_SHIPS_PATH_WIDTH;
+        }
         switch (d.modelRotation)
         {
             case 0:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f* Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f* Block.QUAD_SIZE + width / 2f);
                     transform.forward = Vector3.right;
                 }
                 else
                 {
-                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f * Block.QUAD_SIZE + width / 2f);
                     transform.forward = Vector3.left;
                 }
                 xAxisMoving = true;
@@ -57,12 +63,12 @@ public class Ship : MonoBehaviour {
             case 2:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + width / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.forward;
                 }
                 else
                 {
-                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + width / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;
@@ -70,12 +76,12 @@ public class Ship : MonoBehaviour {
             case 4:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(0 - DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - width / 2f);
                     transform.forward = Vector3.right;
                 }
                 else
                 {
-                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f);
+                    transform.position = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - width / 2f);
                     transform.forward = Vector3.left;
                 }
                 xAxisMoving = true;
@@ -83,12 +89,12 @@ public class Ship : MonoBehaviour {
             case 6:
                 if (Random.value > 0.5f)
                 {
-                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - width / 2f, d.transform.position.y, 0 - DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.forward;
                 }
                 else
                 {
-                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - Dock.SMALL_SHIPS_PATH_WIDTH / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - width / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;
@@ -100,7 +106,7 @@ public class Ship : MonoBehaviour {
 		destination = d; 
 	}
 
-	void Update() {
+	void Update() { // добавить рейкаст на препятствия ?
 		if (GameMaster.gameSpeed == 0 | docked) return;		
         if (destination != null)
         {
@@ -122,7 +128,6 @@ public class Ship : MonoBehaviour {
                 { //уходит
                     docked = false; unloaded = false;
                     destination = null;
-                    PoolMaster.current.ReturnShipToPool(this);
                 }
             }
             if (speed * speed / 2 / acceleration >= dist) speed -= acceleration * Time.deltaTime * GameMaster.gameSpeed;

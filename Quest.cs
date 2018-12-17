@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType
 {
-    Progress, Endgame
+    System, Progress, Endgame
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte 
@@ -34,7 +34,9 @@ public class Quest {
     public readonly byte subIndex;
 
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
-    public static readonly Quest NoQuest;
+    public static readonly Quest NoQuest, AwaitingQuest;
+
+    private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
 
     //при добавлении квеста дополнить:
     // Localization -> Fill quest data
@@ -42,7 +44,8 @@ public class Quest {
 
     static Quest () {
         questsCompletenessMask = new uint[2];
-        NoQuest = new Quest();
+        NoQuest = new Quest(QuestType.System, NO_QUEST_SUBINDEX);
+        AwaitingQuest = new Quest(QuestType.System, AWAITING_QUEST_SUBINDEX);
 	}    
 
     public static void SetCompletenessMask(uint[] m)
@@ -136,15 +139,15 @@ public class Quest {
                         break;
                 }
                 break;
+            case QuestType.System:
+                if (subID == NO_QUEST_SUBINDEX) name = "no quest";
+                else name = "awaiting quest";
+                break;
         }
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
         Localization.FillProgressQuest(this);
-    }
-    private Quest()
-    {
-        name = "no-quest";
     }
     
     public void CheckQuestConditions()
@@ -731,7 +734,6 @@ public class Quest {
 
 	public QuestSerializer Save() {
 		QuestSerializer qs = new QuestSerializer();
-        qs.completed = completed;
         qs.stepsFinished = stepsFinished;
         qs.type = type;
         qs.subIndex = subIndex;  
@@ -740,7 +742,6 @@ public class Quest {
 	public static Quest Load(QuestSerializer qs) {
         Quest q = new Quest(qs.type, qs.subIndex);
         q.stepsFinished = qs.stepsFinished;
-        q.completed = qs.completed;
 		return q;
 	}
 
@@ -748,7 +749,6 @@ public class Quest {
 
 [System.Serializable]
 public class QuestSerializer {
-    public bool completed;
     public bool[] stepsFinished;
     public QuestType type;
     public byte subIndex;    

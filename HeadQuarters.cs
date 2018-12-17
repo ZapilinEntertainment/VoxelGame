@@ -5,13 +5,11 @@ using UnityEngine;
 [System.Serializable]
 public class HeadQuartersSerializer {
 	public BuildingSerializer buildingSerializer;
-	public bool nextStageConditionMet;
 	public byte level;
 }
 
-public class HeadQuarters : House {
-    [SerializeField]
-	bool nextStageConditionMet = false;
+public sealed class HeadQuarters : House {
+	private bool nextStageConditionMet = false;
 	ColonyController colony;
 	GameObject rooftop;
 	
@@ -27,7 +25,6 @@ public class HeadQuarters : House {
         SetBuildingData(b, pos);
         GameMaster.realMaster.colonyController.AddHousing(this);
         //#
-
         if (level > 3 ) {
 			if (rooftop == null) {
                 if (b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + 1), b.pos.z, this))
@@ -40,11 +37,7 @@ public class HeadQuarters : House {
 			if (level > 4) {
 				int i = 5;
 				while (i <= level) {
-                    if (b.myChunk.GetBlock(b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z) != null && b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this) == false)
-                    {
-                        UIController.current.MakeAnnouncement("error desu: hq addon cannot be created");
-                        return;
-                    }
+                    b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this);
 					GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
 					addon.transform.parent = transform.GetChild(0);
 					addon.transform.localPosition = Vector3.zero + (i - 3.5f) * Vector3.up * Block.QUAD_SIZE;
@@ -71,37 +64,6 @@ public class HeadQuarters : House {
             case 5: return true;
         }
     }
-
-	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHeadQuartersSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-
-	override public void Load (StructureSerializer ss, SurfaceBlock sb) {
-		HeadQuartersSerializer hqs = new HeadQuartersSerializer();
-		GameMaster.DeserializeByteArray<HeadQuartersSerializer>(ss.specificData, ref hqs);
-		level = hqs.level; 
-		LoadStructureData(ss, sb);
-		LoadBuildingData(hqs.buildingSerializer);
-		nextStageConditionMet = hqs.nextStageConditionMet;
-	} 
-		
-
-	protected HeadQuartersSerializer GetHeadQuartersSerializer() {
-		HeadQuartersSerializer hqs = new HeadQuartersSerializer();
-		hqs.level = level;
-		hqs.nextStageConditionMet = nextStageConditionMet;
-		hqs.buildingSerializer = GetBuildingSerializer();
-		return hqs;
-	}
-	#endregion
-
 
     override public bool IsLevelUpPossible(ref string refusalReason)
     {
@@ -175,7 +137,7 @@ public class HeadQuarters : House {
                 if (rooftop == null)
                 {
                     rooftop = PoolMaster.GetRooftop(true, true);
-                rooftop.transform.parent = model;
+                    rooftop.transform.parent = model;
                 }
                 rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;
                 level++;
@@ -222,4 +184,40 @@ public class HeadQuarters : House {
         // removed colony.RemoveHousing because of dropping hq field
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public StructureSerializer Save()
+    {
+        StructureSerializer ss = GetStructureSerializer();
+        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+        {
+            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHeadQuartersSerializer());
+            ss.specificData = stream.ToArray();
+        }
+        return ss;
+    }
+
+    override public void Load(StructureSerializer ss, SurfaceBlock sb)
+    {
+        HeadQuartersSerializer hqs = new HeadQuartersSerializer();
+        GameMaster.DeserializeByteArray<HeadQuartersSerializer>(ss.specificData, ref hqs);       
+        LoadBuildingData(hqs.buildingSerializer);       
+        // load structure data
+        Prepare();
+        modelRotation = ss.modelRotation;
+        indestructible = ss.indestructible;
+        level = hqs.level;
+        SetBasement(sb, ss.pos);
+        maxHp = ss.maxHp; hp = ss.maxHp;
+    }
+
+
+    protected HeadQuartersSerializer GetHeadQuartersSerializer()
+    {
+        HeadQuartersSerializer hqs = new HeadQuartersSerializer();
+        hqs.level = level;        
+        hqs.buildingSerializer = GetBuildingSerializer();
+        return hqs;
+    }
+    #endregion
 }

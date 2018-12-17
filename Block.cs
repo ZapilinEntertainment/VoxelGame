@@ -9,10 +9,10 @@ public class Block : MonoBehaviour {
     public const string BLOCK_COLLIDER_TAG = "BlockCollider";
 
     public BlockType type { get; protected set; }
-    public Worksite worksite {get;protected set;}
-	public Chunk myChunk {get; protected  set;}
-	public ChunkPos pos {get; protected  set;}
-    public Structure mainStructure; // <---- ЗАМЕНИТЬ
+    public Worksite worksite { get; protected set; }
+    public Chunk myChunk { get; protected set; }
+    public ChunkPos pos { get; protected set; }
+    public Structure mainStructure {get;protected set;}
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
 	public byte visibilityMask { get; protected set; } // видимость относительно других блоков

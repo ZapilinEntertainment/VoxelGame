@@ -28,15 +28,12 @@ public sealed class PoolMaster : MonoBehaviour {
     private static Material metal_material, green_material, darkness_material;
     private static GameObject quad_pref;    
 
-    private GameObject lightPassengerShip_pref, lightCargoShip_pref, lightWarship_pref, privateShip_pref;
-    private List<GameObject> lightPassengerShips, mediumPassengerShips, heavyPassengerShips, lightCargoShips, mediumCargoShips, heavyCargoShips,
-        lightWarships, mediumWarships, heavyWarships, privateShips;// только неактивные	
+    private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
     private ParticleSystem buildEmitter, citizensLeavingEmitter;
     private Sprite[] starsSprites;
 
-    public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
-    private const byte MEDIUM_SHIP_LVL = 4, HEAVY_SHIP_LVL = 6;    
+    public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5; 
     private const int SHIPS_BUFFER_SIZE = 5;
 
     public void Load() {
@@ -44,15 +41,7 @@ public sealed class PoolMaster : MonoBehaviour {
 		current = this;
 
         buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
-
-		lightPassengerShip_pref = Resources.Load<GameObject>("Prefs/lightPassengerShip");
-		lightCargoShip_pref = Resources.Load<GameObject>("Prefs/lightCargoShip");
-		lightWarship_pref = Resources.Load<GameObject>("Prefs/lightWarship");
-		privateShip_pref = Resources.Load<GameObject>("Prefs/privateShip");
-		lightPassengerShips = new List<GameObject>();
-		lightCargoShips = new List<GameObject>();
-		lightWarships = new List<GameObject>();
-		privateShips = new List<GameObject>();
+        inactiveShips = new List<Ship>();
 
 		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
@@ -103,22 +92,11 @@ public sealed class PoolMaster : MonoBehaviour {
 		if (shipsClearTimer > 0) {
 			shipsClearTimer -= Time.deltaTime * GameMaster.gameSpeed;
 			if (shipsClearTimer <= 0) {
-				if (lightPassengerShips.Count > SHIPS_BUFFER_SIZE) {
-					Destroy(lightPassengerShips[0]);
-					lightPassengerShips.RemoveAt(0);
-				}
-				if (lightCargoShips.Count > SHIPS_BUFFER_SIZE) {
-					Destroy(lightCargoShips[0]);
-					lightCargoShips.RemoveAt(0);
-				}
-				if (lightWarships.Count > SHIPS_BUFFER_SIZE) {
-					Destroy(lightWarships[0]);
-					lightWarships.RemoveAt(0);
-				}
-				if (privateShips.Count > SHIPS_BUFFER_SIZE) {
-					Destroy(privateShips[0]);
-					privateShips.RemoveAt(0);
-				}
+				if (inactiveShips.Count > SHIPS_BUFFER_SIZE)
+                {
+                    Destroy(inactiveShips[0].gameObject);
+                    inactiveShips.RemoveAt(0);
+                }
 				shipsClearTimer = clearTime;
 			}
 		}       
@@ -182,83 +160,104 @@ public sealed class PoolMaster : MonoBehaviour {
 
     public Ship GetShip(byte level, ShipType type) {
 		Ship s = null;
-		List<GameObject> searchList = null;
-		GameObject pref = null;
+        bool found = false;
 		switch (type) {
 		case ShipType.Passenger:
-			if (level < MEDIUM_SHIP_LVL) {
-				searchList = lightPassengerShips;
-				pref = lightPassengerShip_pref;
-			}
-			break;
+                {
+                    if (inactiveShips.Count > 0)
+                    {
+                        for (int i = 0; i < inactiveShips.Count; i++)
+                        {
+                            if (inactiveShips[i].type == ShipType.Passenger)
+                            {
+                                s = inactiveShips[i];
+                                inactiveShips.RemoveAt(i);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found)
+                    {
+                        s = Instantiate(Resources.Load<GameObject>("Prefs/passengerShip_1")).GetComponent<Ship>();
+                    }
+                    break;
+                }
 		case ShipType.Cargo:
-			if (level < MEDIUM_SHIP_LVL) {
-				searchList = lightCargoShips;
-				pref = lightCargoShip_pref;
-			}
-			break;
+                {
+                    if (inactiveShips.Count > 0)
+                    {
+                        for (int i = 0; i < inactiveShips.Count; i++)
+                        {
+                            if (inactiveShips[i].type == ShipType.Cargo & inactiveShips[i].level == level)
+                            {
+                                s = inactiveShips[i];
+                                inactiveShips.RemoveAt(i);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found)
+                    {
+                        switch (level) {
+                            case 2: s = Instantiate(Resources.Load<GameObject>("Prefs/mediumCargoShip")).GetComponent<Ship>(); break;
+                            case 3: s = Instantiate(Resources.Load<GameObject>("Prefs/heavyCargoShip")).GetComponent<Ship>(); break;
+                            default:  s = Instantiate(Resources.Load<GameObject>("Prefs/lightCargoShip")).GetComponent<Ship>();
+                                break;
+                        }
+                    }
+                    break;
+                }
 		case ShipType.Private:
-			if (level < MEDIUM_SHIP_LVL) {
-				searchList = privateShips;
-				pref = privateShip_pref;
-			}
-			break;
-		case ShipType.Military:
-			if (level < MEDIUM_SHIP_LVL) {
-				searchList = lightWarships;
-				pref = lightWarship_pref;
-			}
-			break;
+                {
+                    if (inactiveShips.Count > 0)
+                    {
+                        for (int i = 0; i < inactiveShips.Count; i++)
+                        {
+                            if (inactiveShips[i].type == ShipType.Private)
+                            {
+                                s = inactiveShips[i];
+                                inactiveShips.RemoveAt(i);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found)
+                    {
+                        s = Instantiate(Resources.Load<GameObject>("Prefs/privateShip")).GetComponent<Ship>();
+                    }
+                    break;
+                }
+            case ShipType.Military:
+                {
+                    if (inactiveShips.Count > 0)
+                    {
+                        for (int i = 0; i < inactiveShips.Count; i++)
+                        {
+                            if (inactiveShips[i].type == ShipType.Military)
+                            {
+                                s = inactiveShips[i];
+                                inactiveShips.RemoveAt(i);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!found)
+                    {
+                        s = Instantiate(Resources.Load<GameObject>("Prefs/lightWarship")).GetComponent<Ship>();
+                    }
+                    break;
+                }
 		}
-		bool found = false;
-		if (searchList != null) {
-			int i = 0;
-			while (i < searchList.Count && !found) {
-				if (searchList[i] == null) {searchList.RemoveAt(i);continue;}
-				found = true;
-				s = searchList[i].GetComponent<Ship>();
-				searchList.RemoveAt(i);
-				i++;
-				break;
-			}
-			if ( !found ) s = Instantiate(pref).GetComponent<Ship>();
-			s.gameObject.SetActive(true);
-			return s;
-		}
-		else {
-			print ("error in ships array finding");
-			return null;
-		}
+        return s;
 	}
 	public void ReturnShipToPool(Ship s) {
 		if (s == null || !s.gameObject.activeSelf) return;
 		s.gameObject.SetActive(false);
-		switch (s.type) {
-		case ShipType.Cargo:
-			if (s.level > MEDIUM_SHIP_LVL) {
-				if (s.level > HEAVY_SHIP_LVL) heavyCargoShips.Add(s.gameObject);
-				else mediumCargoShips.Add(s.gameObject);
-			}
-			else lightCargoShips.Add(s.gameObject);
-			break;
-		case ShipType.Passenger:
-			if (s.level > MEDIUM_SHIP_LVL) {
-				if (s.level > HEAVY_SHIP_LVL) heavyPassengerShips.Add(s.gameObject);
-				else mediumPassengerShips.Add(s.gameObject);
-			}
-			else lightPassengerShips.Add(s.gameObject);
-			break;
-		case ShipType.Military:
-			if (s.level > MEDIUM_SHIP_LVL) {
-				if (s.level > HEAVY_SHIP_LVL) heavyWarships.Add(s.gameObject);
-				else mediumWarships.Add(s.gameObject);
-			}
-			else lightWarships.Add(s.gameObject);
-			break;
-		case ShipType.Private:
-			privateShips.Add(s.gameObject);
-			break;
-		}
+        inactiveShips.Add(s);
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
 	}
 
