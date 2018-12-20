@@ -2,17 +2,60 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ExpeditionCorpus : WorkBuilding {
+public sealed class ExpeditionCorpus : WorkBuilding {
+    public static List<ExpeditionCorpus> expeditionCorpusesList { get; private set; }
+    private const int EXPEDITIONS_SLOTS_PER_BUILDING = 4;
+
+    static ExpeditionCorpus() {
+        expeditionCorpusesList = new List<ExpeditionCorpus>();
+    }
+    public static void ResetToDefaults_Static_ExpeditionCorpus()
+    {
+        expeditionCorpusesList = new List<ExpeditionCorpus>();
+    }
+    public static int GetExpeditionsSlotsCount()
+    {
+        int t = QuantumTransmitter.transmittersList.Count;
+        int e = expeditionCorpusesList.Count * EXPEDITIONS_SLOTS_PER_BUILDING;
+        if (t < e) return t;
+        else return e;
+    }
+
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        SetWorkbuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
+        if (!expeditionCorpusesList.Contains(this)) expeditionCorpusesList.Add(this);
+    }
+
     public override UIObserver ShowOnGUI()
     {
         if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;
-        UIController.current.ActivateQuestUI();
-        UIController.current.ActivateExpeditionCorpusPanel();
+        UIController.current.ChangeActiveWindow(ActiveWindowMode.ExpeditionPanel);
         return workbuildingObserver;
-    }	
+    }
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (expeditionCorpusesList.Contains(this)) expeditionCorpusesList.Remove(this);
+        PrepareWorkbuildingForDestruction(forced);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
+        Destroy(gameObject);
+    }
 }
 
 [System.Serializable]
@@ -31,6 +74,7 @@ public class ExpeditionSerializer {
 
 
 public class Expedition {
+    // переделать в monobehaviour чтобы не было проблем с null
 	public Quest quest{get;private set;}
 	public List<Shuttle> shuttles;
 	public float progress{get;private set;}

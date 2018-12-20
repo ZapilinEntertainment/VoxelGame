@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
 public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon, CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted, DisabledBuilding }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
-public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu}
+public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel}
 
 
 sealed public class UIController : MonoBehaviour
@@ -15,7 +15,7 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionCorpusPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
@@ -65,7 +65,7 @@ sealed public class UIController : MonoBehaviour
 
     public static UIController current;
 
-    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 5;
+    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 4;
 
     public void Awake()
     {
@@ -261,30 +261,6 @@ sealed public class UIController : MonoBehaviour
                                 case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
                             }
                             hospitalPanel_savedMode = nhm;
-                        }
-                    }
-                    else
-                    {
-                        if (expeditionCorpusPanel.activeSelf)
-                        {
-                            int x = Shuttle.shuttlesList.Count;
-                            if (exCorpus_savedShuttlesCount != x)
-                            {
-                                exCorpus_savedShuttlesCount = x;
-                                expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
-                            }
-                            x = Crew.freeCrewsList.Count;
-                            if (x != exCorpus_savedCrewsCount)
-                            {
-                                exCorpus_savedCrewsCount = x;
-                                expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
-                            }
-                            x = QuantumTransmitter.transmittersList.Count;
-                            if (x != exCorpus_savedTransmittersCount)
-                            {
-                                exCorpus_savedTransmittersCount = x;
-                                expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
-                            }
                         }
                     }
                 }
@@ -652,11 +628,7 @@ sealed public class UIController : MonoBehaviour
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
         else
         {
-            if (expeditionCorpusPanel.activeSelf) DeactivateExpeditionCorpusPanel();
-            else
-            {
-                if (rollingShopPanel.activeSelf) DeactivateWorkshopPanel();
-            }
+           if (rollingShopPanel.activeSelf) DeactivateWorkshopPanel();
         }
 
         //отключение предыдущего observer
@@ -811,9 +783,16 @@ sealed public class UIController : MonoBehaviour
                 case ActiveWindowMode.TradePanel:
                     if (tradePanel.activeSelf) CloseTradePanel();
                     break;
+                case ActiveWindowMode.ExpeditionPanel:
+                    if (expeditionPanel.activeSelf) expeditionPanel.SetActive(false);
+                    break;
             }
         }
         currentActiveWindowMode = mode;
+        if (currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
+        {
+            expeditionPanel.GetComponent<ExpeditionPanelUI>().Activate();
+        }
         bool deactivating = (mode == ActiveWindowMode.NoWindow);
         FollowingCamera fc = FollowingCamera.main;
         fc.ControllerStickActivity(deactivating);
@@ -1012,21 +991,6 @@ sealed public class UIController : MonoBehaviour
                 rs.SetMode((byte)input);
             }
         }
-    }
-
-    public void ActivateExpeditionCorpusPanel()
-    {
-        expeditionCorpusPanel.SetActive(true);
-        exCorpus_savedShuttlesCount = Shuttle.shuttlesList.Count;
-        expeditionCorpusPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttlesAvailable) + " : " + exCorpus_savedShuttlesCount.ToString();
-        exCorpus_savedCrewsCount = Crew.freeCrewsList.Count;
-        expeditionCorpusPanel.transform.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CrewsAvailable) + " : " + exCorpus_savedCrewsCount.ToString();
-        exCorpus_savedTransmittersCount = QuantumTransmitter.transmittersList.Count;
-        expeditionCorpusPanel.transform.GetChild(2).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TransmittersAvailable) + " : " + exCorpus_savedTransmittersCount.ToString();
-    }
-    public void DeactivateExpeditionCorpusPanel()
-    {
-        expeditionCorpusPanel.SetActive(false);
     }
 
     public void ActivateHospitalPanel()

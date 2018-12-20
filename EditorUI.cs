@@ -6,15 +6,16 @@ using UnityEngine.UI;
 public sealed class EditorUI : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel,settingsPanel;
+    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel, settingsPanel;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Image saveButtonImage, loadButtonImage;
     [SerializeField] Text materialNameTextField;
 #pragma warning restore 0649  
 
-    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower }
+    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower, CreateLifesource }
     private ClickAction currentAction;
+    private LifeSource lifesource;
     private int chosenMaterialId = ResourceType.STONE_ID, firstInListPos = 0, chosenListPosition = 0;
     private int[] idsArray;
     private bool blockEditMode = true, visualBorderDrawn = false;
@@ -45,114 +46,80 @@ public sealed class EditorUI : MonoBehaviour
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
         {
             Transform collided = rh.transform;
+            Block b = collided.parent.gameObject.GetComponent<Block>();
+            if (b == null)
+            {
+                b = collided.parent.parent.gameObject.GetComponent<Block>();
+            }
+            if (b == null) return;
             switch (currentAction)
             {
                 case ClickAction.CreateBlock:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
+                        if (b.type == BlockType.Cube)
                         {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
+                            ChunkPos cpos;
+                            switch (collided.name)
+                            {
+                                case CubeBlock.FWD_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1); break;
+                                case CubeBlock.RIGHT_PLANE_NAME: cpos = new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z); break;
+                                case CubeBlock.BACK_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z - 1); break;
+                                case CubeBlock.LEFT_PLANE_NAME: cpos = new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z); break;
+                                case CubeBlock.UP_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z); break;
+                                case CubeBlock.DOWN_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y - 1, b.pos.z); break;
+                                default: cpos = b.pos; break;
+                            }
+                            GameMaster.realMaster.mainChunk.AddBlock(cpos, BlockType.Cube, chosenMaterialId, true);
                         }
-                        if (b != null)
+                        else // surface block
                         {
-                            if (b.type == BlockType.Cube)
-                            {
-                                ChunkPos cpos;
-                                switch (collided.name)
-                                {
-                                    case CubeBlock.FWD_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1); break;
-                                    case CubeBlock.RIGHT_PLANE_NAME: cpos = new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z); break;
-                                    case CubeBlock.BACK_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z - 1); break;
-                                    case CubeBlock.LEFT_PLANE_NAME: cpos = new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z); break;
-                                    case CubeBlock.UP_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z); break;
-                                    case CubeBlock.DOWN_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y - 1, b.pos.z); break;
-                                    default: cpos = b.pos; break;
-                                }
-                                GameMaster.realMaster.mainChunk.AddBlock(cpos, BlockType.Cube, chosenMaterialId, true);
-                            }
-                            else // surface block
-                            {
-                                GameMaster.realMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, chosenMaterialId, true);
-                            }
+                            GameMaster.realMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, chosenMaterialId, true);
                         }
                         break;
                     }
                 case ClickAction.DeleteBlock:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
+                        Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
+                        Chunk c = GameMaster.realMaster.mainChunk;
+                        Block lowerBlock = c.GetBlock(cpos.x, cpos.y - 1, cpos.z);
+                        if ((b.type == BlockType.Surface | b.type == BlockType.Cave) && (lowerBlock.type == BlockType.Cube | lowerBlock.type == BlockType.Cave))
                         {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
+                            c.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
                         }
-                        if (b != null)
-                        {
-                            Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
-                            Chunk c = GameMaster.realMaster.mainChunk;
-                            Block lowerBlock = c.GetBlock(cpos.x, cpos.y - 1, cpos.z);                            
-                            if ( (b.type == BlockType.Surface | b.type == BlockType.Cave) && (lowerBlock.type == BlockType.Cube | lowerBlock.type == BlockType.Cave ))
-                            {
-                                c.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
-                            }
-                            else  c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
-                        }
+                        else c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
                         break;
                     }
                 case ClickAction.AddGrassland:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
+                        SurfaceBlock sb = b as SurfaceBlock;
+                        if (sb == null & b.pos.y < Chunk.CHUNK_SIZE - 1)
                         {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
+                            sb = b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, ResourceType.DIRT_ID, true) as SurfaceBlock;
                         }
-                        if (b != null)
+                        if (sb != null && sb.grassland == null)
                         {
-                            SurfaceBlock sb = b as SurfaceBlock;
-                            if (sb == null & b.pos.y < Chunk.CHUNK_SIZE - 1)
-                            {
-                                sb = b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, ResourceType.DIRT_ID, true) as SurfaceBlock;
-                            }
-                            if (sb != null && sb.grassland == null)
-                            {
-                                if (sb.material_id != ResourceType.DIRT_ID | sb.material_id != ResourceType.FERTILE_SOIL_ID) sb.ReplaceMaterial(ResourceType.DIRT_ID);
-                                Grassland.CreateOn(sb);
-                                sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
-                            }
+                            if (sb.material_id != ResourceType.DIRT_ID | sb.material_id != ResourceType.FERTILE_SOIL_ID) sb.ReplaceMaterial(ResourceType.DIRT_ID);
+                            Grassland.CreateOn(sb);
+                            sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
                         }
                         break;
                     }
                 case ClickAction.DeleteGrassland:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
+                        SurfaceBlock sb = b as SurfaceBlock;
+                        if (sb != null && sb.grassland != null)
                         {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
-                        }
-                        if (b != null)
-                        {
-                            SurfaceBlock sb = b as SurfaceBlock;
-                            if (sb != null && sb.grassland != null)
-                            {
-                                sb.grassland.Annihilation(true);
-                            }
+                            sb.grassland.Annihilation(true);
                         }
                         break;
                     }
                 case ClickAction.MakeSurface:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
+                        if (b.type != BlockType.Surface)
                         {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
+                            if (b.pos.y < Chunk.CHUNK_SIZE - 1) b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, chosenMaterialId, true);
                         }
-                        if (b != null)
-                        {
-                            if (b.type != BlockType.Surface)
-                            {
-                                if (b.pos.y < Chunk.CHUNK_SIZE - 1) b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, chosenMaterialId, true);
-                            }
-                            else b.ReplaceMaterial(chosenMaterialId);
-                        }
+                        else b.ReplaceMaterial(chosenMaterialId);
                         break;
                     }
                 case ClickAction.MakeCave:
@@ -167,29 +134,28 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddLifepower:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
-                        {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
-                        }
-                        if (b != null)
-                        {
-                            SurfaceBlock sb = b as SurfaceBlock;
-                            if (sb != null && sb.grassland != null) sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
-                        }
-                        break;
+                        SurfaceBlock sb = b as SurfaceBlock;
+                        if (sb != null && sb.grassland != null) sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
                     }
+                    break;
                 case ClickAction.TakeLifepower:
                     {
-                        Block b = collided.parent.gameObject.GetComponent<Block>();
-                        if (b == null)
+                        SurfaceBlock sb = b as SurfaceBlock;
+                        if (sb != null && sb.grassland != null) sb.grassland.TakeLifepowerAndCalculate(LIFEPOWER_PORTION);
+                        break;
+                    }
+                case ClickAction.CreateLifesource:
+                    {
+                        SurfaceBlock sb = b as SurfaceBlock;
+                        if (sb != null)
                         {
-                            b = collided.parent.parent.gameObject.GetComponent<Block>();
-                        }
-                        if (b != null)
-                        {
-                            SurfaceBlock sb = b as SurfaceBlock;
-                            if (sb != null && sb.grassland != null) sb.grassland.TakeLifepowerAndCalculate(LIFEPOWER_PORTION);
+                            if (lifesource != null) lifesource.Annihilate(false);
+                            if (b.pos.y < Chunk.CHUNK_SIZE / 2)
+                            {
+                                lifesource = Structure.GetStructureByID(Structure.LIFESTONE_ID) as LifeSource;
+                            }
+                            else lifesource = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as LifeSource;
+                            lifesource.SetBasement(sb, PixelPosByte.zero);
                         }
                         break;
                     }
@@ -219,12 +185,12 @@ public sealed class EditorUI : MonoBehaviour
         if (!actionsPanel.activeSelf)
         {
             actionsPanel.SetActive(true);
-            menuPanel.SetActive(false);            
+            menuPanel.SetActive(false);
         }
         else
         {
             actionsPanel.SetActive(false);
-            listPanel.SetActive(false);            
+            listPanel.SetActive(false);
         }
     }
 
@@ -342,7 +308,7 @@ public sealed class EditorUI : MonoBehaviour
     {
         if (visualBorderDrawn) GameMaster.realMaster.mainChunk.HideBorderLine();
         Destroy(transform.root.gameObject);
-        GameMaster.realMaster.ChangeModeToPlay();        
+        GameMaster.realMaster.ChangeModeToPlay();
     }
 
     public void ChangeMaterial(int id, int pos)

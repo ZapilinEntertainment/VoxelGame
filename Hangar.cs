@@ -11,7 +11,8 @@ public sealed class HangarSerializer
 
 public sealed class Hangar : WorkBuilding
 {
-    static int hangarsCount = 0;
+    public static List<Hangar> hangarsList;
+
     public Shuttle shuttle { get; private set; }
     const float CREW_HIRE_BASE_COST = 100;
     public bool constructing { get; private set; }
@@ -21,9 +22,13 @@ public sealed class Hangar : WorkBuilding
 
     public const float BUILD_SHUTTLE_WORKFLOW = 12000;
 
+    static Hangar()
+    {
+        hangarsList = new List<Hangar>();
+    }
     public static void ResetToDefaults_Static_Hangar()
     {
-        hangarsCount = 0;
+        hangarsList = new List<Hangar>();
     }
 
     override public void SetModelRotation(int r)
@@ -143,7 +148,7 @@ public sealed class Hangar : WorkBuilding
         }
         SetWorkbuildingData(b, pos);
         CheckPositionCorrectness();
-        hangarsCount++;
+        if (!hangarsList.Contains(this)) hangarsList.Add(this);
     }
 
     private void CheckPositionCorrectness()
@@ -249,7 +254,7 @@ public sealed class Hangar : WorkBuilding
 
     override protected void LabourResult()
     {
-        shuttle = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
+        shuttle = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
         shuttle.FirstSet(this);
         constructing = false;
         workflow -= workflowToProcess;
@@ -355,6 +360,7 @@ public sealed class Hangar : WorkBuilding
         constructing = hs.constructing;
         LoadWorkBuildingData(hs.workBuildingSerializer);
         shuttle = Shuttle.GetShuttle(hs.shuttle_id);
+        shuttle.transform.parent = transform;
     }
 
     HangarSerializer GetHangarSerializer()
@@ -379,7 +385,7 @@ public sealed class Hangar : WorkBuilding
         if (showOnGUI & !correctLocation) PoolMaster.current.DisableZone();
         if (forced) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(forced);
-        hangarsCount--;
+        if (hangarsList.Contains(this)) hangarsList.Remove(this);
         if (shuttle != null) shuttle.Deconstruct();
         Destroy(gameObject);
     }

@@ -146,7 +146,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public void BuildSplash(Vector3 pos)
     {
         buildEmitter.transform.position = pos;
-        buildEmitter.Emit(20);
+        buildEmitter.Emit(10);
     }
     public void DrawZone(Vector3 point, Vector3 scale, Color col)
     {

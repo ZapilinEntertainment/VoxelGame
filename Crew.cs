@@ -9,7 +9,7 @@ public sealed class Crew {
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
     public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f;
 	public static int lastNumber {get;private set;}
-	public static List<Crew> freeCrewsList{ get ;private set;} // свободные неприписанные команды
+	public static List<Crew> crewsList{ get ;private set;} 
 	public static int crewSlotsTotal {get;private set;}
     public static int crewSlotsFree { get; private set; }
     public static int totalOperations { get; private set; }
@@ -37,11 +37,11 @@ public sealed class Crew {
 
     static Crew()
     {
-        freeCrewsList = new List<Crew>();
+        crewsList = new List<Crew>();
     }
 
 	public static void Reset() {
-		freeCrewsList = new List<Crew>();
+		crewsList = new List<Crew>();
 		crewSlotsTotal = 0;
         crewSlotsFree = crewSlotsTotal;
 		lastNumber = 0;
@@ -87,107 +87,22 @@ public sealed class Crew {
         if (crewSlotsFree < 0) crewSlotsFree = 0;
 	}
 
-	#region save-load system
-	public static CrewStaticSerializer SaveStaticData() {
-		CrewStaticSerializer css = new CrewStaticSerializer();
-		css.haveCrews = false; css.crewsList = new List<CrewSerializer>();
-		if (freeCrewsList != null && freeCrewsList.Count > 0) {
-			int i = 0;
-			while (i < freeCrewsList.Count) {
-				if (freeCrewsList[i] == null) {
-					freeCrewsList.RemoveAt(i);
-					continue;
-				}
-				else {
-					css.crewsList.Add(freeCrewsList[i].Save());
-				}
-				i++;
-			}
-			if (css.crewsList.Count > 0) css.haveCrews = true;
-		}
-		css.lastNumber = lastNumber;
-		return css;
-	}
-	public static void LoadStaticData(CrewStaticSerializer css) {
-		freeCrewsList = new List<Crew>();
-		if (css.haveCrews) {
-			for (int i = 0; i < css.crewsList.Count; i++) {
-				freeCrewsList.Add(new Crew().Load(css.crewsList[i]));
-			}
-		}
-        crewSlotsFree -= freeCrewsList.Count;
-		lastNumber = css.lastNumber;
-	}
-
-	public CrewSerializer Save() {
-		CrewSerializer cs = new CrewSerializer();
-		cs.salary = salary;
-		cs.count = count;
-		cs.experience = experience;
-		cs.nextExperienceLimit = nextExperienceLimit;
-		cs.name  = name;
-		cs.level = level;
-		cs.ID = ID;
-		cs.shuttleID = (shuttle == null ? -1 : shuttle.ID) ;
-		cs.status = status;
-
-		cs.perception = perception;
-		cs.persistence = persistence;
-		cs.luck = luck;
-		cs.bravery = bravery;
-		cs.techSkills = techSkills;
-		cs.survivalSkills = survivalSkills;
-		cs.teamWork = teamWork;
-		cs.stamina = stamina;
-		cs.successfulOperations = successfulOperations;
-		cs.totalOperations = totalOperations;
-		return cs;
-	}
-
-	public Crew Load(CrewSerializer cs) {
-		salary = cs.salary;
-		count = cs.count;
-		level = cs.level;
-		nextExperienceLimit = cs.nextExperienceLimit;
-		experience = cs.experience;
-		name = cs.name;
-		ID = cs.ID;        
-		status = cs.status;
-		perception = cs.perception;
-		persistence = cs.persistence;
-		luck = cs.luck;
-		bravery = cs.bravery;
-		techSkills = cs.techSkills;
-		survivalSkills = cs.survivalSkills;
-		teamWork = cs.teamWork;
-		stamina = cs.stamina;
-		successfulOperations = cs.successfulOperations;
-		totalOperations=cs.totalOperations;
-        if (cs.shuttleID != -1)
-        {
-            shuttle = Shuttle.GetShuttle(cs.shuttleID);
-            shuttle.AttributeCrew(this);
-        }
-        return this;
-	}
-		
-	#endregion
-
 	static float CalculateExperienceLimit(byte f_level) {
 		return 2 * f_level;
 	}
+    public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
+    {
+        ri.texture = UIController.current.iconsTexture;
+        ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
+    }
 
-	public void DismissMember() {}
+    public void DismissMember() {}
 	public void AddMember() {}
 
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(count);
         count = 0;
-        if (status == CrewStatus.Free)
-        {
-            freeCrewsList.Remove(this);
-        }
-        else
+        if (status != CrewStatus.Free)
         {
             if (shuttle != null)
             {
@@ -196,17 +111,111 @@ public sealed class Crew {
                 s.UnattributeCrew(this);
             }
         }
+        crewsList.Remove(this);
+        crewSlotsFree++;
+    }
+    public void Disappear()
+    {
+        crewsList.Remove(this);            
         crewSlotsFree++;
     }
 
-    public void Disappear()
+    #region save-load system
+    public static CrewStaticSerializer SaveStaticData()
     {
-        if (status == CrewStatus.Free)
+        CrewStaticSerializer css = new CrewStaticSerializer();
+        css.haveCrews = false; css.crewsList = new List<CrewSerializer>();
+        if (crewsList != null && crewsList.Count > 0)
         {
-            freeCrewsList.Remove(this);            
+            int i = 0;
+            while (i < crewsList.Count)
+            {
+                Crew c = crewsList[i];
+                if (c == null)
+                {
+                    crewsList.RemoveAt(i);
+                    continue;
+                }
+                else
+                {
+                    if (c.status == CrewStatus.Free) css.crewsList.Add(c.Save());
+                }
+                i++;
+            }
+            if (css.crewsList.Count > 0) css.haveCrews = true;
         }
-        crewSlotsFree++;
+        css.lastNumber = lastNumber;
+        return css;
     }
+    public static void LoadStaticData(CrewStaticSerializer css)
+    {
+        if (crewsList == null) crewsList = new List<Crew>();
+        if (css.haveCrews)
+        {
+            for (int i = 0; i < css.crewsList.Count; i++)
+            {
+                crewsList.Add(new Crew().Load(css.crewsList[i]));
+            }
+        }
+        crewSlotsFree -= crewsList.Count;
+        lastNumber = css.lastNumber;
+    }
+
+    public CrewSerializer Save()
+    {
+        CrewSerializer cs = new CrewSerializer();
+        cs.salary = salary;
+        cs.count = count;
+        cs.experience = experience;
+        cs.nextExperienceLimit = nextExperienceLimit;
+        cs.name = name;
+        cs.level = level;
+        cs.ID = ID;
+        cs.shuttleID = (shuttle == null ? -1 : shuttle.ID);
+        cs.status = status;
+
+        cs.perception = perception;
+        cs.persistence = persistence;
+        cs.luck = luck;
+        cs.bravery = bravery;
+        cs.techSkills = techSkills;
+        cs.survivalSkills = survivalSkills;
+        cs.teamWork = teamWork;
+        cs.stamina = stamina;
+        cs.successfulOperations = successfulOperations;
+        cs.totalOperations = totalOperations;
+        return cs;
+    }
+
+    public Crew Load(CrewSerializer cs)
+    {
+        salary = cs.salary;
+        count = cs.count;
+        level = cs.level;
+        nextExperienceLimit = cs.nextExperienceLimit;
+        experience = cs.experience;
+        name = cs.name;
+        ID = cs.ID;
+        status = cs.status;
+        perception = cs.perception;
+        persistence = cs.persistence;
+        luck = cs.luck;
+        bravery = cs.bravery;
+        techSkills = cs.techSkills;
+        survivalSkills = cs.survivalSkills;
+        teamWork = cs.teamWork;
+        stamina = cs.stamina;
+        successfulOperations = cs.successfulOperations;
+        totalOperations = cs.totalOperations;
+        if (cs.shuttleID != -1)
+        {
+            shuttle = Shuttle.GetShuttle(cs.shuttleID);
+            shuttle.AttributeCrew(this);
+        }
+        return this;
+    }
+
+    #endregion
 }
 
 [System.Serializable]

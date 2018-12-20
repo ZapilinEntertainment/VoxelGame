@@ -245,6 +245,7 @@ public abstract class WorkBuilding : Building {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
+        //copy to expedition corpus.cs
     }
 
     protected void SetWorkbuildingData(SurfaceBlock sb, PixelPosByte pos)
@@ -347,6 +348,7 @@ public abstract class WorkBuilding : Building {
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;
         return workbuildingObserver;
+        //copy to expeditionCorpus.cs
     }
 
     override public void LevelUp(bool returnToUI)
@@ -393,5 +395,6 @@ public abstract class WorkBuilding : Building {
             subscribedToUpdate = false;
         }
         Destroy(gameObject);
+        //copy to expedition corpus.cs
     }
 }

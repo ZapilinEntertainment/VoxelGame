@@ -5,7 +5,9 @@ using UnityEngine;
 public enum ShipStatus {InPort, OnMission}
 
 public class Shuttle : MonoBehaviour {
-	const float START_VOLUME = 20, STANDART_FUEL_CAPACITY = 100;
+    public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f;
+	private const float START_VOLUME = 20, STANDART_FUEL_CAPACITY = 100;
+
     public const float STANDART_COST = 700;
 	public float volume{get;private set;}
 	public float cost{get;private set;}
@@ -111,7 +113,14 @@ public class Shuttle : MonoBehaviour {
     public void DrawShuttleIcon(UnityEngine.UI.RawImage ri)
     {
         ri.texture = UIController.current.iconsTexture;
-        ri.uvRect = UIController.GetTextureUV((condition < 0.5f) ? Icons.ShuttleBadIcon : ((condition > 0.85f) ? Icons.ShuttleGoodIcon : Icons.ShuttleNormalIcon));
+        Icons chosenIcon;
+        if (condition > GOOD_CONDITION_THRESHOLD) chosenIcon = Icons.ShuttleGoodIcon;
+        else
+        {
+            if (condition < BAD_CONDITION_THRESHOLD) chosenIcon = Icons.ShuttleBadIcon;
+            else chosenIcon = Icons.ShuttleNormalIcon;
+        }
+        ri.uvRect = UIController.GetTextureUV(chosenIcon);
     }
 
     /// <summary>

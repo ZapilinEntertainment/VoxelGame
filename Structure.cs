@@ -71,6 +71,7 @@ public class Structure : MonoBehaviour
         RecruitingCenter.ResetToDefaults_Static_RecruitingCenter();
         QuantumTransmitter.ResetToDefaults_Static_QuantumTransmitter();
         Hangar.ResetToDefaults_Static_Hangar();
+        ExpeditionCorpus.ResetToDefaults_Static_ExpeditionCorpus();
     }
 
     virtual protected void SetModel()

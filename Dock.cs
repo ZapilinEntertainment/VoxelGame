@@ -647,6 +647,7 @@ public sealed class Dock : WorkBuilding {
         {
             showOnGUI = false;
             PoolMaster.current.DisableZone();
+            UIController.current.CloseTradePanel();
         }
     }
 

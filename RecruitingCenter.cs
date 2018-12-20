@@ -1,4 +1,5 @@
 ﻿using UnityEngine; // random
+using System.Collections.Generic;
 
 [System.Serializable]
 public class RecruitingCenterSerializer {
@@ -8,17 +9,25 @@ public class RecruitingCenterSerializer {
 }
 
 public sealed class RecruitingCenter : WorkBuilding {
+    public static UIRecruitingCenterObserver rcenterObserver;
+    public static List<RecruitingCenter> recruitingCentersList;
+    private static float hireCost = -1;       
+
     float backupSpeed = 0.02f;
     public bool finding = false;
-	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
-	private static float hireCost = -1;
-    public static UIRecruitingCenterObserver rcenterObserver;
+	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;	
     const float FIND_SPEED = 5;
     public const float FIND_WORKFLOW = 10;
 
+    static RecruitingCenter() { recruitingCentersList = new List<RecruitingCenter>(); }
 	public static void ResetToDefaults_Static_RecruitingCenter() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
+        recruitingCentersList = new List<RecruitingCenter>();
 	}
+    public static int GetCrewsSlotsCount()
+    {
+        return (recruitingCentersList.Count * CREW_SLOTS_FOR_BUILDING);
+    }
 
    public static float GetHireCost()
     {
@@ -46,6 +55,7 @@ public sealed class RecruitingCenter : WorkBuilding {
             Crew.AddCrewSlots(CREW_SLOTS_FOR_BUILDING);
             workflow = 0;
         }
+        if (!recruitingCentersList.Contains(this)) recruitingCentersList.Add(this);
 	}
 
 	override public void LabourUpdate() {
@@ -58,7 +68,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 				if (workflow >= workflowToProcess) {
 					Crew ncrew = new Crew();
 					ncrew.SetCrew(colony, hireCost);
-					Crew.freeCrewsList.Add(ncrew);
+					Crew.crewsList.Add(ncrew);
 					workflow = 0;
 					finding = false;
                     UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
@@ -148,6 +158,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     {
         if (destroyed) return;
         else destroyed = true;
+        if (recruitingCentersList.Contains(this)) recruitingCentersList.Remove(this);
         PrepareWorkbuildingForDestruction(forced);
         Crew.RemoveCrewSlots(CREW_SLOTS_FOR_BUILDING);
         if (subscribedToUpdate)
