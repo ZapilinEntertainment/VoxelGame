@@ -76,14 +76,12 @@ public sealed class UISurfacePanelController : UIObserver {
 			isObserving = true;
 			ChangeMode (SurfacePanelMode.SelectAction);
             if (constructionPlane.activeSelf) PrepareConstructionPlane();
-				
-			STATUS_UPDATE_TIME = 1;
-			timer = STATUS_UPDATE_TIME;
 		}
 	}
 
     protected override void StatusUpdate()
     {
+        if (!isObserving) return;
         if (observingSurface == null)
         {
             SelfShutOff();
@@ -161,7 +159,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 UIController.current.ShowWorksite(gs);
 			}
 			else gs.StopWork();
-			StatusUpdate(); timer = STATUS_UPDATE_TIME;
+			StatusUpdate();
 		}
 	}
 	public void DigButton() {
@@ -181,7 +179,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 {
                     if (cs.diggingMission) cs.StopWork();
                 }
-			StatusUpdate(); timer = STATUS_UPDATE_TIME;
+			StatusUpdate();
 		}
 	}
 

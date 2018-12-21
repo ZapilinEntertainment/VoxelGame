@@ -25,6 +25,8 @@ sealed public class UIController : MonoBehaviour
 #pragma warning restore 0649
 
     public bool showLayerCut { get; private set; }
+    public delegate void StatusUpdateHandler();
+    public event StatusUpdateHandler statusUpdateEvent;
     public ActiveWindowMode currentActiveWindowMode { get; private set; }
     public ProgressPanelMode progressPanelMode { get; private set; }
     public Texture iconsTexture { get; private set; }
@@ -39,13 +41,13 @@ sealed public class UIController : MonoBehaviour
     private enum MenuSection { NoSelection, Save, Load, Options }
     MenuSection selectedMenuSection = MenuSection.NoSelection;
 
-    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f;    
+    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f, STATUS_UPDATE_TIME = 1;    
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
     updateTimer, moneyFlySpeed = 0, showingHousingCf;
     private byte showingStorageOccupancy, faceIndex = 10;
-    private float saved_energySurplus;
+    private float saved_energySurplus, statusUpdateTimer = 0;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
         saved_citizenCountBeforeStarvation
@@ -99,7 +101,15 @@ sealed public class UIController : MonoBehaviour
 
     void Update()
     {
-        updateTimer -= Time.deltaTime;
+        float tm = Time.deltaTime * GameMaster.gameSpeed;
+        statusUpdateTimer -= tm;
+        if (statusUpdateTimer <= 0)
+        {
+            if (statusUpdateEvent != null) statusUpdateEvent();
+            statusUpdateTimer = STATUS_UPDATE_TIME;
+        }
+        updateTimer -= tm;
+       
         if (linksReady & colony != null)
         {
             if (updateTimer <= 0)

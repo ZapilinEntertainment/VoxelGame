@@ -46,7 +46,33 @@ public class Quest {
         questsCompletenessMask = new uint[2];
         NoQuest = new Quest(QuestType.System, NO_QUEST_SUBINDEX);
         AwaitingQuest = new Quest(QuestType.System, AWAITING_QUEST_SUBINDEX);
-	}    
+	}
+    public static bool operator ==(Quest A, Quest B)
+    {
+        return ((A.type == B.type) && (A.subIndex == B.subIndex));
+    }
+    public static bool operator !=(Quest A, Quest B)
+    {
+        return !(A == B);
+    }
+    public override int GetHashCode()
+    {
+        var hashCode = 67631244;
+        hashCode = hashCode * -1521134295 + type.GetHashCode();
+        hashCode = hashCode * -1521134295 + subIndex.GetHashCode();
+        return hashCode;
+    }
+    public override bool Equals(object obj)
+    {
+        if (!(obj is Quest))
+        {
+            return false;
+        }
+
+        var info = (Quest)obj;
+        return type == info.type &&
+               subIndex == info.subIndex;
+    }
 
     public static void SetCompletenessMask(uint[] m)
     {

@@ -39,8 +39,6 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         uwb.SetObservingWorkBuilding(rc);
 
         PrepareCrewsWindow();
-
-        STATUS_UPDATE_TIME = 1f; timer = STATUS_UPDATE_TIME;
     }
 
     public void PrepareCrewsWindow()
@@ -49,15 +47,15 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         {
             case RecruitingCenterObserverMode.NoShowingCrew:
                 if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel();
-                if (Crew.crewSlotsFree == 0)
-                {
-                    hireButton.interactable = false;
-                    hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoFreeSlots);
-                }
-                else
+                if (Crew.crewsList.Count < RecruitingCenter.GetCrewsSlotsCount())
                 {
                     hireButton.interactable = true;
                     hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost().ToString() + ')';
+                }
+                else
+                {                   
+                    hireButton.interactable = false;
+                    hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoFreeSlots);
                 }
                 hireButton.gameObject.SetActive(true);
                 dismissButton.gameObject.SetActive(false);
@@ -80,12 +78,12 @@ public sealed class UIRecruitingCenterObserver : UIObserver
                 dropdownPseudoButton.SetActive(true);
                 break;
         }
-        showingCrewSlots = Crew.crewSlotsFree;
-        showingTotalCrewSlots = Crew.crewSlotsTotal;
+        showingTotalCrewSlots = Crew.crewsList.Count;
+        showingCrewSlots = RecruitingCenter.GetCrewsSlotsCount() - showingTotalCrewSlots;        
         crewListDropdown.interactable = (Crew.crewsList.Count > 0);
         crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + showingCrewSlots.ToString() + " / " + showingTotalCrewSlots.ToString();
 
-        if (lastCrewsUpdate != Crew.totalOperations) PrepareCrewsDropdown();
+        if (lastCrewsUpdate != Crew.actionsHash) PrepareCrewsDropdown();
     }
 
     override protected void StatusUpdate()
@@ -95,8 +93,10 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         else
         {
             bool changeSlotsInfo = false;
-            if (showingCrewSlots != Crew.crewSlotsFree) { showingCrewSlots = Crew.crewSlotsFree; changeSlotsInfo = true; }
-            if (showingTotalCrewSlots != Crew.crewSlotsTotal) { showingTotalCrewSlots = Crew.crewSlotsTotal; changeSlotsInfo = true; }
+            int x = Crew.crewsList.Count;
+            if (showingTotalCrewSlots != x) { showingTotalCrewSlots = x; changeSlotsInfo = true; }
+            x = RecruitingCenter.GetCrewsSlotsCount() - x;
+            if (showingCrewSlots != x) { showingCrewSlots = x; changeSlotsInfo = true; }           
             if (changeSlotsInfo)
             {
                 crewSlotsText.text = Localization.GetPhrase(LocalizedPhrase.CrewSlots) + " : " + showingCrewSlots.ToString() + " / " + showingTotalCrewSlots.ToString();
@@ -115,7 +115,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
                 PrepareCrewsWindow();
             }
 
-            if (lastCrewsUpdate != Crew.totalOperations)
+            if (lastCrewsUpdate != Crew.actionsHash)
             {
                 PrepareCrewsDropdown();
                 dropdownPseudoButton.SetActive(Crew.crewsList.Count > 0);
@@ -136,7 +136,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             }
         }
         crewListDropdown.options = crewButtons;
-        lastCrewsUpdate = Crew.totalOperations;
+        lastCrewsUpdate = Crew.actionsHash;
     }
 
     public void SelectCrew(int i)

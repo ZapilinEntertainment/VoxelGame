@@ -73,16 +73,17 @@ public class ExpeditionSerializer {
 }
 
 
-public class Expedition {
+public sealed class Expedition {
     // переделать в monobehaviour чтобы не было проблем с null
 	public Quest quest{get;private set;}
 	public List<Shuttle> shuttles;
 	public float progress{get;private set;}
 	public QuantumTransmitter transmitter{get;private set;}
 	public int ID{get;private set;}
-
+    
     public static List<Expedition> expeditionsList { get; private set; }
     public static int expeditionsFinished, expeditionsSucceed;
+    public static int actionsHash { get; private set; }
 
     static Expedition ()
     {
@@ -93,6 +94,7 @@ public class Expedition {
         expeditionsList = new List<Expedition>();
         expeditionsFinished = 0;
         expeditionsSucceed = 0;
+        actionsHash = 0;
     }
 
     public Expedition()
@@ -112,6 +114,7 @@ public class Expedition {
 		if (s == null) return;
 		shuttles.Add(s);
 		s.AssignTo(this);
+        actionsHash++;
 	}
 	public void DetachShuttle(Shuttle s) {
 		if (s == null | shuttles.Count == 0) return;
@@ -120,17 +123,19 @@ public class Expedition {
 			if (shuttles[i] == null )
 			{
 				shuttles.RemoveAt(i);
-				continue;
+                actionsHash++;
+                continue;
 			}
 			else {
 				if (shuttles[i] == s) {
 					shuttles[i].AssignTo(null);
 					shuttles.RemoveAt(i);
-					return;
+                    actionsHash++;
+                    return;
 				}
 			}
 			i++;
-		}
+		}        
 	}
     public void DetachShuttle(int index)
     {
@@ -139,6 +144,7 @@ public class Expedition {
         {
             shuttles[index].AssignTo(null);
             shuttles.RemoveAt(index);
+            actionsHash++;
         }
     }
 

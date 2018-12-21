@@ -336,9 +336,10 @@ public sealed class GameMaster : MonoBehaviour {
     {
         //testzone
         if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
-        if (Input.GetKeyDown("x")) mainChunk.TakeLifePowerWithForce(1000);
-
-        if (Input.GetKeyDown("m")) { layerCutHeight = 0; mainChunk.LayersCut(); }
+        if (Input.GetKeyDown("c"))
+        {
+            Crew c = Crew.CreateNewCrew(colonyController);
+        }
         // eo testzone
 
         //float frameTime = Time.deltaTime * gameSpeed;       

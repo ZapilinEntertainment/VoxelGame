@@ -140,7 +140,6 @@ public class UITradeWindow : UIObserver {
             limitInputField.transform.parent.gameObject.SetActive(false);
         }
         isObserving = true;
-        timer = STATUS_UPDATE_TIME;
     }
     public void ChangeSellStatus( bool? isForSale)
     {

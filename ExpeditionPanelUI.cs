@@ -13,8 +13,8 @@ public class ExpeditionPanelUI : MonoBehaviour {
     [SerializeField] private Image progressBarImage;
     [SerializeField] private Scrollbar itemsScrollbar;
 #pragma warning restore 0649
-    private bool listConstructed = false;
-    private int listStartIndex = 0, lastSelectedItem = -1;
+    private bool listConstructed = false, subscribedToUpdate = false;
+    private int listStartIndex = 0, lastSelectedItem = -1, lastDataHashValue = 0;
     private float itemHeight = 0;
 
     private enum ExpeditionPanelSection : byte { NoChosenSection, Expeditions, Shuttles, Crews};
@@ -27,8 +27,25 @@ public class ExpeditionPanelUI : MonoBehaviour {
     public void Activate()
     {
         if (!listConstructed) ConstructList();
+        if (!subscribedToUpdate) UIController.current.statusUpdateEvent += StatusUpdate;
         Redraw(chosenSection == ExpeditionPanelSection.NoChosenSection ? ExpeditionPanelSection.Expeditions : chosenSection);
         gameObject.SetActive(true);
+    }
+
+    public void StatusUpdate()
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.Crews:
+                if (lastDataHashValue != Crew.actionsHash) Redraw(chosenSection);
+                break;
+            case ExpeditionPanelSection.Shuttles:
+                if (lastDataHashValue != Shuttle.actionsHash) Redraw(chosenSection);
+                break;
+            case ExpeditionPanelSection.Expeditions:
+                if (lastDataHashValue != Expedition.actionsHash) Redraw(chosenSection);
+                break;
+        }
     }
 
     private void Redraw (ExpeditionPanelSection newSection)
@@ -108,6 +125,8 @@ public class ExpeditionPanelUI : MonoBehaviour {
 
                             //actionLabel.enabled = true;
                             // запись в actionlabel
+
+                            lastDataHashValue = Expedition.actionsHash;
                         }
                         else
                         {
@@ -143,6 +162,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
                             progressBarText.transform.parent.gameObject.SetActive(true);
 
                             // запись в actionlabel
+                            lastDataHashValue = Shuttle.actionsHash;
                         }
                         else
                         {
@@ -179,6 +199,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
 
                             //actionLabel.enabled = true;
                             // запись в actionlabel
+                            lastDataHashValue = Crew.actionsHash;
                         }
                         else
                         {
@@ -297,6 +318,68 @@ public class ExpeditionPanelUI : MonoBehaviour {
         if (uc.currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel) uc.ChangeActiveWindow(ActiveWindowMode.NoWindow);
         gameObject.SetActive(false);
     }
+    public void ScrollbarChanged()
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.NoChosenSection: return;
+            case ExpeditionPanelSection.Crews:
+                {
+                    int crewsCount = Crew.crewsList.Count, itemsCount = items.Length ;
+                    float sval = itemsScrollbar.value, ssize = itemsScrollbar.size;
+                    if (sval != 0)
+                    {
+                        if (sval != 1)
+                        {
+                            listStartIndex = (int)((sval - ssize / 2f) * crewsCount);
+                            if (listStartIndex < 0) listStartIndex = 0;
+                            else
+                            {
+                                if (listStartIndex > crewsCount - itemsCount) listStartIndex = crewsCount - itemsCount;
+                            }
+                        }
+                        else listStartIndex = crewsCount - itemsCount;
+                    }
+                    else listStartIndex = 0;
+
+                    if (lastSelectedItem != -1)
+                    {
+                        items[lastSelectedItem].GetComponent<Image>().overrideSprite = null;
+                        lastSelectedItem = -1;
+                    }
+
+                    List<Crew> clist = Crew.crewsList;
+                    for (int i = 0; i < itemsCount; i++)
+                    {
+                        RectTransform rt = items[i];
+                        Crew c = clist[listStartIndex + i];
+                        if (c == null)
+                        {
+                            rt.gameObject.SetActive(false);
+                            continue;
+                        }
+                        else
+                        {
+                            if (c == chosenCrew)
+                            {
+                                lastSelectedItem = i;
+                                items[lastSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                            }
+                            rt.GetChild(0).GetComponent<Text>().text = c.name;
+                            if (c.stamina == 0) rt.GetChild(2).gameObject.SetActive(false);
+                            else
+                            {
+                                Transform it = rt.GetChild(2);
+                                it.GetComponent<RectTransform>().SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, (1 - c.stamina) * itemHeight, itemHeight * c.stamina);
+                                it.gameObject.SetActive(true);
+                            }
+                            rt.gameObject.SetActive(true);
+                        }
+                    }
+                    break;
+                }
+        }
+    }
 
     public void SelectItem(int i)
     {
@@ -308,6 +391,8 @@ public class ExpeditionPanelUI : MonoBehaviour {
             items[i].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
             lastSelectedItem = i;
         }
+
+        i += listStartIndex;
         switch (chosenSection)
         {
             case ExpeditionPanelSection.Expeditions:
@@ -354,14 +439,14 @@ public class ExpeditionPanelUI : MonoBehaviour {
         Transform itemsHolder = listContainer.GetChild(0);
         RectTransform itemExample = itemsHolder.GetChild(0).GetComponent<RectTransform>();
         itemHeight = itemExample.rect.height;
-        int count = (int)(itemsHolder.GetComponent<RectTransform>().rect.height / itemHeight);
-        items = new RectTransform[count + 1];
+        int count = (int)(itemsHolder.GetComponent<RectTransform>().rect.height / itemHeight) + 1;
+        items = new RectTransform[count];
         items[0] = itemExample;
-        for (int i = 0; i < count ; i++)
+        for (int i = 1; i < count ; i++)
         {
             RectTransform rt = Instantiate(itemExample, itemsHolder) as RectTransform;
-            rt.localPosition = itemExample.localPosition + Vector3.down * (i + 1) * itemHeight;
-            items[i + 1] = rt;
+            rt.localPosition = itemExample.localPosition + Vector3.down * (i ) * itemHeight;
+            items[i ] = rt;
             int buttonIndex = i;
             rt.GetComponent<Button>().onClick.AddListener(() => { this.SelectItem(buttonIndex); });
         }       
@@ -375,7 +460,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
         {
             case ExpeditionPanelSection.NoChosenSection:
                 foreach (RectTransform rt in items) rt.gameObject.SetActive(false);
-                itemsScrollbar.enabled = false;
+                itemsScrollbar.gameObject.SetActive(false);
                 break;
             case ExpeditionPanelSection.Expeditions:
                 {                    
@@ -480,19 +565,39 @@ public class ExpeditionPanelUI : MonoBehaviour {
                     int crewsCount = Crew.crewsList.Count;
                     if (crewsCount > 0)
                     {
-                        int endIndex = itemsCount;
+                        int endIndex;
                         if (crewsCount > itemsCount)
-                        {
-                            itemsScrollbar.gameObject.SetActive(true);
-                            itemsScrollbar.size = itemsCount / crewsCount;
-                            itemsScrollbar.value = 0;
+                        {                            
+                            float ccount = crewsCount;
+                            itemsScrollbar.size = itemsCount / ccount;
+                            endIndex = listStartIndex + itemsCount;
+                            if (endIndex >= crewsCount)
+                            {
+                                endIndex = crewsCount - 1;
+                                listStartIndex = crewsCount - itemsCount;
+                            }
+
+                            itemsScrollbar.enabled = false;
+                            if (listStartIndex == 0) itemsScrollbar.value = 0;
+                            else
+                            {
+                                if (endIndex == crewsCount - 1) itemsScrollbar.value = 1;
+                                else itemsScrollbar.value = (listStartIndex + endIndex) / 2f / ccount;
+                            }
+                            itemsScrollbar.enabled = true;
+
                             endIndex = itemsCount;
+                            itemsScrollbar.gameObject.SetActive(true);
                         }
                         else
                         {
                             itemsScrollbar.gameObject.SetActive(false);
+                            itemsScrollbar.size = 1;
+                            itemsScrollbar.value = 0;
                             endIndex = crewsCount;
+                            listStartIndex = 0;
                         }
+                        
                         int i = 0;
                         List<Crew> clist = Crew.crewsList;
                         while (i < endIndex)
@@ -524,6 +629,16 @@ public class ExpeditionPanelUI : MonoBehaviour {
                     else goto case ExpeditionPanelSection.NoChosenSection;
                 }
                 break;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (GameMaster.sceneClearing) return;
+        if (subscribedToUpdate)
+        {
+            UIController uc = UIController.current;
+            if (uc != null) uc.statusUpdateEvent -= StatusUpdate;
         }
     }
 }

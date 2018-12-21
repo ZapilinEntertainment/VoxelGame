@@ -4,8 +4,7 @@ using UnityEngine;
 
 public abstract class UIObserver : MonoBehaviour {
 	public bool isObserving { get; protected set; }
-	protected float timer = 0, STATUS_UPDATE_TIME = 1;
-
+    protected bool subscribedToUpdate = false;
 	/// <summary>
 	/// Call from outside
 	/// </summary>
@@ -21,21 +20,24 @@ public abstract class UIObserver : MonoBehaviour {
 		gameObject.SetActive(false);
 	}
 
-	void Update() {
-		timer -= Time.deltaTime * GameMaster.gameSpeed;
-		if (timer <= 0) {
-			StatusUpdate();
-			timer = STATUS_UPDATE_TIME;
-		}
-	}
-
 	protected virtual void StatusUpdate() {		
 	}
 
 	void OnEnable() {
 		transform.SetAsLastSibling();
+        if (!subscribedToUpdate) UIController.current.statusUpdateEvent += StatusUpdate;
 	}
 
     virtual public void LocalizeContent()
     {    }
+
+    private void OnDestroy()
+    {
+        if (GameMaster.sceneClearing) return;
+        if (subscribedToUpdate)
+        {
+            UIController uc = UIController.current;
+            if (uc != null) uc.statusUpdateEvent -= StatusUpdate;
+        }
+    }
 }

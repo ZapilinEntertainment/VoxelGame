@@ -41,19 +41,12 @@ public sealed class RecruitingCenter : WorkBuilding {
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
 		if (hireCost == -1) ResetToDefaults_Static_RecruitingCenter();
-		bool movement = false;
-		if (basement != null) movement = true;
 		if (b == null) return;
 		SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
-        }
-        if (!movement) // здание не переносилось, а было построено
-        {
-            Crew.AddCrewSlots(CREW_SLOTS_FOR_BUILDING);
-            workflow = 0;
         }
         if (!recruitingCentersList.Contains(this)) recruitingCentersList.Add(this);
 	}
@@ -66,15 +59,15 @@ public sealed class RecruitingCenter : WorkBuilding {
 				if (candidatsCountFactor > 1) candidatsCountFactor = 1;
 				workflow += ( FIND_SPEED * workSpeed * 0.3f + colony.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
 				if (workflow >= workflowToProcess) {
-					Crew ncrew = new Crew();
-					ncrew.SetCrew(colony, hireCost);
-					Crew.crewsList.Add(ncrew);
-					workflow = 0;
+
+                    Crew c = Crew.CreateNewCrew(colony);
+
+                    workflow = 0;
 					finding = false;
-                    UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(ncrew.name));
+                    UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));
 					hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
 					hireCost = ((int)(hireCost * 100)) / 100f;
-                    if (showOnGUI) rcenterObserver.SelectCrew(ncrew);
+                    if (showOnGUI) rcenterObserver.SelectCrew(c);
 				}
 			}
 		}
@@ -104,7 +97,7 @@ public sealed class RecruitingCenter : WorkBuilding {
         if (finding) return true;
         else
         {
-            if (Crew.crewSlotsFree > 0)
+            if (Crew.crewsList.Count < GetCrewsSlotsCount())
             {
                 if (colony.energyCrystalsCount >= hireCost)
                 {
@@ -160,7 +153,6 @@ public sealed class RecruitingCenter : WorkBuilding {
         else destroyed = true;
         if (recruitingCentersList.Contains(this)) recruitingCentersList.Remove(this);
         PrepareWorkbuildingForDestruction(forced);
-        Crew.RemoveCrewSlots(CREW_SLOTS_FOR_BUILDING);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

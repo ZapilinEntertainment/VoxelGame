@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum ShipStatus {InPort, OnMission}
 
-public class Shuttle : MonoBehaviour {
+public sealed class Shuttle : MonoBehaviour {
     public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f;
 	private const float START_VOLUME = 20, STANDART_FUEL_CAPACITY = 100;
 
@@ -26,6 +26,7 @@ public class Shuttle : MonoBehaviour {
 
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
+    public static int actionsHash { get; private set; }
 
     static Shuttle()
     {
@@ -35,6 +36,7 @@ public class Shuttle : MonoBehaviour {
 	public static void Reset() {
 		shuttlesList = new List<Shuttle>();
 		lastIndex = 0;
+        actionsHash = 0;
 	}
     public static void PrepareList()
     {
@@ -59,33 +61,29 @@ public class Shuttle : MonoBehaviour {
 		shuttlesList.Add(this);
 	}
 
-	public void RepairForResources() {}
+	public void RepairForResources() {
+        actionsHash++;
+    }
 	public void RepairForCoins() {
         if (condition == 1) return;
         float repairCost = (1 - condition) * cost;
         float availableSum = GameMaster.realMaster.colonyController.GetEnergyCrystals(repairCost);
         condition += availableSum / repairCost * (1 - condition);
         UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleRepaired) + ", " + Localization.GetWord(LocalizedWord.Price) + ": " + string.Format("{0:0.##}", availableSum));
+        actionsHash++;
     }
 	public void Refuel() {
 		float shortage = fuelCapacity - fuelReserves;
 		if (shortage > 0) {
 			fuelReserves += GameMaster.realMaster.colonyController.storage.GetResources(ResourceType.Fuel, shortage);
 		}
+        actionsHash++;
 	}
 
-	public bool AttributeCrew(Crew c) {
-        if (crew != null) return false;
-        else
-        {
-            crew = c;
-            return true;
-        }
+	public void SetCrew(Crew c) {
+        crew = c;
+        actionsHash++;
 	}
-    public void UnattributeCrew(Crew c)
-    {
-        if (crew == c) crew = null;
-    }
 
 	public static Shuttle GetShuttle( int id ) {
 		if (shuttlesList.Count == 0) return null;
@@ -108,6 +106,7 @@ public class Shuttle : MonoBehaviour {
 	// used only by Expedition class, use expedition.AssignShuttle
 	public void AssignTo(Expedition e) {
 		assignedToExpedition = e;
+        actionsHash++;
 	}
 
     public void DrawShuttleIcon(UnityEngine.UI.RawImage ri)
@@ -148,6 +147,7 @@ public class Shuttle : MonoBehaviour {
             crew = null;
             c.Dismiss();
         }
+        actionsHash++;
     }
 
     public void Disappear() // исчезновение
@@ -157,6 +157,7 @@ public class Shuttle : MonoBehaviour {
         {
             shuttlesList.Remove(this);            
         }
+        actionsHash++;
     }
 
     #region save-load system

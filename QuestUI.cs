@@ -9,7 +9,7 @@ public sealed class QuestUI : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] RectTransform[] questButtons; // fiti
-    [SerializeField] GameObject questInfoPanel; // fiti
+    [SerializeField] GameObject questInfoPanel, closeButton; // fiti
     [SerializeField] RectTransform stepsContainer, listContainer; // fiti
     [SerializeField] Text questName, questDescription, rewardText; // fiti    
 #pragma warning restore 0649
@@ -108,17 +108,19 @@ public sealed class QuestUI : MonoBehaviour
     public void Activate()
     {
         GetComponent<Image>().enabled = true;
+        closeButton.SetActive(true);
         PrepareBasicQuestWindow();
         UIController.current.ChangeActiveWindow(ActiveWindowMode.QuestPanel);
     }
     public void Deactivate()
     {
         GetComponent<Image>().enabled = false;
+        closeButton.SetActive(false);
         questButtons[0].transform.parent.gameObject.SetActive(false);
         questInfoPanel.SetActive(false);
         UIController controller = UIController.current;
         controller.ActivateLeftPanel();
-        controller.DropActiveWindow(ActiveWindowMode.NoWindow);
+        controller.DropActiveWindow(ActiveWindowMode.QuestPanel);
     }
     public void CloseQuestWindow()
     {
@@ -139,7 +141,7 @@ public sealed class QuestUI : MonoBehaviour
             if (questAccessMap[i] == true)
             {
                 Quest q = activeQuests[i];
-                if (q != null)
+                if (q != Quest.NoQuest & q != Quest.AwaitingQuest)
                 {
                     btn.GetComponent<Button>().interactable = true;
                     Quest.SetQuestTexture(q, btn.GetComponent<Image>(), rt.GetChild(0).GetComponent<RawImage>());
@@ -196,7 +198,7 @@ public sealed class QuestUI : MonoBehaviour
         if (activeQuests[i] == Quest.AwaitingQuest | activeQuests[i] != Quest.NoQuest) yield break;
         else activeQuests[i] = Quest.AwaitingQuest;
         yield return new WaitForSeconds(QUEST_REFRESH_TIME);
-        if (activeQuests[i] == Quest.NoQuest) SetNewQuest(i);
+        if (activeQuests[i] == Quest.NoQuest | activeQuests[i] == Quest.AwaitingQuest) SetNewQuest(i);
     }
 
     public void UnblockQuestButton(QuestSection qs)
@@ -252,10 +254,12 @@ public sealed class QuestUI : MonoBehaviour
     }   
     private void ReturnToQuestList()
     {
-        if (openedQuest == -1) return;
-        QuestButton_RestoreButtonRect(openedQuest);
-        transformingRectInProgress = true;
-        transformingProgress = 0;
+        if (openedQuest != -1)
+        {
+            QuestButton_RestoreButtonRect(openedQuest);
+            transformingRectInProgress = true;
+            transformingProgress = 0;
+        }
         PrepareBasicQuestWindow();
     }
     private void QuestButton_RestoreButtonRect(int i)

@@ -50,8 +50,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 		workSpeedField.enabled = (showingWorkspeed > 0);
         actionLabel.enabled = false;        
         stopButton.SetActive(false);
-
-		STATUS_UPDATE_TIME = 0.5f; timer = STATUS_UPDATE_TIME;
 	}
 
     public void SetObservingWorksite(Worksite ws)
@@ -79,8 +77,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         actionLabel.enabled = true;
         actionLabel.text = ws.actionLabel;        
         stopButton.SetActive(true);
-
-        STATUS_UPDATE_TIME = 0.5f; timer = STATUS_UPDATE_TIME;
         StatusUpdate();
     }
 
@@ -194,7 +190,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     GameMaster.realMaster.colonyController.SendWorkers(1, observingWorkbuilding);
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -210,7 +205,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     GameMaster.realMaster.colonyController.SendWorkers(1, observingWorksite);
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -228,7 +222,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     GameMaster.realMaster.colonyController.SendWorkers(observingWorkbuilding.maxWorkers - observingWorkbuilding.workersCount, observingWorkbuilding);
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -245,7 +238,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     GameMaster.realMaster.colonyController.SendWorkers(maxWorkers - observingWorksite.workersCount, observingWorksite);
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -263,7 +255,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     observingWorkbuilding.FreeWorkers(1);
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -279,7 +270,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     observingWorksite.FreeWorkers(1);
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -297,7 +287,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     observingWorkbuilding.FreeWorkers();
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }
@@ -313,7 +302,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     observingWorksite.FreeWorkers();
                 }
-                timer = STATUS_UPDATE_TIME;
                 StatusUpdate();
             }
         }

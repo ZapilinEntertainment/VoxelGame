@@ -4,19 +4,17 @@ using UnityEngine;
 
 public enum CrewStatus {Free, Attributed, OnLandMission}
 
-public sealed class Crew {
+public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
     public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f;
-	public static int lastNumber {get;private set;}
-	public static List<Crew> crewsList{ get ;private set;} 
-	public static int crewSlotsTotal {get;private set;}
-    public static int crewSlotsFree { get; private set; }
-    public static int totalOperations { get; private set; }
 
-	public float salary {get; private set;}
+	public static int lastFreeID {get;private set;}	
+    public static int actionsHash { get; private set; }
+    public static List<Crew> crewsList { get; private set; }
+    private static GameObject crewsContainer;
+
 	public int count {get;private set;}
-	public string name ;
 	public float experience{get; private set;}
 	public float nextExperienceLimit {get;private set;}
 	public byte level {get; private set;}
@@ -33,7 +31,8 @@ public sealed class Crew {
 	public float teamWork{get;private set;}
 
 	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
-	public int successfulOperations{get;private set;}
+    public int missionsCompleted { get; private set; }
+    public int successfulMissions{get;private set;}    
 
     static Crew()
     {
@@ -42,49 +41,43 @@ public sealed class Crew {
 
 	public static void Reset() {
 		crewsList = new List<Crew>();
-		crewSlotsTotal = 0;
-        crewSlotsFree = crewSlotsTotal;
-		lastNumber = 0;
+		lastFreeID = 0;
+        actionsHash = 0;
 	}
 
-    public void SetCrew (ColonyController home, float hireCost) {
-		level = 0;
-		name = Localization.NameCrew();
-		ID = lastNumber;	lastNumber ++;
+    public static Crew CreateNewCrew(ColonyController home)
+    {
+        if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
+        Crew c = new GameObject(Localization.NameCrew()).AddComponent<Crew>();
+        if (crewsContainer == null) crewsContainer = new GameObject("crewsContainer");
+        c.transform.parent = crewsContainer.transform;
 
-		salary = ((int)((hireCost / 12f) * 100)) / 100f;
-		perception = 1; // сделать зависимость от исследованных технологий
-		persistence =  home.happiness_coefficient * 0.85f + 0.15f;
-		luck = Random.value;
-		bravery = 0.3f * Random.value + persistence * 0.3f + 0.4f * home.health_coefficient;
-		techSkills = 0.5f * home.hq.level / 8f + 0.5f; // сделать зависимость от количества общих видов построенных зданий
-		survivalSkills = persistence * 0.15f + luck * 0.05f + techSkills * 0.15f + bravery * 0.15f + 0.5f; // еще пара зависимостей от зданий
-		teamWork = 0.75f * home.happiness_coefficient + 0.25f * Random.value;
+        c.level = 0;
+        c.ID = lastFreeID; lastFreeID++;
+        c.status = CrewStatus.Free;
+        c.perception = 1; // сделать зависимость от исследованных технологий
+        c.persistence = home.happiness_coefficient * 0.85f + 0.15f;
+        c.luck = Random.value;
+        c.bravery = 0.3f * Random.value + c.persistence * 0.3f + 0.4f * home.health_coefficient;
+        c.techSkills = 0.5f * home.hq.level / 8f + 0.5f; // сделать зависимость от количества общих видов построенных зданий
+        c.survivalSkills = c.persistence * 0.15f + c.luck * 0.05f + c.techSkills * 0.15f + c.bravery * 0.15f + 0.5f; // еще пара зависимостей от зданий
+        c.teamWork = 0.75f * home.happiness_coefficient + 0.25f * Random.value;
 
-		stamina = 0.9f + Random.value * 0.1f;
-		count = (int)( MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT) );
-		if (count > MAX_MEMBER_COUNT) count = MAX_MEMBER_COUNT;
-		crewSlotsFree--;
-	}
+        c.stamina = 0.9f + Random.value * 0.1f;
+        c.count = (int)(MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT));
+        if (c.count > MAX_MEMBER_COUNT) c.count = MAX_MEMBER_COUNT;
+        crewsList.Add(c);        
+        actionsHash++;
+        return c;
+    }
 
-	public bool AssignToShip(Shuttle s) {
-		if (s == null || (shuttle != null & s == shuttle)) return false;
-		if (s.AttributeCrew(this) == false) return false;
-		shuttle = s;
-		stamina -= 0.1f;
-		if (stamina < 0) stamina = 0;
-        return true;
-	}
-
-	public static void AddCrewSlots(int x) {
-		crewSlotsTotal += x;
-        crewSlotsFree += x;
-	}
-	public static void RemoveCrewSlots(int x) {
-		crewSlotsTotal -= x;
-		if (crewSlotsTotal < 0) crewSlotsTotal = 0;
-        crewSlotsFree -= x;
-        if (crewSlotsFree < 0) crewSlotsFree = 0;
+	public void SetShuttle(Shuttle s) {
+        if (s == shuttle | (s.crew != null & s.crew != this)) return;
+        if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
+        shuttle = s;
+        shuttle.SetCrew(this);
+        if (shuttle != null) status = CrewStatus.Attributed;
+        actionsHash++;
 	}
 
 	static float CalculateExperienceLimit(byte f_level) {
@@ -96,28 +89,29 @@ public sealed class Crew {
         ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
     }
 
-    public void DismissMember() {}
-	public void AddMember() {}
+    public void DismissMember() {
+        actionsHash++;
+    }
+	public void AddMember() {
+        actionsHash++;
+    }
 
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(count);
         count = 0;
         if (status != CrewStatus.Free)
         {
-            if (shuttle != null)
-            {
-                Shuttle s = shuttle;
-                shuttle = null;
-                s.UnattributeCrew(this);
-            }
+            if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
         }
         crewsList.Remove(this);
-        crewSlotsFree++;
+        actionsHash++;
+        Destroy(this);
     }
     public void Disappear()
     {
-        crewsList.Remove(this);            
-        crewSlotsFree++;
+        crewsList.Remove(this);
+        actionsHash++;
+        Destroy(this);
     }
 
     #region save-load system
@@ -144,7 +138,7 @@ public sealed class Crew {
             }
             if (css.crewsList.Count > 0) css.haveCrews = true;
         }
-        css.lastNumber = lastNumber;
+        css.lastNumber = lastFreeID;
         return css;
     }
     public static void LoadStaticData(CrewStaticSerializer css)
@@ -152,23 +146,25 @@ public sealed class Crew {
         if (crewsList == null) crewsList = new List<Crew>();
         if (css.haveCrews)
         {
+            if (crewsContainer == null) crewsContainer = new GameObject("crews container");
             for (int i = 0; i < css.crewsList.Count; i++)
             {
-                crewsList.Add(new Crew().Load(css.crewsList[i]));
+                Crew c = new GameObject(css.crewsList[i].name).AddComponent<Crew>();
+                c.transform.parent = crewsContainer.transform;
+                c.Load(css.crewsList[i]);
+                crewsList.Add(c);
             }
         }
-        crewSlotsFree -= crewsList.Count;
-        lastNumber = css.lastNumber;
+        lastFreeID = css.lastNumber;
     }
 
     public CrewSerializer Save()
     {
         CrewSerializer cs = new CrewSerializer();
-        cs.salary = salary;
         cs.count = count;
         cs.experience = experience;
         cs.nextExperienceLimit = nextExperienceLimit;
-        cs.name = name;
+        cs.name = gameObject.name;
         cs.level = level;
         cs.ID = ID;
         cs.shuttleID = (shuttle == null ? -1 : shuttle.ID);
@@ -182,19 +178,17 @@ public sealed class Crew {
         cs.survivalSkills = survivalSkills;
         cs.teamWork = teamWork;
         cs.stamina = stamina;
-        cs.successfulOperations = successfulOperations;
-        cs.totalOperations = totalOperations;
+        cs.successfulOperations = successfulMissions;
+        cs.totalOperations = missionsCompleted;
         return cs;
     }
 
     public Crew Load(CrewSerializer cs)
     {
-        salary = cs.salary;
         count = cs.count;
         level = cs.level;
         nextExperienceLimit = cs.nextExperienceLimit;
         experience = cs.experience;
-        name = cs.name;
         ID = cs.ID;
         status = cs.status;
         perception = cs.perception;
@@ -205,12 +199,12 @@ public sealed class Crew {
         survivalSkills = cs.survivalSkills;
         teamWork = cs.teamWork;
         stamina = cs.stamina;
-        successfulOperations = cs.successfulOperations;
-        totalOperations = cs.totalOperations;
+        successfulMissions = cs.successfulOperations;
+        missionsCompleted = cs.totalOperations;
         if (cs.shuttleID != -1)
         {
             shuttle = Shuttle.GetShuttle(cs.shuttleID);
-            shuttle.AttributeCrew(this);
+            shuttle.SetCrew(this);
         }
         return this;
     }

@@ -70,8 +70,6 @@ public sealed class UIFactoryObserver : UIObserver
             limitInputField.text = showingProductionValue.ToString();
             limitPanel.SetActive(true);
         }
-
-        STATUS_UPDATE_TIME = 0.1f; timer = STATUS_UPDATE_TIME;
     }
 
     public void SetRecipe(int x)

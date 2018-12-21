@@ -41,8 +41,6 @@ public sealed class UIDockObserver : UIObserver
             if (tradingListPanel.activeSelf) PrepareTradingPanel();
             else PrepareImmigrationPanel();
             if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
-
-            STATUS_UPDATE_TIME = 1.5f; timer = STATUS_UPDATE_TIME;
         }
     }
 
@@ -95,6 +93,7 @@ public sealed class UIDockObserver : UIObserver
 
     override protected void StatusUpdate()
     {
+        if (!isObserving) return;
         if (observingDock == null)
         {
             SelfShutOff();
@@ -155,7 +154,6 @@ public sealed class UIDockObserver : UIObserver
         if (x < 0) x = 0;
         Dock.ChangeMinValue(resourceID, x);
         RecalculateTradingPanelContent();
-        timer = STATUS_UPDATE_TIME / 2f;
     }
 
     void RecalculateTradingPanelContent()
@@ -218,7 +216,6 @@ public sealed class UIDockObserver : UIObserver
     {
         Dock.ChangeSaleStatus(resourceID, null);
         RecalculateTradingPanelContent();
-        timer = STATUS_UPDATE_TIME / 2f;
     }
     #endregion
 

@@ -40,8 +40,6 @@ public sealed class UIHangarObserver : UIObserver
         observingHangar = h; isObserving = true;
         uwb.SetObservingWorkBuilding(h);
         PrepareHangarWindow();
-
-        STATUS_UPDATE_TIME = 1f; timer = STATUS_UPDATE_TIME;
     }
 
     public void PrepareHangarWindow()

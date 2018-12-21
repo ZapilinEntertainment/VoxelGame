@@ -239,7 +239,7 @@ public static class Localization {
 	public static string NameCrew() { // waiting for креатив
 		switch (currentLanguage) {
 		default:
-		case Language.English:		return "crew " + Crew.lastNumber.ToString();
+		case Language.English:		return "crew " + Crew.lastFreeID.ToString();
 		}
 	}
 

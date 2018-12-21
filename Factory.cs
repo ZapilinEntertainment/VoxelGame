@@ -241,6 +241,7 @@ public class Factory : WorkBuilding {
             case FactorySpecialization.OreRefiner: return Recipe.oreRefiningRecipes;
             case FactorySpecialization.FuelFacility: return Recipe.fuelFacilityRecipes;
             case FactorySpecialization.PlasticsFactory: return Recipe.plasticFactoryRecipes;
+            case FactorySpecialization.GraphoniumEnricher: return Recipe.graphoniumEnricherRecipes;
         }
     }
 

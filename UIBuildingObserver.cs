@@ -113,7 +113,6 @@ public class UIBuildingObserver : UIObserver {
 		}
 
         CheckUpgradeAvailability();       
-		STATUS_UPDATE_TIME = 1.2f; timer = STATUS_UPDATE_TIME;
 	}
 
 	override protected void StatusUpdate() {
@@ -397,7 +396,6 @@ public class UIBuildingObserver : UIObserver {
                     }
                 }
             }
-            timer = STATUS_UPDATE_TIME / 2f;
         }
     }
     public void Charge()
