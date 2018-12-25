@@ -7,6 +7,7 @@
 		[NoScaleOffset] _EffectVisibilityTex("Effect visibility texture", 2D) = "white"{}
 		_MainColor("Main color", Color) = (1,1,1,1)
 		_Illumination("Illumination", float) = 0.9
+			_Speed("Speed", float) = 0.16
 	}
 		SubShader
 		{
@@ -41,7 +42,7 @@
 
 				sampler2D _MainTex, _EffectTex, _EffectVisibilityTex;
 				half4 _MainColor;
-				float _Illumination;
+				float _Illumination, _Speed;
 
 				fixed4 frag(v2f i) : SV_Target
 				{
@@ -49,7 +50,7 @@
 					col.rgb *= i.diff;
 					col.rgb *= _MainColor;
 					col.rgb *= _Illumination;
-					float a = tex2D(_EffectVisibilityTex, i.uv + (0,1) * _Time / 6).w ;
+					float a = tex2D(_EffectVisibilityTex, i.uv + (0,1) * _Time * _Speed).w ;
 					fixed4 effectColor = tex2D(_EffectTex, i.uv);
 					col.rgb = col.rgb * (1 - effectColor.w * a) + effectColor.rgb * a * effectColor.w;
 					// 

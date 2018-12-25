@@ -115,7 +115,7 @@ public sealed class ColonyController : MonoBehaviour
                 energyStored += energySurplus * Time.deltaTime * GameMaster.gameSpeed;
                 if (energyStored < 0)
                 { // отключение потребителей энергии до выравнивания
-                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.PowerFailure));
+                    UIController.current.StartPowerFailureTimer();
                     energyStored = 0;
                     int i = powerGrid.Count - 1;
                     bool powerGridChanged = false;
@@ -738,7 +738,10 @@ public sealed class ColonyController : MonoBehaviour
         {
             hq = new_hq;
         }
-        if (QuestUI.current.activeQuests[0] == Quest.NoQuest) QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
+        if (QuestUI.current.activeQuests[0] == Quest.NoQuest)
+        {
+            QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
+        }
     }
 
     public void AddEnergyCrystals(float v)

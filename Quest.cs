@@ -26,17 +26,13 @@ public class Quest {
     public string[] steps { get; private set; }
     public string[] stepsAddInfo { get; private set; }
     public bool[] stepsFinished { get; private set; }
-    public int shuttlesRequired { get; private set; }
-    public int crewsRequired { get; private set; }
-    public Expedition expedition { get; private set; }
-    public List<Crew> crews { get; private set; }
     public readonly QuestType type;
     public readonly byte subIndex;
 
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
-    public static readonly Quest NoQuest, AwaitingQuest;
+    public static readonly Quest NoQuest;
 
-    private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
+    private const byte NO_QUEST_SUBINDEX = 0;
 
     //при добавлении квеста дополнить:
     // Localization -> Fill quest data
@@ -45,7 +41,6 @@ public class Quest {
     static Quest () {
         questsCompletenessMask = new uint[2];
         NoQuest = new Quest(QuestType.System, NO_QUEST_SUBINDEX);
-        AwaitingQuest = new Quest(QuestType.System, AWAITING_QUEST_SUBINDEX);
 	}
     public static bool operator ==(Quest A, Quest B)
     {
@@ -83,7 +78,6 @@ public class Quest {
     {
         type = i_type;
         subIndex = subID;
-        crews = new List<Crew>();
         byte stepsCount = 1;
         switch (i_type)
         {
@@ -113,23 +107,17 @@ public class Quest {
                         case ProgressQuestID.Progress_FirstExpedition:
                             defaultSettings = false;
                             stepsCount = 4;
-                            shuttlesRequired = 0;
-                            crewsRequired = 0;
                             reward = 400;
                             break;
                         case ProgressQuestID.Progress_Tier5: reward = 960; break;
                         case ProgressQuestID.Progress_FactoryComplex:
                             defaultSettings = false;
                             stepsCount = 2;
-                            shuttlesRequired = 0;
-                            crewsRequired = 0;
                             reward = 960;
                             break;
                         case ProgressQuestID.Progress_SecondFloor:
                             defaultSettings = false;
                             stepsCount = 2;
-                            shuttlesRequired = 0;
-                            crewsRequired = 0;
                             reward = 420;
                             break;
                     }
@@ -137,8 +125,6 @@ public class Quest {
                     if (defaultSettings)
                     {
                         stepsCount = 1;
-                        shuttlesRequired = 0;
-                        crewsRequired = 0;
                     }                    
                     break;
                 }
@@ -147,20 +133,14 @@ public class Quest {
                 {
                     case EndgameQuestID.Endgame_TransportHub_step1:
                         stepsCount = 3;
-                        shuttlesRequired = 0;
-                        crewsRequired = 0;
                         reward = 1000;
                         break;
                     case EndgameQuestID.Endgame_TransportHub_step2:
                         stepsCount = 2;
-                        shuttlesRequired = 0;
-                        crewsRequired = 0;
                         reward = 1000;
                         break;
                     case EndgameQuestID.Endgame_TransportHub_step3:
                         stepsCount = 3;
-                        shuttlesRequired = 0;
-                        crewsRequired = 0;
                         reward = 1000;
                         break;
                 }
@@ -314,11 +294,11 @@ public class Quest {
                     case ProgressQuestID.Progress_FirstExpedition:
                         {
                             byte completeness = 0;                     
-                            if (crews.Count > 0)
+                            if (Crew.crewsList.Count > 0)
                             {
                                 completeness++;
                                 stepsFinished[0] = true;
-                                stepsAddInfo[0] = crews.Count.ToString() + "/1";
+                                stepsAddInfo[0] = Crew.crewsList.Count.ToString() + "/1";
                             }
                             else
                             {
@@ -544,12 +524,6 @@ public class Quest {
         }
     }
 
-    public void RemoveCrew(int index)
-    {
-        if (crews.Count <= index) return;
-        else crews.RemoveAt(index);
-    }
-
     public void MakeQuestCompleted()
     {
         UIController.current.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
@@ -622,7 +596,6 @@ public class Quest {
     {
         // for square textures only
         Texture icon;
-        Sprite overridingSprite = null;
         Rect iconRect;
         switch (q.type) {
             default: return;
@@ -631,17 +604,14 @@ public class Quest {
         {
             default: return;
             case ProgressQuestID.Progress_HousesToMax:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.HOUSE_1_ID);
                 break;
             case ProgressQuestID.Progress_2Docks:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.DOCK_ID);
                 break;
             case ProgressQuestID.Progress_2Storages:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.STORAGE_0_ID);
                 break;
@@ -654,7 +624,6 @@ public class Quest {
                 iconRect = UIController.GetTextureUV(Icons.Citizen);
                 break;
             case ProgressQuestID.Progress_OreRefiner:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.ORE_ENRICHER_2_ID);
                 break;
@@ -667,18 +636,15 @@ public class Quest {
                 iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
                 break;
             case ProgressQuestID.Progress_4MiniReactors:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.MINI_GRPH_REACTOR_3_ID);
                 break;
             case ProgressQuestID.Progress_100Fuel:
-                overridingSprite = QuestUI.questResourceBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.resourcesTexture;
                 iconRect = ResourceType.GetTextureRect(ResourceType.FUEL_ID);
                 break;
             case ProgressQuestID.Progress_XStation:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.XSTATION_3_ID);
@@ -688,25 +654,21 @@ public class Quest {
                 iconRect = Structure.GetTextureRect(Structure.HQ_3_ID);
                 break;
             case ProgressQuestID.Progress_CoveredFarm:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.FARM_4_ID);
                 break;
             case ProgressQuestID.Progress_CoveredLumbermill:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.LUMBERMILL_4_ID);
                 break;
             case ProgressQuestID.Progress_Reactor:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.GRPH_REACTOR_4_ID);
                 break;
             case ProgressQuestID.Progress_FirstExpedition:
-                overridingSprite = QuestUI.questBlocked_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.iconsTexture;
                 iconRect = UIController.GetTextureUV(Icons.GuidingStar);
@@ -716,13 +678,11 @@ public class Quest {
                 iconRect = Structure.GetTextureRect(Structure.HQ_4_ID);
                 break;
             case ProgressQuestID.Progress_FactoryComplex:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.SMELTERY_5_ID);
                 break;
             case ProgressQuestID.Progress_SecondFloor:
-                overridingSprite = QuestUI.questBuildingBack_tx;
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.buildingsTexture;
                 iconRect = Structure.GetTextureRect(Structure.COLUMN_ID);
@@ -741,7 +701,6 @@ public class Quest {
             iconPlace.texture = null;
             iconPlace.enabled = false;
         }
-        if (buttonImage != null) buttonImage.overrideSprite = overridingSprite;
     }
 
 	public QuestSerializer Save() {

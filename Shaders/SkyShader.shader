@@ -11,7 +11,8 @@ Shader "Custom/SkyShader"
 	}
 		SubShader
 	{
-		Tags { "RenderType" = "Opaque" }
+		Tags { "Queue" = "Transparent" }
+		Blend SrcAlpha OneMinusSrcAlpha
 		LOD 100
 
 		Pass
@@ -28,7 +29,7 @@ Shader "Custom/SkyShader"
 			{
 				float2 uv : TEXCOORD0;
 				float4 vertex : SV_POSITION;
-				float3 alphaChannels : COLOR0;
+				float4 alphaChannels : COLOR0;
 			};
 
 			v2f vert(appdata_base v)
@@ -42,6 +43,8 @@ Shader "Custom/SkyShader"
 				o.alphaChannels.x = _SinTime / 2 + 0.5;
 				o.alphaChannels.y = sin(_Time * 3 + 4 + l) / 2 + 0.5;
 				o.alphaChannels.z = sin(_Time * 7 + 1.5f + l) / 2 + 0.5;
+				if (v.vertex.z < 0.01) o.alphaChannels.w = v.vertex.z * 100;
+				else o.alphaChannels.w = 1;
 				return o;
 			}
 
@@ -51,7 +54,12 @@ Shader "Custom/SkyShader"
 				fixed4 col0 = tex2D(_layer0, i.uv);
 				fixed4 col1 = tex2D(_layer1, i.uv) ;
 				fixed4 col2 = tex2D(_layer2, i.uv) ;
-				col.rgb += (col0.rgb * col0.a * i.alphaChannels.x + col1.rgb * col1.a * i.alphaChannels.y + col2.rgb * col2.a * i.alphaChannels.z);
+				col.a = i.alphaChannels.w * i.alphaChannels.w;
+				col.r = (col.r + (col0.r * col0.a * i.alphaChannels.x + col1.r * col1.a * i.alphaChannels.y + col2.r * col2.a * i.alphaChannels.z) )   * col.a ;
+				col.g = (col.g + (col0.g * col0.a * i.alphaChannels.x + col1.g * col1.a * i.alphaChannels.y + col2.g * col2.a * i.alphaChannels.z) )   * col.a ;
+				col.b = (col.b + (col0.b * col0.a * i.alphaChannels.x + col1.b * col1.a * i.alphaChannels.y + col2.b * col2.a * i.alphaChannels.z) )   * col.a ;
+				//col.rgb += (col0.rgb * col0.a * i.alphaChannels.x + col1.rgb * col1.a * i.alphaChannels.y + col2.rgb * col2.a * i.alphaChannels.z);
+				
 				return col;
 			}
 			ENDCG

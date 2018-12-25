@@ -2,20 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ShipStatus {InPort, OnMission}
+public enum ShipStatus {Docked, OnMission} // при изменении дополнить Localization.GetShuttleStatus
 
 public sealed class Shuttle : MonoBehaviour {
     public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f;
-	private const float START_VOLUME = 20, STANDART_FUEL_CAPACITY = 100;
+	private const float START_VOLUME = 20;
 
     public const float STANDART_COST = 700;
 	public float volume{get;private set;}
 	public float cost{get;private set;}
-    public float maintenance { get; private set; }
-	public float fuelReserves{get;private set;}
-	public float fuelCapacity{get;private set;}
 	public int ID{get;private set;}
-	public float condition{get;private set;} // общее состояние
+    public float condition = 1; // общее состояние, автоматически чинится в работающих ангарах
 #pragma warning disable 0649
     [SerializeField] Renderer[] renderers;
 #pragma warning restore 0649
@@ -49,41 +46,27 @@ public sealed class Shuttle : MonoBehaviour {
 		foreach (Renderer r in renderers) {
 			r.enabled = false;
 		}
-		status = ShipStatus.InPort;
+		status = ShipStatus.Docked;
 		name = Localization.NameShuttle();
 		ID = lastIndex; lastIndex ++;
 		volume = START_VOLUME;
 		condition = 1;
-		cost =STANDART_COST;
-        maintenance = cost / 10f;
-		fuelCapacity = STANDART_FUEL_CAPACITY;
-		fuelReserves = GameMaster.realMaster.colonyController.storage.GetResources(ResourceType.Fuel, fuelCapacity);
+		cost = STANDART_COST;
 		shuttlesList.Add(this);
 	}
-
-	public void RepairForResources() {
-        actionsHash++;
+    public void AssignToHangar(Hangar h)
+    {
+        hangar = h;
     }
-	public void RepairForCoins() {
-        if (condition == 1) return;
-        float repairCost = (1 - condition) * cost;
-        float availableSum = GameMaster.realMaster.colonyController.GetEnergyCrystals(repairCost);
-        condition += availableSum / repairCost * (1 - condition);
-        UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleRepaired) + ", " + Localization.GetWord(LocalizedWord.Price) + ": " + string.Format("{0:0.##}", availableSum));
-        actionsHash++;
-    }
-	public void Refuel() {
-		float shortage = fuelCapacity - fuelReserves;
-		if (shortage > 0) {
-			fuelReserves += GameMaster.realMaster.colonyController.storage.GetResources(ResourceType.Fuel, shortage);
-		}
-        actionsHash++;
-	}
 
 	public void SetCrew(Crew c) {
         crew = c;
         actionsHash++;
 	}
+    public void SetVisibility(bool x)
+    {
+        foreach (Renderer r in renderers) r.enabled = x;
+    }
 
 	public static Shuttle GetShuttle( int id ) {
 		if (shuttlesList.Count == 0) return null;
@@ -137,7 +120,7 @@ public sealed class Shuttle : MonoBehaviour {
             }
             GameMaster.realMaster.colonyController.AddEnergyCrystals(cost * pc);
          }
-        if (status == ShipStatus.InPort)
+        if (status == ShipStatus.Docked)
         {
             shuttlesList.Remove(this);
         }
@@ -153,7 +136,7 @@ public sealed class Shuttle : MonoBehaviour {
     public void Disappear() // исчезновение
     {
         if (crew != null) crew.Disappear();
-        if (status == ShipStatus.InPort)
+        if (status == ShipStatus.Docked)
         {
             shuttlesList.Remove(this);            
         }
@@ -198,8 +181,6 @@ public sealed class Shuttle : MonoBehaviour {
 		ShuttleSerializer ss = new ShuttleSerializer();
 		ss.volume = volume;
 		ss.cost = cost;
-		ss.fuelReserves = fuelReserves;
-		ss.fuelCapacity = fuelCapacity;
 		ss.condition = condition;
 		ss.ID = ID; 
 		ss.status = status;
@@ -211,8 +192,6 @@ public sealed class Shuttle : MonoBehaviour {
 	public void Load(ShuttleSerializer ss) {
 		volume =ss.volume;
 		cost = ss.cost;
-		fuelCapacity = ss.fuelCapacity;
-		fuelReserves = ss.fuelReserves;
 		condition = ss.condition;
 		ID = ss.ID;
 		status =ss.status;
@@ -225,7 +204,7 @@ public sealed class Shuttle : MonoBehaviour {
 
 [System.Serializable]
 public class ShuttleSerializer {
-	public float volume, cost,fuelReserves, fuelCapacity, condition;
+	public float volume, cost, condition;
 	public float xpos,ypos,zpos,xrotation,yrotation,zrotation,wrotation;
 	public int ID;
 	public ShipStatus status;

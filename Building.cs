@@ -660,8 +660,8 @@ public class Building : Structure
             case QUANTUM_TRANSMITTER_4_ID:
                 {
                     upgradedIndex = -1;
-                    canBePowerSwitched = true;
-                    energySurplus = -200;
+                    canBePowerSwitched = false;
+                    energySurplus = 0;
                     energyCapacity = 0;                    
                     level = 4;
                 }

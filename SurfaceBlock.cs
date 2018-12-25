@@ -655,8 +655,12 @@ public class SurfaceBlock : Block {
             {
                 if (ss.id != Structure.PLANT_ID)
                 {
-                    Structure s = Structure.GetStructureByID(ss.id);
-                    if (s != null) s.Load(ss, this);
+                    if (ss.id != Structure.CONTAINER_ID)
+                    {
+                        Structure s = Structure.GetStructureByID(ss.id);
+                        if (s != null) s.Load(ss, this);
+                    }
+                    else HarvestableResource.LoadContainer(ss, this);
                 }
                 else
                 {

@@ -242,12 +242,23 @@ public sealed class Hangar : WorkBuilding
 
     public override void LabourUpdate()
     {
-        if (isActive & isEnergySupplied & constructing)
+        if (isActive & isEnergySupplied)
         {
-            workflow += workSpeed;
-            if (workflow >= workflowToProcess)
+            if (constructing)
             {
-                LabourResult();
+                workflow += workSpeed;
+                if (workflow >= workflowToProcess)
+                {
+                    LabourResult();
+                }
+            }
+            else
+            {
+                if (shuttle != null && (shuttle.status == ShipStatus.Docked & shuttle.condition < 1))
+                {
+                    shuttle.condition += workSpeed / 4f;
+                    if (shuttle.condition > 1) shuttle.condition = 1;
+                }
             }
         }
     }
@@ -335,8 +346,17 @@ public sealed class Hangar : WorkBuilding
         else
         {
             shuttle.Deconstruct();
-            shuttle = null;
-            hangarObserver.PrepareHangarWindow();
+            DropShuttle();
+        }
+    }
+    private void DropShuttle()
+    {
+        shuttle = null;
+        hangarObserver.PrepareHangarWindow();
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
         }
     }
 
@@ -360,7 +380,13 @@ public sealed class Hangar : WorkBuilding
         constructing = hs.constructing;
         LoadWorkBuildingData(hs.workBuildingSerializer);
         shuttle = Shuttle.GetShuttle(hs.shuttle_id);
-        shuttle.transform.parent = transform;
+        shuttle.AssignToHangar(this);
+        if (shuttle.status == ShipStatus.Docked)
+        {
+            shuttle.transform.parent = transform;
+            shuttle.SetVisibility(false);
+        }
+        
     }
 
     HangarSerializer GetHangarSerializer()

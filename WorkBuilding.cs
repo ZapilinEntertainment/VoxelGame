@@ -178,6 +178,12 @@ public abstract class WorkBuilding : Building {
                     maxWorkers = 80;
                 }
                 break;
+            case REACTOR_BLOCK_5_ID:
+                {
+                    workflowToProcess = 1;
+                    maxWorkers = 120;
+                }
+                break;
             case PLASTICS_FACTORY_3_ID:
                 {
                     workflowToProcess = 1;

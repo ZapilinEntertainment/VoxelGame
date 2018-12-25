@@ -2,11 +2,11 @@
 public enum LocalizedWord : ushort {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled}
 public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
-ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, 
+ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
-public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, PowerFailure, NewQuestAvailable, GamePaused,
+public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
     GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood };
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
@@ -193,8 +193,7 @@ public static class Localization {
             case GameAnnouncements.GameSaved: return "Game saved";
             case GameAnnouncements.GameLoaded: return "Load successful";
             case GameAnnouncements.SavingFailed: return "Saving failed";
-            case GameAnnouncements.LoadingFailed: return "Loading failed";
-            case GameAnnouncements.PowerFailure: return "Power failure";
+            case GameAnnouncements.LoadingFailed: return "Loading failed";            
             case GameAnnouncements.NewQuestAvailable: return "New quest available";
             case GameAnnouncements.GamePaused: return "Game paused";
             case GameAnnouncements.GameUnpaused: return "Game unpaused";
@@ -220,13 +219,7 @@ public static class Localization {
 		case Language.English: return count.ToString() + " coins";
 		}
 	}
-
-	public static string AnnounceCrewReady( string name ) {
-		switch (currentLanguage) {
-		default:
-		case Language.English: return "crew \" " + name + "\" ready";
-		}
-	}
+	
     public static string AnnounceQuestCompleted (string name)
     {
         switch (currentLanguage)
@@ -236,12 +229,54 @@ public static class Localization {
         }
     }
 
-	public static string NameCrew() { // waiting for креатив
+    public static string AnnounceCrewReady(string name)
+    {
+        switch (currentLanguage)
+        {
+            default:
+            case Language.English: return "crew \" " + name + "\" ready";
+        }
+    }
+    public static string NameCrew() { // waiting for креатив
 		switch (currentLanguage) {
 		default:
 		case Language.English:		return "crew " + Crew.lastFreeID.ToString();
 		}
 	}
+    public static string GetCrewInfo(Crew c)
+    {
+        string s = "Members: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
+        + "\n"
+        + "Perception: " + string.Format("{0:0.##}", c.perception) + "\n"
+        + "Persistence: " + string.Format("{0:0.##}", c.persistence) + "\n"
+        + "Bravery: " + string.Format("{0:0.##}", c.bravery) + "\n"
+        + "Technical skills: " + string.Format("{0:0.##}", c.techSkills) + "\n"
+        + "Survival skills: " + string.Format("{0:0.##}", c.survivalSkills) + "\n"
+        + "Team work efficientcy: " + string.Format("{0:0.##}", c.teamWork) + "\n"
+        + "\n"
+        + "Missions completed: " + c.missionsCompleted.ToString() + "\n"
+        + "Missions successed: " + c.successfulMissions.ToString();
+        return s;
+    }
+    public static string GetCrewStatus(Crew c)
+    {
+        switch (c.status)
+        {
+            case CrewStatus.Attributed: return "Attributed to \"" + c.shuttle.name + '\"';
+            case CrewStatus.Free: return "Not attributed";
+            case CrewStatus.OnLandMission: return "On land mission";
+            default: return "<crew status>";
+        }
+    }
+    public static string GetShuttleStatus(Shuttle s)
+    {
+        switch (s.status)
+        {
+            case ShipStatus.Docked: return "Docked";
+            case ShipStatus.OnMission: return "On mission";
+            default: return "<shuttle status>";
+        }
+    }
 
 	public static string NameShuttle() { // waiting for креатив
 		switch (currentLanguage) {
@@ -319,10 +354,12 @@ public static class Localization {
             case LocalizedPhrase.CrewSlots: return "Crew slots";
             case LocalizedPhrase.NoFreeSlots: return "No free slots";
             case LocalizedPhrase.HireNewCrew: return "Hire new crew";
+            case LocalizedPhrase.NoCrew: return "No crew";
             case LocalizedPhrase.ConstructShuttle: return "Construct shuttle";
             case LocalizedPhrase.ShuttleRepaired: return "A shuttle has been repaired";
             case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
             case LocalizedPhrase.ShuttleOnMission: return "Shuttle on mission";
+            case LocalizedPhrase.NoShuttle: return "No shuttle";
             case LocalizedPhrase.ObjectsLeft: return "Objects left";
             case LocalizedPhrase.NoSavesFound: return "No saves found";
             case LocalizedPhrase.CreateNewSave: return "Create new save";
@@ -333,6 +370,8 @@ public static class Localization {
             case LocalizedPhrase.MakeSurface: return "Make surface";
             case LocalizedPhrase.BufferOverflow: return "Buffer overflow"; // factory resource buffer overflowed
             case LocalizedPhrase.NoEnergySupply: return "No energy supply";
+            case LocalizedPhrase.PowerFailure: return "Power failure";
+            case LocalizedPhrase.NoMission: return "No mission";
         }
     }
 

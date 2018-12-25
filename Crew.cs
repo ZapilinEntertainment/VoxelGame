@@ -2,19 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrewStatus {Free, Attributed, OnLandMission}
+public enum CrewStatus {Free, Attributed, OnLandMission} // при изменении дополнить Localization.GetCrewStatus
 
 public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
 	public const int OPTIMAL_CANDIDATS_COUNT = 400;
-    public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f;
+    public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f, CHANGING_SHUTTLE_STAMINA_CONSUMPTION = 0.1f;
 
 	public static int lastFreeID {get;private set;}	
     public static int actionsHash { get; private set; }
     public static List<Crew> crewsList { get; private set; }
     private static GameObject crewsContainer;
 
-	public int count {get;private set;}
+	public int membersCount {get;private set;}
 	public float experience{get; private set;}
 	public float nextExperienceLimit {get;private set;}
 	public byte level {get; private set;}
@@ -29,6 +29,7 @@ public sealed class Crew : MonoBehaviour {
 	public float techSkills{get;private set;}
 	public float survivalSkills{get;private set;} // для наземных операций
 	public float teamWork{get;private set;}
+    //при внесении изменений отредактировать Localization.GetCrewInfo
 
 	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
     public int missionsCompleted { get; private set; }
@@ -64,20 +65,33 @@ public sealed class Crew : MonoBehaviour {
         c.teamWork = 0.75f * home.happiness_coefficient + 0.25f * Random.value;
 
         c.stamina = 0.9f + Random.value * 0.1f;
-        c.count = (int)(MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT));
-        if (c.count > MAX_MEMBER_COUNT) c.count = MAX_MEMBER_COUNT;
+        c.membersCount = (int)(MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT));
+        if (c.membersCount > MAX_MEMBER_COUNT) c.membersCount = MAX_MEMBER_COUNT;
         crewsList.Add(c);        
         actionsHash++;
         return c;
     }
 
 	public void SetShuttle(Shuttle s) {
-        if (s == shuttle | (s.crew != null & s.crew != this)) return;
-        if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
-        shuttle = s;
-        shuttle.SetCrew(this);
-        if (shuttle != null) status = CrewStatus.Attributed;
-        actionsHash++;
+        if (s == shuttle) return;
+        else {
+            if (s == null)
+            {
+                if (shuttle != null) shuttle.SetCrew(null);
+                shuttle = null;
+                status = CrewStatus.Free;
+            }
+            else
+            {
+                if (shuttle != null & s != shuttle) shuttle.SetCrew(null);
+                s.SetCrew(this);
+                shuttle = s;
+                status = CrewStatus.Attributed;
+            }
+            stamina -= CHANGING_SHUTTLE_STAMINA_CONSUMPTION;
+            if (stamina < 0) stamina = 0;
+            actionsHash++;
+        }               
 	}
 
 	static float CalculateExperienceLimit(byte f_level) {
@@ -97,8 +111,8 @@ public sealed class Crew : MonoBehaviour {
     }
 
 	public void Dismiss() {
-        GameMaster.realMaster.colonyController.AddWorkers(count);
-        count = 0;
+        GameMaster.realMaster.colonyController.AddWorkers(membersCount);
+        membersCount = 0;
         if (status != CrewStatus.Free)
         {
             if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
@@ -161,7 +175,7 @@ public sealed class Crew : MonoBehaviour {
     public CrewSerializer Save()
     {
         CrewSerializer cs = new CrewSerializer();
-        cs.count = count;
+        cs.count = membersCount;
         cs.experience = experience;
         cs.nextExperienceLimit = nextExperienceLimit;
         cs.name = gameObject.name;
@@ -185,7 +199,7 @@ public sealed class Crew : MonoBehaviour {
 
     public Crew Load(CrewSerializer cs)
     {
-        count = cs.count;
+        membersCount = cs.count;
         level = cs.level;
         nextExperienceLimit = cs.nextExperienceLimit;
         experience = cs.experience;

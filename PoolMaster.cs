@@ -77,7 +77,6 @@ public sealed class PoolMaster : MonoBehaviour {
         metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-        QuestUI.LoadTextures();
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 

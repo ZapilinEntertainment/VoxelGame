@@ -20,6 +20,7 @@ public class HarvestableResource : Structure
     public static HarvestableResource ConstructContainer(ContainerModelType i_modelType, ResourceType i_rtype, float i_count)
     {
         HarvestableResource hr = new GameObject().AddComponent<HarvestableResource>();
+        hr.id = CONTAINER_ID;
         hr.PrepareStructure();
         hr.mainResource = i_rtype;
         hr.resourceCount = i_count;               
@@ -302,12 +303,24 @@ public class HarvestableResource : Structure
         maxHp = ss.maxHp; hp = ss.maxHp;
     }
 
+    public static void LoadContainer(StructureSerializer ss, SurfaceBlock sblock)
+    {
+        HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
+        GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
+        HarvestableResource hr = ConstructContainer(hrs.model_id, ResourceType.GetResourceTypeById(hrs.mainResource_id), hrs.count);
+        hr.modelRotation = ss.modelRotation;
+        hr.indestructible = ss.indestructible;
+        hr.SetBasement(sblock, ss.pos);
+        hr.maxHp = ss.maxHp; hr.hp = ss.maxHp;
+    }
+
 
     protected HarvestableResourceSerializer GetHarvestableResourceSerializer()
     {
         HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
         hrs.mainResource_id = mainResource.ID;
         hrs.count = resourceCount;
+        hrs.model_id = model_id;
         return hrs;
     }
     #endregion

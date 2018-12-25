@@ -29,6 +29,13 @@ public class Powerplant : WorkBuilding {
                 fuelLeft = 0;
                 fuelBurnTime = 6000 ; //ticks
                 break;
+            case REACTOR_BLOCK_5_ID:
+                fuel = ResourceType.Graphonium;
+                output = 16000;
+                fuelNeeds = 4;
+                fuelLeft = 0;
+                fuelBurnTime = 5800; //ticks
+                break;
 		}
 	}
 
