@@ -1,17 +1,17 @@
-﻿public enum Language : ushort{English, Russian};
+﻿using UnityEngine;
+
+public enum Language : ushort{English, Russian};
 public enum LocalizedWord : ushort {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Immigration,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, Repair,
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled}
 public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission
+MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
     GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood };
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
-public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished}
-public enum DefeatReason : byte { Default, NoCitizen }
-public enum WinNote : byte { Default, TransportHubVictory }
+public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock}
 
 public static class Localization {
 
@@ -372,12 +372,13 @@ public static class Localization {
             case LocalizedPhrase.NoEnergySupply: return "No energy supply";
             case LocalizedPhrase.PowerFailure: return "Power failure";
             case LocalizedPhrase.NoMission: return "No mission";
+            case LocalizedPhrase.NoHighscores: return "No highscores yet";
         }
     }
 
     public static string GetRefusalReason(RefusalReason rr) {
         switch (rr) {
-            default: return "bad developer guy prohibits it"; 
+            default: return "bad guy developer prohibits it"; 
             case RefusalReason.Unavailable: return "Unavailable";
             case RefusalReason.MaxLevel: return "Maximum level reached";
             case RefusalReason.HQ_RR1: return "No docks built";
@@ -390,6 +391,7 @@ public static class Localization {
             case RefusalReason.NoBlockBelow: return "No block below";
             case RefusalReason.NotEnoughSlots: return "Not enough slots";
             case RefusalReason.WorkNotFinished: return "Work not finished";
+            case RefusalReason.MustBeBuildedOnFoundationBlock: return "Must be builded on Foundation Block";
         }
     }
 
@@ -409,21 +411,38 @@ public static class Localization {
         }
     }
 
-    public static string GetDefeatReason(DefeatReason dr)
+    public static string GetEndingTitle (GameEndingType endType)
     {
-        switch (dr)
+        switch (endType)
         {
-            case DefeatReason.NoCitizen: return "All citizens gone.";
-            default: return "Error 43: reasons stack overflow";
+            case GameEndingType.ColonyLost: return "All citizens gone.";
+            case GameEndingType.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You can be free after this point.";
+            case GameEndingType.ConsumedByLastSector: return "Your island has been consumed by the Last Sector. It is in safe now.";
+            case GameEndingType.ConsumedByReal: return "Your island has been pushed back to real space and now it is lost forever.";
+            case GameEndingType.Default: 
+            default:
+                return "Game Over";
         }
     }
 
-    public static string GetWinNote(WinNote wn)
+    public static string GetAuthorsButtonLabel()
     {
-        switch(wn)
+        int total = 10;
+        int val = (int)(Random.value * total);
+        switch (val)
         {
-            case WinNote.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You can be free after this point.";
-            default: return "Unbreakable victory";
+            case 0: return "Knock-knock";
+            case 1: return "...";
+           
+            case 3: return "Authors room";
+            case 4: return "Psst, look";
+            case 5: return "Lootboxes (maybe) here";
+            case 6: return "I am the mightest button";
+            case 7: return "Credits";
+            case 8: return "Memento vitae";
+            case 9: return "Push your money into me";
+            case 10: return "This game could be better, right?";
+            default: return "Authors button";
         }
     }
 

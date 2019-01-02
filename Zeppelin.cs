@@ -21,7 +21,9 @@ public class Zeppelin : MonoBehaviour {
 
     void Start() {
         Vector2 pos = Random.insideUnitCircle;
-        transform.position = new Vector3(pos.x, 0, pos.y) * Chunk.CHUNK_SIZE * 1.1f ;
+        Vector3 rpos = new Vector3(pos.x, 0, pos.y) * Chunk.CHUNK_SIZE * 1.1f ;
+        rpos.y = Chunk.CHUNK_SIZE / 2f;
+        transform.position = rpos;
 		Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
 		transform.forward = v;
 		leftScrew.Rotate(0, Random.value * 360, 0);

@@ -1153,7 +1153,12 @@ public class Structure : MonoBehaviour
             {
                 ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
                 Block upperBlock = basement.myChunk.GetBlock(npos.x, npos.y, npos.z);
-                if (upperBlock == null) basement.myChunk.AddBlock(npos, BlockType.Surface, ResourceType.CONCRETE_ID, false);
+                if (upperBlock == null)
+                {
+                    int replacingMaterialID = ResourceType.ADVANCED_COVERING_ID;
+                    if (id == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
+                    basement.myChunk.AddBlock(npos, BlockType.Surface, replacingMaterialID, false);
+                }
             }
             else
             {

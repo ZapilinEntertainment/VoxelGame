@@ -130,21 +130,31 @@ public class Powerplant : WorkBuilding {
 	}
 
 	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, tickTimer);
-			ss.specificData = stream.ToArray();
-		}
-		return ss;
-	}
 
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss,sblock);
-		GameMaster.DeserializeByteArray(ss.specificData, ref tickTimer);
-	}
-	#endregion
+    override public StructureSerializer Save()
+    {
+        StructureSerializer ss = GetStructureSerializer();
+
+        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+        {
+            WorkBuildingSerializer wbs = GetWorkBuildingSerializer();
+            wbs.workflowToProcess = tickTimer;// подмена неиспользуемого поля
+            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, wbs);
+            ss.specificData = stream.ToArray();
+        }
+        return ss;
+    }
+
+    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
+    {
+        LoadStructureData(ss, sblock);
+        WorkBuildingSerializer wbs = new WorkBuildingSerializer();
+        GameMaster.DeserializeByteArray<WorkBuildingSerializer>(ss.specificData, ref wbs);
+        tickTimer = (int)wbs.workflowToProcess; // подмена неиспользуемого поля
+        wbs.workflowToProcess = 1;
+        LoadWorkBuildingData(wbs);        
+    }
+    #endregion
 
     public int GetFuelResourseID() { return fuel.ID; }
 

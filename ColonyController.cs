@@ -19,7 +19,7 @@ public sealed class ColonyControllerSerializer
 public sealed class ColonyController : MonoBehaviour
 {
     const float HOUSING_TIME = 5;
-    const float HOUSE_PROBLEM_HAPPINESS_LIMIT = 0.3f, FOOD_PROBLEM_HAPPINESS_LIMIT = 0.1f, // happiness wouldnt raised upper this level if condition is not met
+    const float HOUSING_PROBLEM_HAPPINESS = 0.2f, FOOD_PROBLEM_HAPPINESS = 0.1f, // happiness wouldnt raised upper this level if condition is not met
     HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
 
     public string cityName { get; private set; }
@@ -49,7 +49,7 @@ public sealed class ColonyController : MonoBehaviour
     float peopleSurplus = 0, housingTimer = 0;
     public int totalLivespace { get; private set; }
     List<Hospital> hospitals;
-    private float starvationTimer;
+    private float starvationTimer, targetHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false;
     private const byte MAX_HOUSING_LEVEL = 5;
 
@@ -92,7 +92,7 @@ public sealed class ColonyController : MonoBehaviour
     void Update()
     {
         if (GameMaster.gameSpeed == 0 | hq == null | GameMaster.loading) return;
-        float t = Time.deltaTime * GameMaster.gameSpeed;
+        float t = Time.deltaTime * GameMaster.gameSpeed;        
 
         if (gears_coefficient > 1)
         {
@@ -142,8 +142,10 @@ public sealed class ColonyController : MonoBehaviour
                 }
             }
         }
+
+        float happinessIncreaseMultiplier = 1, happinessDecreaseMultiplier = 1;
         //   STARVATION PROBLEM
-        float foodSupplyHappiness = 1;
+        float foodSupplyHappiness = 0;
         {
             if (starvationTimer > 0)
             {
@@ -154,7 +156,7 @@ public sealed class ColonyController : MonoBehaviour
                     {
                         citizenCount = 0;
                         PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
-                        GameMaster.realMaster.MakeGameOver(Localization.GetDefeatReason(DefeatReason.NoCitizen));
+                        GameMaster.realMaster.GameOver(GameEndingType.ColonyLost);
                         return;
                     }
                     else
@@ -165,17 +167,23 @@ public sealed class ColonyController : MonoBehaviour
                         PoolMaster.current.CitizenLeaveEffect(houses[(int)(Random.value * (houses.Count - 1))].transform.position);
                     }
                 }
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT;
+                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS;
+                happinessDecreaseMultiplier++;
                 realBirthrate = 0;
             }
             else
             {
                 float monthFoodReserves = citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS_LIMIT + (1 - FOOD_PROBLEM_HAPPINESS_LIMIT) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
+                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS + (1 - FOOD_PROBLEM_HAPPINESS) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
+                if (foodSupplyHappiness > 1)
+                {
+                    foodSupplyHappiness = 1;
+                    happinessIncreaseMultiplier++;
+                }
             }
         }
         //HOUSING PROBLEM
-        float housingHappiness = 1;
+        float housingHappiness = 0;
         {
             housingTimer -= t;
             if (housingTimer <= 0)
@@ -188,23 +196,15 @@ public sealed class ColonyController : MonoBehaviour
             }
             if (housingLevel == 0)
             {
-                housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT;
+                housingHappiness = HOUSING_PROBLEM_HAPPINESS;
+                happinessDecreaseMultiplier++;
             }
             else
             {
-                if (totalLivespace < citizenCount)
-                {
-                    float demand = citizenCount - totalLivespace;
-                    housingHappiness = HOUSE_PROBLEM_HAPPINESS_LIMIT * ( 2 - demand / citizenCount);
-                }
-                else
-                {
-                    byte l = hq.level;
-                    if (l > MAX_HOUSING_LEVEL) l = MAX_HOUSING_LEVEL;
-                    housingHappiness = housingLevel / l;
-                }
+                byte l = hq.level;
+                if (l > MAX_HOUSING_LEVEL) l = MAX_HOUSING_LEVEL;
+                housingHappiness = housingLevel / l * (1 - HOUSING_PROBLEM_HAPPINESS) + HOUSING_PROBLEM_HAPPINESS;
             }
-            housingHappiness = Mathf.Clamp(housingHappiness, HOUSE_PROBLEM_HAPPINESS_LIMIT, 1);
         }
         //HEALTHCARE
         if (health_coefficient < 1 && hospitals_coefficient > 0)
@@ -214,11 +214,15 @@ public sealed class ColonyController : MonoBehaviour
         float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT) * hospitals_coefficient;
         healthcareHappiness *= health_coefficient;
         // HAPPINESS CALCULATION
-        happiness_coefficient = 1;
-        if (housingHappiness < happiness_coefficient) happiness_coefficient = housingHappiness;
-        if (healthcareHappiness < happiness_coefficient) happiness_coefficient = healthcareHappiness;
-        if (foodSupplyHappiness < happiness_coefficient) happiness_coefficient = foodSupplyHappiness;
-        happiness_coefficient = Mathf.Clamp01(happiness_coefficient);
+        targetHappiness = 1;
+        if (housingHappiness < targetHappiness) targetHappiness = housingHappiness;
+        if (healthcareHappiness < targetHappiness) targetHappiness = healthcareHappiness;
+        if (foodSupplyHappiness < targetHappiness) targetHappiness = foodSupplyHappiness;
+        if (happiness_coefficient != targetHappiness)
+        {
+            if (happiness_coefficient > targetHappiness) happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * t * happinessDecreaseMultiplier);
+            else happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * t * happinessIncreaseMultiplier);
+        }
 
         //  BIRTHRATE
         {

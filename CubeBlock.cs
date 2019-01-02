@@ -265,7 +265,7 @@ public class CubeBlock : Block
             {
                 if (lowerBlock.type == BlockType.Surface)
                 {
-                    if (!(lowerBlock as SurfaceBlock).haveSupportingStructure) myChunk.ReplaceBlock(lowerBlock.pos, BlockType.Cave, lowerBlock.material_id, material_id, false);
+                    if (!(lowerBlock as SurfaceBlock).haveSupportingStructure & myChunk.CalculateSupportPoints(lowerBlock.pos.x, lowerBlock.pos.y, lowerBlock.pos.z) > Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING) myChunk.ReplaceBlock(lowerBlock.pos, BlockType.Cave, lowerBlock.material_id, material_id, false);
                 }
                 //проверка на верхний блок не нужна, так как добывается открыто
                 myChunk.ReplaceBlock(pos, BlockType.Surface, material_id, false);

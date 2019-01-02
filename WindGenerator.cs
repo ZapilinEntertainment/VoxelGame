@@ -34,9 +34,17 @@ public class WindGenerator : Building {
 	void Update() {
         if (!subscribedToUpdate) return;
 		if ( rotateHead ) {
-            Vector3 newDir = new Vector3(-windDirection.x, 0, -windDirection.y).normalized;
-            head.transform.forward = Vector3.MoveTowards(head.transform.forward, newDir, HEAD_ROTATE_SPEED * Time.deltaTime);            
-			if (head.transform.forward == newDir) rotateHead = false;
+            Vector3 newDir = windDirection.magnitude != 0 ? new Vector3(-windDirection.x, 0, -windDirection.y).normalized : Vector3.zero;
+            if (newDir != Vector3.zero)
+            {
+                head.transform.forward = Vector3.MoveTowards(head.transform.forward, newDir, HEAD_ROTATE_SPEED * Time.deltaTime);
+                if (head.transform.forward == newDir) rotateHead = false;
+            }
+            else
+            {
+                rotateHead = false;
+                rotateScrew = false;
+            }
 		}
 		if (rotateScrew) {
 			screw.transform.Rotate( Vector3.forward * windDirection.magnitude * SCREW_ROTATE_SPEED * Time.deltaTime * GameMaster.gameSpeed);
@@ -45,12 +53,12 @@ public class WindGenerator : Building {
 
 	public void WindUpdate( Vector2 direction) {
 		windDirection = direction;
-		if (windDirection.magnitude == 0) {
-			if ( rotateScrew ) {
-				rotateScrew = false;
+		if (windDirection == Vector2.zero) {
+            rotateScrew = false;
+            if ( rotateScrew ) {
 				energySurplus = 0;
                 GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-				}
+			}
 			rotateHead = false;
 		}
 		else {

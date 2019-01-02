@@ -515,7 +515,7 @@ public class Quest {
                             if (conditionsMet == 2 & hotelFound)
                             {
                                 MakeQuestCompleted();
-                                GameMaster.realMaster.MakeGameCompleted(Localization.GetWinNote(WinNote.TransportHubVictory));
+                                GameMaster.realMaster.GameOver(GameEndingType.TransportHubVictory);
                             }
                         }
                         break;
@@ -642,7 +642,7 @@ public class Quest {
             case ProgressQuestID.Progress_100Fuel:
                 iconRect = new Rect(0, 0, 1, 1);
                 icon = UIController.current.resourcesTexture;
-                iconRect = ResourceType.GetTextureRect(ResourceType.FUEL_ID);
+                iconRect = ResourceType.GetResourceIconRect(ResourceType.FUEL_ID);
                 break;
             case ProgressQuestID.Progress_XStation:
                 iconRect = new Rect(0, 0, 1, 1);

@@ -11,7 +11,7 @@ public sealed class Workshop : WorkBuilding {
     public static Workshop current;
 
     public WorkshopMode mode { get; private set; }
-    private const float GEARS_UPGRADE_SPEED = 0.001f;
+    private const float GEARS_UPGRADE_SPEED = 0.0001f;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -34,10 +34,14 @@ public sealed class Workshop : WorkBuilding {
     {
         if (isActive & isEnergySupplied)
         {
-            if (colony.gears_coefficient < GameConstants.GEARS_UP_LIMIT)
-            {
-                colony.gears_coefficient += workSpeed *GEARS_UPGRADE_SPEED; 
-            }
+            switch (mode) {
+                case WorkshopMode.GearsUpgrade:
+                    if (colony.gears_coefficient < GameConstants.GEARS_UP_LIMIT)
+                    {
+                        colony.gears_coefficient += workSpeed * GEARS_UPGRADE_SPEED;
+                    }
+                    break;
+        }
         }
     }
 

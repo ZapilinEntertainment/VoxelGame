@@ -16,7 +16,7 @@ public class ResourceType {
 	METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25, SNOW_ID = 26;
 	public static readonly ResourceType[] resourceTypesArray, materialsForCovering, blockMaterials;
 	public static float[] prices, demand;
-    public const int RTYPES_COUNT = 27; 
+    public const int RTYPES_COUNT = 27, ADVANCED_COVERING_ID = -2; 
 
 	//проверь при добавлении
 	//- ID
@@ -142,7 +142,8 @@ public class ResourceType {
 
                 case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf, illumination);
                 case GRAPHONIUM_ID: return PoolMaster.energy_material;
-            }
+                 case ADVANCED_COVERING_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Basis, mf, illumination);
+        }
 	}
 
     /// <summary>
@@ -150,7 +151,7 @@ public class ResourceType {
     /// </summary>
     /// <param name="f_id"></param>
     /// <returns></returns>
-	public static Rect GetTextureRect (int f_id) {
+	public static Rect GetResourceIconRect (int f_id) {
 		float p = 0.125f;
 		switch (f_id) {
 		default:	return new Rect(0,0,p,p);

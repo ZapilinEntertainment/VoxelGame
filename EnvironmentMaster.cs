@@ -59,9 +59,12 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         if (windVector != newWindVector)
         {
-            float t = WIND_CHANGE_STEP * Time.deltaTime;
+            float t = WIND_CHANGE_STEP * Time.deltaTime;            
             windVector = Vector3.RotateTowards(windVector, newWindVector, t, t);
-            cloudEmitter.transform.forward = new Vector3(windVector.x, 0, windVector.y);
+            if (windVector.magnitude != 0)
+            {
+                cloudEmitter.transform.forward = new Vector3(windVector.x, 0, windVector.y);
+            }
             float windpower = windVector.magnitude;
             Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windpower);
             cloudEmitterMainModule.simulationSpeed = windpower;
@@ -92,11 +95,12 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         {
             cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity);
         }
-        cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x, 0, windVector.y), Vector3.up);
+        if (windVector != Vector2.zero)  cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x, 0, windVector.y), Vector3.up);
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         float windPower = windVector.magnitude;
         cloudEmitterMainModule.simulationSpeed = windPower;
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);
         prepared = true;
+        if (WindUpdateEvent != null) WindUpdateEvent(windVector);
     }
 }

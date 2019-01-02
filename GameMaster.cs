@@ -34,6 +34,7 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
 public enum WorkType : byte {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 public enum GameLevel : byte { Menu, Playable, Editor}
+public enum GameEndingType : byte { Default, ColonyLost, TransportHubVictory, ConsumedByReal, ConsumedByLastSector}
 
 /// -----------------------------------------------------------------------------
 
@@ -56,6 +57,10 @@ public sealed class GameMaster : MonoBehaviour {
     public static Audiomaster audiomaster;
 
     private static byte pauseRequests = 0;
+
+#pragma warning disable 0649
+    public MeshRenderer upperHemisphere, lowerHemisphere;
+#pragma warning restore 0649
 
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
@@ -92,6 +97,9 @@ public sealed class GameMaster : MonoBehaviour {
 	public bool generateChunk = true;
     public byte test_size = 100;
     public bool _editMode = false;
+    //
+    private byte upSkyStatus = 0, lowSkyStatus = 0;
+    private float worldConsumingTimer = 0;
 
     #region static functions
     public static void SetSavename(string s)
@@ -334,6 +342,127 @@ public sealed class GameMaster : MonoBehaviour {
     #region updates
     private void Update()
     {
+        if (colonyController != null & upperHemisphere != null & lowerHemisphere != null)
+        {
+            worldConsumingTimer -= Time.deltaTime * gameSpeed;
+            if (worldConsumingTimer <= 0)
+            {
+                float ch = colonyController.happiness_coefficient;
+                byte newUpSkyStatus = upSkyStatus, newLowSkyStatus = lowSkyStatus;
+                if (ch > 0.5f)
+                {
+                    if (ch > GameConstants.LSECTOR_CONSUMING_VAL_2)
+                    {
+                        if (ch > GameConstants.LSECTOR_CONSUMING_VAL_3)
+                        {
+                            newUpSkyStatus = 3;
+                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_3;
+                        }
+                        else
+                        {
+                            newUpSkyStatus = 2;
+                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_2;
+                        }
+                    }
+                    else
+                    {
+                        if (ch > GameConstants.LSECTOR_CONSUMING_VAL_1)
+                        {
+                            newUpSkyStatus = 1;
+                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_1;
+                        }
+                        else
+                        {
+                            newUpSkyStatus = 0;
+                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_0;
+                        }
+                    }
+                    newLowSkyStatus = 0;
+                }
+                else
+                {
+                    if (ch > GameConstants.RSPACE_CONSUMING_VAL_1)
+                    {
+                        newLowSkyStatus = 0;
+                        worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_0;
+                    }
+                    else
+                    {
+                        if (ch < GameConstants.RSPACE_CONSUMING_VAL_2)
+                        {
+                            if (ch < GameConstants.RSPACE_CONSUMING_VAL_3)
+                            {
+                                newLowSkyStatus = 3;
+                                worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_3;
+                            }
+                            else
+                            {
+                                newLowSkyStatus = 2;
+                                worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_2;
+                            }
+                        }
+                        else
+                        {
+                            newLowSkyStatus = 1;
+                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_1;
+                        }
+                    }
+                    newUpSkyStatus = 0;
+                }
+                if (newUpSkyStatus != upSkyStatus)
+                {
+                    switch (newUpSkyStatus)
+                    {
+                        case 1:
+                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky1");
+                            break;
+                        case 2:
+                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky2");
+                            break;
+                        case 3:
+                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky3");
+                            break;
+                        default:
+                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
+                            break;
+                    }
+                    upSkyStatus = newUpSkyStatus;
+                }
+                else
+                {
+                    if (upSkyStatus == 3)
+                    {
+                        GameOver(GameEndingType.ConsumedByReal);
+                    }
+                }
+                if (newLowSkyStatus != lowSkyStatus)
+                {
+                    switch (newLowSkyStatus)
+                    {
+                        case 1:
+                            lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky1");
+                            break;
+                        case 2:
+                            lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky2");
+                            break;
+                        case 3:
+                            lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky3");
+                            break;
+                        default:
+                            lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
+                            break;
+                    }
+                    lowSkyStatus = newLowSkyStatus;
+                }
+                else
+                {
+                    if (newLowSkyStatus == 3)
+                    {
+                        GameOver(GameEndingType.ConsumedByLastSector);
+                    }
+                }
+            }
+        }
         //testzone
         if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
         if (Input.GetKeyDown("c"))
@@ -642,27 +771,39 @@ public sealed class GameMaster : MonoBehaviour {
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
     }
 
-    public void MakeGameCompleted(string note)
+    public void GameOver(GameEndingType endType)
     {
         gameSpeed = 0;
         UIController.current.FullDeactivation();
-        Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
-        endpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = note;
+
         double score = new ScoreCalculator().GetScore(this);
-        endpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-        endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
-        endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>().onClick.AddListener( () => { ContinueGameAfterEnd(endpanel.gameObject); });
-    }
-    public void MakeGameOver(string reason)
-    {
-        gameSpeed = 0;
-        StopAllCoroutines();
-        UIController.current.FullDeactivation();
-        Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
-        failpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
-        double score = new ScoreCalculator().GetScore(this);
-        failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-        failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
+        Highscore.AddHighscore(new Highscore(colonyController.cityName, score, endType));
+
+        string reason = Localization.GetEndingTitle(endType);
+        switch (endType)
+        {
+            case GameEndingType.TransportHubVictory:
+                {
+                    Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
+                    endpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
+                    endpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+                    endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
+                    endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => { ContinueGameAfterEnd(endpanel.gameObject); });
+                    break;
+                }
+            case GameEndingType.ColonyLost:
+            case GameEndingType.Default:
+            case GameEndingType.ConsumedByReal:
+            case GameEndingType.ConsumedByLastSector:
+            default:
+                {
+                    Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
+                    failpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
+                    failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+                    failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
+                    break;
+                }
+        }
     }
     public void ReturnToMenuAfterGameOver()
     {
