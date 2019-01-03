@@ -2,13 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public sealed class EnvironmentMasterSerializer
-{
-    public float newWindVector_x, newWindVector_y, windVector_x, windVector_y;
-    public float environmentalConditions, windTimer;
-}
-
 public sealed class EnvironmentMaster : MonoBehaviour {
     [SerializeField] private Vector2 newWindVector;
 
@@ -72,23 +65,21 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
     }
 
-    public EnvironmentMasterSerializer Save()
+    public void Save( System.IO.FileStream fs)
     {
-        EnvironmentMasterSerializer ems = new EnvironmentMasterSerializer();
-        ems.newWindVector_x = newWindVector.x;
-        ems.newWindVector_y = newWindVector.y;
-        ems.windVector_x = windVector.x;
-        ems.windVector_y = windVector.y;
-        ems.environmentalConditions = environmentalConditions;
-        ems.windTimer = windTimer;
-        return ems;
+        fs.Write(System.BitConverter.GetBytes(newWindVector.x),0,4); // 0 - 3
+        fs.Write(System.BitConverter.GetBytes(newWindVector.y), 0, 4);// 4 - 7
+        fs.Write(System.BitConverter.GetBytes(windVector.x), 0, 4);   // 8 - 11
+        fs.Write(System.BitConverter.GetBytes(windVector.y), 0, 4);  // 12 - 15
+        fs.Write(System.BitConverter.GetBytes(environmentalConditions), 0, 4); // 16 - 19
+        fs.Write(System.BitConverter.GetBytes(windTimer), 0, 4);  // 20 - 23
     }
-    public void Load(EnvironmentMasterSerializer ems)
+    public int Load(byte[] data, int startIndex)
     {
-        newWindVector = new Vector2(ems.newWindVector_x, ems.newWindVector_y);
-        windVector = new Vector2(ems.windVector_x, ems.windVector_y);
-        environmentalConditions = ems.environmentalConditions;
-        windTimer = ems.windTimer;
+        newWindVector = new Vector2();
+        windVector = new Vector2(System.BitConverter.ToSingle(data, startIndex + 8), System.BitConverter.ToSingle(data, startIndex + 12));
+        environmentalConditions = System.BitConverter.ToSingle(data, startIndex + 16);
+        windTimer = System.BitConverter.ToSingle(data, startIndex + 20);
 
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
         if (cloudEmitter == null)
@@ -102,5 +93,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);
         prepared = true;
         if (WindUpdateEvent != null) WindUpdateEvent(windVector);
+        return startIndex + 24;
     }
 }

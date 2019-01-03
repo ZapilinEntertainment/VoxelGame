@@ -1,15 +1,7 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
-public enum FactorySpecialization {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher}
-
-[System.Serializable]
-public class FactorySerializer {
-    public FactoryProductionMode productionMode;
-	public WorkBuildingSerializer workBuildingSerializer;
-	public int recipeID, productionModeValue;
-	public float inputResourcesBuffer,outputResourcesBuffer;
-}
-
+public enum FactorySpecialization : byte {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher}
 public enum FactoryProductionMode : byte { NoLimit, Limit, Iterations} // if changing, change UIFactoryObserver prefab also
 
 public class Factory : WorkBuilding {
@@ -193,42 +185,37 @@ public class Factory : WorkBuilding {
     }
 
     #region save-load system
-    public override StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetFactorySerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
+    public override List<byte> Save() {
+        var data = base.Save();
+        data.AddRange(SerializeFactory());
+		return data;
+	}
+    protected List<byte> SerializeFactory()
+    {
+        var data = new List<byte>() { (byte)productionMode };
+        data.AddRange(System.BitConverter.GetBytes(recipe.ID));
+        data.AddRange(System.BitConverter.GetBytes(inputResourcesBuffer));
+        data.AddRange(System.BitConverter.GetBytes(outputResourcesBuffer));
+        data.AddRange(System.BitConverter.GetBytes(productionModeValue));
+        return data;
+    }
+
+    override public int Load (byte[] data, int startIndex, SurfaceBlock sblock) {
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        startIndex = LoadBuildingData(data, startIndex);
+        int endIndex = LoadFactoryData(data, startIndex + WorkBuilding.WORKBUILDING_SERIALIZER_LENGTH);
+        LoadWorkBuildingData(data, startIndex);
+        return endIndex;
 	}
 
-	override public void Load (StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		FactorySerializer fs = new FactorySerializer();
-		GameMaster.DeserializeByteArray(ss.specificData, ref fs);
-		LoadFactoryData(fs);
-	}
-
-	protected void LoadFactoryData(FactorySerializer fs) {
-        SetRecipe(Recipe.GetRecipeByNumber(fs.recipeID));
-        inputResourcesBuffer = fs.inputResourcesBuffer;
-        outputResourcesBuffer = fs.outputResourcesBuffer;
-        productionMode = fs.productionMode;
-        productionModeValue = fs.productionModeValue;
-        LoadWorkBuildingData(fs.workBuildingSerializer);		
-	}
-
-	protected FactorySerializer GetFactorySerializer() {
-		FactorySerializer fs = new FactorySerializer();
-		fs.workBuildingSerializer = GetWorkBuildingSerializer();
-		fs.recipeID = recipe.ID;
-		fs.inputResourcesBuffer = inputResourcesBuffer;
-		fs.outputResourcesBuffer = outputResourcesBuffer;
-        fs.productionMode = productionMode;
-        fs.productionModeValue = productionModeValue;
-		return fs;
-	}
+	protected int LoadFactoryData(byte[] data, int startIndex) {
+        SetRecipe(Recipe.GetRecipeByNumber(System.BitConverter.ToInt32(data, startIndex + 1)));
+        inputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 5);
+        outputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 9);
+        productionMode = (FactoryProductionMode)data[startIndex];
+        productionModeValue = System.BitConverter.ToInt32(data, startIndex + 13);
+        return startIndex + 17;
+	}	
 	#endregion
 
     public virtual Recipe[] GetFactoryRecipes()

@@ -1,16 +1,5 @@
 ﻿using UnityEngine;
-
-[System.Serializable]
-public class StructureSerializer
-{
-    public PixelPosByte pos;
-    public bool indestructible;
-    public float hp, maxHp;
-    public int id;
-    public byte[] specificData;
-    public byte modelRotation;
-}
-
+using System.Collections.Generic;
 public class Structure : MonoBehaviour
 {
     public SurfaceBlock basement { get; protected set; }
@@ -51,7 +40,7 @@ public class Structure : MonoBehaviour
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75;
-    public const int TOTAL_STRUCTURES_COUNT = 76;
+    public const int TOTAL_STRUCTURES_COUNT = 76, STRUCTURE_SERIALIZER_LENGTH = 16, SERIALIZER_ID_POSITION = 12;    
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
     public static UIStructureObserver structureObserver;
@@ -175,6 +164,11 @@ public class Structure : MonoBehaviour
             transform.localRotation = Quaternion.AngleAxis(modelRotation * 45, Vector3.up);
         }
     }
+    public void SetHP(float t)
+    {
+        hp = t;
+        if (hp == 0) Annihilate(false);
+    }
 
     public static Structure GetStructureByID(int i_id)
     {
@@ -287,9 +281,9 @@ public class Structure : MonoBehaviour
             case HOUSING_MAST_6_ID:
                 s = new GameObject("Housing mast").AddComponent<House>(); break;
             case DOCK_ADDON_1_ID:
-                s = new GameObject("Dock Addon 1").AddComponent<DockAddon>(); break; 
+                s = new GameObject("Dock Addon 1").AddComponent<DockAddon>(); break;
             case DOCK_ADDON_2_ID:
-                s = new GameObject("Dock Addon 2").AddComponent<DockAddon>(); break; 
+                s = new GameObject("Dock Addon 2").AddComponent<DockAddon>(); break;
             default: return null;
         }
         s.id = i_id;
@@ -1111,11 +1105,11 @@ public class Structure : MonoBehaviour
             case RECRUITING_CENTER_4_ID: return new Rect(0, 3 * p, p, p);
             case EXPEDITION_CORPUS_4_ID: return new Rect(p, 3 * p, p, p);
             case QUANTUM_TRANSMITTER_4_ID: return new Rect(2 * p, 3 * p, p, p);
-            case REACTOR_BLOCK_5_ID: return new Rect(3 * p, 3 *p, p, p);
-            case FOUNDATION_BLOCK_5_ID: return new Rect(4 * p, 3 *p, p,p);
+            case REACTOR_BLOCK_5_ID: return new Rect(3 * p, 3 * p, p, p);
+            case FOUNDATION_BLOCK_5_ID: return new Rect(4 * p, 3 * p, p, p);
             case CONNECT_TOWER_6_ID: return new Rect(5 * p, 3 * p, p, p);
             case CONTROL_CENTER_6_ID: return new Rect(6 * p, 3 * p, p, p);
-            case HOTEL_BLOCK_6_ID: return new Rect(7 *p, 3 *p,p,p);
+            case HOTEL_BLOCK_6_ID: return new Rect(7 * p, 3 * p, p, p);
             case HOUSING_MAST_6_ID: return new Rect(0, 2 * p, p, p);
             case DOCK_ADDON_1_ID:
             case DOCK_ADDON_2_ID:
@@ -1198,7 +1192,7 @@ public class Structure : MonoBehaviour
             visible = x;
             if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(visible);
         }
-    }   
+    }
 
     virtual public UIObserver ShowOnGUI()
     {
@@ -1300,37 +1294,45 @@ public class Structure : MonoBehaviour
     }
 
     #region save-load system
-    public virtual StructureSerializer Save()
+    public virtual List<byte> Save()
     {
-        return GetStructureSerializer();
+        return SerializeStructure();
     }
 
-    public virtual void Load(StructureSerializer ss, SurfaceBlock sblock)
+    public virtual int Load(byte[] data, int startIndex, SurfaceBlock sblock)
     {
-        LoadStructureData(ss, sblock);
+        return LoadStructureData(data, startIndex, sblock);
     }
     // в финальном виде копипастить в потомков
-    protected void LoadStructureData(StructureSerializer ss, SurfaceBlock sblock)
+    protected int LoadStructureData(byte[] data, int startIndex, SurfaceBlock sblock)
     {
-        //исключен в harvestable resource. load
+        //copy in harvestable resource.load - changed
         Prepare();
-        modelRotation = ss.modelRotation;
-        indestructible = ss.indestructible;
-        SetBasement(sblock, ss.pos);
-        maxHp = ss.maxHp; hp = ss.maxHp;
+        modelRotation = data[startIndex + 2];
+        indestructible = (data[startIndex + 3] == 1);
+        SetBasement(sblock, new PixelPosByte(data[startIndex], data[startIndex + 1]));
+        hp = System.BitConverter.ToSingle(data, startIndex + 4);
+        maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
+        return startIndex + STRUCTURE_SERIALIZER_LENGTH;
     }
 
     // в финальном виде копипастить в потомков
-    protected StructureSerializer GetStructureSerializer()
+    protected List<byte> SerializeStructure()
     {
-        StructureSerializer ss = new StructureSerializer();
-        ss.pos = new PixelPosByte(innerPosition.x, innerPosition.z);
-        ss.indestructible = indestructible;
-        ss.hp = hp;
-        ss.maxHp = maxHp;
-        ss.modelRotation = modelRotation;
-        ss.id = id;
-        return ss;
+        byte one = 1, zero = 0;
+        List<byte> data = new List<byte> {
+            innerPosition.x, innerPosition.z, // 0 , 1
+            modelRotation,                      // 2
+            indestructible ? one : zero     //3
+        };
+        // little endian check ignoring
+
+        data.AddRange(System.BitConverter.GetBytes(hp)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(maxHp)); // 8 - 11
+        data.AddRange(System.BitConverter.GetBytes(id));    // 12 - 15
+        //SERIALIZER_ID_POSITION = 12
+        return data;
+        //SERIALIZER_LENGTH = 16
     }
     #endregion
 }

@@ -1,14 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-[System.Serializable]
-public sealed class HangarSerializer
-{
-    public WorkBuildingSerializer workBuildingSerializer;
-    public bool constructing;
-    public int shuttle_id;
-}
-
 public sealed class Hangar : WorkBuilding
 {
     public static List<Hangar> hangarsList;
@@ -358,46 +350,7 @@ public sealed class Hangar : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
-    }
-
-    #region save-load system
-    override public StructureSerializer Save()
-    {
-        StructureSerializer ss = GetStructureSerializer();
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHangarSerializer());
-            ss.specificData = stream.ToArray();
-        }
-        return ss;
-    }
-
-    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
-    {
-        LoadStructureData(ss, sblock);
-        HangarSerializer hs = new HangarSerializer();
-        GameMaster.DeserializeByteArray<HangarSerializer>(ss.specificData, ref hs);
-        constructing = hs.constructing;
-        LoadWorkBuildingData(hs.workBuildingSerializer);
-        shuttle = Shuttle.GetShuttle(hs.shuttle_id);
-        shuttle.AssignToHangar(this);
-        if (shuttle.status == ShipStatus.Docked)
-        {
-            shuttle.transform.parent = transform;
-            shuttle.SetVisibility(false);
-        }
-        
-    }
-
-    HangarSerializer GetHangarSerializer()
-    {
-        HangarSerializer hs = new HangarSerializer();
-        hs.workBuildingSerializer = GetWorkBuildingSerializer();
-        hs.constructing = constructing;
-        hs.shuttle_id = (shuttle == null ? -1 : shuttle.ID);
-        return hs;
-    }
-    #endregion
+    }  
 
     override public void Annihilate(bool forced)
     {
@@ -415,4 +368,42 @@ public sealed class Hangar : WorkBuilding
         if (shuttle != null) shuttle.Deconstruct();
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = base.Save();
+        data.AddRange(SerializeHangar());
+        return data;
+    }
+    private List<byte> SerializeHangar()
+    {
+        int shuttleIndex = -1;
+        if (shuttle != null) shuttleIndex = shuttle.ID;
+        var data =  new List<byte>() {   constructing ? (byte)1 : (byte)0};
+        data.AddRange(System.BitConverter.GetBytes(shuttleIndex));
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        startIndex = LoadBuildingData(data, startIndex);
+        constructing = data[startIndex + WorkBuilding.WORKBUILDING_SERIALIZER_LENGTH] == 1;
+        startIndex = LoadWorkBuildingData(data,startIndex);
+        int shuttleID = System.BitConverter.ToInt32(data, startIndex + 1);
+        if (shuttleID != -1)
+        {
+            shuttle = Shuttle.GetShuttle(shuttleID);
+            shuttle.AssignToHangar(this);
+            if (shuttle.status == ShipStatus.Docked)
+            {
+                shuttle.transform.parent = transform;
+                shuttle.SetVisibility(false);
+            }
+        }
+        else shuttle = null;
+        return startIndex + 5;
+    }  
+    #endregion
 }

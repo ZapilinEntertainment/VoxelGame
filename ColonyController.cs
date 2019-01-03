@@ -2,19 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public sealed class ColonyControllerSerializer
-{
-    public StorageSerializer storageSerializer;
-    public float gears_coefficient, labourEfficientcy_coefficient,
-    happiness_coefficient, health_coefficient, birthrateCoefficient, realBirthrate;
-
-    public float energyStored, energyCrystalsCount;
-    public WorksiteSerializer[] worksites;
-
-    public int freeWorkers, citizenCount;
-    public float peopleSurplus = 0, housingTimer = 0, starvationTimer, real_birthrate = 0;
-}
 
 public sealed class ColonyController : MonoBehaviour
 {

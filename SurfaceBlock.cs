@@ -634,71 +634,71 @@ public class SurfaceBlock : Block {
 	}
 
 	#region save-load system
-	override public BlockSerializer Save() {
-		BlockSerializer bs = GetBlockSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetSurfaceBlockSerializer());
-			bs.specificData =  stream.ToArray();
-		}
-		return bs;
-	} 
-
-	public void LoadSurfaceBlockData(SurfaceBlockSerializer sbs) { 
-        if (sbs.haveGrassland) {
-            grassland = Grassland.CreateOn(this);
-			grassland.Load(sbs.grasslandSerializer);
-		}
-        if (sbs.haveStructures)
+	override public void Save(System.IO.FileStream fs) {
+        base.Save(fs);
+        if (grassland != null)
         {
-            foreach (StructureSerializer ss in sbs.structuresList)
+            fs.WriteByte(1);
+            fs.Write(grassland.Save().ToArray(), 0, Grassland.SERIALIZER_LENGTH);
+        }
+        else fs.WriteByte(0);
+
+        int structuresCount = surfaceObjects.Count;
+        if (structuresCount > 0)
+        {
+            structuresCount = 0;
+            while (structuresCount < surfaceObjects.Count)
             {
-                if (ss.id != Structure.PLANT_ID)
+                if (surfaceObjects[structuresCount] == null) surfaceObjects.RemoveAt(structuresCount);
+                else structuresCount++;
+            }
+        }
+        fs.Write(System.BitConverter.GetBytes(structuresCount),0,4);
+        if (structuresCount > 0)
+        {
+            foreach (Structure s in surfaceObjects)
+            {
+                var strData = s.Save();
+                if (strData != null && strData.Count > 0)
                 {
-                    if (ss.id != Structure.CONTAINER_ID)
-                    {
-                        Structure s = Structure.GetStructureByID(ss.id);
-                        if (s != null) s.Load(ss, this);
-                    }
-                    else HarvestableResource.LoadContainer(ss, this);
-                }
-                else
-                {
-                    PlantSerializer ps = new PlantSerializer();
-                    GameMaster.DeserializeByteArray<PlantSerializer>(ss.specificData, ref ps);
-                    Plant.Load(ss, ps, this);
+                    fs.Write(strData.ToArray(), 0, strData.Count);
                 }
             }
         }
     }
 
-	public SurfaceBlockSerializer GetSurfaceBlockSerializer() {
-		SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();
-		if (grassland != null) {
-			sbs.haveGrassland = true; 
-			sbs.grasslandSerializer = grassland.Save();
-		}
-		else sbs.haveGrassland = false;
-		if (surfaceObjects.Count != 0) {
-			sbs.haveStructures = true;
-			sbs.structuresList = new List<StructureSerializer>();
-			int realCount = 0;
-			foreach (Structure s in surfaceObjects) {
-				if (s == null) continue;
-				StructureSerializer ss = s.Save();
-				if (ss == null) continue;
-				sbs.structuresList.Add(ss);
-				realCount++;
-			}
-            if (realCount == 0)
+    public int LoadSurfaceBlockData(byte[] data, int startIndex) {
+        int readIndex = startIndex;
+        if (data[startIndex] == 1)
+        {
+            grassland = Grassland.CreateOn(this);
+            readIndex = grassland.Load(data, startIndex + 1);
+        }
+        else readIndex++;
+
+        int structuresCount = System.BitConverter.ToInt32(data, readIndex);
+        if (structuresCount > 0)
+        {
+            readIndex += 4;
+            for (int i = 0; i < structuresCount; i++)
             {
-                sbs.haveStructures = false;
-                sbs.structuresList.Clear();
+                int id = System.BitConverter.ToInt32(data, readIndex + Structure.SERIALIZER_ID_POSITION);
+                if (id != Structure.PLANT_ID)
+                {
+                    if (id != Structure.CONTAINER_ID)
+                    {
+                        readIndex = Structure.GetStructureByID(id).Load(data,readIndex, this);
+                    }
+                    else readIndex = HarvestableResource.LoadContainer(data, readIndex, this);
+                }
+                else
+                {                    
+                    readIndex = Plant.LoadPlant(data, readIndex, this);
+                }
             }
-		}
-		else sbs.haveStructures = false;
-		return sbs;
-	}
+        }
+        return readIndex;
+    }    
     #endregion
 
     override public void Annihilate ()
@@ -714,12 +714,4 @@ public class SurfaceBlock : Block {
         myChunk.RemoveFromSurfacesList(this);
         Destroy(gameObject);
     }
-}
-
-[System.Serializable]
-public class SurfaceBlockSerializer {
-	public bool haveGrassland;
-	public GrasslandSerializer grasslandSerializer;
-	public bool haveStructures;
-	public List<StructureSerializer> structuresList;
 }

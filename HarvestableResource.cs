@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class HarvestableResourceSerializer
-{
-    public int mainResource_id;
-    public float count;
-    public ContainerModelType model_id;
-}
 public enum ContainerModelType : ushort { Default, Boulder, Pile, DeadOak4, DeadOak5, DeadOak6, BerryBush, DeadTreeOfLife, DeadLifestone }
+// при изменении размерности - изменить сериализатор
 
 public class HarvestableResource : Structure
 {
+    public new const int SERIALIZER_LENGTH = 10;
+
     public ResourceType mainResource { get; protected set; }
     public float resourceCount;
     private ContainerModelType model_id;
@@ -279,49 +275,55 @@ public class HarvestableResource : Structure
     }
 
     #region save-load system
-    override public StructureSerializer Save()
+    override public List<byte> Save()
     {
-        StructureSerializer ss = GetStructureSerializer();
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHarvestableResourceSerializer());
-            ss.specificData = stream.ToArray();
-        }
-        return ss;
+        List<byte> data = SerializeStructure();
+        data.AddRange(SerializeHarvestableResource());
+        return data;
     }
 
-    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
+    override public int Load(byte[] data,int startIndex, SurfaceBlock sblock)
     {
-        HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
-        GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
-        mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
-        resourceCount = hrs.count;
+        int containerStartIndex = startIndex + Structure.STRUCTURE_SERIALIZER_LENGTH;
+        mainResource = ResourceType.GetResourceTypeById( System.BitConverter.ToInt32(data, containerStartIndex) );
+        resourceCount = System.BitConverter.ToSingle(data, containerStartIndex + 4);
+
         SetModel();
-        modelRotation = ss.modelRotation;
-        indestructible = ss.indestructible;
-        SetBasement(sblock, ss.pos);
-        maxHp = ss.maxHp; hp = ss.maxHp;
+        modelRotation = data[startIndex + 2];
+        indestructible = (data[startIndex + 3] == 1);
+        SetBasement(sblock, new PixelPosByte(data[startIndex], data[startIndex + 1]));
+        hp = System.BitConverter.ToSingle(data, startIndex + 4);
+        maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
+
+        return containerStartIndex + SERIALIZER_LENGTH; 
     }
 
-    public static void LoadContainer(StructureSerializer ss, SurfaceBlock sblock)
+    public static int LoadContainer(byte[] data, int startIndex, SurfaceBlock sblock)
     {
-        HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
-        GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
-        HarvestableResource hr = ConstructContainer(hrs.model_id, ResourceType.GetResourceTypeById(hrs.mainResource_id), hrs.count);
-        hr.modelRotation = ss.modelRotation;
-        hr.indestructible = ss.indestructible;
-        hr.SetBasement(sblock, ss.pos);
-        hr.maxHp = ss.maxHp; hr.hp = ss.maxHp;
+        int containerStartIndex = startIndex + Structure.STRUCTURE_SERIALIZER_LENGTH;
+        ushort modelId = System.BitConverter.ToUInt16(data, containerStartIndex + 8);
+        ResourceType resType = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, containerStartIndex));
+        float count = System.BitConverter.ToSingle(data, containerStartIndex + 4);
+        HarvestableResource hr = ConstructContainer((ContainerModelType)modelId, resType, count);
+
+        hr.modelRotation = data[startIndex + 2];
+        hr.indestructible = (data[startIndex + 3] == 1);
+        hr.SetBasement(sblock, new PixelPosByte(data[startIndex], data[startIndex + 1]));
+        hr.hp = System.BitConverter.ToSingle(data, startIndex + 4);
+        hr.maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
+
+        return startIndex + 26;
     }
 
 
-    protected HarvestableResourceSerializer GetHarvestableResourceSerializer()
+    protected List<byte> SerializeHarvestableResource()
     {
-        HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
-        hrs.mainResource_id = mainResource.ID;
-        hrs.count = resourceCount;
-        hrs.model_id = model_id;
-        return hrs;
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(mainResource.ID));
+        data.AddRange(System.BitConverter.GetBytes(resourceCount));
+        data.AddRange(System.BitConverter.GetBytes((ushort)model_id));
+        // SERIALIZER_LENGTH = 10
+        return data;
     }
     #endregion
 }

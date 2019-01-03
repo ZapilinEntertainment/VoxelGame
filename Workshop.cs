@@ -1,11 +1,7 @@
-﻿public enum WorkshopMode : byte {NoActivity, GearsUpgrade}
-//при добавлении вписать в UIController.LocalizeTitles
+﻿using System.Collections.Generic;
 
-[System.Serializable]
-public class WorkshopSerializer {
-	public WorkBuildingSerializer workBuildingSerializer;
-	public WorkshopMode mode;
-}
+public enum WorkshopMode : byte {NoActivity, GearsUpgrade}
+//при добавлении вписать в UIController.LocalizeTitles
 
 public sealed class Workshop : WorkBuilding {	
     public static Workshop current;
@@ -51,33 +47,7 @@ public sealed class Workshop : WorkBuilding {
     {
        mode = (WorkshopMode)x;
     }
-    public void SetMode (WorkshopMode rsm) { mode = rsm; }
-
-	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorkshopSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		WorkshopSerializer rss = new WorkshopSerializer();
-		GameMaster.DeserializeByteArray<WorkshopSerializer>(ss.specificData, ref rss);
-		LoadWorkBuildingData(rss.workBuildingSerializer);
-		mode = rss.mode;
-	}
-
-	private WorkshopSerializer GetWorkshopSerializer() {
-		WorkshopSerializer rss = new WorkshopSerializer();
-		rss.workBuildingSerializer = GetWorkBuildingSerializer();
-		rss.mode = mode;
-		return rss;
-	}
-	#endregion
+    public void SetMode (WorkshopMode rsm) { mode = rsm; }	
 
     override public void Annihilate(bool forced)
     {
@@ -103,4 +73,20 @@ public sealed class Workshop : WorkBuilding {
         UIController.current.ActivateWorkshopPanel();
         return workbuildingObserver;
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = base.Save();
+        data.Add((byte)mode);
+        return data;
+    }
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = base.Load(data, startIndex, sblock);
+        mode = (WorkshopMode)data[startIndex];
+        return startIndex + 1;
+    }
+
+    #endregion
 }

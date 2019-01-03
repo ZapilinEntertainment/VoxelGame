@@ -1,10 +1,5 @@
 ﻿using UnityEngine;
-[System.Serializable]
-public class PlantSerializer {
-	public int plant_id;
-	public float lifepower, growth;
-	public byte stage;
-}
+using System.Collections.Generic;
 
 public abstract class Plant : Structure {
 	public int plant_ID{get;protected set;}
@@ -16,6 +11,7 @@ public abstract class Plant : Structure {
 
     public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2, 
         TOTAL_PLANT_TYPES = 2;  // при создании нового добавить во все статические функции внизу
+    public new const int SERIALIZER_LENGTH = 13;
     public static int existingPlantsMask = 0;
 
     public static Plant GetNewPlant(int i_plant_id)
@@ -114,39 +110,7 @@ public abstract class Plant : Structure {
 		stage = newStage;
 		growth = 0;
 	}
-	#endregion
-
-	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetPlantSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-	public static void Load (StructureSerializer i_ss, PlantSerializer i_ps, SurfaceBlock sblock) {
-        Plant p = GetNewPlant(i_ps.plant_id);
-		p.LoadStructureData(i_ss,sblock);
-        p.LoadPlantData(i_ps);
-    }
-
-	protected void LoadPlantData(PlantSerializer ps) {
-        lifepower = ps.lifepower;
-		SetStage(ps.stage);
-		growth = ps.growth;
-	}
-
-	protected PlantSerializer GetPlantSerializer() {
-		PlantSerializer ps = new PlantSerializer();
-		ps.plant_id = plant_ID;
-		ps.lifepower = lifepower;
-		ps.growth = growth;
-		ps.stage = stage;
-		return ps;
-	}
-	#endregion
+	#endregion	
 
 	virtual public void Dry() {
 		Annihilate(false);
@@ -175,4 +139,36 @@ public abstract class Plant : Structure {
         basement = null;
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        List<byte> data = SerializeStructure();
+        data.AddRange(SerializePlant());
+        return data;
+    }
+
+    public static int LoadPlant(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        int plantSerializerIndex = startIndex + Structure.STRUCTURE_SERIALIZER_LENGTH;
+        int plantId = System.BitConverter.ToInt32(data, plantSerializerIndex);
+        Plant p = GetNewPlant(plantId);
+        p.LoadStructureData(data, startIndex, sblock);
+        p.lifepower = System.BitConverter.ToSingle(data, plantSerializerIndex + 4);
+        p.SetStage(data[plantSerializerIndex + 12]);
+        p.growth = System.BitConverter.ToSingle(data, plantSerializerIndex + 8);
+        return plantSerializerIndex + SERIALIZER_LENGTH;
+    }
+
+    protected List<byte> SerializePlant()
+    {
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(plant_ID)); // 17 - 20
+        data.AddRange(System.BitConverter.GetBytes(lifepower)); // 21 - 24
+        data.AddRange(System.BitConverter.GetBytes(growth)); // 25 - 28
+        data.Add(stage); // 29
+        //SERIALIZER_LENGTH = 13
+        return data;
+    }
+    #endregion
 }

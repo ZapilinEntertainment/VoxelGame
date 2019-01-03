@@ -1,13 +1,6 @@
 ﻿using UnityEngine; // random
 using System.Collections.Generic;
 
-[System.Serializable]
-public class RecruitingCenterSerializer {
-	public WorkBuildingSerializer workBuildingSerializer;
-	public float backupSpeed;
-	public bool finding;
-}
-
 public sealed class RecruitingCenter : WorkBuilding {
     public static UIRecruitingCenterObserver rcenterObserver;
     public static List<RecruitingCenter> recruitingCentersList;
@@ -119,34 +112,6 @@ public sealed class RecruitingCenter : WorkBuilding {
         }
     }
 
-	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetRecruitingCenterSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		RecruitingCenterSerializer rcs = new RecruitingCenterSerializer();
-		GameMaster.DeserializeByteArray<RecruitingCenterSerializer>(ss.specificData, ref rcs);
-		LoadWorkBuildingData(rcs.workBuildingSerializer);
-		backupSpeed = rcs.backupSpeed;
-		finding = rcs.finding;
-	}
-
-	RecruitingCenterSerializer GetRecruitingCenterSerializer() {
-		RecruitingCenterSerializer rcs = new RecruitingCenterSerializer();
-		rcs.workBuildingSerializer = GetWorkBuildingSerializer();
-		rcs.backupSpeed = backupSpeed;
-		rcs.finding = finding;
-		return rcs;
-	}
-	#endregion
-
     override public void Annihilate(bool forced)
     {
         if (destroyed) return;
@@ -160,4 +125,22 @@ public sealed class RecruitingCenter : WorkBuilding {
         }
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = base.Save();
+        data.AddRange(System.BitConverter.GetBytes(backupSpeed));
+        data.Add(finding ? (byte)1 : (byte)0);
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = base.Load(data, startIndex, sblock);
+        backupSpeed = System.BitConverter.ToSingle(data, startIndex);
+        finding = data[startIndex + 1] == 1;
+        return startIndex + 5;
+    }   
+    #endregion
 }

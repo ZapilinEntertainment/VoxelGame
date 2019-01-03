@@ -2,12 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class HeadQuartersSerializer {
-	public BuildingSerializer buildingSerializer;
-	public byte level;
-}
-
 public sealed class HeadQuarters : House {
 	private bool nextStageConditionMet = false;
 	ColonyController colony;
@@ -186,38 +180,32 @@ public sealed class HeadQuarters : House {
     }
 
     #region save-load system
-    override public StructureSerializer Save()
+    override public List<byte> Save()
     {
-        StructureSerializer ss = GetStructureSerializer();
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHeadQuartersSerializer());
-            ss.specificData = stream.ToArray();
-        }
-        return ss;
+        var data = base.Save();
+        data.Add(level);
+        return data;
     }
 
-    override public void Load(StructureSerializer ss, SurfaceBlock sb)
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sb)
     {
-        HeadQuartersSerializer hqs = new HeadQuartersSerializer();
-        GameMaster.DeserializeByteArray<HeadQuartersSerializer>(ss.specificData, ref hqs);       
-        LoadBuildingData(hqs.buildingSerializer);       
-        // load structure data
+        int endIndex = LoadBuildingData(data, startIndex + STRUCTURE_SERIALIZER_LENGTH);
         Prepare();
-        modelRotation = ss.modelRotation;
-        indestructible = ss.indestructible;
-        level = hqs.level;
-        SetBasement(sb, ss.pos);
-        maxHp = ss.maxHp; hp = ss.maxHp;
+        //load structure data
+        Prepare();
+        modelRotation = data[startIndex + 2];
+        indestructible = (data[startIndex + 3] == 1);
+        // >>
+        level = data[endIndex];
+        // >>
+        SetBasement(sb, new PixelPosByte(data[startIndex], data[startIndex + 1]));
+        hp = System.BitConverter.ToSingle(data, startIndex + 4);
+        maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
+
+        return endIndex + 1;
     }
 
 
-    protected HeadQuartersSerializer GetHeadQuartersSerializer()
-    {
-        HeadQuartersSerializer hqs = new HeadQuartersSerializer();
-        hqs.level = level;        
-        hqs.buildingSerializer = GetBuildingSerializer();
-        return hqs;
-    }
+    
     #endregion
 }

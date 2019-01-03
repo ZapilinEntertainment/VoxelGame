@@ -2,14 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class CubeBlockSerializer
-{
-    public float naturalFossils;
-    public int volume;
-    public bool career;
-}
-
 public class CubeBlock : Block
 {
     public MeshRenderer[] faces { get; private set; } // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
@@ -20,6 +12,7 @@ public class CubeBlock : Block
     public static readonly int MAX_VOLUME;
     public bool career { get; private set; } // изменена ли верхняя поверхность на котлован?
 
+    public new const int SERIALIZER_LENGTH = 9;
     public const string FWD_PLANE_NAME = "forwardPlane", RIGHT_PLANE_NAME = "rightPlane", BACK_PLANE_NAME = "backPlane", LEFT_PLANE_NAME = "leftPlane", UP_PLANE_NAME = "upperPlane", DOWN_PLANE_NAME = "bottomPlane";
 
     static CubeBlock()
@@ -361,30 +354,7 @@ public class CubeBlock : Block
             if (pos.y == 0) illumination = 255; else illumination = lmap[pos.x, pos.y - 1, pos.z];
             faces[5].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[5].GetComponent<MeshFilter>(), illumination);
         }
-    }
-
-    #region save-load system
-    override public BlockSerializer Save()
-    {
-        BlockSerializer bs = GetBlockSerializer();
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetCubeBlockSerializer());
-            bs.specificData = stream.ToArray();
-        }
-        return bs;
-    }
-
-    public void LoadCubeBlockData(BlockSerializer bs)
-    {
-        CubeBlockSerializer cbs = new CubeBlockSerializer();
-        GameMaster.DeserializeByteArray<CubeBlockSerializer>(bs.specificData, ref cbs);
-        career = cbs.career;
-        naturalFossils = cbs.naturalFossils;
-        volume = cbs.volume;
-        if (career) CheckExcavatingStatus();
-    }
-    #endregion
+    } 
 
     override public void Annihilate()
     {
@@ -404,12 +374,24 @@ public class CubeBlock : Block
         Destroy(gameObject);
     }
 
-    CubeBlockSerializer GetCubeBlockSerializer()
+    #region save-load system
+    override public List<byte> Save()
     {
-        CubeBlockSerializer cbs = new CubeBlockSerializer();
-        cbs.naturalFossils = naturalFossils;
-        cbs.volume = volume;
-        cbs.career = career;
-        return cbs;
+        var data = GetBlockData();
+        if (career) data.Add(1); else data.Add(0);
+        data.AddRange(System.BitConverter.GetBytes(naturalFossils));
+        data.AddRange(System.BitConverter.GetBytes(volume));
+        //SERIALIZER_LENGTH = 9;
+        return data;
     }
+
+    public int LoadCubeBlockData(byte[] data, int startIndex)
+    {
+        career = (data[startIndex] == 1);
+        naturalFossils = System.BitConverter.ToSingle(data, startIndex + 1);
+        volume = System.BitConverter.ToInt32(data, startIndex + 5);
+        if (career) CheckExcavatingStatus();
+        return startIndex + SERIALIZER_LENGTH;
+    }
+    #endregion    
 }

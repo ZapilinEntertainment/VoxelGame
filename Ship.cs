@@ -2,16 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ShipType {Passenger, Cargo, Private, Military}
-
-[System.Serializable]
-public class ShipSerializer {
-	public float xpos, ypos,zpos,xrot,yrot,zrot,wrot;
-	public bool xAxisMoving, docked, unloaded;
-	public float speed;
-	public byte level;
-	public ShipType type;
-}
+public enum ShipType : byte {Passenger, Cargo, Private, Military}
+// при изменении заменить конвертер в сериализаторе
 
 public class Ship : MonoBehaviour {
 #pragma warning disable 0649
@@ -23,15 +15,16 @@ public class Ship : MonoBehaviour {
 
     public byte level {get;private set;} // fixed by asset	
 	public ShipType type{get;private set;} // fixed by asset
-	const float DISTANCE_TO_ISLAND = 40;
 	
 	public int volume{get; private set;} // fixed by asset
-	bool xAxisMoving = false, docked = false, unloaded = false;
-	float speed = 0;
-    private const float START_SPEED = 10;
-	Dock destination;
+	private bool xAxisMoving = false, docked = false, unloaded = false;
+	private float speed = 0;    
+	private Dock destination;
 
-	void Awake() {
+    private const float START_SPEED = 10, DISTANCE_TO_ISLAND = 40;
+    public const int SERIALIZER_LENGTH = 37;
+
+    void Awake() {
 		level = _level;
 		type = _type;
 		volume = _volume;
@@ -143,36 +136,62 @@ public class Ship : MonoBehaviour {
 		}
 	}
 
-	#region save-load system
-	public ShipSerializer GetShipSerializer() {
-		ShipSerializer ss = new ShipSerializer();
-		ss.docked = docked;
-		ss.xpos = transform.position.x; ss.ypos = transform.position.y; ss.zpos = transform.position.z; 
-		ss.xrot = transform.rotation.x;ss.yrot = transform.rotation.y;ss.zrot = transform.rotation.z;ss.wrot = transform.rotation.w;
-		ss.speed = speed;
-		ss.unloaded = unloaded;
-		ss.xAxisMoving = xAxisMoving;
-		ss.level = level;
-		ss.type = type;
-		return ss;
-	}
-
-	public void Load(ShipSerializer ss, Dock d) {
-		destination = d;
-		docked = ss.docked;
-		transform.position = new Vector3(ss.xpos, ss.ypos,ss.zpos);
-		transform.rotation = new Quaternion(ss.xrot, ss.yrot, ss.zrot,ss.wrot);
-		speed= ss.speed;
-		unloaded = ss.unloaded;
-		xAxisMoving = ss.xAxisMoving;
-		level = ss.level;
-		type = ss.type;
-	}
-	#endregion
-
 	public void Undock() {
 		docked = false;
 		unloaded = true;
         destination = null;
 	}
+
+    #region save-load system
+    public List<byte> GetShipSerializer()
+    {
+        byte zero = 0, one = 1;
+        var data = new List<byte>() {
+            level,              // 0
+            (byte)type,         // 1
+            docked ? one : zero //2
+        };
+        Transform t = transform;
+        data.AddRange(System.BitConverter.GetBytes(t.position.x)); // 3 - 6
+        data.AddRange(System.BitConverter.GetBytes(t.position.y)); // 7 - 10
+        data.AddRange(System.BitConverter.GetBytes(t.position.z)); // 11 - 14
+
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.x)); // 15 - 18
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.y)); // 19 - 22
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.z)); // 23 - 26
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.w)); // 27 - 30
+
+        data.AddRange(System.BitConverter.GetBytes(speed));        // 31 - 34
+        data.Add(unloaded ? one : zero);    // 35
+        data.Add(xAxisMoving ? one : zero); // 36
+        //SERIALIZER_LENGTH = 37
+        return data;
+    }
+
+    public static Ship Load(byte[] data, int startIndex, Dock d)
+    {
+        byte slevel = data[startIndex];
+        ShipType stype = (ShipType)data[startIndex + 1];
+        Ship s = PoolMaster.current.GetShip(slevel, stype);
+        s.level = slevel;
+        s.type = stype;
+        s.destination = d;
+        s.docked = data[startIndex + 2] == 1;
+        s.transform.position = new Vector3(
+            System.BitConverter.ToSingle(data,startIndex + 3),
+            System.BitConverter.ToSingle(data, startIndex + 7),
+            System.BitConverter.ToSingle(data, startIndex + 11)
+            );
+        s.transform.rotation = new Quaternion(
+            System.BitConverter.ToSingle(data, startIndex + 15),
+            System.BitConverter.ToSingle(data, startIndex + 19),
+            System.BitConverter.ToSingle(data, startIndex + 23),
+            System.BitConverter.ToSingle(data, startIndex + 27)
+            );
+        s.speed = System.BitConverter.ToSingle(data, startIndex + 31);
+        s.unloaded = data[startIndex + 35] == 1;
+        s.xAxisMoving = data[startIndex + 36] == 1;
+        return s;
+    }
+    #endregion
 }

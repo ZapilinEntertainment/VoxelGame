@@ -1,8 +1,4 @@
-﻿[System.Serializable]
-public class FoodFactorySerializer {
-	public WorkBuildingSerializer workBuildingSerializer;
-	public float food_inputBuffer, metalP_inputBuffer, supplies_outputBuffer; 
-}
+﻿using System.Collections.Generic;
 
 public class FoodFactory : WorkBuilding {
 	const float food_input = 10, metalP_input = 1, supplies_output = 15;
@@ -63,38 +59,35 @@ public class FoodFactory : WorkBuilding {
 
 
 	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetFoodFactorySerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
+	override public List<byte> Save() {
+        var data = SerializeStructure();
+        data.AddRange(SerializeBuilding());
+        data.AddRange(SerializeWorkBuilding());
+        data.AddRange(SerializeFoodFactory());
+        return data;
+	}
+    public List<byte> SerializeFoodFactory()
+    {
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(food_inputBuffer));
+        data.AddRange(System.BitConverter.GetBytes(metalP_inputBuffer));
+        data.AddRange(System.BitConverter.GetBytes(supplies_outputBuffer));
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock) {
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        startIndex = LoadBuildingData(data, startIndex);
+        startIndex = LoadWorkBuildingData(data, startIndex);
+        return LoadFoodFactoryData(data, startIndex);
 	}
 
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		FoodFactorySerializer ffs = new FoodFactorySerializer();
-		GameMaster.DeserializeByteArray<FoodFactorySerializer>(ss.specificData, ref ffs);
-		LoadFoodFactoryData(ffs);
-	}
-
-	protected void LoadFoodFactoryData(FoodFactorySerializer ffs) {
-		LoadWorkBuildingData(ffs.workBuildingSerializer);
-		food_inputBuffer = ffs.food_inputBuffer;
-		metalP_inputBuffer = ffs.metalP_inputBuffer;
-		supplies_outputBuffer = ffs.supplies_outputBuffer;
-	}
-
-	public FoodFactorySerializer GetFoodFactorySerializer() {
-		FoodFactorySerializer ffs = new FoodFactorySerializer();
-		ffs.workBuildingSerializer = GetWorkBuildingSerializer();
-		ffs.food_inputBuffer = food_inputBuffer;
-		ffs.metalP_inputBuffer = metalP_inputBuffer;
-		ffs.supplies_outputBuffer = supplies_outputBuffer;
-		return ffs;
-	}
+	protected int LoadFoodFactoryData(byte[] data, int startIndex) {
+        food_inputBuffer = System.BitConverter.ToSingle(data, startIndex);
+		metalP_inputBuffer = System.BitConverter.ToSingle(data, startIndex + 4);
+        supplies_outputBuffer = System.BitConverter.ToSingle(data, startIndex + 8);
+        return startIndex + 12;
+    }
 	#endregion
 
     override public void Annihilate(bool forced)

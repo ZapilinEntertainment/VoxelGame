@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic; // листы
 using UnityEngine; // классы Юнити
 using System.IO; // чтение-запись файлов
-using System.Runtime.Serialization.Formatters.Binary; // конверсия в поток байтов и обратно
 using UnityEngine.SceneManagement;
 
 public struct GameStartSettings  {
@@ -48,7 +47,7 @@ public sealed class GameMaster : MonoBehaviour {
     public static string savename { get; private set; }
     public static float LUCK_COEFFICIENT { get; private set; }
     public static float sellPriceCoefficient = 0.75f;
-    public static int layerCutHeight = 16, prevCutHeight = 16;
+    public static byte layerCutHeight = 16, prevCutHeight = 16;
 
     public static Vector3 sceneCenter { get { return Vector3.one * Chunk.CHUNK_SIZE / 2f; } } // SCENE CENTER
     public static GameStartSettings gameStartSettings = GameStartSettings.Empty;
@@ -600,37 +599,7 @@ public sealed class GameMaster : MonoBehaviour {
     public bool SaveGame() { return SaveGame("autosave"); }
 	public bool SaveGame( string name ) { // заменить потом на persistent -  постоянный путь
         SetPause(true);
-		GameMasterSerializer gms = new GameMasterSerializer();
-		#region gms mainPartFilling
-		gms.gameSpeed = gameSpeed;
-		gms.lifeGrowCoefficient = lifeGrowCoefficient;
-		gms.demolitionLossesPercent = demolitionLossesPercent;
-		gms.lifepowerLossesPercent = lifepowerLossesPercent;
-		gms.luckCoefficient = LUCK_COEFFICIENT;
-		gms.sellPriceCoefficient = sellPriceCoefficient;
-		gms.tradeVesselsTrafficCoefficient = tradeVesselsTrafficCoefficient;
-		gms.upgradeDiscount = upgradeDiscount;
-		gms.upgradeCostIncrease = upgradeCostIncrease;
-		gms.warProximity = warProximity;
-		gms.difficulty = difficulty;
-		gms.startGameWith = startGameWith;
-		gms.prevCutHeight = prevCutHeight;
-		gms.day = day; gms.month = month; gms.year = year; gms.t = timeGone;
-        gms.gearsDegradeSpeed = gearsDegradeSpeed;
 
-        gms.labourTimer = labourTimer;
-        gms.lifepowerTimer = lifepowerTimer;
-
-		gms.recruiting_hireCost = RecruitingCenter.GetHireCost();
-		#endregion
-		gms.chunkSerializer = mainChunk.SaveChunkData();
-        gms.environmentalMasterSerializer = environmentMaster.Save();
-		gms.colonyControllerSerializer = colonyController.Save();
-		gms.dockStaticSerializer = Dock.SaveStaticDockData();
-		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
-		gms.crewStaticSerializer = Crew.SaveStaticData();
-		gms.questStaticSerializer = QuestUI.current.Save();
-		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
         string path = SaveSystemUI.GetSavesPath() + '/';
         if (!Directory.Exists(path))
         {
@@ -638,6 +607,40 @@ public sealed class GameMaster : MonoBehaviour {
         }
         FileStream fs = File.Create(path + name + '.' + SaveSystemUI.SAVE_FNAME_EXTENSION);
         savename = name;
+        //сразу передавать файловый поток для записи, чтобы не забивать озу
+        #region gms mainPartFilling
+        fs.Write(System.BitConverter.GetBytes(gameSpeed), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(lifeGrowCoefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(demolitionLossesPercent), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(lifepowerLossesPercent), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(LUCK_COEFFICIENT), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(sellPriceCoefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(tradeVesselsTrafficCoefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(upgradeDiscount), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(upgradeCostIncrease), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(warProximity), 0, 4);
+        fs.WriteByte((byte)difficulty);
+        fs.WriteByte((byte)startGameWith);
+        fs.WriteByte(prevCutHeight);
+        fs.WriteByte(day);
+        fs.WriteByte(month);
+        fs.Write(System.BitConverter.GetBytes(year), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(timeGone), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(gearsDegradeSpeed), 0, 4);
+
+        fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
+		#endregion
+		mainChunk.SaveChunkData(fs);
+        environmentMaster.Save(fs);
+		gms.colonyControllerSerializer = colonyController.Save();
+		gms.dockStaticSerializer = Dock.SaveStaticDockData();
+		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
+		gms.crewStaticSerializer = Crew.SaveStaticData();
+		gms.questStaticSerializer = QuestUI.current.Save();
+		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
+        
 		BinaryFormatter bf = new BinaryFormatter();
 		bf.Serialize(fs, gms);
 		fs.Close();
@@ -754,13 +757,6 @@ public sealed class GameMaster : MonoBehaviour {
         FollowingCamera.main.WeNeedUpdate();
         return true;
     }    
-
-	public static void DeserializeByteArray<T>( byte[] data, ref T output ) {
-		using (MemoryStream stream = new MemoryStream(data))
-		{
-			output = (T)System.Convert.ChangeType(new BinaryFormatter().Deserialize(stream), typeof(T));
-		}
-	}
     #endregion
 
     //test
@@ -826,31 +822,4 @@ public sealed class GameMaster : MonoBehaviour {
         gameSpeed = 1;
         pauseRequests = 0;
     }    
-}
-
-[System.Serializable]
-class GameMasterSerializer {
-	public float gameSpeed;
-	public float lifeGrowCoefficient, demolitionLossesPercent, lifepowerLossesPercent, luckCoefficient, sellPriceCoefficient,
-	tradeVesselsTrafficCoefficient, upgradeDiscount, upgradeCostIncrease, warProximity, gearsDegradeSpeed;
-	public Difficulty difficulty;
-	public GameStart startGameWith;
-	public int prevCutHeight = 16;
-    public byte day = 0, month = 0;
-    public uint year = 0;
-    public float t;
-    public float windVector_x, windVector_z; // cause serialization error
-	public float windTimer = 0, windChangeTime = 120, labourTimer, lifepowerTimer;
-
-	public ChunkSerializer chunkSerializer;
-    public EnvironmentMasterSerializer environmentalMasterSerializer;
-	public ColonyControllerSerializer colonyControllerSerializer;
-	public DockStaticSerializer dockStaticSerializer;
-	public CrewStaticSerializer crewStaticSerializer;
-	public ShuttleStaticSerializer shuttleStaticSerializer;
-	public QuestStaticSerializer questStaticSerializer;
-	public ExpeditionStaticSerializer expeditionStaticSerializer;
-	public float recruiting_hireCost;
-
-	// все, что можно - в классы - сериализаторы
 }

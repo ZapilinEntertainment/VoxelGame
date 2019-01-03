@@ -52,6 +52,7 @@ public class GrasslandSerializer
 public class Grassland : MonoBehaviour
 {
     public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22, BERRY_BUSH_LIFECOST = 10;
+    public const int SERIALIZER_LENGTH = 9;
     const byte MAX_PLANTS_COUNT = 8;
 
     public SurfaceBlock myBlock { get; private set; }
@@ -398,18 +399,22 @@ public class Grassland : MonoBehaviour
         }
     }
 
-    public GrasslandSerializer Save()
+    #region save-load
+    public List<byte> Save()
     {
-        GrasslandSerializer gs = new GrasslandSerializer();
-        gs.progress = progress;
-        gs.lifepower = lifepower;
-        gs.prevStage = prevStage;
-        return gs;
+        var data = new List<byte>();        
+        data.AddRange(System.BitConverter.GetBytes(lifepower));
+        data.Add(prevStage);
+        data.AddRange(System.BitConverter.GetBytes(progress));        
+        //SERIALIZER_LENGTH = 9
+        return data;
     }
 
-    public void Load(GrasslandSerializer gs)    {        
-        SetLifepower(gs.lifepower);
-        prevStage = gs.prevStage;
-        progress = gs.progress;
+    public int Load(byte[] data, int startIndex)  {            
+        SetLifepower(System.BitConverter.ToSingle(data, startIndex));
+        prevStage = data[startIndex + 4];
+        progress = System.BitConverter.ToSingle(data, startIndex + 5);
+        return startIndex + SERIALIZER_LENGTH;
     }
+    #endregion
 }

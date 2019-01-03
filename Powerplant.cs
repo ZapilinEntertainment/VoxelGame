@@ -1,4 +1,6 @@
 ﻿using UnityEngine; // mathf
+using System.Collections.Generic;
+
 public class Powerplant : WorkBuilding {
 	ResourceType fuel;
     private float output, fuelNeeds, fuelBurnTime;
@@ -127,34 +129,7 @@ public class Powerplant : WorkBuilding {
         if (x > workersCount) x = workersCount;
 		workersCount -= x;
 		colony.AddWorkers(x);
-	}
-
-	#region save-load system
-
-    override public StructureSerializer Save()
-    {
-        StructureSerializer ss = GetStructureSerializer();
-
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            WorkBuildingSerializer wbs = GetWorkBuildingSerializer();
-            wbs.workflowToProcess = tickTimer;// подмена неиспользуемого поля
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, wbs);
-            ss.specificData = stream.ToArray();
-        }
-        return ss;
-    }
-
-    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
-    {
-        LoadStructureData(ss, sblock);
-        WorkBuildingSerializer wbs = new WorkBuildingSerializer();
-        GameMaster.DeserializeByteArray<WorkBuildingSerializer>(ss.specificData, ref wbs);
-        tickTimer = (int)wbs.workflowToProcess; // подмена неиспользуемого поля
-        wbs.workflowToProcess = 1;
-        LoadWorkBuildingData(wbs);        
-    }
-    #endregion
+	}	
 
     public int GetFuelResourseID() { return fuel.ID; }
 
@@ -181,4 +156,25 @@ public class Powerplant : WorkBuilding {
         Destroy(gameObject);
     }
 
+    #region save-load system
+
+    override public List<byte> Save()
+    {
+        var data = SerializeStructure();
+        data.AddRange(SerializeBuilding());
+        float saved_wtp = workflowToProcess; // подмена неиспользуемого поля
+        workflowToProcess = tickTimer;
+        data.AddRange(SerializeWorkBuilding());
+        workflowToProcess = saved_wtp;
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = base.Load(data, startIndex, sblock);
+        tickTimer = (int)workflowToProcess;
+        workflowToProcess = 1;
+        return startIndex;
+    }
+    #endregion
 }

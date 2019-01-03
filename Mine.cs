@@ -2,18 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class MineSerializer {
-	public WorkBuildingSerializer workBuildingSerializer;
-	public bool workFinished;
-	public ChunkPos lastWorkObjectPos;
-	public bool awaitingElevatorBuilding;
-	public byte level;
-	public List<StructureSerializer> elevators;
-	public List<byte>elevatorHeights;
-	public bool haveElevators;
-}
-
 public class Mine : WorkBuilding {
 	CubeBlock workObject;
 	bool workFinished = false;
@@ -112,63 +100,6 @@ override protected void LabourResult() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Mining);
 	}
 
-	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetMineSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		MineSerializer ms = new MineSerializer();
-		GameMaster.DeserializeByteArray(ss.specificData, ref ms);
-		LoadMineData(ms);
-	}
-
-	protected void LoadMineData(MineSerializer ms) {
-		level = ms.level;
-		LoadWorkBuildingData(ms.workBuildingSerializer);
-		elevators = new List<Structure>();
-		if (level > 1 & ms.haveElevators) {
-			for (int i = 0; i < ms.elevators.Count; i++) {
-				Structure s = Structure.GetStructureByID(MINE_ELEVATOR_ID);
-				s.Load(ms.elevators[i], basement.myChunk.GetBlock(basement.pos.x, ms.elevatorHeights[i], basement.pos.z) as SurfaceBlock);
-				elevators.Add(s);
-			}
-		}
-		workFinished = ms.workFinished;
-		lastWorkObjectPos = ms.lastWorkObjectPos;
-		awaitingElevatorBuilding = ms.awaitingElevatorBuilding;
-	}
-
-	protected MineSerializer GetMineSerializer() {
-		MineSerializer ms = new MineSerializer();
-		ms.workBuildingSerializer = GetWorkBuildingSerializer();
-		ms.workFinished = workFinished;
-		ms.lastWorkObjectPos = lastWorkObjectPos;
-		ms.awaitingElevatorBuilding = awaitingElevatorBuilding;
-		ms.level = level;
-		ms.elevators = new List<StructureSerializer>(); ms.elevatorHeights = new List<byte>();
-		ms.haveElevators = false;
-		if (level > 1) {
-			for (int i = 0; i < elevators.Count; i++) {
-				if (elevators[i] == null) continue;
-				else {
-					ms.elevators.Add((elevators[i] as MineElevator).GetSerializer());
-					ms.elevatorHeights.Add(elevators[i].basement.pos.y);
-					ms.haveElevators = true;
-				}
-			}
-		}
-		return ms;
-	}
-	#endregion
-
 	void UpgradeMine(byte f_level) {
 		if (f_level == level ) return;
 		GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
@@ -254,4 +185,91 @@ override protected void LabourResult() {
         }
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = base.Save();
+        data.AddRange(SerializeMine());
+        return data;
+    }
+
+    protected List<byte> SerializeMine()
+    {
+        byte zero = 0, one = 1;
+        int elevatorsCount = elevators.Count;
+        var elevatorsData = new List<byte>();
+        if (elevatorsCount > 0) {            
+            int i = 0;
+            while (i < elevators.Count)
+            {
+                if (elevators[i] == null)
+                {
+                    elevators.RemoveAt(i);
+                }
+                else
+                {
+                    Structure elevator = elevators[i];
+                    elevatorsData.Add(elevator.basement.pos.y);
+                    elevatorsData.Add(elevator.modelRotation);
+                    byte ehp = (byte)((elevator.hp / elevator.maxHp) * 255);
+                    elevatorsData.Add(ehp);
+                    i++;
+                }
+            }
+            elevatorsCount = elevators.Count;
+        }
+
+        var data = new List<byte>()
+        {
+            workFinished ? one : zero,  //0
+            lastWorkObjectPos.x,        //1
+            lastWorkObjectPos.y,        //2
+            lastWorkObjectPos.z,        //3
+            awaitingElevatorBuilding ? one : zero, //4
+            level,                                  //5
+        };
+        data.AddRange(System.BitConverter.GetBytes(elevatorsCount)); // 6 - 9
+        if (elevatorsCount > 0)
+        {
+            data.AddRange(elevatorsData); // 10 +
+        }
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        startIndex = LoadBuildingData(data, startIndex);
+        return LoadMineData(data, startIndex);
+    }
+
+    protected int LoadMineData(byte[] data, int startIndex)
+    {
+        level = data[startIndex + WORKBUILDING_SERIALIZER_LENGTH + 5];
+        startIndex = LoadWorkBuildingData(data, startIndex);
+        elevators = new List<Structure>();
+        int elevatorsCount = System.BitConverter.ToInt32(data, startIndex + 6);
+        int readIndex = startIndex + 10;
+        if (elevatorsCount > 0)
+        {            Chunk chunk = basement.myChunk;
+            byte x = basement.pos.x, z = basement.pos.z;
+            
+            for (int i = 0; i < elevatorsCount; i++)
+            {
+                Structure s = GetStructureByID(MINE_ELEVATOR_ID);
+                s.SetModelRotation(data[readIndex + 1]);
+                s.SetBasement(chunk.GetBlock(x, data[readIndex],z) as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size /2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
+                s.SetHP(data[readIndex + 2] / 255f * s.maxHp);
+                elevators.Add(s);
+                readIndex += 3;
+            }
+        }
+
+        workFinished = data[startIndex] == 1;
+        lastWorkObjectPos = new ChunkPos(data[startIndex + 1], data[startIndex + 2], data[startIndex + 3]);
+        awaitingElevatorBuilding = data[startIndex + 4] == 1;
+        return readIndex;
+    }   
+    #endregion
 }

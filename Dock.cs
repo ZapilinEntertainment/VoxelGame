@@ -513,75 +513,6 @@ public sealed class Dock : WorkBuilding {
         }
     }    
 
-	#region save-load system
-	public static DockStaticSerializer SaveStaticDockData() {
-		DockStaticSerializer dss = new DockStaticSerializer();
-		dss.isForSale = isForSale;
-		dss.minValueForTrading = minValueForTrading;
-		dss.prices = ResourceType.prices;
-		dss.demand = ResourceType.demand;
-		dss.immigrationPlan = immigrationPlan;
-		dss.immigrationEnabled = immigrationEnabled;
-		return dss;
-	}
-
-	public static void LoadStaticData( DockStaticSerializer dss) {
-		isForSale = dss.isForSale;
-		minValueForTrading = dss.minValueForTrading;
-		ResourceType.prices = dss.prices;
-		ResourceType.demand = dss.demand;
-		immigrationPlan = dss.immigrationPlan;
-		immigrationEnabled = dss.immigrationEnabled;
-	}
-
-	public override StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetDockSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		DockSerializer ds= new DockSerializer();
-		GameMaster.DeserializeByteArray<DockSerializer>(ss.specificData, ref ds);
-		LoadDockData(ds);
-	}
-	void LoadDockData(DockSerializer ds) {
-		LoadWorkBuildingData(ds.workBuildingSerializer);
-		correctLocation = ds.correctLocation;
-		maintainingShip = ds.maintainingShip;
-		if (maintainingShip) {
-			ShipSerializer ss = ds.loadingShip;
-            if (ss != null)
-            {
-                Ship s = PoolMaster.current.GetShip(ss.level, ss.type);
-                s.Load(ss, this);
-                loadingShip = s;
-            }
-		}
-		loadingTimer =  ds.loadingTimer;
-		shipArrivingTimer = ds.shipArrivingTimer;
-	} 
-
-	DockSerializer GetDockSerializer() {
-		DockSerializer ds = new DockSerializer();
-		ds.workBuildingSerializer = GetWorkBuildingSerializer();
-		ds.correctLocation = correctLocation;
-        if (maintainingShip & loadingShip != null)
-        {
-            ds.loadingShip = loadingShip.GetShipSerializer();
-            ds.maintainingShip = true;
-        }
-        else ds.maintainingShip = false;
-		ds.loadingTimer = loadingTimer;
-		ds.shipArrivingTimer = shipArrivingTimer;
-		return ds;
-	}
-    #endregion
-
     override protected void RecalculateWorkspeed()
     {
         workSpeed = (float)workersCount / (float)maxWorkers;
@@ -667,15 +598,78 @@ public sealed class Dock : WorkBuilding {
         if (maintainingShip & loadingShip != null) loadingShip.Undock();        
         Destroy(gameObject);
     }
+
+    #region save-load system
+    public static DockStaticSerializer SaveStaticDockData()
+    {
+        DockStaticSerializer dss = new DockStaticSerializer();
+        dss.isForSale = isForSale;
+        dss.minValueForTrading = minValueForTrading;
+        dss.prices = ResourceType.prices;
+        dss.demand = ResourceType.demand;
+        dss.immigrationPlan = immigrationPlan;
+        dss.immigrationEnabled = immigrationEnabled;
+        return dss;
+    }
+
+    public static void LoadStaticData(DockStaticSerializer dss)
+    {
+        isForSale = dss.isForSale;
+        minValueForTrading = dss.minValueForTrading;
+        ResourceType.prices = dss.prices;
+        ResourceType.demand = dss.demand;
+        immigrationPlan = dss.immigrationPlan;
+        immigrationEnabled = dss.immigrationEnabled;
+    }
+
+    public override List<byte> Save()
+    {
+        var data = SerializeStructure();
+        data.AddRange(SerializeBuilding());
+        data.AddRange(SerializeWorkBuilding());
+        data.AddRange(SerializeDock());
+        return data;
+    }
+    private List<byte> SerializeDock()
+    {
+        byte zero = 0, one = 1;
+        var data = new List<byte>() { correctLocation ? one : zero };
+
+        if (maintainingShip & loadingShip != null)
+        {
+            data.Add(one);
+            data.AddRange(loadingShip.GetShipSerializer());
+        }
+        else data.Add(zero);
+        data.AddRange(System.BitConverter.GetBytes(loadingTimer));
+        data.AddRange(System.BitConverter.GetBytes(shipArrivingTimer));
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        startIndex = LoadBuildingData(data, startIndex);
+        startIndex = LoadWorkBuildingData(data, startIndex);
+        return LoadDockData(data, startIndex);
+    }
+    private int LoadDockData(byte[] data, int startIndex)
+    {
+        correctLocation = data[startIndex] == 1;
+        maintainingShip = data[startIndex + 1] == 1;
+        startIndex += 2;
+        if (maintainingShip)
+        {
+            loadingShip = Ship.Load(data, startIndex, this);
+            startIndex += Ship.SERIALIZER_LENGTH;
+        }
+        loadingTimer = System.BitConverter.ToSingle(data, startIndex);
+        shipArrivingTimer = System.BitConverter.ToSingle(data, startIndex + 4);
+        return startIndex + 8;
+    }
+    #endregion
 }
 
-[System.Serializable]
-public class DockSerializer {
-	public WorkBuildingSerializer workBuildingSerializer;
-	public bool correctLocation, maintainingShip;
-	public ShipSerializer loadingShip;
-	public float loadingTimer = 0, shipArrivingTimer = 0;
-}
 [System.Serializable]
 public class DockStaticSerializer {
 	public bool?[] isForSale;

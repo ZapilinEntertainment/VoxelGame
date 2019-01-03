@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
-public class ScalableHarvestableResource : Structure {
+public sealed class ScalableHarvestableResource : Structure {
 
     // переделать к обычному harvestable resource
     // 04.11 стоит ли?
@@ -65,33 +66,7 @@ public class ScalableHarvestableResource : Structure {
 		resourceCount -= GameMaster.realMaster.colonyController.storage.AddResource(mainResource,resourceCount);
 		if (resourceCount == 0) Annihilate(false);
 	}
-
-	#region save-load system
-	override public  StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetHarvestableResourceSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
-	}
-
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
-		GameMaster.DeserializeByteArray<HarvestableResourceSerializer>(ss.specificData, ref hrs);
-		mainResource = ResourceType.GetResourceTypeById(hrs.mainResource_id);
-		resourceCount = hrs.count;
-	}
-
-	protected HarvestableResourceSerializer GetHarvestableResourceSerializer() {
-		HarvestableResourceSerializer hrs = new HarvestableResourceSerializer();
-		hrs.mainResource_id = mainResource.ID;
-		hrs.count = resourceCount;
-		return hrs;
-	}
-	#endregion
+    
 	override public void Annihilate( bool forced ) { // for pooling
         if (destroyed) return;
         else destroyed = true;
@@ -100,4 +75,23 @@ public class ScalableHarvestableResource : Structure {
         Destroy(gameObject);
     }
 
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = SerializeStructure();
+        data.AddRange(System.BitConverter.GetBytes(mainResource.ID));
+        data.AddRange(System.BitConverter.GetBytes(resourceCount));
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    {
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        mainResource = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, startIndex));
+        resourceCount = System.BitConverter.ToInt32(data, startIndex + 4);
+        return startIndex + 8;
+    }
+
+    
+    #endregion
 }

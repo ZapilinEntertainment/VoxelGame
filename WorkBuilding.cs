@@ -2,13 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class WorkBuildingSerializer {
-	public BuildingSerializer buildingSerializer;
-	public float workflow, workSpeed, workflowToProcess;
-	public int workersCount;
-}
-
 public abstract class WorkBuilding : Building {
     public static UIWorkbuildingObserver workbuildingObserver;
 
@@ -17,7 +10,9 @@ public abstract class WorkBuilding : Building {
 	public float workflowToProcess{get; protected set;}
 	public int maxWorkers { get; protected set; }
 	public int workersCount {get; protected set;}
-    protected ColonyController colony;    
+    protected ColonyController colony;
+
+    public const int WORKBUILDING_SERIALIZER_LENGTH = 16;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -366,41 +361,35 @@ public abstract class WorkBuilding : Building {
         //copy to expedition corpus.cs
     }
 
-    	#region save-load system
-	override public StructureSerializer Save() {
-		StructureSerializer ss = GetStructureSerializer();
-		using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-		{
-			new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetWorkBuildingSerializer());
-			ss.specificData =  stream.ToArray();
-		}
-		return ss;
+    #region save-load system
+	override public List<byte> Save() {
+        var data = base.Save();
+        data.AddRange(SerializeWorkBuilding());
+		return data;
 	}
 
-	override public void Load(StructureSerializer ss, SurfaceBlock sblock) {
-		LoadStructureData(ss, sblock);
-		WorkBuildingSerializer wbs = new WorkBuildingSerializer();
-		GameMaster.DeserializeByteArray<WorkBuildingSerializer>(ss.specificData, ref wbs);
-		LoadWorkBuildingData(wbs);
+    public List<byte> SerializeWorkBuilding()
+    {
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(workflow));
+        data.AddRange(System.BitConverter.GetBytes(workSpeed));
+        data.AddRange(System.BitConverter.GetBytes(workflowToProcess));
+        data.AddRange(System.BitConverter.GetBytes(workersCount));
+        //SERIALIZER_LENGTH = 16;
+        return data;
+    }
+
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock) {
+        startIndex = base.Load(data, startIndex, sblock);
+        return LoadWorkBuildingData(data, startIndex);
 	}
-	protected void LoadWorkBuildingData (WorkBuildingSerializer wbs) {
-		LoadBuildingData(wbs.buildingSerializer);
-		workersCount = wbs.workersCount;
-		workflow = wbs.workflow;
-		workSpeed = wbs.workSpeed;
-		workflowToProcess = wbs.workflowToProcess;
+	protected int LoadWorkBuildingData (byte[] data, int startIndex) {
+        workflow = System.BitConverter.ToSingle(data,startIndex);
+        workSpeed = System.BitConverter.ToSingle(data, startIndex + 4);
+        workflowToProcess = System.BitConverter.ToSingle(data, startIndex + 8);
+        workersCount = System.BitConverter.ToInt32(data, startIndex + 12);
         RecalculateWorkspeed();
+        return startIndex + WORKBUILDING_SERIALIZER_LENGTH;        
 	}
-
-	public WorkBuildingSerializer GetWorkBuildingSerializer() {
-		WorkBuildingSerializer wbs = new WorkBuildingSerializer();
-		wbs.buildingSerializer = GetBuildingSerializer();
-		wbs.workflow = workflow;
-		wbs.workSpeed = workSpeed;
-		wbs.workflowToProcess = workflowToProcess;
-		wbs.workersCount = workersCount;
-		return wbs;
-	}
-
     #endregion
 }

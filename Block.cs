@@ -5,6 +5,7 @@ using UnityEngine;
 public enum BlockType : byte {Shapeless, Cube, Surface, Cave}
 
 public class Block : MonoBehaviour {
+    public const int SERIALIZER_LENGTH = 8;
     public const float QUAD_SIZE = 1;
     public const string BLOCK_COLLIDER_TAG = "BlockCollider";
 
@@ -162,21 +163,7 @@ public class Block : MonoBehaviour {
             worksite.StopWork();
             worksite = null;
         }
-    }
-
-    #region save-load
-    virtual public BlockSerializer Save() {
-		return GetBlockSerializer();
-	}
-
-    protected BlockSerializer GetBlockSerializer() {
-		BlockSerializer bs = new BlockSerializer();
-		bs.type = type;
-		bs.pos = pos;
-		bs.material_id = material_id;
-		return bs;
-	}
-    #endregion
+    }  
 
     virtual public void SetMainStructure(Structure ms)
     {
@@ -204,13 +191,15 @@ public class Block : MonoBehaviour {
         if (pos.y == Chunk.CHUNK_SIZE - 1) myChunk.DeleteRoof(pos.x, pos.z);
         Destroy(gameObject);
     }
-}
 
-[System.Serializable]
-public class BlockSerializer {
-	public BlockType type;
-	public bool isTransparent;
-	public ChunkPos pos;
-	public int material_id, personalNumber;
-	public byte[] specificData;
+    #region save-load
+    virtual public void Save(System.IO.FileStream fs)
+    {
+        fs.WriteByte((byte)type);
+        fs.WriteByte(pos.x);
+        fs.WriteByte(pos.y);
+        fs.WriteByte(pos.z);
+        fs.Write(System.BitConverter.GetBytes(material_id), 0, 4);
+    }
+    #endregion
 }

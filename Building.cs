@@ -2,13 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class BuildingSerializer
-{
-    public bool isActive;
-    public float energySurplus;
-}
-
 public class Building : Structure
 {
     public int upgradedIndex { get; private set; } 
@@ -934,36 +927,30 @@ public class Building : Structure
     }
 
     #region save-load system
-    override public StructureSerializer Save()
+    override public List<byte> Save()
     {
-        StructureSerializer ss = GetStructureSerializer();
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, GetBuildingSerializer());
-            ss.specificData = stream.ToArray();
-        }
-        return ss;
+        var data = SerializeStructure();
+        data.AddRange(SerializeBuilding());
+        return data;
     }
 
-    override public void Load(StructureSerializer ss, SurfaceBlock sblock)
+    protected List<byte> SerializeBuilding()
     {
-        LoadStructureData(ss, sblock);
-        BuildingSerializer bs = new BuildingSerializer();
-        GameMaster.DeserializeByteArray<BuildingSerializer>(ss.specificData, ref bs);
-        LoadBuildingData(bs);
-    }
-    protected void LoadBuildingData(BuildingSerializer bs)
-    {
-        energySurplus = bs.energySurplus;
-        SetActivationStatus(bs.isActive, true);
+        var data = new List<byte>() { isActive ? (byte)1 : (byte)0};
+        data.AddRange(System.BitConverter.GetBytes(energySurplus));
+        return data;
     }
 
-    protected BuildingSerializer GetBuildingSerializer()
+    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
     {
-        BuildingSerializer bs = new BuildingSerializer();
-        bs.isActive = isActive;
-        bs.energySurplus = energySurplus;
-        return bs;
+        startIndex = LoadStructureData(data, startIndex, sblock);
+        return LoadBuildingData(data, startIndex);
     }
+    protected int LoadBuildingData(byte[] data, int startIndex)
+    {
+        energySurplus = System.BitConverter.ToSingle(data, startIndex + 1);
+        SetActivationStatus(data[startIndex] == 1, true);
+        return startIndex + 5;
+    }   
     #endregion
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
 public struct ChunkPos
 {
     public byte x, y, z;
@@ -15,26 +14,6 @@ public struct ChunkPos
         if (xpos < 0) xpos = 0; if (ypos < 0) ypos = 0; if (zpos < 0) zpos = 0;
         x = (byte)xpos; y = (byte)ypos; z = (byte)zpos;
     }
-}
-
-[System.Serializable]
-public sealed class ChunkSerializer
-{
-    public List<BlockSerializer> blocksData;
-    public float lifepower;
-    public byte chunkSize;
-    public List<RoofSerializer> roofsData;
-}
-
-sealed class Roof : MonoBehaviour
-{
-    public bool peak = false, artificial = false;
-}
-[System.Serializable]
-public sealed class RoofSerializer
-{
-    public bool peak, artificial;
-    public byte modelNumber, rotation, posx, posz;
 }
 
 public enum ChunkGenerationMode { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate }
@@ -1683,134 +1662,170 @@ public sealed class Chunk : MonoBehaviour
     }
 
     #region save-load system
-    public ChunkSerializer SaveChunkData()
+    public void SaveChunkData(System.IO.FileStream fs)
     {
-        ChunkSerializer cs = new ChunkSerializer();
-        cs.blocksData = new List<BlockSerializer>();
-        for (int x = CHUNK_SIZE - 1; x >= 0; x--)
+        fs.WriteByte(CHUNK_SIZE);
+        var blocksToSave = new List<Block>();
+        foreach (Block b in blocks)
         {
-            for (int y = CHUNK_SIZE - 1; y >= 0; y--)
+            if (b != null && b.type != BlockType.Shapeless)
             {
-                for (int z = CHUNK_SIZE - 1; z >= 0; z--)
+                blocksToSave.Add(b);
+            }
+        }
+        int count = blocksToSave.Count;
+        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        if (count > 0)
+        {
+            foreach (Block b in blocksToSave)
+            {
+                b.Save(fs);
+            }
+        }
+
+        fs.Write(System.BitConverter.GetBytes(lifePower), 0, 4);
+
+        int roofsCount = 0;
+        foreach (Roof r in roofs)
+        {
+            if (r != null) roofsCount++;
+        }
+        fs.Write(System.BitConverter.GetBytes(roofsCount), 0, 4);
+        if (roofsCount > 0)
+        {
+            byte zero = 0, one = 1;
+            for (byte i = 0; i < CHUNK_SIZE; i++)
+            {
+                for (byte j = 0; j < CHUNK_SIZE; j++)
                 {
-                    Block b = GetBlock(x, y, z);
-                    if (b != null && b.type != BlockType.Shapeless)
+                    Roof r = roofs[i, j];
+                    if (r == null) continue;
+                    else
                     {
-                        cs.blocksData.Add(b.Save());
+                        fs.WriteByte(i);
+                        fs.WriteByte(j);
+                        fs.WriteByte(r.artificial ? one : zero);
+                        fs.WriteByte(r.peak ? one : zero);
+                        fs.WriteByte((byte)(r.transform.rotation.eulerAngles.y / 90));
+                        fs.WriteByte(byte.Parse(r.name[2].ToString()));
                     }
                 }
             }
         }
-        cs.chunkSize = CHUNK_SIZE;
-        cs.lifepower = lifePower;
-        List<RoofSerializer> rsl = new List<RoofSerializer>();
-        for (byte i = 0; i < CHUNK_SIZE; i++)
-        {
-            for (byte j = 0; j < CHUNK_SIZE; j++)
-            {
-                if (roofs[i, j] == null) continue;
-                else
-                {
-                    RoofSerializer rs = new RoofSerializer();
-                    rs.posx = i;
-                    rs.posz = j;
-                    Roof r = roofs[i, j];
-                    rs.artificial = r.artificial;
-                    rs.peak = r.peak;
-                    rs.rotation = (byte)(r.transform.rotation.eulerAngles.y / 90);
-                    rs.modelNumber = byte.Parse(r.name[2].ToString());
-                    rsl.Add(rs);
-                }
-            }
-        }
-        cs.roofsData = rsl;
-        return cs;
     }
 
-    public void LoadChunkData(ChunkSerializer cs)
+    public int LoadChunkData(byte[] data, int startIndex)
     {
-        if (cs == null) print("chunk serialization failed!");
         if (blocks != null) ClearChunk();        
-        CHUNK_SIZE = cs.chunkSize;
+        CHUNK_SIZE = data[startIndex];
         Prepare();
+
         surfaceBlocks = new List<SurfaceBlock>();
-        List<Block> loadedBlocks = new List<Block>();
-        foreach (BlockSerializer bserializer in cs.blocksData)
-        {
-            switch (bserializer.type)
+        int readIndex = startIndex + 1;
+        int blocksCount = System.BitConverter.ToInt32(data, readIndex);
+        readIndex += 4;
+
+        if (blocksCount > 0) {
+            var loadedBlocks = new Block[blocksCount];
+            BlockType type;
+            ChunkPos pos;
+            int materialID;
+            for (int i = 0; i < blocksCount; i++)
             {
-                case BlockType.Shapeless:
-                    {
-                        Block b = new GameObject().AddComponent<Block>();
-                        blocks[bserializer.pos.x, bserializer.pos.y, bserializer.pos.z] = b;
-                        b.InitializeBlock(this, bserializer.pos, bserializer.material_id);
-                        loadedBlocks.Add(b);
-                        break;
-                    }
-                case BlockType.Cube:
-                    {
-                        CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
-                        blocks[bserializer.pos.x, bserializer.pos.y, bserializer.pos.z] = cb;
-                        cb.InitializeCubeBlock(this, bserializer.pos, bserializer.material_id, false);
-                        cb.LoadCubeBlockData(bserializer);
-                        loadedBlocks.Add(cb);
-                        break;
-                    }
-                case BlockType.Surface:
-                    {
-                        SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
-                        blocks[bserializer.pos.x, bserializer.pos.y, bserializer.pos.z] = sb;
-                        sb.InitializeSurfaceBlock(this, bserializer.pos, bserializer.material_id);
-                        SurfaceBlockSerializer sbs = new SurfaceBlockSerializer();
-                        GameMaster.DeserializeByteArray<SurfaceBlockSerializer>(bserializer.specificData, ref sbs);
-                        sb.LoadSurfaceBlockData(sbs);
-                        loadedBlocks.Add(sb);
-                        surfaceBlocks.Add(sb);
-                        break;
-                    }
-                case BlockType.Cave:
-                    {
-                        CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
-                        blocks[bserializer.pos.x, bserializer.pos.y, bserializer.pos.z] = cvb;
-                        var cbs = new CaveBlockSerializer();
-                        GameMaster.DeserializeByteArray<CaveBlockSerializer>(bserializer.specificData, ref cbs);
-                        cvb.InitializeCaveBlock(this, bserializer.pos, cbs.upMaterial_ID, bserializer.material_id);
-                        cvb.LoadSurfaceBlockData(cbs.surfaceBlockSerializer);
-                        loadedBlocks.Add(cvb);
-                        surfaceBlocks.Add(cvb);
-                        break;
-                    }
+                type = (BlockType)data[readIndex];
+                pos = new ChunkPos(data[readIndex + 1], data[readIndex + 2], data[readIndex + 3]);
+                materialID = System.BitConverter.ToInt32(data, readIndex + 4);
+                readIndex += 8;
+                switch (type)
+                {
+                    case BlockType.Shapeless:
+                        {
+                            Block b = new GameObject().AddComponent<Block>();
+                            blocks[pos.x, pos.y, pos.z] = b;
+                            b.InitializeBlock(this, pos, materialID);
+                            loadedBlocks[i] = b;
+                            break;
+                        }
+                    case BlockType.Cube:
+                        {
+                            CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
+                            blocks[pos.x, pos.y, pos.z] = cb;
+                            cb.InitializeCubeBlock(this, pos, materialID, false);
+                            readIndex = cb.LoadCubeBlockData(data, readIndex);
+                            loadedBlocks[i] = cb;
+                            break;
+                        }
+                    case BlockType.Surface:
+                        {
+                            SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
+                            blocks[pos.x, pos.y, pos.z] = sb;
+                            sb.InitializeSurfaceBlock(this, pos, materialID);
+                            readIndex = sb.LoadSurfaceBlockData(data, readIndex);
+                            loadedBlocks[i] = sb;
+                            surfaceBlocks.Add(sb);
+                            break;
+                        }
+                    case BlockType.Cave:
+                        {
+                            CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
+                            blocks[pos.x, pos.y, pos.z] = cvb;
+                            int ceilingMaterial = System.BitConverter.ToInt32(data, readIndex);
+                            readIndex += 4;
+                            cvb.InitializeCaveBlock(this, pos, ceilingMaterial, materialID);
+                            readIndex = cvb.LoadSurfaceBlockData(data, readIndex);
+                            loadedBlocks[i] = cvb;
+                            surfaceBlocks.Add(cvb);
+                            break;
+                        }
+                    default: continue;
+                }
+            }
+            bool corruptedData = false;
+            foreach (Block b in loadedBlocks) {
+                if (b == null & !corruptedData)
+                {
+                    UIController.current.MakeAnnouncement("error desu : block hasn't loaded");
+                    corruptedData = true;
+                }
+                b.SetVisibilityMask(GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z));
+            } // ужасное решение
+            ChunkLightmapFullRecalculation();
+        }
+
+        lifePower = System.BitConverter.ToSingle(data, readIndex);
+        readIndex += 4;
+
+        if (roofs != null) 
+        {
+            foreach (Roof r in roofs)
+            {
+                if (r != null) Destroy(r.gameObject);
             }
         }
-        bool corruptedData = false;
-        foreach (Block b in loadedBlocks) {
-            if (b == null & !corruptedData)
-            {
-                UIController.current.MakeAnnouncement("error desu : block hasn't loaded");
-                corruptedData = true;
-            }
-            b.SetVisibilityMask(GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z));
-        } // ужасное решение
-        ChunkLightmapFullRecalculation();
-
-        lifePower = cs.lifepower;
-
-        List<RoofSerializer> rsl = cs.roofsData;
-        foreach (Roof r in roofs) { if (r != null) Destroy(r.gameObject); }
-        if (rsl.Count > 0)
+        int roofsCount = System.BitConverter.ToInt32(data, readIndex);
+        readIndex += 4;
+        if (roofsCount > 0)
         {
-            foreach (RoofSerializer rs in rsl)
+            Roof r;
+            for (int i = 0; i < roofsCount; i++)
             {
-                Roof r = PoolMaster.GetRooftop(rs.peak, rs.artificial, rs.modelNumber).AddComponent<Roof>();
-                r.peak = rs.peak;
-                r.artificial = rs.artificial;
+                bool peak = data[readIndex + 3] == 1;
+                bool artificial = data[readIndex + 2] == 1;
+                r = PoolMaster.GetRooftop(peak, artificial, data[readIndex + 5]).AddComponent<Roof>();
+                r.peak = peak;
+                r.artificial = artificial;
                 r.transform.parent = roofObjectsHolder.transform;
-                r.transform.localPosition = new Vector3(rs.posx * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, rs.posz * Block.QUAD_SIZE);
-                r.transform.localRotation = Quaternion.Euler(0, rs.rotation * 90, 0);
-                roofs[rs.posx, rs.posz] = r;
+                byte x = data[readIndex],
+                    y = data[readIndex + 1];
+                r.transform.localPosition = new Vector3(x * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, y * Block.QUAD_SIZE);
+                r.transform.localRotation = Quaternion.Euler(0, data[readIndex + 4] * 90, 0);
+                roofs[x, y] = r;
+
+                readIndex += 6;
             }
         }
         if (borderDrawn) DrawBorder();
+        return readIndex;
     }
     #endregion
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using UnityEngine.SceneManagement;
 
 public class SaveSystemUI : MonoBehaviour
 {
@@ -189,10 +188,10 @@ public class SaveSystemUI : MonoBehaviour
         lastSelectedIndex = index;
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = true;
         deleteButtonText.transform.parent.GetComponent<Button>().interactable = true;
-        string fullPath = terrainsLoading ? 
-            GetTerrainsPath() + '/' + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION 
+        string fullPath = terrainsLoading ?
+            GetTerrainsPath() + '/' + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION
             :
-            GetSavesPath() +'/' + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
+            GetSavesPath() + '/' + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
         if (File.Exists(fullPath))
         {
             saveDateString.enabled = true;
@@ -300,9 +299,9 @@ public class SaveSystemUI : MonoBehaviour
         {   // ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ИГРЫ
             if (deleteSubmit)
             {
-                File.Delete(terrainsLoading ? 
-                    GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION 
-                    : 
+                File.Delete(terrainsLoading ?
+                    GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION
+                    :
                     GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION);
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
@@ -327,9 +326,9 @@ public class SaveSystemUI : MonoBehaviour
     public void DeleteButton()
     {
         if (lastSelectedIndex == -1 | lastSelectedIndex >= saveNames.Length) return;
-        string path = terrainsLoading ? 
-            GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION 
-            : 
+        string path = terrainsLoading ?
+            GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION
+            :
             GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
         if (File.Exists(path))
         {

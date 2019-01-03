@@ -4,11 +4,7 @@ using UnityEngine;
 
 public class MineElevator : Structure {
 	//--------SAVE  SYSTEM-------------
-	public override StructureSerializer Save() { // cause serializing throw mine
+	public override List<byte> Save() { // cause serializing throw mine
 		return null;
 	} 
-	public StructureSerializer GetSerializer() { // for mine serializing
-		return GetStructureSerializer();
-	}
-	// ------------------------------------------
 }

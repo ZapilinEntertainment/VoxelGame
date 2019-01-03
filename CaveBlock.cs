@@ -2,13 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class CaveBlockSerializer
-{
-    public SurfaceBlockSerializer surfaceBlockSerializer;
-    public int upMaterial_ID;
-}
-
 public sealed class CaveBlock : SurfaceBlock
 {
     MeshRenderer[] faces; // 0 - north, 1 - east, 2 - south, 3 - west
@@ -293,19 +286,18 @@ public sealed class CaveBlock : SurfaceBlock
     }
 
     #region save-load system
-    override public BlockSerializer Save()
+    override public List<byte> Save()
     {
-        BlockSerializer bs = GetBlockSerializer();
-        if (!haveSurface) bs.material_id = -1;
-        CaveBlockSerializer cbs = new CaveBlockSerializer();
-        cbs.upMaterial_ID = ceilingMaterial;
-        cbs.surfaceBlockSerializer = GetSurfaceBlockSerializer();        
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, cbs);
-            bs.specificData = stream.ToArray();
-        }
-        return bs;
+        int m_id = material_id;
+        if (!haveSurface) material_id = -1;
+
+        var data = GetBlockData(); // << запись материала
+        material_id = m_id;
+
+        data.AddRange(System.BitConverter.GetBytes(ceilingMaterial));
+        data.AddRange(SaveSurfaceBlockData());     
+
+        return data;
     }
     #endregion
 }
