@@ -195,6 +195,10 @@ public class Block : MonoBehaviour {
     #region save-load
     virtual public void Save(System.IO.FileStream fs)
     {
+        SaveBlockData(fs);
+    }
+    protected void SaveBlockData(System.IO.FileStream fs)
+    {
         fs.WriteByte((byte)type);
         fs.WriteByte(pos.x);
         fs.WriteByte(pos.y);

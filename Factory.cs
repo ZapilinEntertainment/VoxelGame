@@ -14,6 +14,7 @@ public class Factory : WorkBuilding {
     public Recipe recipe { get; private set; }
 
     public const float BUFFER_LIMIT = 10;
+    public const int FACTORY_SERIALIZER_LENGTH = 17;
 
     public static UIFactoryObserver factoryObserver;
 
@@ -197,15 +198,17 @@ public class Factory : WorkBuilding {
         data.AddRange(System.BitConverter.GetBytes(inputResourcesBuffer));
         data.AddRange(System.BitConverter.GetBytes(outputResourcesBuffer));
         data.AddRange(System.BitConverter.GetBytes(productionModeValue));
+        //SERIALIZER_LENGTH = 17;
         return data;
     }
 
-    override public int Load (byte[] data, int startIndex, SurfaceBlock sblock) {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        startIndex = LoadBuildingData(data, startIndex);
-        int endIndex = LoadFactoryData(data, startIndex + WorkBuilding.WORKBUILDING_SERIALIZER_LENGTH);
-        LoadWorkBuildingData(data, startIndex);
-        return endIndex;
+    override public void Load (System.IO.FileStream fs, SurfaceBlock sblock) {
+        LoadStructureData(fs, sblock);
+        LoadBuildingData(fs);
+        var data = new byte[WORKBUILDING_SERIALIZER_LENGTH + FACTORY_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadFactoryData(data, WORKBUILDING_SERIALIZER_LENGTH);
+        LoadWorkBuildingData(data, 0);
 	}
 
 	protected int LoadFactoryData(byte[] data, int startIndex) {

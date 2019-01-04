@@ -7,7 +7,7 @@ public enum ContainerModelType : ushort { Default, Boulder, Pile, DeadOak4, Dead
 
 public class HarvestableResource : Structure
 {
-    public new const int SERIALIZER_LENGTH = 10;
+    public const int CONTAINER_SERIALIZER_LENGTH = 10;
 
     public ResourceType mainResource { get; protected set; }
     public float resourceCount;
@@ -282,37 +282,37 @@ public class HarvestableResource : Structure
         return data;
     }
 
-    override public int Load(byte[] data,int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        int containerStartIndex = startIndex + Structure.STRUCTURE_SERIALIZER_LENGTH;
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + CONTAINER_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        int containerStartIndex = STRUCTURE_SERIALIZER_LENGTH;
         mainResource = ResourceType.GetResourceTypeById( System.BitConverter.ToInt32(data, containerStartIndex) );
         resourceCount = System.BitConverter.ToSingle(data, containerStartIndex + 4);
 
         SetModel();
-        modelRotation = data[startIndex + 2];
-        indestructible = (data[startIndex + 3] == 1);
-        SetBasement(sblock, new PixelPosByte(data[startIndex], data[startIndex + 1]));
-        hp = System.BitConverter.ToSingle(data, startIndex + 4);
-        maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
-
-        return containerStartIndex + SERIALIZER_LENGTH; 
+        modelRotation = data[2];
+        indestructible = (data[3] == 1);
+        SetBasement(sblock, new PixelPosByte(data[0], data[1]));
+        hp = System.BitConverter.ToSingle(data, 4);
+        maxHp = System.BitConverter.ToSingle(data, 8);
     }
 
-    public static int LoadContainer(byte[] data, int startIndex, SurfaceBlock sblock)
+    public static void LoadContainer(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        int containerStartIndex = startIndex + Structure.STRUCTURE_SERIALIZER_LENGTH;
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + CONTAINER_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        int containerStartIndex = STRUCTURE_SERIALIZER_LENGTH;
         ushort modelId = System.BitConverter.ToUInt16(data, containerStartIndex + 8);
         ResourceType resType = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, containerStartIndex));
         float count = System.BitConverter.ToSingle(data, containerStartIndex + 4);
         HarvestableResource hr = ConstructContainer((ContainerModelType)modelId, resType, count);
 
-        hr.modelRotation = data[startIndex + 2];
-        hr.indestructible = (data[startIndex + 3] == 1);
-        hr.SetBasement(sblock, new PixelPosByte(data[startIndex], data[startIndex + 1]));
-        hr.hp = System.BitConverter.ToSingle(data, startIndex + 4);
-        hr.maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
-
-        return startIndex + 26;
+        hr.modelRotation = data[2];
+        hr.indestructible = (data[3] == 1);
+        hr.SetBasement(sblock, new PixelPosByte(data[0], data[1]));
+        hr.hp = System.BitConverter.ToSingle(data,4);
+        hr.maxHp = System.BitConverter.ToSingle(data, 8);
     }
 
 

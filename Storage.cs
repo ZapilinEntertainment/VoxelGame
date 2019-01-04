@@ -1,11 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class StorageSerializer {
-	public float[] standartResources;
-}
-
 public sealed class Storage : MonoBehaviour {
 	public float totalVolume = 0, maxVolume, announcementTimer;
 	public List<StorageHouse> warehouses { get; private set; }
@@ -63,6 +58,7 @@ public sealed class Storage : MonoBehaviour {
 		if (totalVolume >= maxVolume | count == 0) return count;
 		float loadedCount = count;
 		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - totalVolume;
+        if (rtype == ResourceType.FertileSoil) rtype = ResourceType.Dirt;
 		standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
         operationsDone++;
@@ -162,17 +158,23 @@ public sealed class Storage : MonoBehaviour {
         return true;
 	}
 	#region save-load system
-	public StorageSerializer Save() {
-		StorageSerializer ss = new StorageSerializer();
-		ss.standartResources = standartResources;
-		return ss;
-	}
-	public void Load(StorageSerializer ss) {
-		standartResources = ss.standartResources;
-        totalVolume = 0;
-        for (int i =0; i < standartResources.Length; i++)
+	public void Save( System.IO.FileStream fs) {
+        foreach (float f in standartResources)
         {
-            totalVolume += standartResources[i];
+            fs.Write(System.BitConverter.GetBytes(f), 0, 4);
+        }
+	}
+	public void Load(System.IO.FileStream fs) {
+        var val = new byte[4];
+        if (standartResources == null) standartResources = new float[ResourceType.RTYPES_COUNT];
+        totalVolume = 0;
+        float f;
+        for (int i = 0; i <ResourceType.RTYPES_COUNT; i++)
+        {
+            fs.Read(val, 0, 4);
+            f = System.BitConverter.ToInt32(val,0);
+            standartResources[i] = f;
+            totalVolume += f;
         }
 	}
 	#endregion

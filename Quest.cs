@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum QuestType
+public enum QuestType : byte
 {
     System, Progress, Endgame
 }
@@ -703,25 +703,35 @@ public class Quest {
         }
     }
 
-	public QuestSerializer Save() {
-		QuestSerializer qs = new QuestSerializer();
-        qs.stepsFinished = stepsFinished;
-        qs.type = type;
-        qs.subIndex = subIndex;  
-		return qs;
+    #region save-load
+    public List<byte> Save() {
+        var data = new List<byte>() { (byte)type, subIndex };
+        int stepsCount = stepsFinished.Length;
+        data.AddRange(System.BitConverter.GetBytes(stepsCount));
+        byte one = 1, zero = 0;
+        if (stepsCount > 0)
+        {
+            foreach (bool b in stepsFinished)
+            {
+                data.Add(b ? one : zero);
+            }
+        }
+		return data;
 	}
-	public static Quest Load(QuestSerializer qs) {
-        Quest q = new Quest(qs.type, qs.subIndex);
-        q.stepsFinished = qs.stepsFinished;
+	public static Quest Load(System.IO.FileStream fs) {
+        Quest q = new Quest((QuestType)fs.ReadByte(), (byte)fs.ReadByte());
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int stepsCount = System.BitConverter.ToInt32(data,0);
+        data = new byte[stepsCount];
+        fs.Read(data, 0, data.Length);
+        q.stepsFinished = new bool[stepsCount];
+        for (int i = 0; i < stepsCount; i++)
+        {
+            q.stepsFinished[i] = data[i] == 1;
+        }
 		return q;
 	}
-
-}
-
-[System.Serializable]
-public class QuestSerializer {
-    public bool[] stepsFinished;
-    public QuestType type;
-    public byte subIndex;    
+    #endregion
 }
 

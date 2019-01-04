@@ -600,26 +600,51 @@ public sealed class Dock : WorkBuilding {
     }
 
     #region save-load system
-    public static DockStaticSerializer SaveStaticDockData()
+    public static void SaveStaticDockData(System.IO.FileStream fs)
     {
-        DockStaticSerializer dss = new DockStaticSerializer();
-        dss.isForSale = isForSale;
-        dss.minValueForTrading = minValueForTrading;
-        dss.prices = ResourceType.prices;
-        dss.demand = ResourceType.demand;
-        dss.immigrationPlan = immigrationPlan;
-        dss.immigrationEnabled = immigrationEnabled;
-        return dss;
+        byte trueByte = 1, falseByte = 0, nullByte = 2;
+        if (isForSale == null) ResetToDefaults_Static_Dock();
+        for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
+        {
+            if (isForSale[i] == null) fs.WriteByte(nullByte);
+            else
+            {
+                if (isForSale[i] == true) fs.WriteByte(trueByte);
+                else fs.WriteByte(falseByte);
+            }
+            fs.Write(System.BitConverter.GetBytes(minValueForTrading[i]),0,4);
+            fs.Write(System.BitConverter.GetBytes(ResourceType.prices[i]), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(ResourceType.demand[i]), 0, 4);
+        }
+        fs.Write(System.BitConverter.GetBytes(immigrationPlan), 0, 4);
+        fs.WriteByte(immigrationEnabled ? trueByte : falseByte);
     }
 
-    public static void LoadStaticData(DockStaticSerializer dss)
+    public static void LoadStaticData(System.IO.FileStream fs)
     {
-        isForSale = dss.isForSale;
-        minValueForTrading = dss.minValueForTrading;
-        ResourceType.prices = dss.prices;
-        ResourceType.demand = dss.demand;
-        immigrationPlan = dss.immigrationPlan;
-        immigrationEnabled = dss.immigrationEnabled;
+        var data = new byte[13];
+        int count = ResourceType.RTYPES_COUNT;
+        isForSale = new bool?[count];
+        minValueForTrading = new int[count];
+        ResourceType.prices = new float[count];
+        ResourceType.demand = new float[count];
+        for (int i = 0; i < count; i++)
+        {
+            fs.Read(data, 0, 13);
+            if (data[0] == 2) isForSale[i] = null;
+            else
+            {
+                if (data[0] == 1) isForSale[i] = true;
+                else isForSale[i] = false;
+            }
+            minValueForTrading[i] = System.BitConverter.ToInt32(data, 1);
+            ResourceType.prices[i] = System.BitConverter.ToSingle(data, 5);
+            ResourceType.demand[i] = System.BitConverter.ToSingle(data, 9);
+        }
+        data = new byte[5];
+        fs.Read(data, 0, 5);
+        immigrationPlan = System.BitConverter.ToInt32(data, 0);
+        immigrationEnabled = data[4] == 1;
     }
 
     public override List<byte> Save()
@@ -646,35 +671,24 @@ public sealed class Dock : WorkBuilding {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        startIndex = LoadBuildingData(data, startIndex);
-        startIndex = LoadWorkBuildingData(data, startIndex);
-        return LoadDockData(data, startIndex);
-    }
-    private int LoadDockData(byte[] data, int startIndex)
-    {
-        correctLocation = data[startIndex] == 1;
-        maintainingShip = data[startIndex + 1] == 1;
-        startIndex += 2;
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH + WORKBUILDING_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadStructureData(data, sblock);
+        LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
+        LoadWorkBuildingData(data, STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
+        // load dock data
+        correctLocation = fs.ReadByte() == 1;
+        maintainingShip = fs.ReadByte() == 1;
         if (maintainingShip)
         {
-            loadingShip = Ship.Load(data, startIndex, this);
-            startIndex += Ship.SERIALIZER_LENGTH;
+            loadingShip = Ship.Load(fs, this);
         }
-        loadingTimer = System.BitConverter.ToSingle(data, startIndex);
-        shipArrivingTimer = System.BitConverter.ToSingle(data, startIndex + 4);
-        return startIndex + 8;
+        data = new byte[8];
+        fs.Read(data, 0, data.Length);
+        loadingTimer = System.BitConverter.ToSingle(data, 0);
+        shipArrivingTimer = System.BitConverter.ToSingle(data, 4);
     }
     #endregion
-}
-
-[System.Serializable]
-public class DockStaticSerializer {
-	public bool?[] isForSale;
-	public int[] minValueForTrading;
-	public float[] prices, demand;
-	public int immigrationPlan ;
-	public bool immigrationEnabled;
 }

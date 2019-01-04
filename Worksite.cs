@@ -2,16 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class WorksiteSerializer {
-	public WorksiteType type;
-	public ChunkPos workObjectPos;
-	public int workersCount;
-	public float workflow, workSpeed;
-	public byte[] specificData;
-}
-
-public enum WorksiteType {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
+public enum WorksiteType : byte {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
 
 public abstract class Worksite : MonoBehaviour {
 	public int workersCount {get;protected set;}
@@ -81,117 +72,7 @@ public abstract class Worksite : MonoBehaviour {
         destination.workersCount = sum; 
         destination.RecalculateWorkspeed();
     }
-	protected abstract void RecalculateWorkspeed() ;
-
-    #region save-load system
-    virtual protected WorksiteSerializer Save() {
-		WorksiteSerializer ws = GetWorksiteSerializer();
-		ws.type = WorksiteType.Abstract;
-		return ws;
-	}
-	virtual protected void Load(WorksiteSerializer ws) {
-		LoadWorksiteData(ws);
-	}
-
-	protected WorksiteSerializer GetWorksiteSerializer() {
-		WorksiteSerializer ws = new WorksiteSerializer();
-		ws.workersCount = workersCount;
-		ws.workflow = workflow;
-		ws.workSpeed = workSpeed;
-		return ws;
-	}
-	protected void LoadWorksiteData(WorksiteSerializer ws) {
-		workersCount = ws.workersCount;
-		workflow = ws.workflow;
-		workSpeed = ws.workSpeed;
-	}
-
-    public static WorksiteSerializer[] StaticSave()
-    {
-        if (worksitesList.Count == 0) return new WorksiteSerializer[0];
-        var wa = new WorksiteSerializer[worksitesList.Count];
-            for (int i =0; i < wa.Length; i++)
-            {
-                wa[i] = worksitesList[i].Save();
-            }
-            return wa;
-    }
-    public static void StaticLoad(WorksiteSerializer[] wdata)
-    {
-        worksitesList = new List<Worksite>();
-        Worksite w = null;
-        Chunk chunk = GameMaster.realMaster.mainChunk;
-        for (int i = 0; i < wdata.Length; i++)
-        {
-            WorksiteSerializer ws = wdata[i];
-            ChunkPos cpos = ws.workObjectPos;
-            switch (ws.type)
-            {
-                default: w = null; break;
-                case WorksiteType.BlockBuildingSite:
-                    {
-                        SurfaceBlock sblock = chunk.GetBlock(cpos) as SurfaceBlock;
-                        if (sblock != null)
-                        {
-                            w = sblock.gameObject.AddComponent<BlockBuildingSite>();
-                            worksitesList.Add(w);
-                            w.Load(ws);
-                        }
-                        else continue;
-                        break;
-                    }
-                case WorksiteType.CleanSite:
-                    {
-                        SurfaceBlock sblock = chunk.GetBlock(cpos) as SurfaceBlock;
-                        if (sblock != null)
-                        {
-                            w = sblock.gameObject.AddComponent<CleanSite>();
-                            worksitesList.Add(w);
-                            w.Load(ws);
-                        }
-                        else continue;
-                        break;
-                    }
-                case WorksiteType.DigSite:
-                    {
-                        CubeBlock cb = chunk.GetBlock(cpos) as CubeBlock;
-                        if (cb != null)
-                        {
-                            w = cb.gameObject.AddComponent<DigSite>();
-                            worksitesList.Add(w);
-                            w.Load(ws);
-                        }
-                        else continue;
-                        break;
-                    }
-                case WorksiteType.GatherSite:
-                    {
-                        SurfaceBlock sblock = chunk.GetBlock(cpos) as SurfaceBlock;
-                        if (sblock != null)
-                        {
-                            w = sblock.gameObject.AddComponent<GatherSite>();
-                            worksitesList.Add(w);
-                            w.Load(ws);
-                        }
-                        else continue;
-                        break;
-                    }
-                case WorksiteType.TunnelBuildingSite:
-                    {
-                        CubeBlock cb = chunk.GetBlock(cpos) as CubeBlock;
-                        if (cb != null)
-                        {
-                            w = cb.gameObject.AddComponent<TunnelBuildingSite>();
-                            worksitesList.Add(w);
-                            w.Load(ws);
-                        }
-                        else continue;
-                        break;
-                    }
-            }
-        }
-    }
-	#endregion
+	protected abstract void RecalculateWorkspeed() ;    
 
     public UIObserver ShowOnGUI()
     {
@@ -214,4 +95,151 @@ public abstract class Worksite : MonoBehaviour {
         if (sign != null) Destroy(sign.gameObject);
         Destroy(this);
     }
+
+    #region save-load system
+    public static void StaticSave(System.IO.FileStream fs)
+    {
+        int count = worksitesList.Count;
+        if (worksitesList.Count > 0)
+        {
+            int savesCount = 0, i =0;
+            List<byte> saveList = new List<byte>();
+            while (i < worksitesList.Count)
+            {
+                var data = worksitesList[i].Save();
+                if (data != null)
+                {
+                    saveList.AddRange(data);
+                    savesCount++;
+                }
+                i++;
+            }
+            if (savesCount > 0)
+            {
+                fs.Write(System.BitConverter.GetBytes(savesCount), 0, 4);
+                fs.Write(saveList.ToArray(), 0, saveList.Count);
+            }
+            else
+            {
+                int x = 0;
+                fs.Write(System.BitConverter.GetBytes(x), 0, 4);
+            }
+        }
+        else
+        {
+            int x = 0;
+            fs.Write(System.BitConverter.GetBytes(x), 0, 4);
+        }
+    }
+    protected virtual List<byte> Save()
+    {
+        var data = SerializeWorksite();
+        data.Insert(0,(byte)WorksiteType.Abstract);
+        return data;
+    }
+    protected List<byte> SerializeWorksite()
+    {
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(workersCount));
+        data.AddRange(System.BitConverter.GetBytes(workflow));
+        data.AddRange(System.BitConverter.GetBytes(workSpeed));
+        return data;
+    }
+
+
+    virtual protected void Load(System.IO.FileStream fs, ChunkPos pos)
+    {
+        LoadWorksiteData(fs);
+    }    
+    protected void LoadWorksiteData(System.IO.FileStream fs)
+    {
+        byte[] data = new byte[12];
+        fs.Read(data, 0, 12);
+        workersCount = System.BitConverter.ToInt32(data, 0);
+        workflow = System.BitConverter.ToSingle(data, 4);
+        workSpeed = System.BitConverter.ToSingle(data, 8);
+    }    
+
+    public static void StaticLoad(System.IO.FileStream fs)
+    {
+        worksitesList = new List<Worksite>();
+        Worksite w = null;
+        Chunk chunk = GameMaster.realMaster.mainChunk;
+
+        byte[] data = new byte[4];
+        int count = fs.Read(data, 0, 4);
+        if (count > 0)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                WorksiteType type = (WorksiteType)fs.ReadByte();
+                ChunkPos pos = new ChunkPos(fs.ReadByte(), fs.ReadByte(), fs.ReadByte());
+                switch (type)
+                {                    
+                    case WorksiteType.BlockBuildingSite:
+                        {
+                            SurfaceBlock sblock = chunk.GetBlock(pos) as SurfaceBlock;
+                            if (sblock != null)
+                            {
+                                w = sblock.gameObject.AddComponent<BlockBuildingSite>();
+                                worksitesList.Add(w);
+                                w.Load(fs,pos);
+                            }
+                            else continue;
+                            break;
+                        }
+                    case WorksiteType.CleanSite:
+                        {
+                            SurfaceBlock sblock = chunk.GetBlock(pos) as SurfaceBlock;
+                            if (sblock != null)
+                            {
+                                w = sblock.gameObject.AddComponent<CleanSite>();
+                                worksitesList.Add(w);
+                                w.Load(fs,pos);
+                            }
+                            else continue;
+                            break;
+                        }
+                    case WorksiteType.DigSite:
+                        {
+                            CubeBlock cb = chunk.GetBlock(pos) as CubeBlock;
+                            if (cb != null)
+                            {
+                                w = cb.gameObject.AddComponent<DigSite>();
+                                worksitesList.Add(w);
+                                w.Load(fs,pos);
+                            }
+                            else continue;
+                            break;
+                        }
+                    case WorksiteType.GatherSite:
+                        {
+                            SurfaceBlock sblock = chunk.GetBlock(pos) as SurfaceBlock;
+                            if (sblock != null)
+                            {
+                                w = sblock.gameObject.AddComponent<GatherSite>();
+                                worksitesList.Add(w);
+                                w.Load(fs,pos);
+                            }
+                            else continue;
+                            break;
+                        }
+                    case WorksiteType.TunnelBuildingSite:
+                        {
+                            CubeBlock cb = chunk.GetBlock(pos) as CubeBlock;
+                            if (cb != null)
+                            {
+                                w = cb.gameObject.AddComponent<TunnelBuildingSite>();
+                                worksitesList.Add(w);
+                                w.Load(fs,pos);
+                            }
+                            else continue;
+                            break;
+                        }
+                    default: w = null; break;
+                }
+            }
+        }
+    }
+    #endregion
 }

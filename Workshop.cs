@@ -81,11 +81,10 @@ public sealed class Workshop : WorkBuilding {
         data.Add((byte)mode);
         return data;
     }
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = base.Load(data, startIndex, sblock);
-        mode = (WorkshopMode)data[startIndex];
-        return startIndex + 1;
+        base.Load(fs, sblock);
+        mode = (WorkshopMode)fs.ReadByte();
     }
 
     #endregion

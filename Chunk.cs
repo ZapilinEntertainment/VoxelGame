@@ -16,7 +16,7 @@ public struct ChunkPos
     }
 }
 
-public enum ChunkGenerationMode { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate }
+public enum ChunkGenerationMode : byte { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate }
 
 public sealed class Chunk : MonoBehaviour
 {
@@ -1702,40 +1702,41 @@ public sealed class Chunk : MonoBehaviour
                     if (r == null) continue;
                     else
                     {
-                        fs.WriteByte(i);
-                        fs.WriteByte(j);
-                        fs.WriteByte(r.artificial ? one : zero);
-                        fs.WriteByte(r.peak ? one : zero);
-                        fs.WriteByte((byte)(r.transform.rotation.eulerAngles.y / 90));
-                        fs.WriteByte(byte.Parse(r.name[2].ToString()));
+                        fs.WriteByte(i); //0
+                        fs.WriteByte(j); // 1
+                        fs.WriteByte(r.artificial ? one : zero); // 2
+                        fs.WriteByte(r.peak ? one : zero); // 3
+                        fs.WriteByte((byte)(r.transform.rotation.eulerAngles.y / 90)); // 4
+                        fs.WriteByte(byte.Parse(r.name[2].ToString())); // 5
                     }
                 }
             }
         }
     }
 
-    public int LoadChunkData(byte[] data, int startIndex)
+    public void LoadChunkData(System.IO.FileStream fs)
     {
         if (blocks != null) ClearChunk();        
-        CHUNK_SIZE = data[startIndex];
+        CHUNK_SIZE = (byte)fs.ReadByte();
         Prepare();
 
+        var data = new byte[4];
+        fs.Read(data, 0, data.Length);
         surfaceBlocks = new List<SurfaceBlock>();
-        int readIndex = startIndex + 1;
-        int blocksCount = System.BitConverter.ToInt32(data, readIndex);
-        readIndex += 4;
+        int blocksCount = System.BitConverter.ToInt32(data, 0);
 
         if (blocksCount > 0) {
             var loadedBlocks = new Block[blocksCount];
             BlockType type;
             ChunkPos pos;
             int materialID;
+            data = new byte[8];
             for (int i = 0; i < blocksCount; i++)
             {
-                type = (BlockType)data[readIndex];
-                pos = new ChunkPos(data[readIndex + 1], data[readIndex + 2], data[readIndex + 3]);
-                materialID = System.BitConverter.ToInt32(data, readIndex + 4);
-                readIndex += 8;
+                fs.Read(data, 0, data.Length);
+                type = (BlockType)data[0];
+                pos = new ChunkPos(data[1], data[2], data[3]);
+                materialID = System.BitConverter.ToInt32(data,4);
                 switch (type)
                 {
                     case BlockType.Shapeless:
@@ -1751,7 +1752,7 @@ public sealed class Chunk : MonoBehaviour
                             CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
                             blocks[pos.x, pos.y, pos.z] = cb;
                             cb.InitializeCubeBlock(this, pos, materialID, false);
-                            readIndex = cb.LoadCubeBlockData(data, readIndex);
+                            cb.LoadCubeBlockData(fs);
                             loadedBlocks[i] = cb;
                             break;
                         }
@@ -1760,7 +1761,7 @@ public sealed class Chunk : MonoBehaviour
                             SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
                             blocks[pos.x, pos.y, pos.z] = sb;
                             sb.InitializeSurfaceBlock(this, pos, materialID);
-                            readIndex = sb.LoadSurfaceBlockData(data, readIndex);
+                            sb.LoadSurfaceBlockData(fs);
                             loadedBlocks[i] = sb;
                             surfaceBlocks.Add(sb);
                             break;
@@ -1769,10 +1770,11 @@ public sealed class Chunk : MonoBehaviour
                         {
                             CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
                             blocks[pos.x, pos.y, pos.z] = cvb;
-                            int ceilingMaterial = System.BitConverter.ToInt32(data, readIndex);
-                            readIndex += 4;
+                            data = new byte[4];
+                            fs.Read(data, 0, 4);
+                            int ceilingMaterial = System.BitConverter.ToInt32(data, 0);
                             cvb.InitializeCaveBlock(this, pos, ceilingMaterial, materialID);
-                            readIndex = cvb.LoadSurfaceBlockData(data, readIndex);
+                            cvb.LoadSurfaceBlockData(fs);
                             loadedBlocks[i] = cvb;
                             surfaceBlocks.Add(cvb);
                             break;
@@ -1792,8 +1794,9 @@ public sealed class Chunk : MonoBehaviour
             ChunkLightmapFullRecalculation();
         }
 
-        lifePower = System.BitConverter.ToSingle(data, readIndex);
-        readIndex += 4;
+        data = new byte[8];
+        fs.Read(data, 0, 8);
+        lifePower = System.BitConverter.ToSingle(data, 0);
 
         if (roofs != null) 
         {
@@ -1802,30 +1805,28 @@ public sealed class Chunk : MonoBehaviour
                 if (r != null) Destroy(r.gameObject);
             }
         }
-        int roofsCount = System.BitConverter.ToInt32(data, readIndex);
-        readIndex += 4;
+        int roofsCount = System.BitConverter.ToInt32(data, 4);
         if (roofsCount > 0)
         {
             Roof r;
+            data = new byte[5];
             for (int i = 0; i < roofsCount; i++)
             {
-                bool peak = data[readIndex + 3] == 1;
-                bool artificial = data[readIndex + 2] == 1;
-                r = PoolMaster.GetRooftop(peak, artificial, data[readIndex + 5]).AddComponent<Roof>();
+                fs.Read(data, 0, 5);
+                bool peak = data[3] == 1;
+                bool artificial = data[2] == 1;
+                r = PoolMaster.GetRooftop(peak, artificial, data[5]).AddComponent<Roof>();
                 r.peak = peak;
                 r.artificial = artificial;
                 r.transform.parent = roofObjectsHolder.transform;
-                byte x = data[readIndex],
-                    y = data[readIndex + 1];
+                byte x = data[0],
+                    y = data[1];
                 r.transform.localPosition = new Vector3(x * Block.QUAD_SIZE, (CHUNK_SIZE - 0.5f) * Block.QUAD_SIZE, y * Block.QUAD_SIZE);
-                r.transform.localRotation = Quaternion.Euler(0, data[readIndex + 4] * 90, 0);
+                r.transform.localRotation = Quaternion.Euler(0, data[4] * 90, 0);
                 roofs[x, y] = r;
-
-                readIndex += 6;
             }
         }
         if (borderDrawn) DrawBorder();
-        return readIndex;
     }
     #endregion
 

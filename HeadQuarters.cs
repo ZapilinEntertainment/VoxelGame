@@ -187,22 +187,22 @@ public sealed class HeadQuarters : House {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sb)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sb)
     {
-        int endIndex = LoadBuildingData(data, startIndex + STRUCTURE_SERIALIZER_LENGTH);
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
         Prepare();
         //load structure data
         Prepare();
-        modelRotation = data[startIndex + 2];
-        indestructible = (data[startIndex + 3] == 1);
+        modelRotation = data[2];
+        indestructible = (data[3] == 1);
         // >>
-        level = data[endIndex];
+        level = (byte)fs.ReadByte();
         // >>
-        SetBasement(sb, new PixelPosByte(data[startIndex], data[startIndex + 1]));
-        hp = System.BitConverter.ToSingle(data, startIndex + 4);
-        maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
-
-        return endIndex + 1;
+        SetBasement(sb, new PixelPosByte(data[0], data[ 1]));
+        hp = System.BitConverter.ToSingle(data, 4);
+        maxHp = System.BitConverter.ToSingle(data,  8);
     }
 
 

@@ -286,18 +286,14 @@ public sealed class CaveBlock : SurfaceBlock
     }
 
     #region save-load system
-    override public List<byte> Save()
+    override public void Save(System.IO.FileStream fs)
     {
+        SaveBlockData(fs);
+        fs.Write(System.BitConverter.GetBytes(ceilingMaterial), 0, 4);
         int m_id = material_id;
+        SaveSurfaceBlockData(fs);
         if (!haveSurface) material_id = -1;
-
-        var data = GetBlockData(); // << запись материала
-        material_id = m_id;
-
-        data.AddRange(System.BitConverter.GetBytes(ceilingMaterial));
-        data.AddRange(SaveSurfaceBlockData());     
-
-        return data;
+        material_id = m_id;          
     }
     #endregion
 }

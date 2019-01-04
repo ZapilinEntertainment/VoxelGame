@@ -379,17 +379,23 @@ public abstract class WorkBuilding : Building {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock) {
-        startIndex = base.Load(data, startIndex, sblock);
-        return LoadWorkBuildingData(data, startIndex);
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock) {
+        base.Load(fs, sblock);
+        LoadWorkBuildingData(fs);
 	}
-	protected int LoadWorkBuildingData (byte[] data, int startIndex) {
-        workflow = System.BitConverter.ToSingle(data,startIndex);
+    protected void LoadWorkBuildingData(System.IO.FileStream fs)
+    {
+        var data = new byte[WORKBUILDING_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadWorkBuildingData(data, 0);
+    }
+    protected void LoadWorkBuildingData(byte[] data, int startIndex)
+    {
+        workflow = System.BitConverter.ToSingle(data, startIndex);
         workSpeed = System.BitConverter.ToSingle(data, startIndex + 4);
         workflowToProcess = System.BitConverter.ToSingle(data, startIndex + 8);
         workersCount = System.BitConverter.ToInt32(data, startIndex + 12);
         RecalculateWorkspeed();
-        return startIndex + WORKBUILDING_SERIALIZER_LENGTH;        
-	}
+    }
     #endregion
 }

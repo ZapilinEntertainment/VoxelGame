@@ -74,12 +74,14 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(environmentalConditions), 0, 4); // 16 - 19
         fs.Write(System.BitConverter.GetBytes(windTimer), 0, 4);  // 20 - 23
     }
-    public int Load(byte[] data, int startIndex)
+    public void Load(System.IO.FileStream fs)
     {
-        newWindVector = new Vector2();
-        windVector = new Vector2(System.BitConverter.ToSingle(data, startIndex + 8), System.BitConverter.ToSingle(data, startIndex + 12));
-        environmentalConditions = System.BitConverter.ToSingle(data, startIndex + 16);
-        windTimer = System.BitConverter.ToSingle(data, startIndex + 20);
+        var data = new byte[24];
+        fs.Read(data, 0, data.Length);
+        newWindVector = new Vector2(System.BitConverter.ToSingle(data, 0), System.BitConverter.ToSingle(data, 4));
+        windVector = new Vector2(System.BitConverter.ToSingle(data, 8), System.BitConverter.ToSingle(data, 12));
+        environmentalConditions = System.BitConverter.ToSingle(data, 16);
+        windTimer = System.BitConverter.ToSingle(data, 20);
 
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
         if (cloudEmitter == null)
@@ -93,6 +95,5 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);
         prepared = true;
         if (WindUpdateEvent != null) WindUpdateEvent(windVector);
-        return startIndex + 24;
     }
 }

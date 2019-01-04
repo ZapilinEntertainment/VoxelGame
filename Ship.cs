@@ -168,29 +168,31 @@ public class Ship : MonoBehaviour {
         return data;
     }
 
-    public static Ship Load(byte[] data, int startIndex, Dock d)
+    public static Ship Load(System.IO.FileStream fs, Dock d)
     {
-        byte slevel = data[startIndex];
-        ShipType stype = (ShipType)data[startIndex + 1];
+        byte slevel = (byte)fs.ReadByte();
+        ShipType stype = (ShipType)fs.ReadByte();
         Ship s = PoolMaster.current.GetShip(slevel, stype);
         s.level = slevel;
         s.type = stype;
         s.destination = d;
-        s.docked = data[startIndex + 2] == 1;
+        s.docked = fs.ReadByte() == 1;
+        var data = new byte[34];
+        fs.Read(data, 0, data.Length);
         s.transform.position = new Vector3(
-            System.BitConverter.ToSingle(data,startIndex + 3),
-            System.BitConverter.ToSingle(data, startIndex + 7),
-            System.BitConverter.ToSingle(data, startIndex + 11)
+            System.BitConverter.ToSingle(data,0),
+            System.BitConverter.ToSingle(data, 4),
+            System.BitConverter.ToSingle(data, 8)
             );
         s.transform.rotation = new Quaternion(
-            System.BitConverter.ToSingle(data, startIndex + 15),
-            System.BitConverter.ToSingle(data, startIndex + 19),
-            System.BitConverter.ToSingle(data, startIndex + 23),
-            System.BitConverter.ToSingle(data, startIndex + 27)
+            System.BitConverter.ToSingle(data, 12),
+            System.BitConverter.ToSingle(data, 16),
+            System.BitConverter.ToSingle(data, 20),
+            System.BitConverter.ToSingle(data, 24)
             );
-        s.speed = System.BitConverter.ToSingle(data, startIndex + 31);
-        s.unloaded = data[startIndex + 35] == 1;
-        s.xAxisMoving = data[startIndex + 36] == 1;
+        s.speed = System.BitConverter.ToSingle(data, 28);
+        s.unloaded = data[32] == 1;
+        s.xAxisMoving = data[33] == 1;
         return s;
     }
     #endregion

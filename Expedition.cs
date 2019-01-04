@@ -58,55 +58,60 @@ public sealed class Expedition : MonoBehaviour
 
 
     #region save-load system
-    public ExpeditionSerializer Save()
+    public List<byte> Save()
     {
-        ExpeditionSerializer es = new ExpeditionSerializer();
         //awaiting
-        return es;
+        var data = new List<byte>();
+        return data;
     }
-    public Expedition Load(ExpeditionSerializer es)
+    public Expedition Load(System.IO.FileStream fs)
     {
        //awaiting
         return this;
     }
 
-    public static ExpeditionStaticSerializer SaveStaticData()
+    public static void SaveStaticData(System.IO.FileStream fs)
     {
-        ExpeditionStaticSerializer ess = new ExpeditionStaticSerializer();
-        ess.currentExpeditions = new List<ExpeditionSerializer>();
-        if (expeditionsList.Count > 0)
+        int count = expeditionsList.Count;
+        if (count == 0) fs.Write(System.BitConverter.GetBytes(count),0,4);
+        else
         {
-            int i = 0;
-            while (i < expeditionsList.Count)
+            count = 0;
+            var data = new List<byte>();
+            while (count < expeditionsList.Count)
             {
-                if (expeditionsList[i] == null)
+                if (expeditionsList[count] == null)
                 {
-                    expeditionsList.RemoveAt(i);
+                    expeditionsList.RemoveAt(count);
                     continue;
                 }
                 else
                 {
-                    ess.currentExpeditions.Add(expeditionsList[i].Save());
+                    data.AddRange(expeditionsList[count].Save());
+                    count++;
                 }
-                i++;
+            }
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            if (count > 0) {
+                var dataArray = data.ToArray();
+                fs.Write(dataArray, 0, dataArray.Length);
             }
         }
-        return ess;
     }
-    public static void LoadStaticData(ExpeditionStaticSerializer ess)
+    public static void LoadStaticData(System.IO.FileStream fs)
     {
-        int i = 0; expeditionsList = new List<Expedition>();
-        while (i < ess.currentExpeditions.Count)
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int count = System.BitConverter.ToInt32(data,0);
+        expeditionsList = new List<Expedition>();
+        if (count > 0)
         {
-            expeditionsList.Add(new Expedition().Load(ess.currentExpeditions[i]));
-            i++;
+            for (int i = 0; i < count; i++)
+            {
+                expeditionsList.Add(new Expedition().Load(fs));
+            }
         }
     }
     #endregion
 }
 
-[System.Serializable]
-public class ExpeditionSerializer
-{
-    
-}

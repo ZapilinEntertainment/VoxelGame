@@ -188,29 +188,30 @@ public class BlockBuildingSite : Worksite
 
 
     #region save-load system
-    override protected WorksiteSerializer Save()
+    override protected List<byte> Save()
     {
         if (workObject == null)
         {
             StopWork();
             return null;
         }
-        WorksiteSerializer ws = GetWorksiteSerializer();
-        ws.type = WorksiteType.BlockBuildingSite;
-        ws.workObjectPos = workObject.pos;
-        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-        {
-            new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, rtype.ID);
-            ws.specificData = stream.ToArray();
-        }
-        return ws;
+        var data = new List<byte>() { (byte)WorksiteType.BlockBuildingSite };
+        data.Add(workObject.pos.x);
+        data.Add(workObject.pos.y);
+        data.Add(workObject.pos.z);
+        data.AddRange(System.BitConverter.GetBytes(rtype.ID));
+        data.AddRange(SerializeWorksite());        
+        return data;
     }
-    override protected void Load(WorksiteSerializer ws)
+    override protected void Load(System.IO.FileStream fs, ChunkPos cpos)
     {
-        LoadWorksiteData(ws);
-        int res_id = 0;
-        GameMaster.DeserializeByteArray<int>(ws.specificData, ref res_id);
-        Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as SurfaceBlock, ResourceType.GetResourceTypeById(res_id));
+        byte[] data = new byte[4];
+        fs.Read(data, 0, 4);
+        Set(
+            transform.root.GetComponent<Chunk>().GetBlock(cpos) as SurfaceBlock, 
+            ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, 0))
+            );
+        LoadWorksiteData(fs);
     }
     #endregion
 }

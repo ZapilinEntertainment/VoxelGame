@@ -10,7 +10,7 @@ public sealed class QuestUI : MonoBehaviour
 #pragma warning disable 0649
     [SerializeField] RectTransform[] questButtons; // fiti
     [SerializeField] GameObject questInfoPanel, closeButton; // fiti
-    [SerializeField] RectTransform stepsContainer, listContainer; // fiti
+    [SerializeField] RectTransform stepsContainer;
     [SerializeField] Text questName, questDescription, rewardText; // fiti    
 #pragma warning restore 0649
 
@@ -26,19 +26,7 @@ public sealed class QuestUI : MonoBehaviour
 
     private const float QUEST_REFRESH_TIME = 30, QUEST_UPDATE_TIME = 1, QUEST_EMPTY_TIMERVAL = -1, QUEST_AWAITING_TIMERVAL = -2;
 
-    public static Sprite questBlocked_tx { get; private set; }
-    public static Sprite questAwaiting_tx { get; private set; }
-    public static Sprite questBuildingBack_tx { get; private set; }
-    public static Sprite questResourceBack_tx { get; private set; }
     public static QuestUI current { get; private set; }
-
-    public static void LoadTextures()
-    {
-        questBlocked_tx = Resources.Load<Sprite>("Textures/questUnacceptableIcon");
-        questAwaiting_tx = Resources.Load<Sprite>("Textures/questAwaiting");
-        questBuildingBack_tx = Resources.Load<Sprite>("Textures/quest_buildingFrame");
-        questResourceBack_tx = Resources.Load<Sprite>("Textures/quest_resourceFrame");
-    }
 
     private void Awake()
     {
@@ -87,22 +75,20 @@ public sealed class QuestUI : MonoBehaviour
                 }
             }
         }
-        float f = 0, t = Time.deltaTime * GameMaster.gameSpeed;
+        float t = Time.deltaTime * GameMaster.gameSpeed;
         questUpdateTimer -= t;
         bool checkConditions = questUpdateTimer <= 0;
         if (checkConditions) questUpdateTimer = QUEST_UPDATE_TIME;
         for (sbyte i = 0; i < activeQuests.Length; i++)
         {
             Quest q = activeQuests[i];
-            if (q == Quest.NoQuest | q == Quest.AwaitingQuest) continue;
+            if (q == Quest.NoQuest) continue;
             if (checkConditions) q.CheckQuestConditions();
-
             if (openedQuest == i)
             {
                 PrepareStepsList(q);
             }
-        }       
-
+        }     
     }
 
     public void Activate()
@@ -138,22 +124,23 @@ public sealed class QuestUI : MonoBehaviour
             RectTransform btn = questButtons[i];
             questButtons[i].gameObject.SetActive(true);
             RectTransform rt = questButtons[i];
+            Text t = rt.GetChild(1).GetComponent<Text>();
             if (questAccessMap[i] == true)
             {
                 Quest q = activeQuests[i];
-                if (q != Quest.NoQuest & q != Quest.AwaitingQuest)
+                if (q != Quest.NoQuest)
                 {
                     btn.GetComponent<Button>().interactable = true;
-                    Quest.SetQuestTexture(q, btn.GetComponent<Image>(), rt.GetChild(0).GetComponent<RawImage>());
-                    Text t = rt.GetChild(1).GetComponent<Text>();
+                    Quest.SetQuestTexture(q, btn.GetComponent<Image>(), rt.GetChild(0).GetComponent<RawImage>());                    
                     t.text = q.name;
+                    t.color = Color.cyan;
                 }
                 else
                 {
                     btn.GetComponent<Button>().interactable = false;
-                    btn.GetComponent<Image>().overrideSprite = questAwaiting_tx;
-                    btn.GetChild(0).GetComponent<RawImage>().enabled = false;
-                    Text t = rt.GetChild(1).GetComponent<Text>();
+                    RawImage ri = btn.GetChild(0).GetComponent<RawImage>();
+                    ri.texture = UIController.current.iconsTexture;
+                    ri.uvRect = UIController.GetTextureUV(Icons.QuestAwaitingIcon);
                     t.text = "...";
                     t.color = Color.grey;
                 }
@@ -161,16 +148,17 @@ public sealed class QuestUI : MonoBehaviour
             else
             {
                 btn.GetComponent<Button>().interactable = false;
-                btn.GetComponent<Image>().overrideSprite = questBlocked_tx;
-                btn.GetChild(0).GetComponent<RawImage>().enabled = false;
-                rt.GetChild(1).GetComponent<Text>().text = string.Empty;
+                RawImage ri = btn.GetChild(0).GetComponent<RawImage>();
+                t.text = string.Empty;
+                ri.texture = UIController.current.iconsTexture;
+                ri.uvRect = UIController.GetTextureUV(Icons.QuestBlockedIcon);
             }
         }
     }
     public void QuestButton_OpenQuest(sbyte index)
     {
         Quest q = activeQuests[index];
-        if (q == Quest.NoQuest | q == Quest.AwaitingQuest) return;
+        if (q == Quest.NoQuest) return;
         openedQuest = index;
         transformingRect = questButtons[index];
         transformingRectInProgress = true;
@@ -193,12 +181,15 @@ public sealed class QuestUI : MonoBehaviour
         // цена и кнопка запуска
 
     }
+
     public IEnumerator WaitForNewQuest(int i)
     {
-        if (activeQuests[i] == Quest.AwaitingQuest | activeQuests[i] != Quest.NoQuest) yield break;
-        else activeQuests[i] = Quest.AwaitingQuest;
+        if (activeQuests[i] != Quest.NoQuest)
+        {
+            yield return null;
+        }
         yield return new WaitForSeconds(QUEST_REFRESH_TIME);
-        if (activeQuests[i] == Quest.NoQuest | activeQuests[i] == Quest.AwaitingQuest) SetNewQuest(i);
+        if (activeQuests[i] == Quest.NoQuest) SetNewQuest(i);
     }
 
     public void UnblockQuestButton(QuestSection qs)
@@ -207,6 +198,17 @@ public sealed class QuestUI : MonoBehaviour
         int index = (int)qs;
         questAccessMap[index] = true;
         if (activeQuests[index] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(index));
+    }
+
+    public void DropQuest()
+    {
+        if (openedQuest == -1) return;
+        else
+        {
+            activeQuests[openedQuest] = Quest.NoQuest;
+            WaitForNewQuest(openedQuest);
+            ReturnToQuestList();
+        }
     }
     public void ResetQuestCell(Quest q)
     {
@@ -230,9 +232,9 @@ public sealed class QuestUI : MonoBehaviour
         }
         // поиск подходящих среди отложенных
         Quest q = Quest.NoQuest;
-        switch ((QuestType)i) {
-            case QuestType.Progress: q = Quest.GetProgressQuest(); break;
-            case QuestType.Endgame:
+        switch ((QuestSection)i) {
+            case QuestSection.Progress: q = Quest.GetProgressQuest(); break;
+            case QuestSection.Endgame:
                 uint mask = Quest.questsCompletenessMask[i];
                 if (mask == 1) q = new Quest(QuestType.Endgame, 1);
                 else
@@ -321,40 +323,84 @@ public sealed class QuestUI : MonoBehaviour
         }
     }
 
-    public QuestStaticSerializer Save()
+    #region save-load
+    public void Save(System.IO.FileStream fs)
     {
-        QuestStaticSerializer qss = new QuestStaticSerializer();
-        qss.questsCompletenessMask = Quest.questsCompletenessMask;
-        qss.activeQuests = new QuestSerializer[activeQuests.Length];
-        qss.questAccessMap = questAccessMap;
-        for (int i = 0; i < qss.activeQuests.Length; i++)
+        // access map
+        int count = questAccessMap.Length;
+        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        byte one = 1, zero = 0;
+        for (int i = 0; i < count; i++)
         {
-            if (activeQuests[i] != Quest.NoQuest) qss.activeQuests[i] = activeQuests[i].Save();
-            else qss.activeQuests[i] = null;
+            fs.WriteByte(questAccessMap[i] ? one : zero);
         }
-        return qss;
-    }
-    public void Load(QuestStaticSerializer qss)
-    {
-        questAccessMap = qss.questAccessMap;
-        Quest.SetCompletenessMask(qss.questsCompletenessMask);
-        activeQuests = new Quest[questButtons.Length];        
-        for (int i = 0; i < qss.activeQuests.Length; i++)
+
+        //completeness mask
+        count = Quest.questsCompletenessMask.Length;
+        fs.Write(System.BitConverter.GetBytes(count),0,4);
+        for (int i =0; i < count; i++)
         {
-            if (qss.activeQuests[i] == null) activeQuests[i] = Quest.NoQuest;
+            fs.Write(System.BitConverter.GetBytes(Quest.questsCompletenessMask[i]), 0, 4);
+        }       
+        //active quests
+        count = activeQuests.Length;
+        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        for (int i = 0; i < count; i++)
+        {
+            if (activeQuests[i] != Quest.NoQuest)
+            {
+                fs.WriteByte(one);
+                var data = activeQuests[i].Save().ToArray();
+                fs.Write(data, 0, data.Length);
+            }
+            else fs.WriteByte(zero);
+        }
+    }
+    public void Load(System.IO.FileStream fs)
+    {
+        var data = new byte[4];
+        //access mask
+        fs.Read(data, 0, 4);
+        int count = System.BitConverter.ToInt32(data, 0);
+        questAccessMap = new bool[count];
+        data = new byte[count];
+        fs.Read(data, 0, count);
+        for (int i = 0; i < count;i++)
+        {
+            questAccessMap[i] = data[i] == 1;
+        }
+
+        //completeness mask
+        fs.Read(data, 0, 4);
+        count = System.BitConverter.ToInt32(data, 0);
+        uint[] mask = new uint[count];
+        for (int i = 0; i < count; i++)
+        {
+            fs.Read(data, 0, 4);
+            mask[i] = System.BitConverter.ToUInt32(data, 0);
+        }
+        Quest.SetCompletenessMask(mask);
+
+        //active quests
+        data = new byte[4];
+        fs.Read(data, 0, 4);
+        count = System.BitConverter.ToInt32(data, 0);
+        activeQuests = new Quest[count];
+        for (int i = 0; i < count; i++)
+        {
+            var marker = fs.ReadByte();
+            if (marker == 0)
+            {
+                activeQuests[i] = Quest.NoQuest;
+                if (questAccessMap[i] == true) WaitForNewQuest(i);
+            }
             else
             {
-                activeQuests[i] = Quest.Load(qss.activeQuests[i]);
+                activeQuests[i] = Quest.Load(fs);
             }
         }        
     }
+    #endregion
 }
 
-[System.Serializable]
-public class QuestStaticSerializer
-{
-    public uint[] questsCompletenessMask;
-    public QuestSerializer[] activeQuests;
-    public bool[] questAccessMap;
-}
 

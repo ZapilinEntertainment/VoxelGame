@@ -55,7 +55,7 @@ public sealed class UIDockObserver : UIObserver
         immigrationPanel.SetActive(false);
         tradingButtonText.transform.parent.GetComponent<Image>().overrideSprite = overridingSprite;
         immigrationButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
-        RecalculateTradingPanelContent();
+        RefreshTradeOperationsList();
         UIController.current.ActivateTradePanel();
     }
     public void PrepareImmigrationPanel()
@@ -103,7 +103,7 @@ public sealed class UIDockObserver : UIObserver
         {
             if (tradingListPanel.activeSelf)
             {
-                RecalculateTradingPanelContent();
+                RefreshTradeOperationsList();
             }
             else
             {
@@ -153,10 +153,10 @@ public sealed class UIDockObserver : UIObserver
         x += MIN_VALUE_CHANGING_STEP * (plus ? 1 : -1);
         if (x < 0) x = 0;
         Dock.ChangeMinValue(resourceID, x);
-        RecalculateTradingPanelContent();
+        RefreshTradeOperationsList();
     }
 
-    void RecalculateTradingPanelContent()
+    void RefreshTradeOperationsList()
     {
         Transform tpanel = tradingPanelContent.transform;
         bool?[] saleStatus = Dock.isForSale;
@@ -215,7 +215,7 @@ public sealed class UIDockObserver : UIObserver
     public void RemoveTradeOperation(int resourceID)
     {
         Dock.ChangeSaleStatus(resourceID, null);
-        RecalculateTradingPanelContent();
+        RefreshTradeOperationsList();
     }
     #endregion
 

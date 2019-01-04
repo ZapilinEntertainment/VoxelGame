@@ -635,7 +635,11 @@ public class SurfaceBlock : Block {
 
 	#region save-load system
 	override public void Save(System.IO.FileStream fs) {
-        base.Save(fs);
+        SaveBlockData(fs);
+        SaveSurfaceBlockData(fs);
+    }
+    protected void SaveSurfaceBlockData(System.IO.FileStream fs)
+    {
         if (grassland != null)
         {
             fs.WriteByte(1);
@@ -653,7 +657,7 @@ public class SurfaceBlock : Block {
                 else structuresCount++;
             }
         }
-        fs.Write(System.BitConverter.GetBytes(structuresCount),0,4);
+        fs.Write(System.BitConverter.GetBytes(structuresCount), 0, 4);
         if (structuresCount > 0)
         {
             foreach (Structure s in surfaceObjects)
@@ -667,37 +671,18 @@ public class SurfaceBlock : Block {
         }
     }
 
-    public int LoadSurfaceBlockData(byte[] data, int startIndex) {
-        int readIndex = startIndex;
-        if (data[startIndex] == 1)
+    public void LoadSurfaceBlockData(System.IO.FileStream fs) {
+        if (fs.ReadByte() == 1)
         {
             grassland = Grassland.CreateOn(this);
-            readIndex = grassland.Load(data, startIndex + 1);
+            grassland.Load(fs);
         }
-        else readIndex++;
+        else grassland = null;
 
-        int structuresCount = System.BitConverter.ToInt32(data, readIndex);
-        if (structuresCount > 0)
-        {
-            readIndex += 4;
-            for (int i = 0; i < structuresCount; i++)
-            {
-                int id = System.BitConverter.ToInt32(data, readIndex + Structure.SERIALIZER_ID_POSITION);
-                if (id != Structure.PLANT_ID)
-                {
-                    if (id != Structure.CONTAINER_ID)
-                    {
-                        readIndex = Structure.GetStructureByID(id).Load(data,readIndex, this);
-                    }
-                    else readIndex = HarvestableResource.LoadContainer(data, readIndex, this);
-                }
-                else
-                {                    
-                    readIndex = Plant.LoadPlant(data, readIndex, this);
-                }
-            }
-        }
-        return readIndex;
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int structuresCount = System.BitConverter.ToInt32(data, 0);
+        if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, this);
     }    
     #endregion
 

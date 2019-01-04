@@ -84,12 +84,13 @@ public sealed class ScalableHarvestableResource : Structure {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        mainResource = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, startIndex));
-        resourceCount = System.BitConverter.ToInt32(data, startIndex + 4);
-        return startIndex + 8;
+        LoadStructureData(fs, sblock);
+        var data = new byte[8];
+        fs.Read(data, 0, data.Length);
+        mainResource = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, 0));
+        resourceCount = System.BitConverter.ToInt32(data, 4);
     }
 
     

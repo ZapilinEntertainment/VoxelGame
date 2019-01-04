@@ -385,13 +385,17 @@ public sealed class Hangar : WorkBuilding
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        startIndex = LoadBuildingData(data, startIndex);
-        constructing = data[startIndex + WorkBuilding.WORKBUILDING_SERIALIZER_LENGTH] == 1;
-        startIndex = LoadWorkBuildingData(data,startIndex);
-        int shuttleID = System.BitConverter.ToInt32(data, startIndex + 1);
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH + WORKBUILDING_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadStructureData(data, sblock);
+        LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
+        constructing = fs.ReadByte() == 1;
+        LoadWorkBuildingData(data,STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
+        data = new byte[4];
+        fs.Read(data, 0, 4);
+        int shuttleID = System.BitConverter.ToInt32(data, 0);
         if (shuttleID != -1)
         {
             shuttle = Shuttle.GetShuttle(shuttleID);
@@ -403,7 +407,6 @@ public sealed class Hangar : WorkBuilding
             }
         }
         else shuttle = null;
-        return startIndex + 5;
     }  
     #endregion
 }

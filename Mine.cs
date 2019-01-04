@@ -237,39 +237,48 @@ override protected void LabourResult() {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        startIndex = LoadBuildingData(data, startIndex);
-        return LoadMineData(data, startIndex);
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadStructureData(data, sblock);
+        LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
+        LoadMineData(fs);
     }
 
-    protected int LoadMineData(byte[] data, int startIndex)
+    protected void LoadMineData(System.IO.FileStream fs)
     {
-        level = data[startIndex + WORKBUILDING_SERIALIZER_LENGTH + 5];
-        startIndex = LoadWorkBuildingData(data, startIndex);
+        var wdata = new byte[WORKBUILDING_SERIALIZER_LENGTH];
+        fs.Read(wdata, 0, wdata.Length);
+
+        var data = new byte[10];
+        level = data[ 5];
+
+        LoadWorkBuildingData(wdata, 0);
+
         elevators = new List<Structure>();
-        int elevatorsCount = System.BitConverter.ToInt32(data, startIndex + 6);
-        int readIndex = startIndex + 10;
+        int elevatorsCount = System.BitConverter.ToInt32(data, 6);
         if (elevatorsCount > 0)
-        {            Chunk chunk = basement.myChunk;
+        {
+            Chunk chunk = basement.myChunk;
             byte x = basement.pos.x, z = basement.pos.z;
-            
+
+            int eDataLength = 3;
+            var eData = new byte[eDataLength];            
             for (int i = 0; i < elevatorsCount; i++)
             {
+                fs.Read(eData, 0, eDataLength);
                 Structure s = GetStructureByID(MINE_ELEVATOR_ID);
-                s.SetModelRotation(data[readIndex + 1]);
-                s.SetBasement(chunk.GetBlock(x, data[readIndex],z) as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size /2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
-                s.SetHP(data[readIndex + 2] / 255f * s.maxHp);
+                s.SetModelRotation(eData[1]);
+                s.SetBasement(chunk.GetBlock(x, eData[0],z) as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size /2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
+                s.SetHP(eData[2] / 255f * s.maxHp);
                 elevators.Add(s);
-                readIndex += 3;
             }
         }
 
-        workFinished = data[startIndex] == 1;
-        lastWorkObjectPos = new ChunkPos(data[startIndex + 1], data[startIndex + 2], data[startIndex + 3]);
-        awaitingElevatorBuilding = data[startIndex + 4] == 1;
-        return readIndex;
+        workFinished = data[0] == 1;
+        lastWorkObjectPos = new ChunkPos(data[1], data[2], data[3]);
+        awaitingElevatorBuilding = data[4] == 1;
     }   
     #endregion
 }

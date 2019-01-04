@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ShipStatus {Docked, OnMission} // при изменении дополнить Localization.GetShuttleStatus
+public enum ShipStatus : byte {Docked, OnMission} // при изменении дополнить Localization.GetShuttleStatus
 
 public sealed class Shuttle : MonoBehaviour {
     public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f;
@@ -144,75 +144,109 @@ public sealed class Shuttle : MonoBehaviour {
     }
 
     #region save-load system
-    public static ShuttleStaticSerializer SaveStaticData() {
-		ShuttleStaticSerializer s3 = new ShuttleStaticSerializer();
-		s3.shuttlesList = new List<ShuttleSerializer>();
-		s3.haveShuttles = false;
-		if (shuttlesList != null && shuttlesList.Count > 0) {
-			int i =0;
-			while (i < shuttlesList.Count) {
-				if (shuttlesList[i] == null) {
-					shuttlesList.RemoveAt(i);
-					continue;
-				}
-				else {
-					s3.shuttlesList.Add(shuttlesList[i].Save());
-					i++;
-				}
-			}
-			if (s3.shuttlesList.Count > 0) s3.haveShuttles = true;
-		}
-		s3.lastIndex = lastIndex;
-		return s3;
-	}
-	public static void LoadStaticData(ShuttleStaticSerializer s3) {
-		lastIndex = s3.lastIndex;
-		shuttlesList = new List<Shuttle>();
-		if (s3.haveShuttles) {
-			foreach (ShuttleSerializer ss in s3.shuttlesList) {
-				Shuttle s = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
-				s.Load(ss);
-				shuttlesList.Add(s);
-			}
-		}
+    public static void SaveStaticData( System.IO.FileStream fs) {
+        int shuttlesCount = shuttlesList != null ? shuttlesList.Count : 0;
+        if (shuttlesCount > 0)
+        {
+            shuttlesCount = 0;
+            var data = new List<byte>();
+            while (shuttlesCount < shuttlesList.Count)
+            {
+                if (shuttlesList[shuttlesCount] == null)
+                {
+                    shuttlesList.RemoveAt(shuttlesCount);
+                    continue;
+                }
+                else
+                {
+                    data.AddRange(shuttlesList[shuttlesCount].Save());
+                    shuttlesCount++;
+                }
+            }
+            var dataArray = data.ToArray();
+            if (shuttlesCount > 0) fs.Write(dataArray, 0, dataArray.Length);
+            else fs.Write(System.BitConverter.GetBytes(shuttlesCount), 0, 4);
+        }
+        else
+        {
+            fs.Write(System.BitConverter.GetBytes(shuttlesCount),0,4);
+        }
+        fs.Write(System.BitConverter.GetBytes(lastIndex), 0, 4);
+    }
+	public static void LoadStaticData(System.IO.FileStream fs) {
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int shuttlesCount = System.BitConverter.ToInt32(data,0);
+        if (shuttlesCount > 0)
+        {
+            while (shuttlesCount > 0)
+            {
+                Shuttle s = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
+                s.Load(fs);
+                shuttlesCount--;
+            }
+        }
+        fs.Read(data, 0, 4);
+        lastIndex = System.BitConverter.ToInt32(data, 0);
 	}
 
-	public ShuttleSerializer Save() {
-		ShuttleSerializer ss = new ShuttleSerializer();
-		ss.volume = volume;
-		ss.cost = cost;
-		ss.condition = condition;
-		ss.ID = ID; 
-		ss.status = status;
-		ss.name = name;
-		ss.xpos = transform.position.x; ss.ypos = transform.position.y;ss.zpos=transform.position.z;
-		ss.xrotation = transform.rotation.x;ss.yrotation = transform.rotation.y;ss.zrotation = transform.rotation.z;ss.wrotation = transform.rotation.w;
-		return ss;
+	public List<byte> Save() {
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(volume));
+        data.AddRange(System.BitConverter.GetBytes(cost));
+        data.AddRange(System.BitConverter.GetBytes(condition));
+        data.AddRange(System.BitConverter.GetBytes(ID));
+        data.Add((byte)status);
+        var nameArray = System.Text.Encoding.Default.GetBytes(name);
+        int count = nameArray.Length;
+        data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
+        if (count > 0) data.AddRange(nameArray);
+
+        Transform t = transform;
+        data.AddRange(System.BitConverter.GetBytes(t.position.x));
+        data.AddRange(System.BitConverter.GetBytes(t.position.y));
+        data.AddRange(System.BitConverter.GetBytes(t.position.z));
+
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.x));
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.y));
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.z));
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.w));
+
+        return data;
 	}
-	public void Load(ShuttleSerializer ss) {
-		volume =ss.volume;
-		cost = ss.cost;
-		condition = ss.condition;
-		ID = ss.ID;
-		status =ss.status;
-		name = ss.name;
-		transform.position = new Vector3(ss.xpos,ss.ypos,ss.zpos);
-		transform.rotation = new Quaternion(ss.xrotation, ss.yrotation,ss.zrotation,ss.wrotation);
+	public void Load(System.IO.FileStream fs) {
+        var data = new byte[21];
+        fs.Read(data, 0, 21);
+        volume = System.BitConverter.ToSingle(data, 0);
+        cost = System.BitConverter.ToSingle(data, 4);
+        condition = System.BitConverter.ToSingle(data, 8);
+        ID = System.BitConverter.ToInt32(data, 12);
+        status = (ShipStatus)data[16];
+
+        int bytesCount = System.BitConverter.ToInt32(data, 17); //выдаст количество байтов, не длину строки
+        data = new byte[bytesCount];
+        fs.Read(data, 0, bytesCount);
+        if (bytesCount > 0)
+        {
+            System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
+            var chars = new char[d.GetCharCount(data, 0, bytesCount)];
+            d.GetChars(data, 0, bytesCount,chars,0,true);
+            name = new string(chars);
+        }
+
+        data = new byte[28];
+        fs.Read(data, 0, 28);
+        transform.position = new Vector3(
+            System.BitConverter.ToSingle(data, 0),
+            System.BitConverter.ToSingle(data, 4),
+            System.BitConverter.ToSingle(data, 8)
+            );
+        transform.rotation = new Quaternion(
+            System.BitConverter.ToSingle(data, 12),
+            System.BitConverter.ToSingle(data, 16),
+            System.BitConverter.ToSingle(data, 20),
+            System.BitConverter.ToSingle(data, 24)
+            );
 	}
 	#endregion 
-}
-
-[System.Serializable]
-public class ShuttleSerializer {
-	public float volume, cost, condition;
-	public float xpos,ypos,zpos,xrotation,yrotation,zrotation,wrotation;
-	public int ID;
-	public ShipStatus status;
-	public string name;
-}
-[System.Serializable]
-public class ShuttleStaticSerializer {
-	public bool haveShuttles;
-	public List<ShuttleSerializer> shuttlesList;
-	public int lastIndex;
 }

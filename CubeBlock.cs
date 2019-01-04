@@ -375,23 +375,23 @@ public class CubeBlock : Block
     }
 
     #region save-load system
-    override public List<byte> Save()
+    override public void Save( System.IO.FileStream fs)
     {
-        var data = GetBlockData();
-        if (career) data.Add(1); else data.Add(0);
-        data.AddRange(System.BitConverter.GetBytes(naturalFossils));
-        data.AddRange(System.BitConverter.GetBytes(volume));
+        SaveBlockData(fs);
+        if (career) fs.WriteByte(1); else fs.WriteByte(0);
+        fs.Write(System.BitConverter.GetBytes(naturalFossils),0,4);
+        fs.Write(System.BitConverter.GetBytes(volume),0,4);
         //SERIALIZER_LENGTH = 9;
-        return data;
     }
 
-    public int LoadCubeBlockData(byte[] data, int startIndex)
+    public void LoadCubeBlockData(System.IO.FileStream fs)
     {
-        career = (data[startIndex] == 1);
-        naturalFossils = System.BitConverter.ToSingle(data, startIndex + 1);
-        volume = System.BitConverter.ToInt32(data, startIndex + 5);
+        career = fs.ReadByte() == 1;
+        var data = new byte[8];
+        fs.Read(data, 0, data.Length);
+        naturalFossils = System.BitConverter.ToSingle(data, 0);
+        volume = System.BitConverter.ToInt32(data, 4);
         if (career) CheckExcavatingStatus();
-        return startIndex + SERIALIZER_LENGTH;
     }
     #endregion    
 }

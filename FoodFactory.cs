@@ -75,20 +75,24 @@ public class FoodFactory : WorkBuilding {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock) {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        startIndex = LoadBuildingData(data, startIndex);
-        startIndex = LoadWorkBuildingData(data, startIndex);
-        return LoadFoodFactoryData(data, startIndex);
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock) {
+        base.Load(fs, sblock);
+        LoadFoodFactoryData(fs);
 	}
 
-	protected int LoadFoodFactoryData(byte[] data, int startIndex) {
-        food_inputBuffer = System.BitConverter.ToSingle(data, startIndex);
-		metalP_inputBuffer = System.BitConverter.ToSingle(data, startIndex + 4);
-        supplies_outputBuffer = System.BitConverter.ToSingle(data, startIndex + 8);
-        return startIndex + 12;
+    protected void LoadFoodFactoryData(System.IO.FileStream fs)
+    {
+        var data = new byte[12];
+        fs.Read(data, 0, data.Length);
+        LoadFoodFactoryData(data, 0);
     }
-	#endregion
+    protected void LoadFoodFactoryData(byte[] data, int startIndex)
+    {
+        food_inputBuffer = System.BitConverter.ToSingle(data, startIndex);
+        metalP_inputBuffer = System.BitConverter.ToSingle(data, startIndex + 4);
+        supplies_outputBuffer = System.BitConverter.ToSingle(data, startIndex + 8);
+    }
+    #endregion
 
     override public void Annihilate(bool forced)
     {

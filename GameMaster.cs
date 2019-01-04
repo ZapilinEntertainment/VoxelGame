@@ -631,18 +631,18 @@ public sealed class GameMaster : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
-		#endregion
-		mainChunk.SaveChunkData(fs);
+		#endregion		
         environmentMaster.Save(fs);
-		gms.colonyControllerSerializer = colonyController.Save();
-		gms.dockStaticSerializer = Dock.SaveStaticDockData();
-		gms.shuttleStaticSerializer = Shuttle.SaveStaticData();
-		gms.crewStaticSerializer = Crew.SaveStaticData();
-		gms.questStaticSerializer = QuestUI.current.Save();
-		gms.expeditionStaticSerializer = Expedition.SaveStaticData();
+        Crew.SaveStaticData(fs);
+        Shuttle.SaveStaticData(fs);
+        mainChunk.SaveChunkData(fs);
+        colonyController.Save(fs);
+		Dock.SaveStaticDockData(fs);
+		
+		
         
-		BinaryFormatter bf = new BinaryFormatter();
-		bf.Serialize(fs, gms);
+        QuestUI.current.Save(fs);
+		Expedition.SaveStaticData(fs);      
 		fs.Close();
         SetPause(false);
 		return true;
@@ -673,47 +673,48 @@ public sealed class GameMaster : MonoBehaviour {
 
 
             // НАЧАЛО ЗАГРУЗКИ
-            BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Open(fullname, FileMode.Open);
-            
-            GameMasterSerializer gms = (GameMasterSerializer)bf.Deserialize(file);
-            file.Close();
+            FileStream fs = File.Open(fullname, FileMode.Open);           
             #region gms mainPartLoading
-            gameSpeed = gms.gameSpeed;
-            lifeGrowCoefficient = gms.lifeGrowCoefficient;
-            demolitionLossesPercent = gms.demolitionLossesPercent;
-            lifepowerLossesPercent = gms.lifepowerLossesPercent;
-            LUCK_COEFFICIENT = gms.luckCoefficient;
-            sellPriceCoefficient = gms.sellPriceCoefficient;
-            tradeVesselsTrafficCoefficient = gms.tradeVesselsTrafficCoefficient;
-            upgradeDiscount = gms.upgradeDiscount;
-            upgradeCostIncrease = gms.upgradeCostIncrease;
-            warProximity = gms.warProximity;
-            difficulty = gms.difficulty;
-            startGameWith = gms.startGameWith;
-            prevCutHeight = gms.prevCutHeight;
-            day = gms.day;  month = gms.month; year = gms.year; timeGone = gms.t;
-            gearsDegradeSpeed = gms.gearsDegradeSpeed;
-            lifepowerTimer = gms.lifepowerTimer;
-            labourTimer = gms.labourTimer;
+            var data = new byte[69];
+            fs.Read(data, 0, data.Length);
+            gameSpeed = System.BitConverter.ToSingle(data, 0);
+            lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
+            demolitionLossesPercent = System.BitConverter.ToSingle(data, 8);
+            lifepowerLossesPercent = System.BitConverter.ToSingle(data, 12);
+            LUCK_COEFFICIENT = System.BitConverter.ToSingle(data, 16);
+            sellPriceCoefficient = System.BitConverter.ToSingle(data, 20);
+            tradeVesselsTrafficCoefficient = System.BitConverter.ToSingle(data, 24);
+            upgradeDiscount = System.BitConverter.ToSingle(data, 28);
+            upgradeCostIncrease = System.BitConverter.ToSingle(data, 32);
+            warProximity = System.BitConverter.ToSingle(data, 36);
+            difficulty = (Difficulty)data[40];
+            startGameWith = (GameStart)data[41];
+            prevCutHeight = data[42];
+            day = data[43];
+            month = data[44];
+            year = System.BitConverter.ToUInt32(data, 45);
+            timeGone = System.BitConverter.ToSingle(data, 49);
+            gearsDegradeSpeed = System.BitConverter.ToSingle(data, 53);
+            labourTimer = System.BitConverter.ToSingle(data, 57);
+            lifepowerTimer = System.BitConverter.ToSingle(data, 61);
+            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 65));
             #endregion
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
-            environmentMaster.Load(gms.environmentalMasterSerializer);
-            RecruitingCenter.SetHireCost(gms.recruiting_hireCost);
-            Crew.LoadStaticData(gms.crewStaticSerializer);
-            Shuttle.LoadStaticData(gms.shuttleStaticSerializer); // because of hangars
+            environmentMaster.Load(fs);
+            Crew.LoadStaticData(fs);
+            Shuttle.LoadStaticData(fs); // because of hangars
 
             if (mainChunk == null)
             {
                 GameObject g = new GameObject("chunk");
                 mainChunk = g.AddComponent<Chunk>();
             }
-            mainChunk.LoadChunkData(gms.chunkSerializer);
-            colonyController.Load(gms.colonyControllerSerializer); // < --- COLONY CONTROLLER
-
-            Dock.LoadStaticData(gms.dockStaticSerializer);
-            QuestUI.current.Load(gms.questStaticSerializer);
-            Expedition.LoadStaticData(gms.expeditionStaticSerializer);
+            mainChunk.LoadChunkData(fs);
+            colonyController.Load(fs); // < --- COLONY CONTROLLER
+            Dock.LoadStaticData(fs);
+            QuestUI.current.Load(fs);
+            Expedition.LoadStaticData(fs);
+            fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();            
             loading = false;
@@ -737,23 +738,20 @@ public sealed class GameMaster : MonoBehaviour {
             Directory.CreateDirectory(path);
         }
         FileStream fs = File.Create(path + name + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
-        BinaryFormatter bf = new BinaryFormatter();
-        bf.Serialize(fs, mainChunk.SaveChunkData());
+        mainChunk.SaveChunkData(fs);
         fs.Close();
         return true;
     }
     public bool LoadTerrain(string fullname)
     {
-        BinaryFormatter bf = new BinaryFormatter();
-        FileStream file = File.Open(fullname, FileMode.Open);
-        ChunkSerializer cs = (ChunkSerializer)bf.Deserialize(file);
-        file.Close();
+        FileStream fs = File.Open(fullname, FileMode.Open);        
         if (mainChunk == null)
         {
             GameObject g = new GameObject("chunk");
             mainChunk = g.AddComponent<Chunk>();
         }
-        mainChunk.LoadChunkData(cs);
+        mainChunk.LoadChunkData(fs);
+        fs.Close();
         FollowingCamera.main.WeNeedUpdate();
         return true;
     }    

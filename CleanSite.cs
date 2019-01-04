@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class CleanSite : Worksite {
 	public bool diggingMission {get;protected set;}
@@ -138,21 +139,25 @@ public class CleanSite : Worksite {
     }
 
     #region save-load mission
-    override protected WorksiteSerializer Save() {
+    override protected List<byte> Save() {
 		if (workObject == null) {
             StopWork();
 			return null;
 		}
-		WorksiteSerializer ws = GetWorksiteSerializer();
-		ws.type = WorksiteType.CleanSite;
-		ws.workObjectPos = workObject.pos;
-		if (diggingMission) ws.specificData = new byte[1]{1};
-		else ws.specificData = new byte[1]{0};
-		return ws;
+        var data = new List<byte>() { (byte)WorksiteType.CleanSite };
+        data.Add(workObject.pos.x);
+        data.Add(workObject.pos.y);
+        data.Add(workObject.pos.z);
+        data.Add(diggingMission ? (byte)1 : (byte)0);
+        data.AddRange(SerializeWorksite());
+		return data;
 	}
-	override protected void Load(WorksiteSerializer ws) {
-		LoadWorksiteData(ws);
-		Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as SurfaceBlock, ws.specificData[0] == 1);
+	override protected void Load(System.IO.FileStream fs, ChunkPos cpos) {
+        Set(
+            transform.root.GetComponent<Chunk>().GetBlock(cpos) as SurfaceBlock, 
+            fs.ReadByte() == 1
+            );
+        LoadWorksiteData(fs);
 	}
 	#endregion
 			

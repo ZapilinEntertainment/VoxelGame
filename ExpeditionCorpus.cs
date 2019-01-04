@@ -50,9 +50,3 @@ public sealed class ExpeditionCorpus : WorkBuilding {
     }
 }
 
-[System.Serializable]
-public class ExpeditionStaticSerializer {
-	public List<ExpeditionSerializer> currentExpeditions;
-}
-
-

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrewStatus {Free, Attributed, OnLandMission} // при изменении дополнить Localization.GetCrewStatus
+public enum CrewStatus : byte {Free, Attributed, OnLandMission} // при изменении дополнить Localization.GetCrewStatus
 
 public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
@@ -129,118 +129,129 @@ public sealed class Crew : MonoBehaviour {
     }
 
     #region save-load system
-    public static CrewStaticSerializer SaveStaticData()
+    public static void SaveStaticData( System.IO.FileStream fs)
     {
-        CrewStaticSerializer css = new CrewStaticSerializer();
-        css.haveCrews = false; css.crewsList = new List<CrewSerializer>();
-        if (crewsList != null && crewsList.Count > 0)
+        var data = new List<byte>();
+        int crewsCount = crewsList.Count;
+        if (crewsCount > 0)
         {
-            int i = 0;
-            while (i < crewsList.Count)
+            crewsCount = 0;
+            while (crewsCount < crewsList.Count)
             {
-                Crew c = crewsList[i];
+                Crew c = crewsList[crewsCount];
                 if (c == null)
                 {
-                    crewsList.RemoveAt(i);
+                    crewsList.RemoveAt(crewsCount);
                     continue;
                 }
                 else
                 {
-                    if (c.status == CrewStatus.Free) css.crewsList.Add(c.Save());
-                }
-                i++;
+                    data.AddRange(c.Save());
+                    crewsCount++;
+                };
             }
-            if (css.crewsList.Count > 0) css.haveCrews = true;
         }
-        css.lastNumber = lastFreeID;
-        return css;
+        fs.Write(System.BitConverter.GetBytes(crewsCount), 0, 4);
+        if (crewsCount > 0)
+        {
+            var dataArray = data.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
+        }
+
+        fs.Write(System.BitConverter.GetBytes(lastFreeID), 0, 4);
     }
-    public static void LoadStaticData(CrewStaticSerializer css)
+    public static void LoadStaticData(System.IO.FileStream fs)
     {
         if (crewsList == null) crewsList = new List<Crew>();
-        if (css.haveCrews)
+        if (crewsContainer == null) crewsContainer = new GameObject("crews container");
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int crewsCount = System.BitConverter.ToInt32(data, 0);
+        while (crewsCount >0)
         {
-            if (crewsContainer == null) crewsContainer = new GameObject("crews container");
-            for (int i = 0; i < css.crewsList.Count; i++)
-            {
-                Crew c = new GameObject(css.crewsList[i].name).AddComponent<Crew>();
-                c.transform.parent = crewsContainer.transform;
-                c.Load(css.crewsList[i]);
-                crewsList.Add(c);
-            }
+            Crew c = new GameObject().AddComponent<Crew>();
+            c.transform.parent = crewsContainer.transform;
+            c.Load(fs);
+            crewsList.Add(c);
+            crewsCount--;
         }
-        lastFreeID = css.lastNumber;
+
+        fs.Read(data, 0, 4);
+        lastFreeID = System.BitConverter.ToInt32(data, 0);
     }
 
-    public CrewSerializer Save()
+    public List<byte> Save()
     {
-        CrewSerializer cs = new CrewSerializer();
-        cs.count = membersCount;
-        cs.experience = experience;
-        cs.nextExperienceLimit = nextExperienceLimit;
-        cs.name = gameObject.name;
-        cs.level = level;
-        cs.ID = ID;
-        cs.shuttleID = (shuttle == null ? -1 : shuttle.ID);
-        cs.status = status;
+        var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(ID));
+        data.AddRange(System.BitConverter.GetBytes(shuttle == null ? -1 : shuttle.ID));
 
-        cs.perception = perception;
-        cs.persistence = persistence;
-        cs.luck = luck;
-        cs.bravery = bravery;
-        cs.techSkills = techSkills;
-        cs.survivalSkills = survivalSkills;
-        cs.teamWork = teamWork;
-        cs.stamina = stamina;
-        cs.successfulOperations = successfulMissions;
-        cs.totalOperations = missionsCompleted;
-        return cs;
+        var nameArray = System.Text.Encoding.Default.GetBytes(name);
+        int count = nameArray.Length;
+        data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
+        if (count > 0) data.AddRange(nameArray);
+
+        data.AddRange(System.BitConverter.GetBytes(membersCount));
+        data.AddRange(System.BitConverter.GetBytes(experience));
+        data.AddRange(System.BitConverter.GetBytes(nextExperienceLimit));  
+        data.AddRange(System.BitConverter.GetBytes(perception));
+        data.AddRange(System.BitConverter.GetBytes(persistence));
+        data.AddRange(System.BitConverter.GetBytes(luck));
+        data.AddRange(System.BitConverter.GetBytes(bravery));
+        data.AddRange(System.BitConverter.GetBytes(techSkills));
+        data.AddRange(System.BitConverter.GetBytes(survivalSkills));
+        data.AddRange(System.BitConverter.GetBytes(teamWork));
+        data.AddRange(System.BitConverter.GetBytes(stamina));
+        data.AddRange(System.BitConverter.GetBytes(successfulMissions));
+        data.AddRange(System.BitConverter.GetBytes(missionsCompleted));
+
+        data.Add(level);
+        data.Add((byte)status);
+        return data;
     }
 
-    public Crew Load(CrewSerializer cs)
+    public Crew Load(System.IO.FileStream fs)
     {
-        membersCount = cs.count;
-        level = cs.level;
-        nextExperienceLimit = cs.nextExperienceLimit;
-        experience = cs.experience;
-        ID = cs.ID;
-        status = cs.status;
-        perception = cs.perception;
-        persistence = cs.persistence;
-        luck = cs.luck;
-        bravery = cs.bravery;
-        techSkills = cs.techSkills;
-        survivalSkills = cs.survivalSkills;
-        teamWork = cs.teamWork;
-        stamina = cs.stamina;
-        successfulMissions = cs.successfulOperations;
-        missionsCompleted = cs.totalOperations;
-        if (cs.shuttleID != -1)
+        var data = new byte[12];
+        fs.Read(data, 0, 12);
+        ID = System.BitConverter.ToInt32(data,0);
+        int shuttleID = System.BitConverter.ToInt32(data, 4);
+        if (shuttleID != -1)
         {
-            shuttle = Shuttle.GetShuttle(cs.shuttleID);
+            shuttle = Shuttle.GetShuttle(shuttleID);
             shuttle.SetCrew(this);
         }
+        else shuttle = null;
+
+        int bytesCount = System.BitConverter.ToInt32(data, 8); //выдаст количество байтов, не длину строки
+        data = new byte[bytesCount];
+        fs.Read(data, 0, bytesCount);
+        if (bytesCount > 0)
+        {
+            System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
+            var chars = new char[d.GetCharCount(data, 0, bytesCount)];
+            d.GetChars(data, 0, bytesCount, chars, 0, true);
+            name = new string(chars);
+        }
+
+        data = new byte[54];
+        membersCount = System.BitConverter.ToInt32(data, 0);
+        experience = System.BitConverter.ToSingle(data, 4);
+        nextExperienceLimit = System.BitConverter.ToSingle(data, 8);
+        perception = System.BitConverter.ToSingle(data, 12);
+        persistence = System.BitConverter.ToSingle(data, 16);
+        luck = System.BitConverter.ToSingle(data, 20);
+        bravery = System.BitConverter.ToSingle(data, 24);
+        techSkills = System.BitConverter.ToSingle(data, 28);
+        survivalSkills = System.BitConverter.ToSingle(data, 32);
+        teamWork = System.BitConverter.ToSingle(data, 36);
+        stamina = System.BitConverter.ToSingle(data, 40);
+        successfulMissions = System.BitConverter.ToInt32(data, 44);
+        missionsCompleted = System.BitConverter.ToInt32(data, 48);
+        level = data[52];
+        status = (CrewStatus)data[53];
         return this;
     }
 
     #endregion
-}
-
-[System.Serializable]
-public class CrewSerializer {
-	public float salary,  experience, nextExperienceLimit;
-	public string name ;
-	public byte level ;
-	public int ID, shuttleID,count;
-	public CrewStatus status;
-
-	public float perception, persistence, luck,bravery, techSkills,survivalSkills,teamWork,stamina;
-	public int successfulOperations, totalOperations;
-}
-
-[System.Serializable]
-public class CrewStaticSerializer {
-	public bool haveCrews;
-	public List<CrewSerializer> crewsList;
-    public int lastNumber;
 }

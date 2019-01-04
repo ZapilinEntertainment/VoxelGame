@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class TunnelBuildingSite : Worksite {
 	public byte signsMask = 0;
@@ -112,25 +113,27 @@ public class TunnelBuildingSite : Worksite {
     }
 
     #region save-load system
-    override protected WorksiteSerializer Save() {
+    override protected List<byte> Save() {
 		if (workObject == null) {
             StopWork();
 			return null;
 		}
-		WorksiteSerializer ws = GetWorksiteSerializer();
-		ws.type = WorksiteType.TunnelBuildingSite;
-		ws.workObjectPos = workObject.pos;
-		ws.specificData = new byte[1]{signsMask};
-		return ws;
+        var data = new List<byte>() { (byte)WorksiteType.TunnelBuildingSite };
+        data.Add(workObject.pos.x);
+        data.Add(workObject.pos.y);
+        data.Add(workObject.pos.z);
+        data.Add(signsMask);
+        data.AddRange(SerializeWorksite());
+        return data;
 	}
-	override protected void Load (WorksiteSerializer ws) {
-		LoadWorksiteData(ws);
-		Set(transform.root.GetComponent<Chunk>().GetBlock(ws.workObjectPos) as CubeBlock);
-		int smask = ws.specificData[0];
-		if ((smask & 1) != 0) CreateSign(0);
-		if ((smask & 2 )!= 0) CreateSign(1);
-		if ((smask & 4 )!= 0) CreateSign(2);
-		if ((smask & 8 )!= 0) CreateSign(3);
+	override protected void Load (System.IO.FileStream fs, ChunkPos pos) {
+        Set(transform.root.GetComponent<Chunk>().GetBlock(pos) as CubeBlock);
+        int smask = fs.ReadByte();
+        if ((smask & 1) != 0) CreateSign(0);
+        if ((smask & 2) != 0) CreateSign(1);
+        if ((smask & 4) != 0) CreateSign(2);
+        if ((smask & 8) != 0) CreateSign(3);
+        LoadWorksiteData(fs);        
 	}
 	#endregion
 }

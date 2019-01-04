@@ -40,7 +40,7 @@ public class Structure : MonoBehaviour
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75;
-    public const int TOTAL_STRUCTURES_COUNT = 76, STRUCTURE_SERIALIZER_LENGTH = 16, SERIALIZER_ID_POSITION = 12;    
+    public const int TOTAL_STRUCTURES_COUNT = 76, STRUCTURE_SERIALIZER_LENGTH = 12;    
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
     public static UIStructureObserver structureObserver;
@@ -1294,26 +1294,57 @@ public class Structure : MonoBehaviour
     }
 
     #region save-load system
+    public static void LoadStructures(int count, System.IO.FileStream fs, SurfaceBlock sblock)
+    {
+        var data = new byte[4];
+        for (int i = 0; i < count; i++)
+        {
+            fs.Read(data, 0, data.Length);
+            int id = System.BitConverter.ToInt32(data, 0);
+            if (id != PLANT_ID)
+            {
+                if (id != CONTAINER_ID)
+                {
+                    GetStructureByID(id).Load(fs, sblock);
+                }
+                else HarvestableResource.LoadContainer(fs, sblock);
+            }
+            else
+                Plant.LoadPlant(fs, sblock);
+        }
+    }
+
     public virtual List<byte> Save()
     {
         return SerializeStructure();
     }
 
-    public virtual int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    public virtual void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        return LoadStructureData(data, startIndex, sblock);
+       LoadStructureData(fs, sblock);
     }
     // в финальном виде копипастить в потомков
-    protected int LoadStructureData(byte[] data, int startIndex, SurfaceBlock sblock)
+    protected void LoadStructureData(System.IO.FileStream fs, SurfaceBlock sblock)
     {
         //copy in harvestable resource.load - changed
         Prepare();
-        modelRotation = data[startIndex + 2];
-        indestructible = (data[startIndex + 3] == 1);
-        SetBasement(sblock, new PixelPosByte(data[startIndex], data[startIndex + 1]));
-        hp = System.BitConverter.ToSingle(data, startIndex + 4);
-        maxHp = System.BitConverter.ToSingle(data, startIndex + 8);
-        return startIndex + STRUCTURE_SERIALIZER_LENGTH;
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH];
+        fs.Read(data,0,data.Length);
+        modelRotation = data[ 2];
+        indestructible = (data[3] == 1);
+        SetBasement(sblock, new PixelPosByte(data[0], data[1]));
+        hp = System.BitConverter.ToSingle(data, 4);
+        maxHp = System.BitConverter.ToSingle(data, 8);
+    }
+    protected void LoadStructureData(byte[] data, SurfaceBlock sblock)
+    {
+        //copy in harvestable resource.load - changed
+        Prepare();
+        modelRotation = data[2];
+        indestructible = (data[3] == 1);
+        SetBasement(sblock, new PixelPosByte(data[0], data[1]));
+        hp = System.BitConverter.ToSingle(data, 4);
+        maxHp = System.BitConverter.ToSingle(data, 8);
     }
 
     // в финальном виде копипастить в потомков
@@ -1325,11 +1356,10 @@ public class Structure : MonoBehaviour
             modelRotation,                      // 2
             indestructible ? one : zero     //3
         };
+        data.InsertRange(0,System.BitConverter.GetBytes(id)); // считывается до load(), поэтому не учитываем в индексах
         // little endian check ignoring
-
         data.AddRange(System.BitConverter.GetBytes(hp)); // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(maxHp)); // 8 - 11
-        data.AddRange(System.BitConverter.GetBytes(id));    // 12 - 15
         //SERIALIZER_ID_POSITION = 12
         return data;
         //SERIALIZER_LENGTH = 16

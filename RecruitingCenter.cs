@@ -135,12 +135,13 @@ public sealed class RecruitingCenter : WorkBuilding {
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = base.Load(data, startIndex, sblock);
-        backupSpeed = System.BitConverter.ToSingle(data, startIndex);
-        finding = data[startIndex + 1] == 1;
-        return startIndex + 5;
+        base.Load(fs, sblock);
+        var data = new byte[5];
+        fs.Read(data, 0, data.Length);
+        backupSpeed = System.BitConverter.ToSingle(data, 0);
+        finding = data[4] == 1;
     }   
     #endregion
 }

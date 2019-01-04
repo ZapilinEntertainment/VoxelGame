@@ -205,6 +205,7 @@ public class Zeppelin : MonoBehaviour {
 
     void OnGUI()
     {
+        if (GameMaster.gameSpeed == 0) return;
         if (!landPointSet & !destroyed)
         {
             if (landingSurface != null)

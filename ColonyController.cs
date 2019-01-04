@@ -756,48 +756,54 @@ public sealed class ColonyController : MonoBehaviour
     }
 
     #region save-load system
-    public ColonyControllerSerializer Save()
+    public void Save(System.IO.FileStream fs)
     {
-        ColonyControllerSerializer ccs = new ColonyControllerSerializer();
-        ccs.storageSerializer = storage.Save();
-        ccs.gears_coefficient = gears_coefficient;
-        ccs.labourEfficientcy_coefficient = labourEfficientcy_coefficient;
-        ccs.happiness_coefficient = happiness_coefficient;
-        ccs.health_coefficient = health_coefficient;
-        ccs.birthrateCoefficient = birthrateCoefficient;
+        storage.Save(fs);
 
-        ccs.energyStored = energyStored;
-        ccs.energyCrystalsCount = energyCrystalsCount;
-        ccs.worksites = Worksite.StaticSave();
-        ccs.freeWorkers = freeWorkers;
-        ccs.citizenCount = citizenCount;
-        ccs.peopleSurplus = peopleSurplus;
-        ccs.housingTimer = housingTimer;
-        ccs.starvationTimer = starvationTimer;
-        ccs.real_birthrate = realBirthrate;
-        ccs.birthrateCoefficient = birthrateCoefficient;
-        return ccs;
+        fs.Write(System.BitConverter.GetBytes(gears_coefficient),0,4);
+        fs.Write(System.BitConverter.GetBytes(labourEfficientcy_coefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(health_coefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4);
+
+        Worksite.StaticSave(fs);
+
+        fs.Write(System.BitConverter.GetBytes(freeWorkers), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(citizenCount), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(housingTimer), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(starvationTimer), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4);
     }
-    public void Load(ColonyControllerSerializer ccs)
+    public void Load(System.IO.FileStream fs)
     {
         if (storage == null) storage = gameObject.AddComponent<Storage>();
-        storage.Load(ccs.storageSerializer);
-        gears_coefficient = ccs.gears_coefficient;
-        labourEfficientcy_coefficient = ccs.labourEfficientcy_coefficient;
-        happiness_coefficient = ccs.happiness_coefficient;
-        health_coefficient = ccs.health_coefficient;
-        birthrateCoefficient = ccs.birthrateCoefficient;
+        storage.Load(fs);
 
-        energyStored = ccs.energyStored;
-        energyCrystalsCount = ccs.energyCrystalsCount;
-        if (ccs.worksites.Length > 0) Worksite.StaticLoad(ccs.worksites);
-        freeWorkers = ccs.freeWorkers;
-        citizenCount = ccs.citizenCount;
-        peopleSurplus = ccs.peopleSurplus;
-        housingTimer = ccs.housingTimer;
-        starvationTimer = ccs.starvationTimer;
-        realBirthrate = ccs.realBirthrate;
-        birthrateCoefficient = ccs.birthrateCoefficient;
+        var data = new byte[28];
+        fs.Read(data, 0, 28);
+        gears_coefficient = System.BitConverter.ToSingle(data,0);
+        labourEfficientcy_coefficient = System.BitConverter.ToSingle(data, 4);
+        happiness_coefficient = System.BitConverter.ToSingle(data, 8);
+        health_coefficient = System.BitConverter.ToSingle(data, 12);
+        birthrateCoefficient = System.BitConverter.ToSingle(data, 16);
+        energyStored = System.BitConverter.ToSingle(data, 20);
+        energyCrystalsCount = System.BitConverter.ToSingle(data, 24);
+
+        Worksite.StaticLoad(fs);
+
+        fs.Read(data, 0, 28);
+        freeWorkers = System.BitConverter.ToInt32(data, 0);
+        citizenCount = System.BitConverter.ToInt32(data, 4);
+        peopleSurplus = System.BitConverter.ToSingle(data, 8);
+        housingTimer = System.BitConverter.ToSingle(data, 12);
+        starvationTimer = System.BitConverter.ToSingle(data, 16);
+        realBirthrate = System.BitConverter.ToSingle(data, 20);
+        birthrateCoefficient = System.BitConverter.ToSingle(data, 24);
+
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();

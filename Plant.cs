@@ -11,7 +11,7 @@ public abstract class Plant : Structure {
 
     public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2, 
         TOTAL_PLANT_TYPES = 2;  // при создании нового добавить во все статические функции внизу
-    public new const int SERIALIZER_LENGTH = 13;
+    public const int PLANT_SERIALIZER_LENGTH = 13;
     public static int existingPlantsMask = 0;
 
     public static Plant GetNewPlant(int i_plant_id)
@@ -148,25 +148,25 @@ public abstract class Plant : Structure {
         return data;
     }
 
-    public static int LoadPlant(byte[] data, int startIndex, SurfaceBlock sblock)
+    public static void LoadPlant(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        int plantSerializerIndex = startIndex + Structure.STRUCTURE_SERIALIZER_LENGTH;
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + PLANT_SERIALIZER_LENGTH];
+        int plantSerializerIndex = STRUCTURE_SERIALIZER_LENGTH;
         int plantId = System.BitConverter.ToInt32(data, plantSerializerIndex);
         Plant p = GetNewPlant(plantId);
-        p.LoadStructureData(data, startIndex, sblock);
+        p.LoadStructureData(data, sblock);
         p.lifepower = System.BitConverter.ToSingle(data, plantSerializerIndex + 4);
         p.SetStage(data[plantSerializerIndex + 12]);
         p.growth = System.BitConverter.ToSingle(data, plantSerializerIndex + 8);
-        return plantSerializerIndex + SERIALIZER_LENGTH;
     }
 
     protected List<byte> SerializePlant()
     {
         var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(plant_ID)); // 17 - 20
-        data.AddRange(System.BitConverter.GetBytes(lifepower)); // 21 - 24
-        data.AddRange(System.BitConverter.GetBytes(growth)); // 25 - 28
-        data.Add(stage); // 29
+        data.AddRange(System.BitConverter.GetBytes(plant_ID)); 
+        data.AddRange(System.BitConverter.GetBytes(lifepower)); 
+        data.AddRange(System.BitConverter.GetBytes(growth)); 
+        data.Add(stage); 
         //SERIALIZER_LENGTH = 13
         return data;
     }

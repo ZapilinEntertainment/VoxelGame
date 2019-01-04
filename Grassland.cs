@@ -410,11 +410,12 @@ public class Grassland : MonoBehaviour
         return data;
     }
 
-    public int Load(byte[] data, int startIndex)  {            
-        SetLifepower(System.BitConverter.ToSingle(data, startIndex));
-        prevStage = data[startIndex + 4];
-        progress = System.BitConverter.ToSingle(data, startIndex + 5);
-        return startIndex + SERIALIZER_LENGTH;
+    public void Load(System.IO.FileStream fs)  {
+        var data = new byte[SERIALIZER_LENGTH];
+        fs.Read(data,0, SERIALIZER_LENGTH);
+        SetLifepower(System.BitConverter.ToSingle(data, 0));
+        prevStage = data[ 4];
+        progress = System.BitConverter.ToSingle(data, 5);
     }
     #endregion
 }

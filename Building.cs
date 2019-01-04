@@ -95,6 +95,8 @@ public class Building : Structure
         return blist;
     }
 
+    public const int BUILDING_SERIALIZER_LENGTH = 5;
+
     override public void Prepare() { PrepareBuilding(); }
 
     /// <summary>
@@ -941,16 +943,21 @@ public class Building : Structure
         return data;
     }
 
-    override public int Load(byte[] data, int startIndex, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        startIndex = LoadStructureData(data, startIndex, sblock);
-        return LoadBuildingData(data, startIndex);
+        LoadStructureData(fs, sblock);
+        LoadBuildingData(fs);
     }
-    protected int LoadBuildingData(byte[] data, int startIndex)
+    protected void LoadBuildingData(System.IO.FileStream fs)
+    {
+        var data = new byte[BUILDING_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadBuildingData(data, 0);
+    }
+    protected void LoadBuildingData(byte[] data, int startIndex)
     {
         energySurplus = System.BitConverter.ToSingle(data, startIndex + 1);
         SetActivationStatus(data[startIndex] == 1, true);
-        return startIndex + 5;
     }   
     #endregion
 }
