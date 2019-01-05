@@ -117,7 +117,7 @@ public class UITradeWindow : UIObserver {
         resourceInfoPanel.SetActive(true);
         resourceName.text = Localization.GetResourceName(chosenResourceID);
         descriptionText.text = Localization.GetResourcesDescription(chosenResourceID);
-        resourcePicture.uvRect = ResourceType.GetTextureRect(chosenResourceID);
+        resourcePicture.uvRect = ResourceType.GetResourceIconRect(chosenResourceID);
         ChangeSellStatus(Dock.isForSale[chosenResourceID]);
 
         resourceIsForSale = Dock.isForSale[resourceID];
@@ -204,7 +204,7 @@ public class UITradeWindow : UIObserver {
             if (i < tradableResources.Count) {
                 GameObject res = resourcesButtons[i];
                 res.SetActive(true);
-                res.transform.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(tradableResources[i]);
+                res.transform.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(tradableResources[i]);
                 res.transform.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(tradableResources[i]);
                 int id = tradableResources[i];
                 int index = i;
@@ -216,6 +216,7 @@ public class UITradeWindow : UIObserver {
                 else
                 {
                     saleStatusMarker.uvRect = UIController.GetTextureUV((saleStatus[tradableResources[i]] == true) ? Icons.RedArrow : Icons.GreenArrow);
+                    saleStatusMarker.enabled = true;
                 }
             }
             else

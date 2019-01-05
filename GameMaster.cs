@@ -710,6 +710,7 @@ public sealed class GameMaster : MonoBehaviour {
                 mainChunk = g.AddComponent<Chunk>();
             }
             mainChunk.LoadChunkData(fs);
+
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             Dock.LoadStaticData(fs);
             QuestUI.current.Load(fs);

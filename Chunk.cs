@@ -132,7 +132,6 @@ public sealed class Chunk : MonoBehaviour
         if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
         if (cpos.y > 0) { if (cpos.y > size) v.y = 1; else v.y = 0; }
         if (cpos.z > 0) { if (cpos.z > size) v.z = 1; else v.z = 0; }
-        //print (v);
         if (v != Vector3.zero)
         {
             //easy-culling	
@@ -397,6 +396,13 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }       
+        if (surfaceBlocks.Count > 0)
+        {
+            foreach (SurfaceBlock sb in surfaceBlocks)
+            {
+                GameMaster.geologyModule.SpreadMinerals(sb);
+            }
+        }
         FollowingCamera.main.WeNeedUpdate();
     }
 
@@ -506,7 +512,6 @@ public sealed class Chunk : MonoBehaviour
                         RecalculateIlluminationAtPoint(sb.pos);
                     }
                     // eo surface light recalculation
-                    if (i_naturalGeneration) GameMaster.geologyModule.SpreadMinerals(sb);
                     break;
                 }
             case BlockType.Cave:
@@ -753,21 +758,6 @@ public sealed class Chunk : MonoBehaviour
             if (b == null) continue;
             if (b.type == BlockType.Surface | b.type == BlockType.Cave) surfaceBlocks.Add(b as SurfaceBlock);
         }
-    }
-
-    public bool BlockByStructure(byte x, byte y, byte z, Structure s)
-    {
-        if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0 ) | (s == null) ) return false;
-        Block b = GetBlock(x, y, z);
-        if (b != null)  b = ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
-        else b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
-        if (b != null)
-        {
-            b.SetMainStructure(s);
-            chunkUpdated = true;
-            return true;
-        }
-        else return false;
     }
 
     /// <summary>
@@ -1318,6 +1308,39 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
+
+    public bool BlockByStructure(int x, int y, int z, Structure s)
+    {
+        if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0) | (s == null)) return false;
+        Block b = GetBlock(x, y, z);
+        if (b != null) b = ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
+        else b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
+        if (b != null)
+        {
+            b.SetMainStructure(s);
+            chunkUpdated = true;
+            return true;
+        }
+        else return false;
+    }
+
+    public void BlockRegion (List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks, bool indestructible)
+    {
+        foreach (ChunkPos pos in positions)
+        {
+            if ((pos.x >= CHUNK_SIZE || pos.x < 0) | (pos.y >= CHUNK_SIZE || pos.y < 0) | (pos.z >= CHUNK_SIZE || pos.z < 0) ) continue;
+            Block b = blocks[pos.x, pos.y, pos.z];
+            if (b != null) continue;
+            else
+            {
+                b = new GameObject().AddComponent<Block>();
+                b.InitializeShapelessBlock(this, pos, s);
+                b.MakeIndestructible(indestructible);
+                blocks[pos.x, pos.y, pos.z] = b;
+                dependentBlocks.Add(b);
+            }
+        }
+    }
     /// <summary>
     /// uses min coordinates ( left down corner); start positions including!
     /// </summary>
@@ -1809,10 +1832,11 @@ public sealed class Chunk : MonoBehaviour
         if (roofsCount > 0)
         {
             Roof r;
-            data = new byte[5];
+            int roofSerializerLength = 6;
+            data = new byte[roofSerializerLength];
             for (int i = 0; i < roofsCount; i++)
             {
-                fs.Read(data, 0, 5);
+                fs.Read(data, 0, roofSerializerLength);
                 bool peak = data[3] == 1;
                 bool artificial = data[2] == 1;
                 r = PoolMaster.GetRooftop(peak, artificial, data[5]).AddComponent<Roof>();

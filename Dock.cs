@@ -144,7 +144,6 @@ public sealed class Dock : WorkBuilding {
 						maintainingShip = true;
 						s.SetDestination( this );                       
 					}
-                    //else print ("error:no ship given");
                     shipArrivingTimer = GameConstants.GetShipArrivingTimer();
                 }
 			}

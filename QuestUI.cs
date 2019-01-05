@@ -327,25 +327,22 @@ public sealed class QuestUI : MonoBehaviour
     public void Save(System.IO.FileStream fs)
     {
         // access map
-        int count = questAccessMap.Length;
-        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        int questsCount = (int)QuestSection.TotalCount;
         byte one = 1, zero = 0;
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < questsCount; i++)
         {
             fs.WriteByte(questAccessMap[i] ? one : zero);
         }
 
         //completeness mask
-        count = Quest.questsCompletenessMask.Length;
+        int count = Quest.questsCompletenessMask.Length;
         fs.Write(System.BitConverter.GetBytes(count),0,4);
         for (int i =0; i < count; i++)
         {
             fs.Write(System.BitConverter.GetBytes(Quest.questsCompletenessMask[i]), 0, 4);
         }       
         //active quests
-        count = activeQuests.Length;
-        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < questsCount; i++)
         {
             if (activeQuests[i] != Quest.NoQuest)
             {
@@ -358,21 +355,20 @@ public sealed class QuestUI : MonoBehaviour
     }
     public void Load(System.IO.FileStream fs)
     {
-        var data = new byte[4];
+        int questsCount = (int)QuestSection.TotalCount;
         //access mask
-        fs.Read(data, 0, 4);
-        int count = System.BitConverter.ToInt32(data, 0);
-        questAccessMap = new bool[count];
-        data = new byte[count];
-        fs.Read(data, 0, count);
-        for (int i = 0; i < count;i++)
+        questAccessMap = new bool[questsCount];
+        var data = new byte[questsCount];
+        fs.Read(data, 0, data.Length);
+        for (int i = 0; i < questsCount; i++)
         {
             questAccessMap[i] = data[i] == 1;
         }
 
         //completeness mask
+        data = new byte[4];
         fs.Read(data, 0, 4);
-        count = System.BitConverter.ToInt32(data, 0);
+        int count = System.BitConverter.ToInt32(data, 0);
         uint[] mask = new uint[count];
         for (int i = 0; i < count; i++)
         {
@@ -382,11 +378,8 @@ public sealed class QuestUI : MonoBehaviour
         Quest.SetCompletenessMask(mask);
 
         //active quests
-        data = new byte[4];
-        fs.Read(data, 0, 4);
-        count = System.BitConverter.ToInt32(data, 0);
-        activeQuests = new Quest[count];
-        for (int i = 0; i < count; i++)
+        activeQuests = new Quest[questsCount];
+        for (int i = 0; i < questsCount; i++)
         {
             var marker = fs.ReadByte();
             if (marker == 0)

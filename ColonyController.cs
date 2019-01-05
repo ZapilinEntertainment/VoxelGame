@@ -766,17 +766,16 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(health_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 7 x 4
 
         Worksite.StaticSave(fs);
-
         fs.Write(System.BitConverter.GetBytes(freeWorkers), 0, 4);
         fs.Write(System.BitConverter.GetBytes(citizenCount), 0, 4);
         fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
         fs.Write(System.BitConverter.GetBytes(housingTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(starvationTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4); // 7 x 4
     }
     public void Load(System.IO.FileStream fs)
     {
@@ -803,7 +802,6 @@ public sealed class ColonyController : MonoBehaviour
         starvationTimer = System.BitConverter.ToSingle(data, 16);
         realBirthrate = System.BitConverter.ToSingle(data, 20);
         birthrateCoefficient = System.BitConverter.ToSingle(data, 24);
-
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();

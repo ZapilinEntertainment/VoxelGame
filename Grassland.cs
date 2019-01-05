@@ -142,7 +142,6 @@ public class Grassland : MonoBehaviour
                                 p.SetBasement(myBlock, pos);
                                 gl.TakeLifepower(cost);
                                 gl.plantCreateCooldown = LIFE_CREATION_TIMER;
-                                //MonoBehaviour.print("new plant created");
                             }
                         }
                     }

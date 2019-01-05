@@ -1299,7 +1299,7 @@ public class Structure : MonoBehaviour
         var data = new byte[4];
         for (int i = 0; i < count; i++)
         {
-            fs.Read(data, 0, data.Length);
+            fs.Read(data, 0, 4);
             int id = System.BitConverter.ToInt32(data, 0);
             if (id != PLANT_ID)
             {
@@ -1309,8 +1309,7 @@ public class Structure : MonoBehaviour
                 }
                 else HarvestableResource.LoadContainer(fs, sblock);
             }
-            else
-                Plant.LoadPlant(fs, sblock);
+            else  Plant.LoadPlant(fs, sblock);
         }
     }
 
@@ -1330,11 +1329,7 @@ public class Structure : MonoBehaviour
         Prepare();
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH];
         fs.Read(data,0,data.Length);
-        modelRotation = data[ 2];
-        indestructible = (data[3] == 1);
-        SetBasement(sblock, new PixelPosByte(data[0], data[1]));
-        hp = System.BitConverter.ToSingle(data, 4);
-        maxHp = System.BitConverter.ToSingle(data, 8);
+        LoadStructureData(data, sblock);
     }
     protected void LoadStructureData(byte[] data, SurfaceBlock sblock)
     {

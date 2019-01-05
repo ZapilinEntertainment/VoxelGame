@@ -18,7 +18,7 @@ public sealed class FollowingCamera : MonoBehaviour {
 	float moveSmoothAcceleration= 0.03f;
     private float touchRightBorder = Screen.width;
 	public Vector3 deltaLimits = new Vector3 (0.1f, 0.1f, 0.1f);
-	[SerializeField] private Vector3 camPoint = new Vector3(0,5,-5);
+	[SerializeField] private Vector3 camPoint = new Vector3(0,3,-3);
 
 	Vector3 lookPoint;
 	bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false;
@@ -60,6 +60,12 @@ public sealed class FollowingCamera : MonoBehaviour {
     {		
 		camTransform.position = transform.position + transform.TransformDirection(camPoint);
 		camTransform.LookAt(transform.position);
+        Vector3 castPoint = camTransform.position - camTransform.forward * MAX_FAR;
+        RaycastHit rh;
+        if (Physics.SphereCast(castPoint, 0.173f, camTransform.forward, out rh, MAX_FAR))
+        {
+            transform.position = rh.point;
+        }
 
         GameObject[] msprites = GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
         if (msprites != null) {

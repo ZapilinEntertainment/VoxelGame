@@ -151,6 +151,7 @@ public abstract class Plant : Structure {
     public static void LoadPlant(System.IO.FileStream fs, SurfaceBlock sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + PLANT_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
         int plantSerializerIndex = STRUCTURE_SERIALIZER_LENGTH;
         int plantId = System.BitConverter.ToInt32(data, plantSerializerIndex);
         Plant p = GetNewPlant(plantId);

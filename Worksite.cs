@@ -100,35 +100,29 @@ public abstract class Worksite : MonoBehaviour {
     public static void StaticSave(System.IO.FileStream fs)
     {
         int count = worksitesList.Count;
-        if (worksitesList.Count > 0)
+        List<byte> saveList = new List<byte>();
+        if (count > 0)
         {
-            int savesCount = 0, i =0;
-            List<byte> saveList = new List<byte>();
-            while (i < worksitesList.Count)
+            count = 0;            
+            while (count < worksitesList.Count)
             {
-                var data = worksitesList[i].Save();
-                if (data != null)
+                if (worksitesList[count] == null)
                 {
-                    saveList.AddRange(data);
-                    savesCount++;
+                    worksitesList.RemoveAt(count);
+                    continue;
                 }
-                i++;
-            }
-            if (savesCount > 0)
-            {
-                fs.Write(System.BitConverter.GetBytes(savesCount), 0, 4);
-                fs.Write(saveList.ToArray(), 0, saveList.Count);
-            }
-            else
-            {
-                int x = 0;
-                fs.Write(System.BitConverter.GetBytes(x), 0, 4);
+                else
+                {
+                    saveList.AddRange(worksitesList[count].Save());
+                    count++;
+                }
             }
         }
-        else
+        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        if (count > 0)
         {
-            int x = 0;
-            fs.Write(System.BitConverter.GetBytes(x), 0, 4);
+            var dataArray = saveList.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
         }
     }
     protected virtual List<byte> Save()
@@ -163,13 +157,14 @@ public abstract class Worksite : MonoBehaviour {
     public static void StaticLoad(System.IO.FileStream fs)
     {
         worksitesList = new List<Worksite>();
-        Worksite w = null;
-        Chunk chunk = GameMaster.realMaster.mainChunk;
-
-        byte[] data = new byte[4];
-        int count = fs.Read(data, 0, 4);
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int count = System.BitConverter.ToInt32(data,0);      
+      
         if (count > 0)
         {
+            Worksite w = null;
+            Chunk chunk = GameMaster.realMaster.mainChunk;
             for (int i = 0; i < count; i++)
             {
                 WorksiteType type = (WorksiteType)fs.ReadByte();

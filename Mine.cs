@@ -252,6 +252,7 @@ override protected void LabourResult() {
         fs.Read(wdata, 0, wdata.Length);
 
         var data = new byte[10];
+        fs.Read(data, 0, data.Length);
         level = data[ 5];
 
         LoadWorkBuildingData(wdata, 0);

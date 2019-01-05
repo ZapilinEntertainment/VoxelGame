@@ -48,6 +48,15 @@ public class SaveSystemUI : MonoBehaviour
         gameObject.SetActive(true);
         if (inputFieldPanel.activeSelf) inputFieldPanel.SetActive(false);
         if (submitWindow.activeSelf) submitWindow.SetActive(false);
+        if (lastSelectedIndex != -1)
+        {
+            Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
+            if (t != null)
+            {
+                t.GetComponent<Image>().color = Color.white;
+                t.GetChild(0).GetComponent<Text>().color = Color.white;
+            }
+        }
         lastSelectedIndex = -1;
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = false;
         deleteButtonText.transform.parent.GetComponent<Button>().interactable = false;
