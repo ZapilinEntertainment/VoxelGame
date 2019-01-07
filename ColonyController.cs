@@ -727,6 +727,11 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (new_hq != null)
         {
+            if (hq == null)
+            {
+                happiness_coefficient = GameConstants.START_HAPPINESS;
+                birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
+            }
             hq = new_hq;
         }
         if (QuestUI.current.activeQuests[0] == Quest.NoQuest)

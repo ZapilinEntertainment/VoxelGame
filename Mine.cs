@@ -245,7 +245,6 @@ override protected void LabourResult() {
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
         LoadMineData(fs);
     }
-
     protected void LoadMineData(System.IO.FileStream fs)
     {
         var wdata = new byte[WORKBUILDING_SERIALIZER_LENGTH];

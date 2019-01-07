@@ -8,7 +8,7 @@ public class Zeppelin : MonoBehaviour {
     [SerializeField] private AudioSource propeller_as;
 #pragma warning restore 0649
 
-    private float flySpeed = 1, destructionTimer;
+    private float flySpeed = 5, destructionTimer;
     private bool landPointSet = false, destroyed = false;
     private bool? landingByZAxis = null;
 
@@ -20,12 +20,17 @@ public class Zeppelin : MonoBehaviour {
     private Rect landButtonRect;
 
     void Start() {
-        Vector2 pos = Random.insideUnitCircle;
-        Vector3 rpos = new Vector3(pos.x, 0, pos.y) * Chunk.CHUNK_SIZE * 2 ;
-        rpos.y = Chunk.CHUNK_SIZE / 2f;
-        transform.position = rpos;
-		Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
-		transform.forward = v;
+        float x = Random.value * 360;
+        float cs = Chunk.CHUNK_SIZE / 2;
+        Vector3 rpos = Quaternion.AngleAxis(x , Vector3.up ) * Vector3.forward * cs * 1.5f * Block.QUAD_SIZE;
+        
+        rpos.y = cs;
+        rpos.x += cs;
+        rpos.z += cs;
+        transform.position = rpos;        
+        Vector3 v = GameMaster.sceneCenter - transform.position;
+        v.y = 0;
+        transform.forward = Quaternion.AngleAxis(-90, Vector3.up) * v;
 		leftScrew.Rotate(0, Random.value * 360, 0);
 		rightScrew.Rotate(0, Random.value * 360, 0);
 
@@ -41,9 +46,7 @@ public class Zeppelin : MonoBehaviour {
         if (destroyed) return;
         if (!landPointSet)
         {
-            Vector3 v = GameMaster.sceneCenter - transform.position; v.y = 0;
-            transform.forward = Quaternion.AngleAxis(90, Vector3.up) * v;
-            transform.Translate(Vector3.forward * flySpeed * Time.deltaTime * GameMaster.gameSpeed, Space.Self);
+            transform.RotateAround(GameMaster.sceneCenter, Vector3.up, flySpeed * Time.deltaTime * GameMaster.gameSpeed);
             leftScrew.Rotate(0, SCREWS_ROTATION_SPEED * Time.deltaTime * GameMaster.gameSpeed, 0);
             rightScrew.Rotate(0, SCREWS_ROTATION_SPEED * Time.deltaTime * GameMaster.gameSpeed, 0);
         }
@@ -70,6 +73,7 @@ public class Zeppelin : MonoBehaviour {
                     GameMaster.realMaster.SetStartResources();
                     PoolMaster.current.BuildSplash(transform.position);
                     if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSound(NotificationSound.ColonyFounded);
+                    FollowingCamera.main.SetLookPoint(s.transform.position);
                     Destroy(gameObject);
                 }
             }
@@ -204,12 +208,12 @@ public class Zeppelin : MonoBehaviour {
     }
 
     void OnGUI()
-    {
-        if (GameMaster.gameSpeed == 0) return;
+    {        
         if (!landPointSet & !destroyed)
         {
             if (landingSurface != null)
             {
+                if (UIController.current != null && UIController.current.currentActiveWindowMode == ActiveWindowMode.GameMenu) return;
                 Vector3 sc_pos = FollowingCamera.cam.WorldToScreenPoint(landingSurface.transform.position);
                 sc_pos.y = Screen.height - sc_pos.y;
                 landButtonRect = new Rect(sc_pos.x, sc_pos.y, 256, 64);

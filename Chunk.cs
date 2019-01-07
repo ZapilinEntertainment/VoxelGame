@@ -881,7 +881,6 @@ public sealed class Chunk : MonoBehaviour
             }
         }
     }
-
     #endregion
 
     public float CalculateSupportPoints(int x, int y, int z)
@@ -1308,7 +1307,6 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
-
     public bool BlockByStructure(int x, int y, int z, Structure s)
     {
         if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0) | (s == null)) return false;
@@ -1688,22 +1686,20 @@ public sealed class Chunk : MonoBehaviour
     public void SaveChunkData(System.IO.FileStream fs)
     {
         fs.WriteByte(CHUNK_SIZE);
-        var blocksToSave = new List<Block>();
+        var saveableBlocks = new List<Block>();
         foreach (Block b in blocks)
         {
-            if (b != null && b.type != BlockType.Shapeless)
+            if (b == null || b.type == BlockType.Shapeless) continue;
+            else
             {
-                blocksToSave.Add(b);
+                saveableBlocks.Add(b);
             }
         }
-        int count = blocksToSave.Count;
+        int count = saveableBlocks.Count;
         fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         if (count > 0)
         {
-            foreach (Block b in blocksToSave)
-            {
-                b.Save(fs);
-            }
+            foreach (Block b in saveableBlocks) b.Save(fs);
         }
 
         fs.Write(System.BitConverter.GetBytes(lifePower), 0, 4);
@@ -1744,7 +1740,7 @@ public sealed class Chunk : MonoBehaviour
         Prepare();
 
         var data = new byte[4];
-        fs.Read(data, 0, data.Length);
+        fs.Read(data, 0, 4);
         surfaceBlocks = new List<SurfaceBlock>();
         int blocksCount = System.BitConverter.ToInt32(data, 0);
 
@@ -1759,17 +1755,9 @@ public sealed class Chunk : MonoBehaviour
                 fs.Read(data, 0, data.Length);
                 type = (BlockType)data[0];
                 pos = new ChunkPos(data[1], data[2], data[3]);
-                materialID = System.BitConverter.ToInt32(data,4);
+                materialID = System.BitConverter.ToInt32(data, 4);
                 switch (type)
                 {
-                    case BlockType.Shapeless:
-                        {
-                            Block b = new GameObject().AddComponent<Block>();
-                            blocks[pos.x, pos.y, pos.z] = b;
-                            b.InitializeBlock(this, pos, materialID);
-                            loadedBlocks[i] = b;
-                            break;
-                        }
                     case BlockType.Cube:
                         {
                             CubeBlock cb = new GameObject().AddComponent<CubeBlock>();
@@ -1793,15 +1781,16 @@ public sealed class Chunk : MonoBehaviour
                         {
                             CaveBlock cvb = new GameObject().AddComponent<CaveBlock>();
                             blocks[pos.x, pos.y, pos.z] = cvb;
-                            data = new byte[4];
-                            fs.Read(data, 0, 4);
-                            int ceilingMaterial = System.BitConverter.ToInt32(data, 0);
+                            var cdata = new byte[4];
+                            fs.Read(cdata, 0, 4);
+                            int ceilingMaterial = System.BitConverter.ToInt32(cdata, 0);
                             cvb.InitializeCaveBlock(this, pos, ceilingMaterial, materialID);
                             cvb.LoadSurfaceBlockData(fs);
                             loadedBlocks[i] = cvb;
                             surfaceBlocks.Add(cvb);
                             break;
                         }
+
                     default: continue;
                 }
             }
@@ -1809,14 +1798,14 @@ public sealed class Chunk : MonoBehaviour
             foreach (Block b in loadedBlocks) {
                 if (b == null & !corruptedData)
                 {
-                    UIController.current.MakeAnnouncement("error desu : block hasn't loaded");
+                    if (UIController.current != null) UIController.current.MakeAnnouncement("error desu : block hasn't loaded");
                     corruptedData = true;
+                    continue;
                 }
                 b.SetVisibilityMask(GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z));
             } // ужасное решение
             ChunkLightmapFullRecalculation();
-        }
-
+        }        
         data = new byte[8];
         fs.Read(data, 0, 8);
         lifePower = System.BitConverter.ToSingle(data, 0);

@@ -648,26 +648,31 @@ public class SurfaceBlock : Block {
         else fs.WriteByte(0);
 
         int structuresCount = surfaceObjects.Count;
+        var data = new List<byte>();
         if (structuresCount > 0)
         {
             structuresCount = 0;
-            while (structuresCount < surfaceObjects.Count)
+            int i = 0;
+            while (i < surfaceObjects.Count)
             {
-                if (surfaceObjects[structuresCount] == null) surfaceObjects.RemoveAt(structuresCount);
-                else structuresCount++;
+                if (surfaceObjects[i] == null) surfaceObjects.RemoveAt(i);
+                else
+                {
+                    var sdata = surfaceObjects[i].Save();
+                    if (sdata != null && sdata.Count > 0)
+                    {                        
+                        data.AddRange(sdata);
+                        structuresCount++;
+                    }
+                    i++;
+                }
             }
         }
         fs.Write(System.BitConverter.GetBytes(structuresCount), 0, 4);
         if (structuresCount > 0)
         {
-            foreach (Structure s in surfaceObjects)
-            {
-                var strData = s.Save();
-                if (strData != null && strData.Count > 0)
-                {
-                    fs.Write(strData.ToArray(), 0, strData.Count);
-                }
-            }
+            var dataArray = data.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
         }
     }
 

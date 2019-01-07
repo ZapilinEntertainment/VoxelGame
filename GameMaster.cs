@@ -251,6 +251,7 @@ public sealed class GameMaster : MonoBehaviour {
                 {
                     case GameStart.Zeppelin:
                         Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
+                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
                         break;
 
                     case GameStart.Headquarters:

@@ -9,7 +9,7 @@ MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscor
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
-    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood };
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint };
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock}
 
@@ -199,7 +199,8 @@ public static class Localization {
             case GameAnnouncements.GameUnpaused: return "Game unpaused";
             case GameAnnouncements.StorageOverloaded: return "Storage overloaded";
             case GameAnnouncements.ActionError: return "Error desu";
-            case GameAnnouncements.ShipArrived: return "A ship has docked";            
+            case GameAnnouncements.ShipArrived: return "A ship has docked";
+            case GameAnnouncements.SetLandingPoint: return "Set landing point";
         }
 	}
 
@@ -461,7 +462,7 @@ public static class Localization {
                         break;
                     case ProgressQuestID.Progress_2Docks:
                         q.name = "Trade basement";
-                        q.description = "Establish your colony's state by constructing two docks. Keep in mind, that two docks cannot be built on the same height, if they are on the same side of the island";
+                        q.description = "Establish your colony's state by constructing two docks. Keep in mind, that every start dock needs a 2 x 2 corridor to be functional.";
                         q.steps[0] = "Docks built ";
                         break;
                     case ProgressQuestID.Progress_2Storages:

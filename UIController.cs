@@ -43,7 +43,7 @@ sealed public class UIController : MonoBehaviour
     private enum MenuSection { NoSelection, Save, Load, Options }
     MenuSection selectedMenuSection = MenuSection.NoSelection;
 
-    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.3f, STATUS_UPDATE_TIME = 1;    
+    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.1f, STATUS_UPDATE_TIME = 1;    
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
