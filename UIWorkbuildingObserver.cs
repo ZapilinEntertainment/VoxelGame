@@ -218,11 +218,20 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             }
             else
             {
-                if (observingWorkbuilding.workersCount < observingWorkbuilding.maxWorkers)
+                int wcount = observingWorkbuilding.workersCount, max = observingWorkbuilding.maxWorkers;
+                if (wcount == max) return;
+                else
                 {
-                    GameMaster.realMaster.colonyController.SendWorkers(observingWorkbuilding.maxWorkers - observingWorkbuilding.workersCount, observingWorkbuilding);
+                    if (wcount + 10 < max)
+                    {
+                        GameMaster.realMaster.colonyController.SendWorkers(10, observingWorkbuilding);
+                    }
+                    else
+                    {
+                        GameMaster.realMaster.colonyController.SendWorkers(max - wcount, observingWorkbuilding);
+                    }
+                    StatusUpdate();
                 }
-                StatusUpdate();
             }
         }
         else
@@ -233,12 +242,18 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             }
             else
             {
-                int maxWorkers = observingWorksite.GetMaxWorkers();
-                if (observingWorksite.workersCount < maxWorkers)
+                int wcount = observingWorksite.workersCount;
+                int max = observingWorksite.GetMaxWorkers();
+                if (wcount == max) return;
+                else
                 {
-                    GameMaster.realMaster.colonyController.SendWorkers(maxWorkers - observingWorksite.workersCount, observingWorksite);
+                    if (wcount + 10 < max)
+                    {
+                        GameMaster.realMaster.colonyController.SendWorkers(10, observingWorksite);
+                    }
+                    else GameMaster.realMaster.colonyController.SendWorkers(max - wcount, observingWorksite);
+                    StatusUpdate();
                 }
-                StatusUpdate();
             }
         }
 	}
@@ -250,7 +265,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 SelfShutOff(); return;
             }
             else
-            {
+            {                
                 if (observingWorkbuilding.workersCount > 0)
                 {
                     observingWorkbuilding.FreeWorkers(1);
@@ -282,11 +297,11 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 SelfShutOff(); return;
             }
             else
-            {
-                if (observingWorkbuilding.workersCount > 0)
-                {
-                    observingWorkbuilding.FreeWorkers();
-                }
+            {                
+                int wcount = observingWorkbuilding.workersCount;
+                if (wcount == 0) return;
+                if (wcount > 10) observingWorkbuilding.FreeWorkers(10);
+                else observingWorkbuilding.FreeWorkers();
                 StatusUpdate();
             }
         }
@@ -298,11 +313,14 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             }
             else
             {
-                if (observingWorksite.workersCount > 0)
+                int wcount = observingWorksite.workersCount;
+                if (wcount == 0) return;
+                else
                 {
-                    observingWorksite.FreeWorkers();
+                    if (wcount > 10) observingWorksite.FreeWorkers(10);
+                    else observingWorkbuilding.FreeWorkers();
+                    StatusUpdate();
                 }
-                StatusUpdate();
             }
         }
 	}

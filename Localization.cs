@@ -575,7 +575,7 @@ public static class Localization {
                         break;
                     case EndgameQuestID.Endgame_TransportHub_step3:
                         q.name = "Transport Hub way 3 - final";
-                        q.description = "At the end, you city must be prepared to place lot of people. Built new housing skyscrapers and at least one hotel complex. Also you shall care about power supply, so it will be good decision to built a reactor block.";
+                        q.description = "At the end, you city must be prepared to place lot of people. Build new housing skyscrapers and at least one hotel complex. Also you shall care about power supply, so it will be good decision to built a reactor block.";
                         q.steps[0] = "Reactor block built ";
                         q.steps[1] = "Housing masts built ";
                         q.steps[2] = "Hotel block built ";

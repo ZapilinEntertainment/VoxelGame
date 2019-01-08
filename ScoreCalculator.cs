@@ -126,11 +126,13 @@
                             // AWAITING
                             break;
                         case BlockType.Cube:
+                            if (b.material_id > 0)
                             score += (b as CubeBlock).volume * CubeBlock.MAX_VOLUME * resourcesCosts[b.material_id];
                             break;
                         case BlockType.Surface:
                         case BlockType.Cave:
-                            score += SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * resourcesCosts[b.material_id];
+                            if (b.material_id > 0)
+                                score += SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * resourcesCosts[b.material_id];
                             SurfaceBlock sb = b as SurfaceBlock;
                             if (sb.cellsStatus != 0)
                             {

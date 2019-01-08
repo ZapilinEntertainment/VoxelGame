@@ -146,10 +146,10 @@ public sealed class Shuttle : MonoBehaviour {
     #region save-load system
     public static void SaveStaticData( System.IO.FileStream fs) {
         int shuttlesCount = shuttlesList != null ? shuttlesList.Count : 0;
+        var data = new List<byte>();
         if (shuttlesCount > 0)
         {
-            shuttlesCount = 0;
-            var data = new List<byte>();
+            shuttlesCount = 0;            
             while (shuttlesCount < shuttlesList.Count)
             {
                 if (shuttlesList[shuttlesCount] == null)
@@ -163,13 +163,11 @@ public sealed class Shuttle : MonoBehaviour {
                     shuttlesCount++;
                 }
             }
+        }
+        fs.Write(System.BitConverter.GetBytes(shuttlesCount),0,4);
+        if (shuttlesCount > 0) {
             var dataArray = data.ToArray();
             if (shuttlesCount > 0) fs.Write(dataArray, 0, dataArray.Length);
-            else fs.Write(System.BitConverter.GetBytes(shuttlesCount), 0, 4);
-        }
-        else
-        {
-            fs.Write(System.BitConverter.GetBytes(shuttlesCount),0,4);
         }
         fs.Write(System.BitConverter.GetBytes(lastIndex), 0, 4);
     }
@@ -177,14 +175,14 @@ public sealed class Shuttle : MonoBehaviour {
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int shuttlesCount = System.BitConverter.ToInt32(data,0);
-        if (shuttlesCount > 0)
+
+        shuttlesList = new List<Shuttle>();
+        while (shuttlesCount > 0)
         {
-            while (shuttlesCount > 0)
-            {
-                Shuttle s = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
-                s.Load(fs);
-                shuttlesCount--;
-            }
+            Shuttle s = Instantiate(Resources.Load<GameObject>("Prefs/shuttle")).GetComponent<Shuttle>();
+            s.Load(fs);
+            shuttlesList.Add(s);
+            shuttlesCount--;
         }
         fs.Read(data, 0, 4);
         lastIndex = System.BitConverter.ToInt32(data, 0);

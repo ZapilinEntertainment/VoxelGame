@@ -701,7 +701,7 @@ public class Building : Structure
                 break;
             case HOTEL_BLOCK_6_ID:
                 {
-                    specialBuildingConditions = true;
+                    specialBuildingConditions = false;
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
                     energySurplus = -700;

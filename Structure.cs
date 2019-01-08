@@ -139,7 +139,7 @@ public class Structure : MonoBehaviour
             case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;
             case FOUNDATION_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foundationBlock")); break;
             case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;
-            case CONTROL_CENTER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/commandCenter")); break;
+            case CONTROL_CENTER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/controlCenter")); break;
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
@@ -273,9 +273,9 @@ public class Structure : MonoBehaviour
             case FOUNDATION_BLOCK_5_ID:
                 s = new GameObject("Foundation block").AddComponent<Building>(); break;
             case CONNECT_TOWER_6_ID:
-                s = new GameObject("Connect tower").AddComponent<Building>(); break; // AWAITING
+                s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break; 
             case CONTROL_CENTER_6_ID:
-                s = new GameObject("Command center").AddComponent<Building>(); break; // AWAITING
+                s = new GameObject("Command center").AddComponent<ControlCenter>(); break; 
             case HOTEL_BLOCK_6_ID:
                 s = new GameObject("Hotel block").AddComponent<House>(); break; // AWAITING
             case HOUSING_MAST_6_ID:
@@ -392,7 +392,7 @@ public class Structure : MonoBehaviour
             case STORAGE_3_ID:
                 {
                     maxHp = 1000;
-                    innerPosition = new SurfaceRect(0, 0, 6);
+                    innerPosition = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;

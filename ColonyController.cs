@@ -53,7 +53,7 @@ public sealed class ColonyController : MonoBehaviour
             docksLevel = 0;
             energyCrystalsCount = 1000;
 
-            cityName = "default city"; // lol
+            cityName = "My Colony"; 
         }
         houses = new List<House>();
         powerGrid = new List<Building>();
@@ -476,89 +476,56 @@ public sealed class ColonyController : MonoBehaviour
         ignoreHousingRequest = false;
         temporaryHousing = (housingVolumes[0] > 0);
 
-        int allLivespace = totalLivespace;
-        float usingLivespace = 0;
-        // принимается, что все расселены от максимального уровня к минимальному
-        if (housingVolumes[5] >= allLivespace)
+        //leveling
+        if (citizenCount != 0)
         {
-            housingLevel = 5;
-        }
-        else // можно и рекурсией
-        {
-            allLivespace -= housingVolumes[5];
-            usingLivespace += housingVolumes[5];
-            if (housingVolumes[4] >= allLivespace)
+            int lspace = citizenCount;
+            float fcount = citizenCount;
+            if (housingVolumes[5] >= lspace)
             {
-                housingVolumes[4] = allLivespace;
-                usingLivespace += allLivespace;
-                allLivespace = 0;
-                housingVolumes[3] = 0;
-                housingVolumes[2] = 0;
-                housingVolumes[1] = 0;
-                housingVolumes[0] = 0;
+                housingLevel = 5;
             }
             else
             {
-                allLivespace -= housingVolumes[4];
-                usingLivespace += housingVolumes[4];
-
-                if (housingVolumes[3] >= allLivespace)
+                lspace -= housingVolumes[5];
+                if (housingVolumes[4] >= lspace)
                 {
-                    housingVolumes[3] = allLivespace;
-                    usingLivespace += allLivespace;
-                    allLivespace = 0;
+                    housingVolumes[4] = lspace;
+                    housingVolumes[3] = 0;
                     housingVolumes[2] = 0;
                     housingVolumes[1] = 0;
-                    housingVolumes[0] = 0;
                 }
                 else
                 {
-                    allLivespace -= housingVolumes[3];
-                    usingLivespace += housingVolumes[3];
-
-                    if (housingVolumes[2] >= allLivespace)
+                    lspace -= housingVolumes[4];
+                    if (housingVolumes[3] >= lspace)
                     {
-                        housingVolumes[2] = allLivespace;
-                        usingLivespace += allLivespace;
-                        allLivespace = 0;
+                        housingVolumes[3] = lspace;
+                        housingVolumes[2] = 0;
                         housingVolumes[1] = 0;
-                        housingVolumes[0] = 0;
                     }
                     else
                     {
-                        allLivespace -= housingVolumes[2];
-                        usingLivespace += housingVolumes[2];
-
-                        if (housingVolumes[1] >= allLivespace)
+                        lspace -= housingVolumes[3];
+                        if (housingVolumes[2] >= lspace)
                         {
-                            housingVolumes[1] = allLivespace;
-                            usingLivespace += allLivespace;
-                            allLivespace = 0;
-                            housingVolumes[0] = 0;
+                            housingVolumes[2] = lspace;
+                            housingVolumes[1] = 0;
                         }
                         else
                         {
-                            allLivespace -= housingVolumes[1];
-                            usingLivespace += housingVolumes[1];
-
-                            if (housingVolumes[0] >= allLivespace)
+                            lspace -= housingVolumes[2];
+                            if (housingVolumes[1] >= lspace)
                             {
-                                housingVolumes[0] = allLivespace;
-                                usingLivespace += allLivespace;
-                                allLivespace = 0;
-                            }
-                            else
-                            {
-                                allLivespace -= housingVolumes[0];
-                                usingLivespace += housingVolumes[0];
+                                housingVolumes[1] = lspace;
                             }
                         }
                     }
                 }
+                housingLevel = housingVolumes[5] / fcount * 5 + housingVolumes[4] / fcount * 4 + housingVolumes[3] / fcount * 3 + housingVolumes[2] / fcount * 2 + housingVolumes[1] / fcount;
             }
         }
-
-        housingLevel = housingVolumes[5] / usingLivespace * 5 + housingVolumes[4] / usingLivespace * 4 + housingVolumes[3] / usingLivespace * 3 + housingVolumes[2] / usingLivespace * 2 + housingVolumes[1] / usingLivespace;
+        else housingLevel = 0;
     }
 
     public void AddHospital(Hospital h)
@@ -723,6 +690,11 @@ public sealed class ColonyController : MonoBehaviour
     }
     #endregion
 
+    public void RenameColony(string nm)
+    {
+        cityName = nm;
+    }
+
     public void SetHQ(HeadQuarters new_hq)
     {
         if (new_hq != null)
@@ -734,10 +706,7 @@ public sealed class ColonyController : MonoBehaviour
             }
             hq = new_hq;
         }
-        if (QuestUI.current.activeQuests[0] == Quest.NoQuest)
-        {
-            QuestUI.current.StartCoroutine(QuestUI.current.WaitForNewQuest(0));
-        }
+        QuestUI.current.CheckQuestsAccessibility();
     }
 
     public void AddEnergyCrystals(float v)
@@ -781,6 +750,11 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(starvationTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4); // 7 x 4
+
+        var nameArray = System.Text.Encoding.Default.GetBytes(cityName);
+        int count = nameArray.Length;
+        fs.Write(System.BitConverter.GetBytes(count),0,4); // количество байтов, не длина строки
+        if (count > 0) fs.Write(nameArray,0, nameArray.Length);
     }
     public void Load(System.IO.FileStream fs)
     {
@@ -799,7 +773,8 @@ public sealed class ColonyController : MonoBehaviour
 
         Worksite.StaticLoad(fs);
 
-        fs.Read(data, 0, 28);
+        data = new byte[32]; // 28 + 4- name length
+        fs.Read(data, 0, 32);
         freeWorkers = System.BitConverter.ToInt32(data, 0);
         citizenCount = System.BitConverter.ToInt32(data, 4);
         peopleSurplus = System.BitConverter.ToSingle(data, 8);
@@ -810,6 +785,17 @@ public sealed class ColonyController : MonoBehaviour
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();
+
+        int bytesCount = System.BitConverter.ToInt32(data, 28); //выдаст количество байтов, не длину строки
+        data = new byte[bytesCount];
+        fs.Read(data, 0, bytesCount);
+        if (bytesCount > 0)
+        {
+            System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
+            var chars = new char[d.GetCharCount(data, 0, bytesCount)];
+            d.GetChars(data, 0, bytesCount, chars, 0, true);
+            cityName = new string(chars);
+        }
     }
     #endregion
 

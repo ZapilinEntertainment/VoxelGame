@@ -23,7 +23,7 @@ public sealed class HeadQuarters : House {
 			if (rooftop == null) {
                 if (b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + 1), b.pos.z, this))
                 {
-                    rooftop = PoolMaster.GetRooftop(true, true);
+                    rooftop = PoolMaster.GetRooftop(false, true);
                     rooftop.transform.parent = transform.GetChild(0);
                     rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
                 }
@@ -130,7 +130,7 @@ public sealed class HeadQuarters : House {
                 bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE / 2f;
                 if (rooftop == null)
                 {
-                    rooftop = PoolMaster.GetRooftop(true, true);
+                    rooftop = PoolMaster.GetRooftop(false, true);
                     rooftop.transform.parent = model;
                 }
                 rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;

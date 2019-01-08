@@ -212,7 +212,7 @@ public abstract class WorkBuilding : Building {
             case CHEMICAL_FACTORY_4_ID:
                 {
                     workflowToProcess = 1;
-                    maxWorkers = 80;
+                    maxWorkers = 0;
                 }
                 break;
             case SHUTTLE_HANGAR_4_ID:

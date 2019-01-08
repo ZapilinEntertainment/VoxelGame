@@ -167,6 +167,7 @@ public sealed class Crew : MonoBehaviour {
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int crewsCount = System.BitConverter.ToInt32(data, 0);
+
         while (crewsCount >0)
         {
             Crew c = new GameObject().AddComponent<Crew>();
@@ -210,7 +211,7 @@ public sealed class Crew : MonoBehaviour {
         return data;
     }
 
-    public Crew Load(System.IO.FileStream fs)
+    public void Load(System.IO.FileStream fs)
     {
         var data = new byte[12];
         fs.Read(data, 0, 12);
@@ -235,6 +236,7 @@ public sealed class Crew : MonoBehaviour {
         }
 
         data = new byte[54];
+        fs.Read(data, 0, data.Length);
         membersCount = System.BitConverter.ToInt32(data, 0);
         experience = System.BitConverter.ToSingle(data, 4);
         nextExperienceLimit = System.BitConverter.ToSingle(data, 8);
@@ -250,7 +252,6 @@ public sealed class Crew : MonoBehaviour {
         missionsCompleted = System.BitConverter.ToInt32(data, 48);
         level = data[52];
         status = (CrewStatus)data[53];
-        return this;
     }
 
     #endregion

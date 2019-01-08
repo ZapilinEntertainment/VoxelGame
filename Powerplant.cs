@@ -110,15 +110,19 @@ public class Powerplant : WorkBuilding {
         fuelLeft = tickTimer / fuelBurnTime;
     }
 
+    /// <summary>
+	/// return excess workers
+	/// </summary>
 	override public int AddWorkers (int x) { // не используется recalculate workspeed
-		if (workersCount == maxWorkers) return 0;
+		if (workersCount == maxWorkers) return x;
 		else {
 			if (x > maxWorkers - workersCount) {
-				x -= (maxWorkers - workersCount);
+				x = maxWorkers - workersCount;
 				workersCount = maxWorkers;
 			}
 			else {
 				workersCount += x;
+                x = 0;
 			}
 			return x;
 		}

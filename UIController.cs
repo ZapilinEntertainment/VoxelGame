@@ -17,13 +17,14 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] Transform storagePanelContent;
     [SerializeField] RawImage progressPanelIcon;
     [SerializeField] QuestUI _questUI;
+    [SerializeField] InputField colonyNameField;
 #pragma warning restore 0649
 
     public bool showLayerCut { get; private set; }
@@ -99,6 +100,7 @@ sealed public class UIController : MonoBehaviour
         linksReady = true;
         leftPanel.SetActive(true);
         upPanel.SetActive(true);
+        colonyRenameButton.SetActive(true);
     }
 
     void Update()
@@ -330,49 +332,65 @@ sealed public class UIController : MonoBehaviour
                         energyCrystalsString.text = saved_energyCrystalsCount.ToString();
                     }
                     //date
-                    GameMaster gm = GameMaster.realMaster;
-                    if (gm.year > 0)
+                    if (dataString.enabled)
                     {
-                        dataString.text = Localization.GetWord(LocalizedWord.Year_short) + ' ' + gm.year.ToString() + ' ' 
-                            + Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' ' 
-                            + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
-                    }
-                    else
-                    {
-                        if (gm.month > 0)
+                        GameMaster gm = GameMaster.realMaster;
+                        string s;
+                        if (gm.year > 0)
                         {
-                            dataString.text = Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
-                            + Localization.GetWord(LocalizedWord.Day_short) +' ' + gm.day.ToString();
+                            s = Localization.GetWord(LocalizedWord.Year_short) + ' ' + gm.year.ToString() + ' '
+                                + Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
+                                + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
                         }
                         else
                         {
-                            dataString.text = Localization.GetWord(LocalizedWord.Day) + ' ' + gm.day.ToString();
+                            if (gm.month > 0)
+                            {
+                                s = Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
+                                + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
+                            }
+                            else
+                            {
+                                s = Localization.GetWord(LocalizedWord.Day) + ' ' + gm.day.ToString();
+                            }
                         }
+                        s = colony.cityName + ", " + s;
+                        dataString.text = s;
                     }
                     //food val
                     float foodValue = storage.standartResources[ResourceType.FOOD_ID] + storage.standartResources[ResourceType.SUPPLIES_ID];
-                    if (foodValue == 0)
+                    float foodMonth = colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
+                    if (foodValue > foodMonth)
                     {
-                        if (!starvationSignal) {
-                            saved_citizenCountBeforeStarvation = colony.citizenCount;
-                            foodIconFullfill.color = Color.red;                            
-                            starvationSignal = true;
-                        }
-                        if (saved_citizenCountBeforeStarvation != 0)
-                        {
-                            foodIconFullfill.fillAmount = colony.citizenCount / saved_citizenCountBeforeStarvation;
-                        }
+                        if (foodIconFullfill.transform.parent.gameObject.activeSelf) foodIconFullfill.transform.parent.gameObject.SetActive(false);
                     }
                     else
                     {
-                        if (starvationSignal)
+                        if (!foodIconFullfill.transform.parent.gameObject.activeSelf) foodIconFullfill.transform.parent.gameObject.SetActive(true);
+                        if (foodValue == 0)
                         {
-                            starvationSignal = false;
-                            foodIconFullfill.color = Color.white;
+                            if (!starvationSignal)
+                            {
+                                saved_citizenCountBeforeStarvation = colony.citizenCount;
+                                foodIconFullfill.color = Color.red;
+                                starvationSignal = true;
+                            }
+                            if (saved_citizenCountBeforeStarvation != 0)
+                            {
+                                foodIconFullfill.fillAmount = colony.citizenCount / saved_citizenCountBeforeStarvation;
+                            }
                         }
-                        if (colony.citizenCount != 0)
+                        else
                         {
-                            foodIconFullfill.fillAmount = foodValue / (colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH);
+                            if (starvationSignal)
+                            {
+                                starvationSignal = false;
+                                foodIconFullfill.color = Color.white;
+                            }
+                            if (colony.citizenCount != 0)
+                            {
+                                foodIconFullfill.fillAmount = foodValue / foodMonth;
+                            }
                         }
                     }
                 }
@@ -768,12 +786,14 @@ sealed public class UIController : MonoBehaviour
         leftPanel.SetActive(false);
         menuPanel.SetActive(false);
         upPanel.SetActive(false);
+        colonyRenameButton.SetActive(false);
     }
     public void FullReactivation()
     {
         leftPanel.SetActive(true);
         menuPanel.SetActive(true);
         upPanel.SetActive(true);
+        colonyRenameButton.SetActive(true);
     }  
 
     public static Rect GetTextureUV(Icons i)
@@ -1376,6 +1396,24 @@ sealed public class UIController : MonoBehaviour
     public void CloseTradePanel()
     {
         tradePanel.SetActive(false);
+    }
+    #endregion
+
+    #region up panel
+    public void ActivateColonyNameField()
+    {
+        dataString.enabled = false;
+        colonyRenameButton.SetActive(false);
+        colonyNameField.text = colony.cityName;
+        colonyNameField.Select();
+        colonyNameField.gameObject.SetActive(true);
+    }
+    public void ColonyNameEditingEnd(string s)
+    {
+        colonyRenameButton.SetActive(true);
+        colonyNameField.gameObject.SetActive(false);
+        if (s!= colony.cityName) colony.RenameColony(s);
+        dataString.enabled = true;
     }
     #endregion
 

@@ -634,8 +634,8 @@ public sealed class GameMaster : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
 		#endregion		
         environmentMaster.Save(fs);
-        Crew.SaveStaticData(fs);
         Shuttle.SaveStaticData(fs);
+        Crew.SaveStaticData(fs);        
         mainChunk.SaveChunkData(fs);
         colonyController.Save(fs);
 		Dock.SaveStaticDockData(fs);
@@ -702,27 +702,25 @@ public sealed class GameMaster : MonoBehaviour {
             #endregion
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
-            Crew.LoadStaticData(fs);
             Shuttle.LoadStaticData(fs); // because of hangars
+            Crew.LoadStaticData(fs);
 
             if (mainChunk == null)
             {
                 GameObject g = new GameObject("chunk");
                 mainChunk = g.AddComponent<Chunk>();
             }
-            mainChunk.LoadChunkData(fs);
+            mainChunk.LoadChunkData(fs);            
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             Dock.LoadStaticData(fs);
             QuestUI.current.Load(fs);
             Expedition.LoadStaticData(fs);
             fs.Close();
-
             FollowingCamera.main.WeNeedUpdate();            
             loading = false;
             savename = fullname;
-            SetPause(false);
-
+            SetPause(false);            
             return true;
         }
         else
@@ -781,7 +779,7 @@ public sealed class GameMaster : MonoBehaviour {
             case GameEndingType.TransportHubVictory:
                 {
                     Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
-                    endpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
+                    endpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
                     endpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
                     endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
                     endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => { ContinueGameAfterEnd(endpanel.gameObject); });
@@ -794,7 +792,7 @@ public sealed class GameMaster : MonoBehaviour {
             default:
                 {
                     Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
-                    failpanel.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = reason;
+                    failpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
                     failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
                     failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
                     break;

@@ -160,6 +160,7 @@ public class UIBuildingObserver : UIObserver {
                 status_active = observingBuilding.isActive;
                 status_energySupplied = observingBuilding.isEnergySupplied;
 
+                showingEnergySurplus = observingBuilding.energySurplus;
                 if (status_active)
                 {
                     if (status_connectedToPowerGrid)
@@ -265,7 +266,7 @@ public class UIBuildingObserver : UIObserver {
             {
                 if (i < cost.Length)
                 {
-                    resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(cost[i].type.ID);
+                    resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
                     Text t = resourceCostIndicator[i].transform.GetChild(0).GetComponent<Text>();
                     t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}",cost[i].volume);
                     t.color = cost[i].volume > storageVolume[cost[i].type.ID] ? Color.red : Color.white;

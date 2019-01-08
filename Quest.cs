@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType : byte
 {
-    System, Progress, Endgame
+    System, Progress, Endgame, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte 
@@ -30,21 +30,22 @@ public class Quest {
     public readonly byte subIndex;
 
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
-    public static readonly Quest NoQuest;
+    public static readonly Quest NoQuest, AwaitingQuest;
 
-    private const byte NO_QUEST_SUBINDEX = 0;
+    private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
 
     //при добавлении квеста дополнить:
     // Localization -> Fill quest data
     // QuestUI -> coroutine SetNewQuest
 
     static Quest () {
-        questsCompletenessMask = new uint[2];
+        questsCompletenessMask = new uint[(int)QuestType.Total];
         NoQuest = new Quest(QuestType.System, NO_QUEST_SUBINDEX);
+        AwaitingQuest = new Quest(QuestType.System, AWAITING_QUEST_SUBINDEX);
 	}
     public static bool operator ==(Quest A, Quest B)
     {
-        return ((A.type == B.type) && (A.subIndex == B.subIndex));
+       return ((A.type == B.type) && (A.subIndex == B.subIndex));
     }
     public static bool operator !=(Quest A, Quest B)
     {
@@ -511,6 +512,7 @@ public class Quest {
                                 conditionsMet++;
                             }
                             else stepsFinished[1] = false;
+                            stepsAddInfo[1] = housingMastsCount.ToString() + " / " + housingMastsNeeded.ToString();
                             stepsFinished[2] = hotelFound;
                             if (conditionsMet == 2 & hotelFound)
                             {
@@ -529,8 +531,13 @@ public class Quest {
         UIController.current.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
-        QuestUI.current.ResetQuestCell(this);
+        if (type == QuestType.Endgame & subIndex != 2)
+        {
+            QuestUI.current.SetNewQuest((int)QuestSection.Endgame);
+        }
+        else QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
+        
     }
 
     #region allQuestList
