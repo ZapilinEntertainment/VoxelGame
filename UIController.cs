@@ -473,7 +473,7 @@ sealed public class UIController : MonoBehaviour
 
     public void Raycasting()
     {
-        if (colony == null || colony.hq == null) return;
+        if (GameMaster.gameSpeed == 0 | colony == null || colony.hq == null ) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
         if (FollowingCamera.touchscreen )
         {
@@ -785,6 +785,7 @@ sealed public class UIController : MonoBehaviour
         ChangeActiveWindow(ActiveWindowMode.NoWindow);
         leftPanel.SetActive(false);
         menuPanel.SetActive(false);
+        menuButton.SetActive(false);
         upPanel.SetActive(false);
         colonyRenameButton.SetActive(false);
     }
@@ -792,6 +793,7 @@ sealed public class UIController : MonoBehaviour
     {
         leftPanel.SetActive(true);
         menuPanel.SetActive(true);
+        menuButton.SetActive(true);
         upPanel.SetActive(true);
         colonyRenameButton.SetActive(true);
     }  

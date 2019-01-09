@@ -91,7 +91,6 @@ public sealed class GameMaster : MonoBehaviour {
     private float labourTimer = 0, lifepowerTimer = 0;   
     private bool firstSet = true;
 	// FOR TESTING
-	public float newGameSpeed = 1;
 	public bool weNeedNoResources { get; private set; }
 	public bool generateChunk = true;
     public byte test_size = 100;
@@ -337,7 +336,10 @@ public sealed class GameMaster : MonoBehaviour {
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
-    public void SetColonyController(ColonyController c) { colonyController = c; }
+    public void SetColonyController(ColonyController c) {
+        colonyController = c;
+        worldConsumingTimer = 60;
+    }
 
     #region updates
     private void Update()
@@ -349,65 +351,36 @@ public sealed class GameMaster : MonoBehaviour {
             {
                 float ch = colonyController.happiness_coefficient;
                 byte newUpSkyStatus = upSkyStatus, newLowSkyStatus = lowSkyStatus;
-                if (ch > 0.5f)
+                if (ch < GameConstants.RSPACE_CONSUMING_VAL)
                 {
-                    if (ch > GameConstants.LSECTOR_CONSUMING_VAL_2)
+                    newUpSkyStatus = 0;
+                    newLowSkyStatus++;
+                    if (newLowSkyStatus > 3)
                     {
-                        if (ch > GameConstants.LSECTOR_CONSUMING_VAL_3)
-                        {
-                            newUpSkyStatus = 3;
-                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_3;
-                        }
-                        else
-                        {
-                            newUpSkyStatus = 2;
-                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_2;
-                        }
+                        GameOver(GameEndingType.ConsumedByReal);
+                        newLowSkyStatus = 3;
                     }
-                    else
-                    {
-                        if (ch > GameConstants.LSECTOR_CONSUMING_VAL_1)
-                        {
-                            newUpSkyStatus = 1;
-                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_1;
-                        }
-                        else
-                        {
-                            newUpSkyStatus = 0;
-                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_0;
-                        }
-                    }
-                    newLowSkyStatus = 0;
+                    worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newLowSkyStatus;
                 }
                 else
                 {
-                    if (ch > GameConstants.RSPACE_CONSUMING_VAL_1)
+                    if (ch > GameConstants.LSECTOR_CONSUMING_VAL)
                     {
                         newLowSkyStatus = 0;
-                        worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_0;
+                        newUpSkyStatus++;
+                        if (newUpSkyStatus > 3)
+                        {
+                            GameOver(GameEndingType.ConsumedByLastSector);
+                            newUpSkyStatus = 3;
+                        }
+                        worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newUpSkyStatus;
                     }
                     else
                     {
-                        if (ch < GameConstants.RSPACE_CONSUMING_VAL_2)
-                        {
-                            if (ch < GameConstants.RSPACE_CONSUMING_VAL_3)
-                            {
-                                newLowSkyStatus = 3;
-                                worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_3;
-                            }
-                            else
-                            {
-                                newLowSkyStatus = 2;
-                                worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_2;
-                            }
-                        }
-                        else
-                        {
-                            newLowSkyStatus = 1;
-                            worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER_1;
-                        }
+                        newLowSkyStatus = 0;
+                        newUpSkyStatus = 0;
+                        worldConsumingTimer = 60;
                     }
-                    newUpSkyStatus = 0;
                 }
                 if (newUpSkyStatus != upSkyStatus)
                 {
@@ -428,13 +401,6 @@ public sealed class GameMaster : MonoBehaviour {
                     }
                     upSkyStatus = newUpSkyStatus;
                 }
-                else
-                {
-                    if (upSkyStatus == 3)
-                    {
-                        GameOver(GameEndingType.ConsumedByReal);
-                    }
-                }
                 if (newLowSkyStatus != lowSkyStatus)
                 {
                     switch (newLowSkyStatus)
@@ -454,17 +420,9 @@ public sealed class GameMaster : MonoBehaviour {
                     }
                     lowSkyStatus = newLowSkyStatus;
                 }
-                else
-                {
-                    if (newLowSkyStatus == 3)
-                    {
-                        GameOver(GameEndingType.ConsumedByLastSector);
-                    }
-                }
             }
         }
         //testzone
-        if (gameSpeed != newGameSpeed) gameSpeed = newGameSpeed;
         if (Input.GetKeyDown("c"))
         {
             Crew c = Crew.CreateNewCrew(colonyController);
@@ -767,7 +725,7 @@ public sealed class GameMaster : MonoBehaviour {
 
     public void GameOver(GameEndingType endType)
     {
-        gameSpeed = 0;
+        SetPause(true);
         UIController.current.FullDeactivation();
 
         double score = new ScoreCalculator().GetScore(this);

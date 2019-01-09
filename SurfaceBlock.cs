@@ -441,8 +441,12 @@ public class SurfaceBlock : Block {
 			if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
 			else {
 				List<PixelPosByte> acceptableVariants = GetAcceptablePositions(10);
-				int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
-				return acceptableVariants[ppos];
+                if (acceptableVariants.Count == 0) return PixelPosByte.Empty;
+                else
+                {
+                    int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
+                    return acceptableVariants[ppos];
+                }
 			}
 		}
 	}
@@ -535,11 +539,20 @@ public class SurfaceBlock : Block {
 				if (map[i,j] == false) {acceptableVariants.Add(new PixelPosByte(i,j)); }
 			}	
 		}
-		while (acceptableVariants.Count > count) {
-			int i = (int)(Random.value * (acceptableVariants.Count - 1));
-			acceptableVariants.RemoveAt(i);
-		}
-		return acceptableVariants;
+        if (acceptableVariants.Count == 0)
+        {
+            cellsStatus = 1;
+            return new List<PixelPosByte>();
+        }
+        else
+        {
+            while (acceptableVariants.Count > count)
+            {
+                int i = (int)(Random.value * (acceptableVariants.Count - 1));
+                acceptableVariants.RemoveAt(i);
+            }
+            return acceptableVariants;
+        }
 	}
 
 	public bool IsAnyBuildingInArea(SurfaceRect sa) {

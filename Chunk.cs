@@ -1805,7 +1805,28 @@ public sealed class Chunk : MonoBehaviour
                 b.SetVisibilityMask(GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z));
             } // ужасное решение
             ChunkLightmapFullRecalculation();
-        }        
+        }
+        if (surfaceBlocks.Count > 0)
+        {
+            foreach (SurfaceBlock sb in surfaceBlocks)
+            {
+                if (sb.cellsStatus != 0)
+                {
+                    foreach (Structure s in sb.surfaceObjects)
+                    {
+                        if (s.isBasement)
+                        {
+                            BlockRendererController brc = s.transform.GetChild(0).GetComponent<BlockRendererController>();
+                            if (brc != null) {
+                                ChunkPos cpos = s.basement.pos;
+                                brc.SetVisibilityMask(GetVisibilityMask(cpos.x, cpos.y, cpos.z));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         data = new byte[8];
         fs.Read(data, 0, 8);
         lifePower = System.BitConverter.ToSingle(data, 0);

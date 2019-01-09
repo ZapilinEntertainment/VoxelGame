@@ -61,7 +61,7 @@ public sealed class HeadQuarters : House {
 
     override public bool IsLevelUpPossible(ref string refusalReason)
     {
-        if (level < 7)
+        if (level < GameConstants.HQ_MAX_LEVEL)
         {
             if (nextStageConditionMet)
             {

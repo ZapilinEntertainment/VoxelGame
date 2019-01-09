@@ -9,8 +9,8 @@ public sealed class MenuUI : MonoBehaviour
 {
     private int currentGraphicsLevel = 0;
 #pragma warning disable 0649
-    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton;
-    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel;
+    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton;
+    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, authorsButton, highscoresPanel;
     [SerializeField] private Slider sizeSlider, roughnessSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown;
     [SerializeField] private Sprite overridingSprite;
@@ -19,7 +19,7 @@ public sealed class MenuUI : MonoBehaviour
     [SerializeField] private InputField editorSizeInputField;
 #pragma warning restore 0649
 
-    enum MenuSection { NoSelection, NewGame, Loading, Options, Editor }
+    enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores }
     private MenuSection currentSection = MenuSection.NoSelection;
     private ChunkGenerationMode newGameGenMode;
     private List<ChunkGenerationMode> availableGenerationModes;
@@ -64,8 +64,13 @@ public sealed class MenuUI : MonoBehaviour
     }
     public void EditorButton()
     {
-        if (currentSection == MenuSection.Editor)      SwitchVisualSelection(MenuSection.NoSelection);
+        if (currentSection == MenuSection.Editor)    SwitchVisualSelection(MenuSection.NoSelection);
         else   SwitchVisualSelection(MenuSection.Editor);
+    }
+    public void HighscoresButton()
+    {
+        if (currentSection == MenuSection.Highscores) SwitchVisualSelection(MenuSection.NoSelection);
+        else SwitchVisualSelection(MenuSection.Highscores);
     }
     public void ExitButton()
     {
@@ -254,6 +259,10 @@ public sealed class MenuUI : MonoBehaviour
                     editorButton.overrideSprite = null;
                     editorSettingPanel.SetActive(false);
                     break;
+                case MenuSection.Highscores:
+                    highscoresButton.overrideSprite = null;
+                    highscoresPanel.SetActive(false);
+                    break;
             }
         }
         currentSection = ms;
@@ -277,6 +286,65 @@ public sealed class MenuUI : MonoBehaviour
                 editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
                 editorSettingPanel.SetActive(true);
                 break;
+            case MenuSection.Highscores:
+                highscoresButton.overrideSprite = overridingSprite;
+                RectTransform exampleItem = highscoresPanel.transform.GetChild(1).GetComponent<RectTransform>();
+                var highscores = Highscore.GetHighscores();
+                if (highscores == null)
+                {
+                    exampleItem.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoHighscores);
+                    exampleItem.GetChild(1).GetComponent<Text>().text = string.Empty;
+                    exampleItem.GetChild(2).GetComponent<RawImage>().enabled = false;
+                    exampleItem.gameObject.SetActive(true);
+                }
+                else
+                {
+                    Highscore h = highscores[0];
+                    exampleItem.GetChild(0).GetComponent<Text>().text = h.colonyName;
+                    exampleItem.GetChild(1).GetComponent<Text>().text = ((int)h.score).ToString();
+                    RawImage ri = exampleItem.GetChild(2).GetComponent<RawImage>();
+                    ri.uvRect = GetEndGameIconRect(h.endType);
+                    ri.enabled = true;
+                    exampleItem.gameObject.SetActive(true);
+                    if (highscores.Length > 1)
+                    {
+                        for (int i = 1; i < highscores.Length; i++)
+                        {
+                            RectTransform rt = Instantiate(exampleItem, exampleItem.parent);
+                            rt.localPosition += Vector3.down * exampleItem.rect.height * (i - 1);
+                            h = highscores[i];
+                            rt.GetChild(0).GetComponent<Text>().text = h.colonyName;
+                            rt.GetChild(1).GetComponent<Text>().text = ((int)h.score).ToString();
+                            ri = rt.GetChild(2).GetComponent<RawImage>();
+                            ri.uvRect = GetEndGameIconRect(h.endType);
+                            ri.enabled = true;
+                        }
+                    }
+                }
+                highscoresPanel.SetActive(true);
+                break;
         }
+    }
+
+    private Rect GetEndGameIconRect(GameEndingType endType)
+    {
+        switch (endType)
+        {
+            case GameEndingType.ColonyLost: return new Rect(0.5f, 0.75f, 0.25f, 0.25f);
+            case GameEndingType.TransportHubVictory: return new Rect(0.75f, 0.75f, 0.25f, 0.25f);            
+            case GameEndingType.ConsumedByReal: return new Rect(0, 0.75f, 0.25f,0.25f);
+            case GameEndingType.ConsumedByLastSector: return new Rect( 0.25f, 0.75f, 0.25f, 0.25f);
+            default: return Rect.zero;
+        }
+    }
+
+    private void LocalizeTitles()
+    {
+        if (false)
+        {
+            authorsButton.SetActive(true);
+            authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAuthorsButtonLabel();
+        }
+        else authorsButton.SetActive(false);
     }
 }

@@ -446,7 +446,7 @@ public class Structure : MonoBehaviour
                     innerPosition = SurfaceRect.one;
                     placeInCenter = false;
                     rotate90only = false;
-                    isArtificial = true;
+                    isArtificial = false;
                     isBasement = false;
                 }
                 break;

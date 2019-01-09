@@ -139,11 +139,15 @@ public sealed class Dock : WorkBuilding {
 						}
 					}
 					Ship s = PoolMaster.current.GetShip( level, stype );
-                    s.gameObject.SetActive(true);
-					if ( s!= null ) {
-						maintainingShip = true;
-						s.SetDestination( this );                       
-					}
+                    if (s != null)
+                    {
+                        s.gameObject.SetActive(true);
+                        if (s != null)
+                        {
+                            maintainingShip = true;
+                            s.SetDestination(this);
+                        }
+                    }
                     shipArrivingTimer = GameConstants.GetShipArrivingTimer();
                 }
 			}
@@ -400,8 +404,12 @@ public sealed class Dock : WorkBuilding {
                 {
                     if (immigrationPlan > 0)
                     {
-                        if (s.volume > immigrationPlan) { colony.AddCitizens(immigrationPlan); immigrationPlan = 0; }
-                        else { colony.AddCitizens(s.volume); immigrationPlan -= s.volume; }
+                        float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
+                        if (vol > immigrationPlan) { colony.AddCitizens(immigrationPlan); immigrationPlan = 0; }
+                        else {
+                            int x = (int)vol;
+                            colony.AddCitizens(x); immigrationPlan -= x;
+                        }
                     }
                     if (isForSale[ResourceType.FOOD_ID] != null)
                     {
@@ -478,10 +486,6 @@ public sealed class Dock : WorkBuilding {
 		s.Undock();
 
 		shipArrivingTimer = GameConstants.GetShipArrivingTimer();
-		float f = 1;
-		if (colony.docks.Count != 0) f /= (float)colony.docks.Count;
-		if ( f < 0.1f ) f = 0.1f;
-		shipArrivingTimer /= f;
 
 		int newPeople = peopleBefore - immigrationPlan;
 		if (newPeople > 0 & announceNewShips) UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');

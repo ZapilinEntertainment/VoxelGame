@@ -315,7 +315,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
                         ri.texture = UIController.current.resourcesTexture;
-                        ri.uvRect = ResourceType.GetTextureRect(rt.ID);
+                        ri.uvRect = ResourceType.GetResourceIconRect(rt.ID);
                         t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(rt.ID);
                         Button b = t.GetComponent<Button>();
                         b.onClick.RemoveAllListeners();
@@ -358,7 +358,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         {
                             r.gameObject.SetActive(true);
                             int id = rc[i].type.ID;
-                            r.GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(id);
+                            r.GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(id);
                             Text tx = r.GetChild(0).GetComponent<Text>();
                             tx.text= Localization.GetResourceName(id) + " : " + rc[i].volume.ToString();
                             float[] storageResource = colony.storage.standartResources;
@@ -395,7 +395,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         Transform c = t.GetChild(i);
                         c.gameObject.SetActive(true);
                         int id = ResourceType.blockMaterials[i].ID;
-                        c.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(id);
+                        c.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(id);
                         c.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(id);
                         Button b = c.GetComponent<Button>();
                         b.onClick.RemoveAllListeners();
@@ -635,13 +635,14 @@ public sealed class UISurfacePanelController : UIObserver {
 		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
 	
-			Building bd = chosenStructure as Building;
+		Building bd = chosenStructure as Building;
         if (bd != null)
         {
             bool acceptable = true;
             string reason = "UNACCEPTABLE!";
             if (bd.specialBuildingConditions)
-            {                
+            {
+                int mid = observingSurface.material_id;
                 switch (bd.id)
                 {
                     case Structure.FARM_1_ID:
@@ -649,11 +650,20 @@ public sealed class UISurfacePanelController : UIObserver {
                     case Structure.FARM_3_ID:
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
-                    case Structure.LUMBERMILL_3_ID:
-                        int mid = observingSurface.material_id;
+                    case Structure.LUMBERMILL_3_ID:                        
                         if (mid != ResourceType.DIRT_ID & mid != ResourceType.FERTILE_SOIL_ID) {
                             acceptable = false;
                             reason = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
+                        }
+                        break;
+                    case Structure.CONNECT_TOWER_6_ID:
+                    case Structure.HOTEL_BLOCK_6_ID:
+                    case Structure.HOUSING_MAST_6_ID:
+                    case Structure.CONTROL_CENTER_6_ID:
+                        if (mid != ResourceType.ADVANCED_COVERING_ID)
+                        {
+                            acceptable = false;
+                            reason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
                         }
                         break;
                 }                
@@ -662,20 +672,12 @@ public sealed class UISurfacePanelController : UIObserver {
             {
                 t.text = reason;
                 t.color = Color.yellow;
-                resourcesCostImage[0].uvRect = ResourceType.GetTextureRect(0);
+                resourcesCostImage[0].uvRect = ResourceType.GetResourceIconRect(0);
                 resourcesCostImage[0].gameObject.SetActive(true);
                 for (int i = 1; i < resourcesCostImage.Length - 1; i++)
                 {
                     resourcesCostImage[i].gameObject.SetActive(false);
                 }
-                //---deleted
-                //int n = resourcesCostImage.Length - 1;
-                //t = resourcesCostImage[n].transform.GetChild(0).GetComponent<Text>();
-                //t.text = Localization.GetPhrase(LocalizedPhrase.RequiredSurface) + " : " + Localization.GetResourceName(bd.requiredBasementMaterialId);
-                //resourcesCostImage[n].uvRect = ResourceType.GetTextureRect(bd.requiredBasementMaterialId);
-                //resourcesCostImage[n].gameObject.SetActive(true);
-                //t.color = Color.yellow;
-                //---deleted
                 buildingCreateMode = BuildingCreateInfoMode.Unacceptable_Material;
                 innerBuildButton.gameObject.SetActive(false);
             }
@@ -689,7 +691,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 {
                     if (i < cost.Length)
                     {
-                        resourcesCostImage[i].uvRect = ResourceType.GetTextureRect(cost[i].type.ID);
+                        resourcesCostImage[i].uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
                         t = resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>();
                         t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
                         showingResourcesCount[i] = new Vector2(cost[i].type.ID, cost[i].volume);
@@ -715,11 +717,11 @@ public sealed class UISurfacePanelController : UIObserver {
         infoPanel.SetActive(false);
     }
 
+    //inner build button function
 	public void CreateSelectedBuilding () {
         if (chosenStructure.placeInCenter )
         {
-            if (observingSurface.artificialStructures == 0) CreateSelectedBuilding( (byte)(SurfaceBlock.INNER_RESOLUTION /2 - chosenStructure.innerPosition.size/2), (byte)(SurfaceBlock.INNER_RESOLUTION/ 2 - chosenStructure.innerPosition.size/2) );
-            else buildIntersectionSubmit.SetActive(true);
+            CreateSelectedBuilding( (byte)(SurfaceBlock.INNER_RESOLUTION /2 - chosenStructure.innerPosition.size/2), (byte)(SurfaceBlock.INNER_RESOLUTION/ 2 - chosenStructure.innerPosition.size/2), true );
         }
         else
         {
@@ -727,29 +729,46 @@ public sealed class UISurfacePanelController : UIObserver {
             {
                 int size = SurfaceBlock.INNER_RESOLUTION;
                 SurfaceRect sr = chosenStructure.innerPosition;
-                CreateSelectedBuilding((byte)(size/ 2 - sr.size/2), (byte)(size / 2 - sr.size/2));
+                CreateSelectedBuilding((byte)(size/ 2 - sr.size/2), (byte)(size / 2 - sr.size/2), true);
             }
             else    PrepareConstructionPlane(); // включает плоскость, отключает окно выбора строений
         }
     }
-    public void CreateSelectedBuilding(byte x, byte z)
+    // end build request
+    public void CreateSelectedBuilding(byte x, byte z, bool checkForIntersections)
     {
+        if (observingSurface == null) {
+            SelfShutOff();
+            return;
+        }
         ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
         if (colony.storage.CheckSpendPossibility(cost))
         {
-            colony.storage.GetResources(cost);
-            Structure s = Structure.GetStructureByID(chosenStructure.id);
-            s.SetBasement(observingSurface, new PixelPosByte(x, z));
-            PoolMaster.current.BuildSplash(s.transform.position);
-            if (s.innerPosition.size != SurfaceBlock.INNER_RESOLUTION & observingSurface.cellsStatus != 0)
+            byte strSize = chosenStructure.innerPosition.size,  res = SurfaceBlock.INNER_RESOLUTION;
+            if (x + strSize > res) x = (byte)(res - strSize);
+            if (z + strSize > res) z = (byte)(res - strSize);
+            if (checkForIntersections && observingSurface.IsAnyBuildingInArea(new SurfaceRect(x, z, strSize)))
             {
-                if (constructionPlane.activeSelf)
-                {
-                    PrepareConstructionPlane();
-                }
-                if (s.placeInCenter) ReturnButton();
+                constructingPlaneTouchPos = new Vector2Int(x, z);
+                buildIntersectionSubmit.SetActive(true);
+                return;
             }
-            else ReturnButton();
+            else
+            {
+                colony.storage.GetResources(cost);
+                Structure s = Structure.GetStructureByID(chosenStructure.id);
+                s.SetBasement(observingSurface, new PixelPosByte(x, z));
+                PoolMaster.current.BuildSplash(s.transform.position);
+                if (observingSurface.cellsStatus != 0)
+                {
+                    if (constructionPlane.activeSelf)
+                    {
+                        PrepareConstructionPlane();
+                    }
+                    if (strSize == res | chosenStructure.placeInCenter) ReturnButton();
+                }
+                else ReturnButton();
+            }
         }
         else
         {
@@ -759,33 +778,16 @@ public sealed class UISurfacePanelController : UIObserver {
 
     public void IntersectionSubmit_Yes()
     {
-        CreateSelectedBuilding((byte)constructingPlaneTouchPos.x ,(byte)constructingPlaneTouchPos.y);
+        CreateSelectedBuilding((byte)constructingPlaneTouchPos.x, (byte)constructingPlaneTouchPos.y, false);
         buildIntersectionSubmit.SetActive(false);
     }
     // public void IntersectionSubmit_No() - just deactivate the panel 
     public void ConstructingPlaneTouch(Vector3 pos)
-    {        
+    {
+        if (buildIntersectionSubmit.activeSelf | chosenStructure == null | observingSurface == null) return;
         Vector2 mappos = observingSurface.WorldToMapCoordinates(pos);
         byte size = SurfaceBlock.INNER_RESOLUTION;
-        byte x = (byte)(mappos.x * size), z = (byte)(mappos.y * size);
-        if (chosenStructure == null) return;
-        SurfaceRect sr = chosenStructure.innerPosition;
-        // корректировка :
-        if (x + sr.size >= size)
-        {            
-            x = (byte)(size - sr.size);
-        }
-        if (z + chosenStructure.innerPosition.size >= size)
-        {
-            z = (byte)(size - sr.size);
-        }
-        constructingPlaneTouchPos = new Vector2Int(x, z);
-
-        if ( observingSurface.IsAnyBuildingInArea(new SurfaceRect(x,z,sr.size)))
-        {
-            buildIntersectionSubmit.SetActive(true);            
-        }
-        else  CreateSelectedBuilding(x, z);
+        CreateSelectedBuilding((byte)(mappos.x * size), (byte)(mappos.y * size), true);
     }
 
 	

@@ -6,7 +6,7 @@ using UnityEngine;
 public sealed class ColonyController : MonoBehaviour
 {
     const float HOUSING_TIME = 5;
-    const float HOUSING_PROBLEM_HAPPINESS = 0.2f, FOOD_PROBLEM_HAPPINESS = 0.1f, // happiness wouldnt raised upper this level if condition is not met
+    const float HOUSING_PROBLEM_HAPPINESS = 0.3f, FOOD_PROBLEM_HAPPINESS = 0.1f, // happiness wouldnt raised upper this level if condition is not met
     HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
 
     public string cityName { get; private set; }
@@ -169,6 +169,8 @@ public sealed class ColonyController : MonoBehaviour
                 }
             }
         }
+        //
+        float lvlCf = 1 - (hq.level - 1) / (GameConstants.HQ_MAX_LEVEL - 1);
         //HOUSING PROBLEM
         float housingHappiness = 0;
         {
@@ -183,14 +185,14 @@ public sealed class ColonyController : MonoBehaviour
             }
             if (housingLevel == 0)
             {
-                housingHappiness = HOUSING_PROBLEM_HAPPINESS;
+                housingHappiness = HOUSING_PROBLEM_HAPPINESS * lvlCf;
                 happinessDecreaseMultiplier++;
             }
             else
             {
                 byte l = hq.level;
                 if (l > MAX_HOUSING_LEVEL) l = MAX_HOUSING_LEVEL;
-                housingHappiness = housingLevel / l * (1 - HOUSING_PROBLEM_HAPPINESS) + HOUSING_PROBLEM_HAPPINESS;
+                housingHappiness = housingLevel / l * (1 - HOUSING_PROBLEM_HAPPINESS * lvlCf) + HOUSING_PROBLEM_HAPPINESS * lvlCf;
             }
         }
         //HEALTHCARE
@@ -198,7 +200,7 @@ public sealed class ColonyController : MonoBehaviour
         {
             health_coefficient += hospitals_coefficient * t * gears_coefficient * 0.001f;
         }
-        float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT) * hospitals_coefficient;
+        float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT * lvlCf + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT * lvlCf) * hospitals_coefficient;
         healthcareHappiness *= health_coefficient;
         // HAPPINESS CALCULATION
         targetHappiness = 1;
