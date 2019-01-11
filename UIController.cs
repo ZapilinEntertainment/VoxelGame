@@ -17,7 +17,7 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
@@ -89,7 +89,7 @@ sealed public class UIController : MonoBehaviour
         mainCanvas = transform.GetChild(1);
 
         SaveSystemUI.Check(mainCanvas);
-
+        if (landingButton.activeSelf) landingButton.SetActive(false);
         if (!localized) LocalizeButtonTitles();        
     }
 
@@ -1136,7 +1136,7 @@ sealed public class UIController : MonoBehaviour
             GameMaster.SetPause(false);
             FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
-            leftPanel.SetActive(true);
+            if (colony != null) leftPanel.SetActive(true);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
             MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
@@ -1419,6 +1419,22 @@ sealed public class UIController : MonoBehaviour
     }
     #endregion
 
+    public void ActivateLandButton()
+    {
+        if (!landingButton.activeSelf) landingButton.SetActive(true);
+    }
+    public void DeactivateLandButton()
+    {
+        if (landingButton.activeSelf) landingButton.SetActive(false);
+    }
+    public void LandButton()
+    {
+        if (Zeppelin.current != null)
+        {
+            Zeppelin.current.Land();
+        }
+    }
+
     public void LocalizeButtonTitles()
     {
         Transform t = hospitalPanel.transform;
@@ -1446,6 +1462,8 @@ sealed public class UIController : MonoBehaviour
         d.options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoActivity)));
         d.options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.ImproveGears)));
         localized = true;
+
+        landingButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Land_verb);
     }
 
    

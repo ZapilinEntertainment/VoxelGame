@@ -13,7 +13,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static GameObject cavePref { get; private set; }
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
     public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
-        glass_material, glass_offline_material;
+        glass_material, glass_offline_material, darkness_material;
     public static Material billboardMaterial { get; private set; }    
     public static Material starsBillboardMaterial { get; private set; }
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
@@ -25,7 +25,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private static Transform zoneCube;
     private static bool useTextureRotation = false;
     private static Material[] basic_illuminated, green_illuminated, metal_illuminated;
-    private static Material metal_material, green_material, darkness_material;
+    private static Material metal_material, green_material;
     private static GameObject quad_pref;    
 
     private List<Ship> inactiveShips;	

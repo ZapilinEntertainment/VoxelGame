@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Zeppelin : MonoBehaviour {
+    public static Zeppelin current {get;private set;}
 #pragma warning disable 0649
     [SerializeField] private Transform leftScrew,rightScrew, body;
     [SerializeField] private AudioSource propeller_as;
@@ -40,6 +41,9 @@ public class Zeppelin : MonoBehaviour {
 
         UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(Click);
         lineDrawer = GetComponent<LineRenderer>();
+
+        if (current != null) Destroy(current);
+        current = this;        
     }
 
 	void Update() {
@@ -177,6 +181,8 @@ public class Zeppelin : MonoBehaviour {
                     if (landingSurface == null)
                     {
                         lineDrawer.enabled = false;
+                        UIController.current.DeactivateLandButton();
+                        landingMarkObject.SetActive(false);                        
                         return;
                     }
                     DRAW_LINE:
@@ -202,32 +208,31 @@ public class Zeppelin : MonoBehaviour {
                     }
                     lineDrawer.SetPositions(positions);
                     lineDrawer.enabled = true;
+                    landingMarkObject.transform.position = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE * 0.45f;
+                    landingMarkObject.SetActive(true);
+                    UIController.current.ActivateLandButton();
                 }
             }
         }
     }
 
-    void OnGUI()
-    {        
+    public void Land()
+    {
         if (!landPointSet & !destroyed)
         {
             if (landingSurface != null)
             {
                 if (UIController.current != null && UIController.current.currentActiveWindowMode == ActiveWindowMode.GameMenu) return;
-                Vector3 sc_pos = FollowingCamera.cam.WorldToScreenPoint(landingSurface.transform.position);
-                sc_pos.y = Screen.height - sc_pos.y;
-                landButtonRect = new Rect(sc_pos.x, sc_pos.y, 256, 64);
-                if (GUI.Button(landButtonRect, "Land"))
-                {
-                    landPointSet = true;
-                    Vector3 newPos = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
-                    PoolMaster.current.BuildSplash(newPos);
-                    transform.position = newPos + Vector3.up * 0.5f;
-                    if (landingByZAxis == true) transform.rotation = Quaternion.identity;
-                    else transform.rotation = Quaternion.Euler(0, 90, 0);
-                    lineDrawer.enabled = false;
-                    destructionTimer = 3;
-                }
+                landPointSet = true;
+                Vector3 newPos = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
+                PoolMaster.current.BuildSplash(newPos);
+                transform.position = newPos + Vector3.up * 0.5f;
+                if (landingByZAxis == true) transform.rotation = Quaternion.identity;
+                else transform.rotation = Quaternion.Euler(0, 90, 0);
+                lineDrawer.enabled = false;
+                Destroy(landingMarkObject);
+                destructionTimer = 3;
+                UIController.current.DeactivateLandButton();
             }
         }
     }

@@ -333,6 +333,9 @@ public sealed class GameMaster : MonoBehaviour {
         { // set look point
             FollowingCamera.camBasisTransform.position = sceneCenter;
         }
+
+        if (upperHemisphere != null) upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
+        if (lowerHemisphere != null) lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
@@ -354,7 +357,7 @@ public sealed class GameMaster : MonoBehaviour {
                 if (ch < GameConstants.RSPACE_CONSUMING_VAL)
                 {
                     newUpSkyStatus = 0;
-                    newLowSkyStatus++;
+                    newLowSkyStatus++;                    
                     if (newLowSkyStatus > 3)
                     {
                         GameOver(GameEndingType.ConsumedByReal);
@@ -382,6 +385,8 @@ public sealed class GameMaster : MonoBehaviour {
                         worldConsumingTimer = 60;
                     }
                 }
+
+                bool cceCheck = false;
                 if (newUpSkyStatus != upSkyStatus)
                 {
                     switch (newUpSkyStatus)
@@ -400,6 +405,7 @@ public sealed class GameMaster : MonoBehaviour {
                             break;
                     }
                     upSkyStatus = newUpSkyStatus;
+                    cceCheck = true;
                 }
                 if (newLowSkyStatus != lowSkyStatus)
                 {
@@ -419,6 +425,13 @@ public sealed class GameMaster : MonoBehaviour {
                             break;
                     }
                     lowSkyStatus = newLowSkyStatus;
+                    cceCheck = true;
+                }
+                if (cceCheck)
+                {
+                    ChunkConsumingEffect cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+                    if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
+                    cce.SetSettings(upSkyStatus, lowSkyStatus);
                 }
             }
         }
@@ -533,7 +546,7 @@ public sealed class GameMaster : MonoBehaviour {
                 colonyController.storage.AddResource(ResourceType.metal_M, 50);
                 colonyController.storage.AddResource(ResourceType.metal_E, 20);
                 colonyController.storage.AddResource(ResourceType.Plastics, 100);
-                colonyController.storage.AddResource(ResourceType.Food, 500);
+                colonyController.storage.AddResource(ResourceType.Food, 50000);
                 break;
             case Difficulty.Hard:
                 colonyController.AddCitizens(40);
@@ -577,19 +590,24 @@ public sealed class GameMaster : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(tradeVesselsTrafficCoefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(upgradeDiscount), 0, 4);
         fs.Write(System.BitConverter.GetBytes(upgradeCostIncrease), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(warProximity), 0, 4);
-        fs.WriteByte((byte)difficulty);
-        fs.WriteByte((byte)startGameWith);
-        fs.WriteByte(prevCutHeight);
+        fs.Write(System.BitConverter.GetBytes(warProximity), 0, 4); // end 40
+        fs.WriteByte((byte)difficulty); // 41
+        fs.WriteByte((byte)startGameWith); // 42
+        fs.WriteByte(prevCutHeight); //43
         fs.WriteByte(day);
-        fs.WriteByte(month);
+        fs.WriteByte(month); //45
         fs.Write(System.BitConverter.GetBytes(year), 0, 4);
         fs.Write(System.BitConverter.GetBytes(timeGone), 0, 4);
         fs.Write(System.BitConverter.GetBytes(gearsDegradeSpeed), 0, 4);
-
+        // 57
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
+        // 69
+        fs.Write(System.BitConverter.GetBytes(worldConsumingTimer), 0, 4);
+        fs.WriteByte(upSkyStatus);
+        fs.WriteByte(lowSkyStatus);
+        //75
 		#endregion		
         environmentMaster.Save(fs);
         Shuttle.SaveStaticData(fs);
@@ -634,7 +652,7 @@ public sealed class GameMaster : MonoBehaviour {
             // НАЧАЛО ЗАГРУЗКИ
             FileStream fs = File.Open(fullname, FileMode.Open);           
             #region gms mainPartLoading
-            var data = new byte[69];
+            var data = new byte[75];
             fs.Read(data, 0, data.Length);
             gameSpeed = System.BitConverter.ToSingle(data, 0);
             lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
@@ -657,6 +675,10 @@ public sealed class GameMaster : MonoBehaviour {
             labourTimer = System.BitConverter.ToSingle(data, 57);
             lifepowerTimer = System.BitConverter.ToSingle(data, 61);
             RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 65));
+
+            worldConsumingTimer = System.BitConverter.ToSingle(data, 69);
+            upSkyStatus = data[73];
+            lowSkyStatus = data[74];           
             #endregion
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
@@ -668,7 +690,17 @@ public sealed class GameMaster : MonoBehaviour {
                 GameObject g = new GameObject("chunk");
                 mainChunk = g.AddComponent<Chunk>();
             }
-            mainChunk.LoadChunkData(fs);            
+            mainChunk.LoadChunkData(fs);
+            ChunkConsumingEffect cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+            if (upSkyStatus != 0 | lowSkyStatus != 0)
+            {
+                if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
+                cce.SetSettings(upSkyStatus, lowSkyStatus);
+            }
+            else
+            {
+                if (cce != null) Destroy(cce);
+            }
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             Dock.LoadStaticData(fs);

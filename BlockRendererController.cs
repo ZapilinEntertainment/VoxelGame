@@ -20,38 +20,41 @@ public class BlockRendererController : MonoBehaviour
         {
             byte inputMask = newRenderMask;
             int b = 0;
-            switch (structure.modelRotation)
+            if (false)
             {
-                case 2:
-                    b = newRenderMask & 8;
-                    if ((newRenderMask & 1) != b) { if (b == 0) newRenderMask--; else newRenderMask++; } // 3
-                    b = inputMask & 1;
-                    if ((newRenderMask & 2) != b) { if (b == 0) newRenderMask -= 2; else newRenderMask += 2; } // 0
-                    b = inputMask & 2;
-                    if ((newRenderMask & 4) != b) { if (b == 0) newRenderMask -= 4; else newRenderMask += 4; } // 1
-                    b = inputMask & 4;
-                    if ((newRenderMask & 8) != b) { if (b == 0) newRenderMask -= 8; else newRenderMask += 8; } // 2
-                    break;
-                case 4:
-                    b = newRenderMask & 4;
-                    if ((newRenderMask & 1) != b) { if (b == 0) newRenderMask--; else newRenderMask++; } // 3
-                    b = inputMask & 8;
-                    if ((newRenderMask & 2) != b) { if (b == 0) newRenderMask -= 2; else newRenderMask += 2; } // 0
-                    b = inputMask & 1;
-                    if ((newRenderMask & 4) != b) { if (b == 0) newRenderMask -= 4; else newRenderMask += 4; } // 1
-                    b = inputMask & 2;
-                    if ((newRenderMask & 8) != b) { if (b == 0) newRenderMask -= 8; else newRenderMask += 8; } // 2
-                    break;
-                case 6:
-                    b = newRenderMask & 2;
-                    if ((newRenderMask & 1) != b) { if (b == 0) newRenderMask--; else newRenderMask++; } // 3
-                    b = inputMask & 4;
-                    if ((newRenderMask & 2) != b) { if (b == 0) newRenderMask -= 2; else newRenderMask += 2; } // 0
-                    b = inputMask & 8;
-                    if ((newRenderMask & 4) != b) { if (b == 0) newRenderMask -= 4; else newRenderMask += 4; } // 1
-                    b = inputMask & 1;
-                    if ((newRenderMask & 8) != b) { if (b == 0) newRenderMask -= 8; else newRenderMask += 8; } // 2
-                    break;
+                switch (structure.modelRotation)
+                {
+                    case 2:
+                        b = newRenderMask & 8;
+                        if ((newRenderMask & 1) != b) { if (b == 0) newRenderMask--; else newRenderMask++; } // 3
+                        b = inputMask & 1;
+                        if ((newRenderMask & 2) != b) { if (b == 0) newRenderMask -= 2; else newRenderMask += 2; } // 0
+                        b = inputMask & 2;
+                        if ((newRenderMask & 4) != b) { if (b == 0) newRenderMask -= 4; else newRenderMask += 4; } // 1
+                        b = inputMask & 4;
+                        if ((newRenderMask & 8) != b) { if (b == 0) newRenderMask -= 8; else newRenderMask += 8; } // 2
+                        break;
+                    case 4:
+                        b = newRenderMask & 4;
+                        if ((newRenderMask & 1) != b) { if (b == 0) newRenderMask--; else newRenderMask++; } // 3
+                        b = inputMask & 8;
+                        if ((newRenderMask & 2) != b) { if (b == 0) newRenderMask -= 2; else newRenderMask += 2; } // 0
+                        b = inputMask & 1;
+                        if ((newRenderMask & 4) != b) { if (b == 0) newRenderMask -= 4; else newRenderMask += 4; } // 1
+                        b = inputMask & 2;
+                        if ((newRenderMask & 8) != b) { if (b == 0) newRenderMask -= 8; else newRenderMask += 8; } // 2
+                        break;
+                    case 6:
+                        b = newRenderMask & 2;
+                        if ((newRenderMask & 1) != b) { if (b == 0) newRenderMask--; else newRenderMask++; } // 3
+                        b = inputMask & 4;
+                        if ((newRenderMask & 2) != b) { if (b == 0) newRenderMask -= 2; else newRenderMask += 2; } // 0
+                        b = inputMask & 8;
+                        if ((newRenderMask & 4) != b) { if (b == 0) newRenderMask -= 4; else newRenderMask += 4; } // 1
+                        b = inputMask & 1;
+                        if ((newRenderMask & 8) != b) { if (b == 0) newRenderMask -= 8; else newRenderMask += 8; } // 2
+                        break;
+                }
             }
         }
         if (renderMask != newRenderMask)
