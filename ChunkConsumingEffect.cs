@@ -6,11 +6,11 @@ public class ChunkConsumingEffect : MonoBehaviour {
     private struct FlyingBlock
     {
         public GameObject cube;
-        public bool light;
-        public FlyingBlock(GameObject i_go, bool i_light)
+        public bool goingUp;
+        public FlyingBlock(GameObject i_go, bool i_goingUp)
         {
             cube = i_go;
-            light = i_light;
+            goingUp = i_goingUp;
         }
     }
 
@@ -63,12 +63,13 @@ public class ChunkConsumingEffect : MonoBehaviour {
             {
                 fb = activeCubes[i];
                 tf = fb.cube.transform;
-                if (fb.light)
+                if (fb.goingUp)
                 {
                     if (tf.position.y > upBorder)
                     {
                         fb.cube.SetActive(false);
-                        cubesPool.Add(fb.cube);
+                        fb.cube.transform.parent = transform;
+                        cubesPool.Add(fb.cube);                        
                         activeCubes.RemoveAt(i);
                         continue;
                     }
@@ -82,6 +83,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
                     if (tf.position.y < lowBorder)
                     {
                         fb.cube.SetActive(false);
+                        fb.cube.transform.parent = transform;
                         cubesPool.Add(fb.cube);
                         activeCubes.RemoveAt(i);
                         continue;
@@ -152,7 +154,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
             }
         }
     }
-    private void SpawnEffectCube(Vector3 position, bool light)
+    private void SpawnEffectCube(Vector3 position, bool flyUp)
     {
 
         GameObject g = null;
@@ -160,12 +162,13 @@ public class ChunkConsumingEffect : MonoBehaviour {
         {
             g = cubesPool[0];
             cubesPool.RemoveAt(0);
+            g.transform.parent = null;
         }
         else  g = Instantiate(Resources.Load<GameObject>("Prefs/zoneCube"));
-        g.GetComponent<MeshRenderer>().sharedMaterial = light ? PoolMaster.energy_material : PoolMaster.darkness_material;
+        g.GetComponent<MeshRenderer>().sharedMaterial = flyUp ? PoolMaster.energy_material : PoolMaster.darkness_material;
         g.transform.position = position;
         g.transform.rotation = Quaternion.identity;
-        activeCubes.Add(new FlyingBlock(g, light));
+        activeCubes.Add(new FlyingBlock(g, flyUp));
         g.SetActive(true);
     }
 }

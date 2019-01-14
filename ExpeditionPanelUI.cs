@@ -3,33 +3,44 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ExpeditionPanelUI : MonoBehaviour {
+public class ExpeditionPanelUI : MonoBehaviour
+{
 #pragma warning disable 0649
-    [SerializeField] private Button expeditionsButton, shuttlesButton, crewsButton, addButton;
-    [SerializeField] private Text expeditionLog, countString, progressBarText, actionLabel;
+    [SerializeField] private Button expeditionsButton, shuttlesButton, crewsButton;
+    [SerializeField] private Canvas expeditionPanelCanvas;
+    [SerializeField] private Text countString, progressBarText, actionLabel, infoPanel_text;
     [SerializeField] private InputField nameField;
     [SerializeField] private RectTransform listContainer;
     [SerializeField] private RawImage icon;
     [SerializeField] private Image progressBarImage;
     [SerializeField] private Scrollbar itemsScrollbar;
+    [SerializeField] private GameObject addButton, removeButton, infoPanel, infoPanel_passButton, 
+        infoPanel_scrollView, infoPanel_hangarButton;
+    [SerializeField] private Dropdown infoPanel_dropdown;
 #pragma warning restore 0649
     private bool listConstructed = false, subscribedToUpdate = false;
-    private int listStartIndex = 0, lastSelectedItem = -1, lastDataHashValue = 0;
+    private int listStartIndex = 0, lastSelectedItem = -1, lastCrewHashValue = 0, lastShuttlesHashValue = 0, lastExpeditionsHashValue = 0;
     private float itemHeight = 0;
 
-    private enum ExpeditionPanelSection : byte { NoChosenSection, Expeditions, Shuttles, Crews};
+    private enum ExpeditionPanelSection : byte { NoChosenSection, Expeditions, Shuttles, Crews };
     private ExpeditionPanelSection chosenSection = ExpeditionPanelSection.NoChosenSection;
     private Crew chosenCrew;
     private Shuttle chosenShuttle;
     private Expedition chosenExpedition;
     private RectTransform[] items;
+    private List<MonoBehaviour> dropdownList;
 
     public void Activate()
     {
         if (!listConstructed) ConstructList();
         if (!subscribedToUpdate) UIController.current.statusUpdateEvent += StatusUpdate;
-        Redraw(chosenSection == ExpeditionPanelSection.NoChosenSection ? ExpeditionPanelSection.Expeditions : chosenSection);
-        gameObject.SetActive(true);
+        RedrawWindow(chosenSection == ExpeditionPanelSection.NoChosenSection ? ExpeditionPanelSection.Expeditions : chosenSection);
+    }
+    public void Deactivate()
+    {
+        gameObject.SetActive(false);
+        UIController uc = UIController.current;
+        uc.DropActiveWindow(ActiveWindowMode.ExpeditionPanel);        
     }
 
     public void StatusUpdate()
@@ -37,18 +48,19 @@ public class ExpeditionPanelUI : MonoBehaviour {
         switch (chosenSection)
         {
             case ExpeditionPanelSection.Crews:
-                if (lastDataHashValue != Crew.actionsHash) Redraw(chosenSection);
+                if (lastCrewHashValue != Crew.actionsHash) RedrawWindow(chosenSection);
+                if (chosenCrew != null & lastShuttlesHashValue != Shuttle.actionsHash) RefreshShuttlesDropdown();
                 break;
             case ExpeditionPanelSection.Shuttles:
-                if (lastDataHashValue != Shuttle.actionsHash) Redraw(chosenSection);
+                if (lastShuttlesHashValue != Shuttle.actionsHash) RedrawWindow(chosenSection);
                 break;
             case ExpeditionPanelSection.Expeditions:
-                if (lastDataHashValue != Expedition.actionsHash) Redraw(chosenSection);
+                if (lastExpeditionsHashValue != Expedition.actionsHash) RedrawWindow(chosenSection);
                 break;
         }
     }
 
-    private void Redraw (ExpeditionPanelSection newSection)
+    private void RedrawWindow(ExpeditionPanelSection newSection)
     {
         if (chosenSection != newSection)
         {
@@ -69,9 +81,9 @@ public class ExpeditionPanelUI : MonoBehaviour {
             }
             switch (newSection)
             {
-                case ExpeditionPanelSection.Expeditions:  expeditionsButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
+                case ExpeditionPanelSection.Expeditions: expeditionsButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
                 case ExpeditionPanelSection.Shuttles: shuttlesButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
-                case ExpeditionPanelSection.Crews:  crewsButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
+                case ExpeditionPanelSection.Crews: crewsButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
             }
             if (lastSelectedItem != -1)
             {
@@ -79,7 +91,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
                 lastSelectedItem = -1;
             }
         }
-        chosenSection = newSection;        
+        chosenSection = newSection;
 
         int expeditionsCorpusesCount = ExpeditionCorpus.expeditionCorpusesList.Count,
             expeditionsCount = Expedition.expeditionsList.Count,
@@ -89,7 +101,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
             crewsCount = Crew.crewsList.Count,
             transmittersCount = QuantumTransmitter.transmittersList.Count
             ;
-        
+
         if (chosenSection == ExpeditionPanelSection.NoChosenSection)
         {
             UIController uc = UIController.current;
@@ -102,222 +114,243 @@ public class ExpeditionPanelUI : MonoBehaviour {
             {
                 case ExpeditionPanelSection.Expeditions:
                     {
-                        addButton.interactable = (expeditionsCorpusesCount > 0) & (shuttlesCount > 0) & (QuantumTransmitter.transmittersList.Count > 0);
-                        countString.text = expeditionsCount.ToString() + " / " + ExpeditionCorpus.GetExpeditionsSlotsCount().ToString();
+                        //addButton.interactable = (expeditionsCorpusesCount > 0);
+                        countString.text = expeditionsCount.ToString() + " / " + transmittersCount.ToString();
                         RefreshItems();
-                        //
-                        // выбранная экспедиция:
-                        if (chosenExpedition != null)
-                        {
-                            expeditionLog.enabled = true;
-                            // загрузка логов
-                            nameField.text = chosenExpedition.quest.name;
-                            nameField.readOnly = true;
-                            nameField.gameObject.SetActive(true);
-
-                            Quest.SetQuestTexture(chosenExpedition.quest, null, icon);
-                            icon.gameObject.SetActive(true);
-
-                            progressBarText.text = ((int)(chosenExpedition.progress * 100)).ToString() + " %";
-                            progressBarImage.fillAmount = chosenExpedition.progress;
-                            progressBarImage.color = PoolMaster.gameOrangeColor;
-                            progressBarText.transform.parent.gameObject.SetActive(true);
-
-                            //actionLabel.enabled = true;
-                            // запись в actionlabel
-
-                            lastDataHashValue = Expedition.actionsHash;
-                        }
-                        else
-                        {
-                            nameField.gameObject.SetActive(false);
-                            icon.gameObject.SetActive(false);
-                            progressBarText.transform.parent.gameObject.SetActive(false);
-                            actionLabel.transform.parent.gameObject.SetActive(false);
-                        }
+                        RedrawChosenInfo();
                     }
                     break;
                 case ExpeditionPanelSection.Shuttles:
                     {
                         shuttlesButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                        addButton.interactable = (hangarsCount > 0) & (shuttlesCount < hangarsCount);
-                        expeditionLog.enabled = false;
+                        addButton.SetActive(shuttlesCount < hangarsCount);
                         countString.text = shuttlesCount.ToString() + " / " + hangarsCount.ToString();
                         RefreshItems();
-
-                        if (chosenShuttle != null)
-                        {
-                            nameField.text = chosenShuttle.name;
-                            nameField.readOnly = false;
-                            nameField.gameObject.SetActive(true);
-
-                            chosenShuttle.DrawShuttleIcon(icon);
-                            icon.gameObject.SetActive(true);
-
-                            float condition = chosenShuttle.condition;
-                            progressBarText.text = ((int)(condition * 100)).ToString() + " %";
-                            progressBarImage.fillAmount = condition;
-                            if (condition > Shuttle.BAD_CONDITION_THRESHOLD) progressBarImage.color = PoolMaster.gameOrangeColor;
-                            progressBarImage.color = Color.red;
-                            progressBarText.transform.parent.gameObject.SetActive(true);
-
-                            // запись в actionlabel
-                            lastDataHashValue = Shuttle.actionsHash;
-                        }
-                        else
-                        {
-                            nameField.gameObject.SetActive(false);
-                            icon.gameObject.SetActive(false);
-                            progressBarText.transform.parent.gameObject.SetActive(false);
-                            actionLabel.transform.parent.gameObject.SetActive(false);
-                        }
+                        RedrawChosenInfo();
                     }
                     break;
                 case ExpeditionPanelSection.Crews:
                     {
                         crewsButton.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                        addButton.interactable = (crewsCount > 0);
-                        expeditionLog.enabled = false;
+                        addButton.SetActive(crewsCount < RecruitingCenter.GetCrewsSlotsCount());
                         countString.text = crewsCount.ToString() + " / " + RecruitingCenter.GetCrewsSlotsCount().ToString();
-                        RefreshItems();                       
-
-                        if (chosenCrew != null)
-                        {
-                            nameField.text = chosenCrew.name;
-                            nameField.readOnly = false;
-                            nameField.gameObject.SetActive(true);
-
-                            chosenCrew.DrawCrewIcon(icon);
-                            icon.gameObject.SetActive(true);
-
-                            float stamina = chosenCrew.stamina;
-                            progressBarText.text = ((int)(stamina * 100)).ToString() + " %";
-                            progressBarImage.fillAmount = stamina;
-                            if (stamina < Crew.LOW_STAMINA_VALUE) progressBarImage.color = Color.red;
-                            else progressBarImage.color = PoolMaster.gameOrangeColor;
-                            progressBarText.transform.parent.gameObject.SetActive(true);
-
-                            //actionLabel.enabled = true;
-                            // запись в actionlabel
-                            lastDataHashValue = Crew.actionsHash;
-                        }
-                        else
-                        {
-                            nameField.gameObject.SetActive(false);
-                            icon.gameObject.SetActive(false);
-                            progressBarText.transform.parent.gameObject.SetActive(false);
-                            actionLabel.transform.parent.gameObject.SetActive(false);
-                        }
+                        RefreshItems();
+                        RedrawChosenInfo();
                         break;
                     }
             }
         }
     }
-
-    public void SelectSection (int i)
+    private void RedrawChosenInfo()
     {
-        ExpeditionPanelSection newSection;
-        switch (i)
-        {
-            case 0: newSection = ExpeditionPanelSection.Expeditions;break;
-            case 1: newSection = ExpeditionPanelSection.Shuttles; break;
-            case 2: newSection = ExpeditionPanelSection.Crews; break;
-            default: newSection = ExpeditionPanelSection.NoChosenSection; return;
-        }
-        Redraw(newSection);
-    }
-    public void ChangeName(string s)
-    {
-        switch (chosenSection)
-        {
-            case ExpeditionPanelSection.Shuttles:
-                if (chosenShuttle != null) chosenShuttle.name = s;
-                else Redraw(chosenSection);
-                break;
-            case ExpeditionPanelSection.Crews:
-                if (chosenCrew != null) chosenCrew.name = s;
-                else Redraw(chosenSection);
-                break;
-        }
-    }
-    public void AddButton()
-    {
+        bool enableElements = false;
         switch (chosenSection)
         {
             case ExpeditionPanelSection.Expeditions:
-                if (ExpeditionCorpus.GetExpeditionsSlotsCount() - Expedition.expeditionsList.Count > 0)
                 {
-                    chosenExpedition = new Expedition();
-                    Redraw(chosenSection);
+                    if (chosenExpedition != null) 
+                    {
+                        // загрузка логов
+                        enableElements = true;
+                        nameField.text = chosenExpedition.name;
+                        nameField.readOnly = true;
+
+                        chosenExpedition.DrawTexture(icon);
+
+                        progressBarText.text = ((int)(chosenExpedition.progress * 100)).ToString() + " %";
+                        progressBarImage.fillAmount = chosenExpedition.progress;
+                        progressBarImage.color = PoolMaster.gameOrangeColor;
+
+                        removeButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);
+                        
+                        infoPanel_scrollView.SetActive(true);
+                        infoPanel_hangarButton.SetActive(false);
+
+                        //exp canvas enabling
+
+                        lastExpeditionsHashValue = Expedition.actionsHash;                        
+                    }
+                    break;
                 }
-                else addButton.interactable = false;
-                break;
             case ExpeditionPanelSection.Shuttles:
                 {
-                    int c = Hangar.hangarsList.Count;
-                    if ( c > 0 && c > Shuttle.shuttlesList.Count)
+                    if (chosenShuttle != null)
                     {
-                        Hangar reservedVariant = null;
-                        foreach (Hangar h in Hangar.hangarsList)
-                        {
-                            if (h.shuttle == null)
-                            {
-                                if (h.constructing)
-                                {
-                                    reservedVariant = h;
-                                }
-                                else
-                                {
-                                    gameObject.SetActive(false);
-                                    h.ShowOnGUI();
-                                    return;
-                                }
-                            }
-                        }
-                        if (reservedVariant != null)
-                        {
-                            gameObject.SetActive(false);
-                            reservedVariant.ShowOnGUI();
-                            return;
-                        }
+                        enableElements = true;
+                        nameField.text = chosenShuttle.name;
+                        nameField.readOnly = false;
+
+                        chosenShuttle.DrawShuttleIcon(icon);
+                        icon.transform.GetChild(0).GetComponent<Text>().text = string.Empty;
+
+                        float condition = chosenShuttle.condition;
+                        progressBarText.text = ((int)(condition * 100)).ToString() + " %";
+                        progressBarImage.fillAmount = condition;
+                        if (condition > Shuttle.BAD_CONDITION_THRESHOLD) progressBarImage.color = PoolMaster.gameOrangeColor;
+                        else progressBarImage.color = Color.red;
+
+                        removeButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Disassemble);
+
+                        actionLabel.text = Localization.GetShuttleStatus(chosenShuttle);
+
+                        RefreshCrewsDropdown();
+                        infoPanel_passButton.SetActive(chosenShuttle.crew != null);                        
+                        infoPanel_text.text = string.Empty;
+
+                        infoPanel_hangarButton.SetActive(true);
+                        infoPanel_scrollView.SetActive(true);
+
+                        lastShuttlesHashValue = Shuttle.actionsHash;
                     }
-                    else addButton.interactable = false;
                     break;
                 }
             case ExpeditionPanelSection.Crews:
                 {
-                    int c = Crew.crewsList.Count;
-                    if (c > 0 && c < RecruitingCenter.GetCrewsSlotsCount())
+                    if (chosenCrew != null) 
                     {
-                        RecruitingCenter reservedVariant = null;
-                        foreach (RecruitingCenter rc in RecruitingCenter.recruitingCentersList)
-                        {
-                            if (rc.finding) reservedVariant = rc;
-                            else
-                            {
-                                gameObject.SetActive(false);
-                                rc.ShowOnGUI();
-                                return;
-                            }
-                        }
-                        if (reservedVariant != null)
-                        {
-                            gameObject.SetActive(false);
-                            reservedVariant.ShowOnGUI();
-                            return;
-                        }
-                }
-                    else addButton.interactable = false;
+                        enableElements = true;
+                        nameField.text = '\"' + chosenCrew.name + '\"';
+                        nameField.readOnly = false;
+
+                        chosenCrew.DrawCrewIcon(icon);
+                        icon.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Level) + " : " + chosenCrew.level.ToString();
+
+                        float stamina = chosenCrew.stamina;
+                        progressBarText.text = ((int)(stamina * 100)).ToString() + " %";
+                        progressBarImage.fillAmount = stamina;
+                        if (stamina < Crew.LOW_STAMINA_VALUE) progressBarImage.color = Color.red;
+                        else progressBarImage.color = PoolMaster.gameOrangeColor;
+                        progressBarText.transform.parent.gameObject.SetActive(true);
+
+                        removeButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);
+                        actionLabel.text = Localization.GetCrewStatus(chosenCrew);
+                        
+                        RefreshShuttlesDropdown();
+                        infoPanel_scrollView.SetActive(false);
+                        infoPanel_hangarButton.SetActive(false);
+
+                        infoPanel_text.text = Localization.GetCrewInfo(chosenCrew);
+                        infoPanel_text.rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, 12 * (infoPanel_text.fontSize + infoPanel_text.lineSpacing));
+                        (infoPanel_text.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0,infoPanel_text.rectTransform.rect.height);                        
+                        infoPanel_passButton.SetActive(chosenCrew.shuttle != null);
+                        lastCrewHashValue = Crew.actionsHash;
+                    }
                     break;
                 }
         }
+        nameField.gameObject.SetActive(enableElements);
+        icon.gameObject.SetActive(enableElements);
+        progressBarText.transform.parent.gameObject.SetActive(enableElements);
+        actionLabel.transform.parent.gameObject.SetActive(enableElements);
+        removeButton.SetActive(enableElements);
+        infoPanel.SetActive(enableElements);
     }
-    public void CloseButton()
+    private void RefreshShuttlesDropdown()
     {
-        UIController uc = UIController.current;
-        if (uc.currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel) uc.ChangeActiveWindow(ActiveWindowMode.NoWindow);
-        gameObject.SetActive(false);
+        var options = new List<Dropdown.OptionData>();
+        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoShuttle)));
+        var shuttles = Shuttle.shuttlesList;
+        int myShuttleIndex = -1;
+        infoPanel_dropdown.enabled = false;
+        Shuttle s;
+        if (shuttles.Count > 0)
+        {
+            dropdownList = new List<MonoBehaviour>();
+            for (int i = 0; i < shuttles.Count; i++)
+            {
+                s = shuttles[i];
+                if (s == null) continue;
+                char c = '\"';
+                if (s.crew != null) options.Add(new Dropdown.OptionData(c + s.name + c + " : " + c + s.crew.name + c));
+                else
+                {
+                    if (s == chosenCrew.shuttle)
+                    {
+                        myShuttleIndex = i;
+                        options.Add(new Dropdown.OptionData(c + s.name + c));
+                    }
+                    else
+                    {
+                        options.Add(new Dropdown.OptionData(c + s.name + c + " <<"));
+                    }
+                }
+                dropdownList.Add(s);
+                
+            }
+        }
+        infoPanel_dropdown.options = options;
+        if (chosenCrew.shuttle == null) infoPanel_dropdown.value = 0;
+        else
+        {
+            if (myShuttleIndex != -1) infoPanel_dropdown.value = myShuttleIndex + 1;
+        }
+        infoPanel_dropdown.enabled = true;
+        lastShuttlesHashValue = Shuttle.actionsHash;
     }
+    private void RefreshCrewsDropdown()
+    {
+        var options = new List<Dropdown.OptionData>();
+        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
+        var crews = Crew.crewsList;
+        int myCrewIndex = -1;
+        infoPanel_dropdown.enabled = false;
+        Crew c;
+        if (crews.Count > 0)
+        {
+            dropdownList = new List<MonoBehaviour>();
+            for (int i = 0; i < crews.Count; i++)
+            {
+                c = crews[i];
+                if (c == null) continue;
+                if (c.shuttle != null) options.Add(new Dropdown.OptionData('\"' + c.name + '\"'));
+                else options.Add(new Dropdown.OptionData('\"' + c.name + '\"' + '*'));
+                dropdownList.Add(c);
+                if (c == chosenShuttle.crew)
+                {
+                    myCrewIndex = i;
+                }
+            }
+        }
+        infoPanel_dropdown.options = options;
+        if (chosenShuttle.crew == null) infoPanel_dropdown.value = 0;
+        else
+        {
+            if (myCrewIndex != -1) infoPanel_dropdown.value = myCrewIndex + 1;
+        }
+        infoPanel_dropdown.enabled = true;
+        lastCrewHashValue = Crew.actionsHash;
+    }
+    private void RefreshMissionsDropdown()
+    {
+        var options = new List<Dropdown.OptionData>();
+        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)));
+        var missions = Mission.missionsList;
+        int myMissionIndex = -1;
+        infoPanel_dropdown.enabled = false;
+        Mission m;
+        if (missions.Count > 0)
+        {
+            dropdownList = new List<MonoBehaviour>();
+            for (int i = 0; i < missions.Count; i++)
+            {
+                m = missions[i];
+                options.Add(new Dropdown.OptionData( m.codename));
+                if (m == chosenExpedition.mission)
+                {
+                    myMissionIndex = i;
+                }
+            }
+        }
+        infoPanel_dropdown.options = options;
+        if (chosenExpedition.mission == Mission.NoMission) infoPanel_dropdown.value = 0;
+        else
+        {
+            if (myMissionIndex != -1) infoPanel_dropdown.value = myMissionIndex + 1;
+        }
+        infoPanel_dropdown.enabled = true;
+        lastExpeditionsHashValue = Expedition.actionsHash;
+    }
+
     public void ScrollbarChanged()
     {
         switch (chosenSection)
@@ -325,7 +358,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
             case ExpeditionPanelSection.NoChosenSection: return;
             case ExpeditionPanelSection.Crews:
                 {
-                    int crewsCount = Crew.crewsList.Count, itemsCount = items.Length ;
+                    int crewsCount = Crew.crewsList.Count, itemsCount = items.Length;
                     float sval = itemsScrollbar.value, ssize = itemsScrollbar.size;
                     if (sval != 0)
                     {
@@ -383,7 +416,8 @@ public class ExpeditionPanelUI : MonoBehaviour {
 
     public void SelectItem(int i)
     {
-        if (lastSelectedItem != i) {
+        if (lastSelectedItem != i)
+        {
             if (lastSelectedItem != -1)
             {
                 items[lastSelectedItem].GetComponent<Image>().overrideSprite = null;
@@ -429,8 +463,20 @@ public class ExpeditionPanelUI : MonoBehaviour {
                     return;
                 }
         }
-        Redraw(chosenSection);
-        //
+        RedrawChosenInfo();
+    }
+
+    public void SelectSection(int i)
+    {
+        ExpeditionPanelSection newSection;
+        switch (i)
+        {
+            case 0: newSection = ExpeditionPanelSection.Expeditions; break;
+            case 1: newSection = ExpeditionPanelSection.Shuttles; break;
+            case 2: newSection = ExpeditionPanelSection.Crews; break;
+            default: newSection = ExpeditionPanelSection.NoChosenSection; return;
+        }
+        RedrawWindow(newSection);
     }
 
     private void ConstructList()
@@ -442,17 +488,16 @@ public class ExpeditionPanelUI : MonoBehaviour {
         int count = (int)(itemsHolder.GetComponent<RectTransform>().rect.height / itemHeight) + 1;
         items = new RectTransform[count];
         items[0] = itemExample;
-        for (int i = 1; i < count ; i++)
+        for (int i = 1; i < count; i++)
         {
             RectTransform rt = Instantiate(itemExample, itemsHolder) as RectTransform;
-            rt.localPosition = itemExample.localPosition + Vector3.down * (i ) * itemHeight;
-            items[i ] = rt;
+            rt.localPosition = itemExample.localPosition + Vector3.down * (i) * itemHeight;
+            items[i] = rt;
             int buttonIndex = i;
             rt.GetComponent<Button>().onClick.AddListener(() => { this.SelectItem(buttonIndex); });
-        }       
+        }
         items[0].GetComponent<Button>().onClick.AddListener(() => { this.SelectItem(0); });
     }
-
     private void RefreshItems()
     {
         int itemsCount = items.Length;
@@ -463,7 +508,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
                 itemsScrollbar.gameObject.SetActive(false);
                 break;
             case ExpeditionPanelSection.Expeditions:
-                {                    
+                {
                     int expeditionsCount = Expedition.expeditionsList.Count;
                     if (expeditionsCount > 0)
                     {
@@ -492,7 +537,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
                                 t.gameObject.SetActive(false);
                                 continue;
                             }
-                            t.GetChild(0).GetComponent<Text>().text = ex.quest.name;
+                            t.GetChild(0).GetComponent<Text>().text = ex.name;
                             if (ex.progress == 0) t.GetChild(2).gameObject.SetActive(false);
                             else
                             {
@@ -567,7 +612,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
                     {
                         int endIndex;
                         if (crewsCount > itemsCount)
-                        {                            
+                        {
                             float ccount = crewsCount;
                             itemsScrollbar.size = itemsCount / ccount;
                             endIndex = listStartIndex + itemsCount;
@@ -597,7 +642,7 @@ public class ExpeditionPanelUI : MonoBehaviour {
                             endIndex = crewsCount;
                             listStartIndex = 0;
                         }
-                        
+
                         int i = 0;
                         List<Crew> clist = Crew.crewsList;
                         while (i < endIndex)
@@ -630,6 +675,201 @@ public class ExpeditionPanelUI : MonoBehaviour {
                 }
                 break;
         }
+    }    
+
+    public void ChangeName(string s)
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.Shuttles:
+                if (chosenShuttle != null) chosenShuttle.name = s;
+                else RedrawWindow(chosenSection);
+                break;
+            case ExpeditionPanelSection.Crews:
+                if (chosenCrew != null) chosenCrew.name = s;
+                else RedrawWindow(chosenSection);
+                break;
+        }
+    }
+    public void AddButton()
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.Expeditions:
+                if (QuantumTransmitter.transmittersList.Count - Expedition.expeditionsList.Count > 0)
+                {
+                    chosenExpedition = Expedition.CreateNewExpedition();
+                    RedrawWindow(chosenSection);
+                }
+                else addButton.SetActive(false);
+                break;
+            case ExpeditionPanelSection.Shuttles:
+                {
+                    int c = Hangar.hangarsList.Count;
+                    if (c > 0 && c > Shuttle.shuttlesList.Count)
+                    {
+                        Hangar reservedVariant = null;
+                        foreach (Hangar h in Hangar.hangarsList)
+                        {
+                            if (h.shuttle == null)
+                            {
+                                if (h.constructing)
+                                {
+                                    reservedVariant = h;
+                                }
+                                else
+                                {
+                                    // #switching to hangar
+                                    Deactivate();
+                                    UIController.current.Select(h);
+                                    //
+                                    return;
+                                }
+                            }
+                        }
+                        if (reservedVariant != null)
+                        {
+                            // #switching to hangar
+                            Deactivate();
+                            UIController.current.Select(reservedVariant);
+                            //
+                            return;
+                        }
+                    }
+                    else addButton.SetActive(false);
+                    break;
+                }
+            case ExpeditionPanelSection.Crews:
+                {
+                    int c = Crew.crewsList.Count;
+                    if (c > 0 && c < RecruitingCenter.GetCrewsSlotsCount())
+                    {
+                        RecruitingCenter reservedVariant = null;
+                        foreach (RecruitingCenter rc in RecruitingCenter.recruitingCentersList)
+                        {
+                            if (rc.finding) reservedVariant = rc;
+                            else
+                            {
+                                // #switching to recruiting center
+                                Deactivate();
+                                UIController.current.Select(rc);
+                                return;
+                                //
+                            }
+                        }
+                        if (reservedVariant != null)
+                        {
+                            // #switching to recruiting center
+                            Deactivate();
+                            UIController.current.Select(reservedVariant);
+                            return;
+                            //
+                        }
+                    }
+                    else addButton.SetActive(false);
+                    break;
+                }
+        }
+    }
+    public void RemoveButton()
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.Expeditions:
+                // awaiting
+                break;
+            case ExpeditionPanelSection.Shuttles:
+                if (chosenShuttle != null) chosenShuttle.Deconstruct();
+                else removeButton.SetActive(false);
+                break;
+            case ExpeditionPanelSection.Crews:
+                if (chosenCrew != null) chosenCrew.Dismiss();
+                else removeButton.SetActive(false);
+                break;
+        }
+        RedrawWindow(chosenSection);
+    }
+
+    public void InfoPanel_SetDropdownValue(int i)
+    {
+        switch (chosenSection)
+        {            
+            case ExpeditionPanelSection.Crews:
+                {
+                    if (chosenCrew == null)
+                    {
+                        RedrawChosenInfo();
+                        break;
+                    }
+                    if (i == 0) chosenCrew.SetShuttle(null);
+                    else
+                    {
+                        chosenCrew.SetShuttle(dropdownList[i - 1] as Shuttle);
+                    }
+                    RedrawChosenInfo();
+                    break;
+                }
+            case ExpeditionPanelSection.Shuttles:
+                {
+                    if (chosenShuttle == null)
+                    {
+                        RedrawChosenInfo();
+                        break;
+                    }
+                    if (i == 0) chosenShuttle.crew.SetShuttle(null);
+                    else
+                    {
+                        (dropdownList[i - 1] as Crew).SetShuttle(chosenShuttle);
+                    }
+                    RedrawChosenInfo();
+                    break;
+                }
+        }
+    }
+    public void InfoPanel_PassButton()
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.Crews:
+                {
+                    if (chosenCrew == null) RedrawChosenInfo();
+                    else
+                    {
+                        if (chosenCrew.shuttle != null)
+                        {
+                            chosenShuttle = chosenCrew.shuttle;
+                            RedrawWindow(ExpeditionPanelSection.Shuttles);
+                        }
+                        else infoPanel_passButton.SetActive(false);
+
+                    }
+                    break;
+                }
+            case ExpeditionPanelSection.Shuttles:
+                {
+                    if (chosenShuttle == null) RedrawChosenInfo();
+                    else
+                    {
+                        if (chosenShuttle.crew != null)
+                        {
+                            chosenCrew = chosenShuttle.crew;
+                            RedrawWindow(ExpeditionPanelSection.Crews);
+                        }
+                        else infoPanel_passButton.SetActive(false);
+
+                    }
+                    break;
+                }
+        }
+    }
+    public void InfoPanel_HangarButton()
+    {
+        if (chosenShuttle != null)
+        {
+            Deactivate();
+            UIController.current.Select(chosenShuttle.hangar);
+        }
+        else RedrawChosenInfo();
     }
 
     private void OnDestroy()

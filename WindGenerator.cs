@@ -8,7 +8,7 @@ public class WindGenerator : Building {
     bool rotateHead = false, rotateScrew = true, subscribedToWindUpdate = false;
 	const float HEAD_ROTATE_SPEED = 1, SCREW_ROTATE_SPEED = 90;
 	float height_coefficient = 1;
-    const int STANDART_SURPLUS = 100;
+    const int STANDART_SURPLUS = 10;
 
 	override public void Prepare() {
 		PrepareBuilding();

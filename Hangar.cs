@@ -239,6 +239,7 @@ public sealed class Hangar : WorkBuilding
             if (constructing)
             {
                 workflow += workSpeed;
+                colony.gears_coefficient -= gearsDamage;
                 if (workflow >= workflowToProcess)
                 {
                     LabourResult();
@@ -271,6 +272,7 @@ public sealed class Hangar : WorkBuilding
     override protected void RecalculateWorkspeed()
     {
         workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.MachineConstructing);
+        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 2f;
     }
 
     public override UIObserver ShowOnGUI()

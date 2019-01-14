@@ -363,24 +363,31 @@ public sealed class GameMaster : MonoBehaviour {
                         GameOver(GameEndingType.ConsumedByReal);
                         newLowSkyStatus = 3;
                     }
+                    else
+                    {
+                        if (newLowSkyStatus == 1) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing), Color.red);
+                    }
                     worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newLowSkyStatus;
                 }
                 else
                 {
+                    newLowSkyStatus = 0;
                     if (ch > GameConstants.LSECTOR_CONSUMING_VAL)
-                    {
-                        newLowSkyStatus = 0;
+                    {                        
                         newUpSkyStatus++;
                         if (newUpSkyStatus > 3)
                         {
                             GameOver(GameEndingType.ConsumedByLastSector);
                             newUpSkyStatus = 3;
                         }
+                        else
+                        {
+                            if (newUpSkyStatus == 1) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing), Color.red);
+                        }
                         worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newUpSkyStatus;
                     }
                     else
                     {
-                        newLowSkyStatus = 0;
                         newUpSkyStatus = 0;
                         worldConsumingTimer = 60;
                     }
@@ -435,12 +442,6 @@ public sealed class GameMaster : MonoBehaviour {
                 }
             }
         }
-        //testzone
-        if (Input.GetKeyDown("c"))
-        {
-            Crew c = Crew.CreateNewCrew(colonyController);
-        }
-        // eo testzone
 
         //float frameTime = Time.deltaTime * gameSpeed;       
     }   
@@ -538,7 +539,7 @@ public sealed class GameMaster : MonoBehaviour {
                 colonyController.storage.AddResource(ResourceType.metal_M, 60);
                 colonyController.storage.AddResource(ResourceType.metal_E, 30);
                 colonyController.storage.AddResource(ResourceType.Plastics, 150);
-                colonyController.storage.AddResource(ResourceType.Food, 500);
+                colonyController.storage.AddResource(ResourceType.Food, 700);
                 break;
             case Difficulty.Normal:
                 colonyController.AddCitizens(50);
@@ -546,7 +547,7 @@ public sealed class GameMaster : MonoBehaviour {
                 colonyController.storage.AddResource(ResourceType.metal_M, 50);
                 colonyController.storage.AddResource(ResourceType.metal_E, 20);
                 colonyController.storage.AddResource(ResourceType.Plastics, 100);
-                colonyController.storage.AddResource(ResourceType.Food, 50000);
+                colonyController.storage.AddResource(ResourceType.Food, 500);
                 break;
             case Difficulty.Hard:
                 colonyController.AddCitizens(40);
@@ -699,7 +700,7 @@ public sealed class GameMaster : MonoBehaviour {
             }
             else
             {
-                if (cce != null) Destroy(cce);
+                if (cce != null) cce.SetSettings(upSkyStatus, lowSkyStatus);
             }
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER

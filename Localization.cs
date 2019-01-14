@@ -9,7 +9,7 @@ MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscor
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
-    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint };
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing };
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock}
 
@@ -201,6 +201,7 @@ public static class Localization {
             case GameAnnouncements.ActionError: return "Error desu";
             case GameAnnouncements.ShipArrived: return "A ship has docked";
             case GameAnnouncements.SetLandingPoint: return "Set landing point";
+            case GameAnnouncements.IslandCollapsing: return "Island starts collapsing!";
         }
 	}
 

@@ -117,8 +117,8 @@ public class Building : Structure
                 {
                     upgradedIndex = HQ_2_ID;
                     canBePowerSwitched = false;
-                    energySurplus = 10;
-                    energyCapacity = 1000;
+                    energySurplus = 1;
+                    energyCapacity = 100;
                     level = 1;
                 }
                 break;
@@ -126,8 +126,8 @@ public class Building : Structure
                 {
                     upgradedIndex = HQ_3_ID;
                     canBePowerSwitched = false;
-                    energySurplus = 25;
-                    energyCapacity = 1500;
+                    energySurplus = 3;
+                    energyCapacity = 200;
                     level = 2;
                 }
                 break;
@@ -135,8 +135,8 @@ public class Building : Structure
                 {
                     upgradedIndex = HQ_4_ID;
                     canBePowerSwitched = false;
-                    energySurplus = 50;
-                    energyCapacity = 4000;
+                    energySurplus = 5;
+                    energyCapacity = 400;
                     level = 3;
                 }
                 break;
@@ -144,8 +144,8 @@ public class Building : Structure
                 {
                     upgradedIndex = 1;
                     canBePowerSwitched = false;
-                    energySurplus = 100;
-                    energyCapacity = 5000;
+                    energySurplus = 10;
+                    energyCapacity = 500;
                     level = 4;
                 }
                 break;
@@ -213,7 +213,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 10;
+                    energyCapacity = 1;
                     
                     level = 1;
                 }
@@ -222,8 +222,8 @@ public class Building : Structure
                 {
                     upgradedIndex = HOUSE_3_ID;
                     canBePowerSwitched = false;
-                    energySurplus = -50;
-                    energyCapacity = 100;
+                    energySurplus = -5;
+                    energyCapacity = 10;
                     
                     level = 2;
                 }
@@ -232,8 +232,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = -80;
-                    energyCapacity = 200;
+                    energySurplus = -8;
+                    energyCapacity = 20;
                     
                     level = 3;
                 }
@@ -242,8 +242,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = -500;
-                    energyCapacity = 1500;
+                    energySurplus = -50;
+                    energyCapacity = 150;
                     
                     level = 5;
                 }
@@ -252,8 +252,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -120;
-                    energyCapacity = 240;                    
+                    energySurplus = -12;
+                    energyCapacity = 24;                    
                     level = 1;
                 }
                 break;
@@ -261,8 +261,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 800;
+                    energySurplus = -20;
+                    energyCapacity = 80;
                     level = 2;
                 }
                 break;
@@ -270,8 +270,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -300;
-                    energyCapacity = 1500;
+                    energySurplus = -30;
+                    energyCapacity = 150;
                     level = 3;
                 }
                 break;
@@ -280,7 +280,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 2000;
+                    energyCapacity = 200;
                     
                     level = 1;
                 }
@@ -290,7 +290,7 @@ public class Building : Structure
                     upgradedIndex = ENERGY_CAPACITOR_3_ID;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 8000;
+                    energyCapacity = 800;
                     
                     level = 2;
                 }
@@ -300,7 +300,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 25000;
+                    energyCapacity = 2500;
                     
                     level = 3;
                 }
@@ -309,8 +309,8 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_2_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -10;
-                    energyCapacity = 100;
+                    energySurplus = -1;
+                    energyCapacity = 10;
                     specialBuildingConditions = true;
                     level = 1;
                 }
@@ -319,8 +319,8 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_3_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -40;
-                    energyCapacity = 200;
+                    energySurplus = -4;
+                    energyCapacity = 20;
                     specialBuildingConditions = true;
                     level = 2;
                 }
@@ -329,8 +329,8 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_4_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 400;
+                    energySurplus = -20;
+                    energyCapacity = 40;
                     specialBuildingConditions = true;
                     level = 3;
                 }
@@ -339,8 +339,8 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -400;
-                    energyCapacity = 1200;
+                    energySurplus = -40;
+                    energyCapacity = 120;
                     level = 4;
                 }
                 break;
@@ -348,8 +348,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -1000;
-                    energyCapacity = 3000;
+                    energySurplus = -100;
+                    energyCapacity = 300;
                     level = 5;
                 }
                 break;
@@ -357,8 +357,8 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_2_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -15;
-                    energyCapacity = 100;
+                    energySurplus = -2;
+                    energyCapacity = 10;
                     specialBuildingConditions = true;
                     level = 1;
                 }
@@ -367,8 +367,8 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_3_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -50;
-                    energyCapacity = 400;
+                    energySurplus = -5;
+                    energyCapacity = 40;
                     specialBuildingConditions = true;
                     level = 2;
                 }
@@ -377,8 +377,8 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_4_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 800;
+                    energySurplus = -20;
+                    energyCapacity = 80;
                     specialBuildingConditions = true;
                     level = 3;
                 }
@@ -387,8 +387,8 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 800;
+                    energySurplus = -20;
+                    energyCapacity = 80;
                     
                     level = 4;
                 }
@@ -397,8 +397,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -800;
-                    energyCapacity = 1600;
+                    energySurplus = -80;
+                    energyCapacity = 160;
                     
                     level = 5;
                 }
@@ -407,8 +407,8 @@ public class Building : Structure
                 {
                     upgradedIndex = 0;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 200;
+                    energySurplus = -2;
+                    energyCapacity = 20;
                     level = 1;
                 }
                 break;
@@ -416,8 +416,8 @@ public class Building : Structure
                 {
                     upgradedIndex = SMELTERY_2_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -75;
-                    energyCapacity = 400;
+                    energySurplus = -8;
+                    energyCapacity = 40;
                     
                     level = 1;
                 }
@@ -426,8 +426,8 @@ public class Building : Structure
                 {
                     upgradedIndex = SMELTERY_3_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -150;
-                    energyCapacity = 600;
+                    energySurplus = -15;
+                    energyCapacity = 60;
                     
                     level = 2;
                 }
@@ -436,8 +436,8 @@ public class Building : Structure
                 {
                     upgradedIndex = SMELTERY_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -400;
-                    energyCapacity = 1000;
+                    energySurplus = -40;
+                    energyCapacity = 100;
                     
                     level = 3;
                 }
@@ -446,8 +446,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -800;
-                    energyCapacity = 1600;
+                    energySurplus = -80;
+                    energyCapacity = 160;
                     
                     level = 5;
                 }
@@ -456,8 +456,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 100;
-                    energyCapacity = 100;
+                    energySurplus = 10;
+                    energyCapacity = 10;
                     
                     level = 1;
                 }
@@ -466,8 +466,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 100;
-                    energyCapacity = 200;
+                    energySurplus = 10;
+                    energyCapacity = 20;
                     
                     level = 2;
                 }
@@ -476,8 +476,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -60;
-                    energyCapacity = 500;
+                    energySurplus = -6;
+                    energyCapacity = 50;
                     
                     level = 2;
                 }
@@ -486,8 +486,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 100;
-                    energyCapacity = 200;
+                    energySurplus = 10;
+                    energyCapacity = 20;
                     
                     level = 2;
                 }
@@ -496,8 +496,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -120;
-                    energyCapacity = 400;
+                    energySurplus = -12;
+                    energyCapacity = 40;
                     
                     level = 2;
                 }
@@ -506,8 +506,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -80;
-                    energyCapacity = 200;
+                    energySurplus = -8;
+                    energyCapacity = 20;
                     
                     level = 2;
                 }
@@ -516,8 +516,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 500;
-                    energyCapacity = 1000;
+                    energySurplus = 50;
+                    energyCapacity = 100;
                     
                     level = 3;
                 }
@@ -526,8 +526,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 500;
+                    energySurplus = -20;
+                    energyCapacity = 50;
                     
                     level = 3;
                 }
@@ -536,8 +536,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 1000;
-                    energyCapacity = 1000;
+                    energySurplus = 100;
+                    energyCapacity = 100;
                     
                     level = 4;
                 }
@@ -546,8 +546,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 400;
+                    energySurplus = -20;
+                    energyCapacity = 40;
                     
                     level = 3;
                 }
@@ -556,8 +556,8 @@ public class Building : Structure
                 {
                     upgradedIndex = SUPPLIES_FACTORY_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -250;
-                    energyCapacity = 200;
+                    energySurplus = -25;
+                    energyCapacity = 20;
                     
                     level = 4;
                 }
@@ -566,8 +566,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -400;
-                    energyCapacity = 800;
+                    energySurplus = -40;
+                    energyCapacity = 80;
                     
                     level = 5;
                 }
@@ -576,8 +576,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -700;
-                    energyCapacity = 200;
+                    energySurplus = -70;
+                    energyCapacity = 20;
                     
                     level = 3;
                 }
@@ -586,8 +586,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -100;
-                    energyCapacity = 120;
+                    energySurplus = -10;
+                    energyCapacity = 12;
                     
                     level = 3;
                 }
@@ -606,8 +606,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -200;
-                    energyCapacity = 400;
+                    energySurplus = -20;
+                    energyCapacity = 40;
                     
                     level = 4;
                 }
@@ -615,9 +615,9 @@ public class Building : Structure
             case SWITCH_TOWER_ID:
                 {
                     upgradedIndex = -1;
-                    canBePowerSwitched = true;
-                    energySurplus = -1;
-                    energyCapacity = 10;
+                    canBePowerSwitched = false;
+                    energySurplus = 0;
+                    energyCapacity = 0;
                     
                     level = 6;
                 }
@@ -626,8 +626,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -100;
-                    energyCapacity = 400;
+                    energySurplus = -10;
+                    energyCapacity = 40;
                     
                     level = 4;
                 }
@@ -636,8 +636,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -120;
-                    energyCapacity = 200;
+                    energySurplus = -12;
+                    energyCapacity = 20;
                     
                     level = 4;
                 }
@@ -646,8 +646,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -120;
-                    energyCapacity = 200;
+                    energySurplus = -12;
+                    energyCapacity = 20;
                     
                     level = 4;
                 }
@@ -665,8 +665,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 4096;
-                    energyCapacity = 2000;
+                    energySurplus = 512;
+                    energyCapacity = 200;
                     level = 5;
                 }
                 break;
@@ -674,8 +674,8 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 100;
-                    energyCapacity = 100;
+                    energySurplus = 10;
+                    energyCapacity = 10;
                     level = 5;
                 }
                 break;
@@ -684,8 +684,8 @@ public class Building : Structure
                     specialBuildingConditions = true;
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -640;
-                    energyCapacity = 1920;
+                    energySurplus = -64;
+                    energyCapacity = 192;
                     level = 6;
                 }
                 break;
@@ -694,8 +694,8 @@ public class Building : Structure
                     specialBuildingConditions = true;
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -400;
-                    energyCapacity = 2400;
+                    energySurplus = -40;
+                    energyCapacity = 240;
                     level = 6;
                 }
                 break;
@@ -704,8 +704,8 @@ public class Building : Structure
                     specialBuildingConditions = false;
                     upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -700;
-                    energyCapacity = 3000;
+                    energySurplus = -70;
+                    energyCapacity = 300;
                     level = 6;
                 }
                 break;
@@ -714,8 +714,8 @@ public class Building : Structure
                     specialBuildingConditions = true;
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = -1200;
-                    energyCapacity = 10000;
+                    energySurplus = -120;
+                    energyCapacity = 1000;
                     level = 6;
                 }
                 break;
@@ -725,7 +725,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 1000;
+                    energyCapacity = 100;
                     level = 1;
                 }
                 break;
@@ -735,7 +735,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 1000;
+                    energyCapacity = 100;
                     level = 2;
                 }
                 break;

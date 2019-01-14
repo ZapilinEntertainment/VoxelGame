@@ -22,6 +22,7 @@ public class BlockBuildingSite : Worksite
         if (workersCount > 0)
         {
             workflow += workSpeed;
+            colony.gears_coefficient -= gearsDamage;
             LabourResult();
         }
     }
@@ -133,6 +134,7 @@ public class BlockBuildingSite : Worksite
     protected override void RecalculateWorkspeed()
     {
         workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Pouring);
+        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
     public void Set(SurfaceBlock block, ResourceType type)
     {
@@ -140,7 +142,8 @@ public class BlockBuildingSite : Worksite
         workObject.SetWorksite(this);
         rtype = type;
         actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
-        GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+        colony = GameMaster.realMaster.colonyController;
+        colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
         {
@@ -166,7 +169,7 @@ public class BlockBuildingSite : Worksite
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
+            colony.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null) Destroy(sign.gameObject);

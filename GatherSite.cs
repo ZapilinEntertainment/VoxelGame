@@ -17,6 +17,7 @@ public class GatherSite : Worksite
         if (workersCount > 0)
         {
             workflow += workSpeed;
+            colony.gears_coefficient -= gearsDamage;
             if (workflow >= 1)
             {
                 int i = 0;
@@ -71,6 +72,7 @@ public class GatherSite : Worksite
     protected override void RecalculateWorkspeed()
     {
         workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Gathering);
+        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
     public void Set(SurfaceBlock block)
     {
@@ -80,7 +82,8 @@ public class GatherSite : Worksite
         sign.worksite = this;
         sign.transform.position = workObject.transform.position + Vector3.down / 2f * Block.QUAD_SIZE;
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
-        GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+        colony = GameMaster.realMaster.colonyController;
+        colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
         {

@@ -73,6 +73,7 @@ public class Farm : WorkBuilding
     override protected void RecalculateWorkspeed()
     {
         workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
+        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
 
     override public void LabourUpdate()
@@ -80,6 +81,7 @@ public class Farm : WorkBuilding
         if (isActive & isEnergySupplied)
         {
             workflow += workSpeed;
+            colony.gears_coefficient -= gearsDamage;
             if (workflow >= workflowToProcess)
             {
                 LabourResult();

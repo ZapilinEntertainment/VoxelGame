@@ -5,19 +5,21 @@ using UnityEngine;
 public enum WorksiteType : byte {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
 
 public abstract class Worksite : MonoBehaviour {
-	public int workersCount {get;protected set;}
-    protected float workflow;
+    public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
+    public static List<Worksite> worksitesList { get; protected set; }
+
+    public int workersCount {get;protected set;}    
     public float workSpeed { get; protected set; }
     public WorksiteSign sign;
 	public string actionLabel { get; protected set; }
 	public bool showOnGUI = false, destroyed = false;
-	public float gui_ypos = 0;
-    protected bool subscribedToUpdate = false;
+	public float gui_ypos = 0;    
     public const string WORKSITE_SIGN_COLLIDER_TAG = "WorksiteSign";
-    
 
-    public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
-    public static List<Worksite> worksitesList { get; protected set; }
+    protected bool subscribedToUpdate = false;
+    protected float workflow, gearsDamage;
+    protected ColonyController colony;
+
 
     static Worksite()
     {
@@ -54,7 +56,7 @@ public abstract class Worksite : MonoBehaviour {
 	public void FreeWorkers(int x) { 
 		if (x > workersCount) x = workersCount;
 		workersCount -= x;
-		GameMaster.realMaster.colonyController.AddWorkers(x);
+		colony.AddWorkers(x);
 		RecalculateWorkspeed();
 	}
 
@@ -89,7 +91,7 @@ public abstract class Worksite : MonoBehaviour {
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
+            colony.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null) Destroy(sign.gameObject);

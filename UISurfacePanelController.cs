@@ -256,11 +256,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 SetActionPanelStatus(true);                
                 mode = SurfacePanelMode.SelectAction;
                 CheckGatherButton();
-                if (colony.gears_coefficient >= 2)
-                {
-                    changeMaterialButton.gameObject.SetActive(true);
-                }
-                else changeMaterialButton.gameObject.SetActive(false);
+                changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
                 columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.CHUNK_SIZE);
                 blockCreateButton.gameObject.SetActive(colony.hq.level > 5);                
                 break;

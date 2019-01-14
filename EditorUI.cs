@@ -25,7 +25,7 @@ public sealed class EditorUI : MonoBehaviour
     private void Start()
     {
         buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
-        materialButtonImage.uvRect = ResourceType.GetTextureRect(chosenMaterialId);
+        materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
         SaveSystemUI.Check(transform.root);
         SaveSystemUI.current.ingame = true;
@@ -314,7 +314,7 @@ public sealed class EditorUI : MonoBehaviour
     public void ChangeMaterial(int id, int pos)
     {
         chosenMaterialId = id;
-        materialButtonImage.uvRect = ResourceType.GetTextureRect(id);
+        materialButtonImage.uvRect = ResourceType.GetResourceIconRect(id);
         materialNameTextField.text = Localization.GetResourceName(id);
         if (pos + firstInListPos != chosenListPosition)
         {

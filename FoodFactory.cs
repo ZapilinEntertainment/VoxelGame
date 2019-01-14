@@ -30,7 +30,11 @@ public class FoodFactory : WorkBuilding {
         }
         if (supplies_outputBuffer <= BUFFER_LIMIT)
         {
-            if (isActive & isEnergySupplied) workflow += workSpeed;
+            if (isActive & isEnergySupplied)
+            {
+                workflow += workSpeed;
+                colony.gears_coefficient -= gearsDamage;
+            }
             if (workflow >= workflowToProcess) LabourResult();
         }
     }

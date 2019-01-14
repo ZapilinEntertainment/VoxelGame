@@ -70,6 +70,7 @@ public class Mine : WorkBuilding {
             if (workersCount > 0 && !workFinished)
             {
                 workflow += workSpeed;
+                colony.gears_coefficient -= gearsDamage;
                 if (workflow >= workflowToProcess)
                 {
                     LabourResult();
@@ -98,6 +99,7 @@ override protected void LabourResult() {
 
 	override protected void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Mining);
+        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 
 	void UpgradeMine(byte f_level) {

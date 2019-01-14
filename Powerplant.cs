@@ -12,28 +12,28 @@ public class Powerplant : WorkBuilding {
 		switch (id) {
 		case BIOGENERATOR_2_ID:
                 fuel = ResourceType.Food;
-                output = 400;
+                output = 40;
                 fuelNeeds = 10;
                 fuelLeft = 0;
                 fuelBurnTime = 1000; // ticks
                 break;
 		case MINERAL_POWERPLANT_2_ID:
                 fuel = ResourceType.mineral_F;
-                output = 400;
+                output = 40;
                 fuelNeeds = 1;
                 fuelLeft = 0;
                 fuelBurnTime = 600; // ticks
                 break;
 		case GRPH_REACTOR_4_ID :
                 fuel = ResourceType.Graphonium;
-                output = 4000;
+                output = 400;
                 fuelNeeds = 1;
                 fuelLeft = 0;
                 fuelBurnTime = 6000 ; //ticks
                 break;
             case REACTOR_BLOCK_5_ID:
                 fuel = ResourceType.Graphonium;
-                output = 16000;
+                output = 1600;
                 fuelNeeds = 4;
                 fuelLeft = 0;
                 fuelBurnTime = 5800; //ticks

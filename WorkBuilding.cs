@@ -10,6 +10,7 @@ public abstract class WorkBuilding : Building {
 	public float workflowToProcess{get; protected set;}
 	public int maxWorkers { get; protected set; }
 	public int workersCount {get; protected set;}
+    protected float gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
     protected ColonyController colony;
 
     public const int WORKBUILDING_SERIALIZER_LENGTH = 16;
@@ -259,7 +260,8 @@ public abstract class WorkBuilding : Building {
 		if ( !isActive | !isEnergySupplied) return;
 		if (workersCount > 0) {
 			workflow += workSpeed;
-			if (workflow >= workflowToProcess) {
+            colony.gears_coefficient -= gearsDamage;
+            if (workflow >= workflowToProcess) {
 				LabourResult();
 			}
 		}
@@ -302,6 +304,7 @@ public abstract class WorkBuilding : Building {
 	}
 	virtual protected void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
+        gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
 	}
 
     public override UIObserver ShowOnGUI()

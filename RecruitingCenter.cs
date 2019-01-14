@@ -74,6 +74,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 
 	override protected void RecalculateWorkspeed() {
 		workSpeed = (float)workersCount / (float)maxWorkers;
+        gearsDamage = 0;
 	}
 
     public override UIObserver ShowOnGUI()

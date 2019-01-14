@@ -10,7 +10,7 @@ public sealed class UIHangarObserver : UIObserver
     public Hangar observingHangar { get; private set; }
 #pragma warning disable 0649
     [SerializeField] InputField shuttleNameTextField; // fiti
-    [SerializeField] Button constructButton, disassembleButton, repairButton; // fiti
+    [SerializeField] Button constructButton, disassembleButton; // fiti
     [SerializeField] Transform resourceCostContainer;
 #pragma warning restore 0649
     Vector2[] showingResourcesCount;
@@ -48,12 +48,11 @@ public sealed class UIHangarObserver : UIObserver
         bool haveShuttle = (shuttle != null);
 
         shuttleNameTextField.gameObject.SetActive(haveShuttle);
-        repairButton.gameObject.SetActive(haveShuttle && (shuttle.condition < 1));
         disassembleButton.gameObject.SetActive(haveShuttle);
 
         if (haveShuttle)
         {
-            mode = shuttle.status == ShipStatus.InPort ? HangarObserverMode.ShuttleInside : HangarObserverMode.ShuttleOnMission;
+            mode = shuttle.status == ShipStatus.Docked ? HangarObserverMode.ShuttleInside : HangarObserverMode.ShuttleOnMission;
             shuttleNameTextField.text = shuttle.name;
             resourceCostContainer.gameObject.SetActive(false);
             UIController.current.ActivateProgressPanel(ProgressPanelMode.Hangar);            
@@ -80,7 +79,7 @@ public sealed class UIHangarObserver : UIObserver
                     if (i < rc.Length)
                     {
                         int rid = rc[i].type.ID;
-                        t.GetComponent<RawImage>().uvRect = ResourceType.GetTextureRect(rid);
+                        t.GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(rid);
                         Text tx = t.GetChild(0).GetComponent<Text>();
                         tx.text = Localization.GetResourceName(rid) + " : " + rc[i].volume.ToString();
                         float[] storageResources = GameMaster.realMaster.colonyController.storage.standartResources;
@@ -107,7 +106,7 @@ public sealed class UIHangarObserver : UIObserver
             HangarObserverMode newMode;
             if (haveShuttle)
             {
-                if (observingHangar.shuttle.status == ShipStatus.InPort)
+                if (observingHangar.shuttle.status == ShipStatus.Docked)
                 {
                     newMode = HangarObserverMode.ShuttleInside;
                 }
@@ -164,10 +163,6 @@ public sealed class UIHangarObserver : UIObserver
     {
         observingHangar.DeconstructShuttle();
     }
-    public void Repair()
-    {
-        observingHangar.shuttle.RepairForCoins();
-    }
 
 
     override public void SelfShutOff()
@@ -190,6 +185,5 @@ public sealed class UIHangarObserver : UIObserver
     public void LocalizeButtonTitles()
     {
         disassembleButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Disassemble);
-        repairButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Repair);
     }
 }

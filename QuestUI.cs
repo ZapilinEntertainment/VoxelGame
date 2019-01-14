@@ -233,7 +233,7 @@ public sealed class QuestUI : MonoBehaviour
         if (questAccessMap[i] == false) UnblockQuestPosition(QuestSection.Progress);
         else
         {
-            if (activeQuests[i] != Quest.AwaitingQuest) StartCoroutine(WaitForNewQuest(i));
+            if (activeQuests[i] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(i));
         }
 
         i = (int)QuestSection.Endgame;

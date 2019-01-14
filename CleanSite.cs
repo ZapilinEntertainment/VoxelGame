@@ -42,6 +42,7 @@ public class CleanSite : Worksite {
         else
         {
             workflow += workSpeed;
+            colony.gears_coefficient -= gearsDamage;
             Structure s = workObject.surfaceObjects[0];
             if (s == null)
             {
@@ -75,6 +76,7 @@ public class CleanSite : Worksite {
 
 	protected override void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Clearing);
+        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
@@ -87,7 +89,8 @@ public class CleanSite : Worksite {
         //FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
 
         diggingMission = f_diggingMission;
-		if (workersCount < START_WORKERS_COUNT) GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+        colony = GameMaster.realMaster.colonyController;
+		if (workersCount < START_WORKERS_COUNT) colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)
         {
@@ -96,18 +99,13 @@ public class CleanSite : Worksite {
         }
     }
 
-   // public void SignCameraUpdate()
-   // {
-    //    sign.transform.LookAt(FollowingCamera.camPos);
-    //}
-
     override public void StopWork()
     {
         if (destroyed) return;
         else destroyed = true;
         if (workersCount > 0)
         {
-            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
+            colony.AddWorkers(workersCount);
             workersCount = 0;
         }
         if (sign != null)

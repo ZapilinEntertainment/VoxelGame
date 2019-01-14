@@ -74,6 +74,7 @@ public class Factory : WorkBuilding {
                         if (!workPaused)
                         {
                             workflow += workSpeed;
+                            colony.gears_coefficient -= gearsDamage * workSpeed;
                             if (workflow >= workflowToProcess) LabourResult();
                         }
                         else
@@ -81,6 +82,7 @@ public class Factory : WorkBuilding {
                             if (storage.standartResources[recipe.output.ID] < productionModeValue) {
                                 workPaused = false;
                                 workflow += workSpeed;
+                                colony.gears_coefficient -= gearsDamage;
                                 if (workflow >= workflowToProcess) LabourResult();
                             }
                         }
@@ -88,6 +90,7 @@ public class Factory : WorkBuilding {
                     else
                     {
                         workflow += workSpeed;
+                        colony.gears_coefficient -= gearsDamage;
                         if (workflow >= workflowToProcess) LabourResult();
                     }
                 }

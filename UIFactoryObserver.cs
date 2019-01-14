@@ -53,9 +53,9 @@ public sealed class UIFactoryObserver : UIObserver
             recipesDropdown.options = recipeButtons;
         }
 
-        inputIcon.uvRect = ResourceType.GetTextureRect(r.input.ID);
+        inputIcon.uvRect = ResourceType.GetResourceIconRect(r.input.ID);
         inputValueString.text = r.inputValue.ToString();
-        outputIcon.uvRect = ResourceType.GetTextureRect(r.output.ID);
+        outputIcon.uvRect = ResourceType.GetResourceIconRect(r.output.ID);
         outputValueString.text = r.outputValue.ToString();
         recipesDropdown.value = positionInDropdown;
 
@@ -76,9 +76,9 @@ public sealed class UIFactoryObserver : UIObserver
     {
         observingFactory.SetRecipe(x);
         Recipe r = observingFactory.recipe;
-        inputIcon.uvRect = ResourceType.GetTextureRect(r.input.ID);
+        inputIcon.uvRect = ResourceType.GetResourceIconRect(r.input.ID);
         inputValueString.text = r.inputValue.ToString();
-        outputIcon.uvRect = ResourceType.GetTextureRect(r.output.ID);
+        outputIcon.uvRect = ResourceType.GetResourceIconRect(r.output.ID);
         outputValueString.text = r.outputValue.ToString();
     }
 

@@ -20,6 +20,7 @@ public class TunnelBuildingSite : Worksite {
             if (workersCount > 0)
             {
                 workflow += workSpeed;
+                colony.gears_coefficient -= gearsDamage;
                 if (workflow >= 1) {
                     // labour result
                     int x = (int)workflow;
@@ -40,12 +41,14 @@ public class TunnelBuildingSite : Worksite {
 
 	protected override void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount,WorkType.Digging);
+        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;        
 	}
 
 	public void Set(CubeBlock block) {
 		workObject = block;
         workObject.SetWorksite(this);
-		GameMaster.realMaster.colonyController.SendWorkers(START_WORKERS_COUNT, this);
+        colony = GameMaster.realMaster.colonyController;
+		colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate) {
             GameMaster.realMaster.labourUpdateEvent += WorkUpdate;

@@ -21,13 +21,13 @@ sealed public class Corn : Plant {
         corns = new List<Corn>();
         maxLifeTransfer = 1;
         growSpeed = 0.01f;
-        decaySpeed = growSpeed * 0.01f;
-        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
+        decaySpeed = growSpeed * 0.01f;        
     }
 
     public static void ResetToDefaults_Static_Corn()
     {
         corns = new List<Corn>();
+        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
     }    
 
     override public void Prepare()
@@ -54,7 +54,6 @@ sealed public class Corn : Plant {
 
     public static void UpdatePlants()
     {
-        float t = GameMaster.LIFEPOWER_TICK;
         if (corns.Count > 0)
         {
             int i = 0;

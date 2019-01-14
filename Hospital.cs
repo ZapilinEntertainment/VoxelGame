@@ -43,6 +43,7 @@ public class Hospital : WorkBuilding {
         float prevCoverage = coverage;
         coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
         if (prevCoverage != coverage) colony.RecalculateHospitals();
+        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 20f;
     }
 
     public static void SetBirthrateMode(int x) {

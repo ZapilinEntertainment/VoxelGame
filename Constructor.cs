@@ -257,6 +257,7 @@ public class Constructor : MonoBehaviour
 
                 if (y + 1 < size)
                 {
+                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z));
                     chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
                     chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
                     chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
@@ -267,6 +268,7 @@ public class Constructor : MonoBehaviour
                     chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
                     if (y + 2 < size)
                     {
+                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z));
                         chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
                         chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
                         chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));

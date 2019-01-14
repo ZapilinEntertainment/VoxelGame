@@ -38,7 +38,9 @@ public sealed class ColonyController : MonoBehaviour
     List<Hospital> hospitals;
     private float starvationTimer, targetHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false;
+
     private const byte MAX_HOUSING_LEVEL = 5;
+    private const float START_ENERGY_CRYSTALS_COUNT = 100;
 
 
     void Awake()
@@ -51,7 +53,7 @@ public sealed class ColonyController : MonoBehaviour
             hospitals_coefficient = 0;
             birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
-            energyCrystalsCount = 1000;
+            energyCrystalsCount = START_ENERGY_CRYSTALS_COUNT;
 
             cityName = "My Colony"; 
         }

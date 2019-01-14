@@ -138,6 +138,7 @@ public sealed class Dock : WorkBuilding {
 							}
 						}
 					}
+
 					Ship s = PoolMaster.current.GetShip( level, stype );
                     if (s != null)
                     {
@@ -454,6 +455,7 @@ public sealed class Dock : WorkBuilding {
                             if (v < buyVolume) buyVolume = v;
                             BuyResource(ResourceType.resourceTypesArray[i], buyVolume);
                             v -= buyVolume;
+                            colony.gears_coefficient -= gearsDamage * buyVolume;
                             buyPositions.RemoveAt(buyIndex);
                         }
                     }
@@ -523,6 +525,7 @@ public sealed class Dock : WorkBuilding {
         {
             if (maintainingShip & loadingShip != null) loadingShip.Undock();
         }
+        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT / 10f * workSpeed;
     }
 
     public override UIObserver ShowOnGUI()
