@@ -5,7 +5,7 @@ public enum LocalizedWord : ushort {Level, Offline, Dig, Upgrade, UpgradeCost, C
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb}
 public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ImmigrationEnabled, ImmigrationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, ShuttlesAvailable, CrewsAvailable, TransmittersAvailable,
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleRepaired, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, CameraZoom, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores
+MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddShuttle
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
@@ -363,6 +363,7 @@ public static class Localization {
             case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
             case LocalizedPhrase.ShuttleOnMission: return "Shuttle on mission";
             case LocalizedPhrase.NoShuttle: return "No shuttle";
+            case LocalizedPhrase.AddShuttle: return "Add shuttle";
             case LocalizedPhrase.ObjectsLeft: return "Objects left";
             case LocalizedPhrase.NoSavesFound: return "No saves found";
             case LocalizedPhrase.CreateNewSave: return "Create new save";
@@ -376,6 +377,7 @@ public static class Localization {
             case LocalizedPhrase.PowerFailure: return "Power failure";
             case LocalizedPhrase.NoMission: return "No mission";
             case LocalizedPhrase.NoHighscores: return "No highscores yet";
+            case LocalizedPhrase.NoTransmitters: return "No transmitters";
         }
     }
 

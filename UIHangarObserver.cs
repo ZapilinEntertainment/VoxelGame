@@ -139,14 +139,17 @@ public sealed class UIHangarObserver : UIObserver
         {
             if (GameMaster.realMaster.colonyController.energyCrystalsCount >= Shuttle.STANDART_COST)
             {
-                ColonyController colony = GameMaster.realMaster.colonyController;
-                colony.GetEnergyCrystals(Shuttle.STANDART_COST);
+                ColonyController colony = GameMaster.realMaster.colonyController;                    
                 if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID)))
                 {
+                    colony.GetEnergyCrystals(Shuttle.STANDART_COST);
                     observingHangar.StartConstruction();
                     PrepareHangarWindow();
                 }
-                else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                else
+                {
+                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                }
             }
             else
             {

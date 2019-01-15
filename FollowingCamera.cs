@@ -280,7 +280,10 @@ public sealed class FollowingCamera : MonoBehaviour {
             foreach (Transform t in mastBillboards)
             {
                 Vector3 cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
-                t.transform.forward = cpos.normalized;
+                if (cpos != Vector3.zero)
+                {
+                    t.transform.forward = cpos.normalized;
+                }
             }
         }
         yield return null;

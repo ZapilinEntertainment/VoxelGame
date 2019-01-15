@@ -88,7 +88,16 @@ public sealed class Shuttle : MonoBehaviour {
 
 	// used only by Expedition class, use expedition.AssignShuttle
 	public void AssignTo(Expedition e) {
-		assignedToExpedition = e;
+        if (e != null)
+        {
+            assignedToExpedition = e;
+            e.AddParticipant(this);
+        }
+        else
+        {
+            if (assignedToExpedition != null) assignedToExpedition.RemoveParticipant(this);
+            assignedToExpedition = null;
+        }
         actionsHash++;
 	}
 

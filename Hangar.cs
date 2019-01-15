@@ -394,6 +394,11 @@ public sealed class Hangar : WorkBuilding
         LoadStructureData(data, sblock);
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
         constructing = fs.ReadByte() == 1;
+        if (constructing & !subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
         LoadWorkBuildingData(data,STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
         data = new byte[4];
         fs.Read(data, 0, 4);

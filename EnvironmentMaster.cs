@@ -45,9 +45,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         if (windTimer <= 0)
         {
             windTimer = WIND_CHANGE_TIME * (0.1f + Random.value * 1.9f);
-            float a = (Random.value - 0.5f) * 2 * Mathf.Deg2Rad;
-            float cos = Mathf.Cos(a), sin = Mathf.Sin(a);
-            newWindVector = new Vector2(windVector.x * cos - windVector.y * sin, windVector.x * sin + windVector.y * cos).normalized * windVector.magnitude * (0.9f + Random.value * 0.2f);
+            newWindVector = Quaternion.AngleAxis((0.5f - Random.value) * 30, Vector3.up) * windVector;
+            newWindVector = newWindVector * ( 1 + (0.5f - Random.value) * 0.5f );
         }
 
         if (windVector != newWindVector)

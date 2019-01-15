@@ -443,7 +443,9 @@ public sealed class GameMaster : MonoBehaviour {
             }
         }
 
-        //float frameTime = Time.deltaTime * gameSpeed;       
+        //testzone
+        if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
+        //eo testzone
     }   
 
     private void FixedUpdate()
