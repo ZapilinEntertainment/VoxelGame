@@ -678,13 +678,16 @@ public class ExpeditionPanelUI : MonoBehaviour
                         }
                     }
                     lastShuttlesHashValue = Shuttle.actionsHash;
-                }                
+                }
                 d.options = optionsList;
                 d.value = 0;
                 d.enabled = true;
                 d.gameObject.SetActive(true);
             }
-            else ppt.GetChild(0).gameObject.SetActive(false);
+            else
+            {
+                ppt.GetChild(0).gameObject.SetActive(false);
+            }
         }
     }
 

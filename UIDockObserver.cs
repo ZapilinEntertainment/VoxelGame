@@ -76,7 +76,7 @@ public sealed class UIDockObserver : UIObserver
             tradingButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         }        
         if (Dock.immigrationEnabled) {
-            immigrationToggleButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ImmigrationEnabled);
+            immigrationToggleButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ColonizationEnabled);
             immigrationToggleButtonImage.overrideSprite = overridingSprite;
             immigrationLimitInputField.text = Dock.immigrationPlan.ToString();
             immigrationLimitInputField.transform.parent.gameObject.SetActive(true);
@@ -85,7 +85,7 @@ public sealed class UIDockObserver : UIObserver
         }
         else
         {
-            immigrationToggleButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ImmigrationDisabled);
+            immigrationToggleButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ColonizationDisabled);
             immigrationToggleButtonImage.overrideSprite = null;
             immigrationLimitText.enabled = false;
         }
@@ -240,6 +240,6 @@ public sealed class UIDockObserver : UIObserver
     public void LocalizeButtonTitles()
     {
         tradingButtonText.text = Localization.GetWord(LocalizedWord.Trading);
-        immigrationButtonText.text = Localization.GetWord(LocalizedWord.Immigration);   
+        immigrationButtonText.text = Localization.GetWord(LocalizedWord.Colonization);   
     }
 }

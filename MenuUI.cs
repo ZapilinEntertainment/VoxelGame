@@ -7,17 +7,18 @@ using System.IO;
 
 public sealed class MenuUI : MonoBehaviour
 {
-    private int currentGraphicsLevel = 0;
 #pragma warning disable 0649
     [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton;
     [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, authorsButton, highscoresPanel;
     [SerializeField] private Slider sizeSlider, roughnessSlider;
-    [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown;
+    [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown, languageDropdown;
     [SerializeField] private Sprite overridingSprite;
     [SerializeField] private Text sizeSliderVal, roughSliderVal;
     [SerializeField] private Button gameStartButton;
     [SerializeField] private InputField editorSizeInputField;
 #pragma warning restore 0649
+
+    private bool optionsPrepared = false;
 
     enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores }
     private MenuSection currentSection = MenuSection.NoSelection;
@@ -27,16 +28,15 @@ public sealed class MenuUI : MonoBehaviour
 
     private void Start()
     {
-        currentGraphicsLevel = QualitySettings.GetQualityLevel();
         SaveSystemUI.Check(transform.root);
 
-        availableGenerationModes = new List<ChunkGenerationMode>() { ChunkGenerationMode.Standart, ChunkGenerationMode.Pyramid };
+        availableGenerationModes = new List<ChunkGenerationMode>() { ChunkGenerationMode.Standart, ChunkGenerationMode.Cube };
         List<string> genModenames = new List<string>();
         foreach (ChunkGenerationMode cmode in availableGenerationModes) genModenames.Add(cmode.ToString());
         generationTypeDropdown.AddOptions(genModenames);
         generationTypeDropdown.value = 0;
         newGameGenMode = availableGenerationModes[0];
-
+        LocalizeTitles();
         GameMaster.SetPause(false);
     }
 
@@ -219,13 +219,19 @@ public sealed class MenuUI : MonoBehaviour
 
     public void QualityDropdownChanged()
     {
-        graphicsApplyButton.SetActive(qualityDropdown.value != currentGraphicsLevel);
+        graphicsApplyButton.SetActive(qualityDropdown.value != QualitySettings.GetQualityLevel());
     }
     public void ApplyGraphicsButton()
     {
         QualitySettings.SetQualityLevel(qualityDropdown.value);
         graphicsApplyButton.SetActive(false);
     }
+    public void Options_ChangeLanguage(int i)
+    {
+        Localization.ChangeLanguage((Language)i);
+        transform.root.BroadcastMessage("LocalizeTitles", SendMessageOptions.DontRequireReceiver);
+    }
+
     public void SizeValueChanged(float f)
     {
         sizeSliderVal.text = ((int)f).ToString();
@@ -278,6 +284,22 @@ public sealed class MenuUI : MonoBehaviour
                 SaveSystemUI.current.Activate(false, false);
                 break;
             case MenuSection.Options:
+                if (!optionsPrepared)
+                {
+                    var options = new List<Dropdown.OptionData>();
+                    foreach (string s in QualitySettings.names)
+                    {
+                        options.Add(new Dropdown.OptionData(s));
+                    }
+                    qualityDropdown.options = options;
+
+                    options = new List<Dropdown.OptionData>() { new Dropdown.OptionData("English"), new Dropdown.OptionData("Русский") };
+                    languageDropdown.options = options;
+
+                    optionsPrepared = true;
+                }
+                qualityDropdown.value = QualitySettings.GetQualityLevel();
+                languageDropdown.value = Localization.currentLanguage == Language.English ? 0 : 1;
                 optionsButton.overrideSprite = overridingSprite;
                 optionsPanel.SetActive(true);
                 break;
@@ -340,11 +362,29 @@ public sealed class MenuUI : MonoBehaviour
 
     private void LocalizeTitles()
     {
-        if (false)
-        {
-            authorsButton.SetActive(true);
-            authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAuthorsButtonLabel();
-        }
-        else authorsButton.SetActive(false);
+        newGameButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NewGame);
+        generateButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Generate);
+        usePresetsButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.UsePresets);
+        Transform t = generationPanel.transform;
+        t.GetChild(0).GetChild(4).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Size);
+        t.GetChild(1).GetChild(4).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TerrainRoughness);
+        t.GetChild(2).GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GenerationType);
+        difficultyDropdown.transform.GetChild(3).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Difficulty);
+        newGamePanel.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Start);
+
+        loadButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
+
+        optionsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Options);
+        optionsPanel.transform.GetChild(0).GetChild(3).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Language);
+        optionsPanel.transform.GetChild(1).GetChild(3).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Quality);
+        optionsPanel.transform.GetChild(1).GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Apply);
+
+        editorButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Editor);
+        editorSettingPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Size);
+        editorSettingPanel.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Start);
+
+        highscoresButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Highscores);
+        authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAuthorsButtonLabel();
+        transform.GetChild(0).GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
     }
 }

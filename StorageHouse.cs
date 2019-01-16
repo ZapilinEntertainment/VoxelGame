@@ -6,11 +6,24 @@ public sealed class StorageHouse : Building {
         PrepareBuilding();
         switch (id)
         {
-            case STORAGE_0_ID: volume = 10000;break;
-            case STORAGE_1_ID: volume = 5000; break;
-            case STORAGE_2_ID: volume = 20000; break;
-            case STORAGE_3_ID: volume = 50000; break;
-            case STORAGE_5_ID: volume = 200000;break;
+            case STORAGE_0_ID: volume = GetMaxVolume(0);break;
+            case STORAGE_1_ID: volume = GetMaxVolume(1); break;
+            case STORAGE_2_ID: volume = GetMaxVolume(2); break;
+            case STORAGE_3_ID: volume = GetMaxVolume(3); break;
+            case STORAGE_5_ID: volume = GetMaxVolume(5); break;
+        }
+    }
+
+    public static float GetMaxVolume (int level)
+    {
+        switch (level)
+        {
+            case 0: return 10000;
+            case 1: return 5000;
+            case 2: return 20000;
+            case 3: return 50000;
+            case 5: return 200000;
+            default: return 1000;
         }
     }
 

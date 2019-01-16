@@ -28,6 +28,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     [SerializeField] UnityEngine.UI.Slider xSlider; // fiti
     [SerializeField] Transform cloudCamera;
     [SerializeField] RectTransform controllerBack, controllerStick;
+    [SerializeField] GameObject camUpButton, camLowButton;
 #pragma warning restore 0649
     const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50;
 
@@ -40,6 +41,26 @@ public sealed class FollowingCamera : MonoBehaviour {
     public delegate void CameraChangedHandler();
     public event CameraChangedHandler cameraChangedEvent;
 
+    public static void SetTouchControl(bool x)
+    {
+        if (main != null)
+        {
+            if (x)
+            {
+                touchscreen = true;
+                main.controllerBack.gameObject.SetActive(true);
+                main.camUpButton.SetActive(true);
+                main.camLowButton.SetActive(true);
+            }
+            else
+            {
+                touchscreen = false;
+                main.controllerBack.gameObject.SetActive(false);
+                main.camUpButton.SetActive(false);
+                main.camLowButton.SetActive(false);
+            }
+        }
+    }
 
     private void Awake()
     {
@@ -53,7 +74,7 @@ public sealed class FollowingCamera : MonoBehaviour {
         mastBillboards = new List<Transform>();
         mastBillboardsIDs = new List<int>();
 
-        touchscreen = Input.touchSupported;
+        SetTouchControl(Input.touchSupported);
     }
 
     void Start()
@@ -381,7 +402,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     }
     public void CamControllerDrag()
     {
-        if (touchscreen)
+        if (touchscreen & Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
             float x = controllerStickOriginalPos.x * 2, y = controllerStickOriginalPos.x * 2;
@@ -409,7 +430,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     {
         camMoveVector = Vector2.zero;
     }
-
+    
     public void SetTouchRightBorder(float f)
     {
         touchRightBorder = f;

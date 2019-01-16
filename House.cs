@@ -3,22 +3,28 @@ public class House : Building {
 	public int housing { get; protected set; }
     public const int TENT_VOLUME = 2;
 
+    public static int GetHousingValue (int id)
+    {
+        switch (id)
+        { // if changing - look at localized description
+            case LANDED_ZEPPELIN_ID: return 10;
+            case HQ_2_ID: return 30; 
+            case HQ_3_ID: return 40;
+            case HQ_4_ID: return 45;
+            case TENT_ID: return TENT_VOLUME;
+            case HOUSE_1_ID: return 10;
+            case HOUSE_2_ID: return 50; 
+            case HOUSE_3_ID: return 100; 
+            case HOUSE_5_ID: return 800; 
+            case HOTEL_BLOCK_6_ID: return 600; // temporary
+            case HOUSING_MAST_6_ID: return 2200;
+            default: return 1;
+        }
+    }
+
     override public void Prepare() {
         PrepareBuilding();
-        switch (id)
-        {
-            case LANDED_ZEPPELIN_ID: housing = 10; break;
-            case HQ_2_ID: housing = 30; break;
-            case HQ_3_ID: housing = 40; break;
-            case HQ_4_ID: housing = 45; break;
-            case TENT_ID: housing = TENT_VOLUME; break;
-            case HOUSE_1_ID: housing = 10; break;
-            case HOUSE_2_ID: housing = 50; break;
-            case HOUSE_3_ID: housing = 100; break;
-            case HOUSE_5_ID: housing = 800; break;
-            case HOTEL_BLOCK_6_ID: housing = 600; break; // temporary
-            case HOUSING_MAST_6_ID: housing = 2200; break;
-        }
+        housing = GetHousingValue(id);
     }
 
     public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		

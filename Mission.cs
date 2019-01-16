@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 public sealed class Mission {
-	public static readonly Mission NoMission, FindingParadise;
+	public static readonly Mission NoMission;
     public static List<Mission> missionsList;
 
     public bool requireShuttle { get; private set; }
@@ -11,9 +11,9 @@ public sealed class Mission {
     static Mission()
     {
         NoMission = new Mission(Localization.GetPhrase(LocalizedPhrase.NoMission));
-        FindingParadise = new Mission("finding Paradise", 1, true);
+        var lifesourceFind = new Mission("finding lifesources", 1, true);
         missionsList = new List<Mission>();
-        missionsList.Add(FindingParadise);
+        missionsList.Add(lifesourceFind);
     }
 
     private Mission(string name)

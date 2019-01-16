@@ -97,6 +97,18 @@ public class Building : Structure
 
     public const int BUILDING_SERIALIZER_LENGTH = 5;
 
+
+    public static float GetEnergyCapacity(int id)
+    {
+        switch (id)
+        {
+            case ENERGY_CAPACITOR_1_ID: return 200;
+            case ENERGY_CAPACITOR_2_ID: return 800;
+            case ENERGY_CAPACITOR_3_ID: return 2500;
+            default: return 1;
+        }
+    }
+
     override public void Prepare() { PrepareBuilding(); }
 
     /// <summary>
@@ -280,7 +292,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 200;
+                    energyCapacity = GetEnergyCapacity(id);
                     
                     level = 1;
                 }
@@ -290,7 +302,7 @@ public class Building : Structure
                     upgradedIndex = ENERGY_CAPACITOR_3_ID;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 800;
+                    energyCapacity = GetEnergyCapacity(id);
                     
                     level = 2;
                 }
@@ -300,7 +312,7 @@ public class Building : Structure
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
                     energySurplus = 0;
-                    energyCapacity = 2500;
+                    energyCapacity = GetEnergyCapacity(id);
                     
                     level = 3;
                 }

@@ -32,8 +32,8 @@ public sealed class Crew : MonoBehaviour {
     //при внесении изменений отредактировать Localization.GetCrewInfo
 
 	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
-    public int missionsCompleted { get; private set; }
-    public int successfulMissions{get;private set;}    
+    public int missionsParticipated { get; private set; }
+    public int missionsSuccessed{get;private set;}    
 
     static Crew()
     {
@@ -203,8 +203,8 @@ public sealed class Crew : MonoBehaviour {
         data.AddRange(System.BitConverter.GetBytes(survivalSkills));
         data.AddRange(System.BitConverter.GetBytes(teamWork));
         data.AddRange(System.BitConverter.GetBytes(stamina));
-        data.AddRange(System.BitConverter.GetBytes(successfulMissions));
-        data.AddRange(System.BitConverter.GetBytes(missionsCompleted));
+        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed));
+        data.AddRange(System.BitConverter.GetBytes(missionsParticipated));
 
         data.Add(level);
         data.Add((byte)status);
@@ -248,8 +248,8 @@ public sealed class Crew : MonoBehaviour {
         survivalSkills = System.BitConverter.ToSingle(data, 32);
         teamWork = System.BitConverter.ToSingle(data, 36);
         stamina = System.BitConverter.ToSingle(data, 40);
-        successfulMissions = System.BitConverter.ToInt32(data, 44);
-        missionsCompleted = System.BitConverter.ToInt32(data, 48);
+        missionsSuccessed = System.BitConverter.ToInt32(data, 44);
+        missionsParticipated = System.BitConverter.ToInt32(data, 48);
         level = data[52];
         status = (CrewStatus)data[53];
     }

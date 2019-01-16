@@ -162,6 +162,7 @@
                 }
             }
         }
+        score *= (int)GameMaster.difficulty / 3f;
         return score;
     }
 }

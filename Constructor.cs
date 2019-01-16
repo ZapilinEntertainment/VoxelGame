@@ -25,7 +25,7 @@ public class Constructor : MonoBehaviour
         switch (mode)
         {
             case ChunkGenerationMode.Standart: GenerateSpirals(size, ref dat); break;
-            case ChunkGenerationMode.Pyramid: GeneratePyramid(size, ref dat); break;
+            case ChunkGenerationMode.Cube: GeneratePyramid(size, ref dat); break;
         }
         GameObject g = new GameObject("chunk");
         c = g.AddComponent<Chunk>();

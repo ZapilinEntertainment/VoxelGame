@@ -8,16 +8,17 @@
     public const int LIFEPOWER_SPREAD_SPEED = 10 ;
     public const float START_HAPPINESS = 0.5f, HAPPINESS_CHANGE_SPEED = 0.001f,
         LIFE_DECAY_SPEED = 0.1f, CAM_LOOK_SPEED = 10,
-        START_BIRTHRATE_COEFFICIENT = 0.001f,
-        FACTORY_GEARS_DAMAGE_COEFFICIENT = 0.000001f, WORKSITES_GEARS_DAMAGE_COEFFICIENT = 0.000004f,
+        START_BIRTHRATE_COEFFICIENT = 0.001f,        
         HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000,
         FOOD_CONSUMPTION = 1, STARVATION_TIME = 1,
         SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
         RSPACE_CONSUMING_VAL = 0.2f,
-        LSECTOR_CONSUMING_VAL = 0.9f,
-        WORLD_CONSUMING_TIMER = 30
+        LSECTOR_CONSUMING_VAL = 0.9f        
         ;
+    public static float WORLD_CONSUMING_TIMER { get { return 15 * (6 - (int)GameMaster.difficulty); } }
+    public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.0000005f * (int)GameMaster.difficulty; } }
+    public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000002f * (int)GameMaster.difficulty; } }
 
     public const int MAX_LIFEPOWER_TRANSFER = 16;
 

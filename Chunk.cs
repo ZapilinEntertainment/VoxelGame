@@ -16,7 +16,7 @@ public struct ChunkPos
     }
 }
 
-public enum ChunkGenerationMode : byte { Standart, GameLoading, Pyramid, TerrainLoading, DontGenerate }
+public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, TerrainLoading, DontGenerate }
 
 public sealed class Chunk : MonoBehaviour
 {
