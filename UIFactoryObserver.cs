@@ -19,7 +19,7 @@ public sealed class UIFactoryObserver : UIObserver
     {
         UIFactoryObserver ufo = Instantiate(Resources.Load<GameObject>("UIPrefs/factoryObserver"), UIController.current.rightPanel.transform).GetComponent<UIFactoryObserver>();
         Factory.factoryObserver = ufo;
-        ufo.LocalizeContent();
+        ufo.LocalizeTitles();
         return ufo;
     }
 
@@ -174,8 +174,14 @@ public sealed class UIFactoryObserver : UIObserver
         gameObject.SetActive(false);
     }    
 
-    public override void LocalizeContent()
+    public override void LocalizeTitles()
     {
-       
+        var options = new List<Dropdown.OptionData>()
+        {
+            new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoLimit)),
+            new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.UpperLimit)),
+            new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.IterationsCount))
+        };
+        modesDropdown.options = options;
     }
 }

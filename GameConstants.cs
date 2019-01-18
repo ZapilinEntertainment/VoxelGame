@@ -19,8 +19,9 @@
     public static float WORLD_CONSUMING_TIMER { get { return 15 * (6 - (int)GameMaster.difficulty); } }
     public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.0000005f * (int)GameMaster.difficulty; } }
     public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000002f * (int)GameMaster.difficulty; } }
-
     public const int MAX_LIFEPOWER_TRANSFER = 16;
+    public const string BASE_SETTINGS_PLAYERPREF = "baseSettings";
+    // 0 - lang
 
     public static float GetShipArrivingTimer()
     {

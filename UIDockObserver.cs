@@ -21,6 +21,7 @@ public sealed class UIDockObserver : UIObserver
     {
         UIDockObserver udo = Instantiate(Resources.Load<GameObject>("UIPrefs/dockObserver"), UIController.current.rightPanel.transform).GetComponent<UIDockObserver>();
         Dock.dockObserver = udo;
+        udo.LocalizeTitles();
         return udo;
     }
 
@@ -236,10 +237,9 @@ public sealed class UIDockObserver : UIObserver
         gameObject.SetActive(false);
     }
 
-
-    public void LocalizeButtonTitles()
+    public override void LocalizeTitles()
     {
         tradingButtonText.text = Localization.GetWord(LocalizedWord.Trading);
-        immigrationButtonText.text = Localization.GetWord(LocalizedWord.Colonization);   
+        immigrationButtonText.text = Localization.GetWord(LocalizedWord.Colonization);
     }
 }

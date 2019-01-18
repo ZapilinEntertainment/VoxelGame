@@ -9,7 +9,7 @@ public class UIStructureObserver : UIObserver {
     [SerializeField] Text nameField, sizeField;
     [SerializeField]  Button demolishButton;
 #pragma warning restore 0649
-    const int ROTATE_BUTTON_CHILDINDEX = 3;
+    const int ROTATE_BUTTON_CHILDINDEX = 4;
 
     public static UIStructureObserver InitializeStructureObserverScript()
     {

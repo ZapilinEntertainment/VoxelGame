@@ -602,100 +602,114 @@ public class Quest {
     public static void SetQuestTexture(Quest q, UnityEngine.UI.Image buttonImage, UnityEngine.UI.RawImage iconPlace)
     {
         // for square textures only
-        Texture icon;
-        Rect iconRect;
-        switch (q.type) {
-            default: return;
+        Texture icon = null;
+        Rect iconRect = Rect.zero ;
+        switch (q.type) {            
             case QuestType.Progress:
-            switch ((ProgressQuestID)q.subIndex)
-        {
+                {
+                    switch ((ProgressQuestID)q.subIndex)
+                    {
+                        default: return;
+                        case ProgressQuestID.Progress_HousesToMax:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.HOUSE_1_ID);
+                            break;
+                        case ProgressQuestID.Progress_2Docks:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.DOCK_ID);
+                            break;
+                        case ProgressQuestID.Progress_2Storages:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.STORAGE_0_ID);
+                            break;
+                        case ProgressQuestID.Progress_Tier2:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
+                            break;
+                        case ProgressQuestID.Progress_300Population:
+                            icon = UIController.current.iconsTexture;
+                            iconRect = UIController.GetTextureUV(Icons.Citizen);
+                            break;
+                        case ProgressQuestID.Progress_OreRefiner:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.ORE_ENRICHER_2_ID);
+                            break;
+                        case ProgressQuestID.Progress_HospitalCoverage:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.HOSPITAL_2_ID);
+                            break;
+                        case ProgressQuestID.Progress_Tier3:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
+                            break;
+                        case ProgressQuestID.Progress_4MiniReactors:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.MINI_GRPH_REACTOR_3_ID);
+                            break;
+                        case ProgressQuestID.Progress_100Fuel:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.resourcesTexture;
+                            iconRect = ResourceType.GetResourceIconRect(ResourceType.FUEL_ID);
+                            break;
+                        case ProgressQuestID.Progress_XStation:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.XSTATION_3_ID);
+                            break;
+                        case ProgressQuestID.Progress_Tier4:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.HQ_3_ID);
+                            break;
+                        case ProgressQuestID.Progress_CoveredFarm:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.FARM_4_ID);
+                            break;
+                        case ProgressQuestID.Progress_CoveredLumbermill:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.LUMBERMILL_4_ID);
+                            break;
+                        case ProgressQuestID.Progress_Reactor:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.GRPH_REACTOR_4_ID);
+                            break;
+                        case ProgressQuestID.Progress_FirstExpedition:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.iconsTexture;
+                            iconRect = UIController.GetTextureUV(Icons.GuidingStar);
+                            break;
+                        case ProgressQuestID.Progress_Tier5:
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.HQ_4_ID);
+                            break;
+                        case ProgressQuestID.Progress_FactoryComplex:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.SMELTERY_5_ID);
+                            break;
+                        case ProgressQuestID.Progress_SecondFloor:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.buildingsTexture;
+                            iconRect = Structure.GetTextureRect(Structure.COLUMN_ID);
+                            break;
+                    }
+                    break;
+                }
+            case QuestType.Endgame:
+                {
+                    icon = Resources.Load<Texture>("Textures/endGameIcons");
+                    switch ((EndgameQuestID)q.subIndex) {
+                        case EndgameQuestID.Endgame_TransportHub_step1:
+                        case EndgameQuestID.Endgame_TransportHub_step2:
+                        case EndgameQuestID.Endgame_TransportHub_step3:
+                            iconRect = new Rect(0.75f, 0.75f, 0.25f, 0.25f);
+                            break;
+                    }
+                    break;
+                }              
             default: return;
-            case ProgressQuestID.Progress_HousesToMax:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.HOUSE_1_ID);
-                break;
-            case ProgressQuestID.Progress_2Docks:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.DOCK_ID);
-                break;
-            case ProgressQuestID.Progress_2Storages:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.STORAGE_0_ID);
-                break;
-            case ProgressQuestID.Progress_Tier2:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
-                break;
-            case ProgressQuestID.Progress_300Population:
-                icon = UIController.current.iconsTexture;
-                iconRect = UIController.GetTextureUV(Icons.Citizen);
-                break;
-            case ProgressQuestID.Progress_OreRefiner:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.ORE_ENRICHER_2_ID);
-                break;
-            case ProgressQuestID.Progress_HospitalCoverage:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.HOSPITAL_2_ID);
-                break;
-            case ProgressQuestID.Progress_Tier3:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
-                break;
-            case ProgressQuestID.Progress_4MiniReactors:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.MINI_GRPH_REACTOR_3_ID);
-                break;
-            case ProgressQuestID.Progress_100Fuel:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.resourcesTexture;
-                iconRect = ResourceType.GetResourceIconRect(ResourceType.FUEL_ID);
-                break;
-            case ProgressQuestID.Progress_XStation:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.XSTATION_3_ID);
-                break;
-            case ProgressQuestID.Progress_Tier4:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.HQ_3_ID);
-                break;
-            case ProgressQuestID.Progress_CoveredFarm:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.FARM_4_ID);
-                break;
-            case ProgressQuestID.Progress_CoveredLumbermill:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.LUMBERMILL_4_ID);
-                break;
-            case ProgressQuestID.Progress_Reactor:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.GRPH_REACTOR_4_ID);
-                break;
-            case ProgressQuestID.Progress_FirstExpedition:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.iconsTexture;
-                iconRect = UIController.GetTextureUV(Icons.GuidingStar);
-                break;
-            case ProgressQuestID.Progress_Tier5:
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.HQ_4_ID);
-                break;
-            case ProgressQuestID.Progress_FactoryComplex:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.SMELTERY_5_ID);
-                break;
-            case ProgressQuestID.Progress_SecondFloor:
-                iconRect = new Rect(0, 0, 1, 1);
-                icon = UIController.current.buildingsTexture;
-                iconRect = Structure.GetTextureRect(Structure.COLUMN_ID);
-                break;
-        }
-            break;
         }
         if (icon != null)
         {

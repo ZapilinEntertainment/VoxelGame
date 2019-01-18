@@ -77,7 +77,6 @@ sealed public class UIController : MonoBehaviour
         current = this;
         leftPanel.SetActive(false);
         upPanel.SetActive(false);
-        LocalizeButtonTitles();
         selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
         selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
         selectionFrame.gameObject.SetActive(false);
@@ -90,7 +89,7 @@ sealed public class UIController : MonoBehaviour
 
         SaveSystemUI.Check(mainCanvas);
         if (landingButton.activeSelf) landingButton.SetActive(false);
-        if (!localized) LocalizeButtonTitles();        
+        if (!localized) LocalizeTitles();        
     }
 
     public void Prepare()
@@ -1435,7 +1434,7 @@ sealed public class UIController : MonoBehaviour
         }
     }
 
-    public void LocalizeButtonTitles()
+    public void LocalizeTitles()
     {
         Transform t = hospitalPanel.transform;
         t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.BirthrateMode) + " :";
@@ -1443,6 +1442,7 @@ sealed public class UIController : MonoBehaviour
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
 
+        menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
         t = menuPanel.transform;
         t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);

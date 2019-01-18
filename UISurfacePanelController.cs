@@ -627,6 +627,7 @@ public sealed class UISurfacePanelController : UIObserver {
             housingTextField.gameObject.SetActive(false);
         }
         description.text = Localization.GetStructureDescription(chosenStructure.id);
+        (description.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, description.rectTransform.rect.height);
         
 		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
@@ -851,5 +852,12 @@ public sealed class UISurfacePanelController : UIObserver {
         t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.Ask_DestroyIntersectingBuildings);
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Accept);
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+
+        changeMaterialButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ChangeSurfaceMaterial);
+        columnCreateButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CreateColumn);
+        blockCreateButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CreateBlock);
+
+        innerBuildButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build);
+        returnButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Return);
     }
 }

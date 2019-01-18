@@ -51,6 +51,7 @@ public sealed class QuestUI : MonoBehaviour
                 this.QuestButton_OpenQuest(index);
             });
         }
+        LocalizeTitles();
     }   
 
     void Update()
@@ -176,6 +177,7 @@ public sealed class QuestUI : MonoBehaviour
         
         questName.text = q.name;
         questDescription.text = q.description;
+        (questDescription.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, questDescription.rectTransform.rect.height);
         rewardText.text = Localization.GetWord(LocalizedWord.Reward) + " : " + ((int)q.reward).ToString();
         PrepareStepsList(q);
         // цена и кнопка запуска
@@ -354,6 +356,13 @@ public sealed class QuestUI : MonoBehaviour
             }
             else so.SetActive(false);
         }
+    }
+
+    public void LocalizeTitles()
+    {
+        Transform t = questInfoPanel.transform;
+        t.GetChild(4).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Goals);
+        t.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Refuse);
     }
 
     #region save-load

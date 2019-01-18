@@ -229,6 +229,16 @@ public sealed class MenuUI : MonoBehaviour
     public void Options_ChangeLanguage(int i)
     {
         Localization.ChangeLanguage((Language)i);
+        int x = 0;
+        if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF)) x = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
+        if (i == 1) { if ((x & 1) == 0) x += 1; }
+        else
+        {
+            if ((x & 1) == 1) x -= 1;
+        }
+        PlayerPrefs.SetInt(GameConstants.BASE_SETTINGS_PLAYERPREF, x);
+        PlayerPrefs.Save();
+
         transform.root.BroadcastMessage("LocalizeTitles", SendMessageOptions.DontRequireReceiver);
     }
 
@@ -291,7 +301,7 @@ public sealed class MenuUI : MonoBehaviour
                     {
                         options.Add(new Dropdown.OptionData(s));
                     }
-                    qualityDropdown.options = options;
+                    qualityDropdown.options = options;                    
 
                     options = new List<Dropdown.OptionData>() { new Dropdown.OptionData("English"), new Dropdown.OptionData("Русский") };
                     languageDropdown.options = options;
@@ -299,6 +309,7 @@ public sealed class MenuUI : MonoBehaviour
                     optionsPrepared = true;
                 }
                 qualityDropdown.value = QualitySettings.GetQualityLevel();
+                graphicsApplyButton.SetActive(false);
                 languageDropdown.value = Localization.currentLanguage == Language.English ? 0 : 1;
                 optionsButton.overrideSprite = overridingSprite;
                 optionsPanel.SetActive(true);
@@ -384,7 +395,7 @@ public sealed class MenuUI : MonoBehaviour
         editorSettingPanel.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Start);
 
         highscoresButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Highscores);
-        authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAuthorsButtonLabel();
+        authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Info);
         transform.GetChild(0).GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
     }
 }

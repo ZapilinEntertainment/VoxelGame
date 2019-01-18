@@ -151,37 +151,40 @@ public class ResourceType {
     /// </summary>
     /// <param name="f_id"></param>
     /// <returns></returns>
-	public static Rect GetResourceIconRect (int f_id) {
-		float p = 0.125f;
-		switch (f_id) {
-		default:	return new Rect(0,0,p,p);
-		case STONE_ID : return new Rect(5 *p, 5*p, p,p);
-		case  DIRT_ID  : return new Rect(p, 7 *p, p, p);
-		case LUMBER_ID : return new Rect( 6 *p, 7 *p, p,p);
-		case METAL_K_ID : return new Rect(p, 6 *p, p,p);
-		case METAL_M_ID : return new Rect(3 *p, 6 *p,p,p);
-		case METAL_E_ID : return new Rect( 7 *p, 7 *p, p,p);
-		case METAL_N_ID : return new Rect( 5 * p, 6 *p, p, p);
-		case METAL_P_ID : return new Rect( 7 *p, 6 *p, p, p);
-		case METAL_S_ID : return new Rect(p, 5 *p, p, p);
-		case MINERAL_F_ID : return new Rect( 3 *p, 5 *p, p,p);
-		case MINERAL_L_ID : return new Rect( 4 *p, 5 *p, p,p);
-		case PLASTICS_ID : return new Rect( 2 *p, 7 *p, p,p);
-		case FOOD_ID : return new Rect( 4 *p, 7 *p, p,p);
-		case CONCRETE_ID : return new Rect(0, 7 *p,p,p);
-		case METAL_K_ORE_ID : return new Rect(2 *p, 6 *p, p,p);
-		case METAL_M_ORE_ID : return new Rect( 4 *p, 6 *p, p,p);
-		case METAL_E_ORE_ID : return new Rect(0, 6 *p, p,p);
-		case METAL_N_ORE_ID : return new Rect( 6 *p, 6 *p,p,p);
-		case METAL_P_ORE_ID : return new Rect(0, 5 *p,p,p);
-		case METAL_S_ORE_ID : return new Rect( 2 *p, 5 *p, p,p);
-		case FERTILE_SOIL_ID : return new Rect(3 *p, 7 *p,p,p);
-		case FUEL_ID : return new Rect( 5 *p, 7 *p,p,p);
-        case SUPPLIES_ID: return new Rect(6 * p, 5 * p, p, p);
-        case GRAPHONIUM_ID : return new Rect( 7 *p, 5 *p,p,p);		
-        case SNOW_ID: return new Rect(0, 4 *p, p,p);
-		}
-	}
+	public static Rect GetResourceIconRect(int f_id)
+    {
+        float p = 0.125f;
+        switch (f_id)
+        {
+            case ADVANCED_COVERING_ID: return new Rect(p, 4 * p, p, p);
+            case STONE_ID: return new Rect(5 * p, 5 * p, p, p);
+            case DIRT_ID: return new Rect(p, 7 * p, p, p);
+            case LUMBER_ID: return new Rect(6 * p, 7 * p, p, p);
+            case METAL_K_ID: return new Rect(p, 6 * p, p, p);
+            case METAL_M_ID: return new Rect(3 * p, 6 * p, p, p);
+            case METAL_E_ID: return new Rect(7 * p, 7 * p, p, p);
+            case METAL_N_ID: return new Rect(5 * p, 6 * p, p, p);
+            case METAL_P_ID: return new Rect(7 * p, 6 * p, p, p);
+            case METAL_S_ID: return new Rect(p, 5 * p, p, p);
+            case MINERAL_F_ID: return new Rect(3 * p, 5 * p, p, p);
+            case MINERAL_L_ID: return new Rect(4 * p, 5 * p, p, p);
+            case PLASTICS_ID: return new Rect(2 * p, 7 * p, p, p);
+            case FOOD_ID: return new Rect(4 * p, 7 * p, p, p);
+            case CONCRETE_ID: return new Rect(0, 7 * p, p, p);
+            case METAL_K_ORE_ID: return new Rect(2 * p, 6 * p, p, p);
+            case METAL_M_ORE_ID: return new Rect(4 * p, 6 * p, p, p);
+            case METAL_E_ORE_ID: return new Rect(0, 6 * p, p, p);
+            case METAL_N_ORE_ID: return new Rect(6 * p, 6 * p, p, p);
+            case METAL_P_ORE_ID: return new Rect(0, 5 * p, p, p);
+            case METAL_S_ORE_ID: return new Rect(2 * p, 5 * p, p, p);
+            case FERTILE_SOIL_ID: return new Rect(3 * p, 7 * p, p, p);
+            case FUEL_ID: return new Rect(5 * p, 7 * p, p, p);
+            case SUPPLIES_ID: return new Rect(6 * p, 5 * p, p, p);
+            case GRAPHONIUM_ID: return new Rect(7 * p, 5 * p, p, p);
+            case SNOW_ID: return new Rect(0, 4 * p, p, p);
+            default: return new Rect(0, 0, p, p);
+        }
+    }
 }
 
 

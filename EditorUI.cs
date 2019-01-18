@@ -6,21 +6,41 @@ using UnityEngine.UI;
 public sealed class EditorUI : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] GameObject actionsPanel, listPanel, listDownButton, listUpButton, menuPanel, settingsPanel;
+    [SerializeField] GameObject actionsPanel, listPanel, menuPanel, settingsPanel;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Image saveButtonImage, loadButtonImage;
     [SerializeField] Text materialNameTextField;
 #pragma warning restore 0649  
 
+    private Image chosenMaterialButton;
     private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower, CreateLifesource }
     private ClickAction currentAction;
     private LifeSource lifesource;
-    private int chosenMaterialId = ResourceType.STONE_ID, firstInListPos = 0, chosenListPosition = 0;
-    private int[] idsArray;
-    private bool blockEditMode = true, visualBorderDrawn = false;
+    private int chosenMaterialId = ResourceType.STONE_ID;
+    private bool visualBorderDrawn = false, listPrepared;
+    private readonly int[] availableMaterials = new int[]
+    {
+        ResourceType.STONE_ID,
+        ResourceType.DIRT_ID,
+        ResourceType.LUMBER_ID,
+        ResourceType.METAL_K_ID,
+        ResourceType.METAL_M_ID ,
+        ResourceType.METAL_E_ID ,
+        ResourceType.METAL_N_ID ,
+        ResourceType.METAL_P_ID ,
+        ResourceType.METAL_S_ID ,
+        ResourceType.MINERAL_F_ID ,
+        ResourceType.MINERAL_L_ID ,
+        ResourceType.PLASTICS_ID ,
+        ResourceType.CONCRETE_ID ,
+        ResourceType.FERTILE_SOIL_ID ,
+        ResourceType.GRAPHONIUM_ID ,
+        ResourceType.SNOW_ID,
+        ResourceType.ADVANCED_COVERING_ID
+    };
 
-    private const int LIST_POSITIONS = 10, LIFEPOWER_PORTION = 100, LISTPANEL_DEFAULT_CHILDCOUNT = 3;
+    private const int LIFEPOWER_PORTION = 100;
 
     private void Start()
     {
@@ -33,6 +53,7 @@ public sealed class EditorUI : MonoBehaviour
 
         FollowingCamera.main.ResetTouchRightBorder();
         FollowingCamera.main.CameraRotationBlock(false);
+        LocalizeTitles();        
     }
 
     public void Click()
@@ -198,131 +219,59 @@ public sealed class EditorUI : MonoBehaviour
     {
         if (listPanel.activeSelf)
         {
-            listPanel.SetActive(false);
-            if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(chosenListPosition + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = null;
+            listPanel.SetActive(false);            
         }
         else
         {
-            if (blockEditMode)
+            if (!listPrepared)
             {
-                if (listPanel.transform.childCount == 3)
-                {
-                    // preparing
-                    int listPos = 0;
-                    ResourceType[] appliableMaterials = ResourceType.blockMaterials;
-                    while (listPos < LIST_POSITIONS & listPos < appliableMaterials.Length)
-                    {
-                        RectTransform newButtonTransform = Instantiate(listPanel.transform.GetChild(0).gameObject, listPanel.transform).GetComponent<RectTransform>();
-                        newButtonTransform.localPosition = new Vector3(newButtonTransform.localPosition.x, newButtonTransform.localPosition.y - listPos * newButtonTransform.rect.height, newButtonTransform.localPosition.z);
-                        int m_id = appliableMaterials[listPos].ID;
-                        newButtonTransform.GetChild(0).GetComponent<Text>().text = listPos.ToString() + ". " + Localization.GetResourceName(m_id);
-                        int arg_listPos = listPos;
-                        newButtonTransform.GetComponent<Button>().onClick.AddListener(() =>
-                        {
-                            this.ChangeMaterial(m_id, arg_listPos);
-                        });
-                        newButtonTransform.gameObject.SetActive(true);
-                        listPos++;
-                    }
-                    firstInListPos = 0;
-                    listUpButton.SetActive(false);
-                    listDownButton.SetActive(appliableMaterials.Length > LIST_POSITIONS);
+                int count = availableMaterials.Length;
+                RectTransform contentHolder = listPanel.transform.GetChild(0).GetChild(0) as RectTransform;
+                RectTransform example = contentHolder.GetChild(0) as RectTransform;
+                float h = example.rect.height;
+                Vector3 startPos = example.localPosition, down = Vector3.down;
+                contentHolder.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, h * count);
 
-                    chosenListPosition = -1;
-                    for (int i = 0; i < appliableMaterials.Length; i++)
-                    {
-                        if (appliableMaterials[i].ID == chosenMaterialId) chosenListPosition = i;
-                    }
-                    if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                example.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(availableMaterials[0]);
+                chosenMaterialButton = example.GetComponent<Image>();
+                chosenMaterialButton.overrideSprite = PoolMaster.gui_overridingSprite;
+                
+                for (int i = 1; i < count; i++)
+                {
+                    Transform t = Instantiate(example, contentHolder);
+                    t.localPosition = startPos + down * h * i;
+                    t.GetChild(0).GetComponent<Text>().text = Localization.GetResourceName(availableMaterials[i]);
+                    int x = i;
+                    t.GetComponent<Button>().onClick.AddListener(() => { this.ChangeMaterial(x); });
                 }
+                example.GetComponent<Button>().onClick.AddListener(() => { this.ChangeMaterial(0); });                
+                listPrepared = true;
             }
             listPanel.SetActive(true);
         }
     }
-    public void ListDown()
+    public void ChangeMaterial(int i)
     {
-        if (blockEditMode)
-        {
-            if (firstInListPos + LIST_POSITIONS < ResourceType.blockMaterials.Length)
-            {
-                firstInListPos++;
-                Transform list = listPanel.transform;
-                if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = null;
-                chosenListPosition--;
-                if (chosenListPosition > 0)
-                {
-                    list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                }
-                Transform button = null;
-                for (int i = 0; i < LIST_POSITIONS; i++)
-                {
-                    button = list.GetChild(i + LISTPANEL_DEFAULT_CHILDCOUNT);
-                    int index = firstInListPos + i;
-                    int m_id = ResourceType.blockMaterials[index].ID;
-                    button.GetChild(0).GetComponent<Text>().text = index.ToString() + ". " + Localization.GetResourceName(m_id);
-                    Button b = button.GetComponent<Button>();
-                    b.onClick.RemoveAllListeners();
-                    int arg_listPos = i;
-                    b.onClick.AddListener(() =>
-                    {
-                        this.ChangeMaterial(m_id, arg_listPos);
-                    });
-                }
-                listDownButton.SetActive(firstInListPos + LIST_POSITIONS < ResourceType.blockMaterials.Length);
-                listUpButton.SetActive(firstInListPos > 0);
-            }
-        }
+        if (chosenMaterialId == availableMaterials[i]) return;
+        chosenMaterialId = availableMaterials[i];
+        materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
+        materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
+        Transform contentHolder = listPanel.transform.GetChild(0).GetChild(0);
+        if (chosenMaterialButton != null) chosenMaterialButton.overrideSprite = null;
+        chosenMaterialButton = contentHolder.GetChild(i).GetComponent<Image>();
+        chosenMaterialButton.overrideSprite = PoolMaster.gui_overridingSprite;
     }
-    public void ListUp()
-    {
-        if (blockEditMode)
-        {
-            if (firstInListPos > 0)
-            {
-                firstInListPos--;
-                Transform list = listPanel.transform;
-                if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = null;
-                chosenListPosition++;
-                if (chosenListPosition < LIST_POSITIONS - 1) list.GetChild(LISTPANEL_DEFAULT_CHILDCOUNT + chosenListPosition).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                Transform button = null;
-                for (int i = 0; i < LIST_POSITIONS; i++)
-                {
-                    button = list.GetChild(i + LISTPANEL_DEFAULT_CHILDCOUNT);
-                    int index = firstInListPos + i;
-                    int m_id = ResourceType.blockMaterials[index].ID;
-                    button.GetChild(0).GetComponent<Text>().text = index.ToString() + ". " + Localization.GetResourceName(m_id);
-                    Button b = button.GetComponent<Button>();
-                    b.onClick.RemoveAllListeners();
-                    int arg_listPos = i;
-                    b.onClick.AddListener(() =>
-                    {
-                        this.ChangeMaterial(m_id, arg_listPos);
-                    });
-                }
-                listUpButton.SetActive(firstInListPos > 0);
-                listDownButton.SetActive(firstInListPos + LIST_POSITIONS < ResourceType.blockMaterials.Length);
-            }
-        }
-    }
+
+
     public void PlayWithThisTerrain()
     {
         if (visualBorderDrawn) GameMaster.realMaster.mainChunk.HideBorderLine();
         Destroy(transform.root.gameObject);
+        GameMaster.realMaster.SaveTerrain("lastCreatedTerrain");
         GameMaster.realMaster.ChangeModeToPlay();
     }
 
-    public void ChangeMaterial(int id, int pos)
-    {
-        chosenMaterialId = id;
-        materialButtonImage.uvRect = ResourceType.GetResourceIconRect(id);
-        materialNameTextField.text = Localization.GetResourceName(id);
-        if (pos + firstInListPos != chosenListPosition)
-        {
-            if (chosenListPosition >= 0 & chosenListPosition < LIST_POSITIONS) listPanel.transform.GetChild(chosenListPosition + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = null;
-            chosenListPosition = pos;
-            listPanel.transform.GetChild(pos + LISTPANEL_DEFAULT_CHILDCOUNT).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-        }
-    }
+    
 
 
     public void MenuPanelToggle()
@@ -368,5 +317,19 @@ public sealed class EditorUI : MonoBehaviour
     public void BackToMenu()
     {
         GameMaster.ChangeScene(GameLevel.Menu);
+    }
+
+    public void LocalizeTitles()
+    {
+        transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
+        actionsPanel.transform.GetChild(11).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Play);
+
+        Transform t = menuPanel.transform;
+        t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
+        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Options);
+        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
+
+        settingsPanel.GetComponent<GameSettingsUI>().LocalizeTitles();
     }
 }

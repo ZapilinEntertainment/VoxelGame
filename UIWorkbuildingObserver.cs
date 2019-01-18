@@ -374,4 +374,9 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         actionLabel.text = s;
         actionLabel.enabled = true;
     }
+
+    public override void LocalizeTitles()
+    {
+        stopButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Stop);
+    }
 }

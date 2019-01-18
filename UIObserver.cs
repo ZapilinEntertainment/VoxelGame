@@ -28,7 +28,7 @@ public abstract class UIObserver : MonoBehaviour {
         if (!subscribedToUpdate) UIController.current.statusUpdateEvent += StatusUpdate;
 	}
 
-    virtual public void LocalizeContent()
+    virtual public void LocalizeTitles()
     {    }
 
     private void OnDestroy()

@@ -3,11 +3,11 @@
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
 public enum LocalizedWord : ushort {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
-Difficulty, Start, Language, Quality, Apply};
+Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
 public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddShuttle, NewGame, UsePresets, TerrainRoughness, GenerationType
+MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddShuttle, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
@@ -20,7 +20,13 @@ public static class Localization {
 	public static Language currentLanguage { get; private set; }
 
 	static Localization() {
-		ChangeLanguage(Language.English);
+        int x = 0;
+        if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF))
+        {
+            x = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
+        }
+        if (x == 0) ChangeLanguage(Language.English); // default language
+        else ChangeLanguage(Language.Russian);
 	}
 
 	public static void ChangeLanguage(Language lan ) {
@@ -35,7 +41,7 @@ public static class Localization {
                 switch (id)
                 {                    
                     case Structure.PLANT_ID: return "Растение";
-                    case Structure.LANDED_ZEPPELIN_ID: return "Приземлившийся дирижабль";
+                    case Structure.LANDED_ZEPPELIN_ID: return "Временный штаб";
                     case Structure.STORAGE_0_ID: return "Основной склад";
                     case Structure.STORAGE_1_ID: return "Складское помещение";
                     case Structure.STORAGE_2_ID: return "Небольшой склад";
@@ -755,7 +761,7 @@ public static class Localization {
                     switch (word)
                     {
                         case LocalizedWord.Level: return "уровень"; // building technology level
-                        case LocalizedWord.Offline: return "нет питания"; // out of power		    
+                        case LocalizedWord.Offline: return "Не подключено"; // out of power		    
                         case LocalizedWord.Dig: return "Копать";
                         case LocalizedWord.Gather: return "Собирать"; // gather resources	    
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
@@ -764,7 +770,7 @@ public static class Localization {
                         case LocalizedWord.Buy: return "Покупать";
                         case LocalizedWord.Sell: return "Продавать";
                         case LocalizedWord.Limitation: return "Ограничение"; // trade count limit
-                        case LocalizedWord.Demand: return "Потребность";
+                        case LocalizedWord.Demand: return "Спрос";
                         case LocalizedWord.Price: return "Цена";
                         case LocalizedWord.Trading: return "Торговля";
                         case LocalizedWord.Colonization: return "Колонизация";
@@ -793,7 +799,7 @@ public static class Localization {
                         case LocalizedWord.Day_short: return "День:";
                         case LocalizedWord.Day: return "День";
                         case LocalizedWord.Score: return "Счёт";
-                        case LocalizedWord.Disabled: return "Выключено"; // when building is not active
+                        case LocalizedWord.Disabled: return "Неактивно"; // when building is not active
                         case LocalizedWord.Land_verb: return "Приземлиться";
                         case LocalizedWord.Editor: return "Редактор";
                         case LocalizedWord.Highscores: return "Рекорды";
@@ -804,6 +810,14 @@ public static class Localization {
                         case LocalizedWord.Language: return "Язык";
                         case LocalizedWord.Quality: return "Качество графики";
                         case LocalizedWord.Apply: return "Применить";
+                        case LocalizedWord.Continue: return "Продолжить";
+                        case LocalizedWord.Menu: return "Меню";
+                        case LocalizedWord.Stop: return "Остановить";
+                        case LocalizedWord.Play: return "Играть";
+                        case LocalizedWord.Info: return "Информация";
+                        case LocalizedWord.Goals: return "Цели:";
+                        case LocalizedWord.Refuse: return "Отказаться";
+                        case LocalizedWord.Return: return "Вернуться";
                         default: return "...";
                     }
                 }
@@ -862,6 +876,14 @@ public static class Localization {
                         case LocalizedWord.Language: return "Language";
                         case LocalizedWord.Quality: return "Quality";
                         case LocalizedWord.Apply: return "Apply";
+                        case LocalizedWord.Continue: return "Continue";
+                        case LocalizedWord.Menu: return "Menu";
+                        case LocalizedWord.Stop: return "Stop";
+                        case LocalizedWord.Play: return "Play";
+                        case LocalizedWord.Info: return "Info";
+                        case LocalizedWord.Goals: return "Goals:";
+                        case LocalizedWord.Refuse: return "Refuse";
+                        case LocalizedWord.Return: return "Return"; // lol
                         default: return "...";
                     }
                 }
@@ -905,7 +927,7 @@ public static class Localization {
                         case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Снести все пересекающиеся здания?";
                         case LocalizedPhrase.MakeSurface: return "Сделать поверхность";
                         case LocalizedPhrase.BufferOverflow: return "Буфер переполнен"; // factory resource buffer overflowed
-                        case LocalizedPhrase.NoEnergySupply: return "Нет электричества";
+                        case LocalizedPhrase.NoEnergySupply: return "Нет энергии";
                         case LocalizedPhrase.PowerFailure: return "Отказ энергосистемы";
                         case LocalizedPhrase.NoMission: return "Нет миссии";
                         case LocalizedPhrase.NoHighscores: return "Еще нет рекордов";
@@ -914,6 +936,12 @@ public static class Localization {
                         case LocalizedPhrase.UsePresets: return "Использовать существующие";
                         case LocalizedPhrase.TerrainRoughness: return "Выступы ландшафта";
                         case LocalizedPhrase.GenerationType: return "Тип генерации";
+                        case LocalizedPhrase.NoLimit: return "Без ограничений";
+                        case LocalizedPhrase.UpperLimit: return "Пороговое значение";
+                        case LocalizedPhrase.IterationsCount: return "Количество циклов";
+                        case LocalizedPhrase.ChangeSurfaceMaterial: return "Заменить покрытие";
+                        case LocalizedPhrase.CreateBlock: return "Построить блок";
+                        case LocalizedPhrase.CreateColumn: return "Построить опору";
                         default: return "<...>";
                     }
                 }
@@ -960,6 +988,12 @@ public static class Localization {
                         case LocalizedPhrase.UsePresets: return "Use presets";
                         case LocalizedPhrase.TerrainRoughness: return "Terrain roughness";
                         case LocalizedPhrase.GenerationType: return "Generation type";
+                        case LocalizedPhrase.NoLimit: return "No limit";
+                        case LocalizedPhrase.UpperLimit: return "Upper limit";
+                        case LocalizedPhrase.IterationsCount: return "Iterations count";
+                        case LocalizedPhrase.ChangeSurfaceMaterial:return "Change surface";
+                        case LocalizedPhrase.CreateBlock: return "Create block";
+                        case LocalizedPhrase.CreateColumn: return "Create column";
                         default: return "<...>";
                     }
                 }
@@ -1083,52 +1117,6 @@ public static class Localization {
         }        
     }
 
-    public static string GetAuthorsButtonLabel()
-    {
-        int total = 10;
-        int val = (int)(Random.value * total);
-        switch (currentLanguage)
-        {
-            case Language.Russian:
-                {
-                    switch (val)
-                    {
-                        case 0: return "Истоки";
-                        case 1: return "...";
-                        case 2: return "Билеты на космический пароход";
-                        case 3: return "Комната автора";
-                        case 4: return "Кто?";
-                        case 5: return "Тайны";
-                        case 6: return "Сокрытое";
-                        case 7: return "Автор";
-                        case 8: return "Memento vitae";
-                        case 9: return "Узнать";
-                        case 10: return "Ждёт во тьме";
-                        default: return "Кнопка автора";
-                    }
-                }
-            case Language.English:
-            default:
-                {
-                    switch (val)
-                    {
-                        case 0: return "Source";
-                        case 1: return "...";
-                        case 2: return "Tickets for space steam-ship";
-                        case 3: return "Authors room";
-                        case 4: return "Who?";
-                        case 5: return "Mystery";
-                        case 6: return "Made by me";
-                        case 7: return "Credits";
-                        case 8: return "Memento vitae";
-                        case 9: return "I want to know";
-                        case 10: return "In the shadows";
-                        default: return "Authors button";
-                    }
-                }
-        }       
-    }
-
     #region questsData
     public static void FillProgressQuest(Quest q)
     {
@@ -1212,7 +1200,7 @@ public static class Localization {
                                     q.steps[0] = GetStructureName(Structure.LUMBERMILL_4_ID) + " построена";
                                     break;
                                 case ProgressQuestID.Progress_Reactor:
-                                    q.name = "Колодец энергии";
+                                    q.name = "Источник энергии";
                                     q.description = "Постройте полноценный графониевый реактор.";
                                     q.steps[0] = GetStructureName(Structure.GRPH_REACTOR_4_ID) + " построен" ;
                                     break;

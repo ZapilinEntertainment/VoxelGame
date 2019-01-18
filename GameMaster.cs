@@ -84,7 +84,7 @@ public sealed class GameMaster : MonoBehaviour {
     public byte day { get; private set; }
     public byte month { get; private set; }
     public uint year { get; private set; }
-	public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12;
+    public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12;
     public const float DAY_LONG = 60;
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
@@ -774,8 +774,12 @@ public sealed class GameMaster : MonoBehaviour {
                     Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
                     endpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
                     endpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
-                    endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => { ContinueGameAfterEnd(endpanel.gameObject); });
+                    var b = endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>();
+                    b.onClick.AddListener(ReturnToMenuAfterGameOver);
+                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
+                    b = endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>();
+                    b.onClick.AddListener(() => { ContinueGameAfterEnd(endpanel.gameObject); });
+                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Continue);
                     break;
                 }
             case GameEndingType.ColonyLost:
@@ -787,7 +791,9 @@ public sealed class GameMaster : MonoBehaviour {
                     Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
                     failpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
                     failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(ReturnToMenuAfterGameOver);
+                    var b = failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>();
+                    b.onClick.AddListener(ReturnToMenuAfterGameOver);
+                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
                     break;
                 }
         }

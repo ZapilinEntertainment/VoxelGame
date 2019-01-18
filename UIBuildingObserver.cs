@@ -28,6 +28,7 @@ public class UIBuildingObserver : UIObserver {
     {
         UIBuildingObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
         Building.buildingObserver = ub;
+        ub.LocalizeTitles();
         return ub;
     }
 
@@ -425,4 +426,12 @@ public class UIBuildingObserver : UIObserver {
 		Structure.structureObserver.ShutOff();
 		gameObject.SetActive(false);
 	}
+
+    public override void LocalizeTitles()
+    {
+        Transform t = upgradeInfoPanel.transform;
+        t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.UpgradeCost);
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Accept);
+        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+    }
 }

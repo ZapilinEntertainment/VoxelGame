@@ -345,16 +345,10 @@ public sealed class ColonyController : MonoBehaviour
     public void DeleteHousing(House h)
     {
         if (ignoreHousingRequest) return;
-        int i = 0;
-        while (i < houses.Count)
+        if (houses.Contains(h))
         {
-            if (houses[i] == h)
-            {
-                houses.RemoveAt(i);
-                RecalculateHousing();
-                break;
-            }
-            else i++;
+            houses.Remove(h);
+            housingTimer = 0;
         }
     }
     public void RecalculateHousing()

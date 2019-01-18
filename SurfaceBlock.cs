@@ -305,21 +305,26 @@ public class SurfaceBlock : Block {
 			}
 			else {
 				while (i < surfaceObjects.Count) {
-					SurfaceRect a = surfaceObjects[i].innerPosition;
-					int leftX = -1, rightX = -1;
-					if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
-					if (a.x + a.size > sr.x + sr.size) rightX = sr.x + sr.size; else rightX = a.x + a.size;
-					if (leftX >= rightX) {i++;continue;}
-					int topZ = -1, downZ = -1;
-					if (a.z > sr.z) downZ = a.z; else downZ = sr.z;
-					if (a.z + a.size > sr.z + sr.size) topZ = sr.z + sr.size; else topZ = a.z + a.size;
-					if (topZ <= downZ) {i++;continue;}
-					else {
-						if (surfaceObjects[i].isBasement) savedBasementForNow = surfaceObjects[i];
-						else surfaceObjects[i].Annihilate( false );
-						i++;
-					}
-				}
+                    if (surfaceObjects[i] != null)
+                    {
+                        SurfaceRect a = surfaceObjects[i].innerPosition;
+                        int leftX = -1, rightX = -1;
+                        if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
+                        if (a.x + a.size > sr.x + sr.size) rightX = sr.x + sr.size; else rightX = a.x + a.size;
+                        if (leftX < rightX)
+                        {
+                            int topZ = -1, downZ = -1;
+                            if (a.z > sr.z) downZ = a.z; else downZ = sr.z;
+                            if (a.z + a.size > sr.z + sr.size) topZ = sr.z + sr.size; else topZ = a.z + a.size;
+                            if (topZ > downZ)
+                            {
+                                if (surfaceObjects[i].isBasement) savedBasementForNow = surfaceObjects[i];
+                                else surfaceObjects[i].Annihilate(false);
+                            }
+                        }
+                    }
+                    i++;
+                }
 			}
 		}
 		surfaceObjects.Add(s);

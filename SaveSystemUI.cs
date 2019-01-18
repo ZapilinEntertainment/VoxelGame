@@ -40,6 +40,7 @@ public class SaveSystemUI : MonoBehaviour
     {
         if (current != null & current != this) Destroy(current);
         current = this;
+        LocalizeTitles();
     }
 
 
@@ -364,7 +365,7 @@ public class SaveSystemUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void LocalizeButtonTitles()
+    public void LocalizeTitles()
     {
         deleteButtonText.text = Localization.GetWord(LocalizedWord.Delete);
         inputFieldPanel.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);

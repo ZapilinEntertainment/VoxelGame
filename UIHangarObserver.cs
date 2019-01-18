@@ -19,6 +19,7 @@ public sealed class UIHangarObserver : UIObserver
     public static UIHangarObserver InitializeHangarObserverScript()
     {
         UIHangarObserver uho = Instantiate(Resources.Load<GameObject>("UIPrefs/hangarObserver"), UIController.current.rightPanel.transform).GetComponent<UIHangarObserver>();
+        uho.LocalizeTitles();
         return uho;
     }
 
@@ -185,7 +186,7 @@ public sealed class UIHangarObserver : UIObserver
         gameObject.SetActive(false);
     }
 
-    public void LocalizeButtonTitles()
+    public override void LocalizeTitles()
     {
         disassembleButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Disassemble);
     }
