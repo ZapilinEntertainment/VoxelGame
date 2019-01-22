@@ -302,7 +302,7 @@ public abstract class WorkBuilding : Building {
 		colony.AddWorkers(x);
 		RecalculateWorkspeed();
 	}
-	virtual protected void RecalculateWorkspeed() {
+	virtual public void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
         gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
 	}
@@ -398,7 +398,6 @@ public abstract class WorkBuilding : Building {
         workSpeed = System.BitConverter.ToSingle(data, startIndex + 4);
         workflowToProcess = System.BitConverter.ToSingle(data, startIndex + 8);
         workersCount = System.BitConverter.ToInt32(data, startIndex + 12);
-        RecalculateWorkspeed();
     }
     #endregion
 }

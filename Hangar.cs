@@ -269,7 +269,7 @@ public sealed class Hangar : WorkBuilding
         UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleConstructed));
     }
 
-    override protected void RecalculateWorkspeed()
+    override public void RecalculateWorkspeed()
     {
         workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.MachineConstructing);
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 2f;

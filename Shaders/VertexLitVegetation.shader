@@ -31,7 +31,7 @@ Shader "Custom/Vegetation"
 				{
 					v2f o;
 					float4 worldPos = mul(unity_ObjectToWorld, v.vertex);
-					worldPos.y += sin( (worldPos.x + worldPos.z + _Time) * 50 * _Windpower) * 0.002 * _Windpower;
+					worldPos.y += sin( (worldPos.x + worldPos.z + _Time) * 50 * _Windpower) * 0.003 * _Windpower;
 					o.vertex = mul(UNITY_MATRIX_VP, worldPos);
 					o.uv = v.texcoord ;
 					half3 worldNormal = UnityObjectToWorldNormal(v.normal);

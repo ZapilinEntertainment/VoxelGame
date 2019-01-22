@@ -70,7 +70,7 @@ public class Farm : WorkBuilding
         }
     }
 
-    override protected void RecalculateWorkspeed()
+    override public void RecalculateWorkspeed()
     {
         workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;

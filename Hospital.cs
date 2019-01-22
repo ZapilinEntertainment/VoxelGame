@@ -38,7 +38,7 @@ public class Hospital : WorkBuilding {
         if (connectedToPowerGrid & recalculateAfter) colony.RecalculatePowerGrid();
     }
 
-    override protected void RecalculateWorkspeed()
+    override public void RecalculateWorkspeed()
     {
         float prevCoverage = coverage;
         coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);

@@ -17,6 +17,7 @@ public sealed class EditorUI : MonoBehaviour
     private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower, CreateLifesource }
     private ClickAction currentAction;
     private LifeSource lifesource;
+    private SaveSystemUI saveSystem;
     private int chosenMaterialId = ResourceType.STONE_ID;
     private bool visualBorderDrawn = false, listPrepared;
     private readonly int[] availableMaterials = new int[]
@@ -47,8 +48,8 @@ public sealed class EditorUI : MonoBehaviour
         buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
         materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
-        SaveSystemUI.Check(transform.root);
-        SaveSystemUI.current.ingame = true;
+        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
+        saveSystem.ingame = true;
         ActionsPanel();
 
         FollowingCamera.main.ResetTouchRightBorder();
@@ -103,9 +104,27 @@ public sealed class EditorUI : MonoBehaviour
                         Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
                         Chunk c = GameMaster.realMaster.mainChunk;
                         Block lowerBlock = c.GetBlock(cpos.x, cpos.y - 1, cpos.z);
-                        if ((b.type == BlockType.Surface | b.type == BlockType.Cave) && (lowerBlock.type == BlockType.Cube | lowerBlock.type == BlockType.Cave))
+                        if (lowerBlock != null && (lowerBlock.type == BlockType.Cube | lowerBlock.type == BlockType.Cave))
                         {
-                            c.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
+                            if (b.type == BlockType.Surface | b.type == BlockType.Cave) c.DeleteBlock(new ChunkPos(cpos.x, cpos.y - 1, cpos.z));
+                            else
+                            {
+                                if (b.type == BlockType.Cube)
+                                {
+                                    c.ReplaceBlock(b.pos, BlockType.Surface, lowerBlock.material_id, true);
+                                    Block upperBlock = c.GetBlock(cpos.x, cpos.y + 1, cpos.z);
+                                    if (upperBlock != null)
+                                    {
+                                        if (upperBlock.type == BlockType.Surface) c.DeleteBlock(upperBlock.pos);
+                                        else
+                                        {
+                                            if (upperBlock.type == BlockType.Cave) (upperBlock as CaveBlock).DestroySurface();
+                                        }
+                                    }
+                                    
+                                }
+                                else c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
+                            }
                         }
                         else c.DeleteBlock(new ChunkPos(cpos.x, cpos.y, cpos.z));
                         break;
@@ -149,7 +168,11 @@ public sealed class EditorUI : MonoBehaviour
                         if (cb != null)
                         {
                             float x = cb.myChunk.CalculateSupportPoints(cb.pos.x, cb.pos.y, cb.pos.z);
-                            if (x >= Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING) cb.myChunk.ReplaceBlock(cb.pos, BlockType.Cave, cb.material_id, true);
+                            if (x >= Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING)
+                            {
+                                Block lb = cb.myChunk.GetBlock(cb.pos.x, cb.pos.y - 1, cb.pos.z); 
+                                cb.myChunk.ReplaceBlock(cb.pos, BlockType.Cave, lb != null ? lb.material_id : -1, true);
+                            }
                         }
                         break;
                     }
@@ -294,21 +317,21 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void SaveTerrain()
     {
-        SaveSystemUI.current.Activate(true, true);
+        saveSystem.Activate(true, true);
         saveButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
         loadButtonImage.overrideSprite = null;
     }
     public void LoadTerrain()
     {
-        SaveSystemUI.current.Activate(false, true);
+        saveSystem.Activate(false, true);
         loadButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
         saveButtonImage.overrideSprite = null;
     }
     public void SettingsButton()
     {
-        if (SaveSystemUI.current.gameObject.activeSelf)
+        if (saveSystem.gameObject.activeSelf)
         {
-            SaveSystemUI.current.CloseButton();
+            saveSystem.CloseButton();
             saveButtonImage.overrideSprite = null;
             loadButtonImage.overrideSprite = null;
         }

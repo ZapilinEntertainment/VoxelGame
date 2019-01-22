@@ -26,7 +26,7 @@ public class UITradeWindow : UIObserver {
             ResourceType.METAL_S_ID,  ResourceType.MINERAL_F_ID,  ResourceType.MINERAL_L_ID,  ResourceType.PLASTICS_ID,
             ResourceType.FOOD_ID ,  ResourceType.CONCRETE_ID,  ResourceType.METAL_K_ORE_ID,  ResourceType.METAL_M_ORE_ID,
             ResourceType.METAL_E_ORE_ID, ResourceType.METAL_N_ORE_ID , ResourceType.METAL_P_ORE_ID,  ResourceType.METAL_S_ORE_ID,
-            ResourceType.FUEL_ID,  ResourceType.GRAPHONIUM_ID,  ResourceType.SUPPLIES_ID
+            ResourceType.FUEL_ID,  ResourceType.GRAPHONIUM_ID,  ResourceType.SUPPLIES_ID, ResourceType.SNOW_ID
         };
         LocalizeButtonTitles();
     }

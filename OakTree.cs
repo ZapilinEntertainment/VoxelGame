@@ -281,6 +281,7 @@ public class OakTree : Plant
             // modelTransform.LookAt(cpos);
             spriter = modelTransform.gameObject.AddComponent<SpriteRenderer>();
             spriter.sprite = startStageSprites[stage];
+            spriter.sharedMaterial = PoolMaster.verticalBillboardMaterial;
             spriter.enabled = ((transform.position - FollowingCamera.camPos).magnitude < TREE_SPRITE_MAX_VISIBILITY * stage);
             drawmode = OakDrawMode.DrawStartSprite;
         }

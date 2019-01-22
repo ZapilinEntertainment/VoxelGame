@@ -783,6 +783,15 @@ public sealed class ColonyController : MonoBehaviour
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();
+        if (powerGrid.Count > 0)
+        {
+            WorkBuilding wb = null;
+            foreach (Building b in powerGrid)
+            {
+                wb = b as WorkBuilding;
+                if (wb != null) wb.RecalculateWorkspeed();
+            }
+        }
 
         int bytesCount = System.BitConverter.ToInt32(data, 28); //выдаст количество байтов, не длину строки
         data = new byte[bytesCount];

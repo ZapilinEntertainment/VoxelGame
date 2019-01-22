@@ -8,8 +8,9 @@ using System.IO;
 public sealed class MenuUI : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton;
-    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, authorsButton, highscoresPanel;
+    [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton, authorsButton;
+    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, 
+        highscoresPanel, authorsPanel;
     [SerializeField] private Slider sizeSlider, roughnessSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown, languageDropdown;
     [SerializeField] private Sprite overridingSprite;
@@ -20,15 +21,16 @@ public sealed class MenuUI : MonoBehaviour
 
     private bool optionsPrepared = false;
 
-    enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores }
+    enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores, Authors }
     private MenuSection currentSection = MenuSection.NoSelection;
     private ChunkGenerationMode newGameGenMode;
+    private SaveSystemUI saveSystem;
     private List<ChunkGenerationMode> availableGenerationModes;
     private string[] terrainSavenames;
 
     private void Start()
     {
-        SaveSystemUI.Check(transform.root);
+        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
 
         availableGenerationModes = new List<ChunkGenerationMode>() { ChunkGenerationMode.Standart, ChunkGenerationMode.Cube };
         List<string> genModenames = new List<string>();
@@ -71,6 +73,11 @@ public sealed class MenuUI : MonoBehaviour
     {
         if (currentSection == MenuSection.Highscores) SwitchVisualSelection(MenuSection.NoSelection);
         else SwitchVisualSelection(MenuSection.Highscores);
+    }
+    public void AuthorsButton()
+    {
+        if (currentSection == MenuSection.Authors) SwitchVisualSelection(MenuSection.NoSelection);
+        else SwitchVisualSelection(MenuSection.Authors);
     }
     public void ExitButton()
     {
@@ -265,7 +272,7 @@ public sealed class MenuUI : MonoBehaviour
                     break;
                 case MenuSection.Loading:
                     loadButton.overrideSprite = null;
-                    SaveSystemUI.current.gameObject.SetActive(false);
+                    saveSystem.CloseButton();
                     break;
                 case MenuSection.Options:
                     optionsButton.overrideSprite = null;
@@ -279,6 +286,11 @@ public sealed class MenuUI : MonoBehaviour
                     highscoresButton.overrideSprite = null;
                     highscoresPanel.SetActive(false);
                     break;
+                case MenuSection.Authors:
+                    authorsButton.overrideSprite = null;
+                    authorsPanel.SetActive(false);
+                    authorsPanel.transform.GetChild(0).GetComponent<Text>().text = string.Empty;
+                    break;
             }
         }
         currentSection = ms;
@@ -291,7 +303,7 @@ public sealed class MenuUI : MonoBehaviour
                 break;
             case MenuSection.Loading:
                 loadButton.overrideSprite = overridingSprite;
-                SaveSystemUI.current.Activate(false, false);
+                saveSystem.Activate(false, false);
                 break;
             case MenuSection.Options:
                 if (!optionsPrepared)
@@ -355,6 +367,11 @@ public sealed class MenuUI : MonoBehaviour
                     }
                 }
                 highscoresPanel.SetActive(true);
+                break;
+            case MenuSection.Authors:
+                authorsPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetCredits();
+                authorsPanel.SetActive(true);
+                authorsButton.overrideSprite = overridingSprite;
                 break;
         }
     }

@@ -518,7 +518,7 @@ public sealed class Dock : WorkBuilding {
         }
     }    
 
-    override protected void RecalculateWorkspeed()
+    override public void RecalculateWorkspeed()
     {
         workSpeed = (float)workersCount / (float)maxWorkers;
         if (workSpeed == 0)

@@ -50,11 +50,9 @@ Shader "Custom/Billboard"
 	v2f vert(appdata_t IN)
 	{
 		v2f OUT;
-
 		OUT.vertex = mul(UNITY_MATRIX_P,
-			mul(UNITY_MATRIX_MV, float4(0.0, 0.0, 0.0, 1.0))
-			- float4(-IN.vertex.x, -IN.vertex.y, 0.0, 0.0)
-			* float4(1, 1, 1.0, 1.0));
+			mul(UNITY_MATRIX_MV, float4(0, 0, 0, 1))
+			- float4(-IN.vertex.x, -IN.vertex.y, 0, 0));
 
 		OUT.texcoord = IN.texcoord;
 #ifdef PIXELSNAP_ON

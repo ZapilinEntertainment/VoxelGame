@@ -27,7 +27,7 @@ public class CoveredFarm : WorkBuilding {
 		workflow -= iterations * workflowToProcess;
 	}
 
-	override protected void RecalculateWorkspeed() {
+	override public void RecalculateWorkspeed() {
 		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
 		if (workSpeed < MIN_SPEED && workersCount > 0) workSpeed = MIN_SPEED;
         gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;

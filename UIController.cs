@@ -42,7 +42,8 @@ sealed public class UIController : MonoBehaviour
     Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
     private enum MenuSection { NoSelection, Save, Load, Options }
-    MenuSection selectedMenuSection = MenuSection.NoSelection;
+    private MenuSection selectedMenuSection = MenuSection.NoSelection;
+    private SaveSystemUI saveSystem;
 
     const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.1f, STATUS_UPDATE_TIME = 1;    
     public int interceptingConstructPlaneID = -1;
@@ -86,9 +87,9 @@ sealed public class UIController : MonoBehaviour
         questUI = _questUI;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
         mainCanvas = transform.GetChild(1);
-
-        SaveSystemUI.Check(mainCanvas);
+        
         if (landingButton.activeSelf) landingButton.SetActive(false);
+        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.GetChild(1));
         if (!localized) LocalizeTitles();        
     }
 
@@ -1144,12 +1145,12 @@ sealed public class UIController : MonoBehaviour
     }
     public void SaveButton()
     {
-        SaveSystemUI.current.Activate(true, false);
+        saveSystem.Activate(true, false);
         SetMenuPanelSelection(MenuSection.Save);
     }
     public void LoadButton()
     {
-        SaveSystemUI.current.Activate(false, false);
+        saveSystem.Activate(false, false);
         SetMenuPanelSelection(MenuSection.Load);
     }
     public void OptionsButton()
@@ -1179,15 +1180,16 @@ sealed public class UIController : MonoBehaviour
             {
                 case MenuSection.Save:
                     menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    SaveSystemUI.current.CloseButton();
+                    saveSystem.CloseButton();
                     break;
                 case MenuSection.Load:
                     menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    SaveSystemUI.current.CloseButton();
+                    saveSystem.CloseButton();
                     break;
                 case MenuSection.Options:
                     menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
                     optionsPanel.SetActive(false);
+                    if (Zeppelin.current != null && Zeppelin.current.landingSurface != null) landingButton.SetActive(true);
                     break;
             }
             selectedMenuSection = ms;
@@ -1195,7 +1197,10 @@ sealed public class UIController : MonoBehaviour
             {
                 case MenuSection.Save: menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
                 case MenuSection.Load: menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
-                case MenuSection.Options: menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
+                case MenuSection.Options:
+                    menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                    landingButton.SetActive(false);
+                    break;
             }
         }
     }

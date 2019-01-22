@@ -72,7 +72,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 		}
 	}
 
-	override protected void RecalculateWorkspeed() {
+	override public void RecalculateWorkspeed() {
 		workSpeed = (float)workersCount / (float)maxWorkers;
         gearsDamage = 0;
 	}

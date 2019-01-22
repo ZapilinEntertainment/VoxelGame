@@ -75,8 +75,8 @@ public class Recipe {
 		plasticFactoryRecipes[2] = MineralLToPlastics;
 
         graphoniumEnricherRecipes = new Recipe[3];
-        Graphonium_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Graphonium, GRAPHONIUM_FROM_NMETAL_ID, 10, 1, 5000);
-        Graphonium_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Graphonium, GRAPHONIUM_FRON_NMETAL_ORE_ID, 11, 1, 6400);
+        Graphonium_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Graphonium, GRAPHONIUM_FROM_NMETAL_ID, 10, 1, 1000);
+        Graphonium_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Graphonium, GRAPHONIUM_FRON_NMETAL_ORE_ID, 11, 1, 1100);
         graphoniumEnricherRecipes[0] = NoRecipe;
         graphoniumEnricherRecipes[1] = Graphonium_fromNmetal;
         graphoniumEnricherRecipes[2] = Graphonium_fromNmetalOre;

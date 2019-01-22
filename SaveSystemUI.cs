@@ -6,7 +6,6 @@ using System.IO;
 
 public class SaveSystemUI : MonoBehaviour
 {
-    public static SaveSystemUI current { get; private set; }
     public bool saveMode = false, ingame = false;
     private bool deleteSubmit = false, terrainsLoading = false;
     string[] saveNames;
@@ -19,13 +18,11 @@ public class SaveSystemUI : MonoBehaviour
 
     public const string SAVE_FNAME_EXTENSION = "sav", TERRAIN_FNAME_EXTENSION = "itd"; // island terrain data    
 
-    public static void Check(Transform canvas)
+
+    public static SaveSystemUI Initialize(Transform basis)
     {
-        if (current == null)
-        {
-            GameObject mainContainer = Instantiate(Resources.Load<GameObject>("UIPrefs/SaveSystemModule"), canvas);
-            current = mainContainer.GetComponent<SaveSystemUI>();
-        }
+        GameObject g = Instantiate(Resources.Load<GameObject>("UIPrefs/SaveSystemModule"), basis);
+        return g.GetComponent<SaveSystemUI>();
     }
     /// <summary>
     /// ATTENTION : returns without last slash : "Path/Folder" 
@@ -38,8 +35,6 @@ public class SaveSystemUI : MonoBehaviour
 
     private void Awake()
     {
-        if (current != null & current != this) Destroy(current);
-        current = this;
         LocalizeTitles();
     }
 

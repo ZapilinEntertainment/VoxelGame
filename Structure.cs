@@ -15,7 +15,9 @@ public class Structure : MonoBehaviour
     public int id { get; protected set; }
     public bool visible { get; protected set; }
     public byte modelRotation { get; protected set; }
+
     protected bool destroyed = false, subscribedToUpdate = false, subscribedToChunkUpdate = false;
+    protected uint skinIndex = 0;
 
     //проверь при добавлении
     //- ID
@@ -40,7 +42,7 @@ public class Structure : MonoBehaviour
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75;
-    public const int TOTAL_STRUCTURES_COUNT = 76, STRUCTURE_SERIALIZER_LENGTH = 12;    
+    public const int TOTAL_STRUCTURES_COUNT = 76, STRUCTURE_SERIALIZER_LENGTH = 16;    
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
     public static UIStructureObserver structureObserver;
@@ -66,6 +68,7 @@ public class Structure : MonoBehaviour
 
     virtual protected void SetModel()
     {
+        //switch skin index
         GameObject model;
         if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
         switch (id)
@@ -73,7 +76,6 @@ public class Structure : MonoBehaviour
             default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
             case DRYED_PLANT_ID:
                 model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));
-                FollowingCamera.main.AddMastSprite(model.transform);
                 break;
             case RESOURCE_STICK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/resourcesStick")); break;
             case LANDED_ZEPPELIN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")); break;
@@ -252,7 +254,7 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_3_ID:
                 s = new GameObject("Energy capacitor").AddComponent<Building>(); break;
             case GRPH_ENRICHER_3_ID:
-                s = new GameObject("Graphonium Enricher").AddComponent<GraphoniumEnricher>(); break;
+                s = new GameObject("Graphonium Enricher").AddComponent<Factory>(); break;
             case XSTATION_3_ID:
                 s = new GameObject("XStation").AddComponent<XStation>(); break; // AWAITING
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: s = new GameObject("Quantum energy transmitter").AddComponent<QuantumEnergyTransmitter>(); break;
@@ -1289,7 +1291,6 @@ public class Structure : MonoBehaviour
         else destroyed = true;
         PrepareStructureForDestruction(forced);
         basement = null;
-        if (id == DRYED_PLANT_ID & transform.childCount == 1) FollowingCamera.main.RemoveMastSprite(transform.GetChild(0).GetInstanceID());
         Destroy(gameObject);
     }
 
@@ -1337,9 +1338,11 @@ public class Structure : MonoBehaviour
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
+        skinIndex = System.BitConverter.ToUInt32(data, 4);
         SetBasement(sblock, new PixelPosByte(data[0], data[1]));
-        hp = System.BitConverter.ToSingle(data, 4);
-        maxHp = System.BitConverter.ToSingle(data, 8);
+        hp = System.BitConverter.ToSingle(data, 8);
+        maxHp = System.BitConverter.ToSingle(data, 12);
+
     }
 
     // в финальном виде копипастить в потомков
@@ -1353,9 +1356,9 @@ public class Structure : MonoBehaviour
         };
         data.InsertRange(0,System.BitConverter.GetBytes(id)); // считывается до load(), поэтому не учитываем в индексах
         // little endian check ignoring
-        data.AddRange(System.BitConverter.GetBytes(hp)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(skinIndex));  // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(maxHp)); // 8 - 11
-        //SERIALIZER_ID_POSITION = 12
+        data.AddRange(System.BitConverter.GetBytes(hp)); // 12 - 15
         return data;
         //SERIALIZER_LENGTH = 16
     }

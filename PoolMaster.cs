@@ -14,7 +14,8 @@ public sealed class PoolMaster : MonoBehaviour {
     // не убирать basic из public, так как нужен для сравнения при включении/выключении
     public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
         glass_material, glass_offline_material, darkness_material;
-    public static Material billboardMaterial { get; private set; }    
+    public static Material billboardMaterial { get; private set; } 
+    public static Material verticalBillboardMaterial { get; private set; }
     public static Material starsBillboardMaterial { get; private set; }
     public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
@@ -70,6 +71,7 @@ public sealed class PoolMaster : MonoBehaviour {
         metal_material = Resources.Load<Material>("Materials/Metal");
         green_material = Resources.Load<Material>("Materials/Green");
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
+        verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");
 
         basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];

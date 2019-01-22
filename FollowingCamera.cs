@@ -32,11 +32,9 @@ public sealed class FollowingCamera : MonoBehaviour {
 #pragma warning restore 0649
     const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50;
 
-    private bool handleSprites = false, camPosChanged = false;
+    private bool camPosChanged = false;
     private bool? verticalMovement = null;
     public Vector2 controllerStickOriginalPos, camMoveVector;
-    private List<Transform>  mastBillboards;
-    private List<int>  mastBillboardsIDs;
 
     public delegate void CameraChangedHandler();
     public event CameraChangedHandler cameraChangedEvent;
@@ -70,10 +68,6 @@ public sealed class FollowingCamera : MonoBehaviour {
         camBasisTransform = transform;
         camTransform = camBasisTransform.GetChild(0);
         cam = camTransform.GetComponent<Camera>();
-
-        mastBillboards = new List<Transform>();
-        mastBillboardsIDs = new List<int>();
-
         SetTouchControl(Input.touchSupported);
     }
 
@@ -88,23 +82,8 @@ public sealed class FollowingCamera : MonoBehaviour {
             transform.position = rh.point;
         }
 
-        GameObject[] msprites = GameObject.FindGameObjectsWithTag("AddToMastSpritesList");
-        if (msprites != null) {
-            foreach (GameObject g in msprites) {
-                mastBillboards.Add(g.transform);
-                mastBillboardsIDs.Add(g.GetInstanceID());
-            }
-        }
-
         controllerStickOriginalPos = new Vector2(controllerBack.position.y, controllerBack.position.y); // ?
         camMoveVector = Vector2.zero;
-    }
-
-    public void ResetLists()
-    {
-        mastBillboards.Clear();
-        mastBillboardsIDs.Clear();
-        handleSprites = false;
     }
 
     void Update()
@@ -284,7 +263,6 @@ public sealed class FollowingCamera : MonoBehaviour {
         if (camPosChanged)
         {
             cameraChangedEvent();
-            if (handleSprites) StartCoroutine(SpritesHandler());
             camPosChanged = false;
         }
    }
@@ -292,62 +270,6 @@ public sealed class FollowingCamera : MonoBehaviour {
    {
         camPosChanged = true;
    }
-
-    #region sprites handling
-    IEnumerator SpritesHandler()
-    {
-        if (mastBillboards.Count > 0)
-        {
-            foreach (Transform t in mastBillboards)
-            {
-                Vector3 cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
-                if (cpos != Vector3.zero)
-                {
-                    t.transform.forward = cpos.normalized;
-                }
-            }
-        }
-        yield return null;
-    }
-    public void AddMastSprite(Transform t)
-    {
-        int id = t.GetInstanceID();
-        if (mastBillboards.Count != 0)
-        {
-            foreach (int i in mastBillboardsIDs)
-            {
-                if (i == id) return;
-            }
-        }
-        mastBillboards.Add(t);
-        mastBillboardsIDs.Add(id);
-
-        Vector3 cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
-        t.transform.forward = cpos.normalized;
-
-        handleSprites = true;
-    }
-    public void RemoveMastSprite(int id)
-    {
-        if (mastBillboards.Count == 0) return;
-        else
-        {
-            // при замещении блоков иногда работает вхолостую - почему?
-            int i = 0;
-            while (i < mastBillboards.Count)
-            {
-                if (mastBillboardsIDs[i] == id)
-                {
-                    mastBillboardsIDs.RemoveAt(i);
-                    mastBillboards.RemoveAt(i);
-                    break;
-                }
-                i++;
-            }
-            handleSprites = (mastBillboards.Count != 0);
-        }
-    }
-    #endregion
     
 
 	public void SetLookPoint( Vector3 point ) {
