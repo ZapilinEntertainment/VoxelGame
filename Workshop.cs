@@ -4,7 +4,6 @@ public enum WorkshopMode : byte {NoActivity, GearsUpgrade}
 //при добавлении вписать в UIController.LocalizeTitles
 
 public sealed class Workshop : WorkBuilding {	
-    public static Workshop current;
 
     public WorkshopMode mode { get; private set; }
     private const float GEARS_UPGRADE_SPEED = 0.0001f;
@@ -12,18 +11,6 @@ public sealed class Workshop : WorkBuilding {
 	override public void Prepare() {
 		PrepareWorkbuilding();
 		mode = WorkshopMode.NoActivity;
-	}
-
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (b == null) return;
-		SetWorkbuildingData(b, pos);
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
-            subscribedToUpdate = true;
-        }
-        if (current != null & current != this) current.Annihilate(false);
-        current = this;
 	}
 
     override public void LabourUpdate()
@@ -48,21 +35,6 @@ public sealed class Workshop : WorkBuilding {
        mode = (WorkshopMode)x;
     }
     public void SetMode (WorkshopMode rsm) { mode = rsm; }	
-
-    override public void Annihilate(bool forced)
-    {
-        if (destroyed) return;
-        else destroyed = true;
-        if (forced) { UnsetBasement(); }
-        PrepareWorkbuildingForDestruction(forced);
-        if (current == this) current = null;
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
-            subscribedToUpdate = false;
-        }
-        Destroy(gameObject);
-    }
 
     public override UIObserver ShowOnGUI()
     {

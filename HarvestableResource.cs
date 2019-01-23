@@ -48,7 +48,7 @@ public class HarvestableResource : Structure
             case ContainerModelType.DeadTreeOfLife:
                 {
                     hr.gameObject.name = "dead Tree of Life";
-                    model = Instantiate(Resources.Load<GameObject>("Lifeforms/dead_treeOfLife"));
+                    model = Instantiate(Resources.Load<GameObject>("Lifeforms/deadTreeOfLife"));
                     byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
                     hr.innerPosition = new SurfaceRect(c, c, (byte)(c+c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f ;
@@ -147,7 +147,7 @@ public class HarvestableResource : Structure
             LODController currentLC = LODController.GetCurrent();
             LODPackType lpackType = LODPackType.Point;
             int indexInRegistered = currentLC.LOD_existanceCheck(regInfo);
-            float lodDistance = 3, visibilityDistance = 12;
+            float lodDistance = 6, visibilityDistance = 15;
       
             if (indexInRegistered == -1)
             {
@@ -293,9 +293,10 @@ public class HarvestableResource : Structure
         SetModel();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
+        skinIndex = System.BitConverter.ToUInt32(data, 4);
         SetBasement(sblock, new PixelPosByte(data[0], data[1]));
-        hp = System.BitConverter.ToSingle(data, 4);
-        maxHp = System.BitConverter.ToSingle(data, 8);
+        hp = System.BitConverter.ToSingle(data, 8);
+        maxHp = System.BitConverter.ToSingle(data, 812);
     }
 
     public static void LoadContainer(System.IO.FileStream fs, SurfaceBlock sblock)

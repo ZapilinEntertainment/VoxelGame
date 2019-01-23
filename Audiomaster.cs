@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum NotificationSound : ushort { Default, ColonyFounded,PowerFailure }
+public enum NotificationSound : ushort { Default, ColonyFounded,PowerFailure, BatteryCharged }
 public class Audiomaster : MonoBehaviour {
     private AudioSource notificationSource;
 

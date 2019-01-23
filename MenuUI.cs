@@ -28,17 +28,31 @@ public sealed class MenuUI : MonoBehaviour
     private List<ChunkGenerationMode> availableGenerationModes;
     private string[] terrainSavenames;
 
-    private void Start()
+    public void Start()
     {
-        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
+        int k = 0;
+        if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF)) k = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
 
-        availableGenerationModes = new List<ChunkGenerationMode>() { ChunkGenerationMode.Standart, ChunkGenerationMode.Cube };
-        List<string> genModenames = new List<string>();
-        foreach (ChunkGenerationMode cmode in availableGenerationModes) genModenames.Add(cmode.ToString());
-        generationTypeDropdown.AddOptions(genModenames);
-        generationTypeDropdown.value = 0;
-        newGameGenMode = availableGenerationModes[0];
-        LocalizeTitles();
+        if ( (k & 2) == 0)
+        {
+            LODController.SetLODdistance(0.5f);
+            GameObject g = Instantiate(Resources.Load<GameObject>("UIPrefs/firstLaunchPanel"), transform);
+            g.GetComponent<FirstLaunchUI>().menuScript = this;
+            transform.GetChild(0).gameObject.SetActive(false);
+        }
+        else
+        {
+            if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
+
+            availableGenerationModes = new List<ChunkGenerationMode>() { ChunkGenerationMode.Standart, ChunkGenerationMode.Cube };
+            List<string> genModenames = new List<string>();
+            foreach (ChunkGenerationMode cmode in availableGenerationModes) genModenames.Add(cmode.ToString());
+            generationTypeDropdown.AddOptions(genModenames);
+            generationTypeDropdown.value = 0;
+            newGameGenMode = availableGenerationModes[0];
+            LocalizeTitles();
+            transform.GetChild(0).gameObject.SetActive(true);            
+        }
         GameMaster.SetPause(false);
     }
 

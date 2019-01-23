@@ -420,43 +420,51 @@ public sealed class Dock : WorkBuilding {
                     break;
                 }
 		case ShipType.Cargo:
-                {                    
-                    float totalDemand = 0;
-                    List<int> buyPositions = new List<int>();
+                {
+                    float buyPrioritiesPool = 0, sellPrioritiesPool = 0;
+                    List<int> buyPositions = new List<int>(), sellPositions = new List<int>();
+                    var storage = colony.storage.standartResources;
+                    float[] demands = ResourceType.demand;
                     for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
                     {
                         if (isForSale[i] == null) continue;
-                        if (isForSale[i] == true)
-                        {
-                            totalDemand += ResourceType.demand[i];
+                        if (isForSale[i] == true) // продаваемый островом ресурс
+                        {                            
+                            if (storage[i] > minValueForTrading[i])
+                            {
+                                sellPositions.Add(i);
+                                sellPrioritiesPool += demands[i];
+                            }
                         }
-                        else
+                        else // покупаемый островом ресурс
                         {
-                            if (colony.storage.standartResources[i] <= minValueForTrading[i]) buyPositions.Add(i);
+                            if (storage[i] <= minValueForTrading[i])
+                            {
+                                buyPositions.Add(i);
+                                buyPrioritiesPool += demands[i];
+                            }
                         }
                     }
-                    if (totalDemand > 0)
-                    {
-                        float demandPiece = 1 / totalDemand;
-                        for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
-                        {
-                            if (isForSale[i] == true) SellResource(ResourceType.resourceTypesArray[i], ResourceType.demand[i] * demandPiece * tradeVolume);
-                        }
-                    }
+                    
                     if (buyPositions.Count > 0)
                     {
-                        float v = tradeVolume;
-                        while (v > 0 && buyPositions.Count > 0)
+                        float boughtVolume = 0;
+                        foreach (int id in buyPositions)
                         {
-                            int buyIndex = (int)(Random.value * buyPositions.Count - 1); // index in index arrays
-                            int i = buyPositions[buyIndex]; // real index
-                            float buyVolume = minValueForTrading[i] - colony.storage.standartResources[i];
-                            if (buyVolume < 0) buyVolume = 0;
-                            if (v < buyVolume) buyVolume = v;
-                            BuyResource(ResourceType.resourceTypesArray[i], buyVolume);
-                            v -= buyVolume;
-                            colony.gears_coefficient -= gearsDamage * buyVolume;
-                            buyPositions.RemoveAt(buyIndex);
+                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            if (storage[id] + v > minValueForTrading[id]) v = minValueForTrading[id] - storage[id];
+                            boughtVolume += BuyResource(ResourceType.GetResourceTypeById(id), v);
+                        }
+                        tradeVolume += boughtVolume;
+                    }
+                    
+                    if (sellPositions.Count > 0)
+                    {
+                        foreach (int id in sellPositions)
+                        {
+                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            if (storage[id] - v < minValueForTrading[id]) v = storage[id] - minValueForTrading[id];
+                            SellResource(ResourceType.GetResourceTypeById(id), demands[id] / sellPrioritiesPool * tradeVolume);
                         }
                     }
                     break;
@@ -495,10 +503,13 @@ public sealed class Dock : WorkBuilding {
 	private void SellResource(ResourceType rt, float volume) {
 		float vol = colony.storage.GetResources(rt, volume);
 		colony.AddEnergyCrystals(vol * ResourceType.prices[rt.ID] * GameMaster.sellPriceCoefficient);
-	}
-	private void BuyResource(ResourceType rt, float volume) {
+        colony.gears_coefficient -= gearsDamage * vol;
+    }
+	private float BuyResource(ResourceType rt, float volume) {
 		volume = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]) / ResourceType.prices[rt.ID];
 		colony.storage.AddResource(rt, volume);
+        colony.gears_coefficient -= gearsDamage * volume;
+        return volume;
 	}
 
 	public static void SetImmigrationStatus ( bool x, int count) {

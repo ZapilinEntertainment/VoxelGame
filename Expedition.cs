@@ -19,7 +19,7 @@ public sealed class Expedition : MonoBehaviour
 
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
-    public List<MonoBehaviour> participants { get; private set; }
+    public List<Crew> participants { get; private set; }
     public List<MissionStageType> stages;    
 
     static Expedition()
@@ -44,7 +44,7 @@ public sealed class Expedition : MonoBehaviour
 
         e.stage = ExpeditionStage.Preparation;
         e.mission = Mission.NoMission;
-        e.participants = new List<MonoBehaviour>();
+        e.participants = new List<Crew>();
         e.stages = new List<MissionStageType>();
 
         return e;
@@ -66,20 +66,7 @@ public sealed class Expedition : MonoBehaviour
                 bool usingShuttles = participants[0] is Shuttle;
                 if (usingShuttles != m.requireShuttle)
                 {
-                    if (usingShuttles)
-                    {
-                        foreach (Shuttle s in participants)
-                        {
-                            s.AssignTo(null);
-                        }
-                    }
-                    else
-                    {
-                        foreach (Crew c in participants)
-                        {
-                            //c.assign to null
-                        }
-                    }
+
                     participants.Clear();
                 }
                 if (participants.Count > m.requiredParticipantsCount)
@@ -97,37 +84,24 @@ public sealed class Expedition : MonoBehaviour
             mission = Mission.NoMission;
             if (participants.Count > 0)
             {
-                if (participants[0] is Shuttle)
-                {
-                    foreach (Shuttle s in participants) s.AssignTo(null);
-                }
-                else
-                {
-                    foreach (Crew c in participants)
-                    {
-                        //
-                    }
-                }
+                participants.Clear();
             }
         }
     }
 
-    public void AddParticipant(Shuttle s)
+    public void AddParticipant(Crew c)
     {
-        if (s != null & mission != Mission.NoMission && participants.Count < mission.requiredParticipantsCount)
+        if (c != null & mission != Mission.NoMission && participants.Count < mission.requiredParticipantsCount)
         {
-            participants.Add(s);
+            participants.Add(c);
             actionsHash++;
         }
     }
-    public void RemoveParticipant(Shuttle s)
+    public void RemoveParticipant(Crew c)
     {
         if (participants.Count > 0)
         {
-            if (mission.requireShuttle)
-            {
-                if (participants.Remove(s)) actionsHash++;
-            }
+          if (participants.Remove(c)) actionsHash++;
         }
     }
 

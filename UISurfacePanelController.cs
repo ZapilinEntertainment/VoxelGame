@@ -558,7 +558,11 @@ public sealed class UISurfacePanelController : UIObserver {
             constructionPlaneSwitchButton.image.overrideSprite = null;
             constructionPlane.SetActive(false);
             UIController.current.interceptingConstructPlaneID = -1;
-            if (mode == SurfacePanelMode.Build) surfaceBuildingPanel.SetActive(true);
+            if (mode == SurfacePanelMode.Build)
+            {
+                surfaceBuildingPanel.SetActive(true);
+                FollowingCamera.main.CameraRotationBlock(true);
+            }
         }
     }
 
@@ -570,6 +574,7 @@ public sealed class UISurfacePanelController : UIObserver {
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
+        if (chosenStructure != null) FollowingCamera.main.CameraRotationBlock(false);
     }
 
     public void ReturnButton()
@@ -754,7 +759,18 @@ public sealed class UISurfacePanelController : UIObserver {
             {
                 colony.storage.GetResources(cost);
                 Structure s = Structure.GetStructureByID(chosenStructure.id);
+                byte rt = 0;
+                if (s.rotate90only)
+                {
+                    rt = (byte)(Random.value * 3);
+                    rt *= 2;
+                }
+                else
+                {
+                    rt = (byte)(Random.value * 7);
+                }
                 s.SetBasement(observingSurface, new PixelPosByte(x, z));
+                if (s.id != Structure.DOCK_ID & s.id != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
                 if (observingSurface.cellsStatus != 0)
                 {

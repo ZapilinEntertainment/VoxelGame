@@ -47,7 +47,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
 		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
 
-		workSpeedField.enabled = (showingWorkspeed > 0);
+		workSpeedField.enabled = (showingWorkspeed > 0 & !(observingWorkbuilding is Dock) & !(observingWorkbuilding is Powerplant));
         actionLabel.enabled = false;        
         stopButton.SetActive(false);
 	}
@@ -73,7 +73,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         slider.enabled = true;
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
         workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
-        workSpeedField.enabled = (showingWorkspeed > 0);
+        workSpeedField.enabled = (showingWorkspeed > 0 );
         actionLabel.enabled = true;
         actionLabel.text = ws.actionLabel;        
         stopButton.SetActive(true);
@@ -101,8 +101,10 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                     showingWorkersMaxCount = observingWorkbuilding.maxWorkers;
                     slider.maxValue = showingWorkersMaxCount;
                 }
-                if (showingWorkspeed != observingWorkbuilding.workSpeed)
-                {                    
+                if (!(observingWorkbuilding is Dock) & !(observingWorkbuilding is Powerplant))
+                {
+                    if (showingWorkspeed != observingWorkbuilding.workSpeed)
+                    {
                         showingWorkspeed = observingWorkbuilding.workSpeed;
                         if (showingWorkspeed == 0) workSpeedField.enabled = false;
                         else
@@ -110,6 +112,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                             workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
                             workSpeedField.enabled = true;
                         }
+                    }
                 }
             }
         }

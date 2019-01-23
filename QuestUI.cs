@@ -209,7 +209,7 @@ public sealed class QuestUI : MonoBehaviour
         else
         {
             activeQuests[openedQuest] = Quest.NoQuest;
-            WaitForNewQuest(openedQuest);
+            StartCoroutine(WaitForNewQuest(openedQuest));
             ReturnToQuestList();
         }
     }
@@ -221,7 +221,7 @@ public sealed class QuestUI : MonoBehaviour
             if (activeQuests[i] == q)
             {
                 activeQuests[i] = Quest.NoQuest;
-                WaitForNewQuest(i);
+                StartCoroutine(WaitForNewQuest(i));
             }
         }
     }

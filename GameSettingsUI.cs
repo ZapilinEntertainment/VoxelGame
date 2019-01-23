@@ -14,13 +14,17 @@ public sealed class GameSettingsUI : MonoBehaviour
     [SerializeField] Slider lodDistanceSlider;
     [SerializeField] Toggle touchscreenToggle;
 #pragma warning restore 0649
-    private bool ignoreTouchscreenToggle = false;
+    private bool ignoreTouchscreenToggle = false, ignoreDistanceSliderChanging = false;
 
     void OnEnable()
     {
         settingsButton.overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = transform;
+        ignoreDistanceSliderChanging = true;
+        lodDistanceSlider.minValue = 0;
+        lodDistanceSlider.maxValue = 1;
         lodDistanceSlider.value = LODController.lodCoefficient;
+        ignoreDistanceSliderChanging = false;
         qualityDropdown.value = QualitySettings.GetQualityLevel();
         graphicsApplyButton.gameObject.SetActive(false);
 
@@ -36,7 +40,7 @@ public sealed class GameSettingsUI : MonoBehaviour
 
     public void Options_LODdistChanged()
     {
-        LODController.SetLODdistance(lodDistanceSlider.value);
+        if (!ignoreDistanceSliderChanging) LODController.SetLODdistance(lodDistanceSlider.value);
     }
     public void Options_QualityLevelChanged()
     {

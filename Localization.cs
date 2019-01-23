@@ -25,7 +25,7 @@ public static class Localization {
         {
             x = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
         }
-        if (x == 0) ChangeLanguage(Language.English); // default language
+        if ((x&1) == 0) ChangeLanguage(Language.English); // default language
         else ChangeLanguage(Language.Russian);
 	}
 
@@ -1059,7 +1059,7 @@ public static class Localization {
                         case LocalizationActionLabels.BlockCompleted: return "Блок завершён";
                         case LocalizationActionLabels.MineLevelFinished: return "Уровень шахты завершён";
                         case LocalizationActionLabels.CleanInProgress: return "Идёт очистка";
-                        case LocalizationActionLabels.DigInProgress: return "Идут раскопки";
+                        case LocalizationActionLabels.DigInProgress: return "Идёт добыча";
                         case LocalizationActionLabels.GatherInProgress: return "Идёт сбор";
                         case LocalizationActionLabels.PouringInProgress: return "Идёт засыпка";
                     }
@@ -1115,6 +1115,48 @@ public static class Localization {
                     }
                 }
         }        
+    }
+
+    public static string GetCredits()
+    {
+        switch (currentLanguage)
+        {            
+            case Language.Russian:
+                return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2019гг н.э. \n" +
+                    "Собрано на Unity Engine 5. \n" +
+                    "В процессе разработки использовались следующие freeware - программы: \n" +
+                    " - Blender 2.69 от Blender Foundations \n" +
+                    " - Paint.net 4.1.5 \n" +
+                    " - Audacity 2.2.2 \n" +
+                    " - MS Visual Studio Community 2017\n" +
+                    "\n" +
+                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (мной добавлена адаптированная кириллица). \n" +
+                    "\n" +
+                    "\n" +
+                    "Вы можете поддержать мои разработки, купив сюжетные дополнения к Limited Worlds или сделав пожертвование на один из следующих кошельков: \n" +
+                    "\nЯндекс кошелёк: 410 0155 8473 6426\n" +
+                    "Paypal: paypal.me/mahariusls\n" +
+                    "Не забудьте приложить к дотации комментарий :)";
+            case Language.English:
+                return "Imaginated and created by Zapilin Entertainment (me), 2018 - 2019 AD \n" +
+                    "Builded on Unity Engine 5. \n" +
+                    "The following freeware programs were used in the development: \n" +
+                    " - Blender 2.69 by Blender Foundations \n" +
+                    " - Paint.net 4.1.5 \n" +
+                    " - Audacity 2.2.2 \n" +
+                    " - MS Visual Studio Community 2017\n" +
+                    "\n" +
+                    "Used font \"neuropolitical rg\" by Typodermic Fonts Inc. \n" +
+                    "\n" +
+                    "\n" +
+                    "You can support my development by buying storyline addons for Limited Worlds or making a donation to one of this accounts: \n" +
+                    "\nYandex money: 410 0155 8473 6426\n" +
+                    "Paypal: paypal.me/mahariusls\n" +
+                    "Don't forget to leave your commentary to the transaction :)";
+            default:
+                return "" +
+                    "";
+        }
     }
 
     #region questsData

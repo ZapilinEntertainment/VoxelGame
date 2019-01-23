@@ -52,7 +52,15 @@ public sealed class HeadQuarters : House {
         {
             default: return false;
             case 1: return (colony.docks.Count != 0);
-            case 2: return (Workshop.current != null );
+            case 2:
+                if (colony.powerGrid.Count != 0)
+                {
+                    foreach (Building b in colony.powerGrid)
+                    {
+                        if (b.id == WORKSHOP_ID) return true;
+                    }
+                }
+                return false;
             case 3:
                 if (colony.powerGrid.Count != 0) 
                 {

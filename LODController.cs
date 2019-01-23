@@ -129,10 +129,13 @@ public sealed class LODController : MonoBehaviour
     private const string LOD_DIST_KEY = "LOD distance";
 
 
-    private void Awake()
+    static LODController()
     {
         if (PlayerPrefs.HasKey(LOD_DIST_KEY)) lodCoefficient = PlayerPrefs.GetFloat(LOD_DIST_KEY);
-        else lodCoefficient = 1;
+        else {
+            lodCoefficient = 0.5f;
+            PlayerPrefs.SetFloat(LOD_DIST_KEY, lodCoefficient);
+                }
     }
 
     public static void SetLODdistance(float f)
@@ -141,7 +144,8 @@ public sealed class LODController : MonoBehaviour
         {
             lodCoefficient = f;
             PlayerPrefs.SetFloat(LOD_DIST_KEY, lodCoefficient);
-            current.CameraUpdate();
+            PlayerPrefs.Save();
+            if (FollowingCamera.main != null) FollowingCamera.main.WeNeedUpdate();
         }
     }
 

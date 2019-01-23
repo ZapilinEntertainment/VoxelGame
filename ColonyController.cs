@@ -39,7 +39,7 @@ public sealed class ColonyController : MonoBehaviour
     private float starvationTimer, targetHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false;
 
-    private const byte MAX_HOUSING_LEVEL = 5;
+    public const byte MAX_HOUSING_LEVEL = 5;
     private const float START_ENERGY_CRYSTALS_COUNT = 100;
 
 

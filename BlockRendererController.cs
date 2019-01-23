@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlockRendererController : MonoBehaviour
+public sealed class BlockRendererController : MonoBehaviour
 {
     public MeshRenderer[] faces;
     public byte renderMask = 0, visibilityMask = 63;
     private bool visible = true;
-    private Structure structure = null;
+    public Structure structure { get; private set; }
 
     public void SetStructure(Structure s)
     {

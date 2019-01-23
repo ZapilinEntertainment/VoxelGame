@@ -548,7 +548,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 100;
+                    energySurplus = 400;
                     energyCapacity = 100;
                     
                     level = 4;

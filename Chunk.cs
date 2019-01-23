@@ -488,7 +488,6 @@ public sealed class Chunk : MonoBehaviour
                 }
             case BlockType.Surface:
                 {
-                    b = GetBlock(x, y - 1, z);
                     influenceMask = 31;
 
                     SurfaceBlock sb = new GameObject().AddComponent<SurfaceBlock>();
@@ -592,7 +591,7 @@ public sealed class Chunk : MonoBehaviour
             {
                 if ((originalBlock.type == BlockType.Surface | originalBlock.type == BlockType.Cave) & f_newType != BlockType.Surface & f_newType != BlockType.Cave) return originalBlock;
             }
-            if (originalBlock.type == BlockType.Surface & originalBlock.type == BlockType.Cave)
+            if (originalBlock.type == BlockType.Surface | originalBlock.type == BlockType.Cave)
             {
                 SurfaceBlock sb = originalBlock as SurfaceBlock;
                 if (sb.structureBlock != null | sb.haveSupportingStructure) return originalBlock;
@@ -604,7 +603,6 @@ public sealed class Chunk : MonoBehaviour
         bool calculateUpperBlock = false;
         switch (f_newType)
         {
-
             case BlockType.Shapeless:
                 {
                     b = new GameObject().AddComponent<Block>();
@@ -1067,6 +1065,10 @@ public sealed class Chunk : MonoBehaviour
                         if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(0);
                     }
                 }
+                byte m = GetVisibilityMask(x, y, z);
+                if ((m & 16) == 0) m += 16;
+                if (blocks[x, y, z] != null) blocks[x,y,z].SetVisibilityMask(m);
+                y--;
                 for (; y > -1; y--)
                 {
                     if (blocks[x, y, z] != null) blocks[x, y, z].SetVisibilityMask(GetVisibilityMask(x, y, z));

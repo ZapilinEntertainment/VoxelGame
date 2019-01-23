@@ -20,8 +20,13 @@
     public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.0000005f * (int)GameMaster.difficulty; } }
     public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000002f * (int)GameMaster.difficulty; } }
     public const int MAX_LIFEPOWER_TRANSFER = 16;
+
     public const string BASE_SETTINGS_PLAYERPREF = "baseSettings";
+    // int key - 32 values
     // 0 - lang
+    // 1 - (0 -> first launch, 1 - not first)
+    public const uint SAVE_SYSTEM_VERSION = 1;
+   
 
     public static float GetShipArrivingTimer()
     {

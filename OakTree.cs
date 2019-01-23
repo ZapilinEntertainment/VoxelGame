@@ -33,7 +33,7 @@ public class OakTree : Plant
 
     public const byte MAX_STAGE = 6;
     public const int CREATE_COST = 10, LUMBER = 100, FIRST_LIFEPOWER_TO_GROW = 10, SPRITER_CHILDNUMBER = 0, MODEL_CHILDNUMBER = 1;
-    private const float TREE_SPRITE_MAX_VISIBILITY = 6;
+    private const float TREE_SPRITE_MAX_VISIBILITY = 8;
 
     static OakTree()
     {
@@ -431,10 +431,11 @@ public class OakTree : Plant
                     }
                     else
                     {                        // # change model draw mode
-
-                        if (dist > lodDist)
+                        float x = TREE_SPRITE_MAX_VISIBILITY + 3 * oak.stage;
+                        x = dist / x;
+                        if (x > lodDist)
                         {
-                            if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage) newDrawMode = OakDrawMode.NoDraw; else newDrawMode = OakDrawMode.DrawLOD;
+                            if (x > 1) newDrawMode = OakDrawMode.NoDraw; else newDrawMode = OakDrawMode.DrawLOD;
                         }
                         else newDrawMode = OakDrawMode.DrawModel;
                         if (newDrawMode != oak.drawmode)
@@ -624,54 +625,63 @@ public class OakTree : Plant
         else
         {
             visible = x;
-            if (modelHolder != null)
+            if (visible)
             {
-                // # change model draw mode (changed)
-                float dist = (transform.position - FollowingCamera.camPos).magnitude;
-                if (dist > LODController.lodCoefficient)
-                {
-                    if (dist > TREE_SPRITE_MAX_VISIBILITY * stage)
+                if (modelHolder != null)
+                {                    
+                    // # change model draw mode (changed)
+                    float dist = (transform.position - FollowingCamera.camPos).magnitude;
+                    if (dist > LODController.lodCoefficient)
                     {
-                        drawmode = OakDrawMode.NoDraw;
-                        spriter.enabled = false;
-                        modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
-                    }
-                    else
-                    {
-                        drawmode = OakDrawMode.DrawLOD;
-                        spriter.enabled = true;
-                        modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
-                        // # setting lod(changed)
-                        byte spriteNumber = 0;
-                        float angle = Vector3.Angle(Vector3.up, FollowingCamera.camPos - transform.position);
-                        if (angle < 30)
+                        if (dist > TREE_SPRITE_MAX_VISIBILITY * stage)
                         {
-                            if (angle < 10) spriteNumber = 3;
-                            else spriteNumber = 2;
+                            drawmode = OakDrawMode.NoDraw;
+                            spriter.enabled = false;
+                            modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
                         }
                         else
                         {
-                            if (angle > 80) spriteNumber = 0;
-                            else spriteNumber = 1;
+                            drawmode = OakDrawMode.DrawLOD;
+                            spriter.enabled = true;
+                            modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                            // # setting lod(changed)
+                            byte spriteNumber = 0;
+                            float angle = Vector3.Angle(Vector3.up, FollowingCamera.camPos - transform.position);
+                            if (angle < 30)
+                            {
+                                if (angle < 10) spriteNumber = 3;
+                                else spriteNumber = 2;
+                            }
+                            else
+                            {
+                                if (angle > 80) spriteNumber = 0;
+                                else spriteNumber = 1;
+                            }
+                            switch (stage)
+                            {
+                                case 4: spriter.sprite = lodPack_stage4[spriteNumber]; break;
+                                case 5: spriter.sprite = lodPack_stage5[spriteNumber]; break;
+                                case 6: spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                            }
+                            lodNumber = spriteNumber;
+                            // eo setting lod
                         }
-                        switch (stage)
-                        {
-                            case 4: spriter.sprite = lodPack_stage4[spriteNumber]; break;
-                            case 5: spriter.sprite = lodPack_stage5[spriteNumber]; break;
-                            case 6: spriter.sprite = lodPack_stage6[spriteNumber]; break;
-                        }
-                        lodNumber = spriteNumber;
-                        // eo setting lod
+                        modelHolder.SetActive(true);
+                    }
+                    else
+                    {
+                        drawmode = OakDrawMode.DrawModel;
+                        spriter.enabled = false;
+                        modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
                     }
                 }
-                else
-                {
-                    drawmode = OakDrawMode.DrawModel;
-                    spriter.enabled = false;
-                    modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
-                }
+                else spriter.enabled = visible;
             }
-            else spriter.enabled = visible;
+            else
+            {
+                if (modelHolder != null) modelHolder.SetActive(false);
+                if (spriter != null) spriter.enabled = false;
+            }
         }
     }
 

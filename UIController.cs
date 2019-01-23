@@ -45,7 +45,7 @@ sealed public class UIController : MonoBehaviour
     private MenuSection selectedMenuSection = MenuSection.NoSelection;
     private SaveSystemUI saveSystem;
 
-    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.1f, STATUS_UPDATE_TIME = 1;    
+    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.2f, STATUS_UPDATE_TIME = 1;    
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
@@ -979,9 +979,8 @@ sealed public class UIController : MonoBehaviour
     }
     public void LayerCutMinus()
     {
-        GameMaster.layerCutHeight--;
-        if (GameMaster.layerCutHeight < 0) GameMaster.layerCutHeight = 0;
-        else GameMaster.realMaster.mainChunk.LayersCut();
+        if (GameMaster.layerCutHeight > 0) GameMaster.layerCutHeight--;
+        GameMaster.realMaster.mainChunk.LayersCut();
         layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
     }
 
@@ -1128,7 +1127,7 @@ sealed public class UIController : MonoBehaviour
             menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
             menuPanel.SetActive(true);
             //menuButton.transform.SetAsLastSibling();
-            MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GamePaused));
+           menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
             SetMenuPanelSelection(MenuSection.NoSelection);
         }
         else
@@ -1139,8 +1138,9 @@ sealed public class UIController : MonoBehaviour
             if (colony != null) leftPanel.SetActive(true);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
-            MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
-            DropActiveWindow(ActiveWindowMode.GameMenu);
+            // MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
+            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
+             DropActiveWindow(ActiveWindowMode.GameMenu);
         }
     }
     public void SaveButton()

@@ -280,6 +280,7 @@ override protected void LabourResult() {
 
         workFinished = data[0] == 1;
         lastWorkObjectPos = new ChunkPos(data[1], data[2], data[3]);
+        if (!workFinished) workObject = basement.myChunk.GetBlock(lastWorkObjectPos) as CubeBlock;
         awaitingElevatorBuilding = data[4] == 1;
     }   
     #endregion

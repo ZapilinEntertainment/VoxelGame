@@ -1130,25 +1130,25 @@ public class Structure : MonoBehaviour
     protected void SetStructureData(SurfaceBlock b, PixelPosByte pos)
     {
         //#setStructureData
-        basement = b;
+        if (b.type == BlockType.Cave & isBasement)
+        {
+            basement = b.myChunk.ReplaceBlock(b.pos, BlockType.Surface, b.material_id, false) as SurfaceBlock;
+        }
+        else   basement = b;
         innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.size);
         if (transform.childCount == 0) SetModel();
-        b.AddStructure(this);
+        basement.AddStructure(this);
         if (isBasement)
         {
             if (!subscribedToChunkUpdate)
             {
                 basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
                 subscribedToChunkUpdate = true;
-            }
-            if (basement is CaveBlock)
-            {
-                basement = basement.myChunk.ReplaceBlock(basement.pos, BlockType.Surface, basement.material_id, false) as SurfaceBlock;
-            }
+            }            
             if (basement.pos.y + 1 < Chunk.CHUNK_SIZE)
             {
                 ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-                Block upperBlock = basement.myChunk.GetBlock(npos.x, npos.y, npos.z);
+                Block upperBlock = basement.myChunk.GetBlock(npos);
                 if (upperBlock == null)
                 {
                     int replacingMaterialID = ResourceType.ADVANCED_COVERING_ID;
@@ -1164,7 +1164,6 @@ public class Structure : MonoBehaviour
             if (brc != null)
             {
                 brc.SetStructure(this);
-                brc.SetVisibilityMask(basement.myChunk.GetVisibilityMask(basement.pos.x, basement.pos.y, basement.pos.z));
                 basement.SetStructureBlock(brc);
             }
         }

@@ -285,6 +285,20 @@ public sealed class CaveBlock : SurfaceBlock
         }
     }
 
+    override public void Annihilate()
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (cellsStatus != 0)
+        {
+            ClearSurface(false);
+        }
+        if (grassland != null) grassland.Annihilation(true);
+        // удален возврат surface renderer в пул, так как он нестандартный (а почему, собсна?)
+        myChunk.RemoveFromSurfacesList(this);
+        Destroy(gameObject);
+    }
+
     #region save-load system
     override public void Save(System.IO.FileStream fs)
     {

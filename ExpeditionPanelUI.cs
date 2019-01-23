@@ -592,7 +592,6 @@ public class ExpeditionPanelUI : MonoBehaviour
             {
                 char c = '"';
                 RectTransform example = ppt.GetChild(1) as RectTransform;
-                bool usingShuttles = chosenExpedition.mission.requireShuttle;
 
                 int i = 0;
                 for (; i < pcount; i++)
@@ -607,14 +606,12 @@ public class ExpeditionPanelUI : MonoBehaviour
 
                     if (chosenExpedition.participants[i] != null)
                     {
-                        if (usingShuttles)
-                        {
-                            Shuttle s = chosenExpedition.participants[i] as Shuttle;
-                            pstring.GetChild(0).GetComponent<Text>().text = c + s.name + c;
+                            Crew crew = chosenExpedition.participants[i];
+                            pstring.GetChild(0).GetComponent<Text>().text = c + crew.name + c;
 
                             Button b = pstring.GetChild(1).GetComponent<Button>(); // pass button
                             b.onClick.RemoveAllListeners();
-                            int x = s.ID;
+                            int x = crew.ID;
                             b.onClick.AddListener(() => { this.ExpeditionPanel_PassButton(x); });
                             pstring.GetChild(1).gameObject.SetActive(true);
 
@@ -623,14 +620,6 @@ public class ExpeditionPanelUI : MonoBehaviour
                             int y = i;
                             b.onClick.AddListener(() => { this.ExpeditionPanel_RemoveParticipant(y); });
                             pstring.GetChild(2).gameObject.SetActive(true);
-                        }
-                    }
-                    else
-                    {
-                        // error!
-                        pstring.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoShuttle);
-                        pstring.GetChild(1).gameObject.SetActive(false);
-                        pstring.GetChild(2).gameObject.SetActive(false);
                     }
 
                     pstring.gameObject.SetActive(true);
@@ -643,8 +632,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                         ppt.GetChild(i).gameObject.SetActive(false);
                     }
                 }
-                if (usingShuttles) lastShuttlesHashValue = Shuttle.actionsHash;
-                else lastCrewHashValue = Crew.actionsHash;
+                lastCrewHashValue = Crew.actionsHash;
             }
             else
             {
@@ -666,15 +654,14 @@ public class ExpeditionPanelUI : MonoBehaviour
                 optionsList.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.AddShuttle)));
                 expeditionPreparingIDsList = new List<int>();
                 expeditionPreparingIDsList.Add(-1);
-                if (Shuttle.shuttlesList.Count > 0)
+                if (Crew.crewsList.Count > 0)
                 {
-                    foreach (Shuttle s in Shuttle.shuttlesList)
+                    foreach (Crew c in Crew.crewsList)
                     {
-                        if (s.assignedToExpedition == chosenExpedition) continue;
-                        else
+                        if (c.status == CrewStatus.Free)
                         {
-                            optionsList.Add(new Dropdown.OptionData(s.name));
-                            expeditionPreparingIDsList.Add(s.ID);
+                            optionsList.Add(new Dropdown.OptionData(c.name));
+                            expeditionPreparingIDsList.Add(c.ID);
                         }
                     }
                     lastShuttlesHashValue = Shuttle.actionsHash;
@@ -1041,12 +1028,12 @@ public class ExpeditionPanelUI : MonoBehaviour
         }
         if (expeditionPreparingIDsList[i] != - 1)
         {
-            Shuttle s = Shuttle.GetShuttle(expeditionPreparingIDsList[i]);
-            if (s != null)
-            {
-                s.AssignTo(chosenExpedition);
-                RefreshExpeditionPreparePanel();
-            }
+            //Crew c = Crew.(expeditionPreparingIDsList[i]);
+           // if (s != null)
+           // {
+            //    s.AssignTo(chosenExpedition);
+            //    RefreshExpeditionPreparePanel();
+           // }
         }
     }
     public void ExpeditionPanel_PassButton(int i)
@@ -1073,14 +1060,7 @@ public class ExpeditionPanelUI : MonoBehaviour
     {
         if (chosenExpedition != null && (chosenExpedition.participants.Count > i ))
         {
-            if (chosenExpedition.mission.requireShuttle )
-            {
-                (chosenExpedition.participants[i] as Shuttle).AssignTo(null);                
-            }
-            else
-            {
-                // crew assign to null
-            }
+            
             RefreshExpeditionPreparePanel();
         }
     }

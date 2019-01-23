@@ -6,6 +6,7 @@ public sealed class Mission {
 
     public bool requireShuttle { get; private set; }
     public int requiredParticipantsCount { get; private set; }
+    public int progressPoints { get; private set; }
     public string codename { get; private set; }
 
     static Mission()

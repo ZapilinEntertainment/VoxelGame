@@ -425,11 +425,19 @@ public class SurfaceBlock : Block {
     {
         structureBlock = brc;
         brc.SetVisibilityMask(visibilityMask);
+        if (brc.structure.innerPosition.size == INNER_RESOLUTION)
+        {
+            surfaceRenderer.enabled = false;
+        }
         brc.SetRenderBitmask(renderMask);
     }
     public void ClearStructureBlock(BlockRendererController brc)
     {
-        if (structureBlock == brc) structureBlock = null;
+        if (structureBlock == brc)
+        {
+            if (structureBlock.structure.innerPosition.size == INNER_RESOLUTION) surfaceRenderer.enabled = true;
+            structureBlock = null;
+        }
     }
 
         #region structures positioning   

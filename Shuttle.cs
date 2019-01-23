@@ -19,7 +19,6 @@ public sealed class Shuttle : MonoBehaviour {
     public Crew crew{get; private set;}
 	public Hangar hangar{get;private set;}
 	public ShipStatus status{get;private set;}
-	public Expedition assignedToExpedition{get;private set;}
 
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
@@ -86,21 +85,6 @@ public sealed class Shuttle : MonoBehaviour {
 		}
 	}
 
-	// used only by Expedition class, use expedition.AssignShuttle
-	public void AssignTo(Expedition e) {
-        if (e != null)
-        {
-            assignedToExpedition = e;
-            e.AddParticipant(this);
-        }
-        else
-        {
-            if (assignedToExpedition != null) assignedToExpedition.RemoveParticipant(this);
-            assignedToExpedition = null;
-        }
-        actionsHash++;
-	}
-
     public void DrawShuttleIcon(UnityEngine.UI.RawImage ri)
     {
         ri.texture = UIController.current.iconsTexture;
@@ -132,22 +116,6 @@ public sealed class Shuttle : MonoBehaviour {
         if (status == ShipStatus.Docked)
         {
             shuttlesList.Remove(this);
-        }
-        if (crew != null)
-        {
-            Crew c = crew;
-            crew = null;
-            c.Dismiss();
-        }
-        actionsHash++;
-    }
-
-    public void Disappear() // исчезновение
-    {
-        if (crew != null) crew.Disappear();
-        if (status == ShipStatus.Docked)
-        {
-            shuttlesList.Remove(this);            
         }
         actionsHash++;
     }
