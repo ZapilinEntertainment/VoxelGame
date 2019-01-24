@@ -20,7 +20,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
     private List<GameObject> cubesPool = new List<GameObject>();
     private List<FlyingBlock> activeCubes = new List<FlyingBlock>();
 
-    private const float FLY_SPEED = 8, ROTATION_SPEED = 5;
+    private const float FLY_SPEED = 16, ROTATION_SPEED = 5, CONSUMING_MULTIPLIER = 3;
 
     private void Awake()
     {
@@ -29,8 +29,8 @@ public class ChunkConsumingEffect : MonoBehaviour {
 
     public void SetSettings(byte upSkyStatus, byte lowSkyStatus)
     {
-        lsConsumingSpeed = upSkyStatus;
-        realConsumingSpeed = lowSkyStatus;
+        lsConsumingSpeed = upSkyStatus * CONSUMING_MULTIPLIER;
+        realConsumingSpeed = lowSkyStatus * CONSUMING_MULTIPLIER;
     }
 
     public void Update()
@@ -127,6 +127,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
                 }
             }
         }
+        GameMaster.realMaster.GameOver(GameEndingType.ConsumedByReal);
     }
     private void SpawnCube_BottomToUp()
     {
@@ -153,6 +154,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
                 }
             }
         }
+        GameMaster.realMaster.GameOver(GameEndingType.ConsumedByLastSector);
     }
     private void SpawnEffectCube(Vector3 position, bool flyUp)
     {

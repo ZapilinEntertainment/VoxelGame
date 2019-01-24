@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Zeppelin : MonoBehaviour {
+public sealed class Zeppelin : MonoBehaviour {
     public static Zeppelin current {get;private set;}
 #pragma warning disable 0649
     [SerializeField] private Transform leftScrew,rightScrew, body;
@@ -15,10 +15,9 @@ public class Zeppelin : MonoBehaviour {
 
     private const float SCREWS_ROTATION_SPEED = 500;
 
-    private SurfaceBlock landingSurface;
+    public SurfaceBlock landingSurface { get; private set; }
     private GameObject landingMarkObject;
     private LineRenderer lineDrawer;
-    private Rect landButtonRect;
 
     void Start() {
         float x = Random.value * 360;
@@ -37,7 +36,6 @@ public class Zeppelin : MonoBehaviour {
 
         landingMarkObject = Instantiate(Resources.Load<GameObject>("Prefs/LandingX")) as GameObject;
         landingMarkObject.SetActive(false);
-        landButtonRect = new Rect(0, 0, 0, 0);
 
         UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(Click);
         lineDrawer = GetComponent<LineRenderer>();

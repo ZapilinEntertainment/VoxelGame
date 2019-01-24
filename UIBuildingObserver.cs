@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class UIBuildingObserver : UIObserver {
 	Building observingBuilding;
-    bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, isHouse = false, canBeUpgraded = false;
+    bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, canBeUpgraded = false;
 	float showingEnergySurplus = 0;
 	int showingHousing = 0;
     byte savedLevel = 0;
@@ -101,14 +101,12 @@ public class UIBuildingObserver : UIObserver {
         //# eo redraw
 
 		if (b is House) {
-			isHouse = true;
 			showingHousing = (b as House).housing;
 			housingValue.text = showingHousing.ToString();
 			housingValue.enabled = true;
 			housingImage.enabled = true;
 		}
 		else {
-			isHouse = false;
 			housingValue.enabled = false;
 			housingImage.enabled = false;
 		}

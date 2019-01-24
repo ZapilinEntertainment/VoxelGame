@@ -587,10 +587,6 @@ public sealed class Chunk : MonoBehaviour
         }
         else
         {
-            if (originalBlock.indestructible)
-            {
-                if ((originalBlock.type == BlockType.Surface | originalBlock.type == BlockType.Cave) & f_newType != BlockType.Surface & f_newType != BlockType.Cave) return originalBlock;
-            }
             if (originalBlock.type == BlockType.Surface | originalBlock.type == BlockType.Cave)
             {
                 SurfaceBlock sb = originalBlock as SurfaceBlock;
@@ -719,7 +715,6 @@ public sealed class Chunk : MonoBehaviour
                 }
                 break;
         }
-        blocks[x, y, z].MakeIndestructible(originalBlock.indestructible);
         originalBlock.Annihilate();
         originalBlock = null;
 
@@ -767,7 +762,7 @@ public sealed class Chunk : MonoBehaviour
         // в сиквеле стоит пересмотреть всю иерархию классов ><
         //12.06 нет, я так не думаю
         Block b = GetBlock(pos);
-        if (b == null || b.indestructible == true) return;
+        if (b == null) return;
         int x = pos.x, y = pos.y, z = pos.z;
 
         bool neighboursInfluence = false, upperBlockInfluence = false, lowerBlockInfluence = false;
@@ -779,12 +774,33 @@ public sealed class Chunk : MonoBehaviour
                 neighboursInfluence = true;
                 break;
             case BlockType.Surface:
-                if ((b as SurfaceBlock).haveSupportingStructure) {
-                    upperBlockInfluence = true;
-                    neighboursInfluence = true;
+                {
+                    SurfaceBlock sb = b as SurfaceBlock;
+                    if (sb.cellsStatus != 0)
+                    {
+                        foreach (Structure s in sb.surfaceObjects)
+                        {
+                            if (s != null && s.indestructible)
+                            {
+                                if (GetBlock(x,y-1,z) == null)
+                                {
+                                    Block ub = AddBlock(new ChunkPos(x, y - 1, z), BlockType.Shapeless, ResourceType.METAL_S_ID, false);
+                                    GameObject g = PoolMaster.GetFlyingPlatform();
+                                    g.transform.parent = ub.transform;
+                                    g.transform.localPosition = Vector3.zero;
+                                }
+                                return;
+                            }
+                        }
+                    }
+                    if (sb.haveSupportingStructure)
+                    {
+                        upperBlockInfluence = true;
+                        neighboursInfluence = true;
+                    }
+                    lowerBlockInfluence = true;
+                    break;
                 }
-                lowerBlockInfluence = true;
-                break;
             case BlockType.Cave:
                 neighboursInfluence = true;
                 upperBlockInfluence = true;
@@ -1324,7 +1340,7 @@ public sealed class Chunk : MonoBehaviour
         else return false;
     }
 
-    public void BlockRegion (List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks, bool indestructible)
+    public void BlockRegion (List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
     {
         foreach (ChunkPos pos in positions)
         {
@@ -1335,7 +1351,6 @@ public sealed class Chunk : MonoBehaviour
             {
                 b = new GameObject().AddComponent<Block>();
                 b.InitializeShapelessBlock(this, pos, s);
-                b.MakeIndestructible(indestructible);
                 blocks[pos.x, pos.y, pos.z] = b;
                 dependentBlocks.Add(b);
             }

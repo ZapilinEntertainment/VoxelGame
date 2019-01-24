@@ -166,7 +166,6 @@ public sealed class LODController : MonoBehaviour
     public void CameraUpdate()
     {
         camPos = FollowingCamera.camPos;
-        Transform camTransform = FollowingCamera.camTransform;
         float sqdist = 0;
         bool? newStatus = null;
         int i = 0, count = pointLODmodels.Count;

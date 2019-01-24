@@ -73,7 +73,6 @@ public class LODSpriteMaker : MonoBehaviour {
                     // 0 degrees                    
                     cam.transform.localPosition = renderPoints[0].position;
                     cam.transform.localRotation = Quaternion.Euler(renderPoints[0].rotation);
-                    Texture2D spriteRender = new Texture2D(resolution, resolution);
                     m_RenderTexture.Create();
                     cam.targetTexture = m_RenderTexture;
                     cam.Render();
@@ -84,7 +83,6 @@ public class LODSpriteMaker : MonoBehaviour {
                     // 22.5 degrees
                     cam.transform.localPosition = renderPoints[1].position;
                     cam.transform.localRotation = Quaternion.Euler(renderPoints[1].rotation);
-                    spriteRender = new Texture2D(resolution, resolution);
                     m_RenderTexture.Create();
                     cam.targetTexture = m_RenderTexture;
                     cam.Render();
@@ -95,7 +93,6 @@ public class LODSpriteMaker : MonoBehaviour {
                     // 45 degrees
                     cam.transform.localPosition = renderPoints[2].position;
                     cam.transform.localRotation = Quaternion.Euler(renderPoints[2].rotation);
-                    spriteRender = new Texture2D(resolution, resolution);
                     m_RenderTexture.Create();
                     cam.targetTexture = m_RenderTexture;
                     cam.Render();
@@ -106,7 +103,6 @@ public class LODSpriteMaker : MonoBehaviour {
                     // 85 degrees
                     cam.transform.localPosition = renderPoints[3].position;
                     cam.transform.localRotation = Quaternion.Euler(renderPoints[3].rotation);
-                    spriteRender = new Texture2D(resolution, resolution);
                     m_RenderTexture.Create();
                     cam.targetTexture = m_RenderTexture;
                     cam.Render();
@@ -128,7 +124,6 @@ public class LODSpriteMaker : MonoBehaviour {
                         // 0 degrees
                         cam.transform.localPosition = renderPoints[index].position;
                         cam.transform.localRotation = Quaternion.Euler(renderPoints[index].rotation);
-                        Texture2D spriteRender = new Texture2D(resolution, resolution);
                         m_RenderTexture.Create();
                         cam.targetTexture = m_RenderTexture;
                         cam.Render();
@@ -140,7 +135,6 @@ public class LODSpriteMaker : MonoBehaviour {
                         // 22.5 degrees
                         cam.transform.localPosition = renderPoints[index].position;
                         cam.transform.localRotation = Quaternion.Euler(renderPoints[index].rotation);
-                        spriteRender = new Texture2D(resolution, resolution);
                         m_RenderTexture.Create();
                         cam.targetTexture = m_RenderTexture;
                         cam.Render();
@@ -152,7 +146,6 @@ public class LODSpriteMaker : MonoBehaviour {
                         // 45 degrees
                         cam.transform.localPosition = renderPoints[index].position;
                         cam.transform.localRotation = Quaternion.Euler(renderPoints[index].rotation);
-                        spriteRender = new Texture2D(resolution, resolution);
                         m_RenderTexture.Create();
                         cam.targetTexture = m_RenderTexture;
                         cam.Render();
@@ -164,7 +157,6 @@ public class LODSpriteMaker : MonoBehaviour {
                         // 85 degrees
                         cam.transform.localPosition = renderPoints[index].position;
                         cam.transform.localRotation = Quaternion.Euler(renderPoints[index].rotation);
-                        spriteRender = new Texture2D(resolution, resolution);
                         m_RenderTexture.Create();
                         cam.targetTexture = m_RenderTexture;
                         cam.Render();

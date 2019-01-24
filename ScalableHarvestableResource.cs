@@ -6,7 +6,7 @@ public sealed class ScalableHarvestableResource : Structure {
     // переделать к обычному harvestable resource
     // 04.11 стоит ли?
 	public const float MAX_VOLUME = 64;
-	public ResourceType mainResource {get;protected set;}
+	public ResourceType mainResource {get;private set;}
 	public float resourceCount;
 
 	override public void Prepare() {

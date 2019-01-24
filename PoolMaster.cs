@@ -281,6 +281,10 @@ public sealed class PoolMaster : MonoBehaviour {
         g.name = (artificial ? "a" : "n") + (peak ? "p" : "r") + number.ToString();
         return g;
 	}
+    public static GameObject GetFlyingPlatform()
+    {
+        return Instantiate(Resources.Load<GameObject>("Prefs/flyingPlatform_small"));
+    }
 
     public static Material GetGreenMaterial(GreenMaterial mtype, MeshFilter mf, byte i_illumination)
     {

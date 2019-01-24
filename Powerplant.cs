@@ -7,33 +7,35 @@ public class Powerplant : WorkBuilding {
     public float fuelLeft { get; private set; }
     private int tickTimer = 0;
 
+    public const int BIOGEN_OUTPUT = 40, MINERAL_F_PP_OUTPUT = 40, GRPH_REACTOR_OUTPUT = 400, REACTOR_BLOCK_5_OUTPUT = 1600;
+
 	override public void Prepare() {
 		PrepareWorkbuilding();
 		switch (id) {
 		case BIOGENERATOR_2_ID:
                 fuel = ResourceType.Food;
-                output = 40;
+                output = BIOGEN_OUTPUT;
                 fuelNeeds = 10;
                 fuelLeft = 0;
                 fuelBurnTime = 1000; // ticks
                 break;
 		case MINERAL_POWERPLANT_2_ID:
                 fuel = ResourceType.mineral_F;
-                output = 40;
+                output = MINERAL_F_PP_OUTPUT;
                 fuelNeeds = 1;
                 fuelLeft = 0;
                 fuelBurnTime = 600; // ticks
                 break;
 		case GRPH_REACTOR_4_ID :
                 fuel = ResourceType.Graphonium;
-                output = 400;
+                output = GRPH_REACTOR_OUTPUT;
                 fuelNeeds = 1;
                 fuelLeft = 0;
                 fuelBurnTime = 6000 ; //ticks
                 break;
             case REACTOR_BLOCK_5_ID:
                 fuel = ResourceType.Graphonium;
-                output = 1600;
+                output = REACTOR_BLOCK_5_OUTPUT;
                 fuelNeeds = 4;
                 fuelLeft = 0;
                 fuelBurnTime = 5800; //ticks

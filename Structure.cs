@@ -143,7 +143,7 @@ public class Structure : MonoBehaviour
             case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;
             case CONTROL_CENTER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/controlCenter")); break;
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
-            case HOUSING_MAST_6_ID: model = model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
+            case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
             case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
         }
@@ -1144,21 +1144,24 @@ public class Structure : MonoBehaviour
             {
                 basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
                 subscribedToChunkUpdate = true;
-            }            
-            if (basement.pos.y + 1 < Chunk.CHUNK_SIZE)
-            {
-                ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-                Block upperBlock = basement.myChunk.GetBlock(npos);
-                if (upperBlock == null)
-                {
-                    int replacingMaterialID = ResourceType.ADVANCED_COVERING_ID;
-                    if (id == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
-                    basement.myChunk.AddBlock(npos, BlockType.Surface, replacingMaterialID, false);
-                }
             }
-            else
+            if (!GameMaster.loading)
             {
-                basement.myChunk.SetRoof(basement.pos.x, basement.pos.z, isArtificial);
+                if (basement.pos.y + 1 < Chunk.CHUNK_SIZE)
+                {
+                    ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
+                    Block upperBlock = basement.myChunk.GetBlock(npos);
+                    if (upperBlock == null)
+                    {
+                        int replacingMaterialID = ResourceType.ADVANCED_COVERING_ID;
+                        if (id == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
+                        basement.myChunk.AddBlock(npos, BlockType.Surface, replacingMaterialID, false);
+                    }
+                }
+                else
+                {
+                    basement.myChunk.SetRoof(basement.pos.x, basement.pos.z, isArtificial);
+                }
             }
             BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
             if (brc != null)
@@ -1268,6 +1271,21 @@ public class Structure : MonoBehaviour
                 Block upperBlock = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
                 if (upperBlock != null)
                 {
+                    if (upperBlock is SurfaceBlock)
+                    {
+                        if (upperBlock.type == BlockType.Surface)
+                        {
+                            if (lastBasement.myChunk.CalculateSupportPoints(lastBasement.pos.x, lastBasement.pos.y, lastBasement.pos.z) >= Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING)
+                            {
+                                lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, upperBlock.material_id, false);
+                            }
+                            else lastBasement.myChunk.DeleteBlock(upperBlock.pos);
+                        }
+                        else // cave
+                        {
+                            (upperBlock as CaveBlock).DestroySurface();
+                        }
+                    }
                     lastBasement.myChunk.DeleteBlock(upperBlock.pos);
                 }
                 else

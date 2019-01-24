@@ -20,8 +20,7 @@ public sealed class QuestUI : MonoBehaviour
 
     private float rectTransformingSpeed = 0.8f, transformingProgress;
     private RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
-    private bool transformingRectInProgress = false;
-    private bool prepareCrewsList = false; // else prepare shuttles list        
+    private bool transformingRectInProgress = false;   
     private float questUpdateTimer = 0;
 
     private const float QUEST_REFRESH_TIME = 30, QUEST_UPDATE_TIME = 1, QUEST_EMPTY_TIMERVAL = -1, QUEST_AWAITING_TIMERVAL = -2;

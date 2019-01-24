@@ -18,7 +18,6 @@ public class Block : MonoBehaviour {
 	public int material_id {get;protected  set;}
 	public byte visibilityMask { get; protected set; } // видимость относительно других блоков
 	protected byte renderMask = 0; // видимость относительно камеры
-	public bool indestructible {get; protected set;}
     protected bool destroyed = false;
     public byte illumination { get; protected set; }
 
@@ -64,10 +63,6 @@ public class Block : MonoBehaviour {
 		material_id = newId;
 		blockedByStructure = false;
 		name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
-	}
-
-	public void MakeIndestructible(bool x) {
-		indestructible = x;
 	}
 
 	virtual public void SetRenderBitmask(byte x) {

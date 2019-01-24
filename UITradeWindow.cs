@@ -28,10 +28,10 @@ public class UITradeWindow : UIObserver {
             ResourceType.METAL_E_ORE_ID, ResourceType.METAL_N_ORE_ID , ResourceType.METAL_P_ORE_ID,  ResourceType.METAL_S_ORE_ID,
             ResourceType.FUEL_ID,  ResourceType.GRAPHONIUM_ID,  ResourceType.SUPPLIES_ID, ResourceType.SNOW_ID
         };
-        LocalizeButtonTitles();
+        LocalizeTitles();
     }
 
-    public void LocalizeButtonTitles() {
+    override public void LocalizeTitles() {
         buyButtonText.text = Localization.GetWord(LocalizedWord.Buy);
         sellButtonText.text = Localization.GetWord(LocalizedWord.Sell);
         limitText.text = Localization.GetWord(LocalizedWord.Limitation);
@@ -75,13 +75,22 @@ public class UITradeWindow : UIObserver {
                 {
                     showingLimit = Dock.minValueForTrading[chosenResourceID];
                     limitInputField.text = showingLimit.ToString();
-                }
-                if (showingDemand != ResourceType.demand[chosenResourceID])
+                }                
+            }       
+            else
+            {
+                if (showingPrice != ResourceType.prices[chosenResourceID])
                 {
-                    showingDemand = ResourceType.demand[chosenResourceID];
-                    demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
+                    showingPrice = ResourceType.prices[chosenResourceID];
+                    priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
                 }
-            }           
+            }
+
+            if (showingDemand != ResourceType.demand[chosenResourceID])
+            {
+                showingDemand = ResourceType.demand[chosenResourceID];
+                demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
+            }
         }
     }
 
@@ -123,14 +132,11 @@ public class UITradeWindow : UIObserver {
         resourceIsForSale = Dock.isForSale[resourceID];
         if (resourceIsForSale != null)
         {
-            bool selling = (resourceIsForSale == true);
-            showingPrice = selling ? ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient : ResourceType.prices[chosenResourceID];
-            priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
+            bool selling = (resourceIsForSale == true);                 
             limitText.transform.parent.gameObject.SetActive(true);
+            showingPrice = selling ? ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient : ResourceType.prices[chosenResourceID];
             showingLimit = Dock.minValueForTrading[chosenResourceID];
-            limitInputField.text = showingLimit.ToString();
-            showingDemand = ResourceType.demand[chosenResourceID];
-            demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
+            limitInputField.text = showingLimit.ToString();            
             RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
             ri.enabled = true;
             ri.uvRect = UIController.GetTextureUV(selling ? Icons.RedArrow : Icons.GreenArrow);
@@ -138,7 +144,11 @@ public class UITradeWindow : UIObserver {
         else
         {
             limitInputField.transform.parent.gameObject.SetActive(false);
-        }
+            showingPrice = ResourceType.prices[chosenResourceID];
+        }        
+        priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
+        showingDemand = ResourceType.demand[chosenResourceID];
+        demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
         isObserving = true;
     }
     public void ChangeSellStatus( bool? isForSale)

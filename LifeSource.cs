@@ -32,7 +32,7 @@ public sealed class LifeSource : Structure {
                 new ChunkPos(x - 1, y+ 1, z), new ChunkPos(x , y+ 1, z), new ChunkPos( x + 1, y+ 1, z),
                 new ChunkPos(x - 1, y+ 1, z - 1), new ChunkPos(x , y+ 1, z - 1), new ChunkPos( x + 1, y+ 1, z - 1),
             };
-            chunk.BlockRegion(positions, this, ref dependentBlocks, true);
+            chunk.BlockRegion(positions, this, ref dependentBlocks);
         }
     }
 

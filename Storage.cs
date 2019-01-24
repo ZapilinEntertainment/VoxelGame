@@ -2,13 +2,15 @@
 using UnityEngine;
 
 public sealed class Storage : MonoBehaviour {
-	public float totalVolume = 0, maxVolume, announcementTimer;
+    public double totalVolume { get; private set; }
+	public float  maxVolume { get; private set; }
 	public List<StorageHouse> warehouses { get; private set; }
-	public bool showStorage = false;
 	public float[] standartResources{get;private set;}
-	Rect myRect;
-	const float MIN_VALUE_TO_SHOW = 0.001f;
     public int operationsDone { get; private set; } // для UI
+
+    private float announcementTimer;
+	private Rect myRect;
+	private const float MIN_VALUE_TO_SHOW = 0.001f;    
 
 	void Awake() {
 		totalVolume = 0;
@@ -57,7 +59,7 @@ public sealed class Storage : MonoBehaviour {
 	public float AddResource(ResourceType rtype, float count) {
 		if (totalVolume >= maxVolume | count == 0) return count;
 		float loadedCount = count;
-		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - totalVolume;
+		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - (float)totalVolume;
         if (rtype == ResourceType.FertileSoil) rtype = ResourceType.Dirt;
 		standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
@@ -75,7 +77,7 @@ public sealed class Storage : MonoBehaviour {
 		AddResources(resourcesList.ToArray());
 	}
 	public void AddResources(ResourceContainer[] resourcesList) {
-		float freeSpace = maxVolume - totalVolume;
+		float freeSpace = maxVolume - (float)totalVolume;
         if (freeSpace == 0)
         {
             if (announcementTimer <= 0)
@@ -178,5 +180,5 @@ public sealed class Storage : MonoBehaviour {
             totalVolume += f;
         }
 	}
-	#endregion
+    #endregion
 }

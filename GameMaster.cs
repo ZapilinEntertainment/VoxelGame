@@ -59,7 +59,7 @@ public sealed class GameMaster : MonoBehaviour
     private static byte pauseRequests = 0;
 
 #pragma warning disable 0649
-    public MeshRenderer upperHemisphere, lowerHemisphere;
+    [SerializeField]private MeshRenderer upperHemisphere, lowerHemisphere;
 #pragma warning restore 0649
 
     public Chunk mainChunk { get; private set; }
@@ -136,7 +136,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (!editMode) return;
         _editMode = false;
-        UIController uic = Instantiate(Resources.Load<GameObject>("UIPrefs/UIController")).GetComponent<UIController>();
+        Instantiate(Resources.Load<GameObject>("UIPrefs/UIController")).GetComponent<UIController>();
         firstSet = true;
         gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
         startGameWith = GameStart.Zeppelin;
@@ -267,8 +267,6 @@ public sealed class GameMaster : MonoBehaviour
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
-                        b.MakeIndestructible(true);
-                        b.myChunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z).MakeIndestructible(true);
                         //test
                         //HeadQuarters hq = s as HeadQuarters;
                         //weNeedNoResources = true;
@@ -337,8 +335,8 @@ public sealed class GameMaster : MonoBehaviour
             FollowingCamera.camBasisTransform.position = sceneCenter;
         }
 
-        if (upperHemisphere != null) upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
-        if (lowerHemisphere != null) lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
+        if (upperHemisphere != null & upSkyStatus == 0) upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
+        if (lowerHemisphere != null & lowSkyStatus == 0 ) lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
@@ -351,6 +349,7 @@ public sealed class GameMaster : MonoBehaviour
     #region updates
     private void Update()
     {
+        if (loading) return;
         if (colonyController != null & upperHemisphere != null & lowerHemisphere != null)
         {
             worldConsumingTimer -= Time.deltaTime * gameSpeed;
@@ -360,32 +359,21 @@ public sealed class GameMaster : MonoBehaviour
                 byte newUpSkyStatus = upSkyStatus, newLowSkyStatus = lowSkyStatus;
                 if (ch < GameConstants.RSPACE_CONSUMING_VAL)
                 {
-                    newUpSkyStatus = 0;
-                    newLowSkyStatus++;
-                    if (newLowSkyStatus > 3)
-                    {
-                        GameOver(GameEndingType.ConsumedByReal);
-                        newLowSkyStatus = 3;
-                    }
-                    else
-                    {
+                    if (newUpSkyStatus > 0) newUpSkyStatus--;
+                    if (newLowSkyStatus < 4) {
+                        newLowSkyStatus++;
                         if (newLowSkyStatus == 1) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing), Color.red);
                     }
                     worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newLowSkyStatus;
                 }
                 else
                 {
-                    newLowSkyStatus = 0;
+                    if (newLowSkyStatus > 0) newLowSkyStatus--;
                     if (ch > GameConstants.LSECTOR_CONSUMING_VAL)
                     {
-                        newUpSkyStatus++;
-                        if (newUpSkyStatus > 3)
+                        if (newUpSkyStatus < 4)
                         {
-                            GameOver(GameEndingType.ConsumedByLastSector);
-                            newUpSkyStatus = 3;
-                        }
-                        else
-                        {
+                            newUpSkyStatus++;
                             if (newUpSkyStatus == 1) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing), Color.red);
                         }
                         worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newUpSkyStatus;
@@ -411,6 +399,8 @@ public sealed class GameMaster : MonoBehaviour
                         case 3:
                             upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky3");
                             break;
+                        case 4: upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
+                            break;
                         default:
                             upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
                             break;
@@ -430,6 +420,9 @@ public sealed class GameMaster : MonoBehaviour
                             break;
                         case 3:
                             lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky3");
+                            break;
+                        case 4:
+                            lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
                             break;
                         default:
                             lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
@@ -765,7 +758,50 @@ public sealed class GameMaster : MonoBehaviour
 
             worldConsumingTimer = System.BitConverter.ToSingle(data, 69);
             upSkyStatus = data[73];
+            if (upperHemisphere != null)
+            {
+                switch (upSkyStatus)
+                {
+                    case 1:
+                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky1");
+                        break;
+                    case 2:
+                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky2");
+                        break;
+                    case 3:
+                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky3");
+                        break;
+                    case 4:
+                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
+                        break;
+                    default:
+                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
+                        break;
+                }                
+            }
             lowSkyStatus = data[74];
+            if (lowerHemisphere != null)
+            {
+                switch (lowSkyStatus)
+                {
+                    case 1:
+                        lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky1");
+                        break;
+                    case 2:
+                        lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky2");
+                        break;
+                    case 3:
+                        lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky3");
+                        break;
+                    case 4:
+                        lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
+                        break;
+                    default:
+                        lowerHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
+                        break;
+                }
+            }
+            else print("no hemisphere");
             #endregion
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);

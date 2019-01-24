@@ -8,7 +8,7 @@ public enum ShipType : byte {Passenger, Cargo, Private, Military}
 public class Ship : MonoBehaviour {
 #pragma warning disable 0649
     [SerializeField] byte _level = 1;
-    [SerializeField] float width = 0.5f, acceleration = 1, halfLength = 1; // fixed by asset
+    [SerializeField] float acceleration = 1, halfLength = 1; // fixed by asset
     [SerializeField] int _volume = 50;
     [SerializeField] ShipType _type;
 #pragma warning restore 0649

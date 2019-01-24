@@ -159,7 +159,7 @@ public abstract class WorkBuilding : Building {
             case WORKSHOP_ID:
                 {
                     workflowToProcess = 1;
-                    maxWorkers = 40;
+                    maxWorkers = 80;
                 }
                 break;
             case FUEL_FACILITY_3_ID:
@@ -362,6 +362,7 @@ public abstract class WorkBuilding : Building {
         }
         Destroy(gameObject);
         //copy to expedition corpus.cs
+        //copy to hospital.cs
     }
 
     #region save-load system

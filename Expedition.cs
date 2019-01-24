@@ -63,12 +63,6 @@ public sealed class Expedition : MonoBehaviour
             actionsHash++;
             if (participants.Count > 0)
             {
-                bool usingShuttles = participants[0] is Shuttle;
-                if (usingShuttles != m.requireShuttle)
-                {
-
-                    participants.Clear();
-                }
                 if (participants.Count > m.requiredParticipantsCount)
                 {
                     participants.RemoveRange(m.requiredParticipantsCount, participants.Count - m.requiredParticipantsCount);

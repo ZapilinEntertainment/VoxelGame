@@ -399,7 +399,7 @@ public sealed class Dock : WorkBuilding {
             return;
 		}
 		int peopleBefore = immigrationPlan;
-        float tradeVolume = s.volume * (0.01f + 0.99f * ((float)workersCount / (float)maxWorkers));
+        double tradeVolume = s.volume * (0.01f + 0.99f * ((float)workersCount / (float)maxWorkers));
         switch (s.type) {
 		case ShipType.Passenger:
                 {
@@ -448,12 +448,13 @@ public sealed class Dock : WorkBuilding {
                     
                     if (buyPositions.Count > 0)
                     {
-                        float boughtVolume = 0;
+                        double boughtVolume = 0;
                         foreach (int id in buyPositions)
                         {
-                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            double v = demands[id] / buyPrioritiesPool * tradeVolume;
                             if (storage[id] + v > minValueForTrading[id]) v = minValueForTrading[id] - storage[id];
-                            boughtVolume += BuyResource(ResourceType.GetResourceTypeById(id), v);
+                            float v2 = (float)v;
+                            if (v2 != 0)  boughtVolume += BuyResource(ResourceType.GetResourceTypeById(id), v2);
                         }
                         tradeVolume += boughtVolume;
                     }
@@ -462,9 +463,10 @@ public sealed class Dock : WorkBuilding {
                     {
                         foreach (int id in sellPositions)
                         {
-                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            double v = demands[id] / buyPrioritiesPool * tradeVolume;
                             if (storage[id] - v < minValueForTrading[id]) v = storage[id] - minValueForTrading[id];
-                            SellResource(ResourceType.GetResourceTypeById(id), demands[id] / sellPrioritiesPool * tradeVolume);
+                            float v2 = (float)(demands[id] / sellPrioritiesPool * tradeVolume);
+                            if (v2 != 0)  SellResource(ResourceType.GetResourceTypeById(id), v2);
                         }
                     }
                     break;
@@ -477,7 +479,10 @@ public sealed class Dock : WorkBuilding {
                         if (veterans > immigrationPlan) veterans = immigrationPlan;
                         colony.AddCitizens(veterans);
                     }
-                    if (isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, tradeVolume * 0.5f * (Random.value * 0.5f + 0.5f));
+                    if (isForSale[ResourceType.FUEL_ID] == true) {
+                        float tv = (float)(tradeVolume * 0.5f * (Random.value * 0.5f + 0.5f));
+                        if (tv != 0) SellResource(ResourceType.Fuel, tv);
+                            };
                     if (GameMaster.realMaster.warProximity > 0.5f)
                     {
                         if (isForSale[ResourceType.METAL_S_ID] == true) SellResource(ResourceType.metal_S, s.volume * 0.1f);
@@ -487,8 +492,8 @@ public sealed class Dock : WorkBuilding {
                     break;
                 }
 		case ShipType.Private:
-			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, tradeVolume * 0.8f);
-			if ( isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Fuel, tradeVolume * 0.15f);
+			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, (float)(tradeVolume * 0.8f));
+			if ( isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Fuel, (float)(tradeVolume * 0.15f));
 			break;
 		}
 		loadingShip = null;
@@ -500,13 +505,19 @@ public sealed class Dock : WorkBuilding {
 		int newPeople = peopleBefore - immigrationPlan;
 		if (newPeople > 0 & announceNewShips) UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
 	}
+
 	private void SellResource(ResourceType rt, float volume) {
 		float vol = colony.storage.GetResources(rt, volume);
 		colony.AddEnergyCrystals(vol * ResourceType.prices[rt.ID] * GameMaster.sellPriceCoefficient);
         colony.gears_coefficient -= gearsDamage * vol;
     }
 	private float BuyResource(ResourceType rt, float volume) {
-		volume = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]) / ResourceType.prices[rt.ID];
+        float p = ResourceType.prices[rt.ID];
+        if (p != 0)
+        {
+            volume = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]) / ResourceType.prices[rt.ID];
+            if (volume == 0) return 0;
+        }
 		colony.storage.AddResource(rt, volume);
         colony.gears_coefficient -= gearsDamage * volume;
         return volume;

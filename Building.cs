@@ -478,7 +478,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 10;
+                    energySurplus = Powerplant.BIOGEN_OUTPUT;
                     energyCapacity = 20;
                     
                     level = 2;
@@ -498,7 +498,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 10;
+                    energySurplus = Powerplant.MINERAL_F_PP_OUTPUT;
                     energyCapacity = 20;
                     
                     level = 2;
@@ -548,7 +548,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 400;
+                    energySurplus = Powerplant.GRPH_REACTOR_OUTPUT;
                     energyCapacity = 100;
                     
                     level = 4;
@@ -677,7 +677,7 @@ public class Building : Structure
                 {
                     upgradedIndex = -1;
                     canBePowerSwitched = false;
-                    energySurplus = 512;
+                    energySurplus = Powerplant.REACTOR_BLOCK_5_OUTPUT;
                     energyCapacity = 200;
                     level = 5;
                 }

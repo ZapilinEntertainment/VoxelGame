@@ -134,7 +134,6 @@ public sealed class HeadQuarters : House {
         { // building blocks on the top
                 Chunk chunk = basement.myChunk;
                 ChunkPos upperPos = new ChunkPos(basement.pos.x, basement.pos.y + (level - 3), basement.pos.z);
-                Block upperBlock = chunk.GetBlock(upperPos.x, upperPos.y, upperPos.z);
                 chunk.BlockByStructure(upperPos.x, upperPos.y, upperPos.z, this);
                 Transform model = transform.GetChild(0);
                 GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));

@@ -689,7 +689,6 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Structure:
                 faceIndex = 10; // вспомогательная дата для chosenCube
                 selectionFrame.position = chosenStructure.transform.position;
-                selectionFrame.rotation = chosenStructure.transform.rotation;
                 selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.size, 1, chosenStructure.innerPosition.size);
                 sframeColor = new Vector3(1, 0, 1);
                 workingObserver = chosenStructure.ShowOnGUI();
@@ -1011,7 +1010,7 @@ sealed public class UIController : MonoBehaviour
             Transform t = storagePanelContent.GetChild(0);
             t.GetChild(0).GetComponent<RawImage>().enabled = false;
             t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
-            t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString();
+            t.GetChild(2).GetComponent<Text>().text =  "0 / " + st.maxVolume.ToString();
         }
         else
         {
@@ -1037,7 +1036,7 @@ sealed public class UIController : MonoBehaviour
             t = storagePanelContent.GetChild(i);
             t.GetChild(0).GetComponent<RawImage>().enabled = false;
             t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
-            t.GetChild(2).GetComponent<Text>().text = (((int)(st.totalVolume * 100)) / 100f).ToString() + " / " + st.maxVolume.ToString();
+            t.GetChild(2).GetComponent<Text>().text = string.Format("{0:0.##}", st.totalVolume) + " / " + st.maxVolume.ToString();
             t.gameObject.SetActive(true);
             i++;
             if (i < storagePanelContent.childCount)
@@ -1047,6 +1046,7 @@ sealed public class UIController : MonoBehaviour
             }
             //storagePanel.transform.GetChild(0).GetChild(1).GetComponent<Scrollbar>().size = 
         }
+        lastStorageOperationNumber = st.operationsDone;
     }
     #endregion
 
@@ -1352,7 +1352,6 @@ sealed public class UIController : MonoBehaviour
     }
     public void Workshop_SetActivity(int input)
     {
-        byte x = (byte)input;
         UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
         if (wbo == null | !wbo.gameObject.activeSelf)
         {

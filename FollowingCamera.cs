@@ -24,7 +24,6 @@ public sealed class FollowingCamera : MonoBehaviour {
 	bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false;
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
-    [SerializeField] bool useAutoZooming = true;
     [SerializeField] UnityEngine.UI.Slider xSlider; // fiti
     [SerializeField] Transform cloudCamera;
     [SerializeField] RectTransform controllerBack, controllerStick;

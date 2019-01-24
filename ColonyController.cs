@@ -37,7 +37,7 @@ public sealed class ColonyController : MonoBehaviour
     public int totalLivespace { get; private set; }
     List<Hospital> hospitals;
     private float starvationTimer, targetHappiness;
-    private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false;
+    private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false, housingCountChanges = false;
 
     public const byte MAX_HOUSING_LEVEL = 5;
     private const float START_ENERGY_CRYSTALS_COUNT = 100;
@@ -179,7 +179,7 @@ public sealed class ColonyController : MonoBehaviour
             housingTimer -= t;
             if (housingTimer <= 0)
             {
-                if (temporaryHousing | citizenCount > totalLivespace)
+                if (temporaryHousing | housingCountChanges | citizenCount > totalLivespace)
                 {
                     RecalculateHousing();
                 }
@@ -340,7 +340,8 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
         houses.Add(h);
-        RecalculateHousing();
+        housingCountChanges = true;
+        housingTimer = 0;
     }
     public void DeleteHousing(House h)
     {
@@ -348,6 +349,7 @@ public sealed class ColonyController : MonoBehaviour
         if (houses.Contains(h))
         {
             houses.Remove(h);
+            housingCountChanges = true;
             housingTimer = 0;
         }
     }
@@ -524,6 +526,7 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
         else housingLevel = 0;
+        housingCountChanges = false;
     }
 
     public void AddHospital(Hospital h)

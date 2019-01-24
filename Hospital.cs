@@ -71,4 +71,14 @@ public class Hospital : WorkBuilding {
         showOnGUI = true;
         return workbuildingObserver;
     }
+
+    override public void Annihilate(bool forced)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(forced);
+        colony.DeleteHospital(this);
+        Destroy(gameObject);
+        //copy to expedition corpus.cs
+    }
 }
