@@ -590,7 +590,7 @@ public sealed class Chunk : MonoBehaviour
             if (originalBlock.type == BlockType.Surface | originalBlock.type == BlockType.Cave)
             {
                 SurfaceBlock sb = originalBlock as SurfaceBlock;
-                if (sb.structureBlock != null | sb.haveSupportingStructure) return originalBlock;
+                if (sb.structureBlockRenderer != null | sb.haveSupportingStructure) return originalBlock;
             }
             Structure fillingStructure = originalBlock.mainStructure;
         }
@@ -633,12 +633,7 @@ public sealed class Chunk : MonoBehaviour
                     influenceMask = 31;
                     if (originalBlock.type == BlockType.Cave)
                     {
-                        CaveBlock originalSurface = originalBlock as CaveBlock;
-                        foreach (Structure s in originalSurface.surfaceObjects)
-                        {
-                            if (s == null) continue;
-                            s.SetBasement(sb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
-                        }
+                        (originalBlock as CaveBlock).TransferStructures(sb);
                     }
                     //#surface light recalculation
                     byte light = lightMap[x, y, z];
@@ -682,11 +677,7 @@ public sealed class Chunk : MonoBehaviour
                     if (originalBlock.type == BlockType.Surface)
                     {
                         SurfaceBlock originalSurface = originalBlock as SurfaceBlock;
-                        foreach (Structure s in originalSurface.surfaceObjects)
-                        {
-                            if (s == null) continue;
-                            s.SetBasement(cvb, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
-                        }
+                        originalSurface.TransferStructures(cvb);
                         if (originalSurface.grassland != null)
                         {
                             Grassland gl = Grassland.CreateOn(cvb);
@@ -787,7 +778,7 @@ public sealed class Chunk : MonoBehaviour
                                     Block ub = AddBlock(new ChunkPos(x, y - 1, z), BlockType.Shapeless, ResourceType.METAL_S_ID, false);
                                     GameObject g = PoolMaster.GetFlyingPlatform();
                                     g.transform.parent = ub.transform;
-                                    g.transform.localPosition = Vector3.zero;
+                                    g.transform.localPosition = Vector3.up * Block.QUAD_SIZE / 2f;
                                 }
                                 return;
                             }

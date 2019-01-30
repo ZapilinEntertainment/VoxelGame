@@ -51,7 +51,7 @@ sealed public class Corn : Plant {
         model.transform.localPosition = Vector3.zero;
         var sr = model.gameObject.AddComponent<SpriteRenderer>();
         sr.sprite = stageSprites[0];
-        sr.sharedMaterial = PoolMaster.verticalBillboardMaterial;
+        sr.sharedMaterial = PoolMaster.verticalWavingBillboardMaterial;
     }
 
     public static void UpdatePlants()

@@ -6,7 +6,8 @@
 		SetWorkbuildingData(b, pos);
         if (current != null & current != this) current.Annihilate(false);
         current = this;
-	}
+        SetActivationStatus(false, true);
+    }
 
     override public void Annihilate(bool forced)
     {

@@ -70,7 +70,7 @@ public class CleanSite : Worksite {
                 }
             }
             workflow -= workGained;
-            actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + workObject.surfaceObjects.Count.ToString() + ' ' + Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) + ")";
+            actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" +Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) +" :" + workObject.surfaceObjects.Count.ToString()  +  ")";
         }		
 	}
 

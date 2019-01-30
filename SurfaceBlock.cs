@@ -2,66 +2,70 @@
 using UnityEngine;
 
 [System.Serializable]
-public struct SurfaceRect {
-	public byte x,z,size;
-	public SurfaceRect(byte f_x, byte f_z, byte f_size) {
-		if (f_x < 0) f_x = 0; if (f_x >= SurfaceBlock.INNER_RESOLUTION) f_x = SurfaceBlock.INNER_RESOLUTION - 1;
-		if (f_z < 0) f_z = 0; if (f_z >= SurfaceBlock.INNER_RESOLUTION) f_z = SurfaceBlock.INNER_RESOLUTION - 1;
-		if (f_size < 1) f_size = 1; if (f_size > SurfaceBlock.INNER_RESOLUTION) f_size = SurfaceBlock.INNER_RESOLUTION;
-		x = f_x;
-		z = f_z; 
-		size = f_size; 
-	}
+public struct SurfaceRect
+{
+    public byte x, z, size;
+    public SurfaceRect(byte f_x, byte f_z, byte f_size)
+    {
+        if (f_x < 0) f_x = 0; if (f_x >= SurfaceBlock.INNER_RESOLUTION) f_x = SurfaceBlock.INNER_RESOLUTION - 1;
+        if (f_z < 0) f_z = 0; if (f_z >= SurfaceBlock.INNER_RESOLUTION) f_z = SurfaceBlock.INNER_RESOLUTION - 1;
+        if (f_size < 1) f_size = 1; if (f_size > SurfaceBlock.INNER_RESOLUTION) f_size = SurfaceBlock.INNER_RESOLUTION;
+        x = f_x;
+        z = f_z;
+        size = f_size;
+    }
 
-	static SurfaceRect() {
-		one = new SurfaceRect(0,0,1);
-		full = new SurfaceRect(0,0, SurfaceBlock.INNER_RESOLUTION);
-	}
+    static SurfaceRect()
+    {
+        one = new SurfaceRect(0, 0, 1);
+        full = new SurfaceRect(0, 0, SurfaceBlock.INNER_RESOLUTION);
+    }
 
-	public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) {return lhs.Equals(rhs);}
-	public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) {return !(lhs.Equals(rhs));}
-	public override bool Equals(object obj) 
-	{
-		// Check for null values and compare run-time types.
-		if (obj == null || GetType() != obj.GetType()) 
-			return false;
+    public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) { return lhs.Equals(rhs); }
+    public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) { return !(lhs.Equals(rhs)); }
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
 
-		SurfaceRect p = (SurfaceRect)obj;
-		return (x == p.x) & (z == p.z) & (size == p.size);
-	}
+        SurfaceRect p = (SurfaceRect)obj;
+        return (x == p.x) & (z == p.z) & (size == p.size);
+    }
 
-	public override int GetHashCode()
-	{ 
-		return x + z + size;
-	}
-	public static readonly SurfaceRect one;
-	public static readonly SurfaceRect full;
+    public override int GetHashCode()
+    {
+        return x + z + size;
+    }
+    public static readonly SurfaceRect one;
+    public static readonly SurfaceRect full;
 }
 
-public class SurfaceBlock : Block {
-	public const byte INNER_RESOLUTION = 16;
-	public MeshRenderer surfaceRenderer {get;protected set;}
-	public Grassland grassland{get;protected set;}
-	public List<Structure> surfaceObjects{get;protected set;}
-	public sbyte cellsStatus {get;protected set;}// -1 is not stated, 1 is full, 0 is empty;
-	public int artificialStructures { get; protected set; }
-	public bool[,] map { get; protected set; }
-	public BlockRendererController structureBlock { get; protected set; }
+public class SurfaceBlock : Block
+{
+    public const byte INNER_RESOLUTION = 16;
+    public MeshRenderer surfaceRenderer { get; protected set; }
+    public Grassland grassland { get; protected set; }
+    public List<Structure> surfaceObjects { get; protected set; }
+    public sbyte cellsStatus { get; protected set; }// -1 is not stated, 1 is full, 0 is empty;
+    public int artificialStructures { get; protected set; }
+    public bool[,] map { get; protected set; }
+    public BlockRendererController structureBlockRenderer { get; protected set; }
     public bool haveSupportingStructure { get; protected set; }
 
-	public static UISurfacePanelController surfaceObserver;
+    public static UISurfacePanelController surfaceObserver;
 
     public void InitializeSurfaceBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id)
     {
         cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
         for (int i = 0; i < map.GetLength(0); i++)
         {
-         for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
+            for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
         }
         material_id = 0;
         illumination = 255;
         surfaceObjects = new List<Structure>();
-        artificialStructures = 0;         
+        artificialStructures = 0;
         type = BlockType.Surface;
         myChunk = f_chunk;
         transform.parent = f_chunk.transform;
@@ -86,8 +90,8 @@ public class SurfaceBlock : Block {
         material_id = f_material_id;
         surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
 
-        if (visibilityMask != 0) surfaceRenderer.gameObject.SetActive(true);       
-        
+        if (visibilityMask != 0) surfaceRenderer.gameObject.SetActive(true);
+
         name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
     }
 
@@ -96,7 +100,7 @@ public class SurfaceBlock : Block {
 
     public bool[,] RecalculateSurface()
     {
-        map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];        
+        map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
         for (int i = 0; i < INNER_RESOLUTION; i++)
         {
             for (int j = 0; j < INNER_RESOLUTION; j++)
@@ -181,7 +185,7 @@ public class SurfaceBlock : Block {
                     cellsStatus = -1;
                     surfaceRenderer.GetComponent<Collider>().enabled = true;
                 }
-            }            
+            }
         }
         return map;
     }
@@ -189,9 +193,9 @@ public class SurfaceBlock : Block {
     {
         int cellRes = 4;
         int realRes = INNER_RESOLUTION * cellRes;
-        byte[] buildmap = new byte[realRes * realRes * 4 ];
+        byte[] buildmap = new byte[realRes * realRes * 4];
         int index;
-        for (int i = 0; i < buildmap.Length; i+=4)
+        for (int i = 0; i < buildmap.Length; i += 4)
         {
             buildmap[i] = 0;
             buildmap[i + 1] = 255;
@@ -233,42 +237,42 @@ public class SurfaceBlock : Block {
             buildmap[index + 3] = 255;
         }
         // eo red axis
-        
+
         RecalculateSurface(); // обновит данные и избавит от проверки на null
-            if (cellsStatus != 0)
+        if (cellsStatus != 0)
+        {
+            foreach (Structure s in surfaceObjects)
             {
-                foreach (Structure s in surfaceObjects)
+                byte[] col;
+                if (s is Plant) col = new byte[4] { 0, 255, 0, 255 };
+                else
                 {
-                    byte[] col;
-                    if (s is Plant) col = new byte[4] { 0, 255, 0, 255 };
+                    if (s is HarvestableResource | s is ScalableHarvestableResource) col = new byte[4] { 255, 106, 0, 255 };
                     else
                     {
-                        if (s is HarvestableResource | s is ScalableHarvestableResource) col = new byte[4] { 255, 106, 0, 255 };
-                        else
+                        Building bd = s as Building;
+                        if (bd != null)
                         {
-                            Building bd = s as Building;
-                            if (bd != null)
-                            {
-                                if (bd.placeInCenter) col = new byte[4] { 255, 255, 255, 255 };
-                                else col = new byte[4] { 64, 64, 64, 255 };
-                            }
-                            else col = new byte[4] { 128, 128, 128, 255 };
+                            if (bd.placeInCenter) col = new byte[4] { 255, 255, 255, 255 };
+                            else col = new byte[4] { 64, 64, 64, 255 };
                         }
+                        else col = new byte[4] { 128, 128, 128, 255 };
                     }
-                    SurfaceRect sr = s.innerPosition;
-                    for (int i = sr.x * cellRes ; i < (sr.x + sr.size) * cellRes; i++)
+                }
+                SurfaceRect sr = s.innerPosition;
+                for (int i = sr.x * cellRes; i < (sr.x + sr.size) * cellRes; i++)
+                {
+                    for (int j = sr.z * cellRes; j < (sr.z + sr.size) * cellRes; j++)
                     {
-                        for (int j = sr.z * cellRes ; j < (sr.z + sr.size) * cellRes; j++)
-                        {
                         index = i * realRes * 4 + j * 4;
-                            buildmap[index] = col[0];
-                            buildmap[index + 1] = col[1];
-                            buildmap[index + 2] = col[2];
-                            buildmap[index + 3] = col[3];
-                        }
+                        buildmap[index] = col[0];
+                        buildmap[index + 1] = col[1];
+                        buildmap[index + 2] = col[2];
+                        buildmap[index + 3] = col[3];
                     }
                 }
             }
+        }
         Texture2D planeTex = new Texture2D(INNER_RESOLUTION * cellRes, INNER_RESOLUTION * cellRes, TextureFormat.RGBA32, false);
         planeTex.filterMode = FilterMode.Point;
         planeTex.LoadRawTextureData(buildmap);
@@ -280,31 +284,38 @@ public class SurfaceBlock : Block {
     {
         if (transform.childCount == 0) return Vector2.zero;
         point = transform.InverseTransformPoint(point);
-        return new Vector2(point.x / QUAD_SIZE + 0.5f, 0.5f - point.z / QUAD_SIZE );
+        return new Vector2(point.x / QUAD_SIZE + 0.5f, 0.5f - point.z / QUAD_SIZE);
     }
-	/// <summary>
-	/// Do not use directly, use "Set Basement" instead
-	/// </summary>
-	/// <param name="s">S.</param>
-	public void AddStructure(Structure s) { // with autoreplacing
-		if (s == null ) return;
-		if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION  ) {
-			print ("error in structure size");
-			return;
-		}
-		if (s.innerPosition.size == 1 && s.innerPosition.size == 1) {
-			AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z)); 
-			return;
-		}
-		Structure savedBasementForNow = null;
-		if (cellsStatus != 0) { 
-			SurfaceRect sr = s.innerPosition;
-			int i =0;
-			if (sr == SurfaceRect.full) {// destroy everything there
+    /// <summary>
+    /// Do not use directly, use "Set Basement" instead
+    /// </summary>
+    /// <param name="s">S.</param>
+    public void AddStructure(Structure s)
+    { // with autoreplacing
+        if (s == null) return;
+        if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION)
+        {
+            print("error in structure size");
+            return;
+        }
+        if (s.innerPosition.size == 1 && s.innerPosition.size == 1)
+        {
+            AddCellStructure(s, new PixelPosByte(s.innerPosition.x, s.innerPosition.z));
+            return;
+        }
+        Structure savedBasementForNow = null;
+        if (cellsStatus != 0)
+        {
+            SurfaceRect sr = s.innerPosition;
+            int i = 0;
+            if (sr == SurfaceRect.full)
+            {// destroy everything there
                 ClearSurface(false); // false так как не нужна лишняя проверка
-			}
-			else {
-				while (i < surfaceObjects.Count) {
+            }
+            else
+            {
+                while (i < surfaceObjects.Count)
+                {
                     if (surfaceObjects[i] != null)
                     {
                         SurfaceRect a = surfaceObjects[i].innerPosition;
@@ -325,89 +336,119 @@ public class SurfaceBlock : Block {
                     }
                     i++;
                 }
-			}
-		}
-		surfaceObjects.Add(s);
-		s.transform.parent = transform;
-		s.transform.localPosition = GetLocalPosition(s.innerPosition);
-		if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
+            }
+        }
+        surfaceObjects.Add(s);
+        s.transform.parent = transform;
+        s.transform.localPosition = GetLocalPosition(s.innerPosition);
+        if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
         s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
-		if (savedBasementForNow != null) {
-			savedBasementForNow.Annihilate(true);
-		}
+        if (savedBasementForNow != null)
+        {
+            savedBasementForNow.Annihilate(true);
+        }
         RecalculateSurface();
-	}
+    }
 
     /// <summary>
     /// collider check - enables surface collider, if inactive
     /// </summary>
     /// <param name="colliderCheck"></param>
-	public void ClearSurface(bool check) {
+	public void ClearSurface(bool check)
+    {
         if (surfaceObjects.Count > 0)
         {
-            for (int i =0; i < surfaceObjects.Count; i++)
+            for (int i = 0; i < surfaceObjects.Count; i++)
             {
                 surfaceObjects[i].Annihilate(true); // чтобы не вызывали removeStructure здесь
             }
             surfaceObjects.Clear();
         }
-        if (check) RecalculateSurface();      
-	}
+        if (check) RecalculateSurface();
+    }
 
-	/// <summary>
-	/// Do not use directly, use "Set Basement" instead
-	/// </summary>
-	public void AddCellStructure(Structure s, PixelPosByte pos) { 
-		if (s == null) return;
-		if (map[pos.x, pos.y] == true) {
-			int i = 0;
-			while ( i < surfaceObjects.Count ) {
-				if ( surfaceObjects[i] == null) {surfaceObjects.RemoveAt(i); continue;}
-				SurfaceRect sr = surfaceObjects[i].innerPosition;
-				if (sr.x <= pos.x & sr.z <= pos.y & sr.x + sr.size > pos.x & sr.z+ sr.size > pos.y) {
-					if ( surfaceObjects[i].indestructible)
-					{	
-						s.Annihilate( true);
-						return;
-					}
-					else {
-						surfaceObjects[i].Annihilate( true );
-						break; 
-					}
-				}
-				i++;
-			}
-		}
-		surfaceObjects.Add(s);
-		s.transform.parent = transform;
-		s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1));
+    /// <summary>
+    /// Do not use directly, use "Set Basement" instead
+    /// </summary>
+    public void AddCellStructure(Structure s, PixelPosByte pos)
+    {
+        if (s == null) return;
+        if (map[pos.x, pos.y] == true)
+        {
+            int i = 0;
+            while (i < surfaceObjects.Count)
+            {
+                if (surfaceObjects[i] == null) { surfaceObjects.RemoveAt(i); continue; }
+                SurfaceRect sr = surfaceObjects[i].innerPosition;
+                if (sr.x <= pos.x & sr.z <= pos.y & sr.x + sr.size > pos.x & sr.z + sr.size > pos.y)
+                {
+                    if (surfaceObjects[i].indestructible)
+                    {
+                        s.Annihilate(true);
+                        return;
+                    }
+                    else
+                    {
+                        surfaceObjects[i].Annihilate(true);
+                        break;
+                    }
+                }
+                i++;
+            }
+        }
+        surfaceObjects.Add(s);
+        s.transform.parent = transform;
+        s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1));
         s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
-        if ( visibilityMask == 0 ) s.SetVisibility(false); else s.SetVisibility(true);
+        if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
         RecalculateSurface();
-	}
+    }
 
-	/// <summary>
-	/// Remove structure data from this block structures map
-	/// </summary>
-	/// <param name="so">So.</param>
-	public void RemoveStructure(Structure s) {
+    /// <summary>
+    /// Remove structure data from this block structures map
+    /// </summary>
+    /// <param name="so">So.</param>
+    public void RemoveStructure(Structure s)
+    {
         int count = surfaceObjects.Count;
-		if (count == 0) return;
-        for ( int i = 0; i < count; i++) {
-			if (surfaceObjects[i] == s) {
-				surfaceObjects.RemoveAt(i);
-				break;
-			}
-		}
+        if (count == 0) return;
+        for (int i = 0; i < count; i++)
+        {
+            if (surfaceObjects[i] == s)
+            {
+                surfaceObjects.RemoveAt(i);
+                break;
+            }
+        }
         RecalculateSurface();
-	}
+    }
 
-	public override void ReplaceMaterial( int newId) {
-		material_id = newId;
-		if (material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID & grassland != null) {
-			grassland.Annihilation();
-		}
-		surfaceRenderer.sharedMaterial =  ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
+    public void TransferStructures(SurfaceBlock receiver)
+    {
+        if (cellsStatus == 0) return;
+        else
+        {
+            foreach (Structure s in surfaceObjects)
+            {
+                if (s == null) return;
+                else
+                {
+                    s.ChangeBasement(receiver);
+                }
+            }
+            surfaceObjects.Clear();
+            map = RecalculateSurface();
+        }
+    }
+
+    public override void ReplaceMaterial(int newId)
+    {
+        material_id = newId;
+        if (material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID & grassland != null)
+        {
+            grassland.Annihilation();
+        }
+        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
     }
 
     override public void SetIllumination()
@@ -423,7 +464,7 @@ public class SurfaceBlock : Block {
 
     public void SetStructureBlock(BlockRendererController brc)
     {
-        structureBlock = brc;
+        structureBlockRenderer = brc;
         brc.SetVisibilityMask(visibilityMask);
         if (brc.structure.innerPosition.size == INNER_RESOLUTION)
         {
@@ -433,125 +474,155 @@ public class SurfaceBlock : Block {
     }
     public void ClearStructureBlock(BlockRendererController brc)
     {
-        if (structureBlock == brc)
+        if (structureBlockRenderer == brc)
         {
-            if (structureBlock.structure.innerPosition.size == INNER_RESOLUTION) surfaceRenderer.enabled = true;
-            structureBlock = null;
+            if (structureBlockRenderer.structure.innerPosition.size == INNER_RESOLUTION) surfaceRenderer.enabled = true;
+            structureBlockRenderer = null;
         }
     }
 
-        #region structures positioning   
-        public static Vector3 GetLocalPosition(SurfaceRect sr) {
-		float res = INNER_RESOLUTION;
-		float xpos = sr.x + sr.size/2f ;
-		float zpos = sr.z + sr.size/2f;
-		return( new Vector3((xpos / res - 0.5f) * QUAD_SIZE , -QUAD_SIZE/2f, ((1 -zpos / res) - 0.5f)* QUAD_SIZE));
-	}
+    #region structures positioning   
+    public static Vector3 GetLocalPosition(SurfaceRect sr)
+    {
+        float res = INNER_RESOLUTION;
+        float xpos = sr.x + sr.size / 2f;
+        float zpos = sr.z + sr.size / 2f;
+        return (new Vector3((xpos / res - 0.5f) * QUAD_SIZE, -QUAD_SIZE / 2f, ((1 - zpos / res) - 0.5f) * QUAD_SIZE));
+    }
 
-	public PixelPosByte GetRandomCell() {
-		if (cellsStatus == 1) return PixelPosByte.Empty;
-		else {
-			if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
-			else {
-				List<PixelPosByte> acceptableVariants = GetAcceptablePositions(10);
+    public PixelPosByte GetRandomCell()
+    {
+        if (cellsStatus == 1) return PixelPosByte.Empty;
+        else
+        {
+            if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
+            else
+            {
+                List<PixelPosByte> acceptableVariants = GetAcceptablePositions(10);
                 if (acceptableVariants.Count == 0) return PixelPosByte.Empty;
                 else
                 {
                     int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
                     return acceptableVariants[ppos];
                 }
-			}
-		}
-	}
-	public List<PixelPosByte> GetRandomCells (int count) {
-		List<PixelPosByte> positions = new List<PixelPosByte>();
-		if (cellsStatus != 1)  {
-			List<PixelPosByte> acceptableVariants = GetAcceptablePositions(INNER_RESOLUTION * INNER_RESOLUTION);
-			while (positions.Count < count && acceptableVariants.Count > 0) {
-				int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
-				positions.Add(acceptableVariants[ppos]);
-				acceptableVariants.RemoveAt(ppos);
-			}
-		}
-		return positions;
-	}
+            }
+        }
+    }
+    public List<PixelPosByte> GetRandomCells(int count)
+    {
+        List<PixelPosByte> positions = new List<PixelPosByte>();
+        if (cellsStatus != 1)
+        {
+            List<PixelPosByte> acceptableVariants = GetAcceptablePositions(INNER_RESOLUTION * INNER_RESOLUTION);
+            while (positions.Count < count && acceptableVariants.Count > 0)
+            {
+                int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
+                positions.Add(acceptableVariants[ppos]);
+                acceptableVariants.RemoveAt(ppos);
+            }
+        }
+        return positions;
+    }
 
-	public PixelPosByte GetRandomPosition(byte xsize, byte zsize) {
-		if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION || xsize < 1 || zsize < 1) return PixelPosByte.Empty;
-		if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
-		return GetAcceptablePosition(xsize, zsize);
-	}
+    public PixelPosByte GetRandomPosition(byte xsize, byte zsize)
+    {
+        if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION || xsize < 1 || zsize < 1) return PixelPosByte.Empty;
+        if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
+        return GetAcceptablePosition(xsize, zsize);
+    }
 
-	PixelPosByte GetAcceptablePosition (byte xsize, byte zsize) {
-		List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
-		for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++) {
-			int width = 0;
-			for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++) {
-				if (map[xpos, zpos] == true) width = 0; else width++;
-				if (width >= zsize) {
-					bool appliable = true;
-					for (int xdelta = 1; xdelta < xsize; xdelta++) {
-						for (int zdelta = 0; zdelta < zsize; zdelta++) {
-							if (map[xpos + xdelta, zpos + zdelta] == true) {appliable = false; break;}
-						}
-						if (appliable == false) break;
-					}
-					if (appliable) {
-						acceptablePositions.Add( new PixelPosByte(xpos, zpos)); width = 0;
-						for (int xdelta = 1; xdelta < xsize; xdelta++) {
-							for (int zdelta = 0; zdelta < zsize; zdelta++) {
-								map[xpos + xdelta, zpos + zdelta] = true;
-							}
-						}
-					}
-				}
-			}
-		}
-		if (acceptablePositions.Count > 0)	return acceptablePositions[(int)(Random.value * (acceptablePositions.Count - 1))];
-		else return PixelPosByte.Empty;
-	}
+    PixelPosByte GetAcceptablePosition(byte xsize, byte zsize)
+    {
+        List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
+        for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++)
+        {
+            int width = 0;
+            for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++)
+            {
+                if (map[xpos, zpos] == true) width = 0; else width++;
+                if (width >= zsize)
+                {
+                    bool appliable = true;
+                    for (int xdelta = 1; xdelta < xsize; xdelta++)
+                    {
+                        for (int zdelta = 0; zdelta < zsize; zdelta++)
+                        {
+                            if (map[xpos + xdelta, zpos + zdelta] == true) { appliable = false; break; }
+                        }
+                        if (appliable == false) break;
+                    }
+                    if (appliable)
+                    {
+                        acceptablePositions.Add(new PixelPosByte(xpos, zpos)); width = 0;
+                        for (int xdelta = 1; xdelta < xsize; xdelta++)
+                        {
+                            for (int zdelta = 0; zdelta < zsize; zdelta++)
+                            {
+                                map[xpos + xdelta, zpos + zdelta] = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (acceptablePositions.Count > 0) return acceptablePositions[(int)(Random.value * (acceptablePositions.Count - 1))];
+        else return PixelPosByte.Empty;
+    }
 
-	List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants) {
-		if (maxVariants > INNER_RESOLUTION * INNER_RESOLUTION) maxVariants = INNER_RESOLUTION * INNER_RESOLUTION;
-		if (xsize > INNER_RESOLUTION | zsize > INNER_RESOLUTION | xsize <=0 | zsize <= 0) return null;
-		List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
-		for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++) {
-			int width = 0;
-			for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++) {
-				if (map[xpos, zpos] == true) width = 0; else width++;
-				if (width >= zsize) {
-					bool appliable = true;
-					for (int xdelta = 1; xdelta < xsize; xdelta++) {
-						for (int zdelta = 0; zdelta < zsize; zdelta++) {
-							if (map[xpos + xdelta, zpos + zdelta] == true) {appliable = false; break;}
-						}
-						if (appliable == false) break;
-					}
-					if (appliable) {
-						acceptablePositions.Add( new PixelPosByte(xpos, zpos)); width = 0;
-						for (int xdelta = 1; xdelta < xsize; xdelta++) {
-							for (int zdelta = 0; zdelta < zsize; zdelta++) {
-								map[xpos + xdelta, zpos + zdelta] = true;
-							}
-						}
-					}
-				}
-			}
-		}
-		while (acceptablePositions.Count > maxVariants) {
-			int i = (int)(Random.value * (acceptablePositions.Count - 1));
-			acceptablePositions.RemoveAt(i);
-		}
-		return acceptablePositions;
-	}
+    List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants)
+    {
+        if (maxVariants > INNER_RESOLUTION * INNER_RESOLUTION) maxVariants = INNER_RESOLUTION * INNER_RESOLUTION;
+        if (xsize > INNER_RESOLUTION | zsize > INNER_RESOLUTION | xsize <= 0 | zsize <= 0) return null;
+        List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
+        for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++)
+        {
+            int width = 0;
+            for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++)
+            {
+                if (map[xpos, zpos] == true) width = 0; else width++;
+                if (width >= zsize)
+                {
+                    bool appliable = true;
+                    for (int xdelta = 1; xdelta < xsize; xdelta++)
+                    {
+                        for (int zdelta = 0; zdelta < zsize; zdelta++)
+                        {
+                            if (map[xpos + xdelta, zpos + zdelta] == true) { appliable = false; break; }
+                        }
+                        if (appliable == false) break;
+                    }
+                    if (appliable)
+                    {
+                        acceptablePositions.Add(new PixelPosByte(xpos, zpos)); width = 0;
+                        for (int xdelta = 1; xdelta < xsize; xdelta++)
+                        {
+                            for (int zdelta = 0; zdelta < zsize; zdelta++)
+                            {
+                                map[xpos + xdelta, zpos + zdelta] = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        while (acceptablePositions.Count > maxVariants)
+        {
+            int i = (int)(Random.value * (acceptablePositions.Count - 1));
+            acceptablePositions.RemoveAt(i);
+        }
+        return acceptablePositions;
+    }
 
-	public List<PixelPosByte> GetAcceptablePositions(int count) {
-		List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();
-		for (byte i = 0; i< INNER_RESOLUTION; i++) {
-			for (byte j =0; j < INNER_RESOLUTION; j++) {
-				if (map[i,j] == false) {acceptableVariants.Add(new PixelPosByte(i,j)); }
-			}	
-		}
+    public List<PixelPosByte> GetAcceptablePositions(int count)
+    {
+        List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();
+        for (byte i = 0; i < INNER_RESOLUTION; i++)
+        {
+            for (byte j = 0; j < INNER_RESOLUTION; j++)
+            {
+                if (map[i, j] == false) { acceptableVariants.Add(new PixelPosByte(i, j)); }
+            }
+        }
         if (acceptableVariants.Count == 0)
         {
             cellsStatus = 1;
@@ -566,29 +637,32 @@ public class SurfaceBlock : Block {
             }
             return acceptableVariants;
         }
-	}
+    }
 
-	public bool IsAnyBuildingInArea(SurfaceRect sa) {
-		if (cellsStatus == 0) return false;
-		bool found = false;
-		foreach (Structure suro in surfaceObjects) {
-			if ( !suro.isArtificial ) continue;
-			int minX = -1, maxX = -1, minZ = -1, maxZ = -1;
-			if (sa.x > suro.innerPosition.x) minX = sa.x; else minX = suro.innerPosition.x;
-			if (sa.x + sa.size < suro.innerPosition.x + suro.innerPosition.size) maxX = sa.x+sa.size; 
-			else maxX = suro.innerPosition.x + suro.innerPosition.size;
-			if (minX >= maxX) continue;
-			if (sa.z > suro.innerPosition.z) minZ = sa.z; else minZ = suro.innerPosition.z;
-			if (sa.z + sa.size < suro.innerPosition.z + suro.innerPosition.size ) maxZ = sa.z + sa.size; 
-			else maxZ = suro.innerPosition.z + suro.innerPosition.size;
-			if (minZ >= maxZ) continue;
-			else {found = true; break;}
-		}
-		return found;
-	}
+    public bool IsAnyBuildingInArea(SurfaceRect sa)
+    {
+        if (cellsStatus == 0) return false;
+        bool found = false;
+        foreach (Structure suro in surfaceObjects)
+        {
+            if (!suro.isArtificial) continue;
+            int minX = -1, maxX = -1, minZ = -1, maxZ = -1;
+            if (sa.x > suro.innerPosition.x) minX = sa.x; else minX = suro.innerPosition.x;
+            if (sa.x + sa.size < suro.innerPosition.x + suro.innerPosition.size) maxX = sa.x + sa.size;
+            else maxX = suro.innerPosition.x + suro.innerPosition.size;
+            if (minX >= maxX) continue;
+            if (sa.z > suro.innerPosition.z) minZ = sa.z; else minZ = suro.innerPosition.z;
+            if (sa.z + sa.size < suro.innerPosition.z + suro.innerPosition.size) maxZ = sa.z + sa.size;
+            else maxZ = suro.innerPosition.z + suro.innerPosition.size;
+            if (minZ >= maxZ) continue;
+            else { found = true; break; }
+        }
+        return found;
+    }
     #endregion
 
-    override public void SetRenderBitmask(byte x) {
+    override public void SetRenderBitmask(byte x)
+    {
         if (renderMask == x) return;
         else
         {
@@ -597,7 +671,7 @@ public class SurfaceBlock : Block {
             else
             {
                 //#surface block visibility check
-                if (renderMask != 0 & structureBlock != null) structureBlock.SetRenderBitmask(x);
+                if (renderMask != 0 & structureBlockRenderer != null) structureBlockRenderer.SetRenderBitmask(x);
                 bool allSidesInvisible = ((visibilityMask & 15) == 0);
                 if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible)
                 {
@@ -610,7 +684,7 @@ public class SurfaceBlock : Block {
                 //eo sblock vis check
             }
         }
-	}
+    }
 
     override public void SetVisibilityMask(byte x)
     {
@@ -630,7 +704,7 @@ public class SurfaceBlock : Block {
         else
         {
             //#surface block visibility check
-            if (renderMask != 0 & structureBlock != null) structureBlock.SetRenderBitmask(x);
+            if (renderMask != 0 & structureBlockRenderer != null) structureBlockRenderer.SetRenderBitmask(x);
             if (prevVisibility == 0)
             {
                 illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
@@ -644,23 +718,26 @@ public class SurfaceBlock : Block {
                 }
             }
             bool allSidesInvisible = ((visibilityMask & 15) == 0);
-            if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible)  surfaceRenderer.gameObject.SetActive(false);
+            if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible) surfaceRenderer.gameObject.SetActive(false);
             else surfaceRenderer.gameObject.SetActive(true);
             //eo sblock vis check
         }
     }
 
-    public UIObserver ShowOnGUI() {
-		if (surfaceObserver == null) {
-			surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.mainCanvas).GetComponent<UISurfacePanelController>();
-		}
-		else surfaceObserver.gameObject.SetActive(true);
-		surfaceObserver.SetObservingSurface(this);
-		return surfaceObserver;
-	}
+    public UIObserver ShowOnGUI()
+    {
+        if (surfaceObserver == null)
+        {
+            surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.mainCanvas).GetComponent<UISurfacePanelController>();
+        }
+        else surfaceObserver.gameObject.SetActive(true);
+        surfaceObserver.SetObservingSurface(this);
+        return surfaceObserver;
+    }
 
-	#region save-load system
-	override public void Save(System.IO.FileStream fs) {
+    #region save-load system
+    override public void Save(System.IO.FileStream fs)
+    {
         SaveBlockData(fs);
         SaveSurfaceBlockData(fs);
     }
@@ -686,7 +763,7 @@ public class SurfaceBlock : Block {
                 {
                     var sdata = surfaceObjects[i].Save();
                     if (sdata != null && sdata.Count > 0)
-                    {                        
+                    {
                         data.AddRange(sdata);
                         structuresCount++;
                     }
@@ -702,7 +779,8 @@ public class SurfaceBlock : Block {
         }
     }
 
-    public void LoadSurfaceBlockData(System.IO.FileStream fs) {
+    public void LoadSurfaceBlockData(System.IO.FileStream fs)
+    {
         if (fs.ReadByte() == 1)
         {
             grassland = Grassland.CreateOn(this);
@@ -714,10 +792,10 @@ public class SurfaceBlock : Block {
         fs.Read(data, 0, 4);
         int structuresCount = System.BitConverter.ToInt32(data, 0);
         if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, this);
-    }    
+    }
     #endregion
 
-    override public void Annihilate ()
+    override public void Annihilate()
     {
         if (destroyed) return;
         else destroyed = true;

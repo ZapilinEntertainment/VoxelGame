@@ -20,7 +20,7 @@ public sealed class Crew : MonoBehaviour {
 	public byte level {get; private set;}
 	public int ID{get;private set;}
 	public Shuttle shuttle{get;private set;}
-	public CrewStatus status;
+	public CrewStatus status { get; private set; }
 
 	public float perception{get;private set;}  // тесты на нахождение и внимательность
 	public float persistence{get;private set;}   // тесты на выносливость и желание продолжать поиски
@@ -71,6 +71,18 @@ public sealed class Crew : MonoBehaviour {
         actionsHash++;
         return c;
     }
+    public static Crew GetCrew(int s_id)
+    {
+        if (crewsList.Count <= s_id) return null;
+        else
+        {
+            foreach (Crew c in crewsList)
+            {
+                if (c != null && c.ID == s_id) return c;
+            }
+            return null;
+        }
+    }
 
 	public void SetShuttle(Shuttle s) {
         if (s == shuttle) return;
@@ -79,20 +91,22 @@ public sealed class Crew : MonoBehaviour {
             {
                 if (shuttle != null) shuttle.SetCrew(null);
                 shuttle = null;
-                status = CrewStatus.Free;
             }
             else
             {
                 if (shuttle != null & s != shuttle) shuttle.SetCrew(null);
                 s.SetCrew(this);
                 shuttle = s;
-                status = CrewStatus.Attributed;
             }
             stamina -= CHANGING_SHUTTLE_STAMINA_CONSUMPTION;
             if (stamina < 0) stamina = 0;
             actionsHash++;
         }               
 	}
+    public void SetStatus(CrewStatus cs)
+    {
+        status = cs;
+    }
 
 	static float CalculateExperienceLimit(byte f_level) {
 		return 2 * f_level;

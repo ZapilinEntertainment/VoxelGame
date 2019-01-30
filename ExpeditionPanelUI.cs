@@ -27,8 +27,7 @@ public class ExpeditionPanelUI : MonoBehaviour
     private Shuttle chosenShuttle;
     private Expedition chosenExpedition;
     private RectTransform[] items;
-    private List<int> expeditionPreparingIDsList;
-    private List<MonoBehaviour> dropdownList;
+    private List<int> dropdownList, dropdownList2;
 
     public void Activate()
     {
@@ -198,10 +197,12 @@ public class ExpeditionPanelUI : MonoBehaviour
                         {
                             RefreshExpeditionPreparePanel();
                             infoPanel_expeditionPreparePanel.SetActive(true);
+                            removeButton.SetActive(true);
                         }
                         else
                         {
                             infoPanel_expeditionPreparePanel.SetActive(false);
+                            removeButton.SetActive(false);
                         }
                         infoPanel_passButton.SetActive(false);
                         infoPanel_scrollView.SetActive(true);
@@ -211,6 +212,7 @@ public class ExpeditionPanelUI : MonoBehaviour
 
                         lastExpeditionsHashValue = Expedition.actionsHash;                        
                     }
+                    else removeButton.SetActive(false);
                     break;
                 }
             case ExpeditionPanelSection.Shuttles:
@@ -241,9 +243,11 @@ public class ExpeditionPanelUI : MonoBehaviour
 
                         infoPanel_hangarButton.SetActive(true);
                         infoPanel_scrollView.SetActive(true);
+                        removeButton.SetActive(true);
 
                         lastShuttlesHashValue = Shuttle.actionsHash;
                     }
+                    else removeButton.SetActive(false);
                     break;
                 }
             case ExpeditionPanelSection.Crews:
@@ -276,16 +280,17 @@ public class ExpeditionPanelUI : MonoBehaviour
                         infoPanel_text.rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, 12 * (infoPanel_text.fontSize + infoPanel_text.lineSpacing));
                         (infoPanel_text.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0,infoPanel_text.rectTransform.rect.height);                        
                         infoPanel_passButton.SetActive(chosenCrew.shuttle != null);
+                        removeButton.SetActive(true);
                         lastCrewHashValue = Crew.actionsHash;
                     }
+                    else removeButton.SetActive(false);
                     break;
                 }
         }
         nameField.gameObject.SetActive(enableElements);
         icon.gameObject.SetActive(enableElements);
         progressBarText.transform.parent.gameObject.SetActive(enableElements);
-        actionLabel.transform.parent.gameObject.SetActive(enableElements);
-        removeButton.SetActive(enableElements);
+        actionLabel.transform.parent.gameObject.SetActive(enableElements);       
         infoPanel.SetActive(enableElements);
     }
     private void RefreshItems()
@@ -467,112 +472,6 @@ public class ExpeditionPanelUI : MonoBehaviour
                 break;
         }
     }
-
-    private void RefreshShuttlesDropdown()
-    {
-        var options = new List<Dropdown.OptionData>();
-        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoShuttle)));
-        var shuttles = Shuttle.shuttlesList;
-        int myShuttleIndex = -1;
-        infoPanel_dropdown.enabled = false;
-        Shuttle s;
-        if (shuttles.Count > 0)
-        {
-            dropdownList = new List<MonoBehaviour>();
-            for (int i = 0; i < shuttles.Count; i++)
-            {
-                s = shuttles[i];
-                if (s == null) continue;
-                char c = '\"';
-                if (s.crew != null) options.Add(new Dropdown.OptionData(c + s.name + c + " : " + c + s.crew.name + c));
-                else
-                {
-                    if (s == chosenCrew.shuttle)
-                    {
-                        myShuttleIndex = i;
-                        options.Add(new Dropdown.OptionData(c + s.name + c + " <<"));
-                    }
-                    else
-                    {
-                        options.Add(new Dropdown.OptionData(c + s.name + c));
-                    }
-                }
-                dropdownList.Add(s);
-                
-            }
-        }
-        infoPanel_dropdown.options = options;
-        if (chosenCrew.shuttle == null) infoPanel_dropdown.value = 0;
-        else
-        {
-            if (myShuttleIndex != -1) infoPanel_dropdown.value = myShuttleIndex + 1;
-        }
-        infoPanel_dropdown.enabled = true;
-        lastShuttlesHashValue = Shuttle.actionsHash;
-    }
-    private void RefreshCrewsDropdown()
-    {
-        var options = new List<Dropdown.OptionData>();
-        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
-        var crews = Crew.crewsList;
-        int myCrewIndex = -1;
-        infoPanel_dropdown.enabled = false;
-        Crew c;
-        if (crews.Count > 0)
-        {
-            dropdownList = new List<MonoBehaviour>();
-            for (int i = 0; i < crews.Count; i++)
-            {
-                c = crews[i];
-                if (c == null) continue;
-                if (c.shuttle != null) options.Add(new Dropdown.OptionData('\"' + c.name + '\"'));
-                else options.Add(new Dropdown.OptionData('\"' + c.name + '\"' + '*'));
-                dropdownList.Add(c);
-                if (c == chosenShuttle.crew)
-                {
-                    myCrewIndex = i;
-                }
-            }
-        }
-        infoPanel_dropdown.options = options;
-        if (chosenShuttle.crew == null) infoPanel_dropdown.value = 0;
-        else
-        {
-            if (myCrewIndex != -1) infoPanel_dropdown.value = myCrewIndex + 1;
-        }
-        infoPanel_dropdown.enabled = true;
-        lastCrewHashValue = Crew.actionsHash;
-    }
-    private void RefreshMissionsDropdown()
-    {
-        var options = new List<Dropdown.OptionData>();
-        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)));
-        var missions = Mission.missionsList;
-        int myMissionIndex = -1;
-        infoPanel_dropdown.enabled = false;
-        Mission m;
-        if (missions.Count > 0)
-        {
-            dropdownList = new List<MonoBehaviour>();
-            for (int i = 0; i < missions.Count; i++)
-            {
-                m = missions[i];
-                options.Add(new Dropdown.OptionData( m.codename));
-                if (m == chosenExpedition.mission)
-                {
-                    myMissionIndex = i;
-                }
-            }
-        }
-        infoPanel_dropdown.options = options;
-        if (chosenExpedition.mission == Mission.NoMission) infoPanel_dropdown.value = 0;
-        else
-        {
-            if (myMissionIndex != -1) infoPanel_dropdown.value = myMissionIndex + 1;
-        }
-        infoPanel_dropdown.enabled = true;
-        lastExpeditionsHashValue = Expedition.actionsHash;
-    }
     private void RefreshExpeditionPreparePanel()
     {
         if (chosenExpedition == null || chosenExpedition.mission == Mission.NoMission)
@@ -606,20 +505,20 @@ public class ExpeditionPanelUI : MonoBehaviour
 
                     if (chosenExpedition.participants[i] != null)
                     {
-                            Crew crew = chosenExpedition.participants[i];
-                            pstring.GetChild(0).GetComponent<Text>().text = c + crew.name + c;
+                        Crew crew = chosenExpedition.participants[i];
+                        pstring.GetChild(0).GetComponent<Text>().text = c + crew.name + c;
 
-                            Button b = pstring.GetChild(1).GetComponent<Button>(); // pass button
-                            b.onClick.RemoveAllListeners();
-                            int x = crew.ID;
-                            b.onClick.AddListener(() => { this.ExpeditionPanel_PassButton(x); });
-                            pstring.GetChild(1).gameObject.SetActive(true);
+                        Button b = pstring.GetChild(1).GetComponent<Button>(); // pass button
+                        b.onClick.RemoveAllListeners();
+                        int x = crew.ID;
+                        b.onClick.AddListener(() => { this.ExpeditionPanel_PassButton(x); });
+                        pstring.GetChild(1).gameObject.SetActive(true);
 
-                            b = pstring.GetChild(2).GetComponent<Button>(); // delete button
-                            b.onClick.RemoveAllListeners();
-                            int y = i;
-                            b.onClick.AddListener(() => { this.ExpeditionPanel_RemoveParticipant(y); });
-                            pstring.GetChild(2).gameObject.SetActive(true);
+                        b = pstring.GetChild(2).GetComponent<Button>(); // delete button
+                        b.onClick.RemoveAllListeners();
+                        int y = i;
+                        b.onClick.AddListener(() => { this.ExpeditionPanel_RemoveParticipant(y); });
+                        pstring.GetChild(2).gameObject.SetActive(true);
                     }
 
                     pstring.gameObject.SetActive(true);
@@ -627,7 +526,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                 i++;
                 if (i < childCount)
                 {
-                    for (; i< childCount; i++)
+                    for (; i < childCount; i++)
                     {
                         ppt.GetChild(i).gameObject.SetActive(false);
                     }
@@ -639,7 +538,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                 ppt.GetChild(1).gameObject.SetActive(false);
                 if (ppt.childCount > 2)
                 {
-                    for (int i = 2; i < ppt.childCount;i++)
+                    for (int i = 2; i < ppt.childCount; i++)
                     {
                         ppt.GetChild(i).gameObject.SetActive(false);
                     }
@@ -649,26 +548,7 @@ public class ExpeditionPanelUI : MonoBehaviour
             if (pcount < m.requiredParticipantsCount)
             {
                 Dropdown d = ppt.GetChild(0).GetComponent<Dropdown>();
-                d.enabled = false;
-                var optionsList = new List<Dropdown.OptionData>();
-                optionsList.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.AddShuttle)));
-                expeditionPreparingIDsList = new List<int>();
-                expeditionPreparingIDsList.Add(-1);
-                if (Crew.crewsList.Count > 0)
-                {
-                    foreach (Crew c in Crew.crewsList)
-                    {
-                        if (c.status == CrewStatus.Free)
-                        {
-                            optionsList.Add(new Dropdown.OptionData(c.name));
-                            expeditionPreparingIDsList.Add(c.ID);
-                        }
-                    }
-                    lastShuttlesHashValue = Shuttle.actionsHash;
-                }
-                d.options = optionsList;
-                d.value = 0;
-                d.enabled = true;
+                RefreshCrewsDropdownForChosenExpedition(d);
                 d.gameObject.SetActive(true);
             }
             else
@@ -677,6 +557,160 @@ public class ExpeditionPanelUI : MonoBehaviour
             }
         }
     }
+
+    private void RefreshShuttlesDropdown()
+    {
+        var options = new List<Dropdown.OptionData>();
+        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoShuttle)));
+        dropdownList = new List<int>() { -1 };
+        var shuttles = Shuttle.shuttlesList;
+        infoPanel_dropdown.enabled = false;
+        if (shuttles.Count > 0)
+        {
+            char c = '\"';
+            foreach (Shuttle s in shuttles)
+            {
+                if (s == null) continue;                
+                if (s.crew != null) options.Add(new Dropdown.OptionData(c + s.name + c + " : " + c + s.crew.name + c));
+                else
+                {
+                   options.Add(new Dropdown.OptionData(c + s.name + c));
+                }
+                dropdownList.Add(s.ID);                
+            }
+        }
+        infoPanel_dropdown.options = options;
+        if (chosenCrew.shuttle == null) infoPanel_dropdown.value = 0;
+        else
+        {
+           int id = chosenCrew.shuttle.ID;
+           for (int i = 0; i < dropdownList.Count; i++)
+            {
+                if (dropdownList[i] == id)
+                {
+                    infoPanel_dropdown.value = i;
+                    break;
+                }
+            }
+        }
+        infoPanel_dropdown.enabled = true;
+        lastShuttlesHashValue = Shuttle.actionsHash;
+    }
+    private void RefreshCrewsDropdown()
+    {
+        var options = new List<Dropdown.OptionData>();
+        dropdownList = new List<int>() { -1 };
+        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
+        var crews = Crew.crewsList;        
+        if (crews.Count > 0)
+        {            
+            foreach (Crew c in crews)
+            {
+                if (c == null) continue;
+                if (c.shuttle != null) options.Add(new Dropdown.OptionData('\"' + c.name + '\"'));
+                else options.Add(new Dropdown.OptionData('\"' + c.name + '\"' + '*'));
+                dropdownList.Add(c.ID);
+            }
+        }
+        infoPanel_dropdown.enabled = false;
+        infoPanel_dropdown.options = options;
+        if (chosenShuttle.crew == null) infoPanel_dropdown.value = 0;
+        else
+        {
+            int id = chosenShuttle.crew.ID;
+            for (int i = 0; i < dropdownList.Count; i++)
+            {
+                if (dropdownList[i] == id)
+                {
+                    infoPanel_dropdown.value = i;
+                    break;
+                }
+            }
+        }
+        infoPanel_dropdown.enabled = true;
+        lastCrewHashValue = Crew.actionsHash;
+    }
+    private void RefreshCrewsDropdownForChosenExpedition(Dropdown d)
+    {        
+        var options = new List<Dropdown.OptionData>();
+        dropdownList2 = new List<int>();
+        options.Add(new Dropdown.OptionData('<' + Localization.GetPhrase(LocalizedPhrase.AddCrew) + '>'));
+        dropdownList2.Add(-1);
+
+        if (chosenExpedition == null || chosenExpedition.mission == Mission.NoMission)
+        {
+            RefreshExpeditionPreparePanel();
+            return;
+        }
+        else {
+            var crews = Crew.crewsList;
+            Crew c;
+            if (crews.Count > 0)
+            {                
+                if (!chosenExpedition.mission.requireShuttle)
+                {
+                    for (int i = 0; i < crews.Count; i++)
+                    {
+                        c = crews[i];
+                        if (c == null) continue;
+                        if (c.shuttle != null) options.Add(new Dropdown.OptionData('\"' + c.name + "\" - \" " + c.shuttle.name + '\"'));
+                        else options.Add(new Dropdown.OptionData('\"' + c.name + '\"'));
+                        dropdownList2.Add(c.ID);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < crews.Count; i++)
+                    {
+                        c = crews[i];
+                        if (c == null) continue;
+                        if (c.shuttle != null) options.Add(new Dropdown.OptionData('\"' + c.name + '\"'));
+                        dropdownList.Add(c.ID);
+                    }
+                }                
+            }
+            d.enabled = false;
+            d.value = 0;
+            d.options = options;
+            d.enabled = true;
+            lastCrewHashValue = Crew.actionsHash;
+        }
+    }
+    private void RefreshMissionsDropdown()
+    {
+        var options = new List<Dropdown.OptionData>();
+        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)));
+        var missions = Mission.missionsList;
+        infoPanel_dropdown.enabled = false;
+        Mission m;
+        if (missions.Count > 0)
+        {
+            dropdownList = new List<int>();
+            for (int i = 0; i < missions.Count; i++)
+            {
+                m = missions[i];
+                options.Add(new Dropdown.OptionData( m.codename));
+                dropdownList.Add(m.ID);
+            }
+        }
+        infoPanel_dropdown.options = options;
+        if (chosenExpedition.mission == Mission.NoMission) infoPanel_dropdown.value = 0;
+        else
+        {
+            int id = chosenExpedition.mission.ID;
+            for (int i = 0; i < missions.Count; i++)
+            {
+                if (missions[i].ID == id)
+                {
+                    infoPanel_dropdown.value = i;
+                    break;
+                }
+            }
+        }
+        infoPanel_dropdown.enabled = true;
+        lastExpeditionsHashValue = Expedition.actionsHash;
+    }
+    
 
     public void ScrollbarChanged()
     {
@@ -912,7 +946,14 @@ public class ExpeditionPanelUI : MonoBehaviour
         switch (chosenSection)
         {
             case ExpeditionPanelSection.Expeditions:
-                // awaiting
+                if (chosenExpedition != null && chosenExpedition.mission != Mission.NoMission)
+                {
+                    chosenExpedition.Dismiss();
+                }
+                else
+                {
+                    removeButton.SetActive(false);
+                }
                 break;
             case ExpeditionPanelSection.Shuttles:
                 if (chosenShuttle != null) chosenShuttle.Deconstruct();
@@ -940,7 +981,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                     if (i == 0) chosenCrew.SetShuttle(null);
                     else
                     {
-                        chosenCrew.SetShuttle(dropdownList[i - 1] as Shuttle);
+                        chosenCrew.SetShuttle(Shuttle.GetShuttle(dropdownList[i]));
                     }
                     RedrawChosenInfo();
                     break;
@@ -959,7 +1000,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                         }
                         else
                         {
-                            (dropdownList[i - 1] as Crew).SetShuttle(chosenShuttle);
+                            (Crew.GetCrew(dropdownList[i])).SetShuttle(chosenShuttle);
                         }
                         RedrawChosenInfo();                        
                     }
@@ -969,7 +1010,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                 if (chosenExpedition == null)  RedrawChosenInfo();
                 else
                 {
-                    if (i != 0) chosenExpedition.SetMission(Mission.missionsList[i - 1]);
+                    if (i != -1) chosenExpedition.SetMission(Mission.GetMission(dropdownList[i]));
                     else chosenExpedition.DropMission();
                 }
                 break;
@@ -1026,14 +1067,9 @@ public class ExpeditionPanelUI : MonoBehaviour
             infoPanel_expeditionPreparePanel.SetActive(false);
             return;
         }
-        if (expeditionPreparingIDsList[i] != - 1)
+        else
         {
-            //Crew c = Crew.(expeditionPreparingIDsList[i]);
-           // if (s != null)
-           // {
-            //    s.AssignTo(chosenExpedition);
-            //    RefreshExpeditionPreparePanel();
-           // }
+           chosenExpedition.SetMission(Mission.GetMission(dropdownList2[i]));
         }
     }
     public void ExpeditionPanel_PassButton(int i)

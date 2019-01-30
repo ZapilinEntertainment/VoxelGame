@@ -7,7 +7,8 @@ Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, G
 
 public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddShuttle, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock
+MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
+AddPlatform
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
@@ -370,6 +371,7 @@ public static class Localization {
                 {
                     switch (id)
                     {
+                        case ResourceType.ADVANCED_COVERING_ID: return GetStructureName(Structure.FOUNDATION_BLOCK_5_ID);
                         case 0: return "Ничего";
                         case ResourceType.DIRT_ID: return "Земля";
                         case ResourceType.FOOD_ID: return "Пища";
@@ -560,7 +562,7 @@ public static class Localization {
                         case GameAnnouncements.GameUnpaused: return "Игра продолжается";
                         case GameAnnouncements.StorageOverloaded: return "Склад переполнен";
                         case GameAnnouncements.ActionError: return "Ошибка, десу";
-                        case GameAnnouncements.ShipArrived: return "В нашу гавань зашло судно";
+                        case GameAnnouncements.ShipArrived: return "В нашу гавань зашёл корабль";
                         case GameAnnouncements.SetLandingPoint: return "Установите место посадки";
                         case GameAnnouncements.IslandCollapsing: return "Остров рушится!";
                         default: return "<пустое уведомление>";
@@ -918,7 +920,7 @@ public static class Localization {
                         case LocalizedPhrase.ShuttleConstructed: return "Собран новый челнок";
                         case LocalizedPhrase.ShuttleOnMission: return "Челнок на миссии";
                         case LocalizedPhrase.NoShuttle: return "Нет челнока";
-                        case LocalizedPhrase.AddShuttle: return "Добавить челнок";
+                        case LocalizedPhrase.AddCrew: return "Добавить команду";
                         case LocalizedPhrase.ObjectsLeft: return "Осталось объектов";
                         case LocalizedPhrase.NoSavesFound: return "Нет сохранений";
                         case LocalizedPhrase.CreateNewSave: return "Создать новое сохранение";
@@ -942,6 +944,7 @@ public static class Localization {
                         case LocalizedPhrase.ChangeSurfaceMaterial: return "Заменить покрытие";
                         case LocalizedPhrase.CreateBlock: return "Построить блок";
                         case LocalizedPhrase.CreateColumn: return "Построить опору";
+                        case LocalizedPhrase.AddPlatform: return "Прикрепить платформу";
                         default: return "<...>";
                     }
                 }
@@ -970,7 +973,7 @@ public static class Localization {
                         case LocalizedPhrase.ShuttleConstructed: return "New shuttle constructed";
                         case LocalizedPhrase.ShuttleOnMission: return "Shuttle on mission";
                         case LocalizedPhrase.NoShuttle: return "No shuttle";
-                        case LocalizedPhrase.AddShuttle: return "Add shuttle";
+                        case LocalizedPhrase.AddCrew: return "Add crew";
                         case LocalizedPhrase.ObjectsLeft: return "Objects left";
                         case LocalizedPhrase.NoSavesFound: return "No saves found";
                         case LocalizedPhrase.CreateNewSave: return "Create new save";
@@ -994,6 +997,7 @@ public static class Localization {
                         case LocalizedPhrase.ChangeSurfaceMaterial:return "Change surface";
                         case LocalizedPhrase.CreateBlock: return "Create block";
                         case LocalizedPhrase.CreateColumn: return "Create column";
+                        case LocalizedPhrase.AddPlatform: return "Add platform";
                         default: return "<...>";
                     }
                 }

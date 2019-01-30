@@ -33,12 +33,13 @@ public sealed class MenuUI : MonoBehaviour
         int k = 0;
         if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF)) k = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
 
-        if ( (k & 2) == 0)
+        if ( (k & 2) == 0) // first launch
         {
             LODController.SetLODdistance(0.5f);
             GameObject g = Instantiate(Resources.Load<GameObject>("UIPrefs/firstLaunchPanel"), transform);
             g.GetComponent<FirstLaunchUI>().menuScript = this;
             transform.GetChild(0).gameObject.SetActive(false);
+            authorsButton.gameObject.SetActive(false);
         }
         else
         {

@@ -1126,6 +1126,26 @@ public class Structure : MonoBehaviour
         if (b == null) return;
         SetStructureData(b, pos);
     }
+
+    /// <summary>
+    /// do not use directly, use basement.TransferStructures() instead
+    /// </summary>
+    /// <param name="sb"></param>
+    public void ChangeBasement(SurfaceBlock sb)
+    {
+        basement = sb;
+        if (transform.childCount == 0) SetModel();
+        basement.AddStructure(this);
+        if (isBasement)
+        {
+            BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
+            if (brc != null)
+            {
+                brc.SetStructure(this);
+                basement.SetStructureBlock(brc);
+            }
+        }
+    }
     // в финальном виде копипастить в потомков
     protected void SetStructureData(SurfaceBlock b, PixelPosByte pos)
     {

@@ -33,7 +33,7 @@ public class TunnelBuildingSite : Worksite {
                     }
                     GameMaster.geologyModule.CalculateOutput(production, workObject, GameMaster.realMaster.colonyController.storage);
                     workflow -= production;
-                    actionLabel = Localization.GetActionLabel(LocalizationActionLabels.DigInProgress) + " (" + ((int)(((float)workObject.volume / (float)CubeBlock.MAX_VOLUME) * 100)).ToString() + "%)";
+                    actionLabel = Localization.GetActionLabel(LocalizationActionLabels.DigInProgress) + " (" + ((int)(( 1 - ((float)workObject.volume / (float)CubeBlock.MAX_VOLUME)) * 100)).ToString() + "%)";
                 }
             }
         }

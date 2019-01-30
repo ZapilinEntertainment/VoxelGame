@@ -99,6 +99,18 @@ public sealed class Expedition : MonoBehaviour
         }
     }
 
+    public void Dismiss()
+    {
+        if (mission == Mission.NoMission)
+        {
+            if (participants.Count > 0)
+            {
+                foreach (Crew c in participants) c.SetStatus(CrewStatus.Free);
+                participants.Clear();
+            }            
+        }
+    }
+
     public void DrawTexture(UnityEngine.UI.RawImage iconPlace)
     {
         //awaiting

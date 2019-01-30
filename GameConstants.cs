@@ -13,7 +13,7 @@
         FOOD_CONSUMPTION = 1, STARVATION_TIME = 1,
         SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
-        RSPACE_CONSUMING_VAL = 0.2f,
+        RSPACE_CONSUMING_VAL = 0.125f,
         LSECTOR_CONSUMING_VAL = 0.9f        
         ;
     public static float WORLD_CONSUMING_TIMER { get { return 15 * (6 - (int)GameMaster.difficulty); } }

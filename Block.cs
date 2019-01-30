@@ -27,7 +27,7 @@ public class Block : MonoBehaviour {
 
 	public void InitializeShapelessBlock (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
         type = BlockType.Shapeless;
-        material_id = 0;
+        material_id = -1;
         illumination = 255;
 		myChunk = f_chunk; 
 		transform.parent = f_chunk.transform;
@@ -53,14 +53,13 @@ public class Block : MonoBehaviour {
 }
 	public virtual void InitializeBlock (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
         type = BlockType.Shapeless;
-        material_id = 0;
+        material_id = -1;
         illumination = 255;
 		myChunk = f_chunk;
         transform.parent = f_chunk.transform;
 		pos = f_chunkPos;
         transform.localPosition = new Vector3(pos.x,pos.y,pos.z);
 		transform.localRotation = Quaternion.Euler(Vector3.zero);
-		material_id = newId;
 		blockedByStructure = false;
 		name = "block "+ pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
 	}

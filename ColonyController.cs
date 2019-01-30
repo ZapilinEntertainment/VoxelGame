@@ -5,9 +5,7 @@ using UnityEngine;
 
 public sealed class ColonyController : MonoBehaviour
 {
-    const float HOUSING_TIME = 5;
-    const float HOUSING_PROBLEM_HAPPINESS = 0.3f, FOOD_PROBLEM_HAPPINESS = 0.1f, // happiness wouldnt raised upper this level if condition is not met
-    HEALTHCARE_PROBLEM_HAPPINESS_LIMIT = 0.5f;
+    private const float HOUSING_TIME = 5, FOOD_SUPPLY_MIN_HAPPINESS = 0.2f, HOUSING_MIN_HAPPINESS = 0.15f, HEALTHCARE_MIN_HAPPINESS = 0.14f;
 
     public string cityName { get; private set; }
     public Storage storage { get; private set; }
@@ -33,14 +31,14 @@ public sealed class ColonyController : MonoBehaviour
     public int citizenCount { get; private set; }
     float birthrateCoefficient;
     public float realBirthrate { get; private set; }
-    float peopleSurplus = 0, housingTimer = 0;
+    float peopleSurplus = 0, housingTimer = 0, happinessTimer = 0;
     public int totalLivespace { get; private set; }
     List<Hospital> hospitals;
-    private float starvationTimer, targetHappiness;
+    private float starvationTimer, targetHappiness, happinessIncreaseMultiplier = 1, happinessDecreaseMultiplier = 1;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false, housingCountChanges = false;
 
     public const byte MAX_HOUSING_LEVEL = 5;
-    private const float START_ENERGY_CRYSTALS_COUNT = 100;
+    private const float START_ENERGY_CRYSTALS_COUNT = 100, HAPPINESS_RECALCULATE_TIME = 5;
 
 
     void Awake()
@@ -132,83 +130,101 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
 
-        float happinessIncreaseMultiplier = 1, happinessDecreaseMultiplier = 1;
-        //   STARVATION PROBLEM
-        float foodSupplyHappiness = 0;
+        housingTimer -= t;
+        if (housingTimer <= 0)
         {
-            if (starvationTimer > 0)
+            if (temporaryHousing | housingCountChanges | citizenCount > totalLivespace)
             {
-                starvationTimer -= t;
-                if (starvationTimer < 0)
+                RecalculateHousing();
+            }
+            housingTimer = HOUSING_TIME;
+        }
+
+        happinessTimer -= t;
+        if (happinessTimer <= 0)
+        {
+            float x = GameConstants.HQ_MAX_LEVEL - 1;
+            float lvlCf = 1 - (hq.level - 3) / x;
+            //   STARVATION PROBLEM
+            float foodSupplyHappiness = 0;
+            {
+                if (starvationTimer > 0)
                 {
-                    if (citizenCount == 1)
+                    starvationTimer -= t;
+                    if (starvationTimer < 0)
                     {
-                        citizenCount = 0;
-                        PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
-                        GameMaster.realMaster.GameOver(GameEndingType.ColonyLost);
-                        return;
+                        if (citizenCount == 1)
+                        {
+                            citizenCount = 0;
+                            PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
+                            GameMaster.realMaster.GameOver(GameEndingType.ColonyLost);
+                            return;
+                        }
+                        else
+                        {
+                            starvationTimer = GameConstants.STARVATION_TIME;
+                            if (freeWorkers > 0) { freeWorkers--; citizenCount--; }
+                            else StartCoroutine(DeportateWorkingCitizen());
+                            PoolMaster.current.CitizenLeaveEffect(houses[(int)(Random.value * (houses.Count - 1))].transform.position);
+                        }
                     }
+                    foodSupplyHappiness = 0;
+                    happinessDecreaseMultiplier++;
+                    realBirthrate = 0;
+                }
+                else
+                {
+                    float monthFoodReserves = citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
+                    foodSupplyHappiness = (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves) * lvlCf;
+                    if (foodSupplyHappiness < FOOD_SUPPLY_MIN_HAPPINESS) foodSupplyHappiness = FOOD_SUPPLY_MIN_HAPPINESS;
                     else
                     {
-                        starvationTimer = GameConstants.STARVATION_TIME;
-                        if (freeWorkers > 0) { freeWorkers--; citizenCount--; }
-                        else StartCoroutine(DeportateWorkingCitizen());
-                        PoolMaster.current.CitizenLeaveEffect(houses[(int)(Random.value * (houses.Count - 1))].transform.position);
+                        if (foodSupplyHappiness > 1)
+                        {
+                            happinessIncreaseMultiplier++;
+                        }
                     }
                 }
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS;
-                happinessDecreaseMultiplier++;
-                realBirthrate = 0;
             }
-            else
+            //        
+            happinessDecreaseMultiplier = 0;
+            happinessIncreaseMultiplier = 0;
+            //HOUSING PROBLEM
+            float housingHappiness = 0;            
+            housingHappiness = HOUSING_MIN_HAPPINESS * lvlCf;
+            if (housingLevel < 1)
             {
-                float monthFoodReserves = citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
-                foodSupplyHappiness = FOOD_PROBLEM_HAPPINESS + (1 - FOOD_PROBLEM_HAPPINESS) * (storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves);
-                if (foodSupplyHappiness > 1)
-                {
-                    foodSupplyHappiness = 1;
-                    happinessIncreaseMultiplier++;
-                }
-            }
-        }
-        //
-        float lvlCf = 1 - (hq.level - 1) / (GameConstants.HQ_MAX_LEVEL - 1);
-        //HOUSING PROBLEM
-        float housingHappiness = 0;
-        {
-            housingTimer -= t;
-            if (housingTimer <= 0)
-            {
-                if (temporaryHousing | housingCountChanges | citizenCount > totalLivespace)
-                {
-                    RecalculateHousing();
-                }
-                housingTimer = HOUSING_TIME;
-            }
-            if (housingLevel == 0)
-            {
-                housingHappiness = HOUSING_PROBLEM_HAPPINESS * lvlCf;
                 happinessDecreaseMultiplier++;
             }
             else
             {
                 byte l = hq.level;
                 if (l > MAX_HOUSING_LEVEL) l = MAX_HOUSING_LEVEL;
-                housingHappiness = housingLevel / l * (1 - HOUSING_PROBLEM_HAPPINESS * lvlCf) + HOUSING_PROBLEM_HAPPINESS * lvlCf;
+                float supply = housingLevel / l;
+                housingHappiness += (1 - housingHappiness) * supply;
             }
+            //HEALTHCARE            
+            float healthcareHappiness = HEALTHCARE_MIN_HAPPINESS * lvlCf;
+            if (hospitals_coefficient > 0)
+            {
+                healthcareHappiness += hospitals_coefficient * (1 - healthcareHappiness);
+                if (hospitals_coefficient > 1) happinessIncreaseMultiplier++;
+            }
+            else
+            {
+                happinessDecreaseMultiplier++;
+                if (health_coefficient < 1)
+                {
+                    health_coefficient += hospitals_coefficient * t * gears_coefficient * 0.001f;
+                }
+            }
+            // HAPPINESS CALCULATION
+            targetHappiness = 1;
+            if (targetHappiness > foodSupplyHappiness) targetHappiness = foodSupplyHappiness;
+            if (targetHappiness > healthcareHappiness) targetHappiness = healthcareHappiness;
+            if (targetHappiness > housingHappiness) targetHappiness = housingHappiness;
+            happinessTimer = HAPPINESS_RECALCULATE_TIME;
         }
-        //HEALTHCARE
-        if (health_coefficient < 1 && hospitals_coefficient > 0)
-        {
-            health_coefficient += hospitals_coefficient * t * gears_coefficient * 0.001f;
-        }
-        float healthcareHappiness = HEALTHCARE_PROBLEM_HAPPINESS_LIMIT * lvlCf + (1 - HEALTHCARE_PROBLEM_HAPPINESS_LIMIT * lvlCf) * hospitals_coefficient;
-        healthcareHappiness *= health_coefficient;
-        // HAPPINESS CALCULATION
-        targetHappiness = 1;
-        if (housingHappiness < targetHappiness) targetHappiness = housingHappiness;
-        if (healthcareHappiness < targetHappiness) targetHappiness = healthcareHappiness;
-        if (foodSupplyHappiness < targetHappiness) targetHappiness = foodSupplyHappiness;
         if (happiness_coefficient != targetHappiness)
         {
             if (happiness_coefficient > targetHappiness) happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * t * happinessDecreaseMultiplier);

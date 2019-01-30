@@ -222,7 +222,7 @@ public sealed class CaveBlock : SurfaceBlock
                 //eo visibility check
             }
         }
-        if (structureBlock != null) structureBlock.SetVisibilityMask(x);
+        if (structureBlockRenderer != null) structureBlockRenderer.SetVisibilityMask(x);
     }
 
     public void DestroySurface()

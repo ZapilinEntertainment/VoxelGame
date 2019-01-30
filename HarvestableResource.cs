@@ -179,6 +179,8 @@ public class HarvestableResource : Structure
                             size = 0.2f;
                             resolution = 32;
                             lpackType = LODPackType.OneSide;
+                            lodDistance = 15;
+                            visibilityDistance = 24;
                             break;
                         }
                     case ContainerModelType.DeadOak5:
@@ -192,6 +194,8 @@ public class HarvestableResource : Structure
                             size = 0.25f;
                             resolution = 32;
                             lpackType = LODPackType.OneSide;
+                            lodDistance = 18;
+                            visibilityDistance = 28;
                             break;
                         }
                     case ContainerModelType.DeadOak6:
@@ -203,6 +207,8 @@ public class HarvestableResource : Structure
                                new RenderPoint(new Vector3(0, 0.551f, -0.074f), new Vector3(75, 0, 0))
                             };
                             size = 0.4f;
+                            lodDistance = 21;
+                            visibilityDistance = 32;
                             resolution = 64;
                             lpackType = LODPackType.OneSide;
                             break;

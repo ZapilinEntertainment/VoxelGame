@@ -57,24 +57,27 @@ public sealed class LifeSource : Structure {
             GameMaster.realMaster.lifepowerUpdateEvent -= LifepowerUpdate;
             subscribedToUpdate = false;
         }
-        if (basement != null)
+        if (basement != null )
         {
-            switch (id)
+            if (!GameMaster.editMode)
             {
-                case TREE_OF_LIFE_ID:
-                    {
-                        HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.DeadTreeOfLife, ResourceType.Lumber, 5000);
-                        hr.SetModelRotation(modelRotation);
-                        hr.SetBasement(basement, new PixelPosByte(hr.innerPosition.x, hr.innerPosition.z));
-                        break;
-                    }
-                case LIFESTONE_ID:
-                    {
-                        HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.DeadLifestone, ResourceType.Stone, 5000);
-                        hr.SetModelRotation(modelRotation);
-                        hr.SetBasement(basement, new PixelPosByte(hr.innerPosition.x, hr.innerPosition.z));
-                        break;
-                    }
+                switch (id)
+                {
+                    case TREE_OF_LIFE_ID:
+                        {
+                            HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.DeadTreeOfLife, ResourceType.Lumber, 5000);
+                            hr.SetModelRotation(modelRotation);
+                            hr.SetBasement(basement, new PixelPosByte(hr.innerPosition.x, hr.innerPosition.z));
+                            break;
+                        }
+                    case LIFESTONE_ID:
+                        {
+                            HarvestableResource hr = HarvestableResource.ConstructContainer(ContainerModelType.DeadLifestone, ResourceType.Stone, 5000);
+                            hr.SetModelRotation(modelRotation);
+                            hr.SetBasement(basement, new PixelPosByte(hr.innerPosition.x, hr.innerPosition.z));
+                            break;
+                        }
+                }
             }
             if (dependentBlocks != null)
             {

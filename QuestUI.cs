@@ -11,7 +11,8 @@ public sealed class QuestUI : MonoBehaviour
     [SerializeField] RectTransform[] questButtons; // fiti
     [SerializeField] GameObject questInfoPanel, closeButton; // fiti
     [SerializeField] RectTransform stepsContainer;
-    [SerializeField] Text questName, questDescription, rewardText; // fiti    
+    [SerializeField] Text questName, questDescription, rewardText; // fiti  
+    [SerializeField] RawImage newQuestMarker;
 #pragma warning restore 0649
 
     public bool[] questAccessMap { get; private set; }
@@ -95,6 +96,7 @@ public sealed class QuestUI : MonoBehaviour
     {
         GetComponent<Image>().enabled = true;
         closeButton.SetActive(true);
+        newQuestMarker.enabled = false;
         PrepareBasicQuestWindow();
         UIController.current.ChangeActiveWindow(ActiveWindowMode.QuestPanel);
     }
@@ -277,13 +279,17 @@ public sealed class QuestUI : MonoBehaviour
                 }
                 break;
         }
-        
-        if (q == Quest.NoQuest )
+
+        if (q == Quest.NoQuest)
         {
             StartCoroutine(WaitForNewQuest(i));
             return;
         }
-        else activeQuests[i] = q;
+        else
+        {
+            activeQuests[i] = q;
+            if (openedQuest == -1) newQuestMarker.enabled = true;
+        }
 
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
         UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));

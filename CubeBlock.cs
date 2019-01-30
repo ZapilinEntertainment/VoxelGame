@@ -46,29 +46,69 @@ public class CubeBlock : Block
                 Block lowerBlock = myChunk.GetBlock(pos.x, pos.y - 1, pos.z);
                 Block upperBlock = myChunk.GetBlock(pos.x, pos.y + 1, pos.z);
                 int ceilingMaterial = material_id;
-                bool makeSurfaceType = true;
+                bool convertToSurfaceType = true;
                 if (upperBlock != null)
                 {
                     ceilingMaterial = upperBlock.material_id;
-                    if (upperBlock.type == BlockType.Surface | upperBlock.type == BlockType.Cave) makeSurfaceType = false;
+                    if (upperBlock is SurfaceBlock) convertToSurfaceType = false;
                 }
 
                 if (lowerBlock == null)
                 {
-                    if (makeSurfaceType) myChunk.DeleteBlock(pos);
+                    if (convertToSurfaceType) myChunk.DeleteBlock(pos);
                     else
                     {
                         myChunk.ReplaceBlock(pos, BlockType.Cave, -1, upperBlock.material_id, false);
                     }
                 }
                 else
-                {             
-                    if (lowerBlock.type == BlockType.Surface)
+                {
+                    bool haveSupport = true;
+                    int surfMaterial = material_id;
+                    switch (lowerBlock.type)
                     {
-                        if (!(lowerBlock as SurfaceBlock).haveSupportingStructure) myChunk.ReplaceBlock(lowerBlock.pos, BlockType.Cave, lowerBlock.material_id, material_id, false);
+                        case BlockType.Shapeless:
+                            haveSupport = false;
+                            break;
+                        case BlockType.Cube:
+                            {
+                                CubeBlock cb = lowerBlock as CubeBlock;
+                                if (cb.excavatingStatus != 0) haveSupport = false;
+                                else {
+                                    haveSupport = true;
+                                    surfMaterial = lowerBlock.material_id;
+                                }
+                            }
+                            break;
+                        case BlockType.Surface:
+                            {
+                                SurfaceBlock sb = lowerBlock as SurfaceBlock;
+                                if (sb.haveSupportingStructure)
+                                {
+                                    haveSupport = true;
+                                    surfMaterial = sb.structureBlockRenderer != null ? ResourceType.ADVANCED_COVERING_ID : ResourceType.CONCRETE_ID;
+                                }
+                                else haveSupport = false;
+                            }
+                            break;
+                        case BlockType.Cave:
+                            {
+                                CaveBlock cvb = lowerBlock as CaveBlock;
+                                if (cvb != null) surfMaterial = cvb.ceilingMaterial;
+                                else surfMaterial = lowerBlock.material_id;
+                            }
+                            break;
                     }
-                    if (makeSurfaceType) myChunk.ReplaceBlock(pos, BlockType.Surface, material_id, false);
-                    else myChunk.ReplaceBlock(pos, BlockType.Cave, material_id, ceilingMaterial, false);
+                    if (haveSupport)
+                    {
+                        if (convertToSurfaceType) myChunk.ReplaceBlock(pos, BlockType.Surface, lowerBlock.material_id, false);
+                        else myChunk.ReplaceBlock(pos, BlockType.Cave, surfMaterial, ceilingMaterial, false);
+                    }
+                    else
+                    {
+                        if (convertToSurfaceType) myChunk.DeleteBlock(pos);
+                        else myChunk.ReplaceBlock(pos, BlockType.Cave, -1, ceilingMaterial, false);
+                    }
                 }                
             }
         }
