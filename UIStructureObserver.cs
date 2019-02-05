@@ -8,6 +8,7 @@ public class UIStructureObserver : UIObserver {
 #pragma warning disable 0649
     [SerializeField] Text nameField, sizeField;
     [SerializeField]  Button demolishButton;
+    [SerializeField] GameObject specialButton;
 #pragma warning restore 0649
     const int ROTATE_BUTTON_CHILDINDEX = 4;
 
@@ -36,6 +37,15 @@ public class UIStructureObserver : UIObserver {
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(false);
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(false);
             }
+            if (s.id == Structure.OBSERVATORY_ID)
+            {
+                specialButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.OpenMap);
+                specialButton.SetActive(true);
+            }
+            else
+            {
+                if (specialButton.activeSelf) specialButton.SetActive(false);
+            }
 		}
 	}
 
@@ -57,6 +67,18 @@ public class UIStructureObserver : UIObserver {
         if (observingStructure.rotate90only) r += 2;
         else r++;
         observingStructure.SetModelRotation(r);
+    }
+    public void SpecialButtonClick()
+    {
+        if (observingStructure == null) SelfShutOff();
+        else
+        {
+            if (observingStructure.id == Structure.OBSERVATORY_ID)
+            {
+                GlobalMapUI.GetCurrent().Activate();
+            }
+            else specialButton.SetActive(false);
+        }
     }
 
     override public void SelfShutOff() {

@@ -669,141 +669,149 @@ public sealed class UISurfacePanelController : UIObserver {
                         }
                         break;
                     case Structure.OBSERVATORY_ID:
-                        {                            
-                            if (observingSurface.type == BlockType.Surface)
+                        {
+                            if (Observatory.alreadyBuilt)
                             {
-                                Block[,,] blocks = observingSurface.myChunk.blocks;
-                                ChunkPos pos = observingSurface.pos;
-                                int size = Chunk.CHUNK_SIZE;
-
-                                int i = 0;
-                                if (pos.y < size - 1)
+                                acceptable = false;
+                                reason = Localization.GetRefusalReason(RefusalReason.AlreadyBuilt);
+                            }
+                            else
+                            {
+                                if (observingSurface.type == BlockType.Surface)
                                 {
-                                    if (pos.y > 1)
+                                    Block[,,] blocks = observingSurface.myChunk.blocks;
+                                    ChunkPos pos = observingSurface.pos;
+                                    int size = Chunk.CHUNK_SIZE;
+
+                                    int i = 0;
+                                    if (pos.y < size - 1)
                                     {
-                                        for (; i < pos.y - 1; i++)
+                                        if (pos.y > 1)
+                                        {
+                                            for (; i < pos.y - 1; i++)
+                                            {
+                                                if (blocks[pos.x, i, pos.z] != null) goto CHECK_FAILED;
+                                            }
+                                        }
+                                        for (i = pos.y + 1; i < size; i++)
                                         {
                                             if (blocks[pos.x, i, pos.z] != null) goto CHECK_FAILED;
                                         }
+                                        i = 0;
                                     }
-                                    for (i = pos.y + 1; i < size; i++)
-                                    {
-                                        if (blocks[pos.x, i, pos.z] != null) goto CHECK_FAILED;
-                                    }
-                                    i = 0;
-                                }
-                                bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true};
-                                //  0  1  2
-                                //  3     4
-                                //  5  6  7
-                                if (pos.x == 0)
-                                {
-                                    checkArray[0] = false;
-                                    checkArray[3] = false;
-                                    checkArray[5] = false;
-                                }
-                                else
-                                {
-                                    if (pos.x == size-1)
-                                    {
-                                        checkArray[2] = false;
-                                        checkArray[4] = false;
-                                        checkArray[7] = false;
-                                    }
-                                }
-                                if (pos.z == 0)
-                                {
-                                    checkArray[5] = false;
-                                    checkArray[6] = false;
-                                    checkArray[7] = false;
-                                }
-                                else
-                                {
-                                    if (pos.z == size - 1)
+                                    bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true };
+                                    //  0  1  2
+                                    //  3     4
+                                    //  5  6  7
+                                    if (pos.x == 0)
                                     {
                                         checkArray[0] = false;
-                                        checkArray[1] = false;
-                                        checkArray[2] = false;
+                                        checkArray[3] = false;
+                                        checkArray[5] = false;
                                     }
-                                }                                
-                                if (checkArray[0])
-                                {
-                                    int x = pos.x - 1, z = pos.z + 1;
-                                    for (; i < size; i++)
+                                    else
                                     {
-                                        if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        if (pos.x == size - 1)
+                                        {
+                                            checkArray[2] = false;
+                                            checkArray[4] = false;
+                                            checkArray[7] = false;
+                                        }
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[1])
-                                {
-                                    int z = pos.z + 1;
-                                    for (; i < size; i++)
+                                    if (pos.z == 0)
                                     {
-                                        if (blocks[pos.x, i, z] != null) goto CHECK_FAILED;
+                                        checkArray[5] = false;
+                                        checkArray[6] = false;
+                                        checkArray[7] = false;
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[2])
-                                {
-                                    int x = pos.x + 1, z = pos.z + 1;
-                                    for (; i < size; i++)
+                                    else
                                     {
-                                        if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        if (pos.z == size - 1)
+                                        {
+                                            checkArray[0] = false;
+                                            checkArray[1] = false;
+                                            checkArray[2] = false;
+                                        }
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[3])
-                                {
-                                    int x = pos.x - 1;
-                                    for (; i < size; i++)
+                                    if (checkArray[0])
                                     {
-                                        if (blocks[x, i, pos.z] != null) goto CHECK_FAILED;
+                                        int x = pos.x - 1, z = pos.z + 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[4])
-                                {
-                                    int x = pos.x + 1;
-                                    for (; i < size; i++)
+                                    if (checkArray[1])
                                     {
-                                        if (blocks[x, i, pos.z] != null) goto CHECK_FAILED;
+                                        int z = pos.z + 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[pos.x, i, z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[5])
-                                {
-                                    int x = pos.x - 1, z = pos.z - 1;
-                                    for (; i < size; i++)
+                                    if (checkArray[2])
                                     {
-                                        if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        int x = pos.x + 1, z = pos.z + 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[6])
-                                {
-                                    int  z = pos.z - 1;
-                                    for (; i < size; i++)
+                                    if (checkArray[3])
                                     {
-                                        if (blocks[pos.x, i, z] != null) goto CHECK_FAILED;
+                                        int x = pos.x - 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[x, i, pos.z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
                                     }
-                                    i = 0;
-                                }
-                                if (checkArray[7])
-                                {
-                                    int x = pos.x + 1, z = pos.z - 1;
-                                    for (; i < size; i++)
+                                    if (checkArray[4])
                                     {
-                                        if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        int x = pos.x + 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[x, i, pos.z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
                                     }
-                                    i = 0;
+                                    if (checkArray[5])
+                                    {
+                                        int x = pos.x - 1, z = pos.z - 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
+                                    }
+                                    if (checkArray[6])
+                                    {
+                                        int z = pos.z - 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[pos.x, i, z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
+                                    }
+                                    if (checkArray[7])
+                                    {
+                                        int x = pos.x + 1, z = pos.z - 1;
+                                        for (; i < size; i++)
+                                        {
+                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                        }
+                                        i = 0;
+                                    }
+                                    acceptable = true;
+                                    break;
                                 }
-                                acceptable = true;
-                                break;
+                                CHECK_FAILED:
+                                acceptable = false;
+                                reason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
                             }
-                            CHECK_FAILED:
-                            acceptable = false;
-                            reason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
                         }
                         break;
                 }                
@@ -814,7 +822,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 t.color = Color.yellow;
                 resourcesCostImage[0].uvRect = ResourceType.GetResourceIconRect(0);
                 resourcesCostImage[0].gameObject.SetActive(true);
-                for (int i = 1; i < resourcesCostImage.Length - 1; i++)
+                for (int i = 1; i < resourcesCostImage.Length; i++)
                 {
                     resourcesCostImage[i].gameObject.SetActive(false);
                 }
@@ -1001,6 +1009,7 @@ public sealed class UISurfacePanelController : UIObserver {
     void LocalizeButtonTitles()
     {
         transform.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build);
+        transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Gather);
 
         Transform t = buildIntersectionSubmit.transform;
         t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.Ask_DestroyIntersectingBuildings);

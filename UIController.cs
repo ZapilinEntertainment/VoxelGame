@@ -17,7 +17,7 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
@@ -58,7 +58,7 @@ sealed public class UIController : MonoBehaviour
         ;
     private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false,
         localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
-    
+    private List<int> activeFastButtons;
 
     private CubeBlock chosenCube;
     private ColonyController colony;
@@ -87,6 +87,7 @@ sealed public class UIController : MonoBehaviour
         questUI = _questUI;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
         mainCanvas = transform.GetChild(1);
+        activeFastButtons = new List<int>();
         
         if (landingButton.activeSelf) landingButton.SetActive(false);
         if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.GetChild(1));
@@ -750,6 +751,7 @@ sealed public class UIController : MonoBehaviour
             t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(false);
             t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(false);
             t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).gameObject.SetActive(false);
+            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 3).gameObject.SetActive(false);
         }
         if (changeFrameColor)
         {
@@ -1214,6 +1216,56 @@ sealed public class UIController : MonoBehaviour
         }
         END:
         ChangeChosenObject(ChosenObjectType.Cube);
+    }
+
+    public void AddFastButton(Structure s)
+    {
+        switch (s.id)
+        {
+            case Structure.OBSERVATORY_ID: break;
+            default: return;
+        }
+        GameObject buttonGO = null;
+        if (activeFastButtons.Count == 0) {
+            buttonGO = rightFastPanel.transform.GetChild(0).gameObject;
+            buttonGO.SetActive(true);            
+        }
+        else {
+            buttonGO = Instantiate(rightFastPanel.transform.GetChild(0).gameObject, rightFastPanel.transform);
+            RectTransform rt = buttonGO.GetComponent<RectTransform>();
+            rt.position += Vector3.down * rt.rect.height * activeFastButtons.Count;
+        }
+        Button b = buttonGO.GetComponent<Button>();
+        b.onClick.RemoveAllListeners();
+        if (s.id != Structure.OBSERVATORY_ID)    b.onClick.AddListener(() => { Select(s); });
+        else b.onClick.AddListener(() => { GlobalMapUI.GetCurrent().Activate(); });
+        buttonGO.transform.GetChild(0).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(s.id);
+        activeFastButtons.Add(s.id);
+    }
+    public void RemoveFastButton(Structure s)
+    {
+        int i = 0;
+        bool found = false;
+        Transform t = rightFastPanel.transform;
+        while (i < activeFastButtons.Count)
+        {
+            if (activeFastButtons[i] == s.id)
+            {
+                if (t.childCount > 1) Destroy(t.GetChild(i).gameObject);
+                else t.GetChild(i).gameObject.SetActive(false);
+                activeFastButtons.RemoveAt(i);
+                found = true;
+            }
+            else
+            {
+                if (found)
+                {
+                    RectTransform rt = t.GetChild(i) as RectTransform;
+                    rt.position += Vector3.up * rt.rect.height;
+                    i++;
+                }
+            }
+        }
     }
     #endregion
 

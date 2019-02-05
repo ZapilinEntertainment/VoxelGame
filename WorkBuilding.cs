@@ -234,6 +234,12 @@ public abstract class WorkBuilding : Building {
                     maxWorkers = 60;
                 }
                 break;
+            case OBSERVATORY_ID:
+                {
+                    workflowToProcess = Observatory.SEARCH_WORKFLOW;
+                    maxWorkers = 50;
+                }
+                break;
         }
         colony = GameMaster.realMaster.colonyController;
     }
@@ -248,6 +254,7 @@ public abstract class WorkBuilding : Building {
             subscribedToUpdate = true;
         }
         //copy to expedition corpus.cs
+        //copy to expedition observatory.cs
     }
 
     protected void SetWorkbuildingData(SurfaceBlock sb, PixelPosByte pos)
@@ -363,6 +370,7 @@ public abstract class WorkBuilding : Building {
         Destroy(gameObject);
         //copy to expedition corpus.cs
         //copy to hospital.cs
+        //copy to observatory.cs
     }
 
     #region save-load system

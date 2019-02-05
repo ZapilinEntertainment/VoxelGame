@@ -9,15 +9,27 @@ public class GlobalMapUI : MonoBehaviour {
 #pragma warning disable 0649
     [SerializeField] private Transform[] rings;
     [SerializeField] private GameObject exampleMarker;
+    [SerializeField] private GameObject mapCamera, mapCanvas;
 #pragma warning restore 0649
+    private static GlobalMapUI current;
+
     private bool prepared = false;
     private float sh;
     public float[] ringsBorders { get; private set; }
     private float[] rotationSpeed;
-    private Canvas mapCanvas;
     private MapPoint cityPoint;
     private Vector3 mapCenter;
     private List<PointOfInterest> points;      
+
+    public static GlobalMapUI GetCurrent()
+    {
+        if (current == null)
+        {
+            current = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI")).GetComponent<GlobalMapUI>();
+            current.Prepare();
+        }
+        return current;
+    }
 
     private void Start()
     {
@@ -27,18 +39,17 @@ public class GlobalMapUI : MonoBehaviour {
     private void Prepare()
     {        
         ringsBorders = new float[6] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
-        sh = Screen.height;
-        float outer = sh * ringsBorders[0], inner = sh * ringsBorders[1];
         int resolution = (int)(Screen.height * QualitySettings.GetQualityLevel() / 2f);
-        rings[0].GetComponent<RawImage>().texture = GetTorusTexture((int)outer, (int)inner, resolution);
-        outer = inner; inner = sh * ringsBorders[2];
-        rings[1].GetComponent<RawImage>().texture = GetTorusTexture((int)outer, (int)inner, resolution);
-        outer = inner; inner = sh * ringsBorders[3];
-        rings[2].GetComponent<RawImage>().texture = GetTorusTexture((int)outer, (int)inner, resolution);
-        outer = inner; inner = sh * ringsBorders[4];
-        rings[3].GetComponent<RawImage>().texture = GetTorusTexture((int)outer, (int)inner, resolution);
-        outer = inner; inner = sh * ringsBorders[5];
-        rings[4].GetComponent<RawImage>().texture = GetTorusTexture((int)outer, (int)inner, resolution);
+        float r = ringsBorders[1];
+        rings[0].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[0]), r);
+        r = ringsBorders[2] / r;
+        rings[1].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[1]), r);
+        r = ringsBorders[3] / r;
+        rings[2].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[2]), r);
+        r = ringsBorders[4] / r;
+        rings[3].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[3]), r);
+        r = ringsBorders[5] / r;
+        rings[4].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[4]), r);
 
         rotationSpeed = new float[5];
         rotationSpeed[0] = (Random.value - 0.5f) * 30;
@@ -50,8 +61,9 @@ public class GlobalMapUI : MonoBehaviour {
         points = new List<PointOfInterest>();
         
         mapCenter = new Vector3(Screen.width / 2f, sh / 2f, 0);
+        prepared = true;
 
-        GameObject cityMarker = Instantiate(exampleMarker,transform);
+        GameObject cityMarker = Instantiate(exampleMarker,mapCanvas.transform);
         cityMarker.GetComponent<RawImage>().uvRect = GetMarkerRect(MapMarkerType.MyCity);
         cityMarker.GetComponent<Button>().interactable = false;
         cityMarker.gameObject.SetActive(true);
@@ -59,7 +71,7 @@ public class GlobalMapUI : MonoBehaviour {
         float h = GameConstants.START_HAPPINESS;
         cityPoint.Initialize(cityMarker.GetComponent<RectTransform>(), Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity);
 
-        prepared = true;
+        LocalizeTitles();
     }
 
     public void Activate()
@@ -68,6 +80,17 @@ public class GlobalMapUI : MonoBehaviour {
         {
             Prepare();
         }
+        UIController.current.gameObject.SetActive(false);
+        FollowingCamera.main.gameObject.SetActive(false);
+        mapCamera.SetActive(true);
+        mapCanvas.SetActive(true);
+    }
+    public void Close()
+    {
+        mapCamera.SetActive(false);
+        mapCanvas.SetActive(false);
+        UIController.current.gameObject.SetActive(true);
+        FollowingCamera.main.gameObject.SetActive(true);
     }
 
     private void Update()
@@ -90,45 +113,30 @@ public class GlobalMapUI : MonoBehaviour {
             }
         }
         cityPoint.angle += rotationSpeed[cityPoint.ringIndex] * t;
-        cityPoint.rect.position = mapCenter + Quaternion.AngleAxis(cityPoint.angle, Vector3.forward) * (Vector3.up * cityPoint.height * sh / 2f);
+        if (cityPoint.angle >= 360) cityPoint.angle %= 360;
+        cityPoint.rect.localPosition = Quaternion.AngleAxis(cityPoint.angle, Vector3.forward) * (Vector3.up * cityPoint.height * Screen.height / 2f) ;
     }
 
-    private Texture2D GetTorusTexture(int outerRadius, int innerRadius, int resolution)
+    private Texture2D GetTorusTexture(int resolution, float innerRadiusValue)
     {
         byte[] rawdata = new byte[resolution * resolution * 4];
+        float squaredRadius = resolution * resolution / 4f, innerSquaredRadius = squaredRadius * innerRadiusValue * innerRadiusValue;
+        float half = resolution / 2f;
         float sr = 0;
-        float squaredRadius = outerRadius * outerRadius, squaredInnerRadius = innerRadius * innerRadius;
-        float halfpoint = resolution / 2f, sqWidth = squaredRadius - squaredInnerRadius;
-        int k = 0;
         byte one = 255, zero = 0;
+
+        int k = 0;
         for (int x = 0; x < resolution; x++)
         {
             for (int y = 0; y < resolution; y++)
             {
-                sr = (x - halfpoint) * (x - halfpoint) + (y - halfpoint) * (y - halfpoint);   
-                if (sr <= squaredRadius & sr >= squaredInnerRadius)
+                sr = (x - half) * (x - half) + (y - half) * (y - half);
+                if (sr <= squaredRadius & sr >= innerSquaredRadius)
                 {
-                    if (squaredRadius - sr < 4)
-                    {
-                        //border
-                        rawdata[k] = zero;
-                        rawdata[k + 1] = one;
-                        rawdata[k + 2] = one;
-                    }
-                    else
-                    {
-                        rawdata[k] = 255;
-                        rawdata[k + 1] = 255;
-                        rawdata[k + 2] = 255;
-                    }
-                    float d = (squaredRadius - sr) / sqWidth;
-                    if (d <= 0.1f) d = Mathf.Sin((d - 0.1f) / 0.2f * Mathf.PI);
-                    else
-                    {
-                        if (d >= 0.9f) d = Mathf.Sin((d - 0.9f) / 0.9f * Mathf.PI);
-                        else d = 1;
-                    }
-                    rawdata[k + 3] = (byte)(d * one);
+                    rawdata[k] = one;
+                    rawdata[k + 1] = one;
+                    rawdata[k + 2] = one;                    
+                    rawdata[k + 3] = one;
                 }
                 else
                 {
@@ -188,6 +196,11 @@ public class GlobalMapUI : MonoBehaviour {
         }
     }
 
+    public void LocalizeTitles()
+    {
+        mapCanvas.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Close);
+    }
+
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {
@@ -205,16 +218,8 @@ class MapPoint : MonoBehaviour
     public byte ringIndex;
     public MapMarkerType type { get; protected set;}
     public RectTransform rect { get; protected set; }
-    public float angle {
-        get { return angle; }
-        set { if (value > 360) angle = value % 360;
-            else
-            {
-                if (value < 0) angle = (value % 360) + 360;
-            }
-            }
-    }
-    public float height { get { return height; } set { if (value > 1) height = 1; else { if (value < 0) height = 0; } } }
+    public float angle;
+    public float height;
 
     public void Initialize(RectTransform t, float i_angle, float i_height, byte ring, MapMarkerType mtype)
     {

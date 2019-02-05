@@ -1,20 +1,20 @@
 ﻿using UnityEngine;
 
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
-public enum LocalizedWord : ushort {Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
+public enum LocalizedWord : ushort {Close,Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
 public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-AddPlatform
+AddPlatform, OpenMap
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
     GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing };
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
-public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock}
+public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt}
 
 public static class Localization {
 
@@ -111,6 +111,7 @@ public static class Localization {
                     case Structure.HOUSING_MAST_6_ID: return "Жилой шпиль";
                     case Structure.DOCK_ADDON_1_ID: return "Пристройка дока - 1";
                     case Structure.DOCK_ADDON_2_ID: return "Пристройка дока - 2";
+                    case Structure.OBSERVATORY_ID: return "Обсерватория";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -187,6 +188,7 @@ public static class Localization {
                     case Structure.HOUSING_MAST_6_ID: return "Housing spire";
                     case Structure.DOCK_ADDON_1_ID: return "Dock addon 1";
                     case Structure.DOCK_ADDON_2_ID: return "Dock addon 2";
+                    case Structure.OBSERVATORY_ID: return "Observatory";
                     default: return "Unknown building";
                 }
         }
@@ -261,7 +263,7 @@ public static class Localization {
                     case Structure.SUPPLIES_FACTORY_4_ID: 
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Производит снаряжение для экспедиций и нужд колонии.";
                     case Structure.GRPH_ENRICHER_3_ID: return "Обогащает N-метал до Графония.";                    
-                    case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Конденсирует лишнюю энергию в кристаллы.";
+                    case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Конденсирует лишнюю энергию в кристаллы. Может быть построен только одно такое здание!";
                     case Structure.SWITCH_TOWER_ID: return "При выделении включает срез слоя, на котором находится.";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Вмещает и обслуживает один челнок.";
                     case Structure.RECRUITING_CENTER_4_ID: return "Набирает и подготавливает команды исследователей из добровольцев.";
@@ -275,6 +277,7 @@ public static class Localization {
                     case Structure.CONNECT_TOWER_6_ID:
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<В разработке>";
+                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха.";
                     default: return "Без описания";
                 }
             case Language.English:
@@ -345,7 +348,7 @@ public static class Localization {
                     case Structure.SUPPLIES_FACTORY_4_ID:
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Produces supplies for expeditions and colony needs.";
                     case Structure.GRPH_ENRICHER_3_ID: return "Transform N-metal into Graphonium.";
-                    case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Transform energy excess in energy crystals.";
+                    case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Transform energy excess in energy crystals. It can be only one building of this type!";
                     case Structure.SWITCH_TOWER_ID: return "Being selected activates layer cut on its own height.";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Base and maintain one shuttle.";
                     case Structure.RECRUITING_CENTER_4_ID: return "Recruit and train exploring teams from volunteers.";
@@ -359,6 +362,7 @@ public static class Localization {
                     case Structure.CONNECT_TOWER_6_ID:
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<In development>";
+                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
                     default: return "No description.";
                 }
         }
@@ -762,6 +766,7 @@ public static class Localization {
                 {
                     switch (word)
                     {
+                        case LocalizedWord.Close: return "Закрыть";
                         case LocalizedWord.Level: return "уровень"; // building technology level
                         case LocalizedWord.Offline: return "Не подключено"; // out of power		    
                         case LocalizedWord.Dig: return "Копать";
@@ -828,6 +833,7 @@ public static class Localization {
                 {
                     switch (word)
                     {
+                        case LocalizedWord.Close: return "Close";
                         case LocalizedWord.Level: return "level"; // building technology level
                         case LocalizedWord.Offline: return "offline"; // out of power		    
                         case LocalizedWord.Dig: return "Dig";
@@ -945,6 +951,7 @@ public static class Localization {
                         case LocalizedPhrase.CreateBlock: return "Построить блок";
                         case LocalizedPhrase.CreateColumn: return "Построить опору";
                         case LocalizedPhrase.AddPlatform: return "Прикрепить платформу";
+                        case LocalizedPhrase.OpenMap: return "Открыть карту";
                         default: return "<...>";
                     }
                 }
@@ -998,6 +1005,7 @@ public static class Localization {
                         case LocalizedPhrase.CreateBlock: return "Create block";
                         case LocalizedPhrase.CreateColumn: return "Create column";
                         case LocalizedPhrase.AddPlatform: return "Add platform";
+                        case LocalizedPhrase.OpenMap: return "Open map";
                         default: return "<...>";
                     }
                 }
@@ -1024,6 +1032,8 @@ public static class Localization {
                         case RefusalReason.NotEnoughSlots: return "Нет свободных ячеек";
                         case RefusalReason.WorkNotFinished: return "Работы не окончены";
                         case RefusalReason.MustBeBuildedOnFoundationBlock: return "Нужно строить на блоке основания";
+                        case RefusalReason.NoEmptySpace: return "Нет свободного пространства";
+                        case RefusalReason.AlreadyBuilt: return "Уже построено";
                     }
                 }
             case Language.English:
@@ -1044,6 +1054,8 @@ public static class Localization {
                         case RefusalReason.NotEnoughSlots: return "Not enough slots";
                         case RefusalReason.WorkNotFinished: return "Work not finished";
                         case RefusalReason.MustBeBuildedOnFoundationBlock: return "Must be builded on Foundation Block";
+                        case RefusalReason.NoEmptySpace: return "No empty space";
+                        case RefusalReason.AlreadyBuilt: return "Already built";
                     }
                 }
         }       

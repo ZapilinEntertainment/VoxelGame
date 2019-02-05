@@ -41,8 +41,9 @@ public class Structure : MonoBehaviour
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
-        CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75;
-    public const int TOTAL_STRUCTURES_COUNT = 76, STRUCTURE_SERIALIZER_LENGTH = 16;    
+        CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
+        OBSERVATORY_ID = 76;
+    public const int TOTAL_STRUCTURES_COUNT = 77, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
     public static UIStructureObserver structureObserver;
@@ -64,6 +65,7 @@ public class Structure : MonoBehaviour
         QuantumTransmitter.ResetToDefaults_Static_QuantumTransmitter();
         Hangar.ResetToDefaults_Static_Hangar();
         ExpeditionCorpus.ResetToDefaults_Static_ExpeditionCorpus();
+        Observatory.ResetBuiltMarker();
     }
 
     virtual protected void SetModel()
@@ -146,6 +148,7 @@ public class Structure : MonoBehaviour
             case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
             case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
+            case OBSERVATORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/observatory")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -275,9 +278,9 @@ public class Structure : MonoBehaviour
             case FOUNDATION_BLOCK_5_ID:
                 s = new GameObject("Foundation block").AddComponent<Building>(); break;
             case CONNECT_TOWER_6_ID:
-                s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break; 
+                s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break;
             case CONTROL_CENTER_6_ID:
-                s = new GameObject("Command center").AddComponent<ControlCenter>(); break; 
+                s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
             case HOTEL_BLOCK_6_ID:
                 s = new GameObject("Hotel block").AddComponent<House>(); break; // AWAITING
             case HOUSING_MAST_6_ID:
@@ -286,6 +289,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Dock Addon 1").AddComponent<DockAddon>(); break;
             case DOCK_ADDON_2_ID:
                 s = new GameObject("Dock Addon 2").AddComponent<DockAddon>(); break;
+            case OBSERVATORY_ID:
+                s = new GameObject("Observatory").AddComponent<Observatory>();break;
             default: return null;
         }
         s.id = i_id;
@@ -1035,6 +1040,16 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
+            case OBSERVATORY_ID:
+                {
+                    maxHp = 5000;
+                    innerPosition = SurfaceRect.full;
+                    placeInCenter = true;
+                    rotate90only = false;
+                    isArtificial = true;
+                    isBasement = false;                    
+                }
+                break;
         }
         hp = maxHp;
     }
@@ -1118,6 +1133,7 @@ public class Structure : MonoBehaviour
             case DOCK_2_ID:
             case DOCK_3_ID:
                 return new Rect(p, 2 * p, p, p);
+            case OBSERVATORY_ID: return new Rect(2 * p, 2*p,p,p);
         }
     }
 
@@ -1154,7 +1170,7 @@ public class Structure : MonoBehaviour
         {
             basement = b.myChunk.ReplaceBlock(b.pos, BlockType.Surface, b.material_id, false) as SurfaceBlock;
         }
-        else   basement = b;
+        else basement = b;
         innerPosition = new SurfaceRect(pos.x, pos.y, innerPosition.size);
         if (transform.childCount == 0) SetModel();
         basement.AddStructure(this);
@@ -1347,7 +1363,7 @@ public class Structure : MonoBehaviour
                 }
                 else HarvestableResource.LoadContainer(fs, sblock);
             }
-            else  Plant.LoadPlant(fs, sblock);
+            else Plant.LoadPlant(fs, sblock);
         }
     }
 
@@ -1358,7 +1374,7 @@ public class Structure : MonoBehaviour
 
     public virtual void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-       LoadStructureData(fs, sblock);
+        LoadStructureData(fs, sblock);
     }
     // в финальном виде копипастить в потомков
     protected void LoadStructureData(System.IO.FileStream fs, SurfaceBlock sblock)
@@ -1366,7 +1382,7 @@ public class Structure : MonoBehaviour
         //copy in harvestable resource.load - changed
         Prepare();
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH];
-        fs.Read(data,0,data.Length);
+        fs.Read(data, 0, data.Length);
         LoadStructureData(data, sblock);
     }
     protected void LoadStructureData(byte[] data, SurfaceBlock sblock)
@@ -1391,7 +1407,7 @@ public class Structure : MonoBehaviour
             modelRotation,                      // 2
             indestructible ? one : zero     //3
         };
-        data.InsertRange(0,System.BitConverter.GetBytes(id)); // считывается до load(), поэтому не учитываем в индексах
+        data.InsertRange(0, System.BitConverter.GetBytes(id)); // считывается до load(), поэтому не учитываем в индексах
         // little endian check ignoring
         data.AddRange(System.BitConverter.GetBytes(skinIndex));  // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(maxHp)); // 8 - 11
