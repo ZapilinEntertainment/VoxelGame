@@ -5,7 +5,7 @@ using UnityEngine;
 public sealed class Expedition : MonoBehaviour
 {
     public enum MissionStageType : byte { Test, Decision, Fee, Crossroad, Special, Random }
-    public enum ExpeditionStage : byte { Preparation, WayIn, WayThrough, WayOut }
+    public enum ExpeditionStage : byte { Preparation, WayIn, WayOut, OnMission }
 
     public static List<Expedition> expeditionsList { get; private set; }
     public static int expeditionsFinished, expeditionsSucceed;

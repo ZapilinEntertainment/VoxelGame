@@ -1238,7 +1238,7 @@ sealed public class UIController : MonoBehaviour
         Button b = buttonGO.GetComponent<Button>();
         b.onClick.RemoveAllListeners();
         if (s.id != Structure.OBSERVATORY_ID)    b.onClick.AddListener(() => { Select(s); });
-        else b.onClick.AddListener(() => { GlobalMapUI.GetCurrent().Activate(); });
+        else b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
         buttonGO.transform.GetChild(0).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(s.id);
         activeFastButtons.Add(s.id);
     }

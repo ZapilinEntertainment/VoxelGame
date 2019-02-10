@@ -14,7 +14,8 @@
         SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
         RSPACE_CONSUMING_VAL = 0.125f,
-        LSECTOR_CONSUMING_VAL = 0.9f        
+        LSECTOR_CONSUMING_VAL = 0.9f,
+        OBSERVATORY_FIND_SPEED_CF = 10
         ;
     public static float WORLD_CONSUMING_TIMER { get { return 15 * (6 - (int)GameMaster.difficulty); } }
     public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.0000005f * (int)GameMaster.difficulty; } }
@@ -25,7 +26,8 @@
     // int key - 32 values
     // 0 - lang
     // 1 - (0 -> first launch, 1 - not first)
-    public const uint SAVE_SYSTEM_VERSION = 1;
+    public const uint SAVE_SYSTEM_VERSION = 2;
+    // 1 - 9.3.1 public alpha
    
 
     public static float GetShipArrivingTimer()

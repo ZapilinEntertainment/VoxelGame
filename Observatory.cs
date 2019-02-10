@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Observatory : WorkBuilding {
     public static bool alreadyBuilt = false;
-    private bool mapOpened = false;
-    public const float SEARCH_WORKFLOW = 100;
+    public const float SEARCH_WORKFLOW = 1000, CHANCE_TO_FIND = 0.3f;
+    private bool mapOpened = false;    
     private List<Block> blockedBlocks;
 
     public static void ResetBuiltMarker()
@@ -50,15 +50,38 @@ public class Observatory : WorkBuilding {
         alreadyBuilt = true;
     }
 
+    protected override void LabourResult()
+    {
+        workflow = 0;
+        // new object searched
+        float f = Random.value;
+        if (Random.value <= CHANCE_TO_FIND)
+        {
+            if (GameMaster.realMaster.globalMap.Search())
+            {
+                // visual effect
+            }
+        }
+    }
+    override public void RecalculateWorkspeed()
+    {
+        workSpeed = (colony.gears_coefficient + colony.health_coefficient + colony.happiness_coefficient - 2) * GameConstants.OBSERVATORY_FIND_SPEED_CF;
+        gearsDamage = 0;
+    }
+
     override public void Annihilate(bool forced)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (blockedBlocks != null & basement != null)
-        {
-            basement.myChunk.ClearBlocksList(blockedBlocks, true);
-        }
         PrepareWorkbuildingForDestruction(forced);
+        if (basement != null)
+        {
+            if (blockedBlocks != null)
+            {
+                basement.myChunk.ClearBlocksList(blockedBlocks, true);
+            }
+            if (basement.type == BlockType.Surface) basement.myChunk.DeleteBlock(basement.pos);
+        }        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

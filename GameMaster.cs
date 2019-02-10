@@ -65,6 +65,7 @@ public sealed class GameMaster : MonoBehaviour
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
+    public GlobalMap globalMap { get; private set; }
     public Constructor constructor;
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
@@ -155,6 +156,11 @@ public sealed class GameMaster : MonoBehaviour
         sceneClearing = false;
         if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
         environmentMaster.Prepare();
+        if (!editMode)
+        {
+            if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
+            globalMap.Prepare();
+        }
     }
 
     void Start()

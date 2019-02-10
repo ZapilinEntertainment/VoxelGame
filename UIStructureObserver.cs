@@ -75,7 +75,7 @@ public class UIStructureObserver : UIObserver {
         {
             if (observingStructure.id == Structure.OBSERVATORY_ID)
             {
-                GlobalMapUI.GetCurrent().Activate();
+                GameMaster.realMaster.globalMap.ShowOnGUI();
             }
             else specialButton.SetActive(false);
         }
