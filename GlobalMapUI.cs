@@ -3,18 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Island, SOS, Portal, QuestMark, OtherColony, Star, Wiseman, Wonder, Resources }
-//при изменении порядка или количества - изменить маску необязательных объектов
-
 public class GlobalMapUI : MonoBehaviour {
 #pragma warning disable 0649
+    [SerializeField] private Button startButton;
+    [SerializeField] private Dropdown missionDropdown, shuttlesDropdown;
+    [SerializeField] private Image  descrButtonImage, expButtonImage;
+    [SerializeField] private InputField expeditionNameField;
     [SerializeField] private RectTransform mapRect;
+    [SerializeField] private RawImage pointIcon;
+    [SerializeField] private Text pointLabel, pointDescription, expStatusText;
     [SerializeField] private Transform[] rings;
-    [SerializeField] private GameObject exampleMarker;
+    [SerializeField] private GameObject exampleMarker, infoPanel, sendPanel, teamInfoblock;
     [SerializeField] private GameObject mapCanvas, mapCamera;
 #pragma warning restore 0649
 
-    private bool prepared = false;    
+    private bool prepared = false, pointInfoMode = false, expeditionWindowOpened = false;
+    private float infoPanelWidth = Screen.width;
     private float[] rotationSpeed;
     private int lastDrawnStateHash = 0;
     private GlobalMap globalMap;
@@ -35,8 +39,54 @@ public class GlobalMapUI : MonoBehaviour {
     }
     public void SelectPoint(MapPoint mp)
     {
-        print(mp.type);
+        if (infoPanel.activeSelf) infoPanel.SetActive(false);
+        pointLabel.text = Localization.GetMapPointTitle(mp.type);
+        pointIcon.uvRect = GetMarkerRect(mp.type);
+        PointOfInterest poi = mp as PointOfInterest;
+        if (poi != null)
+        {
+            pointDescription.gameObject.SetActive(false);
+
+            expButtonImage.gameObject.SetActive(true);
+            if (pointInfoMode == true)
+            {
+                descrButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+                expButtonImage.overrideSprite = null;
+                sendPanel.SetActive(false);
+                pointDescription.gameObject.SetActive(true);
+            }
+            else
+            {
+                descrButtonImage.overrideSprite = null;
+                expButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+                sendPanel.SetActive(true);
+                pointDescription.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            pointDescription.text = Localization.GetMapPointDescription(mp.type, mp.subIndex);
+            pointDescription.gameObject.SetActive(true);
+
+            pointInfoMode = true;
+            descrButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+            expButtonImage.overrideSprite = null;
+            expButtonImage.gameObject.SetActive(false);
+            if (sendPanel.activeSelf) sendPanel.SetActive(false);
+        }
+        infoPanel.SetActive(true);
+        infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
     }
+
+    public void SwitchToSendPanel()
+    {
+
+    }
+    public void SwitchToInfoPanel()
+    {
+
+    }
+
     public void Close()
     {
         gameObject.SetActive(false);
@@ -67,24 +117,39 @@ public class GlobalMapUI : MonoBehaviour {
             if (mapMarkers.Count > 0)
             {
                 Vector3 fwd = Vector3.forward, up = Vector3.up;
-                float sh = Screen.height / 2f;
+                float shp = Screen.height / 2f;
                 for (int i = 0; i < mapMarkers.Count; i++)
                 {
-                    mapMarkers[i].localPosition = Quaternion.AngleAxis(mapPoints[i].angle, fwd) * (up * sh * mapPoints[i].height);
+                    mapMarkers[i].localPosition = Quaternion.AngleAxis(mapPoints[i].angle, fwd) * (up * shp * mapPoints[i].height);
                 }
             }
         }
+
+        float deltaX = 0, deltaY = 0, deltaZoom = 0;
         if (FollowingCamera.touchscreen)
         {
-            if (Input.touchCount == 2)
+            if (Input.touchCount > 0)
             {
-                Touch tc = Input.GetTouch(0), tc2 = Input.GetTouch(1);
-                Vector2 tPrevPos = tc.position - tc.deltaPosition;
-                Vector2 t2PrevPos = tc2.position - tc2.deltaPosition;
-                float delta = ((tPrevPos - t2PrevPos).magnitude - (tc.position - tc2.position).magnitude) / (float)Screen.height * (-2);
-                if (delta != 0)
+                Touch tc = Input.GetTouch(0);
+                if (Input.touchCount == 2)
                 {
-
+                    Touch tc2 = Input.GetTouch(1);
+                    Vector2 tPrevPos = tc.position - tc.deltaPosition;
+                    Vector2 t2PrevPos = tc2.position - tc2.deltaPosition;
+                    deltaZoom = ((tPrevPos - t2PrevPos).magnitude - (tc.position - tc2.position).magnitude) / (float)Screen.height * (-2);
+                }
+                else
+                {
+                    if (Input.touchCount == 1)
+                    {
+                        if (tc.phase == TouchPhase.Began | tc.phase == TouchPhase.Moved)
+                        {
+                            float delta = tc.deltaPosition.x / (float)Screen.width * 10;
+                            float swp = Screen.width / 10f;
+                            deltaX = tc.deltaPosition.x / swp;
+                            deltaY = tc.deltaPosition.y / swp;
+                        }
+                    }
                 }
             }
         }
@@ -92,18 +157,83 @@ public class GlobalMapUI : MonoBehaviour {
         {
             if (Input.GetMouseButton(2))
             {
-                //ограничения на передвижение?
-                float xmove = Input.GetAxis("Mouse X"), ymove = Input.GetAxis("Mouse Y");
-                if (xmove != 0 | ymove != 0)  mapRect.position += new Vector3(xmove, ymove, 0) * 30;
+                deltaX = Input.GetAxis("Mouse X");
+                deltaY = Input.GetAxis("Mouse Y");
             }
+            deltaZoom = Input.GetAxis("Mouse ScrollWheel");            
+        }
 
-            float delta = Input.GetAxis("Mouse ScrollWheel");
-            float y = mapRect.localScale.y + delta;
-            if (delta != 0 & y < ZOOM_BORDER & y > DIST_BORDER)
+        if (deltaZoom != 0)
+        {
+            float newScale = mapRect.localScale.y + deltaZoom;
+            if (newScale > ZOOM_BORDER) newScale = ZOOM_BORDER;
+            else
             {
-                mapRect.localScale += Vector3.one * delta;
+                if (newScale < DIST_BORDER) newScale = DIST_BORDER;
+            }
+            if (newScale != mapRect.localScale.x)
+            {
+                mapRect.localScale = Vector3.one * newScale;
             }
         }
+        
+        float xpos = mapRect.position.x, ypos = mapRect.position.y;
+        float radius = mapRect.rect.width * mapRect.localScale.x / 2f;
+        float sw = Screen.width - infoPanelWidth;
+        int sh = Screen.height;
+        if (2 * radius <= sw )
+        {
+            xpos = sw / 2f;
+        }
+        else
+        {
+            if (deltaX != 0)
+            {
+                xpos += deltaX * 30;
+            }
+            float leftExpart = xpos - radius;
+            float rightExpart = sw - (xpos + radius);
+            if (leftExpart > 0)
+            {
+                if (rightExpart < 0)
+                {
+                    xpos = radius;
+                }
+            }
+            else
+            {
+                if (rightExpart > 0)
+                {
+                    xpos = sw - (radius);
+                }
+            }
+        }
+
+        if (2 * radius <= sh)
+        {
+            ypos = sh / 2f;
+        }
+        else
+        {
+            if (deltaY != 0)
+            {
+                ypos += deltaY * 30;
+
+            }
+            float upExpart = sh - ypos - radius;
+            float downExpart = ypos - radius;
+            if (upExpart > 0)
+            {
+                if (downExpart < 0) ypos = sh - radius;
+            }
+            else
+            {
+                if (downExpart > 0) ypos = radius;
+            }
+        }
+        
+        
+        mapRect.position = new Vector3(xpos, ypos, 0);
     }
 
     private void Prepare()
@@ -125,6 +255,9 @@ public class GlobalMapUI : MonoBehaviour {
         prepared = true;
         mapMarkers = new List<RectTransform>();
         RedrawMarkers();
+        if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
+        else infoPanelWidth = 0;
+        infoPanel.SetActive(false);        
         LocalizeTitles();        
     }
 
@@ -212,6 +345,8 @@ public class GlobalMapUI : MonoBehaviour {
             else
             {
                 if (lastDrawnStateHash != globalMap.actionsHash) RedrawMarkers();
+                if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
+                else infoPanelWidth = 0;
             }
         }
     }
@@ -267,7 +402,7 @@ public class GlobalMapUI : MonoBehaviour {
             case MapMarkerType.SOS: return new Rect(0, 2 * p, p, p);
             case MapMarkerType.Portal: return new Rect(p, 2 * p, p, p);
             case MapMarkerType.QuestMark: return new Rect(2 * p, 2 * p, p, p);
-            case MapMarkerType.OtherColony: return new Rect(3 * p, 2 * p, p, p);
+            case MapMarkerType.Colony: return new Rect(3 * p, 2 * p, p, p);
             case MapMarkerType.Star: return new Rect(0, 3 * p, p, p);
             case MapMarkerType.Wiseman: return new Rect(p, 3 * p, p, p);
             case MapMarkerType.Wonder: return new Rect(2 * p, 3 * p, p, p);

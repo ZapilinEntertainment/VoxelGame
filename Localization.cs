@@ -1011,7 +1011,6 @@ public static class Localization {
                 }
         }       
     }
-
     public static string GetRefusalReason(RefusalReason rr) {
         switch (currentLanguage)
         {
@@ -1060,7 +1059,6 @@ public static class Localization {
                 }
         }       
     }
-
     public static string GetActionLabel(LocalizationActionLabels label)
     {
         switch (currentLanguage)
@@ -1098,7 +1096,6 @@ public static class Localization {
                 }
         }      
     }
-
     public static string GetEndingTitle (GameEndingType endType)
     {
         switch (currentLanguage)
@@ -1131,7 +1128,7 @@ public static class Localization {
                     }
                 }
         }        
-    }
+    }    
 
     public static string GetCredits()
     {
@@ -1461,6 +1458,97 @@ public static class Localization {
                 }
                 break;
         }       
+    }
+    #endregion
+
+    #region map points
+    public static string GetMapPointTitle(MapMarkerType mmtype)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                switch (mmtype)
+                {
+                    case MapMarkerType.MyCity: return "Мой город";
+                    case MapMarkerType.Station: return "Станция";
+                    case MapMarkerType.Wreck: return "Обломки";
+                    case MapMarkerType.Shuttle: return "Челнок";
+                    case MapMarkerType.Island: return "Остров";
+                    case MapMarkerType.SOS: return "Запрос о помощи";
+                    case MapMarkerType.Portal: return "Портал";
+                    case MapMarkerType.QuestMark: return "Отметка задания"; //заменить
+                    case MapMarkerType.Colony: return "Другая колония";
+                    case MapMarkerType.Star: return "Звезда";
+                    case MapMarkerType.Wiseman: return "Источник знания";
+                    case MapMarkerType.Wonder: return "Что-то невероятное";
+                    case MapMarkerType.Resources: return "Ресурсы";
+                    case MapMarkerType.Unknown:
+                    default: return "Неизвестно";
+                }
+            case Language.English:
+            default:
+                switch (mmtype)
+                {
+                    case MapMarkerType.MyCity: return "My city";
+                    case MapMarkerType.Station: return "Station";
+                    case MapMarkerType.Wreck: return "Wreck";
+                    case MapMarkerType.Shuttle: return "Shuttle";
+                    case MapMarkerType.Island: return "Island";
+                    case MapMarkerType.SOS: return "Someone needs help";
+                    case MapMarkerType.Portal: return "Portal";
+                    case MapMarkerType.QuestMark: return "Quest mark"; //заменить
+                    case MapMarkerType.Colony: return "Another colony";
+                    case MapMarkerType.Star: return "Star";
+                    case MapMarkerType.Wiseman: return "Source of wisdom";
+                    case MapMarkerType.Wonder: return "Something unbelievable";
+                    case MapMarkerType.Resources: return "Drifting resources";
+                    case MapMarkerType.Unknown:
+                    default: return "Unknown point";
+                }
+        }
+
+    }
+    public static string GetMapPointDescription(MapMarkerType mmtype, byte subIndex)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                return string.Empty;
+            case Language.English:
+            default:
+                {
+                    switch (mmtype)
+                    {
+                        case MapMarkerType.MyCity: return "Our stable piece of dream-reality.";
+                        case MapMarkerType.Station: return "Lonely station, which has connection with real space out there.";
+                        case MapMarkerType.Wreck:
+                            {
+                                switch (subIndex)
+                                {
+                                    case 3: return "Broken refugee's ship. No visible signs of life.";
+                                    case 2: return "Parts of something big and made from metal dropped everywhere there";
+                                    case 1: return "It painted with pain and sorrow. Broken ship from outside.";
+                                    case 0:
+                                    default:
+                                        return "Something broken to pieces.";
+                                }
+                            }
+                        case MapMarkerType.Shuttle: return "Our colony's shuttle."; // заменить
+                        case MapMarkerType.Island: return "An uninhabitated island.";
+                        case MapMarkerType.SOS: return "Maybe we should send someone?";
+                        case MapMarkerType.Portal: return "Temporary way to another world.";
+                        case MapMarkerType.QuestMark: return "Your questmission here."; //заменить
+                        case MapMarkerType.Colony: return "We are not alone here!";
+                        case MapMarkerType.Star: return "Shines.";
+                        case MapMarkerType.Wiseman: return "Our explorers can take wisdom here.";
+                        case MapMarkerType.Wonder: return "Mighty construction built for unobvious purpose.";
+                        case MapMarkerType.Resources: return "We can gain it and use.";
+                        case MapMarkerType.Unknown:
+                        default:
+                            return "It can't be described with words";
+                    }
+                }
+        }
     }
     #endregion
 }

@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Island, SOS, Portal, QuestMark, Colony, Star, Wiseman, Wonder, Resources }
+//при изменении порядка или количества - изменить маску необязательных объектов
+// изменить Localization.GetMapPointLabel()
+// константы максимального количества подвидов
+
 public sealed class GlobalMap : MonoBehaviour {
 
     public float[] ringsBorders { get; private set; }
@@ -207,7 +212,7 @@ public sealed class GlobalMap : MonoBehaviour {
                     {
                         if (f > 0.75f)
                         {
-                            mmtype = MapMarkerType.OtherColony;
+                            mmtype = MapMarkerType.Colony;
                             height = 0.3f + 0.5f * Random.value;
                         }
                         else
@@ -250,18 +255,23 @@ public sealed class GlobalMap : MonoBehaviour {
 public class MapPoint
 {
     public bool interactable { get; protected set; }
+    public bool explored { get; protected set; }
+    public byte subIndex { get; protected set; }
     public byte ringIndex;
     public MapMarkerType type { get; protected set; }
     public float angle;
     public float height;
 
-    public MapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype, bool i_interactable)
+    const byte WRECKS_TYPE_COUNT = 10;
+
+    public MapPoint()
     {
-        interactable = i_interactable;
-        angle = i_angle;
-        height = i_height;
-        ringIndex = ring;
-        type = mtype;
+
+    }
+
+    public MapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype, bool i_interactable) : this(i_angle, i_height, ring, mtype)
+    {
+        if (i_interactable) interactable = true;
     }
 
     public MapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype)
@@ -271,6 +281,12 @@ public class MapPoint
         height = i_height;
         ringIndex = ring;
         type = mtype;
+        explored = false;
+        switch (type)
+        {
+            case MapMarkerType.Wreck: subIndex = (byte)(Random.value * WRECKS_TYPE_COUNT); break;
+            default: subIndex = 0; break;
+        }
     }
 
     public virtual bool DestroyRequest()
