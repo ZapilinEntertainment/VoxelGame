@@ -6,6 +6,8 @@ using UnityEngine;
 public class QuantumTransmitter : Building {
 	public static List<QuantumTransmitter> transmittersList{get;private set;}
 
+    // STATIC METHODS
+
     static QuantumTransmitter()
     {
         transmittersList = new List<QuantumTransmitter>();
@@ -14,55 +16,23 @@ public class QuantumTransmitter : Building {
 	public static void ResetToDefaults_Static_QuantumTransmitter() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
-    public static void PrepareList()
+    //  PUBLIC
+
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
-        if (transmittersList == null) transmittersList = new List<QuantumTransmitter>();
+        if (b == null) return;
+        SetBuildingData(b, pos);
+        if (!transmittersList.Contains(this)) transmittersList.Add(this);
+        SetActivationStatus(false, true);
     }
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (b == null) return;
-		SetBuildingData(b, pos);
-		AddToList(this);
-		SetActivationStatus(false, true);
-	}
-
-	override public void SetActivationStatus(bool x, bool recalculateAfter) {
+    override public void SetActivationStatus(bool x, bool recalculateAfter) {
 		if ( x == true & isActive == false) return; // невозможно включить вхолостую
 		isActive = x;
 		if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
 		transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works",x);
 		ChangeRenderersView(x);
-	}
-
-	public static void AddToList(QuantumTransmitter qt) {
-		if (qt == null) return;
-		if (transmittersList.Count == 0) transmittersList.Add(qt);
-		else {
-			int i = 0;
-			while (i < transmittersList.Count) {
-				if (transmittersList[i] == null) {
-					transmittersList.RemoveAt(i);
-					continue;
-				}
-				else {
-					if (transmittersList[i] == qt) return;
-				}
-				i++;
-			}
-			transmittersList.Add(qt);
-		}
-	}
-	public static void RemoveFromList(QuantumTransmitter qt) {
-		if (qt == null | transmittersList.Count == 0) return;
-		int i = 0;
-		while (i < transmittersList.Count) {
-			if (transmittersList[i] == null | transmittersList[i] == qt) {
-				transmittersList.RemoveAt(i);
-				continue;
-			}
-			i++;
-		}
-	}
+	}	
 
     override public void Annihilate(bool forced)
     {
@@ -70,7 +40,7 @@ public class QuantumTransmitter : Building {
         else destroyed = true;
         if (forced) { UnsetBasement(); }
         PrepareBuildingForDestruction(forced);
-        if (transmittersList != null && transmittersList.Count > 0) RemoveFromList(this);
+        if (transmittersList.Contains(this)) transmittersList.Remove(this);
         Destroy(gameObject);
     }
 }

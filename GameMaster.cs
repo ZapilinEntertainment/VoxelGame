@@ -97,6 +97,10 @@ public sealed class GameMaster : MonoBehaviour
     public bool generateChunk = true;
     public byte test_size = 100;
     public bool _editMode = false;
+
+    private bool hotStart = true;
+    private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
+    private string hotStart_savename = "alpha9.3.1";
     //
     private byte upSkyStatus = 0, lowSkyStatus = 0;
     private float worldConsumingTimer = 0;
@@ -172,8 +176,16 @@ public sealed class GameMaster : MonoBehaviour
         audiomaster = gameObject.AddComponent<Audiomaster>();
         audiomaster.Prepare();
 
+        //testzone
         editMode = _editMode;
-        //Localization.ChangeLanguage(Language.English);   
+        if (hotStart)
+        {
+            gameStartSettings = hotStartSettings;
+            savename = hotStart_savename;
+            hotStart = false;
+        }
+        //end of test data
+
         if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
         if (!editMode)
         {

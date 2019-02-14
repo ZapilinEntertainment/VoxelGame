@@ -191,8 +191,6 @@ public class ExpeditionPanelUI : MonoBehaviour
                         progressBarImage.color = PoolMaster.gameOrangeColor;
 
                         removeButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);
-
-                        RefreshMissionsDropdown();
                         if (chosenExpedition.mission != Mission.NoMission)
                         {
                             RefreshExpeditionPreparePanel();
@@ -485,76 +483,7 @@ public class ExpeditionPanelUI : MonoBehaviour
             int childCount = ppt.childCount;
             Mission m = chosenExpedition.mission;
 
-            //participants strings
-            int pcount = chosenExpedition.participants.Count;
-            if (pcount > 0)
-            {
-                char c = '"';
-                RectTransform example = ppt.GetChild(1) as RectTransform;
-
-                int i = 0;
-                for (; i < pcount; i++)
-                {
-                    Transform pstring;
-                    if (i + 1 < childCount) pstring = ppt.GetChild(i + 1);
-                    else
-                    {
-                        pstring = Instantiate(example, ppt);
-                        pstring.transform.localPosition = example.transform.localPosition + Vector3.down * example.rect.height * i;
-                    }
-
-                    if (chosenExpedition.participants[i] != null)
-                    {
-                        Crew crew = chosenExpedition.participants[i];
-                        pstring.GetChild(0).GetComponent<Text>().text = c + crew.name + c;
-
-                        Button b = pstring.GetChild(1).GetComponent<Button>(); // pass button
-                        b.onClick.RemoveAllListeners();
-                        int x = crew.ID;
-                        b.onClick.AddListener(() => { this.ExpeditionPanel_PassButton(x); });
-                        pstring.GetChild(1).gameObject.SetActive(true);
-
-                        b = pstring.GetChild(2).GetComponent<Button>(); // delete button
-                        b.onClick.RemoveAllListeners();
-                        int y = i;
-                        b.onClick.AddListener(() => { this.ExpeditionPanel_RemoveParticipant(y); });
-                        pstring.GetChild(2).gameObject.SetActive(true);
-                    }
-
-                    pstring.gameObject.SetActive(true);
-                }
-                i++;
-                if (i < childCount)
-                {
-                    for (; i < childCount; i++)
-                    {
-                        ppt.GetChild(i).gameObject.SetActive(false);
-                    }
-                }
-                lastCrewHashValue = Crew.actionsHash;
-            }
-            else
-            {
-                ppt.GetChild(1).gameObject.SetActive(false);
-                if (ppt.childCount > 2)
-                {
-                    for (int i = 2; i < ppt.childCount; i++)
-                    {
-                        ppt.GetChild(i).gameObject.SetActive(false);
-                    }
-                }
-            }
-            //dropdown:
-            if (pcount < m.requiredParticipantsCount)
-            {
-                Dropdown d = ppt.GetChild(0).GetComponent<Dropdown>();
-                RefreshCrewsDropdownForChosenExpedition(d);
-                d.gameObject.SetActive(true);
-            }
-            else
-            {
-                ppt.GetChild(0).gameObject.SetActive(false);
-            }
+    
         }
     }
 
@@ -675,40 +604,6 @@ public class ExpeditionPanelUI : MonoBehaviour
             d.enabled = true;
             lastCrewHashValue = Crew.actionsHash;
         }
-    }
-    private void RefreshMissionsDropdown()
-    {
-        var options = new List<Dropdown.OptionData>();
-        options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)));
-        var missions = Mission.missionsList;
-        infoPanel_dropdown.enabled = false;
-        Mission m;
-        if (missions.Count > 0)
-        {
-            dropdownList = new List<int>();
-            for (int i = 0; i < missions.Count; i++)
-            {
-                m = missions[i];
-                options.Add(new Dropdown.OptionData( m.codename));
-                dropdownList.Add(m.ID);
-            }
-        }
-        infoPanel_dropdown.options = options;
-        if (chosenExpedition.mission == Mission.NoMission) infoPanel_dropdown.value = 0;
-        else
-        {
-            int id = chosenExpedition.mission.ID;
-            for (int i = 0; i < missions.Count; i++)
-            {
-                if (missions[i].ID == id)
-                {
-                    infoPanel_dropdown.value = i;
-                    break;
-                }
-            }
-        }
-        infoPanel_dropdown.enabled = true;
-        lastExpeditionsHashValue = Expedition.actionsHash;
     }
     
 
@@ -948,7 +843,9 @@ public class ExpeditionPanelUI : MonoBehaviour
             case ExpeditionPanelSection.Expeditions:
                 if (chosenExpedition != null && chosenExpedition.mission != Mission.NoMission)
                 {
-                    chosenExpedition.Dismiss();
+                    int d_id = chosenExpedition.ID;
+                    chosenExpedition = null;
+                    Expedition.DismissExpedition(d_id);
                 }
                 else
                 {
@@ -1008,11 +905,6 @@ public class ExpeditionPanelUI : MonoBehaviour
                 }
             case ExpeditionPanelSection.Expeditions:
                 if (chosenExpedition == null)  RedrawChosenInfo();
-                else
-                {
-                    if (i != -1) chosenExpedition.SetMission(Mission.GetMission(dropdownList[i]));
-                    else chosenExpedition.DropMission();
-                }
                 break;
         }
     }
@@ -1061,17 +953,6 @@ public class ExpeditionPanelUI : MonoBehaviour
         }
         else RedrawChosenInfo();
     }
-    public void ExpeditionDropdown_SetParticipant(int i)
-    {
-        if (chosenExpedition == null) {
-            infoPanel_expeditionPreparePanel.SetActive(false);
-            return;
-        }
-        else
-        {
-           chosenExpedition.SetMission(Mission.GetMission(dropdownList2[i]));
-        }
-    }
     public void ExpeditionPanel_PassButton(int i)
     {
         if (chosenExpedition != null )
@@ -1090,14 +971,6 @@ public class ExpeditionPanelUI : MonoBehaviour
             {
                 //for crews
             }
-        }
-    }
-    public void ExpeditionPanel_RemoveParticipant(int i)
-    {
-        if (chosenExpedition != null && (chosenExpedition.participants.Count > i ))
-        {
-            
-            RefreshExpeditionPreparePanel();
         }
     }
 

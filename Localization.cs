@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
-public enum LocalizedWord : ushort {Close,Level, Offline, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
+public enum LocalizedWord : ushort {Expedition,Close,Crew,Launch,Level, Offline, Progress, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { StopDig, StopGather, RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
+public enum LocalizedPhrase : ushort { RecallExpedition, NoSuitableShuttles,StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
@@ -767,8 +767,12 @@ public static class Localization {
                     switch (word)
                     {
                         case LocalizedWord.Close: return "Закрыть";
+                        case LocalizedWord.Crew: return "Команда";
+                        case LocalizedWord.Expedition: return "Экспедиция";                        
+                        case LocalizedWord.Launch: return "Запустить";
                         case LocalizedWord.Level: return "уровень"; // building technology level
-                        case LocalizedWord.Offline: return "Не подключено"; // out of power		    
+                        case LocalizedWord.Offline: return "Не подключено"; // out of power		 
+                        case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Dig: return "Копать";
                         case LocalizedWord.Gather: return "Собирать"; // gather resources	    
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
@@ -834,8 +838,12 @@ public static class Localization {
                     switch (word)
                     {
                         case LocalizedWord.Close: return "Close";
+                        case LocalizedWord.Crew: return "Crew";
+                        case LocalizedWord.Expedition: return "Expedition";                        
+                        case LocalizedWord.Launch: return "Launch";
                         case LocalizedWord.Level: return "level"; // building technology level
-                        case LocalizedWord.Offline: return "offline"; // out of power		    
+                        case LocalizedWord.Offline: return "offline"; // out of power	
+                        case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Dig: return "Dig";
                         case LocalizedWord.Gather: return "Gather"; // gather resources	    
                         case LocalizedWord.UpgradeCost: return "Upgrade cost";
@@ -905,11 +913,14 @@ public static class Localization {
             case Language.Russian:
                 {
                     switch (lp)
-                    {                        
+                    {
+                        case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.PointsSec: return " ед./сек";
                         case LocalizedPhrase.PerSecond: return "в секунду";
+                        case LocalizedPhrase.RecallExpedition: return "Отозвать экспедицию";
                         case LocalizedPhrase.StopDig: return "Остановить добычу";
                         case LocalizedPhrase.StopGather: return "Остановить сбор";
+                        case LocalizedPhrase.UnoccupiedTransmitters: return "Свободно передатчиков: ";
                         case LocalizedPhrase.RequiredSurface: return "Требуемая поверхность";
                         case LocalizedPhrase.ColonizationEnabled: return "Привозить колонистов";
                         case LocalizedPhrase.ColonizationDisabled: return "Не привозить колонистов";
@@ -959,11 +970,14 @@ public static class Localization {
             default:
                 {
                     switch (lp)
-                    {                       
+                    {
+                        case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.PointsSec: return "points/sec";
                         case LocalizedPhrase.PerSecond: return "per second";
+                        case LocalizedPhrase.RecallExpedition: return "Recall expedition";
                         case LocalizedPhrase.StopDig: return "Stop digging";
                         case LocalizedPhrase.StopGather: return "Stop gathering";
+                        case LocalizedPhrase.UnoccupiedTransmitters: return "Unoccupied transmitters: ";
                         case LocalizedPhrase.RequiredSurface: return "Required surface";
                         case LocalizedPhrase.ColonizationEnabled: return "Immigration enabled";
                         case LocalizedPhrase.ColonizationDisabled: return "Immigration disabled";
@@ -1480,7 +1494,7 @@ public static class Localization {
                     case MapMarkerType.Colony: return "Другая колония";
                     case MapMarkerType.Star: return "Звезда";
                     case MapMarkerType.Wiseman: return "Источник знания";
-                    case MapMarkerType.Wonder: return "Что-то невероятное";
+                    case MapMarkerType.Wonder: return "Что-то непостижимое";
                     case MapMarkerType.Resources: return "Ресурсы";
                     case MapMarkerType.Unknown:
                     default: return "Неизвестно";
@@ -1500,7 +1514,7 @@ public static class Localization {
                     case MapMarkerType.Colony: return "Another colony";
                     case MapMarkerType.Star: return "Star";
                     case MapMarkerType.Wiseman: return "Source of wisdom";
-                    case MapMarkerType.Wonder: return "Something unbelievable";
+                    case MapMarkerType.Wonder: return "Something inconceivable";
                     case MapMarkerType.Resources: return "Drifting resources";
                     case MapMarkerType.Unknown:
                     default: return "Unknown point";
@@ -1548,6 +1562,19 @@ public static class Localization {
                             return "It can't be described with words";
                     }
                 }
+        }
+    }
+    #endregion
+
+    #region missions data
+    public static string GetMissionCodename(int id)
+    {
+        switch (id)
+        {
+            case Mission.EXPLORE_MISSION_ID:  return "Exploring";
+            case Mission.UNDEFINED_ID:
+            default:
+            return "No mission";
         }
     }
     #endregion

@@ -12,14 +12,15 @@ public sealed class Expedition : MonoBehaviour
     public static int actionsHash { get; private set; }
     private static Transform expeditionsContainer;
 
-    public float progress { get; private set; }  
+    public float progress { get; private set; }
     public float cost { get; private set; }
     public int ID { get; private set; }
+    public static int lastUsedID {get;private set;} // в сохранение
     public int fuelNeeded { get; private set; }
 
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
-    public List<Crew> participants { get; private set; }
+    public Crew crew { get; private set; }
     public List<MissionStageType> stages;    
 
     static Expedition()
@@ -33,10 +34,11 @@ public sealed class Expedition : MonoBehaviour
         expeditionsSucceed = 0;
         actionsHash = 0;
     }
-
     public static Expedition CreateNewExpedition()
     {
-        Expedition e = new GameObject("expedition " + actionsHash.ToString()).AddComponent<Expedition>();
+        Expedition e = new GameObject(Localization.GetWord(LocalizedWord.Expedition) + lastUsedID.ToString()).AddComponent<Expedition>();
+        e.ID = lastUsedID;
+        lastUsedID++;
         if (expeditionsContainer == null) expeditionsContainer = new GameObject("expeditionsContainer").transform;
         e.gameObject.transform.parent = expeditionsContainer;
         expeditionsList.Add(e);
@@ -44,10 +46,37 @@ public sealed class Expedition : MonoBehaviour
 
         e.stage = ExpeditionStage.Preparation;
         e.mission = Mission.NoMission;
-        e.participants = new List<Crew>();
         e.stages = new List<MissionStageType>();
 
         return e;
+    }
+    public static void DismissExpedition(int s_id)
+    {
+        if (expeditionsList.Count > 0)
+        {
+            for (int i = 0; i < expeditionsList.Count; i++)
+            {
+                if (expeditionsList[i].ID == s_id)
+                {
+                    Expedition e = expeditionsList[i];
+                    if (e.crew != null) e.DismissCrew();
+                    Destroy(e);
+                    expeditionsList.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void Launch(PointOfInterest poi)
+    {
+        if (stage == ExpeditionStage.Preparation)
+        {
+            if (GameMaster.realMaster.globalMap.ExpeditionLaunch(this, poi))
+            {
+                stage = ExpeditionStage.WayIn;
+            }
+        }
     }
 
     public void SetMission(Mission m)
@@ -61,14 +90,6 @@ public sealed class Expedition : MonoBehaviour
         {
             mission = m;
             actionsHash++;
-            if (participants.Count > 0)
-            {
-                if (participants.Count > m.requiredParticipantsCount)
-                {
-                    participants.RemoveRange(m.requiredParticipantsCount, participants.Count - m.requiredParticipantsCount);
-                }
-
-            }
         }
     }
     public void DropMission()
@@ -76,38 +97,18 @@ public sealed class Expedition : MonoBehaviour
         if (mission != Mission.NoMission)
         {
             mission = Mission.NoMission;
-            if (participants.Count > 0)
-            {
-                participants.Clear();
-            }
         }
     }
-
-    public void AddParticipant(Crew c)
+    public void SetCrew(Crew c)
     {
-        if (c != null & mission != Mission.NoMission && participants.Count < mission.requiredParticipantsCount)
-        {
-            participants.Add(c);
-            actionsHash++;
-        }
+        if (stage == ExpeditionStage.Preparation) crew = c;
     }
-    public void RemoveParticipant(Crew c)
+    public void DismissCrew()
     {
-        if (participants.Count > 0)
+        if (mission == Mission.NoMission & crew != null)
         {
-          if (participants.Remove(c)) actionsHash++;
-        }
-    }
-
-    public void Dismiss()
-    {
-        if (mission == Mission.NoMission)
-        {
-            if (participants.Count > 0)
-            {
-                foreach (Crew c in participants) c.SetStatus(CrewStatus.Free);
-                participants.Clear();
-            }            
+            crew.SetStatus(CrewStatus.Free);
+            crew = null;
         }
     }
 

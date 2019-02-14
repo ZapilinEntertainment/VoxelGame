@@ -2,48 +2,36 @@
 
 public sealed class Mission {
 	public static readonly Mission NoMission;
-    public static List<Mission> missionsList;
-    public static int nextID = 0;
 
-    public bool requireShuttle { get; private set; }
+    public readonly bool requireShuttle;
     public readonly int ID;
-    public int requiredParticipantsCount { get; private set; }
     public int progressPoints { get; private set; }
     public string codename { get; private set; }
     //сохранение использованных айди?
-
+    public const int UNDEFINED_ID = 0, EXPLORE_MISSION_ID = 1;
 
     static Mission()
     {
-        NoMission = new Mission(Localization.GetPhrase(LocalizedPhrase.NoMission), 0);
-        nextID = 1;
-        var lifesourceFind = new Mission("finding lifesources", 1, true);
-        missionsList = new List<Mission>();
-        missionsList.Add(lifesourceFind);
+        NoMission = new Mission(Localization.GetPhrase(LocalizedPhrase.NoMission));
     }
 
-    public static Mission GetMission(int s_id)
+    private Mission()
     {
-        if (s_id < missionsList.Count)
-        {
-            foreach (Mission m in missionsList)
-            {
-                if (m.ID == s_id) return m;
-            }
-        }
-        return NoMission;
+        requireShuttle = false;
+        ID = UNDEFINED_ID;
+        progressPoints = 0;
+        codename = string.Empty;
     }
 
-    private Mission(string name, int i_id)
+    private Mission(string i_codename) : this()
     {
-        codename = name;
+        codename = i_codename;        
+    }
+
+    public Mission(int i_id, bool i_requireShuttle)
+    {
         ID = i_id;
-    }
-    private Mission(string name, int participantsCount, bool i_requireShuttle)
-    {
-        codename = name;
-        requiredParticipantsCount = participantsCount;
         requireShuttle = i_requireShuttle;
-        ID = nextID++;
+        codename = Localization.GetMissionCodename(ID);
     }
 }

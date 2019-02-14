@@ -40,7 +40,7 @@ public sealed class GlobalMap : MonoBehaviour {
 
         mapPoints = new List<MapPoint>();
         float h = GameConstants.START_HAPPINESS;
-        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity, false));
+        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity));
 
         actionsHash = 0;
         prepared = true;
@@ -126,7 +126,6 @@ public sealed class GlobalMap : MonoBehaviour {
         MapMarkerType mmtype = MapMarkerType.Unknown;
         float f = Random.value;
         float height = 0.5f;
-        bool interactive = true;
         if (f <= 0.5f)
         {//resources            
             f *= 2;
@@ -228,7 +227,25 @@ public sealed class GlobalMap : MonoBehaviour {
                 }
             }
         }
-        return AddPoint(new MapPoint(Random.value * 360, height, DefineRing(height), mmtype, interactive));
+
+        float angle = Random.value * 360;
+        switch (mmtype)
+        {
+            case MapMarkerType.Station:
+            case MapMarkerType.Wreck:
+            case MapMarkerType.Island:
+            case MapMarkerType.SOS: 
+            case MapMarkerType.Portal: 
+            case MapMarkerType.Colony: 
+            case MapMarkerType.Star:
+            case MapMarkerType.Wiseman: 
+            case MapMarkerType.Wonder: 
+            case MapMarkerType.Resources:
+                {
+                    return AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype));
+                }
+            default: return false;
+        }
     }
     public void ShowOnGUI()
     {
@@ -238,6 +255,17 @@ public sealed class GlobalMap : MonoBehaviour {
             mapUI_go.GetComponent<GlobalMapUI>().SetGlobalMap(this);
         }
         if (!mapUI_go.activeSelf) mapUI_go.SetActive(true);
+    }
+
+    public bool ExpeditionLaunch(Expedition e, MapPoint destination)
+    {
+        if (mapPoints.Count == 0) return false;
+        else
+        {
+            MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
+            FlyingExpedition fePoint = new FlyingExpedition(cityPoint.angle, cityPoint.height, cityPoint.ringIndex, MapMarkerType.Shuttle, e, destination);
+            return AddPoint(fePoint);
+        }
     }
 
     #region save-load system
@@ -250,78 +278,4 @@ public sealed class GlobalMap : MonoBehaviour {
 
     }
     #endregion
-}
-
-public class MapPoint
-{
-    public bool interactable { get; protected set; }
-    public bool explored { get; protected set; }
-    public byte subIndex { get; protected set; }
-    public byte ringIndex;
-    public MapMarkerType type { get; protected set; }
-    public float angle;
-    public float height;
-
-    const byte WRECKS_TYPE_COUNT = 10;
-
-    public MapPoint()
-    {
-
-    }
-
-    public MapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype, bool i_interactable) : this(i_angle, i_height, ring, mtype)
-    {
-        if (i_interactable) interactable = true;
-    }
-
-    public MapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype)
-    {
-        interactable = false;
-        angle = i_angle;
-        height = i_height;
-        ringIndex = ring;
-        type = mtype;
-        explored = false;
-        switch (type)
-        {
-            case MapMarkerType.Wreck: subIndex = (byte)(Random.value * WRECKS_TYPE_COUNT); break;
-            default: subIndex = 0; break;
-        }
-    }
-
-    public virtual bool DestroyRequest()
-    {
-        return true;
-    }
-}
-
-class PointOfInterest : MapPoint
-{
-    public Mission mission { get; protected set; }
-    public Expedition sentExpedition { get; protected set; }
-
-    public PointOfInterest(float i_angle, float i_height, byte ring, MapMarkerType mtype, Mission m) : base(i_angle, i_height, ring, mtype)
-    {
-        interactable = true;
-        mission = m;
-    }
-
-    public void SendExpedition(Expedition e)
-    {
-        if (sentExpedition == null) sentExpedition = e;
-        else
-        {
-            if (sentExpedition.stage == Expedition.ExpeditionStage.Preparation)
-            {
-                sentExpedition.Dismiss();
-                sentExpedition = e;
-            }
-        }
-    }
-
-    public override bool DestroyRequest()
-    {
-        if (sentExpedition != null && (sentExpedition.stage == Expedition.ExpeditionStage.WayIn | sentExpedition.stage == Expedition.ExpeditionStage.OnMission)) return false;
-        else return true;
-    }
 }

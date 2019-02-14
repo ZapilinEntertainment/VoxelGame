@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GlobalMapUI : MonoBehaviour {
+public sealed class GlobalMapUI : MonoBehaviour
+{
 #pragma warning disable 0649
     [SerializeField] private Button startButton;
     [SerializeField] private Dropdown missionDropdown, shuttlesDropdown;
-    [SerializeField] private Image  descrButtonImage, expButtonImage;
+    [SerializeField] private Image descrButtonImage, expButtonImage;
     [SerializeField] private InputField expeditionNameField;
     [SerializeField] private RectTransform mapRect;
     [SerializeField] private RawImage pointIcon;
@@ -17,15 +18,17 @@ public class GlobalMapUI : MonoBehaviour {
     [SerializeField] private GameObject mapCanvas, mapCamera;
 #pragma warning restore 0649
 
-    private bool prepared = false, pointInfoMode = false, expeditionWindowOpened = false;
+    private bool prepared = false, infopanelEnabled = false, descriptionMode = true;
     private float infoPanelWidth = Screen.width;
     private float[] rotationSpeed;
     private int lastDrawnStateHash = 0;
     private GlobalMap globalMap;
+    private MapPoint chosenPoint;
+    private List<int> shuttlesListIds = new List<int>();
     private List<RectTransform> mapMarkers;
     private List<MapPoint> mapPoints;
 
-    protected readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f);   
+    private readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f), chosenColor = Color.yellow;
     private const float ZOOM_BORDER = 9, DIST_BORDER = 1;
 
     //========================== PUBLIC METHODS
@@ -39,60 +42,270 @@ public class GlobalMapUI : MonoBehaviour {
     }
     public void SelectPoint(MapPoint mp)
     {
-        if (infoPanel.activeSelf) infoPanel.SetActive(false);
-        pointLabel.text = Localization.GetMapPointTitle(mp.type);
-        pointIcon.uvRect = GetMarkerRect(mp.type);
-        PointOfInterest poi = mp as PointOfInterest;
-        if (poi != null)
+        if (chosenPoint != null)
         {
-            pointDescription.gameObject.SetActive(false);
-
-            expButtonImage.gameObject.SetActive(true);
-            if (pointInfoMode == true)
+            if (mp != chosenPoint)
             {
-                descrButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
-                expButtonImage.overrideSprite = null;
-                sendPanel.SetActive(false);
-                pointDescription.gameObject.SetActive(true);
+                for (int i = 0; i < mapPoints.Count; i++)
+                {
+                    if (mapPoints[i] == chosenPoint)
+                    {
+                        mapMarkers[i].GetComponent<Image>().color = mapPoints[i] is PointOfInterest ? interactableColor : notInteractableColor;
+                        break;
+                    }
+                }
+                chosenPoint = null;
+                infoPanel.SetActive(false);
             }
             else
-            {
-                descrButtonImage.overrideSprite = null;
-                expButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
-                sendPanel.SetActive(true);
-                pointDescription.gameObject.SetActive(false);
+            {  //повторный выбор точки
+                if (descriptionMode) { PreparePointDescription(); return; }
+                else { PreparePointExpedition(); return; }
             }
         }
+        chosenPoint = mp;
+        for (int i = 0; i < mapPoints.Count; i++)
+        {
+            if (mapPoints[i] == chosenPoint)
+            {
+                mapMarkers[i].GetComponent<Image>().color = chosenColor;
+                break;
+            }
+        }
+        switch (chosenPoint.type) {
+            case MapMarkerType.MyCity: if (GameMaster.realMaster.colonyController != null) pointLabel.text = GameMaster.realMaster.colonyController.cityName ;break;
+            default: pointLabel.text = Localization.GetMapPointTitle(chosenPoint.type); break;
+        }
+        pointIcon.uvRect = GetMarkerRect(chosenPoint.type);
+        if (descriptionMode) PreparePointDescription();
         else
         {
-            pointDescription.text = Localization.GetMapPointDescription(mp.type, mp.subIndex);
-            pointDescription.gameObject.SetActive(true);
-
-            pointInfoMode = true;
-            descrButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
-            expButtonImage.overrideSprite = null;
-            expButtonImage.gameObject.SetActive(false);
-            if (sendPanel.activeSelf) sendPanel.SetActive(false);
+            if (mp is PointOfInterest) PreparePointExpedition();
+            else
+            {
+                PreparePointDescription();
+            }
         }
-        infoPanel.SetActive(true);
+
         infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
     }
 
-    public void SwitchToSendPanel()
+    public void PreparePointDescription()
     {
+        if (chosenPoint != null)
+        {
+            descriptionMode = true;
+            pointDescription.text = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex);
+            pointDescription.gameObject.SetActive(true);
 
+            descrButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+            expButtonImage.overrideSprite = null;
+            expButtonImage.gameObject.SetActive(chosenPoint is PointOfInterest);
+            if (sendPanel.activeSelf) sendPanel.SetActive(false);
+
+            startButton.gameObject.SetActive(false);
+
+            infoPanel.SetActive(true);
+            infopanelEnabled = true;
+        }
+        else CloseInfopanel();
     }
-    public void SwitchToInfoPanel()
+    public void PreparePointExpedition()
     {
+        if (chosenPoint != null)
+        {
+            PointOfInterest poi = chosenPoint as PointOfInterest;
+            if (poi == null)
+            {
+                PreparePointDescription();
+                return;
+            }
+            else
+            {
+                descriptionMode = false;
+                pointDescription.gameObject.SetActive(false);
 
+                descrButtonImage.overrideSprite = null;
+                expButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
+                expButtonImage.gameObject.SetActive(true);
+
+                if (sendPanel.activeSelf) sendPanel.SetActive(false);
+                shuttlesDropdown.gameObject.SetActive(false);
+                if (poi.sentExpedition != null)
+                { // окно действующей экспедиции
+                    expeditionNameField.text = poi.sentExpedition.name;
+                    missionDropdown.gameObject.SetActive(false);
+                    expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + poi.sentExpedition.crew.name + '\n' +
+                        Localization.GetWord(LocalizedWord.Progress) + ": " + ((poi.sentExpedition.progress * 100) / 100).ToString() + '%';
+
+                    startButton.interactable = true;
+                    startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                }
+                else
+                {
+                    //окно подготовки экспедиции
+                    expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) +' '+ Expedition.lastUsedID.ToString();
+
+                    var mdrop = poi.GetAvailableMissionsDropdownData();
+                    if (mdrop.Count > 0)
+                    {
+                        missionDropdown.options = mdrop;
+                    }
+                    else
+                    {
+                        missionDropdown.options = new List<Dropdown.OptionData>() { new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)) };
+                    }
+                    missionDropdown.gameObject.SetActive(true);
+
+                    var shuttlesDropdownList = new List<Dropdown.OptionData>();
+                    shuttlesDropdownList.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoShuttle)));
+                    shuttlesListIds.Clear();
+                    shuttlesListIds.Add(-1);
+                    if (Shuttle.shuttlesList.Count > 0)
+                    {
+                        foreach (Shuttle s in Shuttle.shuttlesList)
+                        {
+                            if (s.crew != null && s.crew.status == CrewStatus.Free)
+                            {
+                                shuttlesDropdownList.Add(new Dropdown.OptionData(s.crew.name));
+                                shuttlesListIds.Add(s.ID);
+                            }
+                        }
+                    }
+                    if (shuttlesListIds.Count == 0)
+                    {
+                        shuttlesDropdownList.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoSuitableShuttles)));
+                    }
+                    shuttlesDropdown.options = shuttlesDropdownList;
+                    shuttlesDropdown.gameObject.SetActive(true);
+
+                    int freeCount = QuantumTransmitter.transmittersList.Count - Expedition.expeditionsList.Count;
+                    if (freeCount > 0) expStatusText.text = Localization.GetPhrase(LocalizedPhrase.UnoccupiedTransmitters) + freeCount.ToString();
+                    else expStatusText.text = Localization.GetPhrase(LocalizedPhrase.NoTransmitters);
+                    
+                    teamInfoblock.gameObject.SetActive(false);
+                    startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Launch);
+                    startButton.interactable = (shuttlesListIds.Count > 0 & mdrop.Count > 0 & freeCount > 0);
+                }
+                startButton.gameObject.SetActive(true);
+                sendPanel.SetActive(true);
+                if (!infopanelEnabled)
+                {
+                    infoPanel.SetActive(true);
+                    infopanelEnabled = true;
+                }
+            }
+        }
+        else CloseInfopanel();
+    }
+    public void RenameExpedition(string s)
+    {
+        if (chosenPoint != null)
+        {
+            PointOfInterest poi = chosenPoint as PointOfInterest;
+            if (poi != null && poi.sentExpedition != null)
+            {
+                poi.sentExpedition.name = s;
+            }
+            PreparePointExpedition();
+        }
+        else  CloseInfopanel();
+    }
+    public void SetMission(int index)
+    {
+        if (chosenPoint != null)
+        {
+            PointOfInterest poi = chosenPoint as PointOfInterest;
+            if (poi != null )
+            {
+                if (poi.sentExpedition != null) poi.sentExpedition.SetMission(poi.GetMission(index));
+                PreparePointExpedition();
+            }
+            else PreparePointDescription();
+        }
+        else CloseInfopanel();
+    }
+    public void SetShuttle(int index)
+    {
+        if (chosenPoint != null)
+        {
+            PointOfInterest poi = chosenPoint as PointOfInterest;
+            if (poi == null) PreparePointDescription();
+            else
+            {
+                if ( poi.sentExpedition != null )
+                {
+                    if (index == -1) poi.sentExpedition.DismissCrew();
+                    else poi.sentExpedition.SetCrew(Shuttle.GetShuttle(shuttlesListIds[index]).crew);
+                }
+                PreparePointExpedition();
+            }
+        }
+        else CloseInfopanel();
+    }
+    public void RemoveCrew()
+    {
+        if (chosenPoint != null)
+        {
+            PointOfInterest poi = chosenPoint as PointOfInterest;
+            if (poi != null)
+            {
+                if (poi.sentExpedition != null) poi.sentExpedition.DismissCrew();
+                PreparePointExpedition();
+            }
+            else PreparePointDescription();
+        }
+        else CloseInfopanel();
     }
 
+    public void StartButton()
+    {
+        if (chosenPoint != null)
+        {
+            if (!descriptionMode)
+            {
+                var poi = chosenPoint as PointOfInterest;
+                if (poi.sentExpedition == null)
+                { //отправить экспедицию
+                    Expedition e = Expedition.CreateNewExpedition();
+                    Shuttle s = Shuttle.GetShuttle(shuttlesListIds[shuttlesDropdown.value]);
+                    if (s != null) e.SetCrew(s.crew);
+                    e.SetMission(poi.GetMission(missionDropdown.value));
+                    poi.SendExpedition(e);
+                }
+                else
+                { //вернуть экспедицию
+                    poi.ReturnExpedition();
+                }
+                PreparePointExpedition();
+            }
+            else PreparePointDescription();
+        }
+        else CloseInfopanel();
+    }
+    public void CloseInfopanel()
+    {
+        infoPanel.SetActive(false);
+        infopanelEnabled = false;        
+        infoPanelWidth = 0;
+        if (chosenPoint != null & mapMarkers.Count > 0)
+        for (int i = 0; i < mapMarkers.Count; i++)
+        {
+            if (mapPoints[i] == chosenPoint)
+                {
+                    mapMarkers[i].GetComponent<Image>().color = mapPoints[i] is PointOfInterest ? interactableColor : notInteractableColor;
+                    break;
+                }
+        }
+        chosenPoint = null;
+    }
     public void Close()
     {
+        CloseInfopanel();
         gameObject.SetActive(false);
         UIController.current.gameObject.SetActive(true);
         FollowingCamera.main.gameObject.SetActive(true);
-    }
+    }   
     // ======================== PRIVATE METHODS
     private void Start()
     {
@@ -120,7 +333,12 @@ public class GlobalMapUI : MonoBehaviour {
                 float shp = Screen.height / 2f;
                 for (int i = 0; i < mapMarkers.Count; i++)
                 {
-                    mapMarkers[i].localPosition = Quaternion.AngleAxis(mapPoints[i].angle, fwd) * (up * shp * mapPoints[i].height);
+                    MapPoint mp = mapPoints[i];
+                    mapMarkers[i].localPosition = Quaternion.AngleAxis(mp.angle, fwd) * (up * shp * mp.height);
+                    if (mp.type == MapMarkerType.Shuttle)
+                    {
+
+                    }
                 }
             }
         }
@@ -160,7 +378,7 @@ public class GlobalMapUI : MonoBehaviour {
                 deltaX = Input.GetAxis("Mouse X");
                 deltaY = Input.GetAxis("Mouse Y");
             }
-            deltaZoom = Input.GetAxis("Mouse ScrollWheel");            
+            deltaZoom = Input.GetAxis("Mouse ScrollWheel");
         }
 
         if (deltaZoom != 0)
@@ -176,12 +394,12 @@ public class GlobalMapUI : MonoBehaviour {
                 mapRect.localScale = Vector3.one * newScale;
             }
         }
-        
+
         float xpos = mapRect.position.x, ypos = mapRect.position.y;
         float radius = mapRect.rect.width * mapRect.localScale.x / 2f;
         float sw = Screen.width - infoPanelWidth;
         int sh = Screen.height;
-        if (2 * radius <= sw )
+        if (2 * radius <= sw)
         {
             xpos = sw / 2f;
         }
@@ -231,8 +449,8 @@ public class GlobalMapUI : MonoBehaviour {
                 if (downExpart > 0) ypos = radius;
             }
         }
-        
-        
+
+
         mapRect.position = new Vector3(xpos, ypos, 0);
     }
 
@@ -257,10 +475,9 @@ public class GlobalMapUI : MonoBehaviour {
         RedrawMarkers();
         if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
         else infoPanelWidth = 0;
-        infoPanel.SetActive(false);        
-        LocalizeTitles();        
+        infoPanel.SetActive(false);
+        LocalizeTitles();
     }
-
     private void RedrawMarkers()
     {
         if (!prepared) return;
@@ -273,9 +490,9 @@ public class GlobalMapUI : MonoBehaviour {
             {
                 mapRect.gameObject.SetActive(false);
                 if (c != n)
-                {                    
+                {
                     if (c > n)
-                    {                        
+                    {
                         for (int i = c - 1; i >= n; i--)
                         {
                             int a = mapMarkers.Count - 1;
@@ -294,22 +511,22 @@ public class GlobalMapUI : MonoBehaviour {
                 RectTransform rt;
                 MapPoint mp;
                 Vector3 fwd = Vector3.forward, up = Vector3.up;
+                bool checkForChosen = (chosenPoint != null);
                 float sh = Screen.height / 2f;
-                for (int i = 0; i < n;i++)
+                for (int i = 0; i < n; i++)
                 {
                     rt = mapMarkers[i];
                     mp = mapPoints[i];
-                    rt.GetComponent<Image>().color = mp.interactable ? interactableColor : notInteractableColor;
-                    rt.GetChild(0).GetComponent<RawImage>().uvRect = GetMarkerRect(mp.type);
-                    Button b = rt.GetComponent<Button>();
-                    b.interactable = mp.interactable
-;
-                    b.onClick.RemoveAllListeners();
-                    if (mp.interactable)
-                    {                          
-                        MapPoint mpLink = mp;
-                        b.onClick.AddListener(() => { this.SelectPoint(mpLink); });
+                    if (checkForChosen && mp == chosenPoint) rt.GetComponent<Image>().color = chosenColor;
+                    else
+                    {
+                        rt.GetComponent<Image>().color = mp is PointOfInterest ? interactableColor : notInteractableColor;
                     }
+                    rt.GetChild(0).GetComponent<RawImage>().uvRect = GetMarkerRect(mp.type);
+                    Button b = rt.GetComponent<Button>();;
+                    b.onClick.RemoveAllListeners();
+                    MapPoint mpLink = mp;
+                    b.onClick.AddListener(() => { this.SelectPoint(mpLink); });
                     rt.localPosition = Quaternion.AngleAxis(mapPoints[i].angle, fwd) * (up * sh * mapPoints[i].height);
                     if (!rt.gameObject.activeSelf) rt.gameObject.SetActive(true);
                 }
@@ -318,7 +535,7 @@ public class GlobalMapUI : MonoBehaviour {
             else
             {
                 if (mapMarkers.Count > 0)
-                {                    
+                {
                     for (int i = 0; i < c; i++)
                     {
                         Destroy(mapMarkers[0].gameObject);
@@ -329,7 +546,7 @@ public class GlobalMapUI : MonoBehaviour {
             lastDrawnStateHash = globalMap.actionsHash;
         }
     }
-
+   
     private void OnEnable()
     {
         if (globalMap == null)
@@ -370,7 +587,7 @@ public class GlobalMapUI : MonoBehaviour {
                 {
                     rawdata[k] = one;
                     rawdata[k + 1] = one;
-                    rawdata[k + 2] = one;                    
+                    rawdata[k + 2] = one;
                     rawdata[k + 3] = one;
                 }
                 else
@@ -379,7 +596,7 @@ public class GlobalMapUI : MonoBehaviour {
                     rawdata[k + 1] = zero;
                     rawdata[k + 2] = zero;
                     rawdata[k + 3] = zero;
-                }                
+                }
                 k += 4;
             }
         }
@@ -394,9 +611,9 @@ public class GlobalMapUI : MonoBehaviour {
         float p = 0.25f;
         switch (mtype)
         {
-            case MapMarkerType.MyCity: return new Rect(p,0,p,p);
+            case MapMarkerType.MyCity: return new Rect(p, 0, p, p);
             case MapMarkerType.Station: return new Rect(0, p, p, p);
-            case MapMarkerType.Wreck: return new Rect(p,p,p,p);
+            case MapMarkerType.Wreck: return new Rect(p, p, p, p);
             case MapMarkerType.Shuttle: return new Rect(2 * p, p, p, p);
             case MapMarkerType.Island: return new Rect(3 * p, p, p, p);
             case MapMarkerType.SOS: return new Rect(0, 2 * p, p, p);
@@ -412,10 +629,10 @@ public class GlobalMapUI : MonoBehaviour {
                 return new Rect(0, 0, p, p);
         }
     }
-    
+
 
     public void LocalizeTitles()
     {
-        mapCanvas.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Close);
-    }   
+      
+    }
 }
