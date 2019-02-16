@@ -11,4 +11,13 @@ public sealed class FlyingExpedition : MovingMapPoint {
         expedition = e;
         destination = i_destination;
     }
+
+    public void DestinationReached(MapPoint mp)
+    {
+        if (expedition.stage == Expedition.ExpeditionStage.WayIn)
+        {
+            expedition.MissionStart();            
+        }
+        GameMaster.realMaster.globalMap.RemovePoint(this);
+    }
 }

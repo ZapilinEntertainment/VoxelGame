@@ -6,12 +6,13 @@ public class PointOfInterest : MapPoint
 {
     public bool explored { get; protected set; }
     public Expedition sentExpedition { get; protected set; }
-    private List<Mission> availableMissions;
+    public ExploringLocation location { get; private set; }
+    private List<Mission> availableMissions;    
 
     public PointOfInterest(float i_angle, float i_height, byte ring, MapMarkerType mtype) : base(i_angle, i_height, ring, mtype)
     {
         explored = false;
-        availableMissions = new List<Mission>() { new Mission(Mission.EXPLORE_MISSION_ID, true) };
+        availableMissions = new List<Mission>() { new Mission(MissionType.Exploring, 0) };
     }
 
     public void SendExpedition(Expedition e)
@@ -20,17 +21,7 @@ public class PointOfInterest : MapPoint
         {
             sentExpedition = e;
             e.Launch(this);
-        }
-        else
-        {
-            if (sentExpedition.stage == Expedition.ExpeditionStage.Preparation)
-            {
-                int d_id = sentExpedition.ID;
-                sentExpedition = null;
-                Expedition.DismissExpedition(d_id);
-                sentExpedition = e;
-            }
-        }        
+        }      
     }
     public void ReturnExpedition()
     {

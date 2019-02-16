@@ -1,37 +1,60 @@
 ﻿using System.Collections.Generic;
 
-public sealed class Mission {
+public enum MissionType : byte
+{
+    Awaiting, Exploring, FindingKnowledge, FindingItem, FindingPerson, FindingPlace, FindingResources,
+    FindingEntrance, FindingExit
+}
+
+public sealed class Mission {    
+
 	public static readonly Mission NoMission;
 
     public readonly bool requireShuttle;
-    public readonly int ID;
-    public int progressPoints { get; private set; }
+    public readonly MissionType type;
+    public readonly PointOfInterest point;
+    public int currentStep { get; private set; }
+    public int totalSteps { get; private set; }
     public string codename { get; private set; }
+    private byte subIndex;
     //сохранение использованных айди?
-    public const int UNDEFINED_ID = 0, EXPLORE_MISSION_ID = 1;
 
     static Mission()
     {
-        NoMission = new Mission(Localization.GetPhrase(LocalizedPhrase.NoMission));
+        NoMission = new Mission(MissionType.Awaiting, 0);
     }
 
-    private Mission()
+    public Mission(MissionType i_type, byte i_subIndex)
     {
+        type = i_type;
+        subIndex = i_subIndex;
+        point = null;
         requireShuttle = false;
-        ID = UNDEFINED_ID;
-        progressPoints = 0;
-        codename = string.Empty;
+        codename = Localization.GetMissionCodename(type, subIndex);
+    }
+    public Mission (MissionType i_type, byte i_subIndex, PointOfInterest i_point) : this(i_type, i_subIndex)
+    {
+        requireShuttle = true;
+        point = i_point;
     }
 
-    private Mission(string i_codename) : this()
+    public float CalculateCrewSpeed(Crew c)
     {
-        codename = i_codename;        
+        if (c == null) return 0;
+        else
+        {
+            // вообще должно зависеть от самой миссии
+            return c.teamWork * c.unity + c.persistence * c.confidence + 0.1f * c.loyalty + c.adaptability;
+        }
     }
-
-    public Mission(int i_id, bool i_requireShuttle)
+    public bool NextStep()
     {
-        ID = i_id;
-        requireShuttle = i_requireShuttle;
-        codename = Localization.GetMissionCodename(ID);
+        currentStep++;
+        return (currentStep == totalSteps);
+    }
+    public bool TryToLeave()
+    {
+        //может и не получиться
+        return true;
     }
 }

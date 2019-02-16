@@ -31,6 +31,12 @@ public sealed class Crew : MonoBehaviour {
 	public float teamWork{get;private set;}
     //при внесении изменений отредактировать Localization.GetCrewInfo
 
+        //neuroparameters:
+    public float confidence { get; private set; }
+    public float unity { get; private set; }
+    public float loyalty { get; private set; }
+    public float adaptability { get;private set; }
+
 	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
     public int missionsParticipated { get; private set; }
     public int missionsSuccessed{get;private set;}    
@@ -56,13 +62,23 @@ public sealed class Crew : MonoBehaviour {
         c.level = 0;
         c.ID = lastFreeID; lastFreeID++;
         c.status = CrewStatus.Free;
-        c.perception = 1; // сделать зависимость от исследованных технологий
-        c.persistence = home.happiness_coefficient * 0.85f + 0.15f;
+
+        //normal parameters
+        c.perception =  0.3f + Random.value * 0.5f;
+        c.persistence = 0.3f + Random.value * 0.5f;
         c.luck = Random.value;
-        c.bravery = 0.3f * Random.value + c.persistence * 0.3f + 0.4f * home.health_coefficient;
-        c.techSkills = 0.5f * home.hq.level / 8f + 0.5f; // сделать зависимость от количества общих видов построенных зданий
-        c.survivalSkills = c.persistence * 0.15f + c.luck * 0.05f + c.techSkills * 0.15f + c.bravery * 0.15f + 0.5f; // еще пара зависимостей от зданий
-        c.teamWork = 0.75f * home.happiness_coefficient + 0.25f * Random.value;
+        c.bravery = 0.3f + Random.value * 0.6f;
+        float lvl_cf = home.hq.level / GameConstants.HQ_MAX_LEVEL;
+        c.techSkills = 0.1f * Random.value + lvl_cf * 0.45f + home.gears_coefficient / GameConstants.GEARS_UP_LIMIT * 0.45f; // сделать зависимость от количества общих видов построенных зданий
+        float hcf = home.hospitals_coefficient;
+        if (hcf > 1) hcf = 1;
+        c.survivalSkills = 0.3f * Random.value + 0.3f * home.health_coefficient + 0.4f * hcf ; // еще пара зависимостей от зданий
+        c.teamWork = 0.7f * home.happiness_coefficient + 0.1f * Random.value;
+        //neuroparameters:
+        c.confidence = home.happiness_coefficient;
+        c.unity = 0.5f + (c.teamWork - 0.5f) * 0.75f;
+        c.loyalty = home.happiness_coefficient;
+        c.adaptability = lvl_cf * 0.5f;
 
         c.stamina = 0.9f + Random.value * 0.1f;
         c.membersCount = (int)(MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT));

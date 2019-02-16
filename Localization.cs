@@ -1567,14 +1567,42 @@ public static class Localization {
     #endregion
 
     #region missions data
-    public static string GetMissionCodename(int id)
+    public static string GetMissionCodename(MissionType mtype, byte subIndex)
     {
-        switch (id)
-        {
-            case Mission.EXPLORE_MISSION_ID:  return "Exploring";
-            case Mission.UNDEFINED_ID:
+        switch (currentLanguage) {
+            case Language.Russian:
+                switch (mtype)
+                {
+                    case MissionType.Exploring: return "Изучение"; break;
+                    case MissionType.FindingKnowledge: return "В поисках знания";
+                    case MissionType.FindingItem: return "Поиск предмета";
+                    case MissionType.FindingPerson: return "Поиск человека";
+                    case MissionType.FindingPlace: return "Поиск места";
+                    case MissionType.FindingResources: return "Поиск ресурсов";
+                    case MissionType.FindingEntrance: return "Найти вход";
+                    case MissionType.FindingExit: return "Найти дорогу обратно";
+                    case MissionType.Awaiting:
+                    default:
+                        return "Awaiting";
+                }
+            case Language.English:
             default:
-            return "No mission";
+                {
+                    switch (mtype)
+                    {
+                        case MissionType.Exploring: return "Exploring"; 
+                        case MissionType.FindingKnowledge: return "Finding knowledge";
+                        case MissionType.FindingItem: return "Finding item";
+                        case MissionType.FindingPerson: return "Finding person";
+                        case MissionType.FindingPlace: return "Finding place";
+                        case MissionType.FindingResources: return "Finding resources";
+                        case MissionType.FindingEntrance: return "Finding entrance";
+                        case MissionType.FindingExit: return "Finding way back";
+                        case MissionType.Awaiting:
+                        default:
+                            return "Awaiting";
+                    }
+        }
         }
     }
     #endregion

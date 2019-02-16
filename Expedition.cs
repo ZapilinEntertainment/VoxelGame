@@ -12,8 +12,6 @@ public sealed class Expedition : MonoBehaviour
     public static int actionsHash { get; private set; }
     private static Transform expeditionsContainer;
 
-    public float progress { get; private set; }
-    public float cost { get; private set; }
     public int ID { get; private set; }
     public static int lastUsedID {get;private set;} // в сохранение
     public int fuelNeeded { get; private set; }
@@ -21,7 +19,11 @@ public sealed class Expedition : MonoBehaviour
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
     public Crew crew { get; private set; }
-    public List<MissionStageType> stages;    
+
+    private bool subscribedToUpdate;
+    private float crewSpeed, progress; // до следующего шага
+
+    private const float ONE_STEP_WORKFLOW = 100;
 
     static Expedition()
     {
@@ -46,7 +48,6 @@ public sealed class Expedition : MonoBehaviour
 
         e.stage = ExpeditionStage.Preparation;
         e.mission = Mission.NoMission;
-        e.stages = new List<MissionStageType>();
 
         return e;
     }
@@ -62,6 +63,7 @@ public sealed class Expedition : MonoBehaviour
                     if (e.crew != null) e.DismissCrew();
                     Destroy(e);
                     expeditionsList.RemoveAt(i);
+                    actionsHash++;
                     break;
                 }
             }
@@ -74,8 +76,70 @@ public sealed class Expedition : MonoBehaviour
         {
             if (GameMaster.realMaster.globalMap.ExpeditionLaunch(this, poi))
             {
-                stage = ExpeditionStage.WayIn;
+                ChangeStage( ExpeditionStage.WayIn );
             }
+        }
+    }
+    public void MissionStart()
+    {
+        if (stage != ExpeditionStage.OnMission)
+        {
+            ChangeStage(ExpeditionStage.OnMission);
+            crewSpeed = mission.CalculateCrewSpeed(crew);
+            if (!subscribedToUpdate)
+            {
+                GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
+                subscribedToUpdate = true;
+            }
+        }
+    }
+    public void EndMission()
+    {
+        switch (stage)
+        {
+            case ExpeditionStage.WayIn:
+                {
+                    mission = Mission.NoMission;
+                    progress = 0;
+                    ChangeStage(ExpeditionStage.WayOut);
+                    break;
+                }
+            case ExpeditionStage.OnMission:
+                {
+                    if (mission != Mission.NoMission)
+                    {
+                        if (mission.TryToLeave())
+                        {
+                            mission = Mission.NoMission;
+                            progress = 0;
+                            ChangeStage(ExpeditionStage.WayOut);
+                        }
+                    }
+                    else ChangeStage(ExpeditionStage.WayOut);
+                    break;
+                }
+        }
+    }
+
+    public void LabourUpdate()
+    {
+        switch (stage)
+        {
+            case ExpeditionStage.Preparation:
+                {
+                    break;
+                }
+            case ExpeditionStage.OnMission:
+                {
+                    progress += crewSpeed;
+                    if (progress >= ONE_STEP_WORKFLOW)
+                    {
+                        progress = 0;
+                        bool completed = mission.NextStep();
+                        if (completed) EndMission();
+                    }
+                    break;
+                }
         }
     }
 
@@ -102,6 +166,10 @@ public sealed class Expedition : MonoBehaviour
     public void SetCrew(Crew c)
     {
         if (stage == ExpeditionStage.Preparation) crew = c;
+        if (crew != null & stage == ExpeditionStage.OnMission & !subscribedToUpdate) {
+            GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
+            subscribedToUpdate = true;
+        }
     }
     public void DismissCrew()
     {
@@ -109,12 +177,33 @@ public sealed class Expedition : MonoBehaviour
         {
             crew.SetStatus(CrewStatus.Free);
             crew = null;
+            if (subscribedToUpdate)
+            {
+                GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
+                subscribedToUpdate = false;
+            }
         }
     }
 
     public void DrawTexture(UnityEngine.UI.RawImage iconPlace)
     {
         //awaiting
+    }
+
+    private void ChangeStage(ExpeditionStage nstage)
+    {
+        //добавить проверки
+        stage = nstage;
+        actionsHash++;
+    }
+
+    private void OnDestroy()
+    {
+        if (subscribedToUpdate & !GameMaster.sceneClearing)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
+            subscribedToUpdate = false;
+        }
     }
 
     #region save-load system

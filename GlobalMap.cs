@@ -20,6 +20,7 @@ public sealed class GlobalMap : MonoBehaviour {
     private const int CITY_POINT_INDEX = 0;
     private const int TEMPORARY_POINTS_MASK = 15593;
     private const int MAX_OBJECTS_COUNT = 50;
+    private const float SHUTTLES_SPEED = 4;
 
     private void Start()
     {
@@ -76,6 +77,14 @@ public sealed class GlobalMap : MonoBehaviour {
             return true;
         }
     }
+    public void RemovePoint(MapPoint mp)
+    {
+        if (mapPoints.Contains(mp))
+        {
+            mapPoints.Remove(mp);
+            actionsHash++;
+        }
+    }
 
     private byte DefineRing(float ypos)
     {
@@ -114,6 +123,16 @@ public sealed class GlobalMap : MonoBehaviour {
             float t = Time.deltaTime * GameMaster.gameSpeed;
             foreach (MapPoint mp in mapPoints)
             {
+                if (mp.type == MapMarkerType.Shuttle)
+                {
+                    MapPoint destination = (mp as FlyingExpedition).destination;
+                    mp.height = Mathf.MoveTowards(mp.height, destination.height, SHUTTLES_SPEED * t);
+                    mp.angle = Mathf.MoveTowardsAngle(mp.angle, destination.angle, SHUTTLES_SPEED * t);
+                    if (mp.height == destination.height & mp.angle == destination.angle)
+                    {
+                        (mp as FlyingExpedition).DestinationReached(destination);
+                    }
+                }
                 mp.angle += rotationSpeed[mp.ringIndex] * t;
             }
         }
