@@ -6,18 +6,28 @@ public enum MissionType : byte
     FindingEntrance, FindingExit
 }
 
-public sealed class Mission {    
+public struct Mission {    
 
 	public static readonly Mission NoMission;
 
-    public readonly bool requireShuttle;
-    public readonly MissionType type;
-    public readonly PointOfInterest point;
-    public int currentStep { get; private set; }
-    public int totalSteps { get; private set; }
-    public string codename { get; private set; }
-    private byte subIndex;
-    //сохранение использованных айди?
+    public MissionType type;
+    public byte subIndex;
+    public bool requireShuttle;    
+    public PointOfInterest point;
+    public string codename;    
+    public int stepsCount;
+
+    public static bool operator ==(Mission lhs, Mission rhs) { return lhs.Equals(rhs); }
+    public static bool operator !=(Mission lhs, Mission rhs) { return !(lhs.Equals(rhs)); }
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        Mission p = (Mission)obj;
+        return (type == p.type) & (subIndex == p.subIndex);
+    }
 
     static Mission()
     {
@@ -30,6 +40,7 @@ public sealed class Mission {
         subIndex = i_subIndex;
         point = null;
         requireShuttle = false;
+        stepsCount = 1; // awaiting
         codename = Localization.GetMissionCodename(type, subIndex);
     }
     public Mission (MissionType i_type, byte i_subIndex, PointOfInterest i_point) : this(i_type, i_subIndex)
@@ -47,14 +58,19 @@ public sealed class Mission {
             return c.teamWork * c.unity + c.persistence * c.confidence + 0.1f * c.loyalty + c.adaptability;
         }
     }
-    public bool NextStep()
-    {
-        currentStep++;
-        return (currentStep == totalSteps);
-    }
     public bool TryToLeave()
     {
         //может и не получиться
         return true;
     }
+
+    #region save-load
+    public List<byte> Save()
+    {
+        var bytes = new List<byte>();
+        bytes.Add((byte)type);
+        bytes.Add(subIndex);
+        return bytes;
+    }
+    #endregion
 }

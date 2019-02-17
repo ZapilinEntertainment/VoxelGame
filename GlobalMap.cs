@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Island, SOS, Portal, QuestMark, Colony, Star, Wiseman, Wonder, Resources }
-//при изменении порядка или количества - изменить маску необязательных объектов
-// изменить Localization.GetMapPointLabel()
-// константы максимального количества подвидов
-
 public sealed class GlobalMap : MonoBehaviour {
 
     public float[] ringsBorders { get; private set; }
@@ -86,7 +81,7 @@ public sealed class GlobalMap : MonoBehaviour {
         }
     }
 
-    private byte DefineRing(float ypos)
+    public byte DefineRing(float ypos)
     {
         if (ypos < ringsBorders[2])
         {
@@ -121,8 +116,10 @@ public sealed class GlobalMap : MonoBehaviour {
         if (mapPoints.Count > 0)
         {
             float t = Time.deltaTime * GameMaster.gameSpeed;
-            foreach (MapPoint mp in mapPoints)
+            int i = 0;
+            while (i < mapPoints.Count)
             {
+                MapPoint mp = mapPoints[i];
                 if (mp.type == MapMarkerType.Shuttle)
                 {
                     MapPoint destination = (mp as FlyingExpedition).destination;
@@ -131,9 +128,11 @@ public sealed class GlobalMap : MonoBehaviour {
                     if (mp.height == destination.height & mp.angle == destination.angle)
                     {
                         (mp as FlyingExpedition).DestinationReached(destination);
+                        continue;
                     }
                 }
                 mp.angle += rotationSpeed[mp.ringIndex] * t;
+                i++;
             }
         }
     }
@@ -290,11 +289,31 @@ public sealed class GlobalMap : MonoBehaviour {
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {
-
+        if (mapPoints.Count > 0)
+        {
+            int realCount = 0;
+            var saveArray = new List<byte>();
+            foreach (MapPoint mp in mapPoints)
+            {
+                if (mp.type != MapMarkerType.Shuttle)
+                {
+                    saveArray.AddRange(mp.Save());
+                    realCount++;
+                }
+            }
+            if (realCount > 0)
+            {
+                fs.WriteByte((byte)realCount);
+                fs.Write(saveArray.ToArray(), 0, saveArray.Count);
+            }
+        }
+        else fs.WriteByte(0);
     }
     public void Load(System.IO.FileStream fs)
     {
-
+        if (mapPoints == null) mapPoints = new List<MapPoint>();
+        else mapPoints.Clear();
+        mapPoints = MapPoint.LoadPoints(fs);
     }
     #endregion
 }

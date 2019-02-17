@@ -2,27 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class Expedition : MonoBehaviour
+public sealed class Expedition
 {
     public enum MissionStageType : byte { Test, Decision, Fee, Crossroad, Special, Random }
     public enum ExpeditionStage : byte { Preparation, WayIn, WayOut, OnMission }
 
     public static List<Expedition> expeditionsList { get; private set; }
-    public static int expeditionsFinished, expeditionsSucceed;
     public static int actionsHash { get; private set; }
-    private static Transform expeditionsContainer;
 
     public int ID { get; private set; }
     public static int lastUsedID {get;private set;} // в сохранение
-    public int fuelNeeded { get; private set; }
 
+    public float progress { get; private set;}
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
     public Crew crew { get; private set; }
 
     private bool subscribedToUpdate;
-    private float crewSpeed, progress; // до следующего шага
-
+    private float crewSpeed;
+    private int currentStep;
     private const float ONE_STEP_WORKFLOW = 100;
 
     static Expedition()
@@ -32,24 +30,19 @@ public sealed class Expedition : MonoBehaviour
     public static void GameReset()
     {
         expeditionsList = new List<Expedition>();
-        expeditionsFinished = 0;
-        expeditionsSucceed = 0;
         actionsHash = 0;
     }
-    public static Expedition CreateNewExpedition()
+    public static Expedition GetExpeditionByID(int s_id)
     {
-        Expedition e = new GameObject(Localization.GetWord(LocalizedWord.Expedition) + lastUsedID.ToString()).AddComponent<Expedition>();
-        e.ID = lastUsedID;
-        lastUsedID++;
-        if (expeditionsContainer == null) expeditionsContainer = new GameObject("expeditionsContainer").transform;
-        e.gameObject.transform.parent = expeditionsContainer;
-        expeditionsList.Add(e);
-        actionsHash++;
-
-        e.stage = ExpeditionStage.Preparation;
-        e.mission = Mission.NoMission;
-
-        return e;
+        if (expeditionsList.Count == 0) return null;
+        else
+        {
+            foreach (Expedition e in expeditionsList)
+            {
+                if (e != null && e.ID == s_id) return e;
+            }
+            return null;
+        }
     }
     public static void DismissExpedition(int s_id)
     {
@@ -61,7 +54,6 @@ public sealed class Expedition : MonoBehaviour
                 {
                     Expedition e = expeditionsList[i];
                     if (e.crew != null) e.DismissCrew();
-                    Destroy(e);
                     expeditionsList.RemoveAt(i);
                     actionsHash++;
                     break;
@@ -135,8 +127,16 @@ public sealed class Expedition : MonoBehaviour
                     if (progress >= ONE_STEP_WORKFLOW)
                     {
                         progress = 0;
-                        bool completed = mission.NextStep();
-                        if (completed) EndMission();
+                        //тут должны быть тесты
+                        currentStep++;
+                        if (currentStep >= mission.stepsCount)
+                        {
+                            if (mission.TryToLeave())
+                            {
+                                mission = Mission.NoMission;
+                                ChangeStage(ExpeditionStage.WayOut); // а как с наземными миссиями?
+                            }
+                        }
                     }
                     break;
                 }
@@ -153,6 +153,9 @@ public sealed class Expedition : MonoBehaviour
         else
         {
             mission = m;
+            currentStep = 0;
+            progress = 0;
+            crewSpeed = 0;
             actionsHash++;
         }
     }
@@ -161,6 +164,9 @@ public sealed class Expedition : MonoBehaviour
         if (mission != Mission.NoMission)
         {
             mission = Mission.NoMission;
+            currentStep = 0;
+            progress = 0;
+            crewSpeed = 0;
         }
     }
     public void SetCrew(Crew c)
@@ -257,7 +263,7 @@ public sealed class Expedition : MonoBehaviour
         {
             for (int i = 0; i < count; i++)
             {
-                Expedition ex = CreateNewExpedition();
+                Expedition ex = new Expedition();
                 ex.Load(fs);
             }
         }

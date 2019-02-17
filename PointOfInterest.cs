@@ -48,4 +48,60 @@ public class PointOfInterest : MapPoint
         if (sentExpedition != null && (sentExpedition.stage == Expedition.ExpeditionStage.WayIn | sentExpedition.stage == Expedition.ExpeditionStage.OnMission)) return false;
         else return true;
     }
+
+    #region save-load
+    override public List<byte> Save()
+    {
+        var bytes = base.Save();
+        byte zero = 0, one = 1;
+        if (location == null) bytes.Add(zero);
+        else
+        {
+            bytes.Add(one);
+            bytes.AddRange(location.Save());
+        }
+
+        int expeditionID = -1;
+        if (sentExpedition != null) expeditionID = sentExpedition.ID;
+        bytes.AddRange(System.BitConverter.GetBytes(expeditionID));
+
+        byte count = (byte)availableMissions.Count;
+        bytes.Add(count);
+        if (count > 0)
+        {
+            foreach (Mission m in availableMissions)
+            {
+                bytes.AddRange(m.Save());
+            }
+        }
+        return bytes;
+    }
+    public void Load(System.IO.FileStream fs)
+    {
+        int x = fs.ReadByte();
+        if (x == 1)
+        {
+            location = ExploringLocation.Load(fs);
+        }
+
+        var data = new byte[8];
+        fs.Read(data, 0, 8);
+        x = System.BitConverter.ToInt32(data, 0);
+        if (x == -1) sentExpedition = null;
+        else sentExpedition = Expedition.GetExpeditionByID(x);
+
+        x = System.BitConverter.ToInt32(data, 4);
+        if (availableMissions == null) availableMissions = new List<Mission>();
+        else availableMissions.Clear();
+        if (x > 0)
+        {
+            for (int i = 0; i < x; i++)
+            {
+                var mtype = (MissionType)fs.ReadByte();
+                byte subIndex = (byte)fs.ReadByte();
+                availableMissions.Add(new Mission(mtype, subIndex, this));
+            }
+        }
+    } 
+    #endregion
 }
