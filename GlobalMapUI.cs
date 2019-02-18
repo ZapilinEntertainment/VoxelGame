@@ -267,7 +267,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 var poi = chosenPoint as PointOfInterest;
                 if (poi.sentExpedition == null)
                 { //отправить экспедицию
-                    Expedition e = Expedition.CreateNewExpedition();
+                    Expedition e = new Expedition();
                     Shuttle s = Shuttle.GetShuttle(shuttlesListIds[shuttlesDropdown.value]);
                     if (s != null) e.SetCrew(s.crew);
                     e.SetMission(poi.GetMission(missionDropdown.value));

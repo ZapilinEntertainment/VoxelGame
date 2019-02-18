@@ -98,9 +98,9 @@ public sealed class GameMaster : MonoBehaviour
     public byte test_size = 100;
     public bool _editMode = false;
 
-    private bool hotStart = true;
+    private static bool hotStart = true;
     private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
-    private string hotStart_savename = "alpha9.3.1";
+    private string hotStart_savename = "alpha 9.3.4";
     //
     private byte upSkyStatus = 0, lowSkyStatus = 0;
     private float worldConsumingTimer = 0;
@@ -712,6 +712,7 @@ public sealed class GameMaster : MonoBehaviour
 
         QuestUI.current.Save(fs);
         Expedition.SaveStaticData(fs);
+        globalMap.Save(fs);
         fs.Close();
         SetPause(false);
         return true;
@@ -847,6 +848,7 @@ public sealed class GameMaster : MonoBehaviour
             Dock.LoadStaticData(fs);
             QuestUI.current.Load(fs);
             Expedition.LoadStaticData(fs);
+            globalMap.Load(fs);
             fs.Close();
             FollowingCamera.main.WeNeedUpdate();
             loading = false;

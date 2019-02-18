@@ -1278,6 +1278,7 @@ sealed public class UIController : MonoBehaviour
             GameMaster.SetPause(true);
             if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
             if (leftPanel.activeSelf) leftPanel.SetActive(false);
+            if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
             if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
             if (showColonyInfo) ColonyButton();
             ChangeActiveWindow(ActiveWindowMode.GameMenu);
@@ -1293,6 +1294,7 @@ sealed public class UIController : MonoBehaviour
             FollowingCamera.main.ResetTouchRightBorder();
             menuPanel.SetActive(false);
             if (colony != null) leftPanel.SetActive(true);
+            if (rightFastPanel.transform.childCount > 0) rightFastPanel.SetActive(true);
             SetMenuPanelSelection(MenuSection.NoSelection);
             menuButton.GetComponent<Image>().overrideSprite = null;
             // MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));

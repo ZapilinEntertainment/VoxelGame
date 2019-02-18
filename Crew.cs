@@ -87,7 +87,7 @@ public sealed class Crew : MonoBehaviour {
         actionsHash++;
         return c;
     }
-    public static Crew GetCrew(int s_id)
+    public static Crew GetCrewByID(int s_id)
     {
         if (crewsList.Count <= s_id) return null;
         else

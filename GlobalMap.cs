@@ -101,21 +101,23 @@ public sealed class GlobalMap : MonoBehaviour {
 
     private void Update()
     {
-        if (!prepared) return;
-        if (GameMaster.realMaster.colonyController != null)
-        {
-            MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
-            float h = 1 - GameMaster.realMaster.colonyController.happiness_coefficient;
-            if (h != cityPoint.height)
-            {
-                cityPoint.height = h;
-                cityPoint.ringIndex = DefineRing(h);
-            }
-        }
+        if (!prepared) return;       
 
         if (mapPoints.Count > 0)
         {
             float t = Time.deltaTime * GameMaster.gameSpeed;
+
+            if (GameMaster.realMaster.colonyController != null)
+            {
+                MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
+                float h = 1 - GameMaster.realMaster.colonyController.happiness_coefficient;
+                if (h != cityPoint.height)
+                {
+                    cityPoint.height = h;
+                    cityPoint.ringIndex = DefineRing(h);
+                }
+            }
+
             int i = 0;
             while (i < mapPoints.Count)
             {
@@ -305,6 +307,8 @@ public sealed class GlobalMap : MonoBehaviour {
             {
                 fs.WriteByte((byte)realCount);
                 fs.Write(saveArray.ToArray(), 0, saveArray.Count);
+                print(realCount);
+                print(saveArray.Count);
             }
         }
         else fs.WriteByte(0);

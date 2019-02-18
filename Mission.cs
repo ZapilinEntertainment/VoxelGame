@@ -6,6 +6,7 @@ public enum MissionType : byte
     FindingEntrance, FindingExit
 }
 
+//структура для проходения проверок командой
 public struct Mission {    
 
 	public static readonly Mission NoMission;
@@ -71,6 +72,9 @@ public struct Mission {
         bytes.Add((byte)type);
         bytes.Add(subIndex);
         return bytes;
+        // зависимости:
+        // Expedition.Load()
+        // PointOfInterest.Load()
     }
     #endregion
 }

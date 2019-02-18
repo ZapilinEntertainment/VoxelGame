@@ -50,6 +50,7 @@ public class MapPoint
     {
         var pts = new List<MapPoint>();
         int count = fs.ReadByte();
+        Debug.Log(count);
         if (count > 0)
         {
             var mmtype = (MapMarkerType)fs.ReadByte();

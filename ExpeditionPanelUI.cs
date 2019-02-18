@@ -762,12 +762,7 @@ public class ExpeditionPanelUI : MonoBehaviour
         switch (chosenSection)
         {
             case ExpeditionPanelSection.Expeditions:
-                if (QuantumTransmitter.transmittersList.Count - Expedition.expeditionsList.Count > 0)
-                {
-                    chosenExpedition = Expedition.CreateNewExpedition();
-                    RedrawWindow(chosenSection);
-                }
-                else addButton.SetActive(false);
+                addButton.SetActive(false);
                 break;
             case ExpeditionPanelSection.Shuttles:
                 {
@@ -897,7 +892,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                         }
                         else
                         {
-                            (Crew.GetCrew(dropdownList[i])).SetShuttle(chosenShuttle);
+                            (Crew.GetCrewByID(dropdownList[i])).SetShuttle(chosenShuttle);
                         }
                         RedrawChosenInfo();                        
                     }
