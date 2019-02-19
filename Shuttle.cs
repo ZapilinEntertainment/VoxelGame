@@ -5,7 +5,7 @@ using UnityEngine;
 public enum ShipStatus : byte {Docked, OnMission} // при изменении дополнить Localization.GetShuttleStatus
 
 public sealed class Shuttle : MonoBehaviour {
-    public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f;
+    public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f, SPEED = 8;
 	private const float START_VOLUME = 20;
 
     public const float STANDART_COST = 700;

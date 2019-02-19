@@ -6,7 +6,6 @@ public enum CrewStatus : byte {Free, Attributed, OnLandMission} // при изм
 
 public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
-	public const int OPTIMAL_CANDIDATS_COUNT = 400;
     public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f, CHANGING_SHUTTLE_STAMINA_CONSUMPTION = 0.1f;
 
 	public static int lastFreeID {get;private set;}	
@@ -52,7 +51,7 @@ public sealed class Crew : MonoBehaviour {
         actionsHash = 0;
 	}
 
-    public static Crew CreateNewCrew(ColonyController home)
+    public static Crew CreateNewCrew(ColonyController home, float recruitsFullfill)
     {
         if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
         Crew c = new GameObject(Localization.NameCrew()).AddComponent<Crew>();
@@ -81,7 +80,7 @@ public sealed class Crew : MonoBehaviour {
         c.adaptability = lvl_cf * 0.5f;
 
         c.stamina = 0.9f + Random.value * 0.1f;
-        c.membersCount = (int)(MIN_MEMBERS_COUNT + (Random.value * 0.3f + 0.7f * (float)home.freeWorkers / (float)OPTIMAL_CANDIDATS_COUNT) * (MAX_MEMBER_COUNT - MIN_MEMBERS_COUNT));
+        c.membersCount = (int)(MAX_MEMBER_COUNT * (recruitsFullfill * 0.5f + 0.2f * Random.value + 0.3f * home.health_coefficient));
         if (c.membersCount > MAX_MEMBER_COUNT) c.membersCount = MAX_MEMBER_COUNT;
         crewsList.Add(c);        
         actionsHash++;
@@ -122,6 +121,10 @@ public sealed class Crew : MonoBehaviour {
     public void SetStatus(CrewStatus cs)
     {
         status = cs;
+        if (shuttle != null)
+        {
+            
+        }
     }
 
 	static float CalculateExperienceLimit(byte f_level) {

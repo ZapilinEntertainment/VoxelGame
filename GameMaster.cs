@@ -98,9 +98,9 @@ public sealed class GameMaster : MonoBehaviour
     public byte test_size = 100;
     public bool _editMode = false;
 
-    private static bool hotStart = true;
+    private static bool hotStart = false;
     private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
-    private string hotStart_savename = "alpha 9.3.4";
+    private string hotStart_savename = "alpha 9.3.5";
     //
     private byte upSkyStatus = 0, lowSkyStatus = 0;
     private float worldConsumingTimer = 0;
@@ -705,14 +705,13 @@ public sealed class GameMaster : MonoBehaviour
         Shuttle.SaveStaticData(fs);
         Crew.SaveStaticData(fs);
         mainChunk.SaveChunkData(fs);
-        colonyController.Save(fs);
+        fs.Write(System.BitConverter.GetBytes(QuantumTransmitter.lastUsedID), 0, 4);
+        colonyController.Save(fs); // <------- COLONY CONTROLLER
         Dock.SaveStaticDockData(fs);
 
-
-
         QuestUI.current.Save(fs);
-        Expedition.SaveStaticData(fs);
         globalMap.Save(fs);
+        Expedition.SaveStaticData(fs);        
         fs.Close();
         SetPause(false);
         return true;
@@ -844,11 +843,14 @@ public sealed class GameMaster : MonoBehaviour
                 if (cce != null) cce.SetSettings(upSkyStatus, lowSkyStatus);
             }
 
+            fs.Read(data, 0, 4);
+            QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));
+
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             Dock.LoadStaticData(fs);
             QuestUI.current.Load(fs);
-            Expedition.LoadStaticData(fs);
             globalMap.Load(fs);
+            Expedition.LoadStaticData(fs);            
             fs.Close();
             FollowingCamera.main.WeNeedUpdate();
             loading = false;

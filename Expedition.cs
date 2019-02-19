@@ -5,26 +5,30 @@ using UnityEngine;
 public sealed class Expedition
 {
     public enum MissionStageType : byte { Test, Decision, Fee, Crossroad, Special, Random }
-    public enum ExpeditionStage : byte { Preparation, WayIn, WayOut, OnMission }
+    public enum ExpeditionStage : byte { WayIn, WayOut, OnMission, LeavingMission, Dismissed }
 
     public static List<Expedition> expeditionsList { get; private set; }
     public static int actionsHash { get; private set; }
     public static int expeditionsSucceed;
 
     public string name;
-    public int ID { get; private set; }
-    public static int lastUsedID {get;private set;} // в сохранение
+    public readonly int ID;
+    public static int lastUsedID { get; private set; } // в сохранение
 
-    public float progress { get; private set;} // прогресс текущего шага
-    public int currentStep { get; private set; }   
+    public float progress { get; private set; } // прогресс текущего шага
+    public int currentStep { get; private set; }
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
-    public Crew crew { get; private set; }
+    public PointOfInterest destination { get; private set; }
+    public Crew crew;
 
-    private bool subscribedToUpdate;
-    private float crewSpeed;    
+    private bool subscribedToUpdate, missionCompleted = false;
+    private float crewSpeed;
+    private MapPoint mapMarker;
+    private QuantumTransmitter transmitter;
     private const float ONE_STEP_WORKFLOW = 100;
 
+    // STATIC & equals
     static Expedition()
     {
         expeditionsList = new List<Expedition>();
@@ -47,61 +51,60 @@ public sealed class Expedition
             return null;
         }
     }
-    public static void DismissExpedition(int s_id)
+    public static Expedition CreateNewExpedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_transmitter, PointOfInterest i_destination, string i_name)
     {
-        if (expeditionsList.Count > 0)
+        if (i_crew == null | i_mission == Mission.NoMission | i_transmitter == null | i_destination == null) return null;
+        else
         {
-            for (int i = 0; i < expeditionsList.Count; i++)
+            if (i_crew.status != CrewStatus.Free | i_crew.shuttle == null | i_transmitter.expeditionID != -1 | i_destination.sentExpedition != null) return null;
+            else
             {
-                if (expeditionsList[i].ID == s_id)
-                {
-                    Expedition e = expeditionsList[i];
-                    if (e.crew != null) e.DismissCrew();
-                    expeditionsList.RemoveAt(i);
-                    actionsHash++;
-                    break;
-                }
+                return new Expedition(i_crew, i_mission, i_transmitter, i_destination, i_name);
             }
         }
     }
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
 
-    public Expedition()
+        Expedition e = (Expedition)obj;
+        return (ID == e.ID);
+    }
+
+    /// ===============================
+    private Expedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_qt, PointOfInterest i_destination, string i_name)
     {
         ID = lastUsedID;
         lastUsedID++;
+        name = i_name;
+        missionCompleted = false;
+        stage = ExpeditionStage.WayIn;
+        crew = i_crew; crew.SetStatus(CrewStatus.Attributed);
+        mission = i_mission;
+        transmitter = i_qt; transmitter.AssignExpedition(this);
+        destination = i_destination; destination.sentExpedition = this;
+        mapMarker = GameMaster.realMaster.globalMap.ExpeditionLaunch(this, destination);
         expeditionsList.Add(this);
-        name = Localization.GetWord(LocalizedWord.Expedition) + ' ' + ID.ToString();
-        stage = ExpeditionStage.Preparation;
-        mission = Mission.NoMission;
     }
-    public Expedition(int i_id)
+    private Expedition(int i_id) // for loading only
     {
-        ID = i_id;       
+        ID = i_id;
         expeditionsList.Add(this);
-        mission = Mission.NoMission;
-    }
-
-    public void Launch(PointOfInterest poi)
-    {
-        if (stage == ExpeditionStage.Preparation)
-        {
-            if (GameMaster.realMaster.globalMap.ExpeditionLaunch(this, poi))
-            {
-                ChangeStage( ExpeditionStage.WayIn );
-            }
-        }
     }
     public void MissionStart()
     {
         if (stage != ExpeditionStage.OnMission)
         {
-            ChangeStage(ExpeditionStage.OnMission);
+            stage = ExpeditionStage.OnMission;
             crewSpeed = mission.CalculateCrewSpeed(crew);
             if (!subscribedToUpdate)
             {
                 GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
                 subscribedToUpdate = true;
             }
+            actionsHash++;
         }
     }
     public void EndMission()
@@ -112,21 +115,23 @@ public sealed class Expedition
                 {
                     mission = Mission.NoMission;
                     progress = 0;
-                    ChangeStage(ExpeditionStage.WayOut);
+                    stage = ExpeditionStage.WayOut;
+                    actionsHash++;
                     break;
                 }
             case ExpeditionStage.OnMission:
                 {
-                    if (mission != Mission.NoMission)
+                    if (mission.TryToLeave())
                     {
-                        if (mission.TryToLeave())
-                        {
-                            mission = Mission.NoMission;
-                            progress = 0;
-                            ChangeStage(ExpeditionStage.WayOut);
-                        }
+                        mission = Mission.NoMission;
+                        progress = 0;
+                        stage = ExpeditionStage.WayOut;
                     }
-                    else ChangeStage(ExpeditionStage.WayOut);
+                    else
+                    {
+                        stage = ExpeditionStage.LeavingMission;
+                    }
+                    actionsHash++;
                     break;
                 }
         }
@@ -136,8 +141,26 @@ public sealed class Expedition
     {
         switch (stage)
         {
-            case ExpeditionStage.Preparation:
+            case ExpeditionStage.WayIn:
+            case ExpeditionStage.WayOut:
                 {
+                    if (mapMarker != null)
+                    {
+                        float s = Shuttle.SPEED / GameMaster.LABOUR_TICK;
+                        mapMarker.angle = Mathf.MoveTowardsAngle(mapMarker.angle, destination.angle, s);
+                        mapMarker.height = Mathf.MoveTowards(mapMarker.height, mapMarker.height, s);
+
+                        if (mapMarker.angle == destination.angle & mapMarker.height == destination.height)
+                        {
+                            if (stage == ExpeditionStage.WayIn) MissionStart();
+                            else
+                            {
+                                if (missionCompleted) expeditionsSucceed++;
+                                Dismiss();
+                            }
+                        }
+                    }
+                    else mapMarker = GameMaster.realMaster.globalMap.ExpeditionLaunch(this, destination);
                     break;
                 }
             case ExpeditionStage.OnMission:
@@ -150,11 +173,22 @@ public sealed class Expedition
                         currentStep++;
                         if (currentStep >= mission.stepsCount)
                         {
-                            if (mission.TryToLeave())
-                            {
-                                mission = Mission.NoMission;
-                                ChangeStage(ExpeditionStage.WayOut); // а как с наземными миссиями?
-                            }
+                            missionCompleted = true;
+                            EndMission();
+                        }
+                    }
+                    break;
+                }
+            case ExpeditionStage.LeavingMission:
+                {
+                    progress += crewSpeed;
+                    if (progress >= ONE_STEP_WORKFLOW)
+                    {
+                        progress = 0;
+                        if (mission.TryToLeave())
+                        {
+                            stage = ExpeditionStage.WayOut;
+                            actionsHash++;
                         }
                     }
                     break;
@@ -162,11 +196,11 @@ public sealed class Expedition
         }
     }
 
-    public void SetMission(Mission m)
+    public void ChangeMission(Mission m)
     {
         if (m == Mission.NoMission)
         {
-            DropMission();
+            EndMission();
             return;
         }
         else
@@ -178,56 +212,27 @@ public sealed class Expedition
             actionsHash++;
         }
     }
-    public void DropMission()
-    {
-        if (mission != Mission.NoMission)
-        {
-            mission = Mission.NoMission;
-            currentStep = 0;
-            progress = 0;
-            crewSpeed = 0;
-        }
-    }
-    public void SetCrew(Crew c)
-    {
-        if (stage == ExpeditionStage.Preparation) crew = c;
-        if (crew != null & stage == ExpeditionStage.OnMission & !subscribedToUpdate) {
-            GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
-            subscribedToUpdate = true;
-        }
-    }
-    public void DismissCrew()
-    {
-        if (mission == Mission.NoMission & crew != null)
-        {
-            crew.SetStatus(CrewStatus.Free);
-            crew = null;
-            if (subscribedToUpdate)
-            {
-                GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
-                subscribedToUpdate = false;
-            }
-        }
-    }
 
     public void DrawTexture(UnityEngine.UI.RawImage iconPlace)
     {
         //awaiting
     }
 
-    private void ChangeStage(ExpeditionStage nstage)
+    private void Dismiss()
     {
-        //добавить проверки
-        stage = nstage;
-        actionsHash++;
-    }
-
-    private void OnDestroy()
-    {
-        if (subscribedToUpdate & !GameMaster.sceneClearing)
+        if (stage == ExpeditionStage.Dismissed) return;
+        else
         {
-            GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
-            subscribedToUpdate = false;
+            if (crew != null) crew.SetStatus(CrewStatus.Free);
+            if (transmitter != null) transmitter.DropExpeditionConnection();
+            if (destination != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
+            if (subscribedToUpdate & !GameMaster.sceneClearing)
+            {
+                GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
+                subscribedToUpdate = false;
+            }
+            if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            stage = ExpeditionStage.Dismissed;
         }
     }
 
@@ -240,22 +245,27 @@ public sealed class Expedition
 
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int bytesCount = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(bytesCount)); 
+        data.AddRange(System.BitConverter.GetBytes(bytesCount));
         if (bytesCount > 0) data.AddRange(nameArray);
 
         data.Add((byte)stage); // 0
-        int crewID = -1; if (crew != null) crewID = crew.ID; 
+        int crewID = -1; if (crew != null) crewID = crew.ID;
         data.AddRange(System.BitConverter.GetBytes(crewID)); // 1 - 4
         data.AddRange(mission.Save());  // 5 - 6
         data.AddRange(System.BitConverter.GetBytes(progress)); // 7 - 10
         data.AddRange(System.BitConverter.GetBytes(currentStep)); // 11 - 14
+        int usingTransmitterID = (transmitter != null) ? transmitter.connectionID : -1;
+        data.AddRange(System.BitConverter.GetBytes(usingTransmitterID)); // 15 - 18
+        data.AddRange(System.BitConverter.GetBytes(destination.ID)); // 19 - 22
+        byte zero = 0, one = 1;
+        if (missionCompleted) data.Add(one); else data.Add(zero); // 23
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)
     {
         var data = new byte[4];
         fs.Read(data, 0, 4);
-        int bytesCount = System.BitConverter.ToInt32(data, 0);            
+        int bytesCount = System.BitConverter.ToInt32(data, 0);
         if (bytesCount > 0)
         {
             data = new byte[bytesCount];
@@ -266,8 +276,8 @@ public sealed class Expedition
             name = new string(chars);
         }
         else name = Localization.GetWord(LocalizedWord.Expedition) + ' ' + ID.ToString();
-
-        data = new byte[15];
+        data = new byte[24];
+        fs.Read(data, 0, data.Length);
         stage = (ExpeditionStage)data[0];
         int crewID = System.BitConverter.ToInt32(data, 1);
         if (crewID > 0) crew = Crew.GetCrewByID(crewID);
@@ -275,39 +285,45 @@ public sealed class Expedition
         mission = new Mission((MissionType)data[5], data[6]);
         progress = System.BitConverter.ToSingle(data, 7);
         currentStep = System.BitConverter.ToInt32(data, 11);
+        int usingTransmitterID = System.BitConverter.ToInt32(data, 15);
+        if (usingTransmitterID > 0)
+        {
+            transmitter = QuantumTransmitter.GetTransmitterByID(usingTransmitterID);
+            transmitter.AssignExpedition(this);
+        }
+        GlobalMap gmap = GameMaster.realMaster.globalMap;
+        destination = gmap.GetMapPointByID(System.BitConverter.ToInt32(data, 19)) as PointOfInterest;
+        if (destination != null & (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut)) gmap.ExpeditionLaunch(this, destination);
+        missionCompleted = (data[23] == 1);
         return this;
     }
 
     public static void SaveStaticData(System.IO.FileStream fs)
     {
-        Debug.Log(lastUsedID);
         fs.Write(System.BitConverter.GetBytes(lastUsedID), 0, 4);
 
         int count = expeditionsList.Count;
-        if (count == 0) fs.Write(System.BitConverter.GetBytes(count),0,4);
+        if (count == 0) fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         else
         {
             count = 0;
             var data = new List<byte>();
-            while (count < expeditionsList.Count)
+            foreach (Expedition e in expeditionsList)
             {
-                if (expeditionsList[count] == null)
+                if (e != null)
                 {
-                    expeditionsList.RemoveAt(count);
-                    continue;
-                }
-                else
-                {
-                    data.AddRange(expeditionsList[count].Save());
+                    data.AddRange(e.Save());
                     count++;
                 }
             }
             fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-            if (count > 0) {
+            if (count > 0)
+            {
                 var dataArray = data.ToArray();
                 fs.Write(dataArray, 0, dataArray.Length);
             }
         }
+
 
         fs.Write(System.BitConverter.GetBytes(expeditionsSucceed), 0, 4);
     }
@@ -316,7 +332,8 @@ public sealed class Expedition
         var data = new byte[8];
         fs.Read(data, 0, 8);
         lastUsedID = System.BitConverter.ToInt32(data, 0);
-        int count = System.BitConverter.ToInt32(data,4);
+        int count = System.BitConverter.ToInt32(data, 4);
+
         expeditionsList = new List<Expedition>();
         if (count > 0)
         {

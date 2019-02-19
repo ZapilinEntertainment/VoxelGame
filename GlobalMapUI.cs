@@ -74,13 +74,22 @@ public sealed class GlobalMapUI : MonoBehaviour
         }
         switch (chosenPoint.type) {
             case MapMarkerType.MyCity: if (GameMaster.realMaster.colonyController != null) pointLabel.text = GameMaster.realMaster.colonyController.cityName ;break;
+            case MapMarkerType.Shuttle:
+                {
+                    // вернуть flying expedition
+                    break;
+                }
             default: pointLabel.text = Localization.GetMapPointTitle(chosenPoint.type); break;
         }
         pointIcon.uvRect = GetMarkerRect(chosenPoint.type);
         if (descriptionMode) PreparePointDescription();
         else
         {
-            if (mp is PointOfInterest) PreparePointExpedition();
+            if (mp is PointOfInterest)
+            {
+                if ((mp as PointOfInterest).sentExpedition == null) expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) + ' ' + Expedition.lastUsedID.ToString();
+                PreparePointExpedition();
+            }
             else
             {
                 PreparePointDescription();
@@ -143,9 +152,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 }
                 else
                 {
-                    //окно подготовки экспедиции
-                    expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) +' '+ Expedition.lastUsedID.ToString();
-
+                    //окно подготовки экспедиции                   
                     var mdrop = poi.GetAvailableMissionsDropdownData();
                     if (mdrop.Count > 0)
                     {
@@ -211,52 +218,6 @@ public sealed class GlobalMapUI : MonoBehaviour
         }
         else  CloseInfopanel();
     }
-    public void SetMission(int index)
-    {
-        if (chosenPoint != null)
-        {
-            PointOfInterest poi = chosenPoint as PointOfInterest;
-            if (poi != null )
-            {
-                if (poi.sentExpedition != null) poi.sentExpedition.SetMission(poi.GetMission(index));
-                PreparePointExpedition();
-            }
-            else PreparePointDescription();
-        }
-        else CloseInfopanel();
-    }
-    public void SetShuttle(int index)
-    {
-        if (chosenPoint != null)
-        {
-            PointOfInterest poi = chosenPoint as PointOfInterest;
-            if (poi == null) PreparePointDescription();
-            else
-            {
-                if ( poi.sentExpedition != null )
-                {
-                    if (index == -1) poi.sentExpedition.DismissCrew();
-                    else poi.sentExpedition.SetCrew(Shuttle.GetShuttle(shuttlesListIds[index]).crew);
-                }
-                PreparePointExpedition();
-            }
-        }
-        else CloseInfopanel();
-    }
-    public void RemoveCrew()
-    {
-        if (chosenPoint != null)
-        {
-            PointOfInterest poi = chosenPoint as PointOfInterest;
-            if (poi != null)
-            {
-                if (poi.sentExpedition != null) poi.sentExpedition.DismissCrew();
-                PreparePointExpedition();
-            }
-            else PreparePointDescription();
-        }
-        else CloseInfopanel();
-    }
 
     public void StartButton()
     {
@@ -267,15 +228,15 @@ public sealed class GlobalMapUI : MonoBehaviour
                 var poi = chosenPoint as PointOfInterest;
                 if (poi.sentExpedition == null)
                 { //отправить экспедицию
-                    Expedition e = new Expedition();
                     Shuttle s = Shuttle.GetShuttle(shuttlesListIds[shuttlesDropdown.value]);
-                    if (s != null) e.SetCrew(s.crew);
-                    e.SetMission(poi.GetMission(missionDropdown.value));
-                    poi.SendExpedition(e);
+                    if (s != null)
+                    {
+                        Expedition.CreateNewExpedition(s.crew, poi.GetMission(missionDropdown.value), QuantumTransmitter.GetFreeTransmitter(), poi, expeditionNameField.text);
+                    }
                 }
                 else
                 { //вернуть экспедицию
-                    poi.ReturnExpedition();
+                    poi.sentExpedition.EndMission();
                 }
                 PreparePointExpedition();
             }
@@ -335,10 +296,6 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     MapPoint mp = mapPoints[i];
                     mapMarkers[i].localPosition = Quaternion.AngleAxis(mp.angle, fwd) * (up * shp * mp.height);
-                    if (mp.type == MapMarkerType.Shuttle)
-                    {
-
-                    }
                 }
             }
         }
@@ -485,6 +442,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         {
             mapPoints = globalMap.mapPoints;
             int n = mapPoints.Count;
+            //print(n);
             int c = mapMarkers.Count;
             if (n > 0)
             {

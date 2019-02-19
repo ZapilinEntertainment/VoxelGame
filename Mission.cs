@@ -68,9 +68,7 @@ public struct Mission {
     #region save-load
     public List<byte> Save()
     {
-        var bytes = new List<byte>();
-        bytes.Add((byte)type);
-        bytes.Add(subIndex);
+        var bytes = new List<byte>() { (byte)type, subIndex };
         return bytes;
         // зависимости:
         // Expedition.Load()

@@ -139,7 +139,7 @@ public class ExpeditionPanelUI : MonoBehaviour
             {
                 case ExpeditionPanelSection.Expeditions:
                     {
-                        addButton.SetActive(transmittersCount > expeditionsCount);
+                        addButton.SetActive(false);
                         if (transmittersCount > 0)
                         {
                             countString.text = expeditionsCount.ToString() + " / " + transmittersCount.ToString();
@@ -838,9 +838,8 @@ public class ExpeditionPanelUI : MonoBehaviour
             case ExpeditionPanelSection.Expeditions:
                 if (chosenExpedition != null && chosenExpedition.mission != Mission.NoMission)
                 {
-                    int d_id = chosenExpedition.ID;
+                    chosenExpedition.EndMission();
                     chosenExpedition = null;
-                    Expedition.DismissExpedition(d_id);
                 }
                 else
                 {

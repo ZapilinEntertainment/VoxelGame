@@ -5,27 +5,16 @@ using System.Collections.Generic;
 public class PointOfInterest : MapPoint
 {
     public bool explored { get; protected set; }
-    public Expedition sentExpedition { get; protected set; }
+    public Expedition sentExpedition; // показывает последнюю отправленную
     public ExploringLocation location { get; private set; }
-    private List<Mission> availableMissions;    
+    private List<Mission> availableMissions;
+
+    public PointOfInterest(int i_id) : base(i_id) { }
 
     public PointOfInterest(float i_angle, float i_height, byte ring, MapMarkerType mtype) : base(i_angle, i_height, ring, mtype)
     {
         explored = false;
         availableMissions = new List<Mission>() { new Mission(MissionType.Exploring, 0) };
-    }
-
-    public void SendExpedition(Expedition e)
-    {
-        if (sentExpedition == null)
-        {
-            sentExpedition = e;
-            e.Launch(this);
-        }      
-    }
-    public void ReturnExpedition()
-    {
-
     }
     
     public List<Dropdown.OptionData> GetAvailableMissionsDropdownData()
@@ -61,10 +50,6 @@ public class PointOfInterest : MapPoint
             bytes.AddRange(location.Save());
         }
 
-        int expeditionID = -1;
-        if (sentExpedition != null) expeditionID = sentExpedition.ID;
-        bytes.AddRange(System.BitConverter.GetBytes(expeditionID));
-
         byte count = (byte)availableMissions.Count;
         bytes.Add(count);
         if (count > 0)
@@ -84,13 +69,7 @@ public class PointOfInterest : MapPoint
             location = ExploringLocation.Load(fs);
         }
 
-        var data = new byte[8];
-        fs.Read(data, 0, 8);
-        x = System.BitConverter.ToInt32(data, 0);
-        if (x == -1) sentExpedition = null;
-        else sentExpedition = Expedition.GetExpeditionByID(x);
-
-        x = System.BitConverter.ToInt32(data, 4);
+        x = fs.ReadByte(); // missionsCount
         if (availableMissions == null) availableMissions = new List<Mission>();
         else availableMissions.Clear();
         if (x > 0)

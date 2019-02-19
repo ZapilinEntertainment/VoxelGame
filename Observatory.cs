@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Observatory : WorkBuilding {
     public static bool alreadyBuilt = false;
-    public const float SEARCH_WORKFLOW = 1000, CHANCE_TO_FIND = 0.3f;
+    public const float SEARCH_WORKFLOW = 250, CHANCE_TO_FIND = 0.3f;
     private bool mapOpened = false;    
     private List<Block> blockedBlocks;
 
@@ -60,12 +60,15 @@ public class Observatory : WorkBuilding {
             if (GameMaster.realMaster.globalMap.Search())
             {
                 // visual effect
+                print("found");
             }
+            else print("not allowed");
         }
+        else print("not found");
     }
     override public void RecalculateWorkspeed()
     {
-        workSpeed = (colony.gears_coefficient + colony.health_coefficient + colony.happiness_coefficient - 2) * GameConstants.OBSERVATORY_FIND_SPEED_CF;
+        workSpeed = (colony.gears_coefficient + colony.health_coefficient + colony.happiness_coefficient - 2) * GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
         gearsDamage = 0;
     }
 

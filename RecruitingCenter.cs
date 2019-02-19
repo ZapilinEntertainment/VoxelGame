@@ -48,13 +48,9 @@ public sealed class RecruitingCenter : WorkBuilding {
 		if ( !isActive | !isEnergySupplied) return;
 		if (workersCount > 0) {
 			if (finding) {
-				float candidatsCountFactor = colony.freeWorkers / Crew.OPTIMAL_CANDIDATS_COUNT;
-				if (candidatsCountFactor > 1) candidatsCountFactor = 1;
-				workflow += ( FIND_SPEED * workSpeed * 0.3f + colony.happiness_coefficient * 0.3f  + candidatsCountFactor * 0.3f + 0.1f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
+				workflow += ( FIND_SPEED * workSpeed * 0.4f + colony.happiness_coefficient * 0.4f   + 0.2f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
 				if (workflow >= workflowToProcess) {
-
-                    Crew c = Crew.CreateNewCrew(colony);
-
+                    Crew c = Crew.CreateNewCrew(colony, workersCount / (float)maxWorkers);
                     workflow = 0;
 					finding = false;
                     UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));

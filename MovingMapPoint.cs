@@ -14,4 +14,14 @@ public class MovingMapPoint : MapPoint {
     {
         return false;
     }
+
+    #region save-load
+    override public List<byte> Save()
+    {
+        var bytes = base.Save();
+        bytes.AddRange(System.BitConverter.GetBytes(moveVector.x));
+        bytes.AddRange(System.BitConverter.GetBytes(moveVector.y));
+        return bytes;
+    }
+    #endregion
 }
