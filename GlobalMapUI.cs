@@ -55,7 +55,6 @@ public sealed class GlobalMapUI : MonoBehaviour
                     }
                 }
                 chosenPoint = null;
-                infoPanel.SetActive(false);
             }
             else
             {  //повторный выбор точки
@@ -144,8 +143,26 @@ public sealed class GlobalMapUI : MonoBehaviour
                 { // окно действующей экспедиции
                     expeditionNameField.text = poi.sentExpedition.name;
                     missionDropdown.gameObject.SetActive(false);
-                    expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + poi.sentExpedition.crew.name + '\n' +
-                        Localization.GetWord(LocalizedWord.Progress) + ": " + ((poi.sentExpedition.progress * 100) / 100).ToString() + '%';
+                    Expedition e = poi.sentExpedition;
+                    switch (e.stage)
+                    {
+                        case Expedition.ExpeditionStage.WayIn:
+                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingToMissionPoint);
+                            break;
+                        case Expedition.ExpeditionStage.OnMission:
+                            expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
+                                Localization.GetWord(LocalizedWord.Progress) + ": " + e.currentStep + '/' + e.mission.stepsCount;
+                            break;
+                        case Expedition.ExpeditionStage.WayOut:
+                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingHome);
+                            break;
+                        case Expedition.ExpeditionStage.LeavingMission:
+                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.TryingToLeave);
+                            break;
+                        case Expedition.ExpeditionStage.Dismissed:
+                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.Dissmissed);
+                            break;
+                    }
 
                     startButton.interactable = true;
                     startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
@@ -282,6 +299,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         rings[2].transform.Rotate(Vector3.forward * rotationSpeed[2] * t);
         rings[3].transform.Rotate(Vector3.forward * rotationSpeed[3] * t);
         rings[4].transform.Rotate(Vector3.forward * rotationSpeed[4] * t);
+        //
         if (lastDrawnStateHash != globalMap.actionsHash)
         {
             RedrawMarkers();
@@ -299,6 +317,26 @@ public sealed class GlobalMapUI : MonoBehaviour
                 }
             }
         }
+
+        if (infopanelEnabled)
+        {
+            if (chosenPoint != null)
+            {
+                PointOfInterest poi = chosenPoint as PointOfInterest;
+                if (poi != null)
+                {
+                    Expedition e = poi.sentExpedition;
+                    if (e != null && e.stage == Expedition.ExpeditionStage.OnMission)
+                    {
+                        expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
+                       Localization.GetWord(LocalizedWord.Progress) + ": " + e.currentStep + '/' + e.mission.stepsCount;
+                    }
+                }
+            }
+            else CloseInfopanel();
+        }
+
+            //
 
         float deltaX = 0, deltaY = 0, deltaZoom = 0;
         if (FollowingCamera.touchscreen)

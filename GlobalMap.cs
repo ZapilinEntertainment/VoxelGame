@@ -35,37 +35,41 @@ public sealed class GlobalMap : MonoBehaviour {
 
         mapPoints = new List<MapPoint>();
         float h = GameConstants.START_HAPPINESS;
-        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity));
+        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity), true);
 
         actionsHash = 0;
         prepared = true;
         //зависимость : Load()
     }
 
-    public bool AddPoint(MapPoint mp)
+    public MapPoint GetCityPoint() { return mapPoints[CITY_POINT_INDEX]; }
+    public bool AddPoint(MapPoint mp, bool forced)
     {
         if (mapPoints.Contains(mp)) return false;
         else
         {
-            if (mapPoints.Count >= MAX_OBJECTS_COUNT)
+            if (!forced)
             {
-                bool placeCleared = false;
-                int i = 0;
-                while (i < mapPoints.Count)
+                if (mapPoints.Count >= MAX_OBJECTS_COUNT)
                 {
-                    int mmt = (int)mapPoints[i].type;
-                    if ((mmt & TEMPORARY_POINTS_MASK) != 0)
+                    bool placeCleared = false;
+                    int i = 0;
+                    while (i < mapPoints.Count)
                     {
-                        if (mapPoints[i].DestroyRequest())
+                        int mmt = (int)mapPoints[i].type;
+                        if ((mmt & TEMPORARY_POINTS_MASK) != 0)
                         {
-                            mapPoints.RemoveAt(i);
-                            placeCleared = true;
-                            break;
+                            if (mapPoints[i].DestroyRequest())
+                            {
+                                mapPoints.RemoveAt(i);
+                                placeCleared = true;
+                                break;
+                            }
                         }
+                        i++;
                     }
-                    i++;
+                    if (!placeCleared) return false;
                 }
-                if (!placeCleared) return false;
             }
             mapPoints.Add(mp);
             actionsHash++;
@@ -100,7 +104,7 @@ public sealed class GlobalMap : MonoBehaviour {
     {
         if (Input.GetKeyDown("x"))
         {
-            if (AddPoint(new PointOfInterest(0.3f, 0.3f, 1, MapMarkerType.Resources))) Debug.Log("okay");
+            if (AddPoint(new PointOfInterest(0.3f, 0.3f, 1, MapMarkerType.Resources), true)) Debug.Log("okay");
         }
 
         if (!prepared) return;       
@@ -112,15 +116,54 @@ public sealed class GlobalMap : MonoBehaviour {
             if (GameMaster.realMaster.colonyController != null)
             {
                 MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
-                cityPoint.height = 1 - GameMaster.realMaster.colonyController.happiness_coefficient;
+                float h = 1 - GameMaster.realMaster.colonyController.happiness_coefficient;
+                if (cityPoint.height != h)
+                {
+                    cityPoint.height = h;
+                    cityPoint.ringIndex = DefineRing(h);
+                }
             }
-
             int i = 0;
             while (i < mapPoints.Count)
             {
-                MapPoint mp = mapPoints[i];
-                mp.ringIndex = DefineRing(mp.height);
+                MapPoint mp = mapPoints[i];                
                 mp.angle += rotationSpeed[mp.ringIndex] * t;
+                if (mp.type == MapMarkerType.Shuttle)
+                {
+                    FlyingExpedition fe = (mp as FlyingExpedition);
+                    MapPoint d = fe.destination;
+                    if (d != null)
+                    {
+                        if (mp.height != d.height)
+                        {
+                            mp.height = Mathf.MoveTowards(mp.height, d.height, fe.speed * t);
+                            mp.ringIndex = DefineRing(mp.height);
+                        }
+                        else
+                        {
+                            if (mp.angle != d.angle) mp.angle = Mathf.MoveTowardsAngle(mp.angle, d.angle, fe.speed * t);
+                            else
+                            {
+                                if (fe.expedition.stage == Expedition.ExpeditionStage.WayIn)
+                                {
+                                    fe.expedition.MissionStart();
+                                }
+                                else
+                                {
+                                    fe.expedition.Dismiss();
+                                }
+                                mapPoints.RemoveAt(i);
+                                actionsHash++;
+                                continue;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        GameLogUI.MakeAnnouncement(Localization.GetExpeditionStatus(LocalizedExpeditionStatus.CannotReachDestination, fe.expedition));
+                        fe.expedition.EndMission();                        
+                    }
+                }
                 i++;
             }
         }
@@ -252,6 +295,7 @@ public sealed class GlobalMap : MonoBehaviour {
         }
 
         float angle = Random.value * 360;
+        bool somethingFound = false;
         switch (mmtype)
         {
             case MapMarkerType.Station:
@@ -264,11 +308,19 @@ public sealed class GlobalMap : MonoBehaviour {
             case MapMarkerType.Wonder: 
             case MapMarkerType.Resources:
                 {
-                    return AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype));
+                    somethingFound =  AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype), false);
+                    break;
                 }
-            case MapMarkerType.Star: return AddPoint(new MapPoint(angle, height, DefineRing(height), mmtype));
-            default: return false;
+            case MapMarkerType.Star:
+                somethingFound =  AddPoint(new MapPoint(angle, height, DefineRing(height), mmtype), false);
+                break;
         }
+        if (somethingFound)
+        {
+            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewObjectFound));
+            if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.newObjectFound);
+        }
+        return somethingFound;
     }
     public void ShowOnGUI()
     {
@@ -278,16 +330,6 @@ public sealed class GlobalMap : MonoBehaviour {
             mapUI_go.GetComponent<GlobalMapUI>().SetGlobalMap(this);
         }
         if (!mapUI_go.activeSelf) mapUI_go.SetActive(true);
-    }
-
-    public MapPoint ExpeditionLaunch(Expedition e, MapPoint destination)
-    {
-        MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
-        MapPoint mp = new MapPoint(cityPoint.angle, cityPoint.height, cityPoint.ringIndex, MapMarkerType.Shuttle);
-        mapPoints.Add(mp);
-        actionsHash++;
-        print("expedition mark");
-        return mp;
     }
 
     #region save-load system

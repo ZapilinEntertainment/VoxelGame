@@ -1806,7 +1806,7 @@ public sealed class Chunk : MonoBehaviour
             foreach (Block b in loadedBlocks) {
                 if (b == null & !corruptedData)
                 {
-                    if (UIController.current != null) UIController.current.MakeAnnouncement("error desu : block hasn't loaded");
+                    Debug.Log("corrupted data");
                     corruptedData = true;
                     continue;
                 }

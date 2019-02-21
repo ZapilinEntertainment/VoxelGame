@@ -42,7 +42,7 @@ public sealed class GameMaster : MonoBehaviour
     public static GameMaster realMaster;
     public static float gameSpeed { get; private set; }
     public static bool sceneClearing { get; private set; }
-    public static bool editMode = false;
+    public static bool editMode = false, needTutorial = false;
     public static bool loading { get; private set; }
     public static bool soundEnabled { get; private set; }
     public static string savename { get; private set; }
@@ -271,7 +271,14 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     case GameStart.Zeppelin:
                         Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
-                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
+                        if (needTutorial)
+                        {
+                            GameLogUI.EnableDecisionWindow(null, Localization.GetTutorialHint(LocalizedTutorialHint.Landing));
+                        }
+                        else
+                        {
+                            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
+                        }
                         break;
 
                     case GameStart.Headquarters:
@@ -380,7 +387,7 @@ public sealed class GameMaster : MonoBehaviour
                     if (newUpSkyStatus > 0) newUpSkyStatus--;
                     if (newLowSkyStatus < 4) {
                         newLowSkyStatus++;
-                        if (newLowSkyStatus == 1) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing), Color.red);
+                        if (newLowSkyStatus == 1) GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing));
                     }
                     worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newLowSkyStatus;
                 }
@@ -392,7 +399,7 @@ public sealed class GameMaster : MonoBehaviour
                         if (newUpSkyStatus < 4)
                         {
                             newUpSkyStatus++;
-                            if (newUpSkyStatus == 1) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing), Color.red);
+                            if (newUpSkyStatus == 1) GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing));
                         }
                         worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newUpSkyStatus;
                     }
@@ -586,7 +593,6 @@ public sealed class GameMaster : MonoBehaviour
         }
 
     }
-
     //test
     public void OnGUI()
     {
@@ -594,7 +600,7 @@ public sealed class GameMaster : MonoBehaviour
         GUI.Box(r, GUIContent.none);
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
     }
-
+    //
     public void GameOver(GameEndingType endType)
     {
         SetPause(true);
@@ -860,7 +866,7 @@ public sealed class GameMaster : MonoBehaviour
         }
         else
         {
-            UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed));
+            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed));
             return false;
         }
     }

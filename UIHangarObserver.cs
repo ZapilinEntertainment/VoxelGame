@@ -149,12 +149,12 @@ public sealed class UIHangarObserver : UIObserver
                 }
                 else
                 {
-                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                    GameLogUI.NotEnoughResourcesAnnounce();
                 }
             }
             else
             {
-                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
+                GameLogUI.NotEnoughMoneyAnnounce();
             }
         }
     }

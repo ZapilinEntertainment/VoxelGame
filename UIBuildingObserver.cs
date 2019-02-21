@@ -407,10 +407,10 @@ public class UIBuildingObserver : UIObserver {
             {
                 colony.GetEnergyCrystals(1);
                 colony.AddEnergy(GameConstants.ENERGY_IN_CRYSTAL);
-                if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSound(NotificationSound.BatteryCharged);
+                if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.BatteryCharged);
             }
         }
-        else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
+        else GameLogUI.NotEnoughMoneyAnnounce();
     }
 
 	override public void SelfShutOff() {

@@ -120,7 +120,7 @@ public sealed class HeadQuarters : House {
             ResourceContainer[] cost = GetUpgradeCost() ;
                 if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                 {
-                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                    GameLogUI.NotEnoughResourcesAnnounce();
                     return;
                 }
         }

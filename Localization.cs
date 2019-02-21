@@ -10,11 +10,14 @@ ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, Construc
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
 }
-public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress }
+public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress,
+    FlyingToMissionPoint, FlyingHome, Dissmissed, TryingToLeave }
 public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
-    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing };
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound};
+public enum LocalizedTutorialHint : byte { Landing}
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt}
+public enum LocalizedExpeditionStatus : byte { CannotReachDestination}
 
 public static class Localization {
 
@@ -33,6 +36,7 @@ public static class Localization {
 	public static void ChangeLanguage(Language lan ) {
         currentLanguage = lan;
 	}
+
 
 
     public static string GetStructureName(int id) {
@@ -569,6 +573,7 @@ public static class Localization {
                         case GameAnnouncements.ShipArrived: return "В нашу гавань зашёл корабль";
                         case GameAnnouncements.SetLandingPoint: return "Установите место посадки";
                         case GameAnnouncements.IslandCollapsing: return "Остров рушится!";
+                        case GameAnnouncements.NewObjectFound: return "Обсерватория : обнаружен новый объект";
                         default: return "<пустое уведомление>";
                     }
                 }
@@ -592,13 +597,13 @@ public static class Localization {
                         case GameAnnouncements.ShipArrived: return "A ship has docked";
                         case GameAnnouncements.SetLandingPoint: return "Set landing point";
                         case GameAnnouncements.IslandCollapsing: return "Island starts collapsing!";
+                        case GameAnnouncements.NewObjectFound: return "Observatory: new object found";
                         default: return "<announcement not found>";
                     }
                 }
         }
 		
 	}
-
 	public static string GetRestrictionPhrase(RestrictionKey rkey ) {
 		switch (rkey) {
 		    default : return "Action not possible";
@@ -607,7 +612,16 @@ public static class Localization {
             case RestrictionKey.HeightBlocked: return "Height blocked";
 		}
 	}
-
+    public static string GetTutorialHint(LocalizedTutorialHint lth)
+    {
+        switch (lth)
+        {
+            case LocalizedTutorialHint.Landing:
+                return "Select landing zone - a place , where your HQ will set. Landing place must be a line of three same-height surfaces. " +
+                    "When you select suitable surface, a contour will appear. All you will need is to click the \"Land\" button.";
+            default: return "I think it is too easy for you to learn.";
+        }
+    }
 
 	public static string CostInCoins(float count) {
 		switch (currentLanguage) {
@@ -1090,6 +1104,11 @@ public static class Localization {
                         case LocalizationActionLabels.DigInProgress: return "Идёт добыча";
                         case LocalizationActionLabels.GatherInProgress: return "Идёт сбор";
                         case LocalizationActionLabels.PouringInProgress: return "Идёт засыпка";
+
+                        case LocalizationActionLabels.FlyingHome: return "Возвращается домой";
+                        case LocalizationActionLabels.FlyingToMissionPoint: return "Летит к точке миссии";
+                        case LocalizationActionLabels.TryingToLeave: return "Пытается покинуть локацию";
+                        case LocalizationActionLabels.Dissmissed: return "Распущена";
                     }
                 }
             case Language.English:
@@ -1106,9 +1125,22 @@ public static class Localization {
                         case LocalizationActionLabels.DigInProgress: return "Dig in progress";
                         case LocalizationActionLabels.GatherInProgress: return "Gather in progress";
                         case LocalizationActionLabels.PouringInProgress: return "Pouring in progress";
+
+                        case LocalizationActionLabels.FlyingHome: return "Flying home";
+                        case LocalizationActionLabels.FlyingToMissionPoint: return "Flying to mission point";
+                        case LocalizationActionLabels.TryingToLeave: return "Trying to leave location";
+                        case LocalizationActionLabels.Dissmissed: return "Dismissed";
                     }
                 }
         }      
+    }
+    public static string GetExpeditionStatus(LocalizedExpeditionStatus les, Expedition e)
+    {
+        switch (les)
+        {
+            case LocalizedExpeditionStatus.CannotReachDestination: return "Expedition \"" + e.name + "\" cannot reach destination.";
+            default: return "Expedition \"" + e.name + "\" is okay";
+        }
     }
     public static string GetEndingTitle (GameEndingType endType)
     {

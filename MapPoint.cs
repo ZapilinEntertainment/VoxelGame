@@ -48,6 +48,13 @@ public class MapPoint
         }
     }
 
+    public void ChangeCoords(float i_angle, float i_height)
+    {
+        angle = i_angle;
+        height = i_height;
+        ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
+    }
+
     public virtual bool DestroyRequest()
     {
         return true;

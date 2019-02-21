@@ -260,7 +260,7 @@ public sealed class ColonyController : MonoBehaviour
                     if (starvationTimer <= 0)
                     {
                         starvationTimer = GameConstants.STARVATION_TIME;
-                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
+                        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
                     }
                 }
                 else starvationTimer = 0;

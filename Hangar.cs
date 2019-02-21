@@ -266,7 +266,7 @@ public sealed class Hangar : WorkBuilding
         {
             hangarObserver.PrepareHangarWindow();
         }
-        UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleConstructed));
+        GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleConstructed));
     }
 
     override public void RecalculateWorkspeed()

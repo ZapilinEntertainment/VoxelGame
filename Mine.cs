@@ -37,7 +37,7 @@ public class Mine : WorkBuilding {
                     s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
                     elevators.Add(s);
                     awaitingElevatorBuilding = false;
-                    UIController.current.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
+                    GameLogUI.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
                 }
                 else
                 {
@@ -50,7 +50,7 @@ public class Mine : WorkBuilding {
                             s.SetBasement(cvb, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2, SurfaceBlock.INNER_RESOLUTION / 2 - s.innerPosition.size / 2));
                             elevators.Add(s);
                             awaitingElevatorBuilding = false;
-                            UIController.current.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
+                            GameLogUI.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
                         }
                         else
                         {
@@ -146,7 +146,7 @@ override protected void LabourResult() {
                 {
                     if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                     {
-                        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                        GameLogUI.NotEnoughResourcesAnnounce();
                         return;
                     }
                 }

@@ -82,6 +82,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);
                 blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
+                blist.Add(GetStructureByID(OBSERVATORY_ID) as Building);
                 break;
             case 6:
                 blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
@@ -751,6 +752,16 @@ public class Building : Structure
                     level = 2;
                 }
                 break;
+            case OBSERVATORY_ID:
+                {
+                    specialBuildingConditions = true;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = - 50;
+                    energyCapacity = 200;
+                    level = 5;
+                }
+                break;
         }
     }
 
@@ -900,7 +911,7 @@ public class Building : Structure
             ResourceContainer[] cost = GetUpgradeCost();
             if (!GameMaster.realMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                GameLogUI.NotEnoughResourcesAnnounce();
                 return;
             }
         }

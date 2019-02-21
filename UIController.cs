@@ -6,9 +6,9 @@ using UnityEngine.UI;
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
 public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon,
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
-    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon }
+    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
-public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel}
+public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow}
 
 
 sealed public class UIController : MonoBehaviour
@@ -19,7 +19,6 @@ sealed public class UIController : MonoBehaviour
 #pragma warning disable 0649
     [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
-    [SerializeField] Text[] announcementStrings;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] Transform storagePanelContent;
     [SerializeField] RawImage progressPanelIcon;
@@ -45,7 +44,7 @@ sealed public class UIController : MonoBehaviour
     private MenuSection selectedMenuSection = MenuSection.NoSelection;
     private SaveSystemUI saveSystem;
 
-    const float DATA_UPDATE_TIME = 1, DISSAPPEAR_SPEED = 0.2f, STATUS_UPDATE_TIME = 1;    
+    const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;    
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
@@ -56,7 +55,7 @@ sealed public class UIController : MonoBehaviour
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
         saved_citizenCountBeforeStarvation
         ;
-    private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false, activeAnnouncements = false,
+    private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false,
         localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
     private List<int> activeFastButtons;
 
@@ -429,35 +428,6 @@ sealed public class UIController : MonoBehaviour
                 }
             }
         }
-        if (activeAnnouncements)
-        {
-            Text t = announcementStrings[0];
-            Color c = t.color;
-            c.a = Mathf.Lerp(c.a, 0, DISSAPPEAR_SPEED * Time.deltaTime * GameMaster.gameSpeed * (2 - c.a) * (2 - c.a));
-            if (c.a > 0.05f) t.color = c;
-            else
-            {
-                if (announcementStrings[1].enabled)
-                {
-                    int lastIndex = 1;
-                    t.color = Color.black;
-                    int i = 1;
-                    while (i < announcementStrings.Length)
-                    {
-                        if (!announcementStrings[i].enabled) break;
-                        else lastIndex = i;
-                        announcementStrings[i - 1].text = announcementStrings[i].text;
-                        i++;
-                    }
-                    announcementStrings[lastIndex].enabled = false;
-                }
-                else
-                {
-                    t.enabled = false;
-                    activeAnnouncements = false;
-                }
-            }
-        }
 
         if (powerFailureTimer > 0)
         {
@@ -797,6 +767,10 @@ sealed public class UIController : MonoBehaviour
                 case ActiveWindowMode.ExpeditionPanel:
                     if (expeditionPanel.activeSelf) expeditionPanel.SetActive(false);
                     break;
+                case ActiveWindowMode.LogWindow:
+                    GameLogUI.DeactivateLogWindow();
+                    break;
+
             }
         }
         currentActiveWindowMode = mode;
@@ -804,6 +778,17 @@ sealed public class UIController : MonoBehaviour
         {
             expeditionPanel.SetActive(true);
             expeditionPanel.GetComponent<ExpeditionPanelUI>().Activate();
+        }
+        else
+        {
+            if (currentActiveWindowMode == ActiveWindowMode.GameMenu)
+            {
+                if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
+                if (leftPanel.activeSelf) leftPanel.SetActive(false);
+                if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
+                if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
+                if (showColonyInfo) ColonyButton();
+            }
         }
         bool deactivating = (mode == ActiveWindowMode.NoWindow);
         FollowingCamera fc = FollowingCamera.main;
@@ -864,40 +849,10 @@ sealed public class UIController : MonoBehaviour
             case Icons.DisabledBuilding: return new Rect(p, 3*p, p,p);
             case Icons.QuestAwaitingIcon: return new Rect(2 * p, 3 * p, p, p);
             case Icons.QuestBlockedIcon: return new Rect(3 * p, 3 * p, p, p);
+            case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
         }
     }
 
-    public void MakeAnnouncement(string s)
-    {
-        MakeAnnouncement(s, Color.black);
-    }
-    public void MakeAnnouncement(string s, Color col)
-    {
-        int lastIndex = 0, len = announcementStrings.Length;
-        for (int i = 0; i < len; i++)
-        {
-            lastIndex = i;
-            if (announcementStrings[i].enabled == false) break;
-        }
-        if (lastIndex == len - 1)
-        { // сдвигаем все на одну позицию назад
-            for (int i = 1; i < len; i++)
-            {
-                announcementStrings[i - 1].text = announcementStrings[i].text;
-                announcementStrings[i - 1].color = announcementStrings[i].color;
-            }
-            announcementStrings[len - 1].text = s;
-            announcementStrings[len - 1].color = col;
-        }
-        else
-        {
-            Text t = announcementStrings[lastIndex];
-            t.enabled = true;
-            t.text = s;
-            t.color = col;
-        }
-        activeAnnouncements = true;
-    }
     public void MoneyChanging(float f)
     {
         if (f > 0)
@@ -1151,7 +1106,11 @@ sealed public class UIController : MonoBehaviour
             chosenSurface = b as SurfaceBlock;
             ChangeChosenObject(ChosenObjectType.Surface);
         }
-        else MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ActionError));
+        else
+        {
+            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ActionError));
+            if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
+        }
     }
     public void CreateHangPlatform()
     {
@@ -1275,18 +1234,13 @@ sealed public class UIController : MonoBehaviour
         showMenuWindow = !showMenuWindow;
         if (showMenuWindow)
         { // on
-            GameMaster.SetPause(true);
-            if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
-            if (leftPanel.activeSelf) leftPanel.SetActive(false);
-            if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
-            if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
-            if (showColonyInfo) ColonyButton();
+            GameMaster.SetPause(true);            
             ChangeActiveWindow(ActiveWindowMode.GameMenu);
             menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
             menuPanel.SetActive(true);
             //menuButton.transform.SetAsLastSibling();
            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
-            SetMenuPanelSelection(MenuSection.NoSelection);
+           SetMenuPanelSelection(MenuSection.NoSelection);
         }
         else
         { //off

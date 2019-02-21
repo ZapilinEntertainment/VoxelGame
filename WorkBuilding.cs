@@ -332,7 +332,7 @@ public abstract class WorkBuilding : Building {
             ResourceContainer[] cost = GetUpgradeCost();
             if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                GameLogUI.NotEnoughResourcesAnnounce();
                 return;
             }
         }

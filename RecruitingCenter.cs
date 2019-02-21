@@ -53,7 +53,7 @@ public sealed class RecruitingCenter : WorkBuilding {
                     Crew c = Crew.CreateNewCrew(colony, workersCount / (float)maxWorkers);
                     workflow = 0;
 					finding = false;
-                    UIController.current.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));
+                    GameLogUI.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));
 					hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
 					hireCost = ((int)(hireCost * 100)) / 100f;
                     if (showOnGUI) rcenterObserver.SelectCrew(c);
@@ -97,13 +97,14 @@ public sealed class RecruitingCenter : WorkBuilding {
                 }
                 else
                 {
-                    UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughEnergyCrystals));
+                    GameLogUI.NotEnoughMoneyAnnounce();
                     return false;
                 }
             }
             else
             {
-                UIController.current.MakeAnnouncement(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
+                GameLogUI.MakeImportantAnnounce(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
+                if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.NotEnoughSlots);
                 return false;
             }
         }

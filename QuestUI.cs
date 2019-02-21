@@ -292,7 +292,8 @@ public sealed class QuestUI : MonoBehaviour
         }
 
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
-        UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));
+        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));
+        if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.newQuestAvailable);
     }
     private void ReturnToQuestList()
     {

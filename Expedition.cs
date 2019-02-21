@@ -24,7 +24,7 @@ public sealed class Expedition
 
     private bool subscribedToUpdate, missionCompleted = false;
     private float crewSpeed;
-    private MapPoint mapMarker;
+    private FlyingExpedition mapMarker;
     private QuantumTransmitter transmitter;
     private const float ONE_STEP_WORKFLOW = 100;
 
@@ -85,7 +85,9 @@ public sealed class Expedition
         mission = i_mission;
         transmitter = i_qt; transmitter.AssignExpedition(this);
         destination = i_destination; destination.sentExpedition = this;
-        mapMarker = GameMaster.realMaster.globalMap.ExpeditionLaunch(this, destination);
+        GlobalMap gmap = GameMaster.realMaster.globalMap;
+        mapMarker = new FlyingExpedition(this, gmap.GetCityPoint(), destination, Shuttle.SPEED);
+        gmap.AddPoint(mapMarker, true);
         expeditionsList.Add(this);
     }
     private Expedition(int i_id) // for loading only
@@ -116,6 +118,7 @@ public sealed class Expedition
                     mission = Mission.NoMission;
                     progress = 0;
                     stage = ExpeditionStage.WayOut;
+                    mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.GetCityPoint());
                     actionsHash++;
                     break;
                 }
@@ -123,9 +126,7 @@ public sealed class Expedition
                 {
                     if (mission.TryToLeave())
                     {
-                        mission = Mission.NoMission;
-                        progress = 0;
-                        stage = ExpeditionStage.WayOut;
+                        LeaveSuccessful();
                     }
                     else
                     {
@@ -136,33 +137,22 @@ public sealed class Expedition
                 }
         }
     }
+    private void LeaveSuccessful()
+    {
+        mission = Mission.NoMission;
+        progress = 0;
+        currentStep = 0;
+        stage = ExpeditionStage.WayOut;
+        GlobalMap gmap = GameMaster.realMaster.globalMap;
+        mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
+        gmap.AddPoint(mapMarker, true);
+        actionsHash++;
+    }
 
     public void LabourUpdate()
     {
         switch (stage)
         {
-            case ExpeditionStage.WayIn:
-            case ExpeditionStage.WayOut:
-                {
-                    if (mapMarker != null)
-                    {
-                        float s = Shuttle.SPEED / GameMaster.LABOUR_TICK;
-                        mapMarker.angle = Mathf.MoveTowardsAngle(mapMarker.angle, destination.angle, s);
-                        mapMarker.height = Mathf.MoveTowards(mapMarker.height, mapMarker.height, s);
-
-                        if (mapMarker.angle == destination.angle & mapMarker.height == destination.height)
-                        {
-                            if (stage == ExpeditionStage.WayIn) MissionStart();
-                            else
-                            {
-                                if (missionCompleted) expeditionsSucceed++;
-                                Dismiss();
-                            }
-                        }
-                    }
-                    else mapMarker = GameMaster.realMaster.globalMap.ExpeditionLaunch(this, destination);
-                    break;
-                }
             case ExpeditionStage.OnMission:
                 {
                     progress += crewSpeed;
@@ -187,8 +177,7 @@ public sealed class Expedition
                         progress = 0;
                         if (mission.TryToLeave())
                         {
-                            stage = ExpeditionStage.WayOut;
-                            actionsHash++;
+                            LeaveSuccessful();
                         }
                     }
                     break;
@@ -218,7 +207,7 @@ public sealed class Expedition
         //awaiting
     }
 
-    private void Dismiss()
+    public void Dismiss()
     {
         if (stage == ExpeditionStage.Dismissed) return;
         else
@@ -259,6 +248,11 @@ public sealed class Expedition
         data.AddRange(System.BitConverter.GetBytes(destination.ID)); // 19 - 22
         byte zero = 0, one = 1;
         if (missionCompleted) data.Add(one); else data.Add(zero); // 23
+        if (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut)
+        {
+            data.AddRange(System.BitConverter.GetBytes(mapMarker.angle)); // 24 - 27
+            data.AddRange(System.BitConverter.GetBytes(mapMarker.height));//28 - 31
+        }
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)
@@ -280,20 +274,35 @@ public sealed class Expedition
         fs.Read(data, 0, data.Length);
         stage = (ExpeditionStage)data[0];
         int crewID = System.BitConverter.ToInt32(data, 1);
-        if (crewID > 0) crew = Crew.GetCrewByID(crewID);
+        if (crewID != - 1) crew = Crew.GetCrewByID(crewID);
         else crew = null;
         mission = new Mission((MissionType)data[5], data[6]);
         progress = System.BitConverter.ToSingle(data, 7);
         currentStep = System.BitConverter.ToInt32(data, 11);
         int usingTransmitterID = System.BitConverter.ToInt32(data, 15);
-        if (usingTransmitterID > 0)
+        if (usingTransmitterID != -1)
         {
             transmitter = QuantumTransmitter.GetTransmitterByID(usingTransmitterID);
             transmitter.AssignExpedition(this);
         }
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         destination = gmap.GetMapPointByID(System.BitConverter.ToInt32(data, 19)) as PointOfInterest;
-        if (destination != null & (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut)) gmap.ExpeditionLaunch(this, destination);
+        if (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut) {
+            data = new byte[8];
+            fs.Read(data, 0, data.Length);
+            if (stage == ExpeditionStage.WayIn) {
+                mapMarker = new FlyingExpedition(this, gmap.GetCityPoint(), destination, Shuttle.SPEED);
+            }
+            else
+            {
+                mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
+            }
+            mapMarker.ChangeCoords(System.BitConverter.ToSingle(data,0), System.BitConverter.ToSingle(data, 4));
+        }
+        else
+        {
+            destination.sentExpedition = this;
+        }
         missionCompleted = (data[23] == 1);
         return this;
     }

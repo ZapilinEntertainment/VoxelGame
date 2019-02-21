@@ -529,7 +529,7 @@ public class Quest {
 
     public void MakeQuestCompleted()
     {
-        UIController.current.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
+        GameLogUI.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
         if (type == QuestType.Endgame & subIndex != 2)

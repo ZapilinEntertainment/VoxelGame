@@ -437,23 +437,23 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             case CostPanelMode.SurfaceMaterialChanging:
                     ResourceType rt = ResourceType.GetResourceTypeById(costPanel_selectedButton.y);
-                    if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION) }))
-                    {
-                        observingSurface.ReplaceMaterial(rt.ID);
-                        costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
-                    }
-                    else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION) }))
+                {
+                    observingSurface.ReplaceMaterial(rt.ID);
+                    costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
+                }
+                else GameLogUI.NotEnoughResourcesAnnounce();
                 break;
                 case CostPanelMode.ColumnBuilding:
                 {
                     if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(ResourcesCost.GetCost(Structure.COLUMN_ID)))
                     {
-                       // float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
-                       // if (supportPoints <= 1)
-                       // {
-                            Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
-                            s.SetBasement(observingSurface, new PixelPosByte(7, 7));
-                            PoolMaster.current.BuildSplash(s.transform.position);
+                        // float supportPoints = observingSurface.myChunk.CalculateSupportPoints(observingSurface.pos.x, observingSurface.pos.y, observingSurface.pos.z);
+                        // if (supportPoints <= 1)
+                        // {
+                        Structure s = Structure.GetStructureByID(Structure.COLUMN_ID);
+                        s.SetBasement(observingSurface, new PixelPosByte(7, 7));
+                        PoolMaster.current.BuildSplash(s.transform.position);
                         SetCostPanelMode(CostPanelMode.Disabled);
                         // }
                         //   else
@@ -461,7 +461,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         //    observingSurface.myChunk.ReplaceBlock(observingSurface.pos, BlockType.Cave, observingSurface.material_id, ResourceType.CONCRETE_ID, false);
                         // }
                     }
-                    else UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+                    else GameLogUI.NotEnoughResourcesAnnounce();
                 }
                 break;
             case CostPanelMode.BlockBuilding:
@@ -931,7 +931,7 @@ public sealed class UISurfacePanelController : UIObserver {
         }
         else
         {
-            UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources));
+            GameLogUI.NotEnoughResourcesAnnounce();
         }
     }
 

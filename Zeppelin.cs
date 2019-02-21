@@ -74,7 +74,7 @@ public sealed class Zeppelin : MonoBehaviour {
                     
                     GameMaster.realMaster.SetStartResources();
                     PoolMaster.current.BuildSplash(transform.position);
-                    if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSound(NotificationSound.ColonyFounded);
+                    if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.ColonyFounded);
                     FollowingCamera.main.SetLookPoint(s.transform.position);
                     Destroy(gameObject);
                 }

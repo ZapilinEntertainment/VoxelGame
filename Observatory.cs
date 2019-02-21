@@ -60,11 +60,8 @@ public class Observatory : WorkBuilding {
             if (GameMaster.realMaster.globalMap.Search())
             {
                 // visual effect
-                print("found");
             }
-            else print("not allowed");
         }
-        else print("not found");
     }
     override public void RecalculateWorkspeed()
     {

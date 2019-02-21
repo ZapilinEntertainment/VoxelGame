@@ -395,7 +395,7 @@ public sealed class Dock : WorkBuilding {
 		if (loadingShip == null) {
 			loadingTimer = LOADING_TIME;
 			loadingShip = s;
-            if (announceNewShips) UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
+            if (announceNewShips) GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
             return;
 		}
 		int peopleBefore = immigrationPlan;
@@ -503,7 +503,7 @@ public sealed class Dock : WorkBuilding {
 		shipArrivingTimer = GameConstants.GetShipArrivingTimer();
 
 		int newPeople = peopleBefore - immigrationPlan;
-		if (newPeople > 0 & announceNewShips) UIController.current.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
+		if (newPeople > 0 & announceNewShips) GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
 	}
 
 	private void SellResource(ResourceType rt, float volume) {

@@ -82,7 +82,8 @@ public sealed class Storage : MonoBehaviour {
         {
             if (announcementTimer <= 0)
             {
-                UIController.current.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.StorageOverloaded));
+                GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.StorageOverloaded));
+                if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.StorageOverload);
                 announcementTimer = 5;
             }
             return;
