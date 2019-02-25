@@ -115,7 +115,7 @@ public class GameLogUI : MonoBehaviour {
         if (activated) contentHolder.gameObject.SetActive(false);        
         if (lastMessageIndex >= MAX_MESSAGES)
         {
-            Vector3 upv = Vector3.up * messages[0].rectTransform.rect.height;
+            Vector3 upv = Vector3.up * exampleText.rect.height;
             for (int i = 1; i < MAX_MESSAGES; i++)
             {
                 messages[i].rectTransform.transform.position += upv;
@@ -129,10 +129,11 @@ public class GameLogUI : MonoBehaviour {
         {
             if (messages.Count < lastMessageIndex + 1)
             {
-                Text m = Instantiate(messages[0]);
+                Text m = Instantiate(exampleText).GetComponent<Text>();
                 m.gameObject.SetActive(true);
                 lastMessageIndex++;
-                m.transform.position += Vector3.up * lastMessageIndex * m.rectTransform.rect.height;
+                m.transform.parent = contentHolder;
+                m.transform.position = Vector3.up * lastMessageIndex * m.rectTransform.rect.height;
                 m.text = s;
                 m.color = c;
             }

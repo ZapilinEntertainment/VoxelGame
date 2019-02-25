@@ -165,7 +165,7 @@ public sealed class ColonyController : MonoBehaviour
                             starvationTimer = GameConstants.STARVATION_TIME;
                             if (freeWorkers > 0) { freeWorkers--; citizenCount--; }
                             else StartCoroutine(DeportateWorkingCitizen());
-                            PoolMaster.current.CitizenLeaveEffect(houses[(int)(Random.value * (houses.Count - 1))].transform.position);
+                            PoolMaster.current.CitizenLeaveEffect(houses[Random.Range(0, houses.Count)].transform.position);
                         }
                     }
                     foodSupplyHappiness = 0;

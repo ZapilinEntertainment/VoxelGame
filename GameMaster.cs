@@ -98,9 +98,9 @@ public sealed class GameMaster : MonoBehaviour
     public byte test_size = 100;
     public bool _editMode = false;
 
-    private static bool hotStart = false;
+    private static bool hotStart = true;
     private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
-    private string hotStart_savename = "alpha 9.3.5";
+    private string hotStart_savename = "base";
     //
     private byte upSkyStatus = 0, lowSkyStatus = 0;
     private float worldConsumingTimer = 0;
@@ -283,7 +283,7 @@ public sealed class GameMaster : MonoBehaviour
 
                     case GameStart.Headquarters:
                         List<SurfaceBlock> sblocks = mainChunk.surfaceBlocks;
-                        SurfaceBlock sb = sblocks[(int)(Random.value * (sblocks.Count - 1))];
+                        SurfaceBlock sb = sblocks[Random.Range(0, sblocks.Count)];
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 

@@ -589,7 +589,7 @@ public class Quest {
             }
             if (acceptableQuest.Count > 0)
             {
-                ProgressQuestID pqi = acceptableQuest[(int)(Random.value * acceptableQuest.Count)];
+                ProgressQuestID pqi = acceptableQuest[Random.Range(0, acceptableQuest.Count)];
                 Quest q = new Quest(QuestType.Progress, (byte)pqi);                              
                 q.CheckQuestConditions();
                 return q;

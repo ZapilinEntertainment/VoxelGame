@@ -502,7 +502,7 @@ public class SurfaceBlock : Block
                 if (acceptableVariants.Count == 0) return PixelPosByte.Empty;
                 else
                 {
-                    int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
+                    int ppos = Random.Range(0, acceptableVariants.Count);
                     return acceptableVariants[ppos];
                 }
             }
@@ -516,7 +516,7 @@ public class SurfaceBlock : Block
             List<PixelPosByte> acceptableVariants = GetAcceptablePositions(INNER_RESOLUTION * INNER_RESOLUTION);
             while (positions.Count < count && acceptableVariants.Count > 0)
             {
-                int ppos = (int)(Random.value * (acceptableVariants.Count - 1));
+                int ppos = Random.Range(0, acceptableVariants.Count);
                 positions.Add(acceptableVariants[ppos]);
                 acceptableVariants.RemoveAt(ppos);
             }
@@ -565,7 +565,7 @@ public class SurfaceBlock : Block
                 }
             }
         }
-        if (acceptablePositions.Count > 0) return acceptablePositions[(int)(Random.value * (acceptablePositions.Count - 1))];
+        if (acceptablePositions.Count > 0) return acceptablePositions[Random.Range(0, acceptablePositions.Count)];
         else return PixelPosByte.Empty;
     }
 
@@ -607,7 +607,7 @@ public class SurfaceBlock : Block
         }
         while (acceptablePositions.Count > maxVariants)
         {
-            int i = (int)(Random.value * (acceptablePositions.Count - 1));
+            int i = Random.Range(0, acceptablePositions.Count);
             acceptablePositions.RemoveAt(i);
         }
         return acceptablePositions;
@@ -632,7 +632,7 @@ public class SurfaceBlock : Block
         {
             while (acceptableVariants.Count > count)
             {
-                int i = (int)(Random.value * (acceptableVariants.Count - 1));
+                int i = Random.Range(0, acceptableVariants.Count);
                 acceptableVariants.RemoveAt(i);
             }
             return acceptableVariants;

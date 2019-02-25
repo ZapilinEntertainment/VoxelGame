@@ -43,7 +43,7 @@ public class MapPoint
         type = mtype;
         switch (type)
         {
-            case MapMarkerType.Wreck: subIndex = (byte)(Random.value * WRECKS_TYPE_COUNT); break;
+            case MapMarkerType.Wreck: subIndex = (byte)(Random.Range(0, WRECKS_TYPE_COUNT)); break;
             default: subIndex = 0; break;
         }
     }

@@ -1045,7 +1045,7 @@ public class Structure : MonoBehaviour
                     maxHp = 5000;
                     innerPosition = SurfaceRect.full;
                     placeInCenter = true;
-                    rotate90only = false;
+                    rotate90only = true;
                     isArtificial = true;
                     isBasement = false;                    
                 }

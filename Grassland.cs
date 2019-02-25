@@ -77,7 +77,7 @@ public class Grassland : MonoBehaviour
         {
             if (tax > 0)
             {
-                int pos = (int)(Random.value * (grasslandList.Count - 1));
+                int pos = Random.Range(0, grasslandList.Count);
                 int count = (int)(GameConstants.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);
                 grasslandList[pos].AddLifepower(count);
                 returnVal -= count;
@@ -155,7 +155,7 @@ public class Grassland : MonoBehaviour
                     int lifepowerFromSinglePlant = Mathf.RoundToInt(lifepowerNeeded / (float)plants.Count);
                     while (lifepower <= LIFEPOWER_TO_PREPARE & plants.Count > 0)
                     {
-                        int i = (int)(Random.value * (plants.Count - 1));
+                        int i = Random.Range(0, plants.Count);
                         lifepower += plants[i].TakeLifepower(lifepowerFromSinglePlant);
                         plants.RemoveAt(i);
                     }

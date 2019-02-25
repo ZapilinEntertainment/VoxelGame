@@ -57,7 +57,7 @@ public class Constructor : MonoBehaviour
         for (int i = 0; i < arms; i++)
         {
             int x2 = x, y2 = y, z2 = z;
-            int rval = (int)(Random.value * (crossroadVariants.Count - 1));
+            int rval = Random.Range(0, crossroadVariants.Count);
             int direction = crossroadVariants[rval];
             crossroadVariants.RemoveAt(rval);
             switch (direction)
@@ -93,7 +93,7 @@ public class Constructor : MonoBehaviour
             while (j > 0)
             {
                 j--;
-                rval = (int)(Random.value * (allVariants.Length - 1));
+                rval = Random.Range(0, allVariants.Length);
                 direction = allVariants[rval];
                 int len = (int)((8 * armsLength) * (0.125f + Random.value * 0.875f));
                 for (int k = 0; k < len; k++)

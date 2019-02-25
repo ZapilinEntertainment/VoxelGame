@@ -136,7 +136,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
     public Sprite GetStarSprite()
     {
-        return (starsSprites[(int)(Random.value * (starsSprites.Length - 1))]);
+        return (starsSprites[Random.Range(0, starsSprites.Length)]);
     }
 
     #region effects

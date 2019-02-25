@@ -107,7 +107,7 @@ public sealed class Chunk : MonoBehaviour
                 }
                 if (dirt_for_grassland.Count > 0)
                 {
-                    int pos = (int)(Random.value * (dirt_for_grassland.Count - 1));
+                    int pos = Random.Range(0, dirt_for_grassland.Count);
                     SurfaceBlock sb = dirt_for_grassland[pos];
                     Grassland gl = Grassland.CreateOn(sb);
                     int lifeTransfer = (int)(GameConstants.MAX_LIFEPOWER_TRANSFER * GameMaster.realMaster.lifeGrowCoefficient);

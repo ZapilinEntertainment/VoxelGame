@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class GlobalMap : MonoBehaviour {
-
-    public float[] ringsBorders { get; private set; }
+public sealed class GlobalMap : MonoBehaviour {    
+    
     public float[] rotationSpeed { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }      
@@ -13,8 +12,11 @@ public sealed class GlobalMap : MonoBehaviour {
     private bool prepared = false;
     private GameObject mapUI_go;
 
-    private const byte RINGS_COUNT = 5, MAX_OBJECTS_COUNT = 50;
+    public const byte RINGS_COUNT = 5;
+    private const byte MAX_OBJECTS_COUNT = 50;
     private const int CITY_POINT_INDEX = 0, TEMPORARY_POINTS_MASK = 15593;
+    public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
+    public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
 
     private void Start()
     {
@@ -25,7 +27,6 @@ public sealed class GlobalMap : MonoBehaviour {
     {
         transform.position = Vector3.up * 0.1f;
 
-        ringsBorders = new float[RINGS_COUNT + 1] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
         rotationSpeed = new float[RINGS_COUNT];
         rotationSpeed[0] = (Random.value - 0.5f) * 3;
         rotationSpeed[1] = (Random.value - 0.5f) * 3;
@@ -335,13 +336,6 @@ public sealed class GlobalMap : MonoBehaviour {
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {        
-        fs.Write(System.BitConverter.GetBytes(ringsBorders[0]),0,4);
-        fs.Write(System.BitConverter.GetBytes(ringsBorders[1]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(ringsBorders[2]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(ringsBorders[3]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(ringsBorders[4]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(ringsBorders[5]), 0, 4);
-
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[0]), 0, 4);
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[1]), 0, 4);
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[2]), 0, 4);
@@ -372,21 +366,14 @@ public sealed class GlobalMap : MonoBehaviour {
     }
     public void Load(System.IO.FileStream fs)
     {        
-        var data = new byte[(RINGS_COUNT * 2 + 1) * 4];
+        var data = new byte[RINGS_COUNT * 4];
         fs.Read(data, 0, data.Length);
-        ringsBorders = new float[RINGS_COUNT + 1];
-        ringsBorders[0] = System.BitConverter.ToSingle(data, 0);
-        ringsBorders[1] = System.BitConverter.ToSingle(data, 4);
-        ringsBorders[2] = System.BitConverter.ToSingle(data, 8);
-        ringsBorders[3] = System.BitConverter.ToSingle(data, 12);
-        ringsBorders[4] = System.BitConverter.ToSingle(data, 16);
-        ringsBorders[5] = System.BitConverter.ToSingle(data, 20);
         rotationSpeed = new float[RINGS_COUNT];
-        rotationSpeed[0] = System.BitConverter.ToSingle(data, 24);
-        rotationSpeed[1] = System.BitConverter.ToSingle(data, 28);
-        rotationSpeed[2] = System.BitConverter.ToSingle(data, 32);
-        rotationSpeed[3] = System.BitConverter.ToSingle(data, 36);
-        rotationSpeed[4] = System.BitConverter.ToSingle(data, 40);
+        rotationSpeed[0] = System.BitConverter.ToSingle(data, 0);
+        rotationSpeed[1] = System.BitConverter.ToSingle(data, 4);
+        rotationSpeed[2] = System.BitConverter.ToSingle(data, 8);
+        rotationSpeed[3] = System.BitConverter.ToSingle(data, 12);
+        rotationSpeed[4] = System.BitConverter.ToSingle(data, 16);
         if (!prepared)
         {
             transform.position = Vector3.up * 0.1f;

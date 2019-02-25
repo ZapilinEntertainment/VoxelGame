@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading;
 
 public sealed class GlobalMapUI : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     [SerializeField] private RectTransform mapRect;
     [SerializeField] private RawImage pointIcon;
     [SerializeField] private Text pointLabel, pointDescription, expStatusText;
+    [SerializeField] private Texture sectorsTexture;
     [SerializeField] private Transform[] rings;
     [SerializeField] private GameObject exampleMarker, infoPanel, sendPanel, teamInfoblock;
     [SerializeField] private GameObject mapCanvas, mapCamera;
@@ -30,6 +32,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 
     private readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f), chosenColor = Color.yellow;
     private const float ZOOM_BORDER = 9, DIST_BORDER = 1;
+    private const int SECTORS_TEXTURE_RESOLUTION = 8000;
 
     //========================== PUBLIC METHODS
 
@@ -453,18 +456,25 @@ public sealed class GlobalMapUI : MonoBehaviour
     {
         if (globalMap == null) return;
         transform.position = Vector3.up * 0.1f;
-        int resolution = (int)(Screen.height * QualitySettings.GetQualityLevel() / 2f);
-        float[] ringsBorders = globalMap.ringsBorders;
-        float r = ringsBorders[1]; // 0.8f
-        rings[0].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[0]), r);
-        r = 0.75f;
-        rings[1].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[1]), r);
-        r = 2f / 3f;
-        rings[2].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[2]), r);
-        r = 0.5f;
-        rings[3].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[3]), r);
-        r = 0.5f;
-        rings[4].GetComponent<RawImage>().texture = GetTorusTexture((int)(resolution * ringsBorders[4]), r);
+
+        mapRect.gameObject.SetActive(false);
+        GameObject sector;
+        for (int ring = 0; ring < GlobalMap.RINGS_COUNT; ring++)
+        {
+            float sectorDegree = globalMap.sectorsDegrees[ring];
+            int sectorsCount = (int)(360f / sectorDegree);
+            for (int i = 0; i < sectorsCount; i++)
+            {
+                sector = new GameObject("ring " + ring.ToString() +", sector " + i.ToString());
+                RawImage ri = sector.AddComponent<RawImage>();
+                ri.raycastTarget = false;
+                PrepareSector(ri, ring);
+                sector.transform.localRotation = Quaternion.Euler(Vector3.forward * i * sectorDegree);
+            }
+        }
+        mapRect.gameObject.SetActive(true);
+        
+
         prepared = true;
         mapMarkers = new List<RectTransform>();
         RedrawMarkers();
@@ -564,44 +574,6 @@ public sealed class GlobalMapUI : MonoBehaviour
         }
     }
     // =====================  AUXILIARY METHODS
-
-    private Texture2D GetTorusTexture(int resolution, float innerRadiusValue)
-    {
-        byte[] rawdata = new byte[resolution * resolution * 4];
-        float squaredRadius = resolution * resolution / 4f, innerSquaredRadius = squaredRadius * innerRadiusValue * innerRadiusValue;
-        float half = resolution / 2f;
-        float sr = 0;
-        byte one = 255, zero = 0;
-
-        int k = 0;
-        for (int x = 0; x < resolution; x++)
-        {
-            for (int y = 0; y < resolution; y++)
-            {
-                sr = (x - half) * (x - half) + (y - half) * (y - half);
-                if (sr <= squaredRadius & sr >= innerSquaredRadius)
-                {
-                    rawdata[k] = one;
-                    rawdata[k + 1] = one;
-                    rawdata[k + 2] = one;
-                    rawdata[k + 3] = one;
-                }
-                else
-                {
-                    rawdata[k] = zero;
-                    rawdata[k + 1] = zero;
-                    rawdata[k + 2] = zero;
-                    rawdata[k + 3] = zero;
-                }
-                k += 4;
-            }
-        }
-        Texture2D tx = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false);
-        tx.LoadRawTextureData(rawdata);
-        tx.Apply();
-        return tx;
-    }
-
     private Rect GetMarkerRect(MapMarkerType mtype)
     {
         float p = 0.25f;
@@ -624,8 +596,106 @@ public sealed class GlobalMapUI : MonoBehaviour
             default:
                 return new Rect(0, 0, p, p);
         }
-    }
+    }   
+    private void PrepareSector(RawImage ri, int ringIndex)
+    {
+        float p = 0.1f;       
+        Rect rect = Rect.zero;        
+        switch (ringIndex)
+        {
+            case 0:
+                {
+                    int i = (int)(Random.value * 8f);
+                    float r = 2 * p;
+                    switch (i)
+                    {
+                        case 0: rect = new Rect(0,0, r, r); break;
+                        case 1: rect = new Rect(2f *p, 0, r, r); break;
+                        case 2: rect = new Rect(4f * p, 0, r,r); break;
+                        case 3: rect = new Rect(6f * p, 0,r,r); break;
+                        case 4: rect = new Rect(8f * p, 0,r,r); break;
+                        case 5: rect = new Rect(8f * p,r,r,r); break;
+                        case 6: rect = new Rect(8f * p, 4f * p,r,r); break;
+                        case 7: rect = new Rect(8f * p, 6f * p,r,r); break;
+                    }                    
+                    break;
+                }               
+            case 1:
+                {
+                    int i = (int)(Random.value * 7f);
+                    float r = 2 * p;
+                    switch (i)
+                    {
+                        case 0: rect = new Rect(0,r,r,r); break;
+                        case 1: rect = new Rect(2f * p,r,r,r); break;
+                        case 2: rect = new Rect(4f * p,r,r,r); break;
+                        case 3: rect = new Rect(6f * p,r,r,r); break;
+                        case 4: rect = new Rect(6f * p, 4f * p,r,r); break;
+                        case 5: rect = new Rect(6f * p, 6f * p,r,r); break;
+                        case 6: rect = new Rect(6f * p, 8f * p,r,r); break;
+                    }
+                    break;
+                }
+            case 2:
+                {
+                    int i = (int)(Random.value * 10f);
+                    float r = 1.5f * p;
+                    switch (i)
+                    {
+                        case 0: rect = new Rect(0f, 8.5f * p, r, r); break;
+                        case 1: rect = new Rect(1.5f * p, 8.5f * p, r, r); break;
+                        case 2: rect = new Rect(3f * p, 8.5f * p, r, r); break;
+                        case 3: rect = new Rect(4.5f * p, 8.5f * p, r, r); break;
+                        case 4: rect = new Rect(0f, 7 * p, r, r); break;
+                        case 5: rect = new Rect(1.5f * p, 7 * p, r, r); break;
+                        case 6: rect = new Rect(3f * p, 7 * p, r, r); break;
+                        case 7: rect = new Rect(4.5f * p, 7 * p, r, r); break;
+                        case 8: rect = new Rect(0f, 5.5f * p, r, r); break;
+                        case 9: rect = new Rect(1.5f * p, 5.5f * p, r, r); break;
+                    }
+                    break;
+                }
+            case 3:
+                {
+                    int i = (int)(Random.value * 6f);
+                    float r = 1.5f * p;
+                    switch (i)
+                    {
+                        case 0: rect = new Rect(3f * p, 5.5f * p, r, r); break;
+                        case 1: rect = new Rect(4.5f * p, 5.5f * p, r, r); break;
+                        case 2: rect = new Rect(0f, 4 * p, r, r); break;
+                        case 3: rect = new Rect(1.5f * p, 4 * p, r, r); break;
+                        case 4: rect = new Rect(3f * p, 4 * p, r, r); break;
+                        case 5: rect = new Rect(4.5f * p, 4 * p, r, r); break;
+                    }
+                    break;
+                }
+            case 4:
+                {
+                    int i = (int)(Random.value * 4);
+                    switch(i)
+                    {
+                        case 0: rect = new Rect(8f * p, 9f * p, p, p); break;
+                        case 1: rect = new Rect(9f * p, 9f * p, p, p); break;
+                        case 2: rect = new Rect(8f * p, 8f * p, p, p); break;
+                        case 3: rect = new Rect(9f * p, 8f * p, p, p); break;
+                    }
+                    break;
+                }
+        }
+        ri.texture = sectorsTexture;
+        ri.uvRect = rect;
+        RectTransform rt = ri.rectTransform;
+        rt.parent = rings[ringIndex];
 
+        float s = Mathf.Sin(globalMap.sectorsDegrees[ringIndex] * Mathf.Deg2Rad);
+        float size = mapRect.rect.height / 2f * globalMap.ringsBorders[ringIndex] * s;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+        rt.pivot = Vector3.down * (1f / s - 1);
+        rt.localPosition = Vector3.zero;
+
+    }
 
     public void LocalizeTitles()
     {
