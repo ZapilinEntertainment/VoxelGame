@@ -13,8 +13,9 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     private bool prepared = false;
     private int vegetationShaderWindPropertyID;
     private float windTimer = 0;
+    private MapPoint cityPoint, thesunPoint;
     private ParticleSystem.MainModule cloudEmitterMainModule;
-    private Transform cloudEmitter;    
+    private Transform cloudEmitter, thesun;    
 
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120;
 
@@ -32,6 +33,10 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         cloudEmitterMainModule.simulationSpeed = 1;
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
+        thesun = FindObjectOfType<Light>().transform;
+        GlobalMap gmap = GameMaster.realMaster.globalMap;
+        cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
+        thesunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
     }
 
     public void SetEnvironmentalConditions(float t)
@@ -62,6 +67,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             cloudEmitterMainModule.simulationSpeed = windpower;
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
+
+
+        Vector2 cityPos = Quaternion.AngleAxis(cityPoint.angle, Vector3.forward) * Vector3.up * cityPoint.height;
+        Vector2 sunPos = Quaternion.AngleAxis(thesunPoint.angle, Vector3.forward) * Vector3.up * thesunPoint.height;
+        thesun.forward = new Vector3(cityPos.x - sunPos.x, -0.7f, cityPos.y - sunPos.y );
     }
 
     public void Save( System.IO.FileStream fs)

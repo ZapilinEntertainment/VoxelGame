@@ -277,9 +277,12 @@ public class CubeBlock : Block
         }
         if (!roofPlane) faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>(), faceIllumination);
         else faces[i].sharedMaterial = ResourceType.GetMaterialById(ResourceType.SNOW_ID, faces[i].GetComponent<MeshFilter>(), faceIllumination);
-        faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-        faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+        if (!PoolMaster.useAdvancedMaterials)
+        {
+            faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+        }
         //if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
         faces[i].enabled = true;
     }

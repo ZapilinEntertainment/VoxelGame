@@ -41,7 +41,8 @@ public sealed class Zeppelin : MonoBehaviour {
         lineDrawer = GetComponent<LineRenderer>();
 
         if (current != null) Destroy(current);
-        current = this;        
+        current = this;
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(gameObject);
     }
 
 	void Update() {

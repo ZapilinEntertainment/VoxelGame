@@ -7,6 +7,7 @@ public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS, Whit
 public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow, WhiteWall, Basis}
 
 public sealed class PoolMaster : MonoBehaviour {
+    public static bool useAdvancedMaterials { get; private set; }
     public static PoolMaster current;	
     public static List<GameObject> quadsPool;    
 	public static GameObject mineElevator_pref {get;private set;}
@@ -36,11 +37,13 @@ public sealed class PoolMaster : MonoBehaviour {
     private Sprite[] starsSprites;
 
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5; 
-    private const int SHIPS_BUFFER_SIZE = 5;
+    private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2;
 
     public void Load() {
 		if (current != null) return;
 		current = this;
+
+        useAdvancedMaterials = (QualitySettings.GetQualityLevel() == MAX_QUALITY_LEVEL);
 
         buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
         inactiveShips = new List<Ship>();
@@ -66,19 +69,34 @@ public sealed class PoolMaster : MonoBehaviour {
         darkness_material = Resources.Load<Material>("Materials/Darkness");
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
 		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
-        basic_material = Resources.Load<Material>("Materials/Basic");
-        glass_material = Resources.Load<Material>("Materials/Glass");
-        glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
-        metal_material = Resources.Load<Material>("Materials/Metal");
-        green_material = Resources.Load<Material>("Materials/Green");
+        if (useAdvancedMaterials)
+        {
+            glass_offline_material = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
+            basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
+            glass_material = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
+            metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
+            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
+            energy_material = Resources.Load<Material>("Materials/Advanced/ChargedMaterial_advanced");
+            MeshRenderer mr = quad_pref.GetComponent<MeshRenderer>();
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            mr.receiveShadows = true;
+        }
+        else
+        {
+            glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
+            basic_material = Resources.Load<Material>("Materials/Basic");
+            glass_material = Resources.Load<Material>("Materials/Glass");
+            metal_material = Resources.Load<Material>("Materials/Metal");
+            green_material = Resources.Load<Material>("Materials/Green");
+
+            basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
+            green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
+            metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
+        }        
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
-        starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");
-
-        basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
-        green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
-        metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
+        starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
@@ -183,6 +201,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/passengerShip_1")).GetComponent<Ship>();
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
                     }
                     break;
                 }
@@ -209,6 +228,7 @@ public sealed class PoolMaster : MonoBehaviour {
                             default:  s = Instantiate(Resources.Load<GameObject>("Prefs/lightCargoShip")).GetComponent<Ship>();
                                 break;
                         }
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
                     }
                     break;
                 }
@@ -230,6 +250,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/privateShip")).GetComponent<Ship>();
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
                     }
                     break;
                 }
@@ -251,6 +272,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/lightWarship")).GetComponent<Ship>();
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
                     }
                     break;
                 }
@@ -281,6 +303,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static GameObject GetRooftop(bool peak, bool artificial, byte number) {
         GameObject g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/" + (artificial ? "artificial" : "natural") + (peak ? "Peak" : "Rooftop") + number.ToString() ) );
         g.name = (artificial ? "a" : "n") + (peak ? "p" : "r") + number.ToString();
+        if (useAdvancedMaterials) ReplaceMaterials(g);
         return g;
 	}
     public static GameObject GetFlyingPlatform()
@@ -356,24 +379,28 @@ public sealed class PoolMaster : MonoBehaviour {
         }
         quad.uv = uvEdited;
 
-        if (illumination >= 1 - p / 2f) return green_material;
+        if (useAdvancedMaterials) return green_material;
         else
         {
-            // проверка на darkness в самом начале функции
-            int pos = (int)(illumination / p);
-            if (illumination - pos * p > p / 2f)
-            {
-                pos++;
-            }
-            if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return green_material;
+            if (illumination >= 1 - p / 2f) return green_material;
             else
             {
-                if (green_illuminated[pos] == null)
+                // проверка на darkness в самом начале функции
+                int pos = (int)(illumination / p);
+                if (illumination - pos * p > p / 2f)
                 {
-                    green_illuminated[pos] = new Material(green_material);
-                    green_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                    pos++;
                 }
-                return green_illuminated[pos];
+                if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return green_material;
+                else
+                {
+                    if (green_illuminated[pos] == null)
+                    {
+                        green_illuminated[pos] = new Material(green_material);
+                        green_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                    }
+                    return green_illuminated[pos];
+                }
             }
         }
     }
@@ -447,6 +474,9 @@ public sealed class PoolMaster : MonoBehaviour {
             }
             quad.uv = uvEdited;
 
+        if (useAdvancedMaterials) return metal_material;
+        else
+        {
             if (illumination >= 1 - p / 2f) return metal_material;
             else
             {
@@ -467,6 +497,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     return metal_illuminated[pos];
                 }
             }
+        }
     }
     public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, byte i_illumination)
     {
@@ -557,24 +588,67 @@ public sealed class PoolMaster : MonoBehaviour {
             quad.uv = uvEdited;
         }
 
-        if (illumination >= 1 - p/2f) return basic_material;
-        else
-        {        
-            // проверка на darkness в самом начале функции
-            int pos = (int)(illumination / p);
-            if (illumination - pos * p > p / 2f)
-            {
-                pos++;
-            }
-            if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return basic_material;
+
+        if (useAdvancedMaterials) return basic_material;
+        else 
+        {
+            if (illumination >= 1 - p / 2f) return basic_material;
             else
             {
-                if (basic_illuminated[pos] == null)
+                // проверка на darkness в самом начале функции
+                int pos = (int)(illumination / p);
+                if (illumination - pos * p > p / 2f)
                 {
-                    basic_illuminated[pos] = new Material(basic_material);
-                    basic_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                    pos++;
                 }
-                return basic_illuminated[pos];
+                if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return basic_material;
+                else
+                {
+                    if (basic_illuminated[pos] == null)
+                    {
+                        basic_illuminated[pos] = new Material(basic_material);
+                        basic_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                    }
+                    return basic_illuminated[pos];
+                }
+            }
+        }
+    }
+
+    public static void ReplaceMaterials(GameObject g)
+    {
+        MeshRenderer[] rrs = g.GetComponentsInChildren<MeshRenderer>();
+        foreach (MeshRenderer mr in rrs)
+        {
+            bool shadowCasting = false;
+            switch (mr.sharedMaterial.name)
+            {
+                case "Basic":
+                    mr.sharedMaterial = basic_material;
+                    shadowCasting = true;
+                    break;
+                case "Glass":
+                    mr.sharedMaterial = glass_material;
+                    shadowCasting = true;
+                    break;
+                case "GlassOffline":
+                    mr.sharedMaterial = glass_offline_material;
+                    shadowCasting = true;
+                    break;
+                case "Vegetation":
+                case "Green":
+                    mr.sharedMaterial = green_material;
+                    shadowCasting = true;
+                    break;
+                case "Metal":
+                    mr.sharedMaterial = metal_material;
+                    shadowCasting = true;
+                    break;
+            }
+            if (shadowCasting)
+            {
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                mr.receiveShadows = true;
             }
         }
     }

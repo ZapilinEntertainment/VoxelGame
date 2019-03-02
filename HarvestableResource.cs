@@ -263,6 +263,7 @@ public class HarvestableResource : Structure
         model.parent = transform;
         model.localPosition = Vector3.zero;
         model.localRotation = Quaternion.Euler(Vector3.zero);
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model.gameObject);
     }
 
     public void Harvest()

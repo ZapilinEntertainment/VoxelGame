@@ -32,9 +32,10 @@ public sealed class Chunk : MonoBehaviour
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
     private float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1), chunkUpdateTimer;
-    private bool chunkUpdated = false, borderDrawn = false;
+    private bool chunkUpdateRequired = false, borderDrawn = false;
     private Roof[,] roofs;
     private GameObject roofObjectsHolder;
+    private GameObject[] combinedSides;
 
     public const float SUPPORT_POINTS_ENOUGH_FOR_HANGING = 2, CHUNK_UPDATE_TICK = 0.5f;
     public const byte MIN_CHUNK_SIZE = 3;
@@ -61,6 +62,13 @@ public sealed class Chunk : MonoBehaviour
             roofObjectsHolder.transform.localPosition = Vector3.zero;
             roofObjectsHolder.transform.localRotation = Quaternion.identity;
         }
+        if (combinedSides == null) {
+            combinedSides = new GameObject[6];
+            for (int i = 0; i < 6; i++)
+            {
+                GameObject g = new GameObject("combined side " + i.ToString());
+            }
+        }
         GameMaster.layerCutHeight = CHUNK_SIZE;
         GameMaster.prevCutHeight = CHUNK_SIZE;
 
@@ -78,10 +86,11 @@ public sealed class Chunk : MonoBehaviour
         chunkUpdateTimer -= Time.fixedDeltaTime;
         if (chunkUpdateTimer <= 0)
         {
-            if (chunkUpdated)
+            if (chunkUpdateRequired)
             {
                 if (ChunkUpdateEvent != null) ChunkUpdateEvent();
-                chunkUpdated = false;
+
+                chunkUpdateRequired = false;
             }
             chunkUpdateTimer = CHUNK_UPDATE_TICK;
         }
@@ -227,7 +236,7 @@ public sealed class Chunk : MonoBehaviour
     }
 
     public void ChunkLightmapFullRecalculation()
-    {
+    { 
         byte UP_LIGHT = 255, DOWN_LIGHT = 128;
         int x = 0, y = 0, z = 0;
         for (x = 0; x < CHUNK_SIZE; x++)
@@ -555,7 +564,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
-        chunkUpdated = true;
+        chunkUpdateRequired = true;
         return b;
     }
 
@@ -720,7 +729,7 @@ public sealed class Chunk : MonoBehaviour
                 else SetRoof(x, z, !naturalGeneration);
             }
         }
-        chunkUpdated = true;
+        chunkUpdateRequired = true;
         return b;
     }
 
@@ -855,7 +864,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         ChunkLightmapFullRecalculation();
-        chunkUpdated = true;
+        chunkUpdateRequired = true;
     }
     public void ClearChunk()
     {
@@ -874,7 +883,7 @@ public sealed class Chunk : MonoBehaviour
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         surfaceBlocks.Clear();
         lifePower = 0;
-        chunkUpdated = true;
+        chunkUpdateRequired = true;
     }
     public void RemoveFromSurfacesList(SurfaceBlock sb)
     {
@@ -1325,7 +1334,7 @@ public sealed class Chunk : MonoBehaviour
         if (b != null)
         {
             b.SetMainStructure(s);
-            chunkUpdated = true;
+            chunkUpdateRequired = true;
             return true;
         }
         else return false;
@@ -1417,7 +1426,7 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
-        chunkUpdated = true;
+        chunkUpdateRequired = true;
         return true;
     }
     /// <summary>
@@ -1640,7 +1649,7 @@ public sealed class Chunk : MonoBehaviour
                 }
                 break;
         }
-        chunkUpdated = true;
+        chunkUpdateRequired = true;
         return true;
     }
     public void ClearBlocksList(List<Block> list, bool clearMainStructureField)
@@ -1656,7 +1665,7 @@ public sealed class Chunk : MonoBehaviour
                 actions = true;
             }
         }
-        if (actions) chunkUpdated = true;
+        if (actions) chunkUpdateRequired = true;
     }
 
     public void DrawBorder()

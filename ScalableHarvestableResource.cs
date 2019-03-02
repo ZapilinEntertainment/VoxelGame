@@ -31,6 +31,7 @@ public sealed class ScalableHarvestableResource : Structure {
             meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(mainResource.ID, meshTransform.GetComponent<MeshFilter>(),basement.illumination);
             model.transform.localScale = new Vector3(1, resourceCount / MAX_VOLUME, 1);
         }
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model);
     }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)

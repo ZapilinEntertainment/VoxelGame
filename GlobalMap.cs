@@ -14,7 +14,9 @@ public sealed class GlobalMap : MonoBehaviour {
 
     public const byte RINGS_COUNT = 5;
     private const byte MAX_OBJECTS_COUNT = 50;
-    private const int CITY_POINT_INDEX = 0, TEMPORARY_POINTS_MASK = 15593;
+    public const int CITY_POINT_INDEX = 0, SUN_POINT_INDEX = 1;
+    private const int TEMPORARY_POINTS_MASK = 15593;
+    private const float MAX_RINGS_ROTATION_SPEED = 1;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
 
@@ -28,15 +30,17 @@ public sealed class GlobalMap : MonoBehaviour {
         transform.position = Vector3.up * 0.1f;
 
         rotationSpeed = new float[RINGS_COUNT];
-        rotationSpeed[0] = (Random.value - 0.5f) * 3;
-        rotationSpeed[1] = (Random.value - 0.5f) * 3;
-        rotationSpeed[2] = (Random.value - 0.5f) * 3;
-        rotationSpeed[3] = (Random.value - 0.5f) * 3;
-        rotationSpeed[4] = (Random.value - 0.5f) * 3;
+        rotationSpeed[0] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
+        rotationSpeed[1] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
+        rotationSpeed[2] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
+        rotationSpeed[3] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
+        rotationSpeed[4] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
 
         mapPoints = new List<MapPoint>();
         float h = GameConstants.START_HAPPINESS;
         AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity), true);
+        h = 0.9f;
+        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.Star), true);
 
         actionsHash = 0;
         prepared = true;
@@ -271,8 +275,7 @@ public sealed class GlobalMap : MonoBehaviour {
                     f = Random.value;
                     if (f > 0.5f)
                     {
-                        mmtype = MapMarkerType.Star;
-                        height = 0.15f + 0.7f * Random.value;
+                        return false;
                     }
                     else
                     {
