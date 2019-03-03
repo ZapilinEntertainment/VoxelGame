@@ -8,6 +8,7 @@ public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, Mine
 
 public sealed class PoolMaster : MonoBehaviour {
     public static bool useAdvancedMaterials { get; private set; }
+    public static bool shadowCasting { get; private set; }
     public static PoolMaster current;	
     public static List<GameObject> quadsPool;    
 	public static GameObject mineElevator_pref {get;private set;}
@@ -44,6 +45,7 @@ public sealed class PoolMaster : MonoBehaviour {
 		current = this;
 
         useAdvancedMaterials = (QualitySettings.GetQualityLevel() == MAX_QUALITY_LEVEL);
+        shadowCasting = useAdvancedMaterials;
 
         buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
         inactiveShips = new List<Ship>();
@@ -76,10 +78,7 @@ public sealed class PoolMaster : MonoBehaviour {
             glass_material = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
             metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
             green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-            energy_material = Resources.Load<Material>("Materials/Advanced/ChargedMaterial_advanced");
-            MeshRenderer mr = quad_pref.GetComponent<MeshRenderer>();
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            mr.receiveShadows = true;
+            
         }
         else
         {
@@ -92,7 +91,7 @@ public sealed class PoolMaster : MonoBehaviour {
             basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
             green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
             metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
-        }        
+        }
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
@@ -620,32 +619,32 @@ public sealed class PoolMaster : MonoBehaviour {
         MeshRenderer[] rrs = g.GetComponentsInChildren<MeshRenderer>();
         foreach (MeshRenderer mr in rrs)
         {
-            bool shadowCasting = false;
+            bool useShadows = false;
             switch (mr.sharedMaterial.name)
             {
                 case "Basic":
                     mr.sharedMaterial = basic_material;
-                    shadowCasting = true;
+                    useShadows = true;
                     break;
                 case "Glass":
                     mr.sharedMaterial = glass_material;
-                    shadowCasting = true;
+                    useShadows = true;
                     break;
                 case "GlassOffline":
                     mr.sharedMaterial = glass_offline_material;
-                    shadowCasting = true;
+                    useShadows = true;
                     break;
                 case "Vegetation":
                 case "Green":
                     mr.sharedMaterial = green_material;
-                    shadowCasting = true;
+                    useShadows = false;
                     break;
                 case "Metal":
                     mr.sharedMaterial = metal_material;
-                    shadowCasting = true;
+                    useShadows = true;
                     break;
             }
-            if (shadowCasting)
+            if (shadowCasting & useShadows)
             {
                 mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 mr.receiveShadows = true;

@@ -29,8 +29,9 @@ public sealed class GlobalMapUI : MonoBehaviour
     private List<int> shuttlesListIds = new List<int>();
     private List<RectTransform> mapMarkers;
     private List<MapPoint> mapPoints;
+    private RawImage[] sectorsImages;
 
-    private readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f), chosenColor = Color.yellow;
+    private readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f), chosenColor = Color.yellow, inactiveSectorColor = new Color(1,1,1,0.3f);
     private const float ZOOM_BORDER = 9, DIST_BORDER = 1;
     private const int SECTORS_TEXTURE_RESOLUTION = 8000;
 
@@ -292,31 +293,154 @@ public sealed class GlobalMapUI : MonoBehaviour
     {
         if (!prepared & gameObject.activeSelf) Prepare();
     }
+    private void Prepare()
+    {
+        if (globalMap == null) return;
+        transform.position = Vector3.up * 0.1f;
+
+        mapRect.gameObject.SetActive(false);
+        GameObject sector;
+        RingSector[] sectorsData = globalMap.mapSectors;
+        sectorsImages = new RawImage[sectorsData.Length];
+        int k = 0;
+        for (int ring = 0; ring < GlobalMap.RINGS_COUNT; ring++)
+        {
+            float sectorDegree = globalMap.sectorsDegrees[ring];
+            int sectorsCount = (int)(360f / sectorDegree);
+            for (int i = 0; i < sectorsCount; i++)
+            {
+                sector = new GameObject("ring " + ring.ToString() + ", sector " + i.ToString());
+                RawImage ri = sector.AddComponent<RawImage>();
+                ri.raycastTarget = false;
+                PrepareSector(ri, ring);
+                sector.transform.localRotation = Quaternion.Euler(Vector3.back * i * sectorDegree);
+                if (sectorsData[k] != null)
+                {
+                    ri.color = sectorsData[k].color;
+                }
+                sectorsImages[k] = ri;
+                k++;
+            }
+        }
+        mapRect.gameObject.SetActive(true);
+
+        prepared = true;
+        mapMarkers = new List<RectTransform>();
+        RedrawMap();
+        if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
+        else infoPanelWidth = 0;
+        infoPanel.SetActive(false);
+        LocalizeTitles();
+    }
+    private void RedrawMap()
+    {
+        if (!prepared) return;
+        else
+        {
+            mapPoints = globalMap.mapPoints;
+            int n = mapPoints.Count;
+            //print(n);
+            int c = mapMarkers.Count;
+            if (n > 0)
+            {
+                mapRect.gameObject.SetActive(false);
+                if (c != n)
+                {
+                    if (c > n)
+                    {
+                        for (int i = c - 1; i >= n; i--)
+                        {
+                            int a = mapMarkers.Count - 1;
+                            Destroy(mapMarkers[a].gameObject);
+                            mapMarkers.RemoveAt(a);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = c; i < n; i++)
+                        {
+                            mapMarkers.Add(Instantiate(exampleMarker, mapRect).GetComponent<RectTransform>());
+                        }
+                    }
+                }
+                RectTransform rt;
+                MapPoint mp;
+                Vector3 dir = Vector3.back, up = Vector3.up * mapRect.rect.height / 2f;
+                bool checkForChosen = (chosenPoint != null);
+                for (int i = 0; i < n; i++)
+                {
+                    rt = mapMarkers[i];
+                    mp = mapPoints[i];
+                    if (checkForChosen && mp == chosenPoint) rt.GetComponent<Image>().color = chosenColor;
+                    else
+                    {
+                        rt.GetComponent<Image>().color = mp is PointOfInterest ? interactableColor : notInteractableColor;
+                    }
+                    rt.GetChild(0).GetComponent<RawImage>().uvRect = GetMarkerRect(mp.type);
+                    Button b = rt.GetComponent<Button>(); ;
+                    b.onClick.RemoveAllListeners();
+                    MapPoint mpLink = mp;
+                    b.onClick.AddListener(() => { this.SelectPoint(mpLink); });
+
+                    rt.localPosition = Quaternion.AngleAxis(mapPoints[i].angle, dir) * (up * mapPoints[i].height);
+
+                    if (!rt.gameObject.activeSelf) rt.gameObject.SetActive(true);
+                }
+                mapRect.gameObject.SetActive(true);
+            }
+            else
+            {
+                if (mapMarkers.Count > 0)
+                {
+                    for (int i = 0; i < c; i++)
+                    {
+                        Destroy(mapMarkers[0].gameObject);
+                        mapMarkers.RemoveAt(0);
+                    }
+                }
+            }
+
+            RingSector[] sectorsData = globalMap.mapSectors;
+            for (int i = 0; i < sectorsData.Length; i++)
+            {
+                if (sectorsData[i] != null)
+                {
+                    sectorsImages[i].color = sectorsData[i].color;
+                }
+                else
+                {
+                    sectorsImages[i].color = inactiveSectorColor;
+                }
+            }
+
+            lastDrawnStateHash = globalMap.actionsHash;
+        }
+    }
 
     private void Update()
     {
         if (!prepared) return;
         float t = Time.deltaTime * GameMaster.gameSpeed;
-        rings[0].transform.Rotate(Vector3.forward * rotationSpeed[0] * t);
-        rings[1].transform.Rotate(Vector3.forward * rotationSpeed[1] * t);
-        rings[2].transform.Rotate(Vector3.forward * rotationSpeed[2] * t);
-        rings[3].transform.Rotate(Vector3.forward * rotationSpeed[3] * t);
-        rings[4].transform.Rotate(Vector3.forward * rotationSpeed[4] * t);
+        Vector3 dir = Vector3.back;
+        rings[0].transform.Rotate(dir * rotationSpeed[0] * t);
+        rings[1].transform.Rotate(dir * rotationSpeed[1] * t);
+        rings[2].transform.Rotate(dir * rotationSpeed[2] * t);
+        rings[3].transform.Rotate(dir * rotationSpeed[3] * t);
+        rings[4].transform.Rotate(dir * rotationSpeed[4] * t);
         //
         if (lastDrawnStateHash != globalMap.actionsHash)
         {
-            RedrawMarkers();
+            RedrawMap();
         }
         else
         {
             if (mapMarkers.Count > 0)
             {
-                Vector3 fwd = Vector3.forward, up = Vector3.up;
-                float shp = Screen.height / 2f;
+                Vector3 up = Vector3.up * mapRect.rect.height / 2f;
                 for (int i = 0; i < mapMarkers.Count; i++)
                 {
                     MapPoint mp = mapPoints[i];
-                    mapMarkers[i].localPosition = Quaternion.AngleAxis(mp.angle, fwd) * (up * shp * mp.height);
+                    mapMarkers[i].localPosition = Quaternion.AngleAxis(mp.angle, dir) * (up * mp.height);
                 }
             }
         }
@@ -379,24 +503,35 @@ public sealed class GlobalMapUI : MonoBehaviour
             deltaZoom = Input.GetAxis("Mouse ScrollWheel");
         }
 
+       
+
         if (deltaZoom != 0)
         {
-            float newScale = mapRect.localScale.y + deltaZoom;
+            float newScale = mapRect.localScale.y + deltaZoom * mapRect.localScale.y;
             if (newScale > ZOOM_BORDER) newScale = ZOOM_BORDER;
             else
             {
                 if (newScale < DIST_BORDER) newScale = DIST_BORDER;
             }
+            Vector3 one = Vector3.one;
             if (newScale != mapRect.localScale.x)
             {
-                mapRect.localScale = Vector3.one * newScale;
+                mapRect.localScale = one * newScale;
             }
+            if (mapMarkers.Count > 0)
+            {
+                foreach (RectTransform marker in mapMarkers)
+                {
+                    marker.localScale = one * (1f / newScale);
+                }
+            }
+           
         }
-
         float xpos = mapRect.position.x, ypos = mapRect.position.y;
-        float radius = mapRect.rect.width * mapRect.localScale.x / 2f;
         float sw = Screen.width - infoPanelWidth;
         int sh = Screen.height;
+        float radius = mapRect.rect.width * mapRect.localScale.x / 2f;
+        
         if (2 * radius <= sw)
         {
             xpos = sw / 2f;
@@ -450,108 +585,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 
 
         mapRect.position = new Vector3(xpos, ypos, 0);
-    }
-
-    private void Prepare()
-    {
-        if (globalMap == null) return;
-        transform.position = Vector3.up * 0.1f;
-
-        mapRect.gameObject.SetActive(false);
-        GameObject sector;
-        for (int ring = 0; ring < GlobalMap.RINGS_COUNT; ring++)
-        {
-            float sectorDegree = globalMap.sectorsDegrees[ring];
-            int sectorsCount = (int)(360f / sectorDegree);
-            for (int i = 0; i < sectorsCount; i++)
-            {
-                sector = new GameObject("ring " + ring.ToString() +", sector " + i.ToString());
-                RawImage ri = sector.AddComponent<RawImage>();
-                ri.raycastTarget = false;
-                PrepareSector(ri, ring);
-                sector.transform.localRotation = Quaternion.Euler(Vector3.forward * i * sectorDegree);
-            }
-        }
-        mapRect.gameObject.SetActive(true);
-        
-
-        prepared = true;
-        mapMarkers = new List<RectTransform>();
-        RedrawMarkers();
-        if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
-        else infoPanelWidth = 0;
-        infoPanel.SetActive(false);
-        LocalizeTitles();
-    }
-    private void RedrawMarkers()
-    {
-        if (!prepared) return;
-        else
-        {
-            mapPoints = globalMap.mapPoints;
-            int n = mapPoints.Count;
-            //print(n);
-            int c = mapMarkers.Count;
-            if (n > 0)
-            {
-                mapRect.gameObject.SetActive(false);
-                if (c != n)
-                {
-                    if (c > n)
-                    {
-                        for (int i = c - 1; i >= n; i--)
-                        {
-                            int a = mapMarkers.Count - 1;
-                            Destroy(mapMarkers[a].gameObject);
-                            mapMarkers.RemoveAt(a);
-                        }
-                    }
-                    else
-                    {
-                        for (int i = c; i < n; i++)
-                        {
-                            mapMarkers.Add(Instantiate(exampleMarker, mapRect).GetComponent<RectTransform>());
-                        }
-                    }
-                }
-                RectTransform rt;
-                MapPoint mp;
-                Vector3 fwd = Vector3.forward, up = Vector3.up;
-                bool checkForChosen = (chosenPoint != null);
-                float sh = Screen.height / 2f;
-                for (int i = 0; i < n; i++)
-                {
-                    rt = mapMarkers[i];
-                    mp = mapPoints[i];
-                    if (checkForChosen && mp == chosenPoint) rt.GetComponent<Image>().color = chosenColor;
-                    else
-                    {
-                        rt.GetComponent<Image>().color = mp is PointOfInterest ? interactableColor : notInteractableColor;
-                    }
-                    rt.GetChild(0).GetComponent<RawImage>().uvRect = GetMarkerRect(mp.type);
-                    Button b = rt.GetComponent<Button>();;
-                    b.onClick.RemoveAllListeners();
-                    MapPoint mpLink = mp;
-                    b.onClick.AddListener(() => { this.SelectPoint(mpLink); });
-                    rt.localPosition = Quaternion.AngleAxis(mapPoints[i].angle, fwd) * (up * sh * mapPoints[i].height);
-                    if (!rt.gameObject.activeSelf) rt.gameObject.SetActive(true);
-                }
-                mapRect.gameObject.SetActive(true);
-            }
-            else
-            {
-                if (mapMarkers.Count > 0)
-                {
-                    for (int i = 0; i < c; i++)
-                    {
-                        Destroy(mapMarkers[0].gameObject);
-                        mapMarkers.RemoveAt(0);
-                    }
-                }
-            }
-            lastDrawnStateHash = globalMap.actionsHash;
-        }
-    }
+    }   
    
     private void OnEnable()
     {
@@ -567,11 +601,16 @@ public sealed class GlobalMapUI : MonoBehaviour
             if (!prepared) Prepare();
             else
             {
-                if (lastDrawnStateHash != globalMap.actionsHash) RedrawMarkers();
+                if (lastDrawnStateHash != globalMap.actionsHash) RedrawMap();
                 if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
                 else infoPanelWidth = 0;
             }
+            GameMaster.realMaster.environmentMaster.sun.GetComponent<Renderer>().enabled = false;
         }
+    }
+    private void OnDisable()
+    {
+        GameMaster.realMaster.environmentMaster.sun.GetComponent<Renderer>().enabled = true;
     }
     // =====================  AUXILIARY METHODS
     private Rect GetMarkerRect(MapMarkerType mtype)
@@ -609,14 +648,14 @@ public sealed class GlobalMapUI : MonoBehaviour
                     float r = 2 * p;
                     switch (i)
                     {
-                        case 0: rect = new Rect(0,0, r, r); break;
-                        case 1: rect = new Rect(2f *p, 0, r, r); break;
-                        case 2: rect = new Rect(4f * p, 0, r,r); break;
-                        case 3: rect = new Rect(6f * p, 0,r,r); break;
-                        case 4: rect = new Rect(8f * p, 0,r,r); break;
-                        case 5: rect = new Rect(8f * p,r,r,r); break;
-                        case 6: rect = new Rect(8f * p, 4f * p,r,r); break;
-                        case 7: rect = new Rect(8f * p, 6f * p,r,r); break;
+                        case 0: rect = new Rect(0,0, r * 0.99f, r * 0.99f); break;
+                        case 1: rect = new Rect(2f *p, 0, r * 0.99f, r * 0.99f); break;
+                        case 2: rect = new Rect(4f * p, 0, r * 0.99f, r * 0.99f); break;
+                        case 3: rect = new Rect(6f * p, 0,r * 0.99f, r * 0.99f); break;
+                        case 4: rect = new Rect(8f * p, 0,r * 0.99f, r * 0.99f); break;
+                        case 5: rect = new Rect(8f * p,r, r * 0.99f, r * 0.99f); break;
+                        case 6: rect = new Rect(8f * p, 4f * p, r * 0.99f, r * 0.99f); break;
+                        case 7: rect = new Rect(8f * p, 6f * p, r * 0.99f, r * 0.99f); break;
                     }                    
                     break;
                 }               
@@ -626,13 +665,13 @@ public sealed class GlobalMapUI : MonoBehaviour
                     float r = 2 * p;
                     switch (i)
                     {
-                        case 0: rect = new Rect(0,r,r,r); break;
-                        case 1: rect = new Rect(2f * p,r,r,r); break;
-                        case 2: rect = new Rect(4f * p,r,r,r); break;
-                        case 3: rect = new Rect(6f * p,r,r,r); break;
-                        case 4: rect = new Rect(6f * p, 4f * p,r,r); break;
-                        case 5: rect = new Rect(6f * p, 6f * p,r,r); break;
-                        case 6: rect = new Rect(6f * p, 8f * p,r,r); break;
+                        case 0: rect = new Rect(0,r, r * 0.99f, r * 0.99f); break;
+                        case 1: rect = new Rect(2f * p,r, r * 0.99f, r * 0.99f); break;
+                        case 2: rect = new Rect(4f * p,r, r * 0.99f, r * 0.99f); break;
+                        case 3: rect = new Rect(6f * p,r, r * 0.99f, r * 0.99f); break;
+                        case 4: rect = new Rect(6f * p, 4f * p, r * 0.99f, r * 0.99f); break;
+                        case 5: rect = new Rect(6f * p, 6f * p, r * 0.99f, r * 0.99f); break;
+                        case 6: rect = new Rect(6f * p, 8f * p, r * 0.99f, r * 0.99f); break;
                     }
                     break;
                 }
@@ -642,16 +681,16 @@ public sealed class GlobalMapUI : MonoBehaviour
                     float r = 1.5f * p;
                     switch (i)
                     {
-                        case 0: rect = new Rect(0f, 8.5f * p, r, r); break;
-                        case 1: rect = new Rect(1.5f * p, 8.5f * p, r, r); break;
-                        case 2: rect = new Rect(3f * p, 8.5f * p, r, r); break;
-                        case 3: rect = new Rect(4.5f * p, 8.5f * p, r, r); break;
-                        case 4: rect = new Rect(0f, 7 * p, r, r); break;
-                        case 5: rect = new Rect(1.5f * p, 7 * p, r, r); break;
-                        case 6: rect = new Rect(3f * p, 7 * p, r, r); break;
-                        case 7: rect = new Rect(4.5f * p, 7 * p, r, r); break;
-                        case 8: rect = new Rect(0f, 5.5f * p, r, r); break;
-                        case 9: rect = new Rect(1.5f * p, 5.5f * p, r, r); break;
+                        case 0: rect = new Rect(0f, 8.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 1: rect = new Rect(1.5f * p, 8.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 2: rect = new Rect(3f * p, 8.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 3: rect = new Rect(4.5f * p, 8.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 4: rect = new Rect(0f, 7 * p, r * 0.99f, r * 0.99f); break;
+                        case 5: rect = new Rect(1.5f * p, 7 * p, r * 0.99f, r * 0.99f); break;
+                        case 6: rect = new Rect(3f * p, 7 * p, r * 0.99f, r * 0.99f); break;
+                        case 7: rect = new Rect(4.5f * p, 7 * p, r * 0.99f, r * 0.99f); break;
+                        case 8: rect = new Rect(0f, 5.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 9: rect = new Rect(1.5f * p, 5.5f * p, r * 0.99f, r * 0.99f); break;
                     }
                     break;
                 }
@@ -661,12 +700,12 @@ public sealed class GlobalMapUI : MonoBehaviour
                     float r = 1.5f * p;
                     switch (i)
                     {
-                        case 0: rect = new Rect(3f * p, 5.5f * p, r, r); break;
-                        case 1: rect = new Rect(4.5f * p, 5.5f * p, r, r); break;
-                        case 2: rect = new Rect(0f, 4 * p, r, r); break;
-                        case 3: rect = new Rect(1.5f * p, 4 * p, r, r); break;
-                        case 4: rect = new Rect(3f * p, 4 * p, r, r); break;
-                        case 5: rect = new Rect(4.5f * p, 4 * p, r, r); break;
+                        case 0: rect = new Rect(3f * p, 5.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 1: rect = new Rect(4.5f * p, 5.5f * p, r * 0.99f, r * 0.99f); break;
+                        case 2: rect = new Rect(0f, 4 * p, r * 0.99f, r * 0.99f); break;
+                        case 3: rect = new Rect(1.5f * p, 4 * p, r * 0.99f, r * 0.99f); break;
+                        case 4: rect = new Rect(3f * p, 4 * p, r * 0.99f, r * 0.99f); break;
+                        case 5: rect = new Rect(4.5f * p, 4 * p, r * 0.99f, r * 0.99f); break;
                     }
                     break;
                 }
@@ -675,10 +714,10 @@ public sealed class GlobalMapUI : MonoBehaviour
                     int i = (int)(Random.value * 4);
                     switch(i)
                     {
-                        case 0: rect = new Rect(8f * p, 9f * p, p, p); break;
-                        case 1: rect = new Rect(9f * p, 9f * p, p, p); break;
-                        case 2: rect = new Rect(8f * p, 8f * p, p, p); break;
-                        case 3: rect = new Rect(9f * p, 8f * p, p, p); break;
+                        case 0: rect = new Rect(8f * p, 9f * p, p * 0.99f, p * 0.99f); break;
+                        case 1: rect = new Rect(9f * p, 9f * p, p * 0.99f, p * 0.99f); break;
+                        case 2: rect = new Rect(8f * p, 8f * p, p * 0.99f, p * 0.99f); break;
+                        case 3: rect = new Rect(9f * p, 8f * p, p * 0.99f, p * 0.99f); break;
                     }
                     break;
                 }

@@ -11,7 +11,7 @@ Shader "Custom/SkyShader"
 	}
 		SubShader
 	{
-		Tags { "Queue" = "Transparent" }
+		Tags { "Queue" = "Background" }
 		Blend SrcAlpha OneMinusSrcAlpha
 		LOD 100
 

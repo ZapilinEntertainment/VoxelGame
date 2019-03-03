@@ -32,12 +32,6 @@ public class PointOfInterest : MapPoint
         else return availableMissions[index];
     }
 
-    public override bool DestroyRequest()
-    {
-        if (sentExpedition != null && (sentExpedition.stage == Expedition.ExpeditionStage.WayIn | sentExpedition.stage == Expedition.ExpeditionStage.OnMission)) return false;
-        else return true;
-    }
-
     #region save-load
     override public List<byte> Save()
     {

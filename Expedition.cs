@@ -149,6 +149,11 @@ public sealed class Expedition
         actionsHash++;
     }
 
+    public bool SectorCollapsingTest()
+    {
+        return true;
+    }
+
     public void LabourUpdate()
     {
         switch (stage)
@@ -224,7 +229,10 @@ public sealed class Expedition
             stage = ExpeditionStage.Dismissed;
         }
     }
-
+    public void Dissappear(bool deleteMapMarker)
+    {
+        
+    }
     #region save-load system
     public List<byte> Save()
     {

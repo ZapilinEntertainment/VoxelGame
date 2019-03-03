@@ -20,6 +20,8 @@ public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, TerrainLoa
 
 public sealed class Chunk : MonoBehaviour
 {
+    public static bool useIlluminationSystem { get; private set; }
+
     public Block[,,] blocks { get; private set; }
     public List<SurfaceBlock> surfaceBlocks { get; private set; }
     public byte prevBitmask = 63;
@@ -32,10 +34,9 @@ public sealed class Chunk : MonoBehaviour
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
     private float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1), chunkUpdateTimer;
-    private bool chunkUpdateRequired = false, borderDrawn = false;
+    private bool chunkUpdateRequired = false, borderDrawn = false, shadowsUpdateRequired;
     private Roof[,] roofs;
-    private GameObject roofObjectsHolder;
-    private GameObject[] combinedSides;
+    private GameObject roofObjectsHolder, combinedShadowCaster;
 
     public const float SUPPORT_POINTS_ENOUGH_FOR_HANGING = 2, CHUNK_UPDATE_TICK = 0.5f;
     public const byte MIN_CHUNK_SIZE = 3;
@@ -52,8 +53,7 @@ public sealed class Chunk : MonoBehaviour
     private void Prepare()
     {
         blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-        surfaceBlocks = new List<SurfaceBlock>();
-        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+        surfaceBlocks = new List<SurfaceBlock>();        
         roofs = new Roof[CHUNK_SIZE, CHUNK_SIZE];
         if (roofObjectsHolder == null)
         {
@@ -62,12 +62,23 @@ public sealed class Chunk : MonoBehaviour
             roofObjectsHolder.transform.localPosition = Vector3.zero;
             roofObjectsHolder.transform.localRotation = Quaternion.identity;
         }
-        if (combinedSides == null) {
-            combinedSides = new GameObject[6];
-            for (int i = 0; i < 6; i++)
-            {
-                GameObject g = new GameObject("combined side " + i.ToString());
-            }
+        if (combinedShadowCaster == null & PoolMaster.shadowCasting)
+        {
+            combinedShadowCaster = new GameObject("combinedShadowCaster");
+            combinedShadowCaster.AddComponent<MeshFilter>();
+            var mr = combinedShadowCaster.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = Resources.Load<Material>("Materials/ShadowsOnly");
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            mr.receiveShadows = false;
+            mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            combinedShadowCaster.SetActive(false);
+            shadowsUpdateRequired = true;
+        }
+        useIlluminationSystem = !PoolMaster.useAdvancedMaterials;
+        if (useIlluminationSystem)
+        {
+            lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         }
         GameMaster.layerCutHeight = CHUNK_SIZE;
         GameMaster.prevCutHeight = CHUNK_SIZE;
@@ -89,11 +100,70 @@ public sealed class Chunk : MonoBehaviour
             if (chunkUpdateRequired)
             {
                 if (ChunkUpdateEvent != null) ChunkUpdateEvent();
-
+                if (PoolMaster.shadowCasting & shadowsUpdateRequired)
+                {
+                    ShadowsUpdate();
+                }
                 chunkUpdateRequired = false;
             }
             chunkUpdateTimer = CHUNK_UPDATE_TICK;
+            if (combinedShadowCaster != null)
+            {
+                combinedShadowCaster.transform.position = GameMaster.realMaster.environmentMaster.sun.forward / 100f;
+            }
+        }        
+    }
+    private void ShadowsUpdate()
+    {
+        var visibleMeshes = new List<Mesh>();
+        var transforms = new List<Transform>();
+        Mesh cubeMesh = Resources.Load<Mesh>("Meshes/cube_shadowMesh"),
+            surfaceMesh = Resources.Load<Mesh>("Meshes/surface_shadowMesh"),
+            caveMesh = Resources.Load<Mesh>("Meshes/cave_shadowMesh"),
+            caveUpMesh = Resources.Load<Mesh>("Meshes/caveUp_shadowMesh");
+        foreach (Block b in blocks)
+        {
+            if (b != null && (b.type != BlockType.Shapeless & b.visibilityMask != 0))
+            {
+                switch (b.type)
+                {
+                    case BlockType.Cube:
+                        visibleMeshes.Add(cubeMesh);
+                        transforms.Add(b.transform);
+                    break;
+                    case BlockType.Surface:
+                        visibleMeshes.Add(surfaceMesh);
+                        transforms.Add(b.transform);
+                        break;
+                    case BlockType.Cave:
+                        CaveBlock cb = b as CaveBlock;
+                        visibleMeshes.Add(cb.haveSurface ? caveMesh : caveUpMesh);
+                        transforms.Add(b.transform);
+                        break;
+                }
+            }
         }
+        int count = visibleMeshes.Count;
+        if (count > 0)
+        {
+            CombineInstance[] ci = new CombineInstance[count];
+            Quaternion or = Quaternion.identity;
+            Vector3 scale = Vector3.one;
+            for (int i = 0; i < count; i++)
+            {
+                ci[i].mesh = visibleMeshes[i];
+                ci[i].transform = Matrix4x4.TRS(transforms[i].position, or, scale);
+            }
+            MeshFilter m = combinedShadowCaster.GetComponent<MeshFilter>();
+            m.mesh = new Mesh();
+            m.mesh.CombineMeshes(ci);
+            combinedShadowCaster.SetActive(true);
+        }
+        else
+        {
+            combinedShadowCaster.SetActive(false);
+        }
+        shadowsUpdateRequired = false;
     }
 
     public void CameraUpdate()
@@ -236,7 +306,8 @@ public sealed class Chunk : MonoBehaviour
     }
 
     public void ChunkLightmapFullRecalculation()
-    { 
+    {
+        if (!useIlluminationSystem) return;
         byte UP_LIGHT = 255, DOWN_LIGHT = 128;
         int x = 0, y = 0, z = 0;
         for (x = 0; x < CHUNK_SIZE; x++)
@@ -466,8 +537,11 @@ public sealed class Chunk : MonoBehaviour
                     calculateUpperBlock = true;
                     i_ceilingMaterialID = i_floorMaterialID;
 
-                    lightMap[x, y, z] = 0;
-                    RecalculateIlluminationAtPoint(cb.pos);
+                    if (useIlluminationSystem)
+                    {
+                        lightMap[x, y, z] = 0;
+                        RecalculateIlluminationAtPoint(cb.pos);
+                    }
                     break;
                 }
             case BlockType.Shapeless:
@@ -476,23 +550,26 @@ public sealed class Chunk : MonoBehaviour
                     blocks[x, y, z] = b;
                     b.InitializeBlock(this, f_pos, i_floorMaterialID);
 
-                    //#shapeless light recalculation
-                    byte light = lightMap[x, y, z];
-                    if (light != 255)
+                    if (useIlluminationSystem)
                     {
-                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
-                        if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        //#shapeless light recalculation
+                        byte light = lightMap[x, y, z];
+                        if (light != 255)
+                        {
+                            if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                            if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        }
+                        if (light != lightMap[x, y, z])
+                        {
+                            lightMap[x, y, z] = light;
+                            RecalculateIlluminationAtPoint(b.pos);
+                        }
+                        // eo shapeless light recalculation
                     }
-                    if (light != lightMap[x, y, z])
-                    {
-                        lightMap[x, y, z] = light;
-                        RecalculateIlluminationAtPoint(b.pos);
-                    }
-                    // eo shapeless light recalculation
                     break;
                 }
             case BlockType.Surface:
@@ -504,22 +581,25 @@ public sealed class Chunk : MonoBehaviour
                     blocks[x, y, z] = sb;
                     surfaceBlocks.Add(sb);
 
-                    //#surface light recalculation
-                    byte light = lightMap[x, y, z];
-                    if (light != 255)
+                    if (useIlluminationSystem)
                     {
-                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                        //#surface light recalculation
+                        byte light = lightMap[x, y, z];
+                        if (light != 255)
+                        {
+                            if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                        }
+                        if (light != lightMap[x, y, z])
+                        {
+                            lightMap[x, y, z] = light;
+                            RecalculateIlluminationAtPoint(sb.pos);
+                        }
+                        // eo surface light recalculation
                     }
-                    if (light != lightMap[x, y, z])
-                    {
-                        lightMap[x, y, z] = light;
-                        RecalculateIlluminationAtPoint(sb.pos);
-                    }
-                    // eo surface light recalculation
                     break;
                 }
             case BlockType.Cave:
@@ -533,20 +613,23 @@ public sealed class Chunk : MonoBehaviour
                     calculateUpperBlock = true;
                     surfaceBlocks.Add(caveb);
 
-                    //#cave light recalculation
-                    byte light = lightMap[x, y, z];
-                    if (light != 255)
+                    if (useIlluminationSystem)
                     {
-                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (!caveb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
-                    }
-                    if (light != lightMap[x, y, z])
-                    {
-                        lightMap[x, y, z] = light;
-                        RecalculateIlluminationAtPoint(caveb.pos);
+                        //#cave light recalculation
+                        byte light = lightMap[x, y, z];
+                        if (light != 255)
+                        {
+                            if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (!caveb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        }
+                        if (light != lightMap[x, y, z])
+                        {
+                            lightMap[x, y, z] = light;
+                            RecalculateIlluminationAtPoint(caveb.pos);
+                        }
                     }
                     // eo cave light recalculation
                 }
@@ -565,6 +648,7 @@ public sealed class Chunk : MonoBehaviour
         }
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
         chunkUpdateRequired = true;
+        shadowsUpdateRequired = true;
         return b;
     }
 
@@ -613,23 +697,26 @@ public sealed class Chunk : MonoBehaviour
                     b = new GameObject().AddComponent<Block>();
                     blocks[x, y, z] = b;
 
-                    //#shapeless light recalculation
-                    byte light = lightMap[x, y, z];
-                    if (light != 255)
+                    if (useIlluminationSystem)
                     {
-                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
-                        if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        //#shapeless light recalculation
+                        byte light = lightMap[x, y, z];
+                        if (light != 255)
+                        {
+                            if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                            if (y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        }
+                        if (light != lightMap[x, y, z])
+                        {
+                            lightMap[x, y, z] = light;
+                            RecalculateIlluminationAtPoint(b.pos);
+                        }
+                        // eo shapeless light recalculation
                     }
-                    if (light != lightMap[x, y, z])
-                    {
-                        lightMap[x, y, z] = light;
-                        RecalculateIlluminationAtPoint(b.pos);
-                    }
-                    // eo shapeless light recalculation
                     break;
                 }
             case BlockType.Surface:
@@ -644,22 +731,25 @@ public sealed class Chunk : MonoBehaviour
                     {
                         (originalBlock as CaveBlock).TransferStructures(sb);
                     }
-                    //#surface light recalculation
-                    byte light = lightMap[x, y, z];
-                    if (light != 255)
+                    if (useIlluminationSystem)
                     {
-                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                        //#surface light recalculation
+                        byte light = lightMap[x, y, z];
+                        if (light != 255)
+                        {
+                            if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (y < CHUNK_SIZE - 1 && lightMap[x, y + 1, z] > light) light = lightMap[x, y + 1, z];
+                        }
+                        if (light != lightMap[x, y, z])
+                        {
+                            lightMap[x, y, z] = light;
+                            RecalculateIlluminationAtPoint(sb.pos);
+                        }
+                        // eo surface light recalculation
                     }
-                    if (light != lightMap[x, y, z])
-                    {
-                        lightMap[x, y, z] = light;
-                        RecalculateIlluminationAtPoint(sb.pos);
-                    }
-                    // eo surface light recalculation
                     break;
                 }
             case BlockType.Cube:
@@ -670,8 +760,11 @@ public sealed class Chunk : MonoBehaviour
                     blocks[x, y, z] = cb;
                     influenceMask = 0;
                     calculateUpperBlock = true;
-                    lightMap[x, y, z] = 0;
-                    RecalculateIlluminationAtPoint(b.pos);
+                    if (useIlluminationSystem)
+                    {
+                        lightMap[x, y, z] = 0;
+                        RecalculateIlluminationAtPoint(b.pos);
+                    }
                 }
                 break;
             case BlockType.Cave:
@@ -696,22 +789,25 @@ public sealed class Chunk : MonoBehaviour
                     }
                     calculateUpperBlock = true;
 
-                    //#cave light recalculation
-                    byte light = lightMap[x, y, z];
-                    if (light != 255)
+                    if (useIlluminationSystem)
                     {
-                        if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
-                        if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                        if (!cvb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        //#cave light recalculation
+                        byte light = lightMap[x, y, z];
+                        if (light != 255)
+                        {
+                            if (z < CHUNK_SIZE - 1 && lightMap[x, y, z + 1] > light) light = (byte)(lightMap[x, y, z + 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x < CHUNK_SIZE - 1 && lightMap[x + 1, y, z] > light) light = (byte)(lightMap[x + 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (z > 0 && lightMap[x, y, z - 1] > light) light = (byte)(lightMap[x, y, z - 1] * LIGHT_DECREASE_PER_BLOCK);
+                            if (x > 0 && lightMap[x - 1, y, z] > light) light = (byte)(lightMap[x - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                            if (!cvb.haveSurface & y > 0 && lightMap[x, y - 1, z] > light) light = (byte)(lightMap[x, y - 1, z] * LIGHT_DECREASE_PER_BLOCK);
+                        }
+                        if (light != lightMap[x, y, z])
+                        {
+                            lightMap[x, y, z] = light;
+                            RecalculateIlluminationAtPoint(cvb.pos);
+                        }
+                        // eo cave light recalculation
                     }
-                    if (light != lightMap[x, y, z])
-                    {
-                        lightMap[x, y, z] = light;
-                        RecalculateIlluminationAtPoint(cvb.pos);
-                    }
-                    // eo cave light recalculation
                 }
                 break;
         }
@@ -730,6 +826,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         chunkUpdateRequired = true;
+        shadowsUpdateRequired = true;
         return b;
     }
 
@@ -863,8 +960,9 @@ public sealed class Chunk : MonoBehaviour
                 else ReplaceBlock(lowerBlock.pos, BlockType.Surface, lowerBlock.material_id, false);
             }
         }
-        ChunkLightmapFullRecalculation();
+        if (useIlluminationSystem) ChunkLightmapFullRecalculation();
         chunkUpdateRequired = true;
+        shadowsUpdateRequired = true;
     }
     public void ClearChunk()
     {
@@ -884,6 +982,7 @@ public sealed class Chunk : MonoBehaviour
         surfaceBlocks.Clear();
         lifePower = 0;
         chunkUpdateRequired = true;
+        shadowsUpdateRequired = true;
     }
     public void RemoveFromSurfacesList(SurfaceBlock sb)
     {
@@ -1821,7 +1920,7 @@ public sealed class Chunk : MonoBehaviour
                 }
                 b.SetVisibilityMask(GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z));
             } // ужасное решение
-            ChunkLightmapFullRecalculation();
+            if (useIlluminationSystem) ChunkLightmapFullRecalculation();
         }
         if (surfaceBlocks.Count > 0)
         {
@@ -1878,6 +1977,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         if (borderDrawn) DrawBorder();
+        if (PoolMaster.shadowCasting) ShadowsUpdate();
     }
     #endregion
 

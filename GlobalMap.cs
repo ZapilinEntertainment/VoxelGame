@@ -2,12 +2,29 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public class RingSector
+{
+    public readonly MapPoint centralPoint;
+    public readonly ExploringLocation locationType;
+    public readonly Color color;
+
+    public RingSector(MapPoint i_point, ExploringLocation i_locationType, Color i_color)
+    {
+        centralPoint = i_point;        
+        locationType = i_locationType;
+        color = i_color;
+        centralPoint.SetStability(true);
+    }
+}
+
 public sealed class GlobalMap : MonoBehaviour {    
     
     public float[] rotationSpeed { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }      
     public List<MapPoint> mapPoints { get; private set; }
+    public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
+    public RingSector sunSector { get; private set; }
 
     private bool prepared = false;
     private GameObject mapUI_go;
@@ -37,11 +54,29 @@ public sealed class GlobalMap : MonoBehaviour {
         rotationSpeed[4] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
 
         mapPoints = new List<MapPoint>();
-        float h = GameConstants.START_HAPPINESS;
-        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.MyCity), true);
-        h = 0.9f;
-        AddPoint(new MapPoint(Random.value * 360, h, DefineRing(h), MapMarkerType.Star), true);
+        int sectorsCount = 0;
+        for (int i = 0; i < RINGS_COUNT; i++)
+        {
+            sectorsCount += (int)(360f / sectorsDegrees[i]);
+        }
+        mapSectors = new RingSector[sectorsCount];
 
+        float angle = Random.value * 360;
+        float h = GameConstants.START_HAPPINESS;
+        byte ring = DefineRing(h);
+        AddPoint(new MapPoint(angle, h, ring, MapMarkerType.MyCity), true);
+
+        //UN THE SUN THE SUN THE SUN THE SUN THE S
+
+        angle -= angle % sectorsDegrees[ring];
+        angle += sectorsDegrees[ring] / 2f;
+        h = ringsBorders[ring] - (ringsBorders[ring] - ringsBorders[ring + 1]) / 2f;
+        MapPoint localSun = new MapPoint(angle, h, ring, MapMarkerType.Star);
+        AddPoint(localSun, true);
+        Color sunColor = Color.Lerp(Color.white, new Color(0.976f, 1, 0.7f), Random.value);
+        sunSector = new RingSector(localSun, new ExploringLocation(ExploringLocation.LocationType.Default), sunColor);
+        mapSectors[DefineSectorIndex(angle, ring)] = sunSector;
+        //
         actionsHash = 0;
         prepared = true;
         //зависимость : Load()
@@ -64,7 +99,7 @@ public sealed class GlobalMap : MonoBehaviour {
                         int mmt = (int)mapPoints[i].type;
                         if ((mmt & TEMPORARY_POINTS_MASK) != 0)
                         {
-                            if (mapPoints[i].DestroyRequest())
+                            if (!mapPoints[i].stable)
                             {
                                 mapPoints.RemoveAt(i);
                                 placeCleared = true;
@@ -83,12 +118,21 @@ public sealed class GlobalMap : MonoBehaviour {
     }
     public void RemovePoint(MapPoint mp)
     {
+        if (mp.stable) return;
         if (mapPoints.Contains(mp))
         {
             mapPoints.Remove(mp);
             actionsHash++;
         }
     }    
+    private void RemovePoint(int index)
+    {
+        if (mapPoints[index] != null && !mapPoints[index].stable)
+        {
+            mapPoints.RemoveAt(index);
+            actionsHash++;
+        }
+    }
     public MapPoint GetMapPointByID(int s_id)
     {
         if (mapPoints.Count == 0) return null;
@@ -105,13 +149,65 @@ public sealed class GlobalMap : MonoBehaviour {
         }
     }
 
+    private void AddNewSector(byte index, MapMarkerType mtype, ExploringLocation.LocationType ltype)
+    {
+        if (mapSectors[index] != null) RemoveSector(index);
+        Vector2 spos = GetSectorPosition(index);
+        MapPoint mpoint = new MapPoint(spos.x, spos.y, DefineRing(spos.y), mtype);
+        mapPoints.Add(mpoint);
+        ExploringLocation loc = new ExploringLocation(ltype);
+        RingSector rs = new RingSector(mpoint, loc, loc.color);
+        mapSectors[index] = rs;
+        actionsHash++;
+    }
+    private void AddSector(RingSector rs, byte index, bool forced)
+    {
+        if (mapSectors[index] != null & !forced) return;
+        else
+        {
+            if (mapSectors[index] != null) RemoveSector(index);
+            mapSectors[index] = rs;
+        }
+    }
+    private void RemoveSector(byte index)
+    {
+        if (mapSectors[index] != null)
+        {
+            if (mapPoints.Count > 0)
+            {
+                MapPoint mp = mapSectors[index].centralPoint;
+                byte ring = mp.ringIndex;
+                float angleStep = sectorsDegrees[ring] / 2f;
+                float heightStep = (ringsBorders[ring] - ringsBorders[ring+1]) / 2f;
+
+                int i = 0;
+                while (i < mapPoints.Count)
+                {
+                    if (!mapPoints[i].stable)
+                    {
+                        RemovePoint(mapPoints[i]);
+                    }
+                    else
+                    {
+                        if (mapPoints[i].type == MapMarkerType.Shuttle)
+                        {
+                            FlyingExpedition fe = mapPoints[i] as FlyingExpedition;
+                            if (!fe.expedition.SectorCollapsingTest())
+                            {
+                                fe.expedition.Dissappear(false);
+                                fe.SetStability(false);
+                                RemovePoint(fe);
+                            }
+                        }
+                    }
+                }
+            }
+            actionsHash++;
+        }
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown("x"))
-        {
-            if (AddPoint(new PointOfInterest(0.3f, 0.3f, 1, MapMarkerType.Resources), true)) Debug.Log("okay");
-        }
-
         if (!prepared) return;       
 
         if (mapPoints.Count > 0)
@@ -192,6 +288,43 @@ public sealed class GlobalMap : MonoBehaviour {
             else return 1;
         }
     }
+    public byte DefineSectorIndex(float angle, byte ring)
+    {
+        byte index = 0;
+        if (ring > 0)
+        {
+            for (int i = 0; i < ring; i++)
+            {
+                index += (byte)(360f / sectorsDegrees[i]);
+            }
+        }
+        index += (byte)(angle / sectorsDegrees[ring]);
+        return index;
+    }
+    public byte DefineLocalSectorIndex(byte index) // положение внутри кольца
+    {
+        for (int i = 0; i < RINGS_COUNT; i++)
+        {
+            byte sectorsInRing = (byte)(360f / sectorsDegrees[i]);
+            if (index >= sectorsInRing) index -= sectorsInRing;
+            else return index;
+        }
+        return index;
+    }
+    public Vector2 GetSectorPosition(int index)
+    {
+        byte i = 0;
+        for (; i < RINGS_COUNT; i++)
+        {
+            int sectorsInRing = (int)(360f / sectorsDegrees[i]);
+            if (index >= sectorsInRing) index -= sectorsInRing;
+            else break;
+        }
+        float sd = sectorsDegrees[i];
+        float h = ringsBorders[i] - (ringsBorders[i] - ringsBorders[i + 1]) / 2f;
+        return new Vector2(sd * index + sd / 2f, h);
+    }
+
     public bool Search()
     {
         MapMarkerType mmtype = MapMarkerType.Unknown;

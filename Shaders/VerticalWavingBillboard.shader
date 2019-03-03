@@ -1,12 +1,10 @@
-﻿// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
-
-Shader "Custom/Billboard"
+﻿Shader "Custom/VerticalWavingBillboard"
 {
+	// AXIS-ALIGNED
 	Properties
 	{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_MainColor("Color", Color) = (1,1,1,1)
-		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 	}
 
 		SubShader
@@ -18,7 +16,7 @@ Shader "Custom/Billboard"
 		"RenderType" = "Transparent"
 		"PreviewType" = "Plane"
 		"CanUseSpriteAtlas" = "True"
-		"DisableBatching" = "True" 
+		"DisableBatching" = "True"
 	}
 
 		Cull Off
@@ -46,32 +44,28 @@ Shader "Custom/Billboard"
 		float4 vertex   : SV_POSITION;
 		half2 texcoord  : TEXCOORD0;
 	};
-
+	uniform float _Windpower;
+	half4 _MainColor;
 
 	v2f vert(appdata_t IN)
 	{
 		v2f OUT;
-		OUT.vertex = mul(UNITY_MATRIX_P,
-			mul(UNITY_MATRIX_MV, float4(0, 0, 0, 1))
-			- float4(-IN.vertex.x, -IN.vertex.y, 0, 0));
-
+		float4 invertex = mul(UNITY_MATRIX_MV, float4(0, IN.vertex.y, 0, 1));
+		invertex.x -= IN.vertex.x + IN.vertex.y * sin(_Time * 10) * _Windpower * 0.2f;
+		invertex.z -= IN.vertex.z - IN.vertex.y *sin(_Time * 10) * _Windpower * 0.2f;
+		OUT.vertex = mul(UNITY_MATRIX_P, invertex);
 		OUT.texcoord = IN.texcoord;
-#ifdef PIXELSNAP_ON
-		OUT.vertex = UnityPixelSnap(OUT.vertex);
-#endif
-
 		return OUT;
 	}
 
 	sampler2D _MainTex;
-	half4 _MainColor;
 
 	fixed4 frag(v2f IN) : SV_Target
 	{
 		fixed4 c = tex2D(_MainTex, IN.texcoord);
-		c.rgb *= _MainColor ;
+		c.rgb *= _MainColor;
 		c.rgb *= c.a;
-		return c;
+	return c;
 	}
 		ENDCG
 	}

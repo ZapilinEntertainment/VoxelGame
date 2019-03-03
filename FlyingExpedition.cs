@@ -12,6 +12,7 @@ public sealed class FlyingExpedition : MapPoint {
         expedition = e;
         destination = i_destination;
         speed = i_speed;
+        stable = true;
     }
     
     public void ChangeDestination(MapPoint mp)

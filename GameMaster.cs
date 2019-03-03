@@ -467,6 +467,7 @@ public sealed class GameMaster : MonoBehaviour
 
         //testzone
         if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
+        if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
         //eo testzone
     }
 

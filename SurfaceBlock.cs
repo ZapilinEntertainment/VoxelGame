@@ -707,7 +707,10 @@ public class SurfaceBlock : Block
             if (renderMask != 0 & structureBlockRenderer != null) structureBlockRenderer.SetRenderBitmask(x);
             if (prevVisibility == 0)
             {
-                illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+                if (Chunk.useIlluminationSystem)
+                {
+                    illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
+                }
                 if (grassland == null) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
                 else grassland.SetGrassTexture();
                 int i = 0;

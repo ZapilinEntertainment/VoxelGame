@@ -10,6 +10,7 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Isl
 public class MapPoint
 {
     public MapMarkerType type { get; protected set; }
+    public bool stable { get; protected set; }
     public byte subIndex { get; protected set; }
     public byte ringIndex;    
     public float angle;
@@ -41,6 +42,7 @@ public class MapPoint
         height = i_height;
         ringIndex = ring;
         type = mtype;
+        stable = false;
         switch (type)
         {
             case MapMarkerType.Wreck: subIndex = (byte)(Random.Range(0, WRECKS_TYPE_COUNT)); break;
@@ -54,10 +56,9 @@ public class MapPoint
         height = i_height;
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
     }
-
-    public virtual bool DestroyRequest()
+    public void SetStability(bool x)
     {
-        return true;
+        stable = x;
     }
 
     #region save-load
@@ -70,6 +71,7 @@ public class MapPoint
         bytes.Add(subIndex);// 5
         bytes.AddRange(System.BitConverter.GetBytes(angle)); // 6 - 9
         bytes.AddRange(System.BitConverter.GetBytes(height)); // 10 - 13
+        if (stable) bytes.Add((byte)1); else bytes.Add((byte)0); // 14
         return bytes;
     }
 
@@ -80,7 +82,7 @@ public class MapPoint
         //Debug.Log(count);
         if (count > 0)
         {            
-            int LENGTH = 14;
+            int LENGTH = 15;
             for (int i = 0; i < count; i++)
             {
                 var data = new byte[LENGTH];
@@ -91,6 +93,7 @@ public class MapPoint
                 int subIndex = data[5];
                 float angle = System.BitConverter.ToSingle(data, 6);
                 float height = System.BitConverter.ToSingle(data, 10);
+                bool stable = (data[14] == 1);
                 GlobalMap gmap = GameMaster.realMaster.globalMap;
 
                 switch (mmtype)
@@ -114,6 +117,7 @@ public class MapPoint
                             poi.ringIndex = gmap.DefineRing(height);
                             poi.type = mmtype;
                             poi.Load(fs);
+                            poi.stable = stable;
                             pts.Add(poi);
                             break;
                         }
@@ -126,6 +130,7 @@ public class MapPoint
                             mpoint.height = height;
                             mpoint.ringIndex = gmap.DefineRing(height);
                             mpoint.type = mmtype;
+                            mpoint.stable = stable;
                             pts.Add(mpoint);
                             break;
                         }

@@ -8,11 +8,7 @@ public class MovingMapPoint : MapPoint {
     public MovingMapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype) : base(i_angle, i_height, ring, mtype)
     {
         moveVector = Vector2.zero;
-    }
-
-    override public bool DestroyRequest()
-    {
-        return false;
+        stable = true;
     }
 
     #region save-load

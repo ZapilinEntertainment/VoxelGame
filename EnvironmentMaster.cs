@@ -7,15 +7,17 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     public float environmentalConditions { get; private set; } // 0 is hell, 1 is very favourable
     public Vector2 windVector { get; private set; }
+    public Transform sun;
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
 
     private bool prepared = false;
     private int vegetationShaderWindPropertyID;
     private float windTimer = 0;
-    private MapPoint cityPoint, thesunPoint;
+    private GameObject physicalSun;
+    private MapPoint cityPoint, sunPoint;
     private ParticleSystem.MainModule cloudEmitterMainModule;
-    private Transform cloudEmitter, thesun;    
+    private Transform cloudEmitter;    
 
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120;
 
@@ -33,10 +35,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         cloudEmitterMainModule.simulationSpeed = 1;
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
-        thesun = FindObjectOfType<Light>().transform;
+        sun = FindObjectOfType<Light>().transform;
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
-        thesunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
+        sunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
+        sun.GetComponent<Light>().color = gmap.sunSector.color;
     }
 
     public void SetEnvironmentalConditions(float t)
@@ -70,8 +73,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
 
         Vector2 cityPos = Quaternion.AngleAxis(cityPoint.angle, Vector3.forward) * Vector3.up * cityPoint.height;
-        Vector2 sunPos = Quaternion.AngleAxis(thesunPoint.angle, Vector3.forward) * Vector3.up * thesunPoint.height;
-        thesun.forward = new Vector3(cityPos.x - sunPos.x, -0.7f, cityPos.y - sunPos.y );
+        Vector2 sunPos = Quaternion.AngleAxis(sunPoint.angle, Vector3.forward) * Vector3.up * sunPoint.height;
+        Vector2 lookDist = new Vector3(cityPos.x - sunPos.x, 0, cityPos.y - sunPos.y );
+        sun.transform.position = new Vector3(lookDist.x * 9, 2, lookDist.y * 9);
+        sun.transform.LookAt(Vector3.zero);
+        sun.GetComponent<Light>().intensity = 0.5f + 0.25f * lookDist.magnitude ;
     }
 
     public void Save( System.IO.FileStream fs)

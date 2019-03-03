@@ -172,7 +172,7 @@ public class CubeBlock : Block
                 if (faces[i] == null) CreateFace(i);
                 else faces[i].gameObject.SetActive(true);
             }
-            ChangeFacesStatus(); // т.к в случае полного отключение вырубаем не рендереры, а сами объекты
+            ChangeFacesStatus(); // т.к в случае полного отключения вырубаем не рендереры, а сами объекты
         }
         else
         {
@@ -236,31 +236,49 @@ public class CubeBlock : Block
                 g.name = FWD_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 180, 0);
                 t.localPosition = new Vector3(0, 0, QUAD_SIZE / 2f);
-                if (pos.z != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z + 1];
+                if (Chunk.useIlluminationSystem)
+                {
+                    if (pos.z != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z + 1];
+                }
                 break;
             case 1: // right
                 g.name = RIGHT_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 270, 0);
                 t.localPosition = new Vector3(QUAD_SIZE / 2f, 0, 0);
-                if (pos.x != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x + 1, pos.y, pos.z];
+                if (Chunk.useIlluminationSystem)
+                {
+                    if (pos.x != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x + 1, pos.y, pos.z];
+                }
                 break;
             case 2: // back
                 g.name = BACK_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 0, 0);
                 t.localPosition = new Vector3(0, 0, -QUAD_SIZE / 2f);
-                if (pos.z != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z - 1];
+                if (Chunk.useIlluminationSystem)
+                {
+                    if (pos.z != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z - 1];
+                }
                 break;
             case 3: // left
                 g.name = LEFT_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(0, 90, 0);
                 t.localPosition = new Vector3(-QUAD_SIZE / 2f, 0, 0);
-                if (pos.x != 0) faceIllumination = myChunk.lightMap[pos.x - 1, pos.y, pos.z];
+                if (Chunk.useIlluminationSystem)
+                {
+                    if (pos.x != 0) faceIllumination = myChunk.lightMap[pos.x - 1, pos.y, pos.z];
+                }
                 break;
             case 4: // up
                 g.name = UP_PLANE_NAME;
                 t.localPosition = new Vector3(0, QUAD_SIZE / 2f, 0);
                 t.localRotation = Quaternion.Euler(90, 0, 0);
-                if (pos.y != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y + 1, pos.z];
+                if (pos.y != Chunk.CHUNK_SIZE - 1)
+                {
+                    if (Chunk.useIlluminationSystem)
+                    {
+                        faceIllumination = myChunk.lightMap[pos.x, pos.y + 1, pos.z];
+                    }
+                }
                 else
                 {
                     roofPlane = true;
@@ -271,18 +289,17 @@ public class CubeBlock : Block
                 g.name = DOWN_PLANE_NAME;
                 t.localRotation = Quaternion.Euler(-90, 0, 0);
                 t.localPosition = new Vector3(0, -QUAD_SIZE / 2f, 0);
-                if (pos.y != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y - 1, pos.z];
-                //GameObject.Destroy( faces[i].gameObject.GetComponent<MeshCollider>() );
+                if (Chunk.useIlluminationSystem)
+                {
+                    if (pos.y != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y - 1, pos.z];
+                }
                 break;
         }
         if (!roofPlane) faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>(), faceIllumination);
         else faces[i].sharedMaterial = ResourceType.GetMaterialById(ResourceType.SNOW_ID, faces[i].GetComponent<MeshFilter>(), faceIllumination);
-        if (!PoolMaster.useAdvancedMaterials)
-        {
-            faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-        }
+        faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+        faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
         //if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
         faces[i].enabled = true;
     }

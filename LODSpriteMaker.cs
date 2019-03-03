@@ -178,7 +178,7 @@ public class LODSpriteMaker : MonoBehaviour {
 
         foreach (Renderer r in allObjects)
         {
-            r.gameObject.layer = layerNumber;
+            r.gameObject.layer = savedLayer;
         }
          return lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
     }

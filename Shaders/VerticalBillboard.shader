@@ -4,6 +4,7 @@
 	Properties
 	{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
+		_MainColor("Color", Color) = (1,1,1,1)
 	}
 
 		SubShader
@@ -43,25 +44,26 @@
 			float4 vertex   : SV_POSITION;
 			half2 texcoord  : TEXCOORD0;
 		};
-		uniform float _Windpower;
 
 		v2f vert(appdata_t IN)
 		{
 			v2f OUT;
 			float4 invertex = mul(UNITY_MATRIX_MV, float4(0, IN.vertex.y, 0, 1));
-			invertex.x -= IN.vertex.x + IN.vertex.y * sin(_Time * 10) * _Windpower * 0.2f;
-			invertex.z -= IN.vertex.z - IN.vertex.y *sin(_Time * 10) * _Windpower * 0.2f;
+			invertex.x -= IN.vertex.x;
+			invertex.z -= IN.vertex.z;
 			OUT.vertex = mul(UNITY_MATRIX_P, invertex);
 			OUT.texcoord = IN.texcoord;
 			return OUT;
 		}
 
 		sampler2D _MainTex;
+		half4 _MainColor;
 
 		fixed4 frag(v2f IN) : SV_Target
 		{
 			fixed4 c = tex2D(_MainTex, IN.texcoord);
-		c.rgb *= c.a;
+			c.rgb *= _MainColor;
+			c.rgb *= c.a;
 		return c;
 		}
 			ENDCG
