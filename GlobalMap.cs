@@ -5,23 +5,30 @@ using UnityEngine;
 public class RingSector
 {
     public readonly MapPoint centralPoint;
-    public readonly ExploringLocation locationType;
-    public readonly Color color;
+    public readonly Environment environment;
 
-    public RingSector(MapPoint i_point, ExploringLocation i_locationType, Color i_color)
+    public RingSector(MapPoint i_point, Environment.EnvironmentPresets environmentPresetType, Color i_color)
     {
-        centralPoint = i_point;        
-        locationType = i_locationType;
-        color = i_color;
+        centralPoint = i_point;
+        environment = new Environment(environmentPresetType, i_color);
+        centralPoint.SetStability(true);
+    }
+    public RingSector(MapPoint i_point, Environment i_environment)
+    {
+        centralPoint = i_point;
+        environment = i_environment;
         centralPoint.SetStability(true);
     }
 }
 
 public sealed class GlobalMap : MonoBehaviour {    
     
+    public float ascension { get; private set; }
+    public float ascensionLowBorder { get; private set; }
+    public float ascensionUpBorder { get; private set; }
     public float[] rotationSpeed { get; private set; }
     //при изменении размера - поменять функции save-load
-    public int actionsHash { get; private set; }      
+    public int actionsHash { get; private set; }    
     public List<MapPoint> mapPoints { get; private set; }
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
     public RingSector sunSector { get; private set; }
@@ -61,8 +68,11 @@ public sealed class GlobalMap : MonoBehaviour {
         }
         mapSectors = new RingSector[sectorsCount];
 
+        ascension = GameConstants.START_HAPPINESS;
+        ascensionLowBorder = ascension - 0.1f;
+        ascensionUpBorder = ascension + 0.1f;
         float angle = Random.value * 360;
-        float h = GameConstants.START_HAPPINESS;
+        float h = 0.5f;
         byte ring = DefineRing(h);
         AddPoint(new MapPoint(angle, h, ring, MapMarkerType.MyCity), true);
 
@@ -74,7 +84,7 @@ public sealed class GlobalMap : MonoBehaviour {
         MapPoint localSun = new MapPoint(angle, h, ring, MapMarkerType.Star);
         AddPoint(localSun, true);
         Color sunColor = Color.Lerp(Color.white, new Color(0.976f, 1, 0.7f), Random.value);
-        sunSector = new RingSector(localSun, new ExploringLocation(ExploringLocation.LocationType.Default), sunColor);
+        sunSector = new RingSector(localSun, Environment.EnvironmentPresets.Default, sunColor);
         mapSectors[DefineSectorIndex(angle, ring)] = sunSector;
         //
         actionsHash = 0;
@@ -149,14 +159,13 @@ public sealed class GlobalMap : MonoBehaviour {
         }
     }
 
-    private void AddNewSector(byte index, MapMarkerType mtype, ExploringLocation.LocationType ltype)
+    private void AddNewSector(byte index, MapMarkerType mtype, Environment e)
     {
         if (mapSectors[index] != null) RemoveSector(index);
         Vector2 spos = GetSectorPosition(index);
         MapPoint mpoint = new MapPoint(spos.x, spos.y, DefineRing(spos.y), mtype);
         mapPoints.Add(mpoint);
-        ExploringLocation loc = new ExploringLocation(ltype);
-        RingSector rs = new RingSector(mpoint, loc, loc.color);
+        RingSector rs = new RingSector(mpoint, e);
         mapSectors[index] = rs;
         actionsHash++;
     }
@@ -216,12 +225,11 @@ public sealed class GlobalMap : MonoBehaviour {
 
             if (GameMaster.realMaster.colonyController != null)
             {
-                MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
-                float h = 1 - GameMaster.realMaster.colonyController.happiness_coefficient;
-                if (cityPoint.height != h)
+                float h = GameMaster.realMaster.colonyController.happiness_coefficient;
+                if (h != ascension)
                 {
-                    cityPoint.height = h;
-                    cityPoint.ringIndex = DefineRing(h);
+                    ascension = h;
+                    //ascension sectors check
                 }
             }
             int i = 0;
@@ -267,7 +275,8 @@ public sealed class GlobalMap : MonoBehaviour {
                 }
                 i++;
             }
-        }
+
+        }        
     }
 
     //=============  PUBLIC METHODS
@@ -323,6 +332,14 @@ public sealed class GlobalMap : MonoBehaviour {
         float sd = sectorsDegrees[i];
         float h = ringsBorders[i] - (ringsBorders[i] - ringsBorders[i + 1]) / 2f;
         return new Vector2(sd * index + sd / 2f, h);
+    }
+
+    public Environment GetCurrentEnvironment()
+    {
+        MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
+        byte si = DefineSectorIndex(cityPoint.angle, cityPoint.ringIndex);
+        if (mapSectors[si] == null) return Environment.defaultEnvironment;
+        else return mapSectors[si].environment;
     }
 
     public bool Search()

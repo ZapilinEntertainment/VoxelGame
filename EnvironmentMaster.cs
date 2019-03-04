@@ -2,8 +2,80 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct Environment
+{
+    public enum EnvironmentPresets {
+        Default, WhiteSpace, BlackSpace, IceSpace, FireSpace, WaterSpace, LightStorm,
+        DarkCanyon, EndlessFields, UnderrealmCaverns, OceanWorld, UndergroundWorld, DiedWorld, ForestWorld, DesertWorld,
+        DreamRealm, AncientRuins, ModernRuins, SoulRuins, Custom
+    }
+
+    public enum SkySphereType : byte
+    {
+        Stars, Clouds, Ice, Fire, OceanSurface, LightStorm, RainySky, RealSky, Hangar, Cavern
+    }
+    public enum BeltType : byte
+    {
+        NoBelt, Light, CavernExit, Caverns, Ruins, Mechanisms, StoneWalls
+    }
+    public enum LowSphereType : byte
+    {
+        Stars, Clouds, Ice, Fire, Ocean, GlowingClouds, Abyss, Canyons, Fields, Forest, Desert, Ruins
+    }
+    public enum DecorationsPack : byte
+    {
+        NoDecorations, PeaksUp, PeaksDown, CyclopeBuildings, AncientRuins, ModernRuins, Mechanisms, Trees, Gardens
+    }
+    public enum Weather : byte
+    {
+        NoWeather, Rain, Snow, Rays, Ashes, Foliage, Pollen
+    }
+
+    public static readonly Environment defaultEnvironment;
+
+    public readonly EnvironmentPresets presetType;
+
+    public readonly SkySphereType skyType;
+    public readonly BeltType beltType;
+    public readonly LowSphereType lowSphereType;
+    public readonly DecorationsPack decorationsPack;
+    public readonly Weather constantWeather;
+
+    public readonly float conditions;
+
+    public readonly Color upColor, downColor, middleColor, effectsColor, sunColor;
+
+    static Environment() {
+        defaultEnvironment = new Environment(EnvironmentPresets.Default, Color.white);
+    }
+
+    public Environment(EnvironmentPresets ep, Color i_sunColor)
+    {
+        switch (ep)
+        {
+            case EnvironmentPresets.Default:
+            default:
+                presetType = EnvironmentPresets.Default;
+                skyType = SkySphereType.Stars;
+                beltType = BeltType.NoBelt;
+                lowSphereType = LowSphereType.Clouds;
+                decorationsPack = DecorationsPack.NoDecorations;
+                constantWeather = Weather.NoWeather;
+
+                upColor = Color.white;
+                downColor = upColor;
+                effectsColor = upColor;
+                sunColor = i_sunColor;
+                middleColor = i_sunColor;
+
+                conditions = 1;                
+                break;
+        }
+    }
+}
+
 public sealed class EnvironmentMaster : MonoBehaviour {
-    [SerializeField] private Vector2 newWindVector;
+    [SerializeField] private Vector2 newWindVector;    
 
     public float environmentalConditions { get; private set; } // 0 is hell, 1 is very favourable
     public Vector2 windVector { get; private set; }
@@ -13,9 +85,12 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     private bool prepared = false;
     private int vegetationShaderWindPropertyID;
-    private float windTimer = 0;
+    private float windTimer = 0, prevSkyboxSaturation = 1;
+    private Environment currentEnvironment;
     private GameObject physicalSun;
+    private GlobalMap gmap;
     private MapPoint cityPoint, sunPoint;
+    private Material skyboxMaterial;
     private ParticleSystem.MainModule cloudEmitterMainModule;
     private Transform cloudEmitter;    
 
@@ -29,23 +104,35 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         newWindVector = windVector;
         if (cloudEmitter == null)
         {
-            cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity);
+            cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity, transform);
         }
         cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x,0, windVector.y), Vector3.up);
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         cloudEmitterMainModule.simulationSpeed = 1;
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
         sun = FindObjectOfType<Light>().transform;
-        GlobalMap gmap = GameMaster.realMaster.globalMap;
+        gmap = GameMaster.realMaster.globalMap;
         cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
         sunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
-        sun.GetComponent<Light>().color = gmap.sunSector.color;
+
+        skyboxMaterial = RenderSettings.skybox;
+        ChangeEnvironment(gmap.GetCurrentEnvironment());
     }
 
     public void SetEnvironmentalConditions(float t)
     {
         environmentalConditions = t;
     }
+    public void ChangeEnvironment(Environment e)
+    {
+        GlobalMap gmap = GameMaster.realMaster.globalMap;
+        currentEnvironment = e;
+        sun.GetComponent<Light>().color = currentEnvironment.sunColor;        
+        prevSkyboxSaturation = skyboxMaterial.GetFloat("_Saturation");
+        skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+        environmentalConditions = currentEnvironment.conditions;
+    }
+
 
     private void LateUpdate()
     {
@@ -71,13 +158,23 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
 
-
-        Vector2 cityPos = Quaternion.AngleAxis(cityPoint.angle, Vector3.forward) * Vector3.up * cityPoint.height;
-        Vector2 sunPos = Quaternion.AngleAxis(sunPoint.angle, Vector3.forward) * Vector3.up * sunPoint.height;
-        Vector2 lookDist = new Vector3(cityPos.x - sunPos.x, 0, cityPos.y - sunPos.y );
+        byte ring = cityPoint.ringIndex;
+        float angleX = (cityPoint.angle - sunPoint.angle) / (gmap.sectorsDegrees[ring] / 2f );
+        float heightY = (cityPoint.height - sunPoint.height) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring +1]) / 2f);
+        Vector2 lookDist = new Vector2(angleX, heightY);
         sun.transform.position = new Vector3(lookDist.x * 9, 2, lookDist.y * 9);
         sun.transform.LookAt(Vector3.zero);
-        sun.GetComponent<Light>().intensity = 0.5f + 0.25f * lookDist.magnitude ;
+
+
+        float d = lookDist.magnitude;
+        if (d > 1) d = 1;
+        float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
+        sun.GetComponent<Light>().intensity = s ;
+        if (s != prevSkyboxSaturation)
+        {
+            prevSkyboxSaturation = s;
+            skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+        }
     }
 
     public void Save( System.IO.FileStream fs)
