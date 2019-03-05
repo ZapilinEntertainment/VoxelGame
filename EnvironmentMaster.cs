@@ -2,88 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct Environment
-{
-    public enum EnvironmentPresets {
-        Default, WhiteSpace, BlackSpace, IceSpace, FireSpace, WaterSpace, LightStorm,
-        DarkCanyon, EndlessFields, UnderrealmCaverns, OceanWorld, UndergroundWorld, DiedWorld, ForestWorld, DesertWorld,
-        DreamRealm, AncientRuins, ModernRuins, SoulRuins, Custom
-    }
-
-    public enum SkySphereType : byte
-    {
-        Stars, Clouds, Ice, Fire, OceanSurface, LightStorm, RainySky, RealSky, Hangar, Cavern
-    }
-    public enum BeltType : byte
-    {
-        NoBelt, Light, CavernExit, Caverns, Ruins, Mechanisms, StoneWalls
-    }
-    public enum LowSphereType : byte
-    {
-        Stars, Clouds, Ice, Fire, Ocean, GlowingClouds, Abyss, Canyons, Fields, Forest, Desert, Ruins
-    }
-    public enum DecorationsPack : byte
-    {
-        NoDecorations, PeaksUp, PeaksDown, CyclopeBuildings, AncientRuins, ModernRuins, Mechanisms, Trees, Gardens
-    }
-    public enum Weather : byte
-    {
-        NoWeather, Rain, Snow, Rays, Ashes, Foliage, Pollen
-    }
-
-    public static readonly Environment defaultEnvironment;
-
-    public readonly EnvironmentPresets presetType;
-
-    public readonly SkySphereType skyType;
-    public readonly BeltType beltType;
-    public readonly LowSphereType lowSphereType;
-    public readonly DecorationsPack decorationsPack;
-    public readonly Weather constantWeather;
-
-    public readonly float conditions;
-
-    public readonly Color upColor, downColor, middleColor, effectsColor, sunColor;
-
-    static Environment() {
-        defaultEnvironment = new Environment(EnvironmentPresets.Default, Color.white);
-    }
-
-    public Environment(EnvironmentPresets ep, Color i_sunColor)
-    {
-        switch (ep)
-        {
-            case EnvironmentPresets.Default:
-            default:
-                presetType = EnvironmentPresets.Default;
-                skyType = SkySphereType.Stars;
-                beltType = BeltType.NoBelt;
-                lowSphereType = LowSphereType.Clouds;
-                decorationsPack = DecorationsPack.NoDecorations;
-                constantWeather = Weather.NoWeather;
-
-                upColor = Color.white;
-                downColor = upColor;
-                effectsColor = upColor;
-                sunColor = i_sunColor;
-                middleColor = i_sunColor;
-
-                conditions = 1;                
-                break;
-        }
-    }
-}
-
 public sealed class EnvironmentMaster : MonoBehaviour {
-    [SerializeField] private Vector2 newWindVector;    
+    [SerializeField] private Vector2 newWindVector;
 
+    public bool positionChanged = false; // может быть отмечена другими скриптами
     public float environmentalConditions { get; private set; } // 0 is hell, 1 is very favourable
     public Vector2 windVector { get; private set; }
     public Transform sun;
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
 
-    private bool prepared = false;
+    private bool prepared = false, cloudsEnabled = true, sunEnabled = true;
     private int vegetationShaderWindPropertyID;
     private float windTimer = 0, prevSkyboxSaturation = 1;
     private Environment currentEnvironment;
@@ -116,21 +45,32 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
 
         skyboxMaterial = RenderSettings.skybox;
-        ChangeEnvironment(gmap.GetCurrentEnvironment());
+        ChangeEnvironment(gmap.GetCurrentEnvironment(), true);
     }
 
     public void SetEnvironmentalConditions(float t)
     {
         environmentalConditions = t;
     }
-    public void ChangeEnvironment(Environment e)
+    public void ChangeEnvironment(Environment e, bool haveSun)
     {
         GlobalMap gmap = GameMaster.realMaster.globalMap;
-        currentEnvironment = e;
-        sun.GetComponent<Light>().color = currentEnvironment.sunColor;        
+        currentEnvironment = e;       
         prevSkyboxSaturation = skyboxMaterial.GetFloat("_Saturation");
         skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
         environmentalConditions = currentEnvironment.conditions;
+
+        if (haveSun)
+        {
+            sun.GetComponent<Light>().color = currentEnvironment.sunColor;
+            if (!sun.gameObject.activeSelf) sun.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (sun.gameObject.activeSelf) sun.gameObject.SetActive(false);
+        }
+        sunEnabled = haveSun;
+        positionChanged = true;
     }
 
 
@@ -154,26 +94,30 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             }
             float windpower = windVector.magnitude;
             Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windpower);
-            cloudEmitterMainModule.simulationSpeed = windpower;
+            if (cloudsEnabled) cloudEmitterMainModule.simulationSpeed = windpower;
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
 
-        byte ring = cityPoint.ringIndex;
-        float angleX = (cityPoint.angle - sunPoint.angle) / (gmap.sectorsDegrees[ring] / 2f );
-        float heightY = (cityPoint.height - sunPoint.height) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring +1]) / 2f);
-        Vector2 lookDist = new Vector2(angleX, heightY);
-        sun.transform.position = new Vector3(lookDist.x * 9, 2, lookDist.y * 9);
-        sun.transform.LookAt(Vector3.zero);
-
-
-        float d = lookDist.magnitude;
-        if (d > 1) d = 1;
-        float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
-        sun.GetComponent<Light>().intensity = s ;
-        if (s != prevSkyboxSaturation)
+        if (positionChanged)
         {
-            prevSkyboxSaturation = s;
-            skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+            byte ring = cityPoint.ringIndex;
+            float angleX = (cityPoint.angle - sunPoint.angle) / (gmap.sectorsDegrees[ring] / 2f);
+            float heightY = (cityPoint.height - sunPoint.height) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
+            Vector2 lookDist = new Vector2(angleX, heightY);
+            sun.transform.position = new Vector3(lookDist.x * 9, 2, lookDist.y * 9);
+            sun.transform.LookAt(Vector3.zero);
+
+
+            float d = lookDist.magnitude;
+            if (d > 1) d = 1;
+            float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
+            if (sunEnabled) sun.GetComponent<Light>().intensity = s;
+            if (s != prevSkyboxSaturation)
+            {
+                prevSkyboxSaturation = s;
+                skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+            }
+            positionChanged = false;
         }
     }
 

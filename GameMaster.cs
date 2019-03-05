@@ -58,10 +58,6 @@ public sealed class GameMaster : MonoBehaviour
 
     private static byte pauseRequests = 0;
 
-#pragma warning disable 0649
-    [SerializeField]private MeshRenderer upperHemisphere, lowerBelt;
-#pragma warning restore 0649
-
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
@@ -102,8 +98,6 @@ public sealed class GameMaster : MonoBehaviour
     private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
     private string hotStart_savename = "base";
     //
-    private byte upSkyStatus = 0, lowSkyStatus = 0;
-    private float worldConsumingTimer = 0;
 
     #region static functions
     public static void SetSavename(string s)
@@ -158,7 +152,7 @@ public sealed class GameMaster : MonoBehaviour
         }
         realMaster = this;
         sceneClearing = false;
-        if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();        
+        if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();        
         if (!editMode)
         {
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
@@ -277,7 +271,7 @@ public sealed class GameMaster : MonoBehaviour
                         }
                         else
                         {
-                            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
+                            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
                         }
                         break;
 
@@ -359,111 +353,18 @@ public sealed class GameMaster : MonoBehaviour
         { // set look point
             FollowingCamera.camBasisTransform.position = sceneCenter;
         }
-
-        if (upperHemisphere != null & upSkyStatus == 0) upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
-        if (lowerBelt != null & lowSkyStatus == 0 ) lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
     public void SetColonyController(ColonyController c)
     {
         colonyController = c;
-        worldConsumingTimer = 60;
     }
 
     #region updates
     private void Update()
     {
         if (loading) return;
-        if (colonyController != null & upperHemisphere != null & lowerBelt != null)
-        {
-            worldConsumingTimer -= Time.deltaTime * gameSpeed;
-            if (worldConsumingTimer <= 0)
-            {
-                float ch = colonyController.happiness_coefficient;
-                byte newUpSkyStatus = upSkyStatus, newLowSkyStatus = lowSkyStatus;
-                if (ch < GameConstants.RSPACE_CONSUMING_VAL)
-                {
-                    if (newUpSkyStatus > 0) newUpSkyStatus--;
-                    if (newLowSkyStatus < 4) {
-                        newLowSkyStatus++;
-                        if (newLowSkyStatus == 1) GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing));
-                    }
-                    worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newLowSkyStatus;
-                }
-                else
-                {
-                    if (newLowSkyStatus > 0) newLowSkyStatus--;
-                    if (ch > GameConstants.LSECTOR_CONSUMING_VAL)
-                    {
-                        if (newUpSkyStatus < 4)
-                        {
-                            newUpSkyStatus++;
-                            if (newUpSkyStatus == 1) GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.IslandCollapsing));
-                        }
-                        worldConsumingTimer = GameConstants.WORLD_CONSUMING_TIMER * newUpSkyStatus;
-                    }
-                    else
-                    {
-                        newUpSkyStatus = 0;
-                        worldConsumingTimer = 60;
-                    }
-                }
-
-                bool cceCheck = false;
-                if (newUpSkyStatus != upSkyStatus)
-                {
-                    switch (newUpSkyStatus)
-                    {
-                        case 1:
-                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky1");
-                            break;
-                        case 2:
-                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky2");
-                            break;
-                        case 3:
-                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky3");
-                            break;
-                        case 4: upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
-                            break;
-                        default:
-                            upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
-                            break;
-                    }
-                    upSkyStatus = newUpSkyStatus;
-                    cceCheck = true;
-                }
-                if (newLowSkyStatus != lowSkyStatus)
-                {
-                    switch (newLowSkyStatus)
-                    {
-                        case 1:
-                            lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky1");
-                            break;
-                        case 2:
-                            lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky2");
-                            break;
-                        case 3:
-                            lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky3");
-                            break;
-                        case 4:
-                            lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/Sky");
-                            break;
-                        default:
-                            lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
-                            break;
-                    }
-                    lowSkyStatus = newLowSkyStatus;
-                    cceCheck = true;
-                }
-                if (cceCheck)
-                {
-                    ChunkConsumingEffect cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-                    if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                    cce.SetSettings(upSkyStatus, lowSkyStatus);
-                }
-            }
-        }
 
         //testzone
         if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
@@ -703,10 +604,6 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
         // 69
-        fs.Write(System.BitConverter.GetBytes(worldConsumingTimer), 0, 4);
-        fs.WriteByte(upSkyStatus);
-        fs.WriteByte(lowSkyStatus);
-        //75
         #endregion
         environmentMaster.Save(fs);
         Shuttle.SaveStaticData(fs);
@@ -780,53 +677,6 @@ public sealed class GameMaster : MonoBehaviour
             labourTimer = System.BitConverter.ToSingle(data, 57);
             lifepowerTimer = System.BitConverter.ToSingle(data, 61);
             RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 65));
-
-            worldConsumingTimer = System.BitConverter.ToSingle(data, 69);
-            upSkyStatus = data[73];
-            if (upperHemisphere != null)
-            {
-                switch (upSkyStatus)
-                {
-                    case 1:
-                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky1");
-                        break;
-                    case 2:
-                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky2");
-                        break;
-                    case 3:
-                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky3");
-                        break;
-                    case 4:
-                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
-                        break;
-                    default:
-                        upperHemisphere.sharedMaterial = Resources.Load<Material>("Materials/Sky");
-                        break;
-                }                
-            }
-            lowSkyStatus = data[74];
-            if (lowerBelt != null)
-            {
-                switch (lowSkyStatus)
-                {
-                    case 1:
-                        lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky1");
-                        break;
-                    case 2:
-                        lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky2");
-                        break;
-                    case 3:
-                        lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky3");
-                        break;
-                    case 4:
-                        lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/Sky");
-                        break;
-                    default:
-                        lowerBelt.sharedMaterial = Resources.Load<Material>("Materials/LowSky");
-                        break;
-                }
-            }
-            else print("no hemisphere");
             #endregion
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
@@ -839,16 +689,6 @@ public sealed class GameMaster : MonoBehaviour
                 mainChunk = g.AddComponent<Chunk>();
             }
             mainChunk.LoadChunkData(fs);
-            ChunkConsumingEffect cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-            if (upSkyStatus != 0 | lowSkyStatus != 0)
-            {
-                if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                cce.SetSettings(upSkyStatus, lowSkyStatus);
-            }
-            else
-            {
-                if (cce != null) cce.SetSettings(upSkyStatus, lowSkyStatus);
-            }
 
             fs.Read(data, 0, 4);
             QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));

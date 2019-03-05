@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
-
-Shader "Custom/Billboard"
+﻿Shader "Custom/Billboard"
 {
 	Properties
 	{
@@ -33,7 +31,9 @@ Shader "Custom/Billboard"
 #pragma vertex vert
 #pragma fragment frag
 #pragma multi_compile DUMMY PIXELSNAP_ON
+#pragma multi_compile _ SHADOWS_SCREEN
 #include "UnityCG.cginc"
+#include "AutoLight.cginc"
 
 		struct appdata_t
 	{
@@ -45,12 +45,18 @@ Shader "Custom/Billboard"
 	{
 		float4 vertex   : SV_POSITION;
 		half2 texcoord  : TEXCOORD0;
+#if defined(SHADOWS_SCREEN)
+		float4 shadowCoordinates : TEXCOORD5;
+#endif
 	};
 
 
 	v2f vert(appdata_t IN)
 	{
 		v2f OUT;
+#if defined(SHADOWS_SCREEN)
+		OUT.shadowCoordinates = UnityObjectToClipPos(IN.vertex);
+#endif
 		OUT.vertex = mul(UNITY_MATRIX_P,
 			mul(UNITY_MATRIX_MV, float4(0, 0, 0, 1))
 			- float4(-IN.vertex.x, -IN.vertex.y, 0, 0));

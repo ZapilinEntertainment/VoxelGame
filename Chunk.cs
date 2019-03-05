@@ -109,7 +109,7 @@ public sealed class Chunk : MonoBehaviour
             chunkUpdateTimer = CHUNK_UPDATE_TICK;
             if (combinedShadowCaster != null)
             {
-                combinedShadowCaster.transform.position = GameMaster.realMaster.environmentMaster.sun.forward / 100f;
+                combinedShadowCaster.transform.position = GameMaster.realMaster.environmentMaster.sun.forward.normalized * 0.5f;
             }
         }        
     }

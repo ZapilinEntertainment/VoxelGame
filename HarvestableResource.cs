@@ -144,6 +144,7 @@ public class HarvestableResource : Structure
             sr.transform.parent = model.transform;
             sr.transform.localPosition = Vector3.up * height;
             sr.sharedMaterial = PoolMaster.billboardMaterial;
+            if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             LODController currentLC = LODController.GetCurrent();
             LODPackType lpackType = LODPackType.Point;
             int indexInRegistered = currentLC.LOD_existanceCheck(regInfo);

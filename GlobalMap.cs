@@ -21,17 +21,17 @@ public class RingSector
     }
 }
 
-public sealed class GlobalMap : MonoBehaviour {    
-    
+public sealed class GlobalMap : MonoBehaviour
+{
+
     public float ascension { get; private set; }
     public float ascensionLowBorder { get; private set; }
     public float ascensionUpBorder { get; private set; }
-    public float[] rotationSpeed { get; private set; }
+    public float[] ringsRotation { get; private set; }
     //при изменении размера - поменять функции save-load
-    public int actionsHash { get; private set; }    
+    public int actionsHash { get; private set; }
     public List<MapPoint> mapPoints { get; private set; }
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
-    public RingSector sunSector { get; private set; }
 
     private bool prepared = false;
     private GameObject mapUI_go;
@@ -39,8 +39,8 @@ public sealed class GlobalMap : MonoBehaviour {
     public const byte RINGS_COUNT = 5;
     private const byte MAX_OBJECTS_COUNT = 50;
     public const int CITY_POINT_INDEX = 0, SUN_POINT_INDEX = 1;
-    private const int TEMPORARY_POINTS_MASK = 15593;
     private const float MAX_RINGS_ROTATION_SPEED = 1;
+    private float[] rotationSpeed;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
 
@@ -59,6 +59,7 @@ public sealed class GlobalMap : MonoBehaviour {
         rotationSpeed[2] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
         rotationSpeed[3] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
         rotationSpeed[4] = (Random.value - 0.5f) * MAX_RINGS_ROTATION_SPEED;
+        ringsRotation = new float[RINGS_COUNT];
 
         mapPoints = new List<MapPoint>();
         int sectorsCount = 0;
@@ -71,21 +72,29 @@ public sealed class GlobalMap : MonoBehaviour {
         ascension = GameConstants.START_HAPPINESS;
         ascensionLowBorder = ascension - 0.1f;
         ascensionUpBorder = ascension + 0.1f;
-        float angle = Random.value * 360;
-        float h = 0.5f;
-        byte ring = DefineRing(h);
-        AddPoint(new MapPoint(angle, h, ring, MapMarkerType.MyCity), true);
 
-        //UN THE SUN THE SUN THE SUN THE SUN THE S
+        //start sector:
+        byte ring = RINGS_COUNT / 2;
+        sectorsCount = (int)(360f / sectorsDegrees[ring]);
+        int min = 0;
+        for (int i = 0; i < ring; i++)
+        {
+            min += (int)(360f / sectorsDegrees[i]);
+        }
+        int startSectorIndex = Random.Range(min, min + sectorsCount);
 
-        angle -= angle % sectorsDegrees[ring];
-        angle += sectorsDegrees[ring] / 2f;
-        h = ringsBorders[ring] - (ringsBorders[ring] - ringsBorders[ring + 1]) / 2f;
-        MapPoint localSun = new MapPoint(angle, h, ring, MapMarkerType.Star);
-        AddPoint(localSun, true);
-        Color sunColor = Color.Lerp(Color.white, new Color(0.976f, 1, 0.7f), Random.value);
-        sunSector = new RingSector(localSun, Environment.EnvironmentPresets.Default, sunColor);
-        mapSectors[DefineSectorIndex(angle, ring)] = sunSector;
+        Vector2 startPos = GetSectorPosition(startSectorIndex);
+        MapPoint sunPoint = new MapPoint(startPos.x, startPos.y, ring, MapMarkerType.Star);
+        RingSector startSector = new RingSector(sunPoint, Environment.defaultEnvironment);
+        mapSectors[startSectorIndex] = startSector;
+        Vector2 dir = Quaternion.AngleAxis(Random.value * 360, Vector3.forward) * Vector2.up;
+        MapPoint cityPoint = new MapPoint(
+            startPos.x + dir.x * 0.25f * sectorsDegrees[ring], //angle
+            startPos.y + dir.y * 0.25f * (ringsBorders[ring] - ringsBorders[ring + 1]),
+            ring, MapMarkerType.MyCity
+        );
+        mapPoints.Add(cityPoint); // CITY_POINT_INDEX = 0
+        mapPoints.Add(sunPoint); // SUN_POINT_INDEX = 1
         //
         actionsHash = 0;
         prepared = true;
@@ -106,15 +115,11 @@ public sealed class GlobalMap : MonoBehaviour {
                     int i = 0;
                     while (i < mapPoints.Count)
                     {
-                        int mmt = (int)mapPoints[i].type;
-                        if ((mmt & TEMPORARY_POINTS_MASK) != 0)
+                        if (!mapPoints[i].stable)
                         {
-                            if (!mapPoints[i].stable)
-                            {
-                                mapPoints.RemoveAt(i);
-                                placeCleared = true;
-                                break;
-                            }
+                            mapPoints.RemoveAt(i);
+                            placeCleared = true;
+                            break;
                         }
                         i++;
                     }
@@ -134,7 +139,7 @@ public sealed class GlobalMap : MonoBehaviour {
             mapPoints.Remove(mp);
             actionsHash++;
         }
-    }    
+    }
     private void RemovePoint(int index)
     {
         if (mapPoints[index] != null && !mapPoints[index].stable)
@@ -187,7 +192,7 @@ public sealed class GlobalMap : MonoBehaviour {
                 MapPoint mp = mapSectors[index].centralPoint;
                 byte ring = mp.ringIndex;
                 float angleStep = sectorsDegrees[ring] / 2f;
-                float heightStep = (ringsBorders[ring] - ringsBorders[ring+1]) / 2f;
+                float heightStep = (ringsBorders[ring] - ringsBorders[ring + 1]) / 2f;
 
                 int i = 0;
                 while (i < mapPoints.Count)
@@ -217,12 +222,26 @@ public sealed class GlobalMap : MonoBehaviour {
 
     private void Update()
     {
-        if (!prepared) return;       
+        if (!prepared) return;
 
+        float t = Time.deltaTime * GameMaster.gameSpeed;
+        float f = 0;
+        for (int i = 0; i < RINGS_COUNT; i++)
+        {
+            f = ringsRotation[i];
+            f -= rotationSpeed[i] * t;
+            if (f > 360f)
+            {
+                f %= 360;
+            }
+            else
+            {
+                if (f < 0) f += 360;
+            }
+            ringsRotation[i] = f;
+        }
         if (mapPoints.Count > 0)
         {
-            float t = Time.deltaTime * GameMaster.gameSpeed;
-
             if (GameMaster.realMaster.colonyController != null)
             {
                 float h = GameMaster.realMaster.colonyController.happiness_coefficient;
@@ -235,7 +254,7 @@ public sealed class GlobalMap : MonoBehaviour {
             int i = 0;
             while (i < mapPoints.Count)
             {
-                MapPoint mp = mapPoints[i];                
+                MapPoint mp = mapPoints[i];
                 mp.angle += rotationSpeed[mp.ringIndex] * t;
                 if (mp.type == MapMarkerType.Shuttle)
                 {
@@ -270,13 +289,12 @@ public sealed class GlobalMap : MonoBehaviour {
                     else
                     {
                         GameLogUI.MakeAnnouncement(Localization.GetExpeditionStatus(LocalizedExpeditionStatus.CannotReachDestination, fe.expedition));
-                        fe.expedition.EndMission();                        
+                        fe.expedition.EndMission();
                     }
                 }
                 i++;
             }
-
-        }        
+        }
     }
 
     //=============  PUBLIC METHODS
@@ -455,18 +473,18 @@ public sealed class GlobalMap : MonoBehaviour {
             case MapMarkerType.Station:
             case MapMarkerType.Wreck:
             case MapMarkerType.Island:
-            case MapMarkerType.SOS: 
-            case MapMarkerType.Portal: 
-            case MapMarkerType.Colony:             
-            case MapMarkerType.Wiseman: 
-            case MapMarkerType.Wonder: 
+            case MapMarkerType.SOS:
+            case MapMarkerType.Portal:
+            case MapMarkerType.Colony:
+            case MapMarkerType.Wiseman:
+            case MapMarkerType.Wonder:
             case MapMarkerType.Resources:
                 {
-                    somethingFound =  AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype), false);
+                    somethingFound = AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype), false);
                     break;
                 }
             case MapMarkerType.Star:
-                somethingFound =  AddPoint(new MapPoint(angle, height, DefineRing(height), mmtype), false);
+                somethingFound = AddPoint(new MapPoint(angle, height, DefineRing(height), mmtype), false);
                 break;
         }
         if (somethingFound)
@@ -479,7 +497,8 @@ public sealed class GlobalMap : MonoBehaviour {
     public void ShowOnGUI()
     {
         if (!prepared) return;
-        if (mapUI_go == null) {
+        if (mapUI_go == null)
+        {
             mapUI_go = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"));
             mapUI_go.GetComponent<GlobalMapUI>().SetGlobalMap(this);
         }
@@ -488,7 +507,7 @@ public sealed class GlobalMap : MonoBehaviour {
 
     #region save-load system
     public void Save(System.IO.FileStream fs)
-    {        
+    {
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[0]), 0, 4);
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[1]), 0, 4);
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[2]), 0, 4);
@@ -511,14 +530,14 @@ public sealed class GlobalMap : MonoBehaviour {
             {
                 fs.WriteByte((byte)realCount);
                 fs.Write(saveArray.ToArray(), 0, saveArray.Count);
-            }            
+            }
         }
         else fs.WriteByte(0);
-        fs.Write(System.BitConverter.GetBytes(MapPoint.lastUsedID),0,4);
+        fs.Write(System.BitConverter.GetBytes(MapPoint.lastUsedID), 0, 4);
         //зависимость : mapPoint.LoadPoints()
     }
     public void Load(System.IO.FileStream fs)
-    {        
+    {
         var data = new byte[RINGS_COUNT * 4];
         fs.Read(data, 0, data.Length);
         rotationSpeed = new float[RINGS_COUNT];
