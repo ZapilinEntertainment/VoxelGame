@@ -2,40 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Constructor : MonoBehaviour
+public abstract class Constructor
 {
-    public static Constructor main;
-    public float TERRAIN_ROUGHNESS = 0.3f;
-    Chunk c;
-    public float seed = 1.1f;
 
-    // Use this for initialization
-    void Awake()
+    public static void ConstructChunk(byte chunkSize, ChunkGenerationMode mode)
     {
-        if (main != null) { Destroy(main); main = this; } // singleton pattern
-        seed += System.DateTime.Now.Second;
-    }
-
-    public void ConstructChunk(byte chunkSize, ChunkGenerationMode mode)
-    {
-        seed += System.DateTime.Now.Second;
-        TERRAIN_ROUGHNESS = GameMaster.gameStartSettings.terrainRoughness;
         int size = chunkSize;
         int[,,] dat = new int[size, size, size];
         switch (mode)
         {
-            case ChunkGenerationMode.Standart: GenerateSpirals(size, ref dat); break;
-            case ChunkGenerationMode.Cube: GeneratePyramid(size, ref dat); break;
+            case ChunkGenerationMode.Standart: GenerateSpiralsData(size, ref dat); break;
+            case ChunkGenerationMode.Cube: GeneratePyramidData(size, ref dat); break;
+            case ChunkGenerationMode.Peak: dat = GeneratePeakData(size); break;
         }
         GameObject g = new GameObject("chunk");
-        c = g.AddComponent<Chunk>();
+        Chunk c = g.AddComponent<Chunk>();
         GameMaster.realMaster.SetMainChunk(c);
         c.CreateNewChunk(dat);
         NatureCreation(c);
-        // + должна быть проверка для возможности посадки
+        CheckForLandingPosition(c);
     }
 
-    private void GenerateSpirals(int size, ref int[,,] data)
+    private static void GenerateSpiralsData(int size, ref int[,,] data)
     {
         int arms = 3;
         float armsLength = 1;
@@ -180,16 +168,16 @@ public class Constructor : MonoBehaviour
             if (x > 0 && data[x - 1, y, z] == 0) data[x - 1, y, z] = Random.value > 0.3f ? ResourceType.STONE_ID : ResourceType.DIRT_ID;
         }
     }
-
-    private void GeneratePyramid(int size, ref int[,,] data)
+    private static void GeneratePyramidData(int size, ref int[,,] data)
     {
         float radius = size * Mathf.Sqrt(2);
+        float seed = 1.1f + System.DateTime.Now.Second, roughness = 0.3f;
         for (int x = 0; x < size; x++)
         {
             for (int z = 0; z < size; z++)
             {
                 float cs = size;
-                float perlin = Mathf.PerlinNoise(x / cs * (10 * TERRAIN_ROUGHNESS) + seed, z / cs * (10 * TERRAIN_ROUGHNESS) + seed);
+                float perlin = Mathf.PerlinNoise(x / cs * (10 * roughness) + seed, z / cs * (10 * roughness) + seed);
                 //perlin += pc; if (perlin > 1) perlin = 1;
                 int height = (int)(size / 2 * perlin);
                 if (height < 2) height = 2; else if (height > size / 2) height = size / 2;
@@ -212,15 +200,47 @@ public class Constructor : MonoBehaviour
             }
         }
     }
+    public static int[,,] GeneratePeakData(int size)
+    {
+        var data = new int[size, size, size];
+        int quarter = size / 4, half = size / 2;
+        int a = half - quarter, b = half + quarter;
+        int h = 0, y = 0 ,end;
+        float sqrDist = (half - a) * (half - a) ;
+        for (int x = a; x < b; x++)
+        {
+            for (int z = a; z < b; z++)
+            {
+                float d = (half - x) * (half - x) + (half - z) * (half - z);
+                d /= sqrDist;
+                d = 1 - d;
+                if (d < 0) d = 0;
+                h = (int)((size - 1) * d * d + (0.5f - Random.value) * (size / 8f));
+                if (h >= size) h = size - 1;
+                y = 0;
+                bool doubleDirt = (Random.value > 0.5f);
+                if (doubleDirt) end = h - 2; else end = h - 1;
+                for (;y < end; y++)
+                {
+                    data[x,y,z] = ResourceType.STONE_ID;
+                }
+                data[x, y, z] = ResourceType.DIRT_ID;
+                if (doubleDirt) data[x, y + 1, z] = ResourceType.DIRT_ID;
+            }
+        }
+        return data;
+    }
 
-    void NatureCreation(Chunk chunk)
+    private static void NatureCreation(Chunk chunk)
     {
         LifeSource ls = null;
         Block[,,] blocks = chunk.blocks;
         int dirtID = ResourceType.DIRT_ID, size = blocks.GetLength(0);
         int y = 0, x, z;
         SurfaceBlock chosenSurface = null;
-        if (Random.value > 0.5f)
+        bool lifesourceIsTree = Random.value > 0.5f;
+        if (GameMaster.gameStartSettings.generationMode == ChunkGenerationMode.Peak) lifesourceIsTree = false;
+        if (lifesourceIsTree)
         {
             foreach (SurfaceBlock sblock in chunk.surfaceBlocks)
             {
@@ -349,6 +369,109 @@ public class Constructor : MonoBehaviour
                 chunk.GenerateNature(ls.transform.position);
                 return;
             }
+        }
+    }
+
+    public static Mesh CreateContourMesh(int[,,] data)
+    {
+
+        Mesh m = new Mesh();
+        return m;
+    } 
+
+    private static void CheckForLandingPosition(Chunk c)
+    {
+        bool artificialLanding = false;
+        var surfaces = c.surfaceBlocks;
+        if (surfaces.Count == 0)
+        {
+            artificialLanding = true;
+        }
+        else
+        {
+            bool found = false;
+            int x = 0, y = 0, z = 0;
+            Block b1, b2;
+            foreach (SurfaceBlock sblock in c.surfaceBlocks)
+            {
+                x = sblock.pos.x; y = sblock.pos.y; z = sblock.pos.z;
+                // z - axis
+                b1 = c.GetBlock(x, y, z + 1);
+                if (b1 != null && b1 is SurfaceBlock)
+                {
+                    b2 = c.GetBlock(x, y, z + 2);
+                    if (b2 != null && b2 is SurfaceBlock)
+                    {
+                        found = true;
+                        break;
+                    }
+                    else
+                    {
+                        b2 = c.GetBlock(x, y, z - 1);
+                        if (b2 != null && b2 is SurfaceBlock)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    b1 = c.GetBlock(x, y, z - 1);
+                    if (b1 != null && b1 is SurfaceBlock)
+                    {
+                        b2 = c.GetBlock(x, y, z - 2);
+                        if (b2 != null && b2 is SurfaceBlock)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                //x -axis
+                b1 = c.GetBlock(x + 1, y, z);
+                if (b1 != null && b1 is SurfaceBlock)
+                {
+                    b2 = c.GetBlock(x + 2, y, z);
+                    if (b2 != null && b2 is SurfaceBlock)
+                    {
+                        found = true;
+                        break;
+                    }
+                    else
+                    {
+                        b2 = c.GetBlock(x - 1, y, z);
+                        if (b2!= null && b2 is SurfaceBlock)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    b1 = c.GetBlock(x - 1, y, z);
+                    if (b1 != null && b1 is SurfaceBlock)
+                    {
+                        b2 = c.GetBlock(x - 2, y, z);
+                        if (b2 != null && b2 is SurfaceBlock)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!found) artificialLanding = true;
+        }
+        if (artificialLanding)
+        {
+            c.AddBlock(new ChunkPos(0, 0, 0), BlockType.Cave, ResourceType.METAL_S_ID, -1, false);
+            c.AddBlock(new ChunkPos(1, 0, 0), BlockType.Cave, ResourceType.METAL_S_ID, -1, false);
+            c.AddBlock(new ChunkPos(2, 0, 0), BlockType.Cave, ResourceType.METAL_S_ID, -1, false);
+            c.AddBlock(new ChunkPos(0, 1, 0), BlockType.Surface, ResourceType.METAL_S_ID, false);
+            c.AddBlock(new ChunkPos(1, 1, 0), BlockType.Surface, ResourceType.METAL_S_ID, false);
+            c.AddBlock(new ChunkPos(2, 1, 0), BlockType.Surface, ResourceType.METAL_S_ID, false);
         }
     }
 }

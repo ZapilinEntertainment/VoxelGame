@@ -22,7 +22,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 
     private bool prepared = false, infopanelEnabled = false, descriptionMode = true;
     private float infoPanelWidth = Screen.width;
-    private float[] rotationSpeed;
+    private float[] ringsRotation;
     private int lastDrawnStateHash = 0;
     private GlobalMap globalMap;
     private MapPoint chosenPoint;
@@ -41,7 +41,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     {
         if (gm == null) return;
         globalMap = gm;
-        rotationSpeed = globalMap.rotationSpeed;
+        ringsRotation = globalMap.ringsRotation;
         mapPoints = globalMap.mapPoints;
     }
     public void SelectPoint(MapPoint mp)
@@ -313,6 +313,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 RawImage ri = sector.AddComponent<RawImage>();
                 ri.raycastTarget = false;
                 PrepareSector(ri, ring);
+                sector.transform.parent = rings[ring];
                 sector.transform.localRotation = Quaternion.Euler(Vector3.back * i * sectorDegree);
                 if (sectorsData[k] != null)
                 {
@@ -422,11 +423,10 @@ public sealed class GlobalMapUI : MonoBehaviour
         if (!prepared) return;
         float t = Time.deltaTime * GameMaster.gameSpeed;
         Vector3 dir = Vector3.back;
-        rings[0].transform.Rotate(dir * rotationSpeed[0] * t);
-        rings[1].transform.Rotate(dir * rotationSpeed[1] * t);
-        rings[2].transform.Rotate(dir * rotationSpeed[2] * t);
-        rings[3].transform.Rotate(dir * rotationSpeed[3] * t);
-        rings[4].transform.Rotate(dir * rotationSpeed[4] * t);
+        for (int i = 0; i < GlobalMap.RINGS_COUNT; i++)
+        {
+            rings[i].transform.rotation = Quaternion.Euler(0,0, ringsRotation[i]);
+        }
         //
         if (lastDrawnStateHash != globalMap.actionsHash)
         {
@@ -586,6 +586,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         mapRect.position = new Vector3(xpos, ypos, 0);
 
         //test
+        bool motion = false;
         float x = Input.GetAxis("Horizontal");
         float angle = mapPoints[GlobalMap.CITY_POINT_INDEX].angle;
         if (x != 0)
@@ -593,6 +594,7 @@ public sealed class GlobalMapUI : MonoBehaviour
             angle += x * 0.05f;
             if (angle > 360f) angle = 360f - angle;
             else { if (angle < 0) angle += 360f; }
+            motion = true;
         }
         x = Input.GetAxis("Vertical");
         float height = mapPoints[GlobalMap.CITY_POINT_INDEX].height;
@@ -601,8 +603,13 @@ public sealed class GlobalMapUI : MonoBehaviour
             height += x * 0.001f;
             if (height > 1) height = 1;
             else { if (height < 0) height = 0; }
+            motion = true;
         }
-        mapPoints[GlobalMap.CITY_POINT_INDEX].ChangeCoords(angle, height);
+        if (motion)
+        {
+            mapPoints[GlobalMap.CITY_POINT_INDEX].ChangeCoords(angle, height);
+            GameMaster.realMaster.environmentMaster.positionChanged = true;
+        }
     }   
    
     private void OnEnable()
@@ -628,7 +635,10 @@ public sealed class GlobalMapUI : MonoBehaviour
     }
     private void OnDisable()
     {
-        GameMaster.realMaster.environmentMaster.sun.GetComponent<Renderer>().enabled = true;
+        if (!GameMaster.sceneClearing)
+        {
+            GameMaster.realMaster.environmentMaster.sun.GetComponent<Renderer>().enabled = true;
+        }
     }
     // =====================  AUXILIARY METHODS
     private Rect GetMarkerRect(MapMarkerType mtype)

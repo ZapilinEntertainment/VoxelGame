@@ -11,10 +11,10 @@ public sealed class MenuUI : MonoBehaviour
     [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton, authorsButton;
     [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, 
         highscoresPanel, authorsPanel;
-    [SerializeField] private Slider sizeSlider, roughnessSlider;
+    [SerializeField] private Slider sizeSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown, languageDropdown;
     [SerializeField] private Sprite overridingSprite;
-    [SerializeField] private Text sizeSliderVal, roughSliderVal;
+    [SerializeField] private Text sizeSliderVal;
     [SerializeField] private Button gameStartButton;
     [SerializeField] private InputField editorSizeInputField;
 #pragma warning restore 0649
@@ -45,7 +45,9 @@ public sealed class MenuUI : MonoBehaviour
         {
             if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
 
-            availableGenerationModes = new List<ChunkGenerationMode>() { ChunkGenerationMode.Standart, ChunkGenerationMode.Cube };
+            availableGenerationModes = new List<ChunkGenerationMode>() {
+                ChunkGenerationMode.Standart, ChunkGenerationMode.Cube, ChunkGenerationMode.Peak
+            };
             List<string> genModenames = new List<string>();
             foreach (ChunkGenerationMode cmode in availableGenerationModes) genModenames.Add(cmode.ToString());
             generationTypeDropdown.AddOptions(genModenames);
@@ -60,7 +62,7 @@ public sealed class MenuUI : MonoBehaviour
     public void StartGame()
     {
         if (newGameGenMode == ChunkGenerationMode.TerrainLoading & GameMaster.savename == string.Empty) return;
-        GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value, roughnessSlider.value);
+        GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value);
         GameMaster.gameStartSettings = gss;
         GameMaster.ChangeScene(GameLevel.Playable);
     }
@@ -268,11 +270,6 @@ public sealed class MenuUI : MonoBehaviour
     {
         sizeSliderVal.text = ((int)f).ToString();
     }
-    public void RoughnessValueChanged(float f)
-    {
-        roughSliderVal.text = string.Format("{0:0.###}", f);
-    }
-
 
     void SwitchVisualSelection(MenuSection ms)
     {
@@ -410,8 +407,7 @@ public sealed class MenuUI : MonoBehaviour
         usePresetsButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.UsePresets);
         Transform t = generationPanel.transform;
         t.GetChild(0).GetChild(4).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Size);
-        t.GetChild(1).GetChild(4).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.TerrainRoughness);
-        t.GetChild(2).GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GenerationType);
+        t.GetChild(1).GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GenerationType);
         difficultyDropdown.transform.GetChild(3).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Difficulty);
         newGamePanel.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Start);
 

@@ -21,9 +21,10 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     private MapPoint cityPoint, sunPoint;
     private Material skyboxMaterial;
     private ParticleSystem.MainModule cloudEmitterMainModule;
-    private Transform cloudEmitter;    
+    private Transform cloudEmitter;
 
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120;
+    private const int SKY_SPHERE_RADIUS = 9;
 
     public void Prepare()
     {
@@ -46,6 +47,87 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         skyboxMaterial = RenderSettings.skybox;
         ChangeEnvironment(gmap.GetCurrentEnvironment(), true);
+    }
+    public void PrepareIslandBasis(ChunkGenerationMode cmode)
+    { // его придётся сохранять!
+        int[,,] data;
+        switch (cmode) {
+            case ChunkGenerationMode.Peak: data = Constructor.GeneratePeakData(SKY_SPHERE_RADIUS); break;
+            default: return;
+        }
+
+        bool found = false;
+        float centerX = 0, centerZ = 0;
+        int h = SKY_SPHERE_RADIUS - 1;
+        if (SKY_SPHERE_RADIUS % 2 == 0)
+        { // нужно найти 4 поверхности рядом, остальные - понизить
+            for (int x = 1; x < SKY_SPHERE_RADIUS; x++)
+            {
+                for (int z = 1; z < SKY_SPHERE_RADIUS; z++)
+                {
+                    if (!found)
+                    {
+                        if (data[x, h, z] != 0)
+                        {
+                            if (data[x - 1, h, z] != 0) // left
+                            {
+                                if (data[x, h, z - 1] != 0 & data[x - 1, h, z - 1] != 0)
+                                {
+                                    found = true;
+                                    centerX = x - 0.5f;
+                                    centerZ = z - 0.5f;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        data[x, h, z] = 0;
+                    }
+                }
+            }
+            int cx,cz;
+            if (!found)
+            {
+                cx = SKY_SPHERE_RADIUS / 2;
+                cz = SKY_SPHERE_RADIUS / 2;
+                centerX = cx + 0.5f;
+                centerZ = cz + 0.5f;
+            }
+            else
+            {
+                cx = (int)(centerX - 0.5f);
+                cz = (int)(centerZ - 0.5f);
+            }
+            data[cx, h, cz] = ResourceType.STONE_ID;
+            data[cx + 1, h, cz] = ResourceType.STONE_ID;
+            data[cx, h, cz + 1] = ResourceType.STONE_ID;
+            data[cx + 1, h, cz + 1] = ResourceType.STONE_ID;            
+        }   
+        else
+        {
+            for (int x = 0; x < SKY_SPHERE_RADIUS; x++)
+            {
+                for (int z = 0; z < SKY_SPHERE_RADIUS; z++)
+                {
+                    if (!found)
+                    {
+                        if (data[x, h, z] != 0)
+                        {
+                            found = true;
+                            centerX = x;
+                            centerZ = z;
+                        }
+                    }
+                    else
+                    {
+                        data[x, h, z] = 0;
+                    }
+                }
+            }
+        }
+
+        GameObject islandBasis = new GameObject("island basis");
     }
 
     public void SetEnvironmentalConditions(float t)
@@ -72,7 +154,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sunEnabled = haveSun;
         positionChanged = true;
     }
-
 
     private void LateUpdate()
     {
@@ -104,7 +185,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             float angleX = (cityPoint.angle - sunPoint.angle) / (gmap.sectorsDegrees[ring] / 2f);
             float heightY = (cityPoint.height - sunPoint.height) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
             Vector2 lookDist = new Vector2(angleX, heightY);
-            sun.transform.position = new Vector3(lookDist.x * 9, 2, lookDist.y * 9);
+            sun.transform.position = new Vector3(lookDist.x * SKY_SPHERE_RADIUS, 2, lookDist.y * SKY_SPHERE_RADIUS);
             sun.transform.LookAt(Vector3.zero);
 
 

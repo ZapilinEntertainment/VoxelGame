@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum GreenMaterial { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20}
-public enum MetalMaterial { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS, WhiteMetal}
-public enum BasicMaterial { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow, WhiteWall, Basis}
+public enum GreenMaterial : byte { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20}
+public enum MetalMaterial : byte { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS, WhiteMetal}
+public enum BasicMaterial : byte { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow, WhiteWall, Basis}
+public enum MeshType: byte { Quad}
 
 public sealed class PoolMaster : MonoBehaviour {
     public static bool useAdvancedMaterials { get; private set; }
@@ -70,7 +71,10 @@ public sealed class PoolMaster : MonoBehaviour {
         default_material = Resources.Load<Material>("Materials/Default");
         darkness_material = Resources.Load<Material>("Materials/Darkness");
 		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
-		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");
+		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");       
+        verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
+        verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
+        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         if (useAdvancedMaterials)
         {
             glass_offline_material = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
@@ -78,7 +82,7 @@ public sealed class PoolMaster : MonoBehaviour {
             glass_material = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
             metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
             green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-            
+           
         }
         else
         {
@@ -87,14 +91,12 @@ public sealed class PoolMaster : MonoBehaviour {
             glass_material = Resources.Load<Material>("Materials/Glass");
             metal_material = Resources.Load<Material>("Materials/Metal");
             green_material = Resources.Load<Material>("Materials/Green");
+            
 
             basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
             green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
             metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
-        }
-        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
-        verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
-        verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
+        }        
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
@@ -146,9 +148,18 @@ public sealed class PoolMaster : MonoBehaviour {
             quadsPool.Add(g);
         }
     }
+
     public static Mesh GetOriginalQuadMesh()
     {
         return quadsPool[0].GetComponent<MeshFilter>().sharedMesh;
+    }
+    public static Mesh GetMesh(MeshType mtype)
+    {
+        switch (mtype)
+        {
+            case MeshType.Quad: return GetOriginalQuadMesh();
+            default: return null;
+        }
     }
 
     public Sprite GetStarSprite()
@@ -310,14 +321,13 @@ public sealed class PoolMaster : MonoBehaviour {
         return Instantiate(Resources.Load<GameObject>("Prefs/flyingPlatform_small"));
     }
 
-    public static Material GetGreenMaterial(GreenMaterial mtype, MeshFilter mf, byte i_illumination)
+    public static Material GetGreenMaterial(GreenMaterial mtype, ref Mesh m, byte i_illumination)
     {
         float illumination = i_illumination / 255f;
         float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
         if (illumination < p / 2f) return darkness_material;
 
-        Mesh quad = mf.mesh;
-        if (quad == null) return green_material;           
+        if (m == null) return green_material;           
         float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
         Vector2[] borders;
         switch (mtype)
@@ -343,8 +353,8 @@ public sealed class PoolMaster : MonoBehaviour {
                 break;
         }
         // крутим развертку, если это квад, иначе просто перетаскиваем 
-        bool isQuad = (quad.uv.Length == 4);
-        Vector2[] uvEdited = quad.uv;
+        bool isQuad = (m.uv.Length == 4);
+        Vector2[] uvEdited = m.uv;
         if (isQuad)
         {
             borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
@@ -376,7 +386,7 @@ public sealed class PoolMaster : MonoBehaviour {
                 uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
             }            
         }
-        quad.uv = uvEdited;
+        m.uv = uvEdited;
 
         if (useAdvancedMaterials) return green_material;
         else
@@ -403,14 +413,13 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
     }
-    public static Material GetMetalMaterial(MetalMaterial mtype, MeshFilter mf, byte i_illumination)
+    public static Material GetMetalMaterial(MetalMaterial mtype, ref Mesh m, byte i_illumination)
     {
         float illumination = i_illumination / 255f;
         float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
         if (illumination < p / 2f) return darkness_material;
 
-        Mesh quad = mf.mesh;
-        if (quad == null) return metal_material;
+        if (m == null) return metal_material;
             float piece = 0.25f;
             Vector2[] borders;
             switch (mtype)
@@ -438,8 +447,8 @@ public sealed class PoolMaster : MonoBehaviour {
                     borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
                     break;
         }
-            bool isQuad = (quad.uv.Length == 4);
-            Vector2[] uvEdited = quad.uv;
+            bool isQuad = (m.uv.Length == 4);
+            Vector2[] uvEdited = m.uv;
             if (isQuad)
             {
                 borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
@@ -471,7 +480,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
                 }
             }
-            quad.uv = uvEdited;
+            m.uv = uvEdited;
 
         if (useAdvancedMaterials) return metal_material;
         else
@@ -498,14 +507,13 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
     }
-    public static Material GetBasicMaterial(BasicMaterial mtype, MeshFilter mf, byte i_illumination)
+    public static Material GetBasicMaterial(BasicMaterial mtype, ref Mesh m, byte i_illumination)
     {
         float illumination = i_illumination / 255f;
         float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
         if (illumination < p / 2f) return darkness_material;
 
-        Mesh quad = mf.mesh;
-        if (quad != null)
+        if (m != null)
         {
             float piece = 0.25f;
             Vector2[] borders;
@@ -551,8 +559,8 @@ public sealed class PoolMaster : MonoBehaviour {
                     borders = new Vector2[] { new Vector2(3 * piece, piece), new Vector2(3 *piece, 2 * piece), new Vector2(4 * piece, 2 * piece), new Vector2(4 * piece, piece) };
                     break;
             }
-            bool isQuad = (quad.uv.Length == 4);
-            Vector2[] uvEdited = quad.uv;
+            bool isQuad = (m.uv.Length == 4);
+            Vector2[] uvEdited = m.uv;
             if (isQuad)
             {
                 borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
@@ -584,7 +592,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
                 }
             }
-            quad.uv = uvEdited;
+            m.uv = uvEdited;
         }
 
 
@@ -619,35 +627,43 @@ public sealed class PoolMaster : MonoBehaviour {
         MeshRenderer[] rrs = g.GetComponentsInChildren<MeshRenderer>();
         foreach (MeshRenderer mr in rrs)
         {
-            bool useShadows = false;
+            bool castShadows = false, receiveShadows = false;
             switch (mr.sharedMaterial.name)
             {
                 case "Basic":
                     mr.sharedMaterial = basic_material;
-                    useShadows = true;
+                    castShadows = true;
+                    receiveShadows = true;
                     break;
                 case "Glass":
                     mr.sharedMaterial = glass_material;
-                    useShadows = true;
+                    castShadows = true;
+                    receiveShadows = true;
                     break;
                 case "GlassOffline":
                     mr.sharedMaterial = glass_offline_material;
-                    useShadows = true;
+                    castShadows = true;
+                    receiveShadows = true;
                     break;
                 case "Vegetation":
                 case "Green":
                     mr.sharedMaterial = green_material;
-                    useShadows = false;
                     break;
                 case "Metal":
                     mr.sharedMaterial = metal_material;
-                    useShadows = true;
+                    castShadows = true;
+                    receiveShadows = true;
                     break;
             }
-            if (shadowCasting & useShadows)
+            if (shadowCasting)
             {
-                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                mr.receiveShadows = true;
+                if (shadowCasting) mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                if (receiveShadows) mr.receiveShadows = true;
+            }
+            else
+            {
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                mr.receiveShadows = false;
             }
         }
     }

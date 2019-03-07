@@ -6,6 +6,7 @@ public class RingSector
 {
     public readonly MapPoint centralPoint;
     public readonly Environment environment;
+    public const int MAX_INTEREST_POINT_COUNT = 3;
 
     public RingSector(MapPoint i_point, Environment.EnvironmentPresets environmentPresetType, Color i_color)
     {

@@ -7,25 +7,22 @@ public struct GameStartSettings  {
     public byte chunkSize;
     public ChunkGenerationMode generationMode;
     public Difficulty difficulty;
-    public float terrainRoughness;
     public static readonly GameStartSettings Empty;
     static GameStartSettings()
     {
-        Empty = new GameStartSettings(ChunkGenerationMode.Standart, 16, Difficulty.Normal, 0.3f);
+        Empty = new GameStartSettings(ChunkGenerationMode.Standart, 16, Difficulty.Normal);
     }
-    public GameStartSettings(ChunkGenerationMode i_genMode, byte i_chunkSize, Difficulty diff, float i_terrainRoughness)
+    public GameStartSettings(ChunkGenerationMode i_genMode, byte i_chunkSize, Difficulty diff)
     {
         generationMode = i_genMode;
         chunkSize = i_chunkSize;
         difficulty = diff;
-        terrainRoughness = i_terrainRoughness;
     }
     public GameStartSettings(ChunkGenerationMode i_genMode)
     {
         generationMode = i_genMode;
         chunkSize = 8;
         difficulty = Difficulty.Normal;
-        terrainRoughness = 0.3f;
     }
     }
 
@@ -62,7 +59,6 @@ public sealed class GameMaster : MonoBehaviour
     public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
     public GlobalMap globalMap { get; private set; }
-    public Constructor constructor;
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
     public GameStart startGameWith = GameStart.Zeppelin;
@@ -199,7 +195,11 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     if (gameStartSettings.generationMode != ChunkGenerationMode.TerrainLoading)
                     {
-                        constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
+                        Constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
+                        if (gameStartSettings.generationMode == ChunkGenerationMode.Peak)
+                        {
+                            environmentMaster.PrepareIslandBasis(ChunkGenerationMode.Peak);
+                        }
                     }
                     else LoadTerrain(SaveSystemUI.GetTerrainsPath() + '/' + savename + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
                 }

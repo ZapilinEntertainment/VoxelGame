@@ -18,7 +18,7 @@ public class GameLogUI : MonoBehaviour {
     private DecisionAction leftDecision, rightDecision, monoDecision;
     private List<Text> messages;
     private const byte MAX_MESSAGES = 30;
-    private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 0.3f, LAST_MESSAGE_DISSAPPEAR_TIME = 0.3f;
+    private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 0.15f, LAST_MESSAGE_DISSAPPEAR_TIME = 0.3f;
 
 
     public static void MakeAnnouncement(string s)

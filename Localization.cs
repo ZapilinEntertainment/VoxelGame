@@ -7,7 +7,7 @@ Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, G
 
 public enum LocalizedPhrase : ushort { RecallExpedition, NoSuitableShuttles,StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, TerrainRoughness, GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
+MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
 }
 public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress,
@@ -967,7 +967,6 @@ public static class Localization {
                         case LocalizedPhrase.NoTransmitters: return "Нет передатчиков";
                         case LocalizedPhrase.NewGame: return "Новая игра";
                         case LocalizedPhrase.UsePresets: return "Использовать существующие";
-                        case LocalizedPhrase.TerrainRoughness: return "Выступы ландшафта";
                         case LocalizedPhrase.GenerationType: return "Тип генерации";
                         case LocalizedPhrase.NoLimit: return "Без ограничений";
                         case LocalizedPhrase.UpperLimit: return "Пороговое значение";
@@ -1024,7 +1023,6 @@ public static class Localization {
                         case LocalizedPhrase.NoTransmitters: return "No transmitters";
                         case LocalizedPhrase.NewGame: return "New game";
                         case LocalizedPhrase.UsePresets: return "Use presets";
-                        case LocalizedPhrase.TerrainRoughness: return "Terrain roughness";
                         case LocalizedPhrase.GenerationType: return "Generation type";
                         case LocalizedPhrase.NoLimit: return "No limit";
                         case LocalizedPhrase.UpperLimit: return "Upper limit";

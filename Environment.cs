@@ -33,15 +33,12 @@ public struct Environment
     public static readonly Environment defaultEnvironment;
 
     public readonly EnvironmentPresets presetType;
-
     public readonly SkySphereType skyType;
     public readonly BeltType beltType;
     public readonly LowSphereType lowSphereType;
     public readonly DecorationsPack decorationsPack;
     public readonly Weather constantWeather;
-
     public readonly float conditions;
-
     public readonly Color upColor, downColor, middleColor, effectsColor, sunColor;
 
     static Environment()

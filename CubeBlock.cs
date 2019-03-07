@@ -4,16 +4,13 @@ using UnityEngine;
 
 public class CubeBlock : Block
 {
-    public MeshRenderer[] faces { get; private set; } // 0 - north, 1 - east, 2 - south, 3 - west, 4 - up, 5 - down
     public float naturalFossils = 0;
     public byte excavatingStatus { get; private set; } // 0 is 75%+, 1 is 50%+, 2 is 25%+, 3 is less than 25%
-    byte prevDrawMask = 0;
     public int volume;
     public static readonly int MAX_VOLUME;
     public bool career { get; private set; } // изменена ли верхняя поверхность на котлован?
 
     public new const int SERIALIZER_LENGTH = 9;
-    public const string FWD_PLANE_NAME = "forwardPlane", RIGHT_PLANE_NAME = "rightPlane", BACK_PLANE_NAME = "backPlane", LEFT_PLANE_NAME = "leftPlane", UP_PLANE_NAME = "upperPlane", DOWN_PLANE_NAME = "bottomPlane";
 
     static CubeBlock()
     {
@@ -122,7 +119,7 @@ public class CubeBlock : Block
 
     public void InitializeCubeBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration)
     {
-        visibilityMask = 0;
+        destroyed = false;
         excavatingStatus = 0;
         naturalFossils = MAX_VOLUME;
         volume = MAX_VOLUME; career = false;
@@ -130,15 +127,7 @@ public class CubeBlock : Block
 
         myChunk = f_chunk;
         pos = f_chunkPos;
-        Transform t = transform;
-        t.parent = f_chunk.transform;
-        t.localPosition = new Vector3(pos.x, pos.y, pos.z);
-        t.localRotation = Quaternion.Euler(Vector3.zero);
-        name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
         material_id = f_material_id;
-        illumination = 255;
-
-        faces = new MeshRenderer[6];
         if (naturalGeneration) { naturalFossils = MAX_VOLUME; }
         else naturalFossils = 0;
     }
@@ -146,56 +135,14 @@ public class CubeBlock : Block
     public override void ReplaceMaterial(int newId)
     {
         if (newId == material_id) return;
-        material_id = newId;
-        foreach (MeshRenderer mr in faces)
-        {
-            if (mr == null) continue;
-            else mr.sharedMaterial = ResourceType.GetMaterialById(material_id, mr.GetComponent<MeshFilter>(), illumination);
-        }
+        material_id = newId;        
     }
 
-    override public void SetRenderBitmask(byte x)
+    public override BlockpartVisualizeInfo GetVisualData(byte face)
     {
-        renderMask = x;
-        ChangeFacesStatus();
-    }
-
-    override public void SetVisibilityMask(byte x)
-    {
-        byte prevMask = visibilityMask;
-        // блоки, отключающиеся полностью, возвращают модели обратно в пул
-        if (prevMask == 0 & x != 0) // включение
-        {
-            visibilityMask = x;
-            for (int i = 0; i < 6; i++)
-            {
-                if (faces[i] == null) CreateFace(i);
-                else faces[i].gameObject.SetActive(true);
-            }
-            ChangeFacesStatus(); // т.к в случае полного отключения вырубаем не рендереры, а сами объекты
-        }
-        else
-        {
-            if (prevMask != 0 & x == 0) // полное выключение
-            {
-                visibilityMask = 0;
-                if (faces[4] != null)
-                {
-                    if (excavatingStatus == 0) { PoolMaster.ReturnQuadToPool(faces[4].gameObject); faces[4] = null; }
-                    else faces[4].gameObject.SetActive(false);
-                }
-                if (faces[0] != null) { PoolMaster.ReturnQuadToPool(faces[0].gameObject); faces[0] = null; }
-                if (faces[1] != null) { PoolMaster.ReturnQuadToPool(faces[1].gameObject); faces[1] = null; }
-                if (faces[2] != null) { PoolMaster.ReturnQuadToPool(faces[2].gameObject); faces[2] = null; }
-                if (faces[3] != null) { PoolMaster.ReturnQuadToPool(faces[3].gameObject); faces[3] = null; }
-                if (faces[5] != null) { PoolMaster.ReturnQuadToPool(faces[5].gameObject); faces[5] = null; }
-            }
-            else
-            {
-                visibilityMask = x;
-                ChangeFacesStatus();
-            }
-        }
+        var mvi = new MeshVisualizeInfo(face, myChunk.GetLightValue(pos), material_id);
+        var bvi = new BlockpartVisualizeInfo(pos, mvi, 0, MeshType.Quad);
+        return bvi;
     }
 
     void ChangeFacesStatus()
@@ -378,43 +325,6 @@ public class CubeBlock : Block
 
         }
     }
-
-    override public void SetIllumination()
-    {
-        illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
-        int size = Chunk.CHUNK_SIZE;
-        byte[,,] lmap = myChunk.lightMap;
-        if (faces[0] != null)
-        {
-            if (pos.z + 1 >= size) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z + 1];
-            faces[0].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[0].GetComponent<MeshFilter>(), illumination);
-        }
-        if (faces[1] != null)
-        {
-            if (pos.x + 1 >= size) illumination = 255; else illumination = lmap[pos.x + 1, pos.y, pos.z];
-            faces[1].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[1].GetComponent<MeshFilter>(), illumination);
-        }
-        if (faces[2] != null)
-        {
-            if (pos.z - 1 < 0) illumination = 255; else illumination = lmap[pos.x, pos.y, pos.z - 1];
-            faces[2].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[2].GetComponent<MeshFilter>(), illumination);
-        }
-        if (faces[3] != null)
-        {
-            if (pos.x - 1 < 0) illumination = 255; else illumination = lmap[pos.x - 1, pos.y, pos.z];
-            faces[3].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[3].GetComponent<MeshFilter>(), illumination);
-        }
-        if (faces[4] != null)
-        {
-            if (pos.y >= size - 1) illumination = 255; else illumination = lmap[pos.x, pos.y + 1, pos.z];
-            faces[4].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[4].GetComponent<MeshFilter>(), illumination);
-        }
-        if (faces[5] != null)
-        {
-            if (pos.y == 0) illumination = 255; else illumination = lmap[pos.x, pos.y - 1, pos.z];
-            faces[5].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[5].GetComponent<MeshFilter>(), illumination);
-        }
-    } 
 
     override public void Annihilate()
     {

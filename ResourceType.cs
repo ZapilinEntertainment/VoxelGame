@@ -119,36 +119,36 @@ public class ResourceType
         }
         else return resourceTypesArray[f_id];
     }
-    public static Material GetMaterialById(int f_id, MeshFilter mf, byte illumination)
+    public static Material GetMaterialById(int f_id, ref Mesh m, byte illumination)
     {
         switch (f_id)
         {
             default: return PoolMaster.default_material;
-            case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, mf, illumination);
-            case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, mf, illumination);
-            case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, mf, illumination);
+            case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, ref m, illumination);
+            case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, ref m, illumination);
+            case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, ref m, illumination);
             case METAL_K_ID:
             case METAL_K_ORE_ID:
-                return PoolMaster.GetMetalMaterial(MetalMaterial.MetalK, mf, illumination);
+                return PoolMaster.GetMetalMaterial(MetalMaterial.MetalK, ref m, illumination);
             case METAL_M_ORE_ID:
-            case METAL_M_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalM, mf, illumination);
+            case METAL_M_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalM, ref m, illumination);
             case METAL_E_ORE_ID:
-            case METAL_E_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalE, mf, illumination);
+            case METAL_E_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalE, ref m, illumination);
             case METAL_N_ORE_ID:
-            case METAL_N_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalN, mf, illumination);
+            case METAL_N_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalN, ref m, illumination);
             case METAL_P_ORE_ID:
-            case METAL_P_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalP, mf, illumination);
+            case METAL_P_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalP, ref m, illumination);
             case METAL_S_ORE_ID:
-            case METAL_S_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalS, mf, illumination);
-            case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, mf, illumination);
-            case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, mf, illumination);
-            case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, mf, illumination);
-            case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, mf, illumination);
-            case SNOW_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Snow, mf, illumination);
+            case METAL_S_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalS, ref m, illumination);
+            case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, ref m, illumination);
+            case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, ref m, illumination);
+            case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, ref m, illumination);
+            case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, ref m, illumination);
+            case SNOW_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Snow, ref m, illumination);
 
-            case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, mf, illumination);
+            case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, ref m, illumination);
             case GRAPHONIUM_ID: return PoolMaster.energy_material;
-            case ADVANCED_COVERING_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Basis, mf, illumination);
+            case ADVANCED_COVERING_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Basis, ref m, illumination);
         }
     }
 

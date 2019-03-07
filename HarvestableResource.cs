@@ -103,6 +103,7 @@ public class HarvestableResource : Structure
                 {
                     hr.gameObject.name = "berry bush";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
+                    if (PoolMaster.shadowCasting) PoolMaster.ReplaceMaterials(model);
                     hr.maxHp = 10;
                     hr.innerPosition = SurfaceRect.one;
                     break;
