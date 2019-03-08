@@ -171,7 +171,7 @@ public class Grassland : MonoBehaviour
     {
         if (sblock == null) return null;
         if (sblock.grassland != null) return sblock.grassland;
-        Grassland gl = sblock.gameObject.AddComponent<Grassland>();
+        var gl = new Grassland();
         gl.myBlock = sblock;
         sblock.SetGrassland(gl);
         grasslandList.Add(gl);
@@ -223,26 +223,25 @@ public class Grassland : MonoBehaviour
     {
         // не ставь проверки - иногда вызываются для обновления
         if (myBlock.material_id != ResourceType.DIRT_ID) return;
-        //безобразие - берёт и подменяет текстуру без спроса! Костыль!
         switch (stage)
         {
             case 0:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+                myBlock.ReplaceMaterial(ResourceType.DIRT_ID);
                 break;
             case 1:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass20, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_20_ID);
                 break;
             case 2:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass40, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_40_ID);
                 break;
             case 3:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass60, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_60_ID);
                 break;
             case 4:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass80, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_80_ID);
                 break;
             case 5:
-                myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetGreenMaterial(GreenMaterial.Grass100, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
+                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_100_ID);
                 break;
         }
     }
@@ -374,8 +373,8 @@ public class Grassland : MonoBehaviour
     }
 
 
-    public void Annihilation() { Annihilation(false); }
-    public void Annihilation(bool forced)
+    public void Annihilation() { Annihilation(false, true); }
+    public void Annihilation(bool forced, bool returnMaterial)
     {
         if (destroyed) return;
         else destroyed = true;      
@@ -390,12 +389,8 @@ public class Grassland : MonoBehaviour
                 k++;
             }
         }
-        if (myBlock.material_id == ResourceType.DIRT_ID) myBlock.surfaceRenderer.sharedMaterial = PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, myBlock.surfaceRenderer.GetComponent<MeshFilter>(), myBlock.illumination);
-        int i = grasslandList.IndexOf(this);
-        if (i > 0)
-        {
-            grasslandList.RemoveAt(i);
-        }
+        if (grasslandList.Contains(this)) grasslandList.Remove(this);
+        if (returnMaterial) myBlock.ReplaceMaterial(ResourceType.DIRT_ID);
     }
 
     #region save-load

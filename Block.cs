@@ -8,29 +8,22 @@ public class Block {
     public const int SERIALIZER_LENGTH = 8;
     public const float QUAD_SIZE = 1;
 
+    public readonly ChunkPos pos;
     public bool destroyed { get; protected set; }
     public BlockType type { get; protected set; }
     public Worksite worksite { get; protected set; }
-    public Chunk myChunk { get; protected set; }
-    public ChunkPos pos { get; protected set; }
+    public Chunk myChunk { get; protected set; }    
     public Structure mainStructure {get;protected set;}
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
     protected List<GameObject> decorations;
 
-	public virtual void ReplaceMaterial(int newId) {
-		material_id = newId;
-	}
+	public virtual void ReplaceMaterial(int newId) {}
 
-	public void InitializeShapelessBlock (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) {
-        destroyed = false;
-        type = BlockType.Shapeless;
-        material_id = -1;
-		myChunk = f_chunk; 
-		pos = f_chunkPos; 
-		mainStructure = f_mainStructure;
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) : this(f_chunk, f_chunkPos) {        
         if (mainStructure != null)
         {
+            mainStructure = f_mainStructure;
             blockedByStructure = true;
             GameObject spriteHolder = new GameObject("mark");
             SpriteRenderer sr = spriteHolder.AddComponent<SpriteRenderer>();
@@ -40,14 +33,13 @@ public class Block {
             decorations = new List<GameObject>();
             decorations.Add(spriteHolder);
         }
-        else blockedByStructure = false;
 }
-	public virtual void InitializeBlock (Chunk f_chunk, ChunkPos f_chunkPos, int newId) {
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
         destroyed = false;
+        myChunk = f_chunk;
+        pos = f_chunkPos;
         type = BlockType.Shapeless;
         material_id = -1;
-		myChunk = f_chunk;
-		pos = f_chunkPos;
 		blockedByStructure = false;
 	}
 

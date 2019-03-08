@@ -17,7 +17,7 @@ public class ResourceType
     METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25, SNOW_ID = 26;
     public static readonly ResourceType[] resourceTypesArray, materialsForCovering, blockMaterials;
     public static float[] prices, demand;
-    public const int RTYPES_COUNT = 27, ADVANCED_COVERING_ID = -2;
+    public const int RTYPES_COUNT = 27;
 
     //проверь при добавлении
     //- ID
@@ -119,38 +119,6 @@ public class ResourceType
         }
         else return resourceTypesArray[f_id];
     }
-    public static Material GetMaterialById(int f_id, ref Mesh m, byte illumination)
-    {
-        switch (f_id)
-        {
-            default: return PoolMaster.default_material;
-            case STONE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Stone, ref m, illumination);
-            case DIRT_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Dirt, ref m, illumination);
-            case LUMBER_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Lumber, ref m, illumination);
-            case METAL_K_ID:
-            case METAL_K_ORE_ID:
-                return PoolMaster.GetMetalMaterial(MetalMaterial.MetalK, ref m, illumination);
-            case METAL_M_ORE_ID:
-            case METAL_M_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalM, ref m, illumination);
-            case METAL_E_ORE_ID:
-            case METAL_E_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalE, ref m, illumination);
-            case METAL_N_ORE_ID:
-            case METAL_N_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalN, ref m, illumination);
-            case METAL_P_ORE_ID:
-            case METAL_P_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalP, ref m, illumination);
-            case METAL_S_ORE_ID:
-            case METAL_S_ID: return PoolMaster.GetMetalMaterial(MetalMaterial.MetalS, ref m, illumination);
-            case MINERAL_F_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralF, ref m, illumination);
-            case MINERAL_L_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.MineralL, ref m, illumination);
-            case PLASTICS_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Plastic, ref m, illumination);
-            case CONCRETE_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Concrete, ref m, illumination);
-            case SNOW_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Snow, ref m, illumination);
-
-            case FERTILE_SOIL_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Farmland, ref m, illumination);
-            case GRAPHONIUM_ID: return PoolMaster.energy_material;
-            case ADVANCED_COVERING_ID: return PoolMaster.GetBasicMaterial(BasicMaterial.Basis, ref m, illumination);
-        }
-    }
 
     /// <summary>
     /// icons
@@ -162,7 +130,7 @@ public class ResourceType
         float p = 0.125f;
         switch (f_id)
         {
-            case ADVANCED_COVERING_ID: return new Rect(p, 4 * p, p, p);
+            case PoolMaster.MATERIAL_ADVANCED_COVERING_ID: return new Rect(p, 4 * p, p, p);
             case STONE_ID: return new Rect(5 * p, 5 * p, p, p);
             case DIRT_ID: return new Rect(p, 7 * p, p, p);
             case LUMBER_ID: return new Rect(6 * p, 7 * p, p, p);

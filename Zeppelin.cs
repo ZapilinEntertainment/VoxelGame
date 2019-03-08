@@ -90,7 +90,7 @@ public sealed class Zeppelin : MonoBehaviour {
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
         {
             GameObject collided = rh.collider.gameObject;
-            if (collided.tag == Block.BLOCK_COLLIDER_TAG)
+            if (collided.tag == "Block")
             {
                 Block b = collided.transform.parent.GetComponent<Block>();
                 if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block                
@@ -186,28 +186,28 @@ public sealed class Zeppelin : MonoBehaviour {
                     }
                     DRAW_LINE:
                     Vector3[] positions = new Vector3[4];
-                    Vector3 cpos = landingSurface.transform.position;
+                    Vector3 lpos = landingSurface.pos.ToWorldSpace();
                     float q = Block.QUAD_SIZE;
-                    float h = cpos.y - 0.5f * q;
+                    float h = lpos.y - 0.5f * q;
                     if (landingByZAxis == false)
                     {
-                        positions[0] = new Vector3( cpos.x - 1.5f * q, h, cpos.z + 0.5f * q );
-                        positions[1] = new Vector3(cpos.x + 1.5f * q, h, cpos.z + 0.5f * q);
-                        positions[2] = new Vector3(cpos.x + 1.5f * q, h, cpos.z - 0.5f * q);
-                        positions[3] = new Vector3(cpos.x - 1.5f * q, h, cpos.z - 0.5f * q);
+                        positions[0] = new Vector3( lpos.x - 1.5f * q, h, lpos.z + 0.5f * q );
+                        positions[1] = new Vector3(lpos.x + 1.5f * q, h, lpos.z + 0.5f * q);
+                        positions[2] = new Vector3(lpos.x + 1.5f * q, h, lpos.z - 0.5f * q);
+                        positions[3] = new Vector3(lpos.x - 1.5f * q, h, lpos.z - 0.5f * q);
                         //positions[4] = positions[0];
                     }
                     else
                     {
-                        positions[0] = new Vector3(cpos.x - 0.5f * q, h, cpos.z + 1.5f * q);
-                        positions[1] = new Vector3(cpos.x + 0.5f * q, h, cpos.z + 1.5f * q);
-                        positions[2] = new Vector3(cpos.x + 0.5f * q, h, cpos.z - 1.5f * q);
-                        positions[3] = new Vector3(cpos.x - 0.5f * q, h, cpos.z - 1.5f * q);
+                        positions[0] = new Vector3(lpos.x - 0.5f * q, h, lpos.z + 1.5f * q);
+                        positions[1] = new Vector3(lpos.x + 0.5f * q, h, lpos.z + 1.5f * q);
+                        positions[2] = new Vector3(lpos.x + 0.5f * q, h, lpos.z - 1.5f * q);
+                        positions[3] = new Vector3(lpos.x - 0.5f * q, h, lpos.z - 1.5f * q);
                         //positions[4] = positions[0];
                     }
                     lineDrawer.SetPositions(positions);
                     lineDrawer.enabled = true;
-                    landingMarkObject.transform.position = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE * 0.45f;
+                    landingMarkObject.transform.position = lpos + Vector3.down * Block.QUAD_SIZE * 0.45f;
                     landingMarkObject.SetActive(true);
                     UIController.current.ActivateLandButton();
                 }
@@ -223,7 +223,7 @@ public sealed class Zeppelin : MonoBehaviour {
             {
                 if (UIController.current != null && UIController.current.currentActiveWindowMode == ActiveWindowMode.GameMenu) return;
                 landPointSet = true;
-                Vector3 newPos = landingSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
+                Vector3 newPos = landingSurface.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE / 2f;
                 PoolMaster.current.BuildSplash(newPos);
                 transform.position = newPos + Vector3.up * 0.5f;
                 if (landingByZAxis == true) transform.rotation = Quaternion.identity;

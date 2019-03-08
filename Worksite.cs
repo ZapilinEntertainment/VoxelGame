@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum WorksiteType : byte {Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite}
 
-public abstract class Worksite : MonoBehaviour {
+public abstract class Worksite {
     public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
     public static List<Worksite> worksitesList { get; protected set; }
 
@@ -94,8 +94,8 @@ public abstract class Worksite : MonoBehaviour {
             colony.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Destroy(sign.gameObject);
-        Destroy(this);
+        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);
+        worksitesList.Remove(this);
     }
 
     #region save-load system
@@ -178,7 +178,7 @@ public abstract class Worksite : MonoBehaviour {
                             SurfaceBlock sblock = chunk.GetBlock(pos) as SurfaceBlock;
                             if (sblock != null)
                             {
-                                w = sblock.gameObject.AddComponent<BlockBuildingSite>();
+                                w = new BlockBuildingSite();
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
@@ -190,7 +190,7 @@ public abstract class Worksite : MonoBehaviour {
                             SurfaceBlock sblock = chunk.GetBlock(pos) as SurfaceBlock;
                             if (sblock != null)
                             {
-                                w = sblock.gameObject.AddComponent<CleanSite>();
+                                w = new CleanSite();
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
@@ -202,7 +202,7 @@ public abstract class Worksite : MonoBehaviour {
                             CubeBlock cb = chunk.GetBlock(pos) as CubeBlock;
                             if (cb != null)
                             {
-                                w = cb.gameObject.AddComponent<DigSite>();
+                                w = new DigSite();
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
@@ -214,7 +214,7 @@ public abstract class Worksite : MonoBehaviour {
                             SurfaceBlock sblock = chunk.GetBlock(pos) as SurfaceBlock;
                             if (sblock != null)
                             {
-                                w = sblock.gameObject.AddComponent<GatherSite>();
+                                w = new GatherSite();
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
@@ -226,7 +226,7 @@ public abstract class Worksite : MonoBehaviour {
                             CubeBlock cb = chunk.GetBlock(pos) as CubeBlock;
                             if (cb != null)
                             {
-                                w = cb.gameObject.AddComponent<TunnelBuildingSite>();
+                                w = new TunnelBuildingSite();
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }

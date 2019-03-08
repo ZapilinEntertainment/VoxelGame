@@ -159,7 +159,7 @@ public class BlockBuildingSite : Worksite
             bc.center = new Vector3(0, - 0.25f, 0);
             bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
             sign.worksite = this;
-            sign.transform.position = workObject.transform.position;
+            sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.up * 0.5f * Block.QUAD_SIZE;
         }
     }
 
@@ -172,8 +172,7 @@ public class BlockBuildingSite : Worksite
             colony.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Destroy(sign.gameObject);
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
@@ -186,7 +185,7 @@ public class BlockBuildingSite : Worksite
             showOnGUI = false;
             UIController.current.ChangeChosenObject(ChosenObjectType.None);
         }
-        Destroy(this);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
     }
 
 
@@ -211,7 +210,7 @@ public class BlockBuildingSite : Worksite
         byte[] data = new byte[4];
         fs.Read(data, 0, 4);
         Set(
-            transform.root.GetComponent<Chunk>().GetBlock(cpos) as SurfaceBlock, 
+            GameMaster.realMaster.mainChunk.GetBlock(cpos) as SurfaceBlock, 
             ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, 0))
             );
         LoadWorksiteData(fs);

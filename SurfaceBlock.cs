@@ -44,7 +44,6 @@ public struct SurfaceRect
 public class SurfaceBlock : Block
 {
     public const byte INNER_RESOLUTION = 16;
-    public MeshRenderer surfaceRenderer { get; protected set; }
     public Grassland grassland { get; protected set; }
     public List<Structure> surfaceObjects { get; protected set; }
     public sbyte cellsStatus { get; protected set; }// -1 is not stated, 1 is full, 0 is empty;
@@ -55,44 +54,18 @@ public class SurfaceBlock : Block
 
     public static UISurfacePanelController surfaceObserver;
 
-    public void InitializeSurfaceBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id)
+    public SurfaceBlock (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) : base (f_chunk, f_chunkPos)
     {
+        type = BlockType.Surface;
+        material_id = f_material_id;
+
         cellsStatus = 0; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
         for (int i = 0; i < map.GetLength(0); i++)
         {
             for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
         }
-        material_id = 0;
-        illumination = 255;
         surfaceObjects = new List<Structure>();
-        artificialStructures = 0;
-        type = BlockType.Surface;
-        myChunk = f_chunk;
-        transform.parent = f_chunk.transform;
-        pos = f_chunkPos;
-        transform.localPosition = new Vector3(pos.x, pos.y, pos.z);
-        transform.localRotation = Quaternion.Euler(Vector3.zero);
-
-        if (surfaceRenderer == null)
-        {
-            GameObject g = PoolMaster.GetQuad();
-            surfaceRenderer = g.GetComponent<MeshRenderer>();
-            surfaceRenderer.enabled = true;
-            surfaceRenderer.GetComponent<Collider>().enabled = true;
-            surfaceRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            Transform meshTransform = g.transform;
-            meshTransform.parent = transform;
-            meshTransform.localPosition = new Vector3(0, -QUAD_SIZE / 2f, 0);
-            meshTransform.localRotation = Quaternion.Euler(90, 0, 0);
-            g.name = "upper_plane";
-            g.tag = BLOCK_COLLIDER_TAG;
-        }
-        material_id = f_material_id;
-        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
-
-        if (visibilityMask != 0) surfaceRenderer.gameObject.SetActive(true);
-
-        name = "block " + pos.x.ToString() + ';' + pos.y.ToString() + ';' + pos.z.ToString();
+        artificialStructures = 0;      
     }
 
     public void SetGrassland(Grassland g) { grassland = g; }
@@ -152,7 +125,6 @@ public class SurfaceBlock : Block
                 {
                     for (int i = 0; i < map.Length; i++) map[i / INNER_RESOLUTION, i % INNER_RESOLUTION] = true;
                     cellsStatus = 1;
-                    surfaceRenderer.GetComponent<Collider>().enabled = false;
                 }
                 a++;
             }
@@ -162,7 +134,6 @@ public class SurfaceBlock : Block
             if (allCellsEmpty)
             {
                 cellsStatus = 0;
-                surfaceRenderer.GetComponent<Collider>().enabled = true;
             }
             else
             {
@@ -178,12 +149,10 @@ public class SurfaceBlock : Block
                 if (allCellsFull)
                 {
                     cellsStatus = 1;
-                    surfaceRenderer.GetComponent<Collider>().enabled = false;
                 }
                 else
                 {
                     cellsStatus = -1;
-                    surfaceRenderer.GetComponent<Collider>().enabled = true;
                 }
             }
         }
@@ -282,9 +251,8 @@ public class SurfaceBlock : Block
 
     public Vector2 WorldToMapCoordinates(Vector3 point)
     {
-        if (transform.childCount == 0) return Vector2.zero;
-        point = transform.InverseTransformPoint(point);
-        return new Vector2(point.x / QUAD_SIZE + 0.5f, 0.5f - point.z / QUAD_SIZE);
+        Vector3 leftDownCorner = GetLocalPosition(0,0);
+        return new Vector2(point.x - leftDownCorner.x, point.z - leftDownCorner.z);
     }
     /// <summary>
     /// Do not use directly, use "Set Basement" instead
@@ -295,7 +263,6 @@ public class SurfaceBlock : Block
         if (s == null) return;
         if (s.innerPosition.x > INNER_RESOLUTION | s.innerPosition.z > INNER_RESOLUTION)
         {
-            print("error in structure size");
             return;
         }
         if (s.innerPosition.size == 1 && s.innerPosition.size == 1)
@@ -339,9 +306,8 @@ public class SurfaceBlock : Block
             }
         }
         surfaceObjects.Add(s);
-        s.transform.parent = transform;
-        s.transform.localPosition = GetLocalPosition(s.innerPosition);
-        if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
+        s.transform.position = GetLocalPosition(s.innerPosition);
+        if (myChunk.GetVisibilityMask(pos) == 0) s.SetVisibility(false); else s.SetVisibility(true);
         s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
         if (savedBasementForNow != null)
         {
@@ -370,17 +336,17 @@ public class SurfaceBlock : Block
     /// <summary>
     /// Do not use directly, use "Set Basement" instead
     /// </summary>
-    public void AddCellStructure(Structure s, PixelPosByte pos)
+    public void AddCellStructure(Structure s, PixelPosByte ppos)
     {
         if (s == null) return;
-        if (map[pos.x, pos.y] == true)
+        if (map[ppos.x, ppos.y] == true)
         {
             int i = 0;
             while (i < surfaceObjects.Count)
             {
                 if (surfaceObjects[i] == null) { surfaceObjects.RemoveAt(i); continue; }
                 SurfaceRect sr = surfaceObjects[i].innerPosition;
-                if (sr.x <= pos.x & sr.z <= pos.y & sr.x + sr.size > pos.x & sr.z + sr.size > pos.y)
+                if (sr.x <= ppos.x & sr.z <= ppos.y & sr.x + sr.size > ppos.x & sr.z + sr.size > ppos.y)
                 {
                     if (surfaceObjects[i].indestructible)
                     {
@@ -397,17 +363,15 @@ public class SurfaceBlock : Block
             }
         }
         surfaceObjects.Add(s);
-        s.transform.parent = transform;
-        s.transform.localPosition = GetLocalPosition(new SurfaceRect(pos.x, pos.y, 1));
-        s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
-        if (visibilityMask == 0) s.SetVisibility(false); else s.SetVisibility(true);
+        s.transform.position = GetLocalPosition(new SurfaceRect(ppos.x, ppos.y, 1));
+        s.transform.rotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
+        if (myChunk.GetVisibilityMask(pos) == 0) s.SetVisibility(false); else s.SetVisibility(true);
         RecalculateSurface();
     }
 
     /// <summary>
     /// Remove structure data from this block structures map
     /// </summary>
-    /// <param name="so">So.</param>
     public void RemoveStructure(Structure s)
     {
         int count = surfaceObjects.Count;
@@ -446,48 +410,38 @@ public class SurfaceBlock : Block
         material_id = newId;
         if (material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID & grassland != null)
         {
-            grassland.Annihilation();
+            grassland.Annihilation(false, true);
         }
-        surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
-    }
-
-    override public void SetIllumination()
-    {
-        byte prevIllumination = illumination;
-        illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
-        if (illumination != prevIllumination)
-        {
-            if (grassland == null) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
-            else grassland.SetGrassTexture();
-        }
+        myChunk.RefreshBlockVisualising(this);
     }
 
     public void SetStructureBlock(BlockRendererController brc)
     {
         structureBlockRenderer = brc;
-        brc.SetVisibilityMask(visibilityMask);
-        if (brc.structure.innerPosition.size == INNER_RESOLUTION)
-        {
-            surfaceRenderer.enabled = false;
-        }
-        brc.SetRenderBitmask(renderMask);
+        brc.SetVisibilityMask(myChunk.GetVisibilityMask(pos));
     }
     public void ClearStructureBlock(BlockRendererController brc)
     {
         if (structureBlockRenderer == brc)
         {
-            if (structureBlockRenderer.structure.innerPosition.size == INNER_RESOLUTION) surfaceRenderer.enabled = true;
             structureBlockRenderer = null;
         }
     }
 
     #region structures positioning   
-    public static Vector3 GetLocalPosition(SurfaceRect sr)
+    public Vector3 GetLocalPosition(SurfaceRect sr)
     {
+        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, 0.5f, -0.5f) * QUAD_SIZE;
         float res = INNER_RESOLUTION;
         float xpos = sr.x + sr.size / 2f;
         float zpos = sr.z + sr.size / 2f;
-        return (new Vector3((xpos / res - 0.5f) * QUAD_SIZE, -QUAD_SIZE / 2f, ((1 - zpos / res) - 0.5f) * QUAD_SIZE));
+        return (leftBottomCorner + new Vector3((xpos / res - 0.5f) * QUAD_SIZE, -QUAD_SIZE / 2f, ((1 - zpos / res) - 0.5f) * QUAD_SIZE));
+    }
+    public Vector3 GetLocalPosition(byte x, byte z)
+    {
+        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, 0.5f, -0.5f) * QUAD_SIZE;
+        float ir = INNER_RESOLUTION, half = 1f / ir / 2f;
+        return leftBottomCorner + new Vector3(x / ir + half, 0f, z / ir + half);
     }
 
     public PixelPosByte GetRandomCell()
@@ -661,77 +615,11 @@ public class SurfaceBlock : Block
     }
     #endregion
 
-    override public void SetRenderBitmask(byte x)
-    {
-        if (renderMask == x) return;
-        else
-        {
-            renderMask = x;
-            if (visibilityMask == 0) return;
-            else
-            {
-                //#surface block visibility check
-                if (renderMask != 0 & structureBlockRenderer != null) structureBlockRenderer.SetRenderBitmask(x);
-                bool allSidesInvisible = ((visibilityMask & 15) == 0);
-                if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible)
-                {
-                    surfaceRenderer.gameObject.SetActive(false);
-                }
-                else
-                {
-                    surfaceRenderer.gameObject.SetActive(true);
-                }
-                //eo sblock vis check
-            }
-        }
-    }
-
-    override public void SetVisibilityMask(byte x)
-    {
-        if (visibilityMask == x) return;
-        byte prevVisibility = visibilityMask;
-        visibilityMask = x;
-        if (visibilityMask == 0)
-        {
-            surfaceRenderer.gameObject.SetActive(false);
-            int i = 0;
-            while (i < surfaceObjects.Count)
-            {
-                surfaceObjects[i].SetVisibility(false);
-                i++;
-            }
-        }
-        else
-        {
-            //#surface block visibility check
-            if (renderMask != 0 & structureBlockRenderer != null) structureBlockRenderer.SetRenderBitmask(x);
-            if (prevVisibility == 0)
-            {
-                if (Chunk.useIlluminationSystem)
-                {
-                    illumination = myChunk.lightMap[pos.x, pos.y, pos.z];
-                }
-                if (grassland == null) surfaceRenderer.sharedMaterial = ResourceType.GetMaterialById(material_id, surfaceRenderer.GetComponent<MeshFilter>(), illumination);
-                else grassland.SetGrassTexture();
-                int i = 0;
-                while (i < surfaceObjects.Count)
-                {
-                    surfaceObjects[i].SetVisibility(true);
-                    i++;
-                }
-            }
-            bool allSidesInvisible = ((visibilityMask & 15) == 0);
-            if ((visibilityMask & renderMask & 32) == 0 & allSidesInvisible) surfaceRenderer.gameObject.SetActive(false);
-            else surfaceRenderer.gameObject.SetActive(true);
-            //eo sblock vis check
-        }
-    }
-
     public UIObserver ShowOnGUI()
     {
         if (surfaceObserver == null)
         {
-            surfaceObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.mainCanvas).GetComponent<UISurfacePanelController>();
+            surfaceObserver = UISurfacePanelController.InitializeSurfaceObserverScript();
         }
         else surfaceObserver.gameObject.SetActive(true);
         surfaceObserver.SetObservingSurface(this);
@@ -800,15 +688,12 @@ public class SurfaceBlock : Block
 
     override public void Annihilate()
     {
-        if (destroyed) return;
-        else destroyed = true;
+        base.Annihilate();
         if (cellsStatus != 0)
         {
             ClearSurface(false);
         }
-        if (grassland != null) grassland.Annihilation(true);
-        if (surfaceRenderer != null) PoolMaster.ReturnQuadToPool(surfaceRenderer.gameObject);
+        if (grassland != null) grassland.Annihilation(true, false);
         myChunk.RemoveFromSurfacesList(this);
-        Destroy(gameObject);
     }
 }

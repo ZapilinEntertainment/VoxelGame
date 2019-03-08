@@ -102,56 +102,34 @@ public class ChunkConsumingEffect : MonoBehaviour {
 
     private void SpawnCube_UpToDown()
     {
-        int len = Chunk.CHUNK_SIZE;
-        Block[,,] blocks = chunk.blocks;
-        for (int y = len - 1; y > -1; y--)
+        var blocks = chunk.blocks;
+        Block b;
+        foreach (var bd in blocks)
         {
-            for (int x = 0; x < len; x++)
+            b = bd.Value;
+            if (b.type == BlockType.Cube)
             {
-                for (int z = 0; z< len;z++)
-                {
-                    Block b = blocks[x, y, z];
-                    if (b == null) continue;
-                    else
-                    {
-                        if (b.type == BlockType.Cube)
-                        {
-                            SurfaceBlock sb = chunk.GetBlock(x, y + 1, z) as SurfaceBlock;
-                            if (sb != null && sb.artificialStructures != 0) continue;
-                            Vector3 pos = b.transform.position;
-                            chunk.DeleteBlock(new ChunkPos(x, y, z));
-                            SpawnEffectCube(pos, true);
-                            return;
-                        }
-                    }
-                }
+                SurfaceBlock sb = chunk.GetBlock(b.pos.x , b.pos.y + 1, b.pos.z) as SurfaceBlock;
+                if (sb != null && sb.artificialStructures != 0) continue;
+                chunk.DeleteBlock(b.pos);
+                SpawnEffectCube(b.pos.ToWorldSpace(), true);
+                return;
             }
         }
         GameMaster.realMaster.GameOver(GameEndingType.ConsumedByReal);
     }
-    private void SpawnCube_BottomToUp()
-    {
-        int len = Chunk.CHUNK_SIZE;
-        Block[,,] blocks = chunk.blocks;
-        for (int y = 0; y < len; y++)
+private void SpawnCube_BottomToUp()
+    {        
+        var blocks = chunk.blocks;
+        Block b;
+        foreach (var bd in blocks)
         {
-            for (int x = 0; x < len; x++)
+            b = bd.Value;
+            if (b.type == BlockType.Cube)
             {
-                for (int z = 0; z < len; z++)
-                {
-                    Block b = blocks[x, y, z];
-                    if (b == null) continue;
-                    else
-                    {
-                        if (b.type == BlockType.Cube)
-                        {
-                            Vector3 pos = b.transform.position;
-                            chunk.DeleteBlock(new ChunkPos(x, y, z));
-                            SpawnEffectCube(pos, false);
-                            return;
-                        }
-                    }
-                }
+                chunk.DeleteBlock(b.pos);
+                SpawnEffectCube(b.pos.ToWorldSpace(), false);
+                return;
             }
         }
         GameMaster.realMaster.GameOver(GameEndingType.ConsumedByLastSector);
@@ -167,7 +145,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
             g.transform.parent = null;
         }
         else  g = Instantiate(Resources.Load<GameObject>("Prefs/zoneCube"));
-        g.GetComponent<MeshRenderer>().sharedMaterial = flyUp ? PoolMaster.energy_material : PoolMaster.darkness_material;
+        g.GetComponent<MeshRenderer>().sharedMaterial = flyUp ? PoolMaster.energyMaterial : PoolMaster.darkness_material;
         g.transform.position = position;
         g.transform.rotation = Quaternion.identity;
         activeCubes.Add(new FlyingBlock(g, flyUp));

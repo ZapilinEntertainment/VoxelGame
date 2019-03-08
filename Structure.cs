@@ -1190,7 +1190,7 @@ public class Structure : MonoBehaviour
                     Block upperBlock = basement.myChunk.GetBlock(npos);
                     if (upperBlock == null)
                     {
-                        int replacingMaterialID = ResourceType.ADVANCED_COVERING_ID;
+                        int replacingMaterialID = PoolMaster.MATERIAL_ADVANCED_COVERING_ID;
                         if (id == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
                         basement.myChunk.AddBlock(npos, BlockType.Surface, replacingMaterialID, false);
                     }

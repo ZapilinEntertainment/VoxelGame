@@ -38,7 +38,7 @@ public sealed class EditorUI : MonoBehaviour
         ResourceType.FERTILE_SOIL_ID ,
         ResourceType.GRAPHONIUM_ID ,
         ResourceType.SNOW_ID,
-        ResourceType.ADVANCED_COVERING_ID
+        PoolMaster.MATERIAL_ADVANCED_COVERING_ID
     };
 
     private const int LIFEPOWER_PORTION = 100;
@@ -78,27 +78,10 @@ public sealed class EditorUI : MonoBehaviour
             {
                 case ClickAction.CreateBlock:
                     {
-                        if (b.type == BlockType.Cube)
-                        {
-                            ChunkPos cpos;
-                            switch (collided.name)
-                            {
-                                case CubeBlock.FWD_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1); break;
-                                case CubeBlock.RIGHT_PLANE_NAME: cpos = new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z); break;
-                                case CubeBlock.BACK_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z - 1); break;
-                                case CubeBlock.LEFT_PLANE_NAME: cpos = new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z); break;
-                                case CubeBlock.UP_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z); break;
-                                case CubeBlock.DOWN_PLANE_NAME: cpos = new ChunkPos(b.pos.x, b.pos.y - 1, b.pos.z); break;
-                                default: cpos = b.pos; break;
-                            }
-                            GameMaster.realMaster.mainChunk.AddBlock(cpos, BlockType.Cube, chosenMaterialId, true);
-                        }
-                        else // surface block
-                        {
-                            GameMaster.realMaster.mainChunk.ReplaceBlock(b.pos, BlockType.Cube, chosenMaterialId, true);
-                        }
-                        break;
+                        //отследить коллизию
+                        // добавить блок с соответствующей стороны
                     }
+                    break;
                 case ClickAction.DeleteBlock:
                     {
                         Vector3Int cpos = new Vector3Int(b.pos.x, b.pos.y, b.pos.z);
@@ -149,7 +132,7 @@ public sealed class EditorUI : MonoBehaviour
                         SurfaceBlock sb = b as SurfaceBlock;
                         if (sb != null && sb.grassland != null)
                         {
-                            sb.grassland.Annihilation(true);
+                            sb.grassland.Annihilation(true, true);
                         }
                         break;
                     }

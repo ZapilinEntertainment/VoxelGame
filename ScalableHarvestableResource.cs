@@ -28,7 +28,9 @@ public sealed class ScalableHarvestableResource : Structure {
         if (resourceCount != 0)
         {
             Transform meshTransform = model.transform.GetChild(0);
-            meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(mainResource.ID, meshTransform.GetComponent<MeshFilter>(),basement.illumination);
+            var mf = meshTransform.GetComponent<MeshFilter>();
+            var mr = meshTransform.GetComponent<MeshRenderer>();
+            PoolMaster.SetMaterialByID(ref mf, ref mr, mainResource.ID, basement.myChunk.GetLightValue(basement.pos));
             model.transform.localScale = new Vector3(1, resourceCount / MAX_VOLUME, 1);
         }
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model);
@@ -49,7 +51,9 @@ public sealed class ScalableHarvestableResource : Structure {
             if (transform.childCount != 0)
             {
                 Transform meshTransform = transform.GetChild(0).GetChild(0);
-                meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(type.ID, meshTransform.GetComponent<MeshFilter>(), basement.illumination);
+                var mf = meshTransform.GetComponent<MeshFilter>();
+                var mr = meshTransform.GetComponent<MeshRenderer>();
+                PoolMaster.SetMaterialByID(ref mf, ref mr, mainResource.ID, basement.myChunk.GetLightValue(basement.pos));
             }
 		}
 		else{

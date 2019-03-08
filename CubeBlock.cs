@@ -83,7 +83,7 @@ public class CubeBlock : Block
                                 if (sb.haveSupportingStructure)
                                 {
                                     haveSupport = true;
-                                    surfMaterial = sb.structureBlockRenderer != null ? ResourceType.ADVANCED_COVERING_ID : ResourceType.CONCRETE_ID;
+                                    surfMaterial = sb.structureBlockRenderer != null ? PoolMaster.MATERIAL_ADVANCED_COVERING_ID : ResourceType.CONCRETE_ID;
                                 }
                                 else haveSupport = false;
                             }
@@ -117,16 +117,12 @@ public class CubeBlock : Block
         naturalFossils = x;
     }
 
-    public void InitializeCubeBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration)
+    public CubeBlock(Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id, bool naturalGeneration) : base(f_chunk, f_chunkPos)
     {
-        destroyed = false;
+        type = BlockType.Cube;
         excavatingStatus = 0;
         naturalFossils = MAX_VOLUME;
-        volume = MAX_VOLUME; career = false;
-        type = BlockType.Cube;
-
-        myChunk = f_chunk;
-        pos = f_chunkPos;
+        volume = MAX_VOLUME; career = false;     
         material_id = f_material_id;
         if (naturalGeneration) { naturalFossils = MAX_VOLUME; }
         else naturalFossils = 0;
@@ -135,120 +131,8 @@ public class CubeBlock : Block
     public override void ReplaceMaterial(int newId)
     {
         if (newId == material_id) return;
-        material_id = newId;        
-    }
-
-    public override BlockpartVisualizeInfo GetVisualData(byte face)
-    {
-        var mvi = new MeshVisualizeInfo(face, myChunk.GetLightValue(pos), material_id);
-        var bvi = new BlockpartVisualizeInfo(pos, mvi, 0, MeshType.Quad);
-        return bvi;
-    }
-
-    void ChangeFacesStatus()
-    {
-        byte mask = (byte)(renderMask & visibilityMask);
-        if (mask == prevDrawMask) return;
-        else prevDrawMask = mask;
-        byte[] arr = new byte[] { 1, 2, 4, 8, 16, 32 };
-        for (int i = 0; i < 6; i++)
-        {
-            if (faces[i] == null) CreateFace(i);
-            if (((mask & arr[i]) == 0))
-            {
-                faces[i].enabled = false;
-                faces[i].GetComponent<Collider>().enabled = false;
-            }
-            else
-            {
-                faces[i].enabled = true;
-                faces[i].GetComponent<Collider>().enabled = true;
-            }
-        }
-    }
-
-    void CreateFace(int i)
-    {
-        GameObject g = PoolMaster.GetQuad();
-        g.tag = BLOCK_COLLIDER_TAG;
-        Transform t = g.transform;
-        t.parent = transform;
-        faces[i] = g.GetComponent<MeshRenderer>();
-
-        bool roofPlane = false;
-        byte faceIllumination = 255;
-        switch (i)
-        {
-            case 0: // fwd
-                g.name = FWD_PLANE_NAME;
-                t.localRotation = Quaternion.Euler(0, 180, 0);
-                t.localPosition = new Vector3(0, 0, QUAD_SIZE / 2f);
-                if (Chunk.useIlluminationSystem)
-                {
-                    if (pos.z != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z + 1];
-                }
-                break;
-            case 1: // right
-                g.name = RIGHT_PLANE_NAME;
-                t.localRotation = Quaternion.Euler(0, 270, 0);
-                t.localPosition = new Vector3(QUAD_SIZE / 2f, 0, 0);
-                if (Chunk.useIlluminationSystem)
-                {
-                    if (pos.x != Chunk.CHUNK_SIZE - 1) faceIllumination = myChunk.lightMap[pos.x + 1, pos.y, pos.z];
-                }
-                break;
-            case 2: // back
-                g.name = BACK_PLANE_NAME;
-                t.localRotation = Quaternion.Euler(0, 0, 0);
-                t.localPosition = new Vector3(0, 0, -QUAD_SIZE / 2f);
-                if (Chunk.useIlluminationSystem)
-                {
-                    if (pos.z != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y, pos.z - 1];
-                }
-                break;
-            case 3: // left
-                g.name = LEFT_PLANE_NAME;
-                t.localRotation = Quaternion.Euler(0, 90, 0);
-                t.localPosition = new Vector3(-QUAD_SIZE / 2f, 0, 0);
-                if (Chunk.useIlluminationSystem)
-                {
-                    if (pos.x != 0) faceIllumination = myChunk.lightMap[pos.x - 1, pos.y, pos.z];
-                }
-                break;
-            case 4: // up
-                g.name = UP_PLANE_NAME;
-                t.localPosition = new Vector3(0, QUAD_SIZE / 2f, 0);
-                t.localRotation = Quaternion.Euler(90, 0, 0);
-                if (pos.y != Chunk.CHUNK_SIZE - 1)
-                {
-                    if (Chunk.useIlluminationSystem)
-                    {
-                        faceIllumination = myChunk.lightMap[pos.x, pos.y + 1, pos.z];
-                    }
-                }
-                else
-                {
-                    roofPlane = true;
-                    t.tag = "Untagged";
-                }
-                break;
-            case 5: // down
-                g.name = DOWN_PLANE_NAME;
-                t.localRotation = Quaternion.Euler(-90, 0, 0);
-                t.localPosition = new Vector3(0, -QUAD_SIZE / 2f, 0);
-                if (Chunk.useIlluminationSystem)
-                {
-                    if (pos.y != 0) faceIllumination = myChunk.lightMap[pos.x, pos.y - 1, pos.z];
-                }
-                break;
-        }
-        if (!roofPlane) faces[i].sharedMaterial = ResourceType.GetMaterialById(material_id, faces[i].GetComponent<MeshFilter>(), faceIllumination);
-        else faces[i].sharedMaterial = ResourceType.GetMaterialById(ResourceType.SNOW_ID, faces[i].GetComponent<MeshFilter>(), faceIllumination);
-        faces[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        faces[i].lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-        faces[i].reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-        //if (Block.QUAD_SIZE != 1) faces[i].transform.localScale = Vector3.one * Block.QUAD_SIZE;
-        faces[i].enabled = true;
+        material_id = newId;
+        myChunk.RefreshBlockVisualising(this);
     }
 
     void CheckExcavatingStatus()
@@ -280,10 +164,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 0)
                 {
                     excavatingStatus = 0;
-                    if (faces[4] == null) CreateFace(4);
-                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.sharedMesh = PoolMaster.GetOriginalQuadMesh();
-                    ResourceType.GetMaterialById(material_id, mf, illumination);
+                    myChunk.RefreshBlockVisualising(this);
                 }
             }
             else
@@ -291,10 +172,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 1)
                 {
                     excavatingStatus = 1;
-                    if (faces[4] == null) CreateFace(4);
-                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.sharedMesh = PoolMaster.plane_excavated_025;
-                    ResourceType.GetMaterialById(material_id, mf, illumination);
+                    myChunk.RefreshBlockVisualising(this);
                 }
             }
         }
@@ -305,10 +183,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 2)
                 {
                     excavatingStatus = 2;
-                    if (faces[4] == null) CreateFace(4);
-                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.sharedMesh = PoolMaster.plane_excavated_05;
-                    ResourceType.GetMaterialById(material_id, mf, illumination);
+                    myChunk.RefreshBlockVisualising(this);
                 }
             }
             else
@@ -316,32 +191,40 @@ public class CubeBlock : Block
                 if (excavatingStatus != 3)
                 {
                     excavatingStatus = 3;
-                    if (faces[4] == null) CreateFace(4);
-                    MeshFilter mf = faces[4].GetComponent<MeshFilter>();
-                    mf.sharedMesh = PoolMaster.plane_excavated_075;
-                    ResourceType.GetMaterialById(material_id, mf, illumination);
+                    myChunk.RefreshBlockVisualising(this);
                 }
             }
 
         }
     }
 
-    override public void Annihilate()
+    override public List<BlockpartVisualizeInfo> GetVisualDataList(byte visibilityMask)
     {
-        // #block annihilate
-        if (destroyed | GameMaster.sceneClearing) return;
-        else destroyed = true;
-        if (worksite != null) worksite.StopWork();
-        if (mainStructure != null) mainStructure.SectionDeleted(pos);
-        // end
-        if (excavatingStatus == 0 & faces[4] != null) PoolMaster.ReturnQuadToPool(faces[4].gameObject);
-        if (faces[0] != null) PoolMaster.ReturnQuadToPool(faces[0].gameObject);
-        if (faces[1] != null) PoolMaster.ReturnQuadToPool(faces[1].gameObject);
-        if (faces[2] != null) PoolMaster.ReturnQuadToPool(faces[2].gameObject);
-        if (faces[3] != null) PoolMaster.ReturnQuadToPool(faces[3].gameObject);
-        if (faces[5] != null) PoolMaster.ReturnQuadToPool(faces[5].gameObject);
-        if (pos.y == Chunk.CHUNK_SIZE - 1) myChunk.DeleteRoof(pos.x, pos.z);
-        Destroy(gameObject);
+        return null;
+    }
+    override public BlockpartVisualizeInfo GetVisualData(byte face)
+    {
+        if (face > 5) return null;
+        else
+        {
+            var mvi = new MeshVisualizeInfo(face, myChunk.GetLightValue(pos), material_id);
+            MeshType mtype = MeshType.Quad;
+            if (face == 4 & career)
+            {
+                float pc = volume / (float)MAX_VOLUME;
+                if (pc < 0.75f)
+                {
+                    if (pc > 0.5f) mtype = MeshType.ExcavatedPlane025;
+                    else
+                    {
+                        if (pc < 0.25f) mtype = MeshType.ExcavatedPlane075;
+                        else mtype = MeshType.ExcavatedPlane05;
+                    }
+                }
+            }
+            var bvi = new BlockpartVisualizeInfo(pos, mvi, mtype);
+            return bvi;
+        }
     }
 
     #region save-load system

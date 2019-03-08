@@ -45,7 +45,11 @@ public class Quest {
 	}
     public static bool operator ==(Quest A, Quest B)
     {
-       return ((A.type == B.type) && (A.subIndex == B.subIndex));
+        if (ReferenceEquals(A, null))
+        {
+            return ReferenceEquals(B, null);
+        }
+        return ((A.type == B.type) && (A.subIndex == B.subIndex));
     }
     public static bool operator !=(Quest A, Quest B)
     {

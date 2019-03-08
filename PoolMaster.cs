@@ -2,26 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum GreenMaterial : byte { Leaves, Grass100, Grass80, Grass60, Grass40, Grass20}
-public enum MetalMaterial : byte { MetalK, MetalM, MetalE, MetalN, MetalP, MetalS, WhiteMetal}
-public enum BasicMaterial : byte { Concrete, Plastic, Lumber,Dirt,Stone, Farmland, MineralF, MineralL, DeadLumber, Snow, WhiteWall, Basis}
-public enum MeshType: byte { Quad}
+public enum MeshType: byte { Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075}
 
 public sealed class PoolMaster : MonoBehaviour {
+    private struct LightPoolInfo
+    {
+        public int materialID;
+        public byte illumination; 
+        public LightPoolInfo (int i_id, byte i_light)
+        {
+            materialID = i_id;
+            illumination = i_light;
+        }
+    }
+
     public static bool useAdvancedMaterials { get; private set; }
     public static bool shadowCasting { get; private set; }
-    public static PoolMaster current;	
-    public static List<GameObject> quadsPool;    
+    public static PoolMaster current;	 
 	public static GameObject mineElevator_pref {get;private set;}
-    public static GameObject cavePref { get; private set; }
-    // не убирать basic из public, так как нужен для сравнения при включении/выключении
-    public static Material default_material, lr_red_material, lr_green_material, basic_material, energy_material, energy_offline_material,
-        glass_material, glass_offline_material, darkness_material;
-    public static Material billboardMaterial { get; private set; } 
+    public static Material billboardMaterial { get; private set; }
+    public static Material energyMaterial { get; private set; }
+    public static Material energyMaterial_disabled{ get; private set; }
+    public static Material glassMaterial { get; private set; }
+    public static Material glassMaterial_disabled { get; private set; }
+    public static Material darkness_material{ get; private set; }
     public static Material verticalBillboardMaterial { get; private set; }
     public static Material verticalWavingBillboardMaterial { get; private set; }
-    public static Material starsBillboardMaterial { get; private set; }
-    public static Mesh plane_excavated_025, plane_excavated_05,plane_excavated_075;
+    public static Material starsBillboardMaterial { get; private set; }    
 	public static GUIStyle GUIStyle_RightOrientedLabel, GUIStyle_BorderlessButton, GUIStyle_BorderlessLabel, GUIStyle_CenterOrientedLabel, GUIStyle_SystemAlert,
 	GUIStyle_RightBottomLabel, GUIStyle_COLabel_red, GUIStyle_Button_red;
     public static Sprite gui_overridingSprite;
@@ -29,16 +36,19 @@ public sealed class PoolMaster : MonoBehaviour {
 
     private static Transform zoneCube;
     private static bool useTextureRotation = false;
-    private static Material[] basic_illuminated, green_illuminated, metal_illuminated;
-    private static Material metal_material, green_material;
-    private static GameObject quad_pref;    
+    private static Dictionary<LightPoolInfo, Material> lightPoolMaterials;
+    private static Material metal_material, green_material, default_material, lr_red_material, lr_green_material, basic_material;
+    private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075;   
 
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
     private ParticleSystem buildEmitter, citizensLeavingEmitter;
     private Sprite[] starsSprites;
 
-    public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5; 
+    public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
+    public const int MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
+        MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
+        MATERIAL_WHITEWALL_ID = -11;
     private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2;
 
     public void Load() {
@@ -51,7 +61,12 @@ public sealed class PoolMaster : MonoBehaviour {
         buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
         inactiveShips = new List<Ship>();
 
-		plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
+        quadMesh = new Mesh();
+        quadMesh.vertices = new Vector3[4] { Vector3.zero, Vector3.up, Vector3.one, Vector3.right };
+        quadMesh.triangles = new int[6] { 0, 1, 2, 0, 2, 3};
+        quadMesh.normals = new Vector3[4] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
+        quadMesh.uv = new Vector2[4] { Vector2.zero, Vector2.up, Vector2.one, Vector2.right };
+        plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
 		plane_excavated_075 = Resources.Load<Mesh>("Meshes/Plane_excavated_075");
 
@@ -59,43 +74,30 @@ public sealed class PoolMaster : MonoBehaviour {
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
         zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);zoneCube.gameObject.SetActive(false);
-        cavePref = Resources.Load<GameObject>("Prefs/CaveBlock_pref");
-        quadsPool = new List<GameObject>();
-        quad_pref = Instantiate(Resources.Load<GameObject>("Prefs/quadPref"), transform);		// ууу, костыль! а если текстура не 4 на 4 ?
-        //quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.98f), new Vector2(0.98f, 0.02f), new Vector2(0.02f, 0.98f) };
-        quad_pref.GetComponent<MeshFilter>().sharedMesh.uv = new Vector2[] { Vector2.zero, Vector2.one, Vector2.right, Vector2.up };
-        quad_pref.transform.parent = transform;
-        quad_pref.SetActive(false);
-        quadsPool.Add(quad_pref);
 
         default_material = Resources.Load<Material>("Materials/Default");
         darkness_material = Resources.Load<Material>("Materials/Darkness");
-		energy_material = Resources.Load<Material>("Materials/ChargedMaterial");
-		energy_offline_material = Resources.Load<Material>("Materials/UnchargedMaterial");       
+		energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
+        energyMaterial_disabled = Resources.Load<Material>("Materials/UnchargedMaterial");       
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         if (useAdvancedMaterials)
         {
-            glass_offline_material = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
+            glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
             basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
-            glass_material = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
+            glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
             metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
             green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
            
         }
         else
         {
-            glass_offline_material = Resources.Load<Material>("Materials/GlassOffline");
+            glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
             basic_material = Resources.Load<Material>("Materials/Basic");
-            glass_material = Resources.Load<Material>("Materials/Glass");
+            glassMaterial = Resources.Load<Material>("Materials/Glass");
             metal_material = Resources.Load<Material>("Materials/Metal");
             green_material = Resources.Load<Material>("Materials/Green");
-            
-
-            basic_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
-            green_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
-            metal_illuminated = new Material[MAX_MATERIAL_LIGHT_DIVISIONS];
         }        
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
@@ -124,40 +126,14 @@ public sealed class PoolMaster : MonoBehaviour {
 		}       
 	}
 
-    public static GameObject GetQuad()
-    {
-        GameObject g = null;
-        if (quadsPool.Count == 1) g = Instantiate(quadsPool[0]); // нулевой никогда не удаляется
-        else
-        {
-            int i = quadsPool.Count - 1;
-            g = quadsPool[i];
-            quadsPool.RemoveAt(i);
-        }
-        g.transform.parent = null;
-        g.SetActive(true);
-        return g;
-    }
-    public static void ReturnQuadToPool(GameObject g)
-    {
-        if (g == null) return;
-        else
-        {
-            g.SetActive(false);
-            g.transform.parent = current.transform;
-            quadsPool.Add(g);
-        }
-    }
-
-    public static Mesh GetOriginalQuadMesh()
-    {
-        return quadsPool[0].GetComponent<MeshFilter>().sharedMesh;
-    }
     public static Mesh GetMesh(MeshType mtype)
     {
         switch (mtype)
         {
-            case MeshType.Quad: return GetOriginalQuadMesh();
+            case MeshType.Quad: return quadMesh;
+            case MeshType.ExcavatedPlane025: return plane_excavated_025;
+            case MeshType.ExcavatedPlane05: return plane_excavated_05;
+            case MeshType.ExcavatedPlane075: return plane_excavated_075;
             default: return null;
         }
     }
@@ -321,35 +297,112 @@ public sealed class PoolMaster : MonoBehaviour {
         return Instantiate(Resources.Load<GameObject>("Prefs/flyingPlatform_small"));
     }
 
-    public static Material GetGreenMaterial(GreenMaterial mtype, ref Mesh m, byte i_illumination)
-    {
-        float illumination = i_illumination / 255f;
-        float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
-        if (illumination < p / 2f) return darkness_material;
+    public static Material GetBasicMaterial() { return basic_material; }
 
-        if (m == null) return green_material;           
-        float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
-        Vector2[] borders;
-        switch (mtype)
+    public static void SetMaterialByID(ref MeshFilter mf, ref MeshRenderer mr, int materialID, byte i_illumination)
+    {
+        var m = mf.mesh;
+        SetMeshUVs(ref m, materialID);
+        mf.sharedMesh = m;
+        if (Chunk.useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);
+        else mr.sharedMaterial = GetMaterial(materialID);
+        if (shadowCasting)
         {
-            default:
-            case GreenMaterial.Leaves:
-                borders = new Vector2[] { Vector2.zero, Vector2.up * piece, Vector2.one * piece, Vector2.right * piece};
+            mr.receiveShadows = true;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+        }
+        else
+        {
+            mr.receiveShadows = false;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+    }
+    public static void SetMeshUVs(ref Mesh m, int materialID)
+    {
+        var borders = new Vector2[m.vertexCount];
+        float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
+        switch (materialID)
+        {
+            case ResourceType.STONE_ID:
+                borders = new Vector2[] { new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(4 * piece, 3 * piece), new Vector2(4 * piece, 2 * piece) };
                 break;
-            case GreenMaterial.Grass100:
+            case ResourceType.DIRT_ID:
+                borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
+                break;
+            case ResourceType.LUMBER_ID:
+                borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
+                break;
+            case ResourceType.METAL_K_ORE_ID:
+            case ResourceType.METAL_K_ID:
+                borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
+                break;
+            case ResourceType.METAL_M_ORE_ID:
+            case ResourceType.METAL_M_ID:
+                borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
+                break;
+            case ResourceType.METAL_E_ORE_ID:
+            case ResourceType.METAL_E_ID:
+                borders = new Vector2[] { new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
+                break;
+            case ResourceType.METAL_N_ORE_ID:
+            case ResourceType.METAL_N_ID:
+                borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
+                break;
+            case ResourceType.METAL_P_ORE_ID:
+            case ResourceType.METAL_P_ID:
+                borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
+                break;
+            case ResourceType.METAL_S_ORE_ID:
+            case ResourceType.METAL_S_ID:
+                borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
+                break;
+            case ResourceType.MINERAL_F_ID:
+                borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
+                break;
+            case ResourceType.MINERAL_L_ID:
+                borders = new Vector2[] { new Vector2(0, piece), new Vector2(0, 2 * piece), new Vector2(piece, 2 * piece), new Vector2(piece, piece) };
+                break;
+            case ResourceType.PLASTICS_ID:
+                borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
+                break;
+            case ResourceType.CONCRETE_ID:
+                borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
+                break;
+            case ResourceType.SNOW_ID:
+                borders = new Vector2[] { new Vector2(piece, piece), new Vector2(piece, 2 * piece), new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, piece) };
+                break;
+            case ResourceType.FERTILE_SOIL_ID:
+                borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                break;
+            case MATERIAL_ADVANCED_COVERING_ID:
+                borders = new Vector2[] { new Vector2(3 * piece, piece), new Vector2(3 * piece, 2 * piece), new Vector2(4 * piece, 2 * piece), new Vector2(4 * piece, piece) };
+                break;
+            case MATERIAL_GRASS_100_ID:
                 borders = new Vector2[] { new Vector2(piece, 0), new Vector2(piece, piece), new Vector2(2 * piece, piece), new Vector2(2 * piece, 0) };
                 break;
-            case GreenMaterial.Grass80:
+            case MATERIAL_GRASS_80_ID:
                 borders = new Vector2[] { new Vector2(2 * piece + add, 0), new Vector2(2 * piece + add, piece), new Vector2(3 * piece + add, piece), new Vector2(3 * piece + add, 0) };
                 break;
-            case GreenMaterial.Grass60:
+            case MATERIAL_GRASS_60_ID:
                 borders = new Vector2[] { new Vector2(2 * piece + add, piece), new Vector2(2 * piece + add, 2 * piece), new Vector2(3 * piece + add, 2 * piece), new Vector2(3 * piece + add, piece) };
                 break;
-            case GreenMaterial.Grass40:
-                borders = new Vector2[] { new Vector2(2 * piece + add, 2 *piece), new Vector2(2 * piece + add, 3* piece), new Vector2(3 * piece + add, 3 * piece), new Vector2(3 * piece + add, 2 * piece) };
+            case MATERIAL_GRASS_40_ID:
+                borders = new Vector2[] { new Vector2(2 * piece + add, 2 * piece), new Vector2(2 * piece + add, 3 * piece), new Vector2(3 * piece + add, 3 * piece), new Vector2(3 * piece + add, 2 * piece) };
                 break;
-            case GreenMaterial.Grass20:
+            case MATERIAL_GRASS_20_ID:
                 borders = new Vector2[] { new Vector2(2 * piece + add, 3 * piece), new Vector2(2 * piece + add, 4 * piece), new Vector2(3 * piece + add, 4 * piece), new Vector2(3 * piece + add, 3 * piece) };
+                break;
+            case MATERIAL_LEAVES_ID:
+                borders = new Vector2[] { Vector2.zero, Vector2.up * piece, Vector2.one * piece, Vector2.right * piece };
+                break;
+            case MATERIAL_WHITE_METAL_ID:
+                borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
+                break;
+            case MATERIAL_DEAD_LUMBER_ID:
+                borders = new Vector2[] { new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
+                break;
+            case MATERIAL_WHITEWALL_ID:
+                borders = new Vector2[] { new Vector2(2 * piece, piece), new Vector2(2 * piece, 2 * piece), new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, piece) };
                 break;
         }
         // крутим развертку, если это квад, иначе просто перетаскиваем 
@@ -379,247 +432,94 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
         else
-        {            
+        {
             for (int i = 0; i < uvEdited.Length; i++)
             {
                 uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
                 uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
-            }            
+            }
         }
         m.uv = uvEdited;
+    }
 
-        if (useAdvancedMaterials) return green_material;
-        else
+    private static Material GetMaterial(int id)
+    {
+        switch (id)
         {
-            if (illumination >= 1 - p / 2f) return green_material;
-            else
-            {
-                // проверка на darkness в самом начале функции
-                int pos = (int)(illumination / p);
-                if (illumination - pos * p > p / 2f)
-                {
-                    pos++;
-                }
-                if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return green_material;
-                else
-                {
-                    if (green_illuminated[pos] == null)
-                    {
-                        green_illuminated[pos] = new Material(green_material);
-                        green_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
-                    }
-                    return green_illuminated[pos];
-                }
-            }
+            case ResourceType.PLASTICS_ID:
+            case ResourceType.CONCRETE_ID:
+            case ResourceType.SNOW_ID:
+            case ResourceType.DIRT_ID:
+            case ResourceType.STONE_ID:
+            case ResourceType.FERTILE_SOIL_ID:
+            case MATERIAL_ADVANCED_COVERING_ID:
+            case ResourceType.LUMBER_ID:
+            case MATERIAL_DEAD_LUMBER_ID:
+            case MATERIAL_WHITEWALL_ID:
+                return basic_material;
+
+            case ResourceType.METAL_K_ID:
+            case ResourceType.METAL_K_ORE_ID:
+            case ResourceType.METAL_M_ORE_ID:
+            case ResourceType.METAL_M_ID: 
+            case ResourceType.METAL_E_ORE_ID:
+            case ResourceType.METAL_E_ID: 
+            case ResourceType.METAL_N_ORE_ID:
+            case ResourceType.METAL_N_ID:
+            case ResourceType.METAL_P_ORE_ID:
+            case ResourceType.METAL_P_ID: 
+            case ResourceType.METAL_S_ORE_ID:
+            case ResourceType.METAL_S_ID: 
+            case ResourceType.MINERAL_F_ID: 
+            case ResourceType.MINERAL_L_ID:
+            case MATERIAL_WHITE_METAL_ID:
+                return metal_material;
+
+            case ResourceType.GRAPHONIUM_ID: return energyMaterial;
+            case MATERIAL_GRASS_100_ID:             
+            case MATERIAL_GRASS_80_ID:                
+            case MATERIAL_GRASS_60_ID:               
+            case MATERIAL_GRASS_40_ID:              
+            case MATERIAL_GRASS_20_ID:               
+            case MATERIAL_LEAVES_ID: return green_material;
+            default: return default_material;
         }
     }
-    public static Material GetMetalMaterial(MetalMaterial mtype, ref Mesh m, byte i_illumination)
+    private static Material GetMaterial(int id, byte i_illumination)
     {
-        float illumination = i_illumination / 255f;
-        float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
-        if (illumination < p / 2f) return darkness_material;
-
-        if (m == null) return metal_material;
-            float piece = 0.25f;
-            Vector2[] borders;
-            switch (mtype)
-            {
-                default:
-                case MetalMaterial.MetalK:
-                    borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
-                    break;
-                case MetalMaterial.MetalM:
-                    borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
-                    break;
-                case MetalMaterial.MetalE:
-                    borders = new Vector2[] { new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
-                    break;
-                case MetalMaterial.MetalN:
-                    borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
-                    break;
-                case MetalMaterial.MetalP:
-                    borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
-                    break;
-                case MetalMaterial.MetalS:
-                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
-                    break;
-                case MetalMaterial.WhiteMetal:
-                    borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
-                    break;
-        }
-            bool isQuad = (m.uv.Length == 4);
-            Vector2[] uvEdited = m.uv;
-            if (isQuad)
-            {
-                borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
-            if (useTextureRotation)
-            {
-                float seed = Random.value;
-                if (seed > 0.5f)
-                {
-                    if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else uvEdited = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
-                }
-                else
-                {
-                    if (seed > 0.25f) uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else uvEdited = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
-                }
-            }
-            else
-            {
-                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
-                uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-            }
-            }
-            else
-            {
-                for (int i = 0; i < uvEdited.Length; i++)
-                {
-                    uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
-                    uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
-                }
-            }
-            m.uv = uvEdited;
-
-        if (useAdvancedMaterials) return metal_material;
+        byte p = (byte)(1f / MAX_MATERIAL_LIGHT_DIVISIONS * 127.5f);
+        if (i_illumination < p) return darkness_material;
         else
         {
-            if (illumination >= 1 - p / 2f) return metal_material;
+            if (i_illumination > 255 - p) return GetMaterial(id);
             else
             {
-                // проверка на darkness в самом начале функции
-                int pos = (int)(illumination / p);
-                if (illumination - pos * p > p / 2f)
-                {
-                    pos++;
-                }
-                if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return metal_material;
-                else
-                {
-                    if (metal_illuminated[pos] == null)
-                    {
-                        metal_illuminated[pos] = new Material(metal_material);
-                        metal_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
-                    }
-                    return metal_illuminated[pos];
-                }
-            }
-        }
-    }
-    public static Material GetBasicMaterial(BasicMaterial mtype, ref Mesh m, byte i_illumination)
-    {
-        float illumination = i_illumination / 255f;
-        float p = 1f / (MAX_MATERIAL_LIGHT_DIVISIONS + 1); // цена деления на шкале освещенности
-        if (illumination < p / 2f) return darkness_material;
+                p *= 2;
+                i_illumination -= (byte)(i_illumination % p);
+                Material m = null;
 
-        if (m != null)
-        {
-            float piece = 0.25f;
-            Vector2[] borders;
-            // 1 2
-            // 0 3
-            switch (mtype)
-            {
-                default:
-                case BasicMaterial.Concrete:
-                    borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
-                    break;
-                case BasicMaterial.Plastic:
-                    borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
-                    break;
-                case BasicMaterial.Stone:
-                    borders = new Vector2[] { new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(4 * piece, 3 * piece), new Vector2(4 * piece, 2 * piece) };
-                    break;
-                case BasicMaterial.MineralF:
-                    borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
-                    break;
-                case BasicMaterial.Lumber:
-                    borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
-                    break;
-                case BasicMaterial.Dirt:
-                    borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
-                    break;
-                case BasicMaterial.Farmland:
-                    borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
-                    break;
-                case BasicMaterial.MineralL:
-                    borders = new Vector2[] { new Vector2(0, piece), new Vector2(0, 2 * piece), new Vector2(piece, 2 * piece), new Vector2(piece, piece) };
-                    break;
-                case BasicMaterial.DeadLumber:
-                    borders = new Vector2[] { new Vector2(2 * piece, 3 *piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
-                    break;
-                case BasicMaterial.Snow:
-                    borders = new Vector2[] { new Vector2(piece, piece), new Vector2(piece, 2 * piece), new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, piece) };
-                    break;
-                case BasicMaterial.WhiteWall:
-                    borders = new Vector2[] { new Vector2(2 * piece, piece), new Vector2(2 *piece, 2 * piece), new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, piece) };
-                    break;
-                case BasicMaterial.Basis:
-                    borders = new Vector2[] { new Vector2(3 * piece, piece), new Vector2(3 *piece, 2 * piece), new Vector2(4 * piece, 2 * piece), new Vector2(4 * piece, piece) };
-                    break;
-            }
-            bool isQuad = (m.uv.Length == 4);
-            Vector2[] uvEdited = m.uv;
-            if (isQuad)
-            {
-                borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
-                if (useTextureRotation)
+                var key = new LightPoolInfo(id, i_illumination);
+                if (lightPoolMaterials.ContainsKey(key))
                 {
-                    float seed = Random.value;
-                    if (seed > 0.5f)
-                    {
-                        if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                        else uvEdited = new Vector2[] { borders[1], borders[3], borders[0], borders[2] };
-                    }
-                    else
-                    {
-                        if (seed > 0.25f) uvEdited = new Vector2[] { borders[2], borders[0], borders[1], borders[3] };
-                        else uvEdited = new Vector2[] { borders[3], borders[1], borders[2], borders[0] };
-                    }
+                    lightPoolMaterials.TryGetValue(key, out m);
+                    if (m == null) return GetMaterial(id);
+                    else return m;
                 }
                 else
                 {
-                    //uvEditing = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                }                
-            }
-            else
-            {                
-                for (int i = 0; i < uvEdited.Length; i++)
-                {
-                    uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
-                    uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
-                }
-            }
-            m.uv = uvEdited;
-        }
-
-
-        if (useAdvancedMaterials) return basic_material;
-        else 
-        {
-            if (illumination >= 1 - p / 2f) return basic_material;
-            else
-            {
-                // проверка на darkness в самом начале функции
-                int pos = (int)(illumination / p);
-                if (illumination - pos * p > p / 2f)
-                {
-                    pos++;
-                }
-                if (pos >= MAX_MATERIAL_LIGHT_DIVISIONS) return basic_material;
-                else
-                {
-                    if (basic_illuminated[pos] == null)
+                    Material m0 = GetMaterial(id);
+                    if (m0.HasProperty("_Illumination"))
                     {
-                        basic_illuminated[pos] = new Material(basic_material);
-                        basic_illuminated[pos].SetFloat("_Illumination", p * (pos + 1));
+                        m = new Material(m0);
+                        m.SetFloat("_Illumination", i_illumination / 255f);
+                        lightPoolMaterials.Add(key, m);
+                        return m;
                     }
-                    return basic_illuminated[pos];
+                    else return m0;
                 }
             }
         }
+        
     }
 
     public static void ReplaceMaterials(GameObject g)
@@ -636,12 +536,12 @@ public sealed class PoolMaster : MonoBehaviour {
                     receiveShadows = true;
                     break;
                 case "Glass":
-                    mr.sharedMaterial = glass_material;
+                    mr.sharedMaterial = glassMaterial;
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "GlassOffline":
-                    mr.sharedMaterial = glass_offline_material;
+                    mr.sharedMaterial = glassMaterial_disabled;
                     castShadows = true;
                     receiveShadows = true;
                     break;

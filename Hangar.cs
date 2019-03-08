@@ -38,7 +38,7 @@ public sealed class Hangar : WorkBuilding
             CheckPositionCorrectness();
         }
     }
-    public override void SectionDeleted(ChunkPos pos)
+    public override void SectionDeleted(ChunkPos cpos)
     {
         if (correctLocation)
         {
@@ -47,29 +47,29 @@ public sealed class Hangar : WorkBuilding
             {
                 //#incorrectLocationDisplaying - Hangar
                 float len = 1;
-                float x = basement.transform.position.x, y = transform.position.y, z = basement.transform.position.z;
+                Vector3 pos = basement.pos.ToWorldSpace();
                 switch (modelRotation)
                 {
                     case 0:
                         len = basement.pos.z * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                    new Vector3(x, y, z + Block.QUAD_SIZE / 2f + len / 2f),
+                    new Vector3(pos.x, pos.y, pos.z + Block.QUAD_SIZE / 2f + len / 2f),
                     new Vector3(1, 1, len),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                         break;
                     case 2:
-                        len = (Chunk.CHUNK_SIZE - x - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.CHUNK_SIZE - pos.x - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                        new Vector3(x + Block.QUAD_SIZE / 2f + len / 2f, y, z),
+                        new Vector3(pos.x + Block.QUAD_SIZE / 2f + len / 2f, pos.y, pos.z),
                         new Vector3(len, 1, 1),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
                         break;
                     case 4:
-                        len = (Chunk.CHUNK_SIZE - z - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.CHUNK_SIZE - pos.z - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                        new Vector3(x, y, z - Block.QUAD_SIZE / 2f - len / 2f),
+                        new Vector3(pos.x, pos.y, pos.z - Block.QUAD_SIZE / 2f - len / 2f),
                         new Vector3(1, 1, len),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
@@ -77,7 +77,7 @@ public sealed class Hangar : WorkBuilding
                     case 6:
                         len = basement.pos.x * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                        new Vector3(x - Block.QUAD_SIZE / 2f - len / 2f, y, z),
+                        new Vector3(pos.x - Block.QUAD_SIZE / 2f - len / 2f, pos.y, pos.z),
                         new Vector3(len, 1, 1),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
@@ -184,21 +184,21 @@ public sealed class Hangar : WorkBuilding
             {
                 //#incorrectLocationDisplaying - Hangar
                 float len = 1;
-                float x = basement.transform.position.x, y = basement.transform.position.y, z = basement.transform.position.z;
+                Vector3 pos = basement.pos.ToWorldSpace();
                 switch (modelRotation)
                 {
                     case 0:
-                        len = (Chunk.CHUNK_SIZE - z - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.CHUNK_SIZE - pos.z - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                    new Vector3(x, y, z + Block.QUAD_SIZE / 2f + len / 2f),
+                    new Vector3(pos.x, pos.y, pos.z + Block.QUAD_SIZE / 2f + len / 2f),
                     new Vector3(1, 1, len),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                         break;
                     case 2:
-                        len = (Chunk.CHUNK_SIZE - x - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.CHUNK_SIZE - pos.x - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                        new Vector3(x + Block.QUAD_SIZE / 2f + len / 2f, y, z),
+                        new Vector3(pos.x + Block.QUAD_SIZE / 2f + len / 2f, pos.y, pos.z),
                         new Vector3(len, 1, 1),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
@@ -206,7 +206,7 @@ public sealed class Hangar : WorkBuilding
                     case 4:
                         len = basement.pos.z * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                        new Vector3(x, y, z - Block.QUAD_SIZE / 2f - len / 2f),
+                        new Vector3(pos.x, pos.y, pos.z - Block.QUAD_SIZE / 2f - len / 2f),
                         new Vector3(1, 1, len),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
@@ -214,7 +214,7 @@ public sealed class Hangar : WorkBuilding
                     case 6:
                         len = basement.pos.x * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
-                        new Vector3(x - Block.QUAD_SIZE / 2f - len / 2f, y, z),
+                        new Vector3(pos.x - Block.QUAD_SIZE / 2f - len / 2f, pos.y, pos.z),
                         new Vector3(len, 1, 1),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
@@ -285,29 +285,29 @@ public sealed class Hangar : WorkBuilding
         {
             //#incorrectLocationDisplaying - Hangar
             float len = 1;
-            float x = basement.transform.position.x, y = transform.position.y, z = basement.transform.position.z;
+            Vector3 pos = basement.pos.ToWorldSpace();
             switch (modelRotation)
             {
                 case 0:
                     len = basement.pos.z * Block.QUAD_SIZE;
                     PoolMaster.current.DrawZone(
-                new Vector3(x, y, z + Block.QUAD_SIZE / 2f + len / 2f),
+                new Vector3(pos.x, pos.y, pos.z + Block.QUAD_SIZE / 2f + len / 2f),
                 new Vector3(1, 1, len),
                 new Color(1, 0.076f, 0.076f, 0.4f)
                 );
                     break;
                 case 2:
-                    len = (Chunk.CHUNK_SIZE - x - 1) * Block.QUAD_SIZE;
+                    len = (Chunk.CHUNK_SIZE - pos.x - 1) * Block.QUAD_SIZE;
                     PoolMaster.current.DrawZone(
-                    new Vector3(x + Block.QUAD_SIZE / 2f + len / 2f, y, z),
+                    new Vector3(pos.x + Block.QUAD_SIZE / 2f + len / 2f, pos.y, pos.z),
                     new Vector3(len, 1, 1),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                     break;
                 case 4:
-                    len = (Chunk.CHUNK_SIZE - z - 1) * Block.QUAD_SIZE;
+                    len = (Chunk.CHUNK_SIZE - pos.z - 1) * Block.QUAD_SIZE;
                     PoolMaster.current.DrawZone(
-                    new Vector3(x, y, z - Block.QUAD_SIZE / 2f - len / 2f),
+                    new Vector3(pos.x, pos.y, pos.z - Block.QUAD_SIZE / 2f - len / 2f),
                     new Vector3(1, 1, len),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
@@ -315,7 +315,7 @@ public sealed class Hangar : WorkBuilding
                 case 6:
                     len = basement.pos.x * Block.QUAD_SIZE;
                     PoolMaster.current.DrawZone(
-                    new Vector3(x - Block.QUAD_SIZE / 2f - len / 2f, y, z),
+                    new Vector3(pos.x - Block.QUAD_SIZE / 2f - len / 2f, pos.y, pos.z),
                     new Vector3(len, 1, 1),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );

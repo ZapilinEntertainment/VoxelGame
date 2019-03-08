@@ -814,10 +814,10 @@ public class Building : Structure
                     for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++)
                     {
                         Material m = myRenderers[i].sharedMaterials[j];
-                        if (m == PoolMaster.glass_material) { m = PoolMaster.glass_offline_material; replacing = true; }
+                        if (m == PoolMaster.glassMaterial) { m = PoolMaster.glassMaterial_disabled; replacing = true; }
                         else
                         {
-                            if (m == PoolMaster.energy_material) { m = PoolMaster.energy_offline_material; replacing = true; }
+                            if (m == PoolMaster.energyMaterial) { m = PoolMaster.energyMaterial_disabled; replacing = true; }
                         }
                         newMaterials[j] = m;
                     }
@@ -827,10 +827,10 @@ public class Building : Structure
                 {
                     Material m = myRenderers[i].sharedMaterial;
                     bool replacing = false;
-                    if (m == PoolMaster.glass_material) { m = PoolMaster.glass_offline_material; replacing = true; }
+                    if (m == PoolMaster.glassMaterial) { m = PoolMaster.glassMaterial_disabled; replacing = true; }
                     else
                     {
-                        if (m == PoolMaster.energy_material) { m = PoolMaster.energy_offline_material; replacing = true; }
+                        if (m == PoolMaster.energyMaterial) { m = PoolMaster.energyMaterial_disabled; replacing = true; }
                     }
                     if (replacing) myRenderers[i].sharedMaterial = m;
                 }
@@ -847,10 +847,10 @@ public class Building : Structure
                     for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++)
                     {
                         Material m = myRenderers[i].sharedMaterials[j];
-                        if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true; }
+                        if (m == PoolMaster.glassMaterial_disabled) { m = PoolMaster.glassMaterial; replacing = true; }
                         else
                         {
-                            if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material; replacing = true; }
+                            if (m == PoolMaster.energyMaterial_disabled) { m = PoolMaster.energyMaterial; replacing = true; }
                         }
                         newMaterials[j] = m;
                     }
@@ -860,10 +860,10 @@ public class Building : Structure
                 {
                     Material m = myRenderers[i].sharedMaterial;
                     bool replacing = false;
-                    if (m == PoolMaster.glass_offline_material) { m = PoolMaster.glass_material; replacing = true; }
+                    if (m == PoolMaster.glassMaterial_disabled) { m = PoolMaster.glassMaterial; replacing = true; }
                     else
                     {
-                        if (m == PoolMaster.energy_offline_material) { m = PoolMaster.energy_material; replacing = true; }
+                        if (m == PoolMaster.energyMaterial_disabled) { m = PoolMaster.energyMaterial; replacing = true; }
                     }
                     if (replacing) myRenderers[i].sharedMaterial = m;
                 }

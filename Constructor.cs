@@ -234,8 +234,8 @@ public abstract class Constructor
     private static void NatureCreation(Chunk chunk)
     {
         LifeSource ls = null;
-        Block[,,] blocks = chunk.blocks;
-        int dirtID = ResourceType.DIRT_ID, size = blocks.GetLength(0);
+        var blocks = chunk.blocks;
+        int dirtID = ResourceType.DIRT_ID, size = Chunk.CHUNK_SIZE;
         int y = 0, x, z;
         SurfaceBlock chosenSurface = null;
         bool lifesourceIsTree = Random.value > 0.5f;

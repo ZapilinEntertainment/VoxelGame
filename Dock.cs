@@ -207,28 +207,28 @@ public sealed class Dock : WorkBuilding {
                 {
                     case 0:
                         PoolMaster.current.DrawZone(
-                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.transform.position.z + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
+                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.pos.ToWorldSpace().z + (0.5f + SMALL_SHIPS_PATH_WIDTH / 2f) * Block.QUAD_SIZE),
                     new Vector3(Chunk.CHUNK_SIZE, corridorWidth, corridorWidth),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                         break;
                     case 2:
                         PoolMaster.current.DrawZone(
-                        new Vector3(basement.transform.position.x + (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                        new Vector3(basement.pos.ToWorldSpace().x + (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
                         new Vector3(corridorWidth, corridorWidth, Chunk.CHUNK_SIZE),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
                         break;
                     case 4:
                         PoolMaster.current.DrawZone(
-                        new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.transform.position.z - (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
+                        new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.pos.ToWorldSpace().z - (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
                         new Vector3(Chunk.CHUNK_SIZE, corridorWidth, corridorWidth),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
                         break;
                     case 6:
                         PoolMaster.current.DrawZone(
-                        new Vector3(basement.transform.position.x -
+                        new Vector3(basement.pos.ToWorldSpace().x -
                         (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
                         new Vector3(corridorWidth, corridorWidth, Chunk.CHUNK_SIZE),
                         new Color(1, 0.076f, 0.076f, 0.4f)
@@ -264,28 +264,28 @@ public sealed class Dock : WorkBuilding {
                 {
                     case 0:
                         PoolMaster.current.DrawZone(
-                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.transform.position.z + (0.5f + corridorWidth/ 2f) * Block.QUAD_SIZE),
+                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.pos.ToWorldSpace().z + (0.5f + corridorWidth/ 2f) * Block.QUAD_SIZE),
                     new Vector3(Chunk.CHUNK_SIZE, corridorWidth, corridorWidth),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                         break;
                     case 2:
                         PoolMaster.current.DrawZone(
-                        new Vector3(basement.transform.position.x + (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                        new Vector3(basement.pos.ToWorldSpace().x + (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
                         new Vector3(corridorWidth, corridorWidth, Chunk.CHUNK_SIZE),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
                         break;
                     case 4:
                         PoolMaster.current.DrawZone(
-                        new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.transform.position.z - (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
+                        new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.pos.ToWorldSpace().z - (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
                         new Vector3(Chunk.CHUNK_SIZE, corridorWidth, corridorWidth),
                         new Color(1, 0.076f, 0.076f, 0.4f)
                         );
                         break;
                     case 6:
                         PoolMaster.current.DrawZone(
-                        new Vector3(basement.transform.position.x -
+                        new Vector3(basement.pos.ToWorldSpace().x -
                         (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
                         new Vector3(corridorWidth, corridorWidth, Chunk.CHUNK_SIZE),
                         new Color(1, 0.076f, 0.076f, 0.4f)
@@ -568,28 +568,28 @@ public sealed class Dock : WorkBuilding {
             {
                 case 0:
                     PoolMaster.current.DrawZone(
-                new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.transform.position.z + (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
+                new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.pos.ToWorldSpace().z + (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
                 new Vector3(Chunk.CHUNK_SIZE, corridorWidth, corridorWidth),
                 new Color(1, 0.076f, 0.076f, 0.4f)
                 );
                     break;
                 case 2:
                     PoolMaster.current.DrawZone(
-                    new Vector3(basement.transform.position.x + (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
+                    new Vector3(basement.pos.ToWorldSpace().x + (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
                     new Vector3(corridorWidth, corridorWidth, Chunk.CHUNK_SIZE),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                     break;
                 case 4:
                     PoolMaster.current.DrawZone(
-                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.transform.position.z - (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
+                    new Vector3(Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE, transform.position.y, basement.pos.ToWorldSpace().z - (0.5f + corridorWidth / 2f) * Block.QUAD_SIZE),
                     new Vector3(Chunk.CHUNK_SIZE, corridorWidth, corridorWidth),
                     new Color(1, 0.076f, 0.076f, 0.4f)
                     );
                     break;
                 case 6:
                     PoolMaster.current.DrawZone(
-                    new Vector3(basement.transform.position.x -
+                    new Vector3(basement.pos.ToWorldSpace().x -
                     (0.5f + corridorWidth / 2f), transform.position.y, Chunk.CHUNK_SIZE / 2f * Block.QUAD_SIZE),
                     new Vector3(corridorWidth, corridorWidth, Chunk.CHUNK_SIZE),
                     new Color(1, 0.076f, 0.076f, 0.4f)

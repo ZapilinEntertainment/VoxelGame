@@ -39,6 +39,17 @@ public sealed class UISurfacePanelController : UIObserver {
 
     public static UISurfacePanelController current { get; private set; }
 
+    public static UISurfacePanelController InitializeSurfaceObserverScript()
+    {
+        if (current != null) return current;
+        else
+        {
+            current = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.mainCanvas).GetComponent<UISurfacePanelController>();            
+            current.LocalizeTitles();
+            return current;
+        }
+    }
+
     void Start() {
         if (firstSet)
         {
@@ -154,7 +165,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		else {
 			GatherSite gs = observingSurface.worksite as GatherSite;
 			if (gs == null) {
-				gs = observingSurface.gameObject.AddComponent<GatherSite>();
+				gs = new GatherSite();
 				gs.Set(observingSurface);
                 UIController.current.ShowWorksite(gs);
 			}
@@ -171,7 +182,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 CleanSite cs = observingSurface.worksite as CleanSite;
                 if (cs == null)
                 {
-                    cs = observingSurface.gameObject.AddComponent<CleanSite>();
+                    cs = new CleanSite();
                     cs.Set(observingSurface, true);
                     UIController.current.ShowWorksite(cs);
                 }
@@ -465,7 +476,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
                 break;
             case CostPanelMode.BlockBuilding:
-                BlockBuildingSite bbs = observingSurface.gameObject.AddComponent<BlockBuildingSite>();
+                BlockBuildingSite bbs = new BlockBuildingSite ();
                 bbs.Set(observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
                 SetCostPanelMode(CostPanelMode.Disabled);
                 UIController.current.ShowWorksite(bbs);
@@ -569,8 +580,7 @@ public sealed class UISurfacePanelController : UIObserver {
     private void PrepareConstructionPlane()
     {
         surfaceBuildingPanel.SetActive(false);
-        constructionPlane.transform.position = observingSurface.transform.position + Vector3.down * 0.45f;
-        constructionPlane.transform.rotation = observingSurface.transform.rotation;      
+        constructionPlane.transform.position = observingSurface.pos.ToWorldSpace() + Vector3.down * 0.45f;   
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
@@ -662,7 +672,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.HOUSING_MAST_6_ID:
                     case Structure.CONTROL_CENTER_6_ID:
-                        if (mid != ResourceType.ADVANCED_COVERING_ID)
+                        if (mid != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                         {
                             acceptable = false;
                             reason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
@@ -679,7 +689,7 @@ public sealed class UISurfacePanelController : UIObserver {
                             {
                                 if (observingSurface.type == BlockType.Surface)
                                 {
-                                    Block[,,] blocks = observingSurface.myChunk.blocks;
+                                    var blocks = observingSurface.myChunk.blocks;
                                     ChunkPos pos = observingSurface.pos;
                                     int size = Chunk.CHUNK_SIZE;
 
@@ -690,12 +700,14 @@ public sealed class UISurfacePanelController : UIObserver {
                                         {
                                             for (; i < pos.y - 1; i++)
                                             {
-                                                if (blocks[pos.x, i, pos.z] != null) goto CHECK_FAILED;
+                                                ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
+                                                if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                             }
                                         }
                                         for (i = pos.y + 1; i < size; i++)
                                         {
-                                            if (blocks[pos.x, i, pos.z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -738,7 +750,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int x = pos.x - 1, z = pos.z + 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(x, i, z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -747,7 +760,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int z = pos.z + 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[pos.x, i, z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(pos.x, i, z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -756,7 +770,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int x = pos.x + 1, z = pos.z + 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(x, i, z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -765,7 +780,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int x = pos.x - 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[x, i, pos.z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(x, i, pos.z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -774,7 +790,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int x = pos.x + 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[x, i, pos.z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(x, i, pos.z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -783,7 +800,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int x = pos.x - 1, z = pos.z - 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(x, i, z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -792,7 +810,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int z = pos.z - 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[pos.x, i, z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(pos.x, i, z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }
@@ -801,7 +820,8 @@ public sealed class UISurfacePanelController : UIObserver {
                                         int x = pos.x + 1, z = pos.z - 1;
                                         for (; i < size; i++)
                                         {
-                                            if (blocks[x, i, z] != null) goto CHECK_FAILED;
+                                            ChunkPos cpos = new ChunkPos(x, i, z);
+                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                         }
                                         i = 0;
                                     }

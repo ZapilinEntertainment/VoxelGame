@@ -78,9 +78,9 @@ public class GatherSite : Worksite
     {
         workObject = block;
         workObject.SetWorksite(this);
-        if (sign == null) sign = Instantiate(Resources.Load<GameObject>("Prefs/GatherSign")).GetComponent<WorksiteSign>();
+        if (sign == null) sign = MonoBehaviour.Instantiate(Resources.Load<GameObject>("Prefs/GatherSign")).GetComponent<WorksiteSign>();
         sign.worksite = this;
-        sign.transform.position = workObject.transform.position + Vector3.down / 2f * Block.QUAD_SIZE;
+        sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.down * 0.5f * Block.QUAD_SIZE;
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
         colony = GameMaster.realMaster.colonyController;
         colony.SendWorkers(START_WORKERS_COUNT, this);
@@ -102,8 +102,8 @@ public class GatherSite : Worksite
             GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Destroy(sign.gameObject);
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);
+        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
@@ -120,7 +120,7 @@ public class GatherSite : Worksite
             showOnGUI = false;
             UIController.current.ChangeChosenObject(ChosenObjectType.Surface);
         }
-        Destroy(this);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
     }
 
     #region save-load system
@@ -141,7 +141,7 @@ public class GatherSite : Worksite
     }
     override protected void Load(System.IO.FileStream fs, ChunkPos pos)
     {
-        Set(transform.root.GetComponent<Chunk>().GetBlock(pos) as SurfaceBlock);
+        Set(GameMaster.realMaster.mainChunk.GetBlock(pos) as SurfaceBlock);
         var data = new byte[4];
         fs.Read(data, 0, 4);
         destructionTimer = System.BitConverter.ToSingle(data, 0);

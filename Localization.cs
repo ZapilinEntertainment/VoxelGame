@@ -379,7 +379,7 @@ public static class Localization {
                 {
                     switch (id)
                     {
-                        case ResourceType.ADVANCED_COVERING_ID: return GetStructureName(Structure.FOUNDATION_BLOCK_5_ID);
+                        case PoolMaster.MATERIAL_ADVANCED_COVERING_ID: return GetStructureName(Structure.FOUNDATION_BLOCK_5_ID);
                         case 0: return "Ничего";
                         case ResourceType.DIRT_ID: return "Земля";
                         case ResourceType.FOOD_ID: return "Пища";

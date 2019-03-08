@@ -60,25 +60,25 @@ public class TunnelBuildingSite : Worksite {
 		if ((signsMask & side) != 0) return;
 		switch (side) {
 		case 0:
-				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-				sign.transform.position = workObject.transform.position + Vector3.forward * Block.QUAD_SIZE / 2f;
+				sign = MonoBehaviour.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE / 2f;
 				signsMask += 1;
 			break;
 		case 1:
-				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-			sign.transform.position = workObject.transform.position + Vector3.right * Block.QUAD_SIZE / 2f;
+				sign = MonoBehaviour.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+			sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,90,0);
 				signsMask += 2;
 			break;
 		case 2:
-				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-				sign.transform.position = workObject.transform.position + Vector3.back * Block.QUAD_SIZE / 2f;
+				sign = MonoBehaviour.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.back * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,180,0);
 				signsMask += 4;
 			break;
 		case 3:
-				sign = Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
-				sign.transform.position = workObject.transform.position + Vector3.left * Block.QUAD_SIZE / 2f;
+				sign = MonoBehaviour.Instantiate(Resources.Load<GameObject>("Prefs/tunnelBuildingSign")).GetComponent<WorksiteSign>();
+				sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.left * Block.QUAD_SIZE / 2f;
 				sign.transform.rotation = Quaternion.Euler(0,-90,0);
 				signsMask += 8;
 			break;
@@ -95,8 +95,7 @@ public class TunnelBuildingSite : Worksite {
             GameMaster.realMaster.colonyController.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) Destroy(sign.gameObject);
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
@@ -112,7 +111,7 @@ public class TunnelBuildingSite : Worksite {
             observer.SelfShutOff();
             showOnGUI = false;
         }
-        Destroy(this);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
     }
 
     #region save-load system
@@ -130,7 +129,7 @@ public class TunnelBuildingSite : Worksite {
         return data;
 	}
 	override protected void Load (System.IO.FileStream fs, ChunkPos pos) {
-        Set(transform.root.GetComponent<Chunk>().GetBlock(pos) as CubeBlock);
+        Set(GameMaster.realMaster.mainChunk.GetBlock(pos) as CubeBlock);
         int smask = fs.ReadByte();
         if ((smask & 1) != 0) CreateSign(0);
         if ((smask & 2) != 0) CreateSign(1);

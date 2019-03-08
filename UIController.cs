@@ -475,7 +475,7 @@ sealed public class UIController : MonoBehaviour
                         }
                         break;
                     }
-                case Block.BLOCK_COLLIDER_TAG:
+                case "Block":
                     {
                         Block b = collided.transform.parent.GetComponent<Block>();
                         if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block
@@ -505,8 +505,8 @@ sealed public class UIController : MonoBehaviour
                                     faceIndex = 10;
                                     for (byte i = 0; i < 6; i++)
                                     {
-                                        if (chosenCube.faces[i] == null) continue;
-                                        if (chosenCube.faces[i].GetComponent<Collider>() == rh.collider) { faceIndex = i; break; }
+                                        //if (chosenCube.faces[i] == null) continue;
+                                        //if (chosenCube.faces[i].GetComponent<Collider>() == rh.collider) { faceIndex = i; break; }
                                     }
                                     if (faceIndex < 6) ChangeChosenObject(ChosenObjectType.Cube);
                                     else ChangeChosenObject(ChosenObjectType.None);
@@ -616,22 +616,21 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Surface:
                 {
                     faceIndex = 10; // вспомогательная дата для chosenCube
-                    selectionFrame.position = chosenSurface.transform.position + Vector3.down * Block.QUAD_SIZE / 2f;
+                    Vector3 pos = chosenSurface.pos.ToWorldSpace();
+                    selectionFrame.position = pos + Vector3.down * Block.QUAD_SIZE / 2f;
                     selectionFrame.rotation = Quaternion.identity;
                     selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
                     workingObserver = chosenSurface.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(chosenSurface.transform.position);
+                    FollowingCamera.main.SetLookPoint(pos);
                 }
                 break;
 
             case ChosenObjectType.Cube:
                 {
                     bool activatePlatformCreatingButton = false;
-                    if (chosenCube.faces[faceIndex] != null)
-                    {
-                        selectionFrame.position = chosenCube.faces[faceIndex].transform.position;
+                        selectionFrame.position = chosenCube.pos.ToWorldSpace(); // + позиция плоскости
                         switch (faceIndex)
                         {
                             case 0:
@@ -683,10 +682,9 @@ sealed public class UIController : MonoBehaviour
                         }
                         selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
                         sframeColor = new Vector3(140f / 255f, 1, 0.9f);
-                    }
-                    else selectionFrame.gameObject.SetActive(false);
 
-                    FollowingCamera.main.SetLookPoint(chosenCube.transform.position);
+
+                    FollowingCamera.main.SetLookPoint(chosenCube.pos.ToWorldSpace());
 
                     Transform t = rightPanel.transform;
                     t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(true);
@@ -1065,13 +1063,13 @@ sealed public class UIController : MonoBehaviour
                 SurfaceBlock sb = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z) as SurfaceBlock;
                 if (sb == null)
                 {
-                    DigSite ds = chosenCube.gameObject.AddComponent<DigSite>();
+                    DigSite ds = new DigSite();
                     ds.Set(chosenCube, true);
                     workingObserver = ds.ShowOnGUI(); // вообще они должны сами в конце цепочки устанавливать здесь workingObserver, не?
                 }
                 else
                 {
-                    CleanSite cs = chosenCube.gameObject.AddComponent<CleanSite>();
+                    CleanSite cs = new CleanSite();
                     cs.Set(sb, true);
                     workingObserver = cs.ShowOnGUI();
                 }
@@ -1080,7 +1078,7 @@ sealed public class UIController : MonoBehaviour
             {
                 if (faceIndex < 4)
                 {
-                    TunnelBuildingSite tbs = chosenCube.gameObject.AddComponent<TunnelBuildingSite>();
+                    TunnelBuildingSite tbs = new TunnelBuildingSite();
                     tbs.Set(chosenCube);
                     tbs.CreateSign(faceIndex);
                     workingObserver = tbs.ShowOnGUI();
@@ -1093,7 +1091,7 @@ sealed public class UIController : MonoBehaviour
         if (chosenCube == null || chosenCube.excavatingStatus == 0) return;
         else
         {
-            DigSite ds = chosenCube.gameObject.AddComponent<DigSite>();
+            DigSite ds = new DigSite();
             ds.Set(chosenCube, false);
             ds.ShowOnGUI();
         }

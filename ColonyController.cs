@@ -278,12 +278,12 @@ public sealed class ColonyController : MonoBehaviour
     private IEnumerator DeportateWorkingCitizen() // чтобы не тормозить апдейт
     {
         bool found = false;
-        Block[,,] blocks = GameMaster.realMaster.mainChunk.blocks;
+        var blocks = GameMaster.realMaster.mainChunk.blocks;
         SurfaceBlock sb = null;
         WorkBuilding wb = null;
-        foreach (Block b in blocks)
+        foreach (var bd in blocks)
         {
-            sb = b as SurfaceBlock;
+            sb = bd.Value as SurfaceBlock;
             if (sb == null || sb.cellsStatus == 0) continue;
             foreach (Structure s in sb.surfaceObjects)
             {

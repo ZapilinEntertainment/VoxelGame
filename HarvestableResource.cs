@@ -38,7 +38,7 @@ public class HarvestableResource : Structure
                     MeshRenderer[] mrrs = model.GetComponentsInChildren<MeshRenderer>();
                     foreach (MeshRenderer mr in mrrs)
                     {
-                        mr.sharedMaterial = PoolMaster.basic_material;
+                        mr.sharedMaterial = PoolMaster.GetBasicMaterial();
                     }
                     byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
                     hr.innerPosition = new SurfaceRect(c, c, (byte)(c + c));
@@ -94,7 +94,14 @@ public class HarvestableResource : Structure
                     height = 0.047f;
 
                     Transform meshTransform = model.transform.GetChild(0);
-                    meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+                    var mf = meshTransform.GetComponent<MeshFilter>();
+                    var mr = meshTransform.GetComponent<MeshRenderer>();
+                    PoolMaster.SetMaterialByID(
+                        ref mf,
+                        ref mr,
+                        i_rtype.ID,
+                        255
+                        );
                     hr.maxHp = 30;
                     hr.innerPosition = SurfaceRect.one;
                     break;
@@ -113,8 +120,15 @@ public class HarvestableResource : Structure
                     hr.gameObject.name = "boulder";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/boulderPref"));
                     Transform meshTransform = model.transform.GetChild(0);
-                    meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
-                   
+                    var mf = meshTransform.GetComponent<MeshFilter>();
+                    var mr = meshTransform.GetComponent<MeshRenderer>();
+                    PoolMaster.SetMaterialByID(
+                        ref mf,
+                        ref mr,
+                        i_rtype.ID,
+                        255
+                        );
+
                     regInfo = new LODRegisterInfo((int)ContainerModelType.Boulder, 0, hr.mainResource.ID);
                     createSpriteLOD = true;
                     height = 0.047f;
@@ -128,7 +142,14 @@ public class HarvestableResource : Structure
                     hr.gameObject.name = "default container";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer"));
                     Transform meshTransform = model.transform.GetChild(0);
-                    meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(i_rtype.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+                    var mf = meshTransform.GetComponent<MeshFilter>();
+                    var mr = meshTransform.GetComponent<MeshRenderer>();
+                    PoolMaster.SetMaterialByID(
+                        ref mf,
+                        ref mr,
+                        i_rtype.ID,
+                        255
+                        );
 
                     hr.model_id = ContainerModelType.Default;
 
@@ -260,7 +281,14 @@ public class HarvestableResource : Structure
     {
         Transform model = Instantiate(Resources.Load<GameObject>("Prefs/defaultContainer")).transform;
         Transform meshTransform = model.transform.GetChild(0);
-        meshTransform.GetComponent<MeshRenderer>().sharedMaterial = ResourceType.GetMaterialById(mainResource.ID, meshTransform.GetComponent<MeshFilter>(), 255);
+        var mf = meshTransform.GetComponent<MeshFilter>();
+        var mr = meshTransform.GetComponent<MeshRenderer>();
+        PoolMaster.SetMaterialByID(
+            ref mf,
+            ref mr,
+            mainResource.ID,
+            255
+            );
         model_id = ContainerModelType.Default;
         model.parent = transform;
         model.localPosition = Vector3.zero;

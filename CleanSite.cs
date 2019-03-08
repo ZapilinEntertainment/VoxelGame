@@ -30,7 +30,7 @@ public class CleanSite : Worksite {
                 }
                 else
                 {                    
-                    DigSite ds = basement.gameObject.AddComponent<DigSite>();
+                    DigSite ds = new DigSite();
                     TransferWorkers(this, ds);
                     ds.Set(basement as CubeBlock, true);
                     if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
@@ -82,10 +82,10 @@ public class CleanSite : Worksite {
 	public void Set(SurfaceBlock block, bool f_diggingMission) {
 		workObject = block;
         workObject.SetWorksite(this);
-		if (block.grassland != null) block.grassland.Annihilation(true); 
-		if (sign == null) sign = Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
+		if (block.grassland != null) block.grassland.Annihilation(true, false); 
+		if (sign == null) sign = MonoBehaviour.Instantiate(Resources.Load<GameObject> ("Prefs/ClearSign")).GetComponent<WorksiteSign>();
 		sign.worksite = this;
-		sign.transform.position = workObject.transform.position;
+		sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.up * 0.5f * Block.QUAD_SIZE;
         //FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
 
         diggingMission = f_diggingMission;
@@ -111,9 +111,8 @@ public class CleanSite : Worksite {
         if (sign != null)
         {
           //  FollowingCamera.main.cameraChangedEvent -= SignCameraUpdate;
-            Destroy(sign.gameObject);
-        }
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
+            MonoBehaviour.Destroy(sign.gameObject);
+        }        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
@@ -133,7 +132,7 @@ public class CleanSite : Worksite {
             }
             showOnGUI = false;
         }
-        Destroy(this);
+        if (worksitesList.Contains(this)) worksitesList.Remove(this);
     }
 
     #region save-load mission
@@ -152,7 +151,7 @@ public class CleanSite : Worksite {
 	}
 	override protected void Load(System.IO.FileStream fs, ChunkPos cpos) {
         Set(
-            transform.root.GetComponent<Chunk>().GetBlock(cpos) as SurfaceBlock, 
+            GameMaster.realMaster.mainChunk.GetBlock(cpos) as SurfaceBlock, 
             fs.ReadByte() == 1
             );
         LoadWorksiteData(fs);
