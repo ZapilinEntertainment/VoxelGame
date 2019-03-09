@@ -200,29 +200,66 @@ public class CubeBlock : Block
 
     override public List<BlockpartVisualizeInfo> GetVisualDataList(byte visibilityMask)
     {
-        return null;
+        if (visibilityMask == 0) return null;
+        var data = new List<BlockpartVisualizeInfo>();
+        if ((visibilityMask & 1) != 0)
+            data.Add(
+                new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(0, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x, pos.y, pos.z + 1)), MeshType.Quad, material_id)
+                );
+        if ((visibilityMask & 2) != 0)
+            data.Add(
+                new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(1, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x + 1, pos.y, pos.z)), MeshType.Quad, material_id)
+                );
+        if ((visibilityMask & 4) != 0)
+            data.Add(
+                new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(2, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x, pos.y, pos.z - 1)), MeshType.Quad, material_id)
+                );
+        if ((visibilityMask & 8) != 0)
+            data.Add(
+                new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(3, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x - 1, pos.y, pos.z)), MeshType.Quad, material_id)
+                );
+        if ((visibilityMask & 16) != 0)
+            data.Add(
+                GetFaceVisualData(4)
+                );
+        if ((visibilityMask & 32) != 0)
+            data.Add(
+                new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(5, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x , pos.y - 1, pos.z)), MeshType.Quad, material_id)
+                );
+        return data;
     }
-    override public BlockpartVisualizeInfo GetVisualData(byte face)
+    override public BlockpartVisualizeInfo GetFaceVisualData(byte face)
     {
         if (face > 5) return null;
         else
         {
-            var mvi = new MeshVisualizeInfo(face, myChunk.GetLightValue(pos), material_id);
+            byte lightValue = 255;
             MeshType mtype = MeshType.Quad;
-            if (face == 4 & career)
+            switch (face)
             {
-                float pc = volume / (float)MAX_VOLUME;
-                if (pc < 0.75f)
-                {
-                    if (pc > 0.5f) mtype = MeshType.ExcavatedPlane025;
-                    else
+                case 0: lightValue = myChunk.GetLightValue(pos.x, pos.y, pos.z + 1); break;
+                case 1: lightValue = myChunk.GetLightValue(pos.x + 1, pos.y, pos.z); break;
+                case 2: lightValue = myChunk.GetLightValue(pos.x, pos.y, pos.z - 1); break;
+                case 3: lightValue = myChunk.GetLightValue(pos.x - 1, pos.y, pos.z); break;
+                case 4:
+                    if (career)
                     {
-                        if (pc < 0.25f) mtype = MeshType.ExcavatedPlane075;
-                        else mtype = MeshType.ExcavatedPlane05;
+                        float pc = volume / (float)MAX_VOLUME;
+                        if (pc < 0.75f)
+                        {
+                            if (pc > 0.5f) mtype = MeshType.ExcavatedPlane025;
+                            else
+                            {
+                                if (pc < 0.25f) mtype = MeshType.ExcavatedPlane075;
+                                else mtype = MeshType.ExcavatedPlane05;
+                            }
+                        }
                     }
-                }
+                    lightValue = myChunk.GetLightValue(pos.x, pos.y + 1, pos.z); break;
+                case 5: lightValue = myChunk.GetLightValue(pos.x, pos.y - 1, pos.z); break;
             }
-            var bvi = new BlockpartVisualizeInfo(pos, mvi, mtype);
+            var mvi = new MeshVisualizeInfo(face, PoolMaster.GetMaterialType(material_id), lightValue);
+            var bvi = new BlockpartVisualizeInfo(pos, mvi, mtype, material_id);
             return bvi;
         }
     }

@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum MeshType: byte { Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075}
+public enum MaterialType : byte { Basic, Metal, Energy, Green }
+public enum MeshType: byte { Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeil}
 
 public sealed class PoolMaster : MonoBehaviour {
     private struct LightPoolInfo
     {
-        public int materialID;
+        public MaterialType mtype;
         public byte illumination; 
-        public LightPoolInfo (int i_id, byte i_light)
+        public LightPoolInfo (MaterialType i_mtype, byte i_light)
         {
-            materialID = i_id;
+            mtype = i_mtype;
             illumination = i_light;
         }
     }
@@ -49,6 +50,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public const int MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
         MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
         MATERIAL_WHITEWALL_ID = -11;
+    // зависимость - ResourceType.GetResourceByID
     private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2;
 
     public void Load() {
@@ -62,10 +64,11 @@ public sealed class PoolMaster : MonoBehaviour {
         inactiveShips = new List<Ship>();
 
         quadMesh = new Mesh();
-        quadMesh.vertices = new Vector3[4] { Vector3.zero, Vector3.up, Vector3.one, Vector3.right };
-        quadMesh.triangles = new int[6] { 0, 1, 2, 0, 2, 3};
+        quadMesh.vertices = new Vector3[4] { new Vector3 (0.5f, -0.5f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0) };
+        quadMesh.triangles = new int[6] {0,1,2, 1,3,2 };
         quadMesh.normals = new Vector3[4] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
-        quadMesh.uv = new Vector2[4] { Vector2.zero, Vector2.up, Vector2.one, Vector2.right };
+        quadMesh.uv = new Vector2[4] { new Vector2(0,0) , new Vector2(0,1), new Vector2(1,0), new Vector2(1,1) };
+
         plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
 		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
 		plane_excavated_075 = Resources.Load<Mesh>("Meshes/Plane_excavated_075");
@@ -106,6 +109,15 @@ public sealed class PoolMaster : MonoBehaviour {
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+
+        //testzone
+        //GameObject g = new GameObject("quad");
+        //var mf = g.AddComponent<MeshFilter>();
+        //mf.mesh= quadMesh;
+        //var mr = g.AddComponent<MeshRenderer>();
+        //mr.sharedMaterial = basic_material;
+        //SetMaterialByID(ref mf, ref mr, MATERIAL_GRASS_20_ID, 255);
+        //g.transform.position += Vector3.up * 2;
 	}
 
 	void LabourUpdate() {
@@ -297,8 +309,6 @@ public sealed class PoolMaster : MonoBehaviour {
         return Instantiate(Resources.Load<GameObject>("Prefs/flyingPlatform_small"));
     }
 
-    public static Material GetBasicMaterial() { return basic_material; }
-
     public static void SetMaterialByID(ref MeshFilter mf, ref MeshRenderer mr, int materialID, byte i_illumination)
     {
         var m = mf.mesh;
@@ -306,20 +316,10 @@ public sealed class PoolMaster : MonoBehaviour {
         mf.sharedMesh = m;
         if (Chunk.useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);
         else mr.sharedMaterial = GetMaterial(materialID);
-        if (shadowCasting)
-        {
-            mr.receiveShadows = true;
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-        }
-        else
-        {
-            mr.receiveShadows = false;
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        }
     }
     public static void SetMeshUVs(ref Mesh m, int materialID)
     {
-        var borders = new Vector2[m.vertexCount];
+        Vector2[] borders ;
         float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
         switch (materialID)
         {
@@ -404,13 +404,27 @@ public sealed class PoolMaster : MonoBehaviour {
             case MATERIAL_WHITEWALL_ID:
                 borders = new Vector2[] { new Vector2(2 * piece, piece), new Vector2(2 * piece, 2 * piece), new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, piece) };
                 break;
+            default: borders = new Vector2[] { Vector2.zero, Vector2.one, Vector2.right, Vector2.up }; break;
         }
+
+        borders = new Vector2[4] { borders[0], borders[2], borders[1], borders[3] };
+        borders[0].x += 0.01f;
+        borders[0].y += 0.01f;
+
+        borders[1].x -= 0.01f;
+        borders[1].y -= 0.01f;
+
+        borders[2].x += 0.01f;
+        borders[2].y -= 0.01f;
+
+        borders[3].x -= 0.01f;
+        borders[3].y += 0.01f;
+
         // крутим развертку, если это квад, иначе просто перетаскиваем 
         bool isQuad = (m.uv.Length == 4);
         Vector2[] uvEdited = m.uv;
         if (isQuad)
-        {
-            borders = new Vector2[] { borders[0] + Vector2.one * 0.01f, borders[1] + new Vector2(0.01f, -0.01f), borders[2] - Vector2.one * 0.01f, borders[3] - new Vector2(0.01f, -0.01f) };
+        {                    
             if (useTextureRotation)
             {
                 float seed = Random.value;
@@ -442,6 +456,97 @@ public sealed class PoolMaster : MonoBehaviour {
         m.uv = uvEdited;
     }
 
+    public static MaterialType GetMaterialType(int materialID)
+    {
+        switch (materialID)
+        {
+            case ResourceType.PLASTICS_ID:
+            case ResourceType.CONCRETE_ID:
+            case ResourceType.SNOW_ID:
+            case ResourceType.DIRT_ID:
+            case ResourceType.STONE_ID:
+            case ResourceType.FERTILE_SOIL_ID:
+            case MATERIAL_ADVANCED_COVERING_ID:
+            case ResourceType.LUMBER_ID:
+            case MATERIAL_DEAD_LUMBER_ID:
+            case MATERIAL_WHITEWALL_ID:
+                return MaterialType.Basic;
+
+            case ResourceType.METAL_K_ID:
+            case ResourceType.METAL_K_ORE_ID:
+            case ResourceType.METAL_M_ORE_ID:
+            case ResourceType.METAL_M_ID:
+            case ResourceType.METAL_E_ORE_ID:
+            case ResourceType.METAL_E_ID:
+            case ResourceType.METAL_N_ORE_ID:
+            case ResourceType.METAL_N_ID:
+            case ResourceType.METAL_P_ORE_ID:
+            case ResourceType.METAL_P_ID:
+            case ResourceType.METAL_S_ORE_ID:
+            case ResourceType.METAL_S_ID:
+            case ResourceType.MINERAL_F_ID:
+            case ResourceType.MINERAL_L_ID:
+            case MATERIAL_WHITE_METAL_ID:
+                return MaterialType.Metal;
+
+            case ResourceType.GRAPHONIUM_ID: return MaterialType.Energy;
+            case MATERIAL_GRASS_100_ID:
+            case MATERIAL_GRASS_80_ID:
+            case MATERIAL_GRASS_60_ID:
+            case MATERIAL_GRASS_40_ID:
+            case MATERIAL_GRASS_20_ID:
+            case MATERIAL_LEAVES_ID: return MaterialType.Green;
+            default: return MaterialType.Basic;
+        }
+    }
+    public static Material GetMaterial (MaterialType mtype)
+    {
+        switch (mtype)
+        {
+            case MaterialType.Metal:
+                return metal_material;
+            case MaterialType.Green:
+                return green_material;
+            case MaterialType.Basic:
+            default:
+                return basic_material;
+        }
+    }
+    public static Material GetMaterial (MaterialType mtype, byte i_illumination)
+    {
+        byte p = (byte)(1f / MAX_MATERIAL_LIGHT_DIVISIONS * 127.5f);
+        if (i_illumination < p) return darkness_material;
+        else
+        {
+            if (i_illumination > 255 - p) return GetMaterial(mtype);
+            else
+            {
+                p *= 2;
+                i_illumination -= (byte)(i_illumination % p);
+                Material m = null;
+
+                var key = new LightPoolInfo(mtype, i_illumination);
+                if (lightPoolMaterials.ContainsKey(key))
+                {
+                    lightPoolMaterials.TryGetValue(key, out m);
+                    if (m == null) return GetMaterial(mtype);
+                    else return m;
+                }
+                else
+                {
+                    Material m0 = GetMaterial(mtype);
+                    if (m0.HasProperty("_Illumination"))
+                    {
+                        m = new Material(m0);
+                        m.SetFloat("_Illumination", i_illumination / 255f);
+                        lightPoolMaterials.Add(key, m);
+                        return m;
+                    }
+                    else return m0;
+                }
+            }
+        }
+    }
     private static Material GetMaterial(int id)
     {
         switch (id)
@@ -498,7 +603,7 @@ public sealed class PoolMaster : MonoBehaviour {
                 i_illumination -= (byte)(i_illumination % p);
                 Material m = null;
 
-                var key = new LightPoolInfo(id, i_illumination);
+                var key = new LightPoolInfo(GetMaterialType(id), i_illumination);
                 if (lightPoolMaterials.ContainsKey(key))
                 {
                     lightPoolMaterials.TryGetValue(key, out m);
@@ -518,8 +623,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     else return m0;
                 }
             }
-        }
-        
+        }        
     }
 
     public static void ReplaceMaterials(GameObject g)
@@ -557,7 +661,7 @@ public sealed class PoolMaster : MonoBehaviour {
             }
             if (shadowCasting)
             {
-                if (shadowCasting) mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                if (castShadows) mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 if (receiveShadows) mr.receiveShadows = true;
             }
             else

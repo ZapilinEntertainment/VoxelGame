@@ -47,7 +47,7 @@ public class Block {
     {
         return null;
     }
-    virtual public BlockpartVisualizeInfo GetVisualData(byte face)
+    virtual public BlockpartVisualizeInfo GetFaceVisualData(byte face)
     {
         return null;
     }

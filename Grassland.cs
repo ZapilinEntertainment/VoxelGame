@@ -49,7 +49,7 @@ public class GrasslandSerializer
     public byte prevStage = 0;
 }
 
-public class Grassland : MonoBehaviour
+public class Grassland
 {
     public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22, BERRY_BUSH_LIFECOST = 10;
     public const int SERIALIZER_LENGTH = 9;
@@ -221,27 +221,25 @@ public class Grassland : MonoBehaviour
 
     void SetGrassTexture(byte stage)
     {
-        // не ставь проверки - иногда вызываются для обновления
-        if (myBlock.material_id != ResourceType.DIRT_ID) return;
         switch (stage)
         {
             case 0:
-                myBlock.ReplaceMaterial(ResourceType.DIRT_ID);
+                myBlock.ReplaceGrassTexture(ResourceType.DIRT_ID);
                 break;
             case 1:
-                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_20_ID);
+                myBlock.ReplaceGrassTexture(PoolMaster.MATERIAL_GRASS_20_ID);
                 break;
             case 2:
-                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_40_ID);
+                myBlock.ReplaceGrassTexture(PoolMaster.MATERIAL_GRASS_40_ID);
                 break;
             case 3:
-                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_60_ID);
+                myBlock.ReplaceGrassTexture(PoolMaster.MATERIAL_GRASS_60_ID);
                 break;
             case 4:
-                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_80_ID);
+                myBlock.ReplaceGrassTexture(PoolMaster.MATERIAL_GRASS_80_ID);
                 break;
             case 5:
-                myBlock.ReplaceMaterial(PoolMaster.MATERIAL_GRASS_100_ID);
+                myBlock.ReplaceGrassTexture(PoolMaster.MATERIAL_GRASS_100_ID);
                 break;
         }
     }

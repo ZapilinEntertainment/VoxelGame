@@ -22,6 +22,18 @@ public abstract class Constructor
         NatureCreation(c);
         CheckForLandingPosition(c);
     }
+    public static void ConstructBlock(byte chunkSize)
+    {
+        int size = chunkSize;
+        int[,,] dat = new int[size, size, size];
+        dat[0, 0, 0] = ResourceType.STONE_ID;
+        GameObject g = new GameObject("chunk");
+        Chunk c = g.AddComponent<Chunk>();
+        GameMaster.realMaster.SetMainChunk(c);
+        c.CreateNewChunk(dat);
+        NatureCreation(c);
+        CheckForLandingPosition(c);
+    }
 
     private static void GenerateSpiralsData(int size, ref int[,,] data)
     {

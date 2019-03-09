@@ -65,7 +65,7 @@ public class SurfaceBlock : Block
             for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
         }
         surfaceObjects = new List<Structure>();
-        artificialStructures = 0;      
+        artificialStructures = 0;
     }
 
     public void SetGrassland(Grassland g) { grassland = g; }
@@ -306,6 +306,7 @@ public class SurfaceBlock : Block
             }
         }
         surfaceObjects.Add(s);
+        s.transform.parent = myChunk.transform;
         s.transform.position = GetLocalPosition(s.innerPosition);
         if (myChunk.GetVisibilityMask(pos) == 0) s.SetVisibility(false); else s.SetVisibility(true);
         s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
@@ -367,8 +368,35 @@ public class SurfaceBlock : Block
         s.transform.rotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
         if (myChunk.GetVisibilityMask(pos) == 0) s.SetVisibility(false); else s.SetVisibility(true);
         RecalculateSurface();
+    }   
+
+    public override void ReplaceMaterial(int newId)
+    {
+        material_id = newId;
+        if (grassland != null) grassland.Annihilation(false, true);
+        myChunk.ChangeBlockVisualData(this, 6);
+    }
+    public void ReplaceGrassTexture(int id)
+    {
+        if (grassland != null)
+        {
+            material_id = id;
+            myChunk.ChangeBlockVisualData(this, 6);
+        }
     }
 
+    public void SetStructureBlock(BlockRendererController brc)
+    {
+        structureBlockRenderer = brc;
+        brc.SetVisibilityMask(myChunk.GetVisibilityMask(pos));
+    }
+    public void ClearStructureBlock(BlockRendererController brc)
+    {
+        if (structureBlockRenderer == brc)
+        {
+            structureBlockRenderer = null;
+        }
+    }
     /// <summary>
     /// Remove structure data from this block structures map
     /// </summary>
@@ -386,7 +414,6 @@ public class SurfaceBlock : Block
         }
         RecalculateSurface();
     }
-
     public void TransferStructures(SurfaceBlock receiver)
     {
         if (cellsStatus == 0) return;
@@ -405,41 +432,34 @@ public class SurfaceBlock : Block
         }
     }
 
-    public override void ReplaceMaterial(int newId)
+    override public List<BlockpartVisualizeInfo> GetVisualDataList(byte visibilityMask)
     {
-        material_id = newId;
-        if (material_id != ResourceType.DIRT_ID & material_id != ResourceType.FERTILE_SOIL_ID & grassland != null)
-        {
-            grassland.Annihilation(false, true);
-        }
-        myChunk.RefreshBlockVisualising(this);
+        if ((visibilityMask & 64) != 0) return new List<BlockpartVisualizeInfo>() { GetFaceVisualData(6) };
+        else return null;
     }
-
-    public void SetStructureBlock(BlockRendererController brc)
+    override public BlockpartVisualizeInfo GetFaceVisualData(byte face)
     {
-        structureBlockRenderer = brc;
-        brc.SetVisibilityMask(myChunk.GetVisibilityMask(pos));
-    }
-    public void ClearStructureBlock(BlockRendererController brc)
-    {
-        if (structureBlockRenderer == brc)
-        {
-            structureBlockRenderer = null;
-        }
+        if (face == 6) return new BlockpartVisualizeInfo(
+            pos,
+            new MeshVisualizeInfo(6, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos)),
+            MeshType.Quad,
+            material_id
+            );
+        else return null;
     }
 
     #region structures positioning   
     public Vector3 GetLocalPosition(SurfaceRect sr)
     {
-        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, 0.5f, -0.5f) * QUAD_SIZE;
+        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, -0.5f, -0.5f) * QUAD_SIZE;
         float res = INNER_RESOLUTION;
         float xpos = sr.x + sr.size / 2f;
         float zpos = sr.z + sr.size / 2f;
-        return (leftBottomCorner + new Vector3((xpos / res - 0.5f) * QUAD_SIZE, -QUAD_SIZE / 2f, ((1 - zpos / res) - 0.5f) * QUAD_SIZE));
+        return (leftBottomCorner + new Vector3((xpos / res) * QUAD_SIZE, 0f, (1 - zpos / res) * QUAD_SIZE));
     }
     public Vector3 GetLocalPosition(byte x, byte z)
     {
-        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, 0.5f, -0.5f) * QUAD_SIZE;
+        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, -0.5f, -0.5f) * QUAD_SIZE;
         float ir = INNER_RESOLUTION, half = 1f / ir / 2f;
         return leftBottomCorner + new Vector3(x / ir + half, 0f, z / ir + half);
     }

@@ -112,12 +112,26 @@ public class ResourceType
 
     public static ResourceType GetResourceTypeById(int f_id)
     {
-        if (f_id > resourceTypesArray.Length || f_id < 0)
+        if (f_id > resourceTypesArray.Length) return Nothing;
+        else
         {
-            // return custom id's
-            return ResourceType.Nothing;
+            if (f_id > 0) return resourceTypesArray[f_id];
+            else {
+                switch (f_id)
+                {
+                    case PoolMaster.MATERIAL_ADVANCED_COVERING_ID: return metal_K;
+                    case PoolMaster.MATERIAL_GRASS_100_ID:
+                    case PoolMaster.MATERIAL_GRASS_80_ID:
+                    case PoolMaster.MATERIAL_GRASS_60_ID:
+                    case PoolMaster.MATERIAL_GRASS_40_ID:
+                    case PoolMaster.MATERIAL_GRASS_20_ID: return Dirt;
+                    case PoolMaster.MATERIAL_WHITE_METAL_ID: return metal_K;
+                    case PoolMaster.MATERIAL_DEAD_LUMBER_ID: return Lumber;
+                    case PoolMaster.MATERIAL_WHITEWALL_ID: return Concrete;
+                    default: return Nothing;
+                }
+            }
         }
-        else return resourceTypesArray[f_id];
     }
 
     /// <summary>

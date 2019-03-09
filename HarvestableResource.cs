@@ -38,7 +38,7 @@ public class HarvestableResource : Structure
                     MeshRenderer[] mrrs = model.GetComponentsInChildren<MeshRenderer>();
                     foreach (MeshRenderer mr in mrrs)
                     {
-                        mr.sharedMaterial = PoolMaster.GetBasicMaterial();
+                        mr.sharedMaterial = PoolMaster.GetMaterial(MaterialType.Basic);
                     }
                     byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
                     hr.innerPosition = new SurfaceRect(c, c, (byte)(c + c));
