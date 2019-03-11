@@ -215,9 +215,11 @@ public class CubeBlock : Block
                 new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(2, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x, pos.y, pos.z - 1)), MeshType.Quad, material_id)
                 );
         if ((visibilityMask & 8) != 0)
+        {            
             data.Add(
                 new BlockpartVisualizeInfo(pos, new MeshVisualizeInfo(3, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x - 1, pos.y, pos.z)), MeshType.Quad, material_id)
                 );
+        }
         if ((visibilityMask & 16) != 0)
             data.Add(
                 GetFaceVisualData(4)

@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct ChunkRaycastHit
+{
+    public readonly Block block;
+    public readonly byte faceIndex;
+    public ChunkRaycastHit(Block b, byte face)
+    {
+        block = b;
+        faceIndex = face;
+    }
+}
 public struct ChunkPos
 {
     public byte x, y, z;
@@ -154,9 +164,7 @@ public sealed class BlockpartVisualizeInfo
 public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, Peak, TerrainLoading, DontGenerate }
 
 public sealed class Chunk : MonoBehaviour
-{
-    public static bool useIlluminationSystem { get; private set; }
-
+{  
     public Dictionary<ChunkPos, Block> blocks;
     public List<SurfaceBlock> surfaceBlocks { get; private set; }
     public byte prevBitmask = 63;
@@ -178,7 +186,8 @@ public sealed class Chunk : MonoBehaviour
     private GameObject[] renderersHolders; // 6 холдеров для каждой стороны куба + 1 нестандартная
 
     public const float SUPPORT_POINTS_ENOUGH_FOR_HANGING = 2, CHUNK_UPDATE_TICK = 0.5f;
-    public const byte MIN_CHUNK_SIZE = 3 ,UP_LIGHT = 255, BOTTOM_LIGHT = 128;
+    public const byte MIN_CHUNK_SIZE = 3 ,UP_LIGHT = 255, BOTTOM_LIGHT = 128, NO_FACE_VALUE = 10;
+    public const string BLOCK_COLLIDER_TAG = "BlockCollider";
 
     private static readonly byte[] powersOfTwo = new byte[] { 1, 2, 4, 8, 16, 32, 64, 128 };
 
@@ -222,9 +231,6 @@ public sealed class Chunk : MonoBehaviour
         {
             RemadeRenderersHolders();
         }
-        
-
-        useIlluminationSystem = !PoolMaster.useAdvancedMaterials;
         lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
@@ -352,7 +358,6 @@ public sealed class Chunk : MonoBehaviour
 
     public void CullingUpdate()
     {
-        return;
         Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
         Vector3 v = Vector3.one * (-1);
         float size = CHUNK_SIZE * Block.QUAD_SIZE;
@@ -362,12 +367,13 @@ public sealed class Chunk : MonoBehaviour
         byte renderBitmask = 63;
         if (v != Vector3.zero)
         {
-            //easy-culling	
-            
+            //easy-culling	            
             if (v.x == 1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
             if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
             if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;            
         }
+        if ((renderBitmask & 16) != 0) renderBitmask += 64;
+        if ((renderBitmask & 32) != 0) renderBitmask += 128;
         if (renderBitmask != prevBitmask)
         {
             if (renderers.Count > 0)
@@ -389,7 +395,7 @@ public sealed class Chunk : MonoBehaviour
     #region visualising
     public byte GetLightValue(int x, int y, int z)
     {
-        if (!useIlluminationSystem) return UP_LIGHT;
+        if (!PoolMaster.useIlluminationSystem) return UP_LIGHT;
         else
         {
             if (y < 0) return BOTTOM_LIGHT;
@@ -403,9 +409,11 @@ public sealed class Chunk : MonoBehaviour
         }
     }
     public byte GetLightValue(ChunkPos cpos) { return GetLightValue(cpos.x, cpos.y, cpos.z); }
+
     public byte GetVisibilityMask(ChunkPos cpos) { return GetVisibilityMask(cpos.x, cpos.y, cpos.z); }
     public byte GetVisibilityMask(int x, int y, int z)
     {
+        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE) return 255;
         if (y > GameMaster.layerCutHeight) return 0;
         else
         {
@@ -448,7 +456,7 @@ public sealed class Chunk : MonoBehaviour
             {
                 vmask += powersOfTwo[6]; // surface
                 vmask += powersOfTwo[7]; // cave ceiling
-            }            
+            }
             return vmask;
         }
     }
@@ -499,7 +507,7 @@ public sealed class Chunk : MonoBehaviour
     }
     public void RefreshBlockVisualising(Block b)
     {
-        byte visibilityMask = GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z);
+        byte visibilityMask = GetVisibilityMask(b.pos);
         var blockParts = new BlockpartVisualizeInfo[8];
         var indexes = new int[8];
 
@@ -619,10 +627,12 @@ public sealed class Chunk : MonoBehaviour
             mr.receiveShadows = PoolMaster.shadowCasting;
             mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
             mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-            if (!useIlluminationSystem) mr.sharedMaterial = PoolMaster.GetMaterial(mvi.materialType);
+            if (!PoolMaster.useIlluminationSystem) mr.sharedMaterial = PoolMaster.GetMaterial(mvi.materialType);
             else mr.sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
             
             g.transform.parent = renderersHolders[mvi.faceIndex].transform;
+            g.AddComponent<MeshCollider>().sharedMesh = m;
+            g.tag = BLOCK_COLLIDER_TAG;
 
             renderers.Add(mvi, g);
         }
@@ -658,8 +668,9 @@ public sealed class Chunk : MonoBehaviour
                     Mesh cm = new Mesh();
                     cm.CombineMeshes(ci);
                     g.GetComponent<MeshFilter>().sharedMesh = cm;
+                    g.GetComponent<MeshCollider>().sharedMesh = cm;
                     if (mvi.materialType == MaterialType.Green) print("green");
-                    if (useIlluminationSystem) g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
+                    if (PoolMaster.useIlluminationSystem) g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
                     else g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType);
                 }
             }
@@ -719,7 +730,7 @@ public sealed class Chunk : MonoBehaviour
     }
     public void ChunkLightmapFullRecalculation()
     {
-        if (!useIlluminationSystem) return;
+        if (!PoolMaster.useIlluminationSystem) return;
         byte UP_LIGHT = 255, DOWN_LIGHT = 128;
         int x = 0, y = 0, z = 0;
         for (x = 0; x < CHUNK_SIZE; x++)
@@ -1008,7 +1019,24 @@ public sealed class Chunk : MonoBehaviour
     }
     public Block GetBlock(int x, int y, int z)
     {
+        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE) return null;
         return GetBlock(new ChunkPos(x, y, z));
+    }
+    public ChunkRaycastHit GetBlock(Vector3 hitpoint, Vector3 normal)
+    {
+        byte face = NO_FACE_VALUE;
+        float bs = Block.QUAD_SIZE;
+        Vector3Int blockpos = new Vector3Int((int)(hitpoint.x / bs), (int)(hitpoint.y / bs), (int)(hitpoint.z / bs));
+
+        hitpoint = ( hitpoint - new Vector3(blockpos.x * bs, blockpos.y * bs, blockpos.z * bs) ) / bs;
+        print(blockpos);
+
+        Block b = GetBlock(blockpos.x, blockpos.y, blockpos.z);
+        if (hitpoint.y == 0.5f)
+        {
+            
+        }
+        return new ChunkRaycastHit(GetBlock(blockpos.x, blockpos.y, blockpos.z), face);
     }
 
     public Block AddBlock(ChunkPos f_pos, BlockType f_type, int material1_id, bool naturalGeneration)
@@ -1055,7 +1083,7 @@ public sealed class Chunk : MonoBehaviour
                     calculateUpperBlock = true;
                     i_ceilingMaterialID = i_floorMaterialID;
 
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         lightMap[x, y, z] = 0;
                         RecalculateIlluminationAtPoint(cb.pos);
@@ -1067,7 +1095,7 @@ public sealed class Chunk : MonoBehaviour
                     b = new Block(this, f_pos);
                     blocks.Add(f_pos, b);
 
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         //#shapeless light recalculation
                         byte light = lightMap[x, y, z];
@@ -1098,7 +1126,7 @@ public sealed class Chunk : MonoBehaviour
                     blocks.Add(f_pos, sb);
                     surfaceBlocks.Add(sb);
 
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         //#surface light recalculation
                         byte light = lightMap[x, y, z];
@@ -1130,7 +1158,7 @@ public sealed class Chunk : MonoBehaviour
                     calculateUpperBlock = true;
                     surfaceBlocks.Add(caveb);
 
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         //#cave light recalculation
                         byte light = lightMap[x, y, z];
@@ -1213,7 +1241,7 @@ public sealed class Chunk : MonoBehaviour
                     b = new Block(this, f_pos);
                     blocks.Add(f_pos, b);
 
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         //#shapeless light recalculation
                         byte light = lightMap[x, y, z];
@@ -1247,7 +1275,7 @@ public sealed class Chunk : MonoBehaviour
                     {
                         (originalBlock as CaveBlock).TransferStructures(sb);
                     }
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         //#surface light recalculation
                         byte light = lightMap[x, y, z];
@@ -1275,7 +1303,7 @@ public sealed class Chunk : MonoBehaviour
                     blocks.Add(f_pos, cb);
                     influenceMask = 0;
                     calculateUpperBlock = true;
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         lightMap[x, y, z] = 0;
                         RecalculateIlluminationAtPoint(b.pos);
@@ -1304,7 +1332,7 @@ public sealed class Chunk : MonoBehaviour
                     }
                     calculateUpperBlock = true;
 
-                    if (useIlluminationSystem)
+                    if (PoolMaster.useIlluminationSystem)
                     {
                         //#cave light recalculation
                         byte light = lightMap[x, y, z];
@@ -1476,7 +1504,7 @@ public sealed class Chunk : MonoBehaviour
                 else ReplaceBlock(lowerBlock.pos, BlockType.Surface, lowerBlock.material_id, false);
             }
         }
-        if (useIlluminationSystem) ChunkLightmapFullRecalculation();
+        if (PoolMaster.useIlluminationSystem) ChunkLightmapFullRecalculation();
         chunkUpdateRequired = true;
         shadowsUpdateRequired = true;
     }
@@ -1503,6 +1531,349 @@ public sealed class Chunk : MonoBehaviour
                 if (surfaceBlocks[i] == sb) { surfaceBlocks.RemoveAt(i); return; }
             }
         }
+    }
+
+
+    public bool BlockByStructure(int x, int y, int z, Structure s)
+    {
+        if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0) | (s == null)) return false;
+        Block b = GetBlock(x, y, z);
+        if (b != null) b = ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
+        else b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
+        if (b != null)
+        {
+            b.SetMainStructure(s);
+            chunkUpdateRequired = true;
+            return true;
+        }
+        else return false;
+    }
+
+    public void BlockRegion(List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
+    {
+        foreach (ChunkPos pos in positions)
+        {
+            if ((pos.x >= CHUNK_SIZE || pos.x < 0) | (pos.y >= CHUNK_SIZE || pos.y < 0) | (pos.z >= CHUNK_SIZE || pos.z < 0)) continue;
+            Block b = GetBlock(pos);
+            if (b != null) continue;
+            else
+            {
+                b = new Block(this, pos, s);
+                blocks.Add(pos, b);
+                dependentBlocks.Add(b);
+            }
+        }
+    }
+    /// <summary>
+    /// uses min coordinates ( left down corner); start positions including!
+    /// </summary>
+    public bool BlockShipCorridorIfPossible(int xpos, int ypos, bool xyAxis, int width, Structure sender, ref List<Block> dependentBlocksList)
+    {
+        int xStart = xpos; int xEnd = xStart + width;
+        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
+        int yStart = ypos; int yEnd = yStart + width;
+        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
+        if (xyAxis)
+        {
+            for (int x = xStart; x < xEnd; x++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    {
+                        if (GetBlock(x, y, z) != null) return false;
+                        //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x,y,z));
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int z = xStart; z < xEnd; z++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    {
+                        if (GetBlock(x, y, z) != null) return false;
+                        //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x, y, z));
+                    }
+                }
+            }
+        }
+        Block bk;
+        if (xyAxis)
+        {
+            for (int x = xStart; x < xEnd; x++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    {
+                        ChunkPos cpos = new ChunkPos(x, y, z);
+                        bk = new Block(this, cpos, sender);
+                        blocks.Add(cpos, bk);
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int z = xStart; z < xEnd; z++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    {
+                        ChunkPos cpos = new ChunkPos(x, y, z);
+                        bk = new Block(this, cpos, sender);
+                        blocks.Add(cpos, bk);
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+            }
+        }
+        chunkUpdateRequired = true;
+        return true;
+    }
+    /// <summary>
+    /// specify startpoint as point with min Coordinates(left down corner); startPoint including!
+    /// </summary>
+    public bool BlockShipCorridorIfPossible(Vector3Int startPoint, byte modelRotation, int width, Structure sender, ref List<Block> dependentBlocksList)
+    {
+        int xStart = startPoint.x, xEnd = startPoint.x + width;
+        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
+        int yStart = startPoint.y, yEnd = startPoint.y + width;
+        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
+        int zStart = startPoint.z, zEnd = startPoint.z + width;
+        if (zStart < 0) xStart = 0; if (zEnd >= CHUNK_SIZE) zEnd = CHUNK_SIZE;
+        switch (modelRotation)
+        {
+            default: return false;
+            case 0: // fwd
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < CHUNK_SIZE; z++)
+                            {
+                                if (GetBlock(x, y, z) != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z < CHUNK_SIZE; z++)
+                    {
+                        if (GetBlock(startPoint.x, startPoint.y, z) != null) return false;
+                    }
+                }
+                break;
+            case 2: // right
+                if (width != 1)
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                if (GetBlock(x, y, z) != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        if (GetBlock(x, startPoint.y, startPoint.z) != null) return false;
+                    }
+                }
+                break;
+            case 4: // back
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z >= 0; z--)
+                            {
+                                if (GetBlock(x, y, z) != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z >= 0; z--)
+                    {
+                        if (GetBlock(startPoint.x, startPoint.y, z) != null) return false;
+                    }
+                }
+                break;
+            case 6: // left
+                if (width != 1)
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                if (GetBlock(x, y, z) != null) return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        if (GetBlock(x, startPoint.y, startPoint.z) != null) return false;
+                    }
+                }
+                break;
+        } // blocks check
+        Block bk;
+        switch (modelRotation) // blocks set
+        {
+            default: return false;
+            case 0: // fwd
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < CHUNK_SIZE; z++)
+                            {
+                                var cpos = new ChunkPos(x, y, z);
+                                bk = new Block(this, cpos, sender);
+                                blocks.Add(cpos, bk);
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z < CHUNK_SIZE; z++)
+                    {
+                        var cpos = new ChunkPos(xStart, yStart, z);
+                        bk = new Block(this, cpos, sender);
+                        blocks.Add(cpos, bk);
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+            case 2: // right
+                if (width != 1)
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                var cpos = new ChunkPos(x, y, z);
+                                bk = new Block(this, cpos, sender);
+                                blocks.Add(cpos, bk);
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    {
+                        var cpos = new ChunkPos(x, yStart, zStart);
+                        bk = new Block(this, cpos, sender);
+                        blocks.Add(cpos, bk);
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+            case 4: // back
+                if (width != 1)
+                {
+                    for (int x = xStart; x < xEnd; x++)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z >= 0; z--)
+                            {
+                                var cpos = new ChunkPos(x, y, z);
+                                bk = new Block(this, cpos, sender);
+                                blocks.Add(cpos, bk);
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int z = zStart; z >= 0; z--)
+                    {
+                        var cpos = new ChunkPos(xStart, yStart, z);
+                        bk = new Block(this, cpos, sender);
+                        blocks.Add(cpos, bk);
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+            case 6: // left
+                if (width != 1)
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        for (int y = yStart; y < yEnd; y++)
+                        {
+                            for (int z = zStart; z < zEnd; z++)
+                            {
+                                var cpos = new ChunkPos(x, y, z);
+                                bk = new Block(this, cpos, sender);
+                                blocks.Add(cpos, bk);
+                                dependentBlocksList.Add(bk);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = xStart; x >= 0; x--)
+                    {
+                        var cpos = new ChunkPos(x, yStart, zStart);
+                        bk = new Block(this, cpos, sender);
+                        blocks.Add(cpos, bk);
+                        dependentBlocksList.Add(bk);
+                    }
+                }
+                break;
+        }
+        chunkUpdateRequired = true;
+        return true;
+    }
+    public void ClearBlocksList(List<Block> list, bool clearMainStructureField)
+    {
+        bool actions = false;
+        foreach (Block b in list)
+        {
+            if (b != null)
+            {
+                if (clearMainStructureField) b.ResetMainStructure();
+                // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
+                b.Annihilate();
+                actions = true;
+            }
+        }
+        if (actions) chunkUpdateRequired = true;
     }
     #endregion
 
@@ -1673,9 +2044,7 @@ public sealed class Chunk : MonoBehaviour
     }
 
     #endregion    
-
-   
-
+     
     public void SetRoof(int x, int z, bool artificial)
     {
         bool canBePeak = false;
@@ -1908,348 +2277,6 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
-    public bool BlockByStructure(int x, int y, int z, Structure s)
-    {
-        if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0) | (s == null)) return false;
-        Block b = GetBlock(x, y, z);
-        if (b != null) b = ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
-        else b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
-        if (b != null)
-        {
-            b.SetMainStructure(s);
-            chunkUpdateRequired = true;
-            return true;
-        }
-        else return false;
-    }
-
-    public void BlockRegion (List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
-    {
-        foreach (ChunkPos pos in positions)
-        {
-            if ((pos.x >= CHUNK_SIZE || pos.x < 0) | (pos.y >= CHUNK_SIZE || pos.y < 0) | (pos.z >= CHUNK_SIZE || pos.z < 0) ) continue;
-            Block b = GetBlock(pos);
-            if (b != null) continue;
-            else
-            {
-                b = new Block(this, pos, s);
-                blocks.Add(pos, b);
-                dependentBlocks.Add(b);
-            }
-        }
-    }
-    /// <summary>
-    /// uses min coordinates ( left down corner); start positions including!
-    /// </summary>
-    public bool BlockShipCorridorIfPossible(int xpos, int ypos, bool xyAxis, int width, Structure sender, ref List<Block> dependentBlocksList)
-    {
-        int xStart = xpos; int xEnd = xStart + width;
-        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
-        int yStart = ypos; int yEnd = yStart + width;
-        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
-        if (xyAxis)
-        {
-            for (int x = xStart; x < xEnd; x++)
-            {
-                for (int y = yStart; y < yEnd; y++)
-                {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
-                    {
-                        if (GetBlock(x,y,z) != null) return false;
-                        //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x,y,z));
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (int z = xStart; z < xEnd; z++)
-            {
-                for (int y = yStart; y < yEnd; y++)
-                {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
-                    {
-                        if (GetBlock(x, y, z) != null) return false;
-                        //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x, y, z));
-                    }
-                }
-            }
-        }
-        Block bk;
-        if (xyAxis)
-        {
-            for (int x = xStart; x < xEnd; x++)
-            {
-                for (int y = yStart; y < yEnd; y++)
-                {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
-                    {
-                        ChunkPos cpos = new ChunkPos(x, y, z);
-                        bk = new Block(this, cpos, sender);                        
-                        blocks.Add(cpos, bk);
-                        dependentBlocksList.Add(bk);
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (int z = xStart; z < xEnd; z++)
-            {
-                for (int y = yStart; y < yEnd; y++)
-                {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
-                    {
-                        ChunkPos cpos = new ChunkPos(x, y, z);
-                        bk = new Block(this, cpos, sender);                       
-                        blocks.Add(cpos, bk);
-                        dependentBlocksList.Add(bk);
-                    }
-                }
-            }
-        }
-        chunkUpdateRequired = true;
-        return true;
-    }
-    /// <summary>
-    /// specify startpoint as point with min Coordinates(left down corner); startPoint including!
-    /// </summary>
-    public bool BlockShipCorridorIfPossible(Vector3Int startPoint, byte modelRotation, int width, Structure sender, ref List<Block> dependentBlocksList)
-    {
-        int xStart = startPoint.x, xEnd = startPoint.x + width;
-        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
-        int yStart = startPoint.y, yEnd = startPoint.y + width;
-        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
-        int zStart = startPoint.z, zEnd = startPoint.z + width;
-        if (zStart < 0) xStart = 0; if (zEnd >= CHUNK_SIZE) zEnd = CHUNK_SIZE;
-        switch (modelRotation)
-        {
-            default: return false;
-            case 0: // fwd
-                if (width != 1)
-                {
-                    for (int x = xStart; x < xEnd; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z < CHUNK_SIZE; z++)
-                            {
-                                if (GetBlock(x,y,z) != null) return false;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int z = zStart; z < CHUNK_SIZE; z++)
-                    {
-                        if (GetBlock(startPoint.x, startPoint.y, z) != null) return false;
-                    }
-                }
-                break;
-            case 2: // right
-                if (width != 1)
-                {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z < zEnd; z++)
-                            {
-                                if (GetBlock(x, y, z) != null) return false;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
-                    {
-                        if (GetBlock(x, startPoint.y, startPoint.z) != null) return false;
-                    }
-                }
-                break;
-            case 4: // back
-                if (width != 1)
-                {
-                    for (int x = xStart; x < xEnd; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z >= 0; z--)
-                            {
-                                if (GetBlock(x, y, z) != null) return false;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int z = zStart; z >= 0; z--)
-                    {
-                        if (GetBlock(startPoint.x, startPoint.y, z) != null) return false;
-                    }
-                }
-                break;
-            case 6: // left
-                if (width != 1)
-                {
-                    for (int x = xStart; x >= 0; x--)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z < zEnd; z++)
-                            {
-                                if (GetBlock(x, y, z) != null) return false;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = xStart; x >= 0; x--)
-                    {
-                        if (GetBlock(x, startPoint.y, startPoint.z) != null) return false;
-                    }
-                }
-                break;
-        } // blocks check
-        Block bk;
-        switch (modelRotation) // blocks set
-        {
-            default: return false;
-            case 0: // fwd
-                if (width != 1)
-                {
-                    for (int x = xStart; x < xEnd; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z < CHUNK_SIZE; z++)
-                            {
-                                var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);                                
-                                blocks.Add(cpos, bk);
-                                dependentBlocksList.Add(bk);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int z = zStart; z < CHUNK_SIZE; z++)
-                    {
-                        var cpos = new ChunkPos(xStart, yStart, z);
-                        bk = new Block(this, cpos, sender);                        
-                        blocks.Add(cpos, bk);
-                        dependentBlocksList.Add(bk);
-                    }
-                }
-                break;
-            case 2: // right
-                if (width != 1)
-                {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z < zEnd; z++)
-                            {
-                                var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);                                
-                                blocks.Add(cpos, bk);
-                                dependentBlocksList.Add(bk);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
-                    {
-                        var cpos = new ChunkPos(x, yStart, zStart);
-                        bk = new Block(this, cpos, sender);                        
-                        blocks.Add(cpos, bk);
-                        dependentBlocksList.Add(bk);
-                    }
-                }
-                break;
-            case 4: // back
-                if (width != 1)
-                {
-                    for (int x = xStart; x < xEnd; x++)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z >= 0; z--)
-                            {
-                                var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);                                
-                                blocks.Add(cpos, bk);
-                                dependentBlocksList.Add(bk);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int z = zStart; z >= 0; z--)
-                    {
-                        var cpos = new ChunkPos(xStart, yStart, z);
-                        bk = new Block(this, cpos, sender);                        
-                        blocks.Add(cpos, bk);
-                        dependentBlocksList.Add(bk);
-                    }
-                }
-                break;
-            case 6: // left
-                if (width != 1)
-                {
-                    for (int x = xStart; x >= 0; x--)
-                    {
-                        for (int y = yStart; y < yEnd; y++)
-                        {
-                            for (int z = zStart; z < zEnd; z++)
-                            {
-                                var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);                                
-                                blocks.Add(cpos, bk);
-                                dependentBlocksList.Add(bk);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = xStart; x >= 0; x--)
-                    {
-                        var cpos = new ChunkPos(x, yStart, zStart);
-                        bk = new Block(this, cpos, sender);                        
-                        blocks.Add(cpos, bk);
-                        dependentBlocksList.Add(bk);
-                    }
-                }
-                break;
-        }
-        chunkUpdateRequired = true;
-        return true;
-    }
-    public void ClearBlocksList(List<Block> list, bool clearMainStructureField)
-    {
-        bool actions = false;
-        foreach (Block b in list)
-        {
-            if (b != null)
-            {
-                if (clearMainStructureField) b.ResetMainStructure();
-                // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
-                b.Annihilate();
-                actions = true;
-            }
-        }
-        if (actions) chunkUpdateRequired = true;
-    }
-
     public void DrawBorder()
     {
         LineRenderer lr = gameObject.GetComponent<LineRenderer>();
@@ -2400,7 +2427,7 @@ public sealed class Chunk : MonoBehaviour
                     continue;
                 }                
             } // ужасное решение
-            if (useIlluminationSystem) ChunkLightmapFullRecalculation();
+            if (PoolMaster.useIlluminationSystem) ChunkLightmapFullRecalculation();
             RenderDataFullRecalculation();
         }
         if (surfaceBlocks.Count > 0)
@@ -2416,7 +2443,7 @@ public sealed class Chunk : MonoBehaviour
                             BlockRendererController brc = s.transform.GetChild(0).GetComponent<BlockRendererController>();
                             if (brc != null) {
                                 ChunkPos cpos = s.basement.pos;
-                                brc.SetVisibilityMask(GetVisibilityMask(cpos.x, cpos.y, cpos.z));
+                                brc.SetVisibilityMask(GetVisibilityMask(cpos));
                             }
                         }
                     }

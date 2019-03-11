@@ -10,7 +10,7 @@ public struct GameStartSettings  {
     public static readonly GameStartSettings Empty;
     static GameStartSettings()
     {
-        Empty = new GameStartSettings(ChunkGenerationMode.Standart, 16, Difficulty.Normal);
+        Empty = new GameStartSettings(ChunkGenerationMode.Peak, 16, Difficulty.Normal);
     }
     public GameStartSettings(ChunkGenerationMode i_genMode, byte i_chunkSize, Difficulty diff)
     {
@@ -195,7 +195,8 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     if (gameStartSettings.generationMode != ChunkGenerationMode.TerrainLoading)
                     {
-                        Constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
+                        //Constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
+                        Constructor.ConstructBlock(chunksize);
                         if (gameStartSettings.generationMode == ChunkGenerationMode.Peak)
                         {
                             environmentMaster.PrepareIslandBasis(ChunkGenerationMode.Peak);

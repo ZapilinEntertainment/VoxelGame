@@ -90,15 +90,15 @@ public sealed class Zeppelin : MonoBehaviour {
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
         {
             GameObject collided = rh.collider.gameObject;
-            if (collided.tag == "Block")
+            if (collided.tag == Chunk.BLOCK_COLLIDER_TAG)
             {
-                Block b = collided.transform.parent.GetComponent<Block>();
-                if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block                
-                if (b != null && (b is SurfaceBlock))
+                Chunk chunk = GameMaster.realMaster.mainChunk;
+                ChunkRaycastHit crh = chunk.GetBlock(rh.point, rh.normal);                
+                Block b = crh.block;
+                if (b != null && crh.faceIndex == 6)
                 {
                     landingSurface = null;
-                    landingByZAxis = null;
-                    Chunk chunk = b.myChunk;
+                    landingByZAxis = null;                    
                     Block minusTwoBlock, minusOneBlock, plusOneBlock, plusTwoBlock;
                     int x = b.pos.x, y = b.pos.y, z = b.pos.z;
                     bool[] suitable = new bool[5];

@@ -18,6 +18,7 @@ public sealed class PoolMaster : MonoBehaviour {
     }
 
     public static bool useAdvancedMaterials { get; private set; }
+    public static bool useIlluminationSystem { get; private set; }
     public static bool shadowCasting { get; private set; }
     public static PoolMaster current;	 
 	public static GameObject mineElevator_pref {get;private set;}
@@ -59,6 +60,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
         useAdvancedMaterials = (QualitySettings.GetQualityLevel() == MAX_QUALITY_LEVEL);
         shadowCasting = useAdvancedMaterials;
+        useIlluminationSystem = !shadowCasting;
 
         buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
         inactiveShips = new List<Ship>();
@@ -110,6 +112,8 @@ public sealed class PoolMaster : MonoBehaviour {
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
 
+        if (useIlluminationSystem) lightPoolMaterials = new Dictionary<LightPoolInfo, Material>();
+
         //testzone
         //GameObject g = new GameObject("quad");
         //var mf = g.AddComponent<MeshFilter>();
@@ -142,11 +146,11 @@ public sealed class PoolMaster : MonoBehaviour {
     {
         switch (mtype)
         {
+            default:
             case MeshType.Quad: return quadMesh;
             case MeshType.ExcavatedPlane025: return plane_excavated_025;
             case MeshType.ExcavatedPlane05: return plane_excavated_05;
             case MeshType.ExcavatedPlane075: return plane_excavated_075;
-            default: return null;
         }
     }
 
@@ -314,7 +318,7 @@ public sealed class PoolMaster : MonoBehaviour {
         var m = mf.mesh;
         SetMeshUVs(ref m, materialID);
         mf.sharedMesh = m;
-        if (Chunk.useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);
+        if (useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);
         else mr.sharedMaterial = GetMaterial(materialID);
     }
     public static void SetMeshUVs(ref Mesh m, int materialID)
@@ -655,6 +659,10 @@ public sealed class PoolMaster : MonoBehaviour {
                     break;
                 case "Metal":
                     mr.sharedMaterial = metal_material;
+                    castShadows = true;
+                    receiveShadows = true;
+                    break;
+                case "Sailcloth":
                     castShadows = true;
                     receiveShadows = true;
                     break;

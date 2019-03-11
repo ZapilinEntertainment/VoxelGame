@@ -4,11 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
-public enum Icons : byte { GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon,
+public enum Icons : byte
+{
+    GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon,
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
-    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton }
+    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton
+}
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
-public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow}
+public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
 
 
 sealed public class UIController : MonoBehaviour
@@ -44,7 +47,7 @@ sealed public class UIController : MonoBehaviour
     private MenuSection selectedMenuSection = MenuSection.NoSelection;
     private SaveSystemUI saveSystem;
 
-    const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;    
+    const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
@@ -87,10 +90,10 @@ sealed public class UIController : MonoBehaviour
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
         mainCanvas = transform.GetChild(1);
         activeFastButtons = new List<int>();
-        
+
         if (landingButton.activeSelf) landingButton.SetActive(false);
         if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.GetChild(1));
-        if (!localized) LocalizeTitles();        
+        if (!localized) LocalizeTitles();
     }
 
     public void Prepare()
@@ -113,7 +116,7 @@ sealed public class UIController : MonoBehaviour
             statusUpdateTimer = STATUS_UPDATE_TIME;
         }
         updateTimer -= tm;
-       
+
         if (linksReady & colony != null)
         {
             if (updateTimer <= 0)
@@ -427,6 +430,11 @@ sealed public class UIController : MonoBehaviour
                     }
                 }
             }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+
+            }
         }
 
         if (powerFailureTimer > 0)
@@ -438,15 +446,15 @@ sealed public class UIController : MonoBehaviour
                 string surplus = saved_energySurplus.ToString();
                 if (saved_energySurplus > 0) surplus = '+' + surplus;
                 energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
-            }            
+            }
         }
-    }   
+    }
 
     public void Raycasting()
     {
-        if (GameMaster.gameSpeed == 0 | colony == null || colony.hq == null ) return;
+        if (GameMaster.gameSpeed == 0 | colony == null || colony.hq == null) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
-        if (FollowingCamera.touchscreen )
+        if (FollowingCamera.touchscreen)
         {
             if (Input.touchCount != 1 | FollowingCamera.camRotateTrace > 0) return;
         }
@@ -471,47 +479,48 @@ sealed public class UIController : MonoBehaviour
                                 chosenCube = null;
                                 chosenWorksite = null;
                                 ChangeChosenObject(ChosenObjectType.Structure);
+                                faceIndex = Chunk.NO_FACE_VALUE;
                             }
                         }
                         break;
                     }
-                case "Block":
+                case Chunk.BLOCK_COLLIDER_TAG:
                     {
-                        Block b = collided.transform.parent.GetComponent<Block>();
-                        if (b == null) b = collided.transform.parent.parent.GetComponent<Block>(); // cave block
+                        var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
+                        Block b = crh.block;
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
-                        switch (b.type)
+                        else
                         {
-                            case BlockType.Cave:
-                            case BlockType.Surface:
-                                SurfaceBlock sb = b as SurfaceBlock;
-                                if (sb == chosenSurface & chosenObjectType == ChosenObjectType.Surface) return;
-                                else
-                                {
-                                    chosenSurface = sb;
-                                    chosenStructure = null;
-                                    chosenCube = null;
-                                    chosenWorksite = sb.worksite;
-                                    ChangeChosenObject(ChosenObjectType.Surface);
-                                }
-                                break;
-                            case BlockType.Cube:
-                                {
-                                    CubeBlock cb = b as CubeBlock;
-                                    chosenCube = cb;
-                                    chosenSurface = null;
-                                    chosenStructure = null;
-                                    chosenWorksite = cb.worksite;
-                                    faceIndex = 10;
-                                    for (byte i = 0; i < 6; i++)
+                            switch (b.type)
+                            {
+                                case BlockType.Cave:
+                                case BlockType.Surface:
+                                    SurfaceBlock sb = b as SurfaceBlock;
+                                    if (sb == chosenSurface & chosenObjectType == ChosenObjectType.Surface) return;
+                                    else
                                     {
-                                        //if (chosenCube.faces[i] == null) continue;
-                                        //if (chosenCube.faces[i].GetComponent<Collider>() == rh.collider) { faceIndex = i; break; }
+                                        chosenSurface = sb;
+                                        chosenStructure = null;
+                                        chosenCube = null;
+                                        chosenWorksite = sb.worksite;
+                                        faceIndex = crh.faceIndex;
+                                        ChangeChosenObject(ChosenObjectType.Surface);
                                     }
-                                    if (faceIndex < 6) ChangeChosenObject(ChosenObjectType.Cube);
-                                    else ChangeChosenObject(ChosenObjectType.None);
                                     break;
-                                }
+                                case BlockType.Cube:
+                                    {
+                                        CubeBlock cb = b as CubeBlock;
+                                        chosenCube = cb;
+                                        chosenSurface = null;
+                                        chosenStructure = null;
+                                        chosenWorksite = cb.worksite;
+                                        faceIndex = crh.faceIndex;
+                                        print(faceIndex);
+                                        if (faceIndex < 6) ChangeChosenObject(ChosenObjectType.Cube);
+                                        else ChangeChosenObject(ChosenObjectType.None);
+                                        break;
+                                    }
+                            }
                         }
                         break;
                     }
@@ -528,6 +537,7 @@ sealed public class UIController : MonoBehaviour
                                 chosenStructure = null;
                                 chosenWorksite = ws.worksite;
                                 ChangeChosenObject(ChosenObjectType.Worksite);
+                                faceIndex = Chunk.NO_FACE_VALUE;
                             }
                         }
                         else ChangeChosenObject(ChosenObjectType.None);
@@ -555,6 +565,7 @@ sealed public class UIController : MonoBehaviour
                 chosenSurface = s.basement;
                 chosenCube = null;
                 chosenWorksite = null;
+                faceIndex = Chunk.NO_FACE_VALUE;
                 ChangeChosenObject(ChosenObjectType.Structure);
             }
         }
@@ -566,7 +577,7 @@ sealed public class UIController : MonoBehaviour
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
         else
         {
-           if (rollingShopPanel.activeSelf) DeactivateWorkshopPanel();
+            if (rollingShopPanel.activeSelf) DeactivateWorkshopPanel();
         }
 
         //отключение предыдущего observer
@@ -586,7 +597,7 @@ sealed public class UIController : MonoBehaviour
             chosenStructure = null;
             chosenCube = null;
             chosenSurface = null;
-            faceIndex = 10;
+            faceIndex = Chunk.NO_FACE_VALUE;
             changeFrameColor = false;
         }
         else
@@ -615,7 +626,7 @@ sealed public class UIController : MonoBehaviour
         {
             case ChosenObjectType.Surface:
                 {
-                    faceIndex = 10; // вспомогательная дата для chosenCube
+                    faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
                     Vector3 pos = chosenSurface.pos.ToWorldSpace();
                     selectionFrame.position = pos + Vector3.down * Block.QUAD_SIZE / 2f;
                     selectionFrame.rotation = Quaternion.identity;
@@ -630,58 +641,67 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Cube:
                 {
                     bool activatePlatformCreatingButton = false;
-                        selectionFrame.position = chosenCube.pos.ToWorldSpace(); // + позиция плоскости
-                        switch (faceIndex)
-                        {
-                            case 0:
+                    switch (faceIndex)
+                    {
+                        case 0:
+                            {
+                                selectionFrame.transform.rotation = Quaternion.Euler(90, 0, 0);
+                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE / 2f;
+                                int z = chosenCube.pos.z + 1;
+                                if (z < Chunk.CHUNK_SIZE)
                                 {
-                                    selectionFrame.transform.rotation = Quaternion.Euler(90, 0, 0);
-                                    int z = chosenCube.pos.z + 1;
-                                    if (z < Chunk.CHUNK_SIZE)
-                                    {
-                                        Block b = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y, z);
-                                        if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                    }
-                                    break;
+                                    Block b = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y, z);
+                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
                                 }
-                            case 1:
+                                break;
+                            }
+                        case 1:
+                            {
+                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE / 2f;
+                                selectionFrame.transform.rotation = Quaternion.Euler(0, 0, -90);
+                                int x = chosenCube.pos.x + 1;
+                                if (x < Chunk.CHUNK_SIZE)
                                 {
-                                    selectionFrame.transform.rotation = Quaternion.Euler(0, 0, -90);
-                                    int x = chosenCube.pos.x + 1;
-                                    if (x < Chunk.CHUNK_SIZE)
-                                    {
-                                        Block b = chosenCube.myChunk.GetBlock(x, chosenCube.pos.y, chosenCube.pos.z);
-                                        if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                    }
-                                    break;
+                                    Block b = chosenCube.myChunk.GetBlock(x, chosenCube.pos.y, chosenCube.pos.z);
+                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
                                 }
-                            case 2:
+                                break;
+                            }
+                        case 2:
+                            {
+                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.back * Block.QUAD_SIZE / 2f;
+                                selectionFrame.transform.rotation = Quaternion.Euler(-90, 0, 0);
+                                int z = chosenCube.pos.z - 1;
+                                if (z >= 0)
                                 {
-                                    selectionFrame.transform.rotation = Quaternion.Euler(-90, 0, 0);
-                                    int z = chosenCube.pos.z - 1;
-                                    if (z >= 0)
-                                    {
-                                        Block b = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y, z);
-                                        if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                    }
-                                    break;
+                                    Block b = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y, z);
+                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
                                 }
-                            case 3:
+                                break;
+                            }
+                        case 3:
+                            {
+                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.left * Block.QUAD_SIZE / 2f;
+                                selectionFrame.transform.rotation = Quaternion.Euler(0, 0, 90);
+                                int x = chosenCube.pos.x - 1;
+                                if (x >= 0)
                                 {
-                                    selectionFrame.transform.rotation = Quaternion.Euler(0, 0, 90);
-                                    int x = chosenCube.pos.x - 1;
-                                    if (x >= 0)
-                                    {
-                                        Block b = chosenCube.myChunk.GetBlock(x, chosenCube.pos.y, chosenCube.pos.z);
-                                        if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                    }
-                                    break;
+                                    Block b = chosenCube.myChunk.GetBlock(x, chosenCube.pos.y, chosenCube.pos.z);
+                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
                                 }
-                            case 4: selectionFrame.transform.rotation = Quaternion.identity; break;
-                            case 5: selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0); break;
-                        }
-                        selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
-                        sframeColor = new Vector3(140f / 255f, 1, 0.9f);
+                                break;
+                            }
+                        case 4:
+                            selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE / 2f;
+                            selectionFrame.transform.rotation = Quaternion.identity;
+                            break;
+                        case 5:
+                            selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE / 2f;
+                            selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0);
+                            break;
+                    }
+                    selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
+                    sframeColor = new Vector3(140f / 255f, 1, 0.9f);
 
 
                     FollowingCamera.main.SetLookPoint(chosenCube.pos.ToWorldSpace());
@@ -696,7 +716,7 @@ sealed public class UIController : MonoBehaviour
                 break;
 
             case ChosenObjectType.Structure:
-                faceIndex = 10; // вспомогательная дата для chosenCube
+                faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
                 selectionFrame.position = chosenStructure.transform.position;
                 selectionFrame.rotation = Quaternion.identity;
                 selectionFrame.localScale = new Vector3(chosenStructure.innerPosition.size, 1, chosenStructure.innerPosition.size);
@@ -706,7 +726,7 @@ sealed public class UIController : MonoBehaviour
                 break;
 
             case ChosenObjectType.Worksite:
-                faceIndex = 10; // вспомогательная дата для chosenCube
+                faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
                 selectionFrame.gameObject.SetActive(false);
                 changeFrameColor = false;
                 workingObserver = chosenWorksite.ShowOnGUI();
@@ -743,7 +763,7 @@ sealed public class UIController : MonoBehaviour
     {
         if (mode == currentActiveWindowMode) return;
         //deactivating previous panel
-        if (currentActiveWindowMode != ActiveWindowMode.NoWindow)       
+        if (currentActiveWindowMode != ActiveWindowMode.NoWindow)
         {
             switch (currentActiveWindowMode)
             {
@@ -821,7 +841,7 @@ sealed public class UIController : MonoBehaviour
         menuButton.SetActive(true);
         upPanel.SetActive(true);
         colonyRenameButton.SetActive(true);
-    }  
+    }
 
     public static Rect GetTextureUV(Icons i)
     {
@@ -844,7 +864,7 @@ sealed public class UIController : MonoBehaviour
             case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
             case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
             case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
-            case Icons.DisabledBuilding: return new Rect(p, 3*p, p,p);
+            case Icons.DisabledBuilding: return new Rect(p, 3 * p, p, p);
             case Icons.QuestAwaitingIcon: return new Rect(2 * p, 3 * p, p, p);
             case Icons.QuestBlockedIcon: return new Rect(3 * p, 3 * p, p, p);
             case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
@@ -933,7 +953,7 @@ sealed public class UIController : MonoBehaviour
         {
             DropActiveWindow(ActiveWindowMode.StoragePanel);
             storageToggleButton.overrideSprite = null;
-            storagePanel.SetActive(false);            
+            storagePanel.SetActive(false);
         }
     }
     public void LayerCutButton()
@@ -995,7 +1015,7 @@ sealed public class UIController : MonoBehaviour
             storagePanelContent.gameObject.SetActive(true);
             storagePositionsPrepared = true;
         }
-        Storage st = colony.storage;        
+        Storage st = colony.storage;
         if (st.totalVolume == 0)
         {
             //empty storage
@@ -1006,13 +1026,13 @@ sealed public class UIController : MonoBehaviour
             Transform t = storagePanelContent.GetChild(0);
             t.GetChild(0).GetComponent<RawImage>().enabled = false;
             t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
-            t.GetChild(2).GetComponent<Text>().text =  "0 / " + st.maxVolume.ToString();
+            t.GetChild(2).GetComponent<Text>().text = "0 / " + st.maxVolume.ToString();
         }
         else
         {
             List<int> resourceIDs = new List<int>();
             float[] resources = st.standartResources;
-            for(i = 0; i < resources.Length; i++)
+            for (i = 0; i < resources.Length; i++)
             {
                 if (resources[i] > 0) resourceIDs.Add(i);
             }
@@ -1125,10 +1145,12 @@ sealed public class UIController : MonoBehaviour
                     if (x + 1 < Chunk.CHUNK_SIZE) x++;
                     else goto END;
                     break;
-                case 2: if (z - 1 >= 0) z--;
+                case 2:
+                    if (z - 1 >= 0) z--;
                     else goto END;
                     break;
-                case 3: if (x - 1 >= 0) x--;
+                case 3:
+                    if (x - 1 >= 0) x--;
                     else goto END;
                     break;
             }
@@ -1183,18 +1205,20 @@ sealed public class UIController : MonoBehaviour
             default: return;
         }
         GameObject buttonGO = null;
-        if (activeFastButtons.Count == 0) {
+        if (activeFastButtons.Count == 0)
+        {
             buttonGO = rightFastPanel.transform.GetChild(0).gameObject;
-            buttonGO.SetActive(true);            
+            buttonGO.SetActive(true);
         }
-        else {
+        else
+        {
             buttonGO = Instantiate(rightFastPanel.transform.GetChild(0).gameObject, rightFastPanel.transform);
             RectTransform rt = buttonGO.GetComponent<RectTransform>();
             rt.position += Vector3.down * rt.rect.height * activeFastButtons.Count;
         }
         Button b = buttonGO.GetComponent<Button>();
         b.onClick.RemoveAllListeners();
-        if (s.id != Structure.OBSERVATORY_ID)    b.onClick.AddListener(() => { Select(s); });
+        if (s.id != Structure.OBSERVATORY_ID) b.onClick.AddListener(() => { Select(s); });
         else b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
         buttonGO.transform.GetChild(0).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(s.id);
         activeFastButtons.Add(s.id);
@@ -1232,13 +1256,13 @@ sealed public class UIController : MonoBehaviour
         showMenuWindow = !showMenuWindow;
         if (showMenuWindow)
         { // on
-            GameMaster.SetPause(true);            
+            GameMaster.SetPause(true);
             ChangeActiveWindow(ActiveWindowMode.GameMenu);
             menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
             menuPanel.SetActive(true);
             //menuButton.transform.SetAsLastSibling();
-           menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
-           SetMenuPanelSelection(MenuSection.NoSelection);
+            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
+            SetMenuPanelSelection(MenuSection.NoSelection);
         }
         else
         { //off
@@ -1251,7 +1275,7 @@ sealed public class UIController : MonoBehaviour
             menuButton.GetComponent<Image>().overrideSprite = null;
             // MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
             menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
-             DropActiveWindow(ActiveWindowMode.GameMenu);
+            DropActiveWindow(ActiveWindowMode.GameMenu);
         }
     }
     public void SaveButton()
@@ -1446,7 +1470,7 @@ sealed public class UIController : MonoBehaviour
     {
         UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
         if (wbo != null && wbo.gameObject.activeSelf)
-        {       
+        {
             Workshop rs = wbo.observingWorkbuilding as Workshop;
             if (rs != null)
             {
@@ -1528,7 +1552,7 @@ sealed public class UIController : MonoBehaviour
     {
         colonyRenameButton.SetActive(true);
         colonyNameField.gameObject.SetActive(false);
-        if (s!= colony.cityName) colony.RenameColony(s);
+        if (s != colony.cityName) colony.RenameColony(s);
         dataString.enabled = true;
     }
     #endregion
@@ -1582,5 +1606,5 @@ sealed public class UIController : MonoBehaviour
         landingButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Land_verb);
     }
 
-   
+
 }
