@@ -488,6 +488,7 @@ sealed public class UIController : MonoBehaviour
                     {
                         var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
                         Block b = crh.block;
+                        faceIndex = crh.faceIndex;
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
                         else
                         {
@@ -502,8 +503,7 @@ sealed public class UIController : MonoBehaviour
                                         chosenSurface = sb;
                                         chosenStructure = null;
                                         chosenCube = null;
-                                        chosenWorksite = sb.worksite;
-                                        faceIndex = crh.faceIndex;
+                                        chosenWorksite = sb.worksite;                                        
                                         ChangeChosenObject(ChosenObjectType.Surface);
                                     }
                                     break;
@@ -514,8 +514,6 @@ sealed public class UIController : MonoBehaviour
                                         chosenSurface = null;
                                         chosenStructure = null;
                                         chosenWorksite = cb.worksite;
-                                        faceIndex = crh.faceIndex;
-                                        print(faceIndex);
                                         if (faceIndex < 6) ChangeChosenObject(ChosenObjectType.Cube);
                                         else ChangeChosenObject(ChosenObjectType.None);
                                         break;
@@ -641,6 +639,7 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Cube:
                 {
                     bool activatePlatformCreatingButton = false;
+                    print("cube");
                     switch (faceIndex)
                     {
                         case 0:

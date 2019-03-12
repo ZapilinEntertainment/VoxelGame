@@ -52,82 +52,14 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     { // его придётся сохранять!
         int[,,] data;
         switch (cmode) {
-            case ChunkGenerationMode.Peak: data = Constructor.GeneratePeakData(SKY_SPHERE_RADIUS); break;
+            case ChunkGenerationMode.Peak:
+                float size = SKY_SPHERE_RADIUS;
+                GameObject g = Constructor.CreatePeakBasis(8, ResourceType.STONE_ID, size);
+                g.transform.position = new Vector3(-size / 2f, - size/2f, -size / 2f);
+                g.layer = cloudEmitter.gameObject.layer;
+                break;
             default: return;
-        }
-
-        bool found = false;
-        float centerX = 0, centerZ = 0;
-        int h = SKY_SPHERE_RADIUS - 1;
-        if (SKY_SPHERE_RADIUS % 2 == 0)
-        { // нужно найти 4 поверхности рядом, остальные - понизить
-            for (int x = 1; x < SKY_SPHERE_RADIUS; x++)
-            {
-                for (int z = 1; z < SKY_SPHERE_RADIUS; z++)
-                {
-                    if (!found)
-                    {
-                        if (data[x, h, z] != 0)
-                        {
-                            if (data[x - 1, h, z] != 0) // left
-                            {
-                                if (data[x, h, z - 1] != 0 & data[x - 1, h, z - 1] != 0)
-                                {
-                                    found = true;
-                                    centerX = x - 0.5f;
-                                    centerZ = z - 0.5f;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        data[x, h, z] = 0;
-                    }
-                }
-            }
-            int cx,cz;
-            if (!found)
-            {
-                cx = SKY_SPHERE_RADIUS / 2;
-                cz = SKY_SPHERE_RADIUS / 2;
-                centerX = cx + 0.5f;
-                centerZ = cz + 0.5f;
-            }
-            else
-            {
-                cx = (int)(centerX - 0.5f);
-                cz = (int)(centerZ - 0.5f);
-            }
-            data[cx, h, cz] = ResourceType.STONE_ID;
-            data[cx + 1, h, cz] = ResourceType.STONE_ID;
-            data[cx, h, cz + 1] = ResourceType.STONE_ID;
-            data[cx + 1, h, cz + 1] = ResourceType.STONE_ID;            
-        }   
-        else
-        {
-            for (int x = 0; x < SKY_SPHERE_RADIUS; x++)
-            {
-                for (int z = 0; z < SKY_SPHERE_RADIUS; z++)
-                {
-                    if (!found)
-                    {
-                        if (data[x, h, z] != 0)
-                        {
-                            found = true;
-                            centerX = x;
-                            centerZ = z;
-                        }
-                    }
-                    else
-                    {
-                        data[x, h, z] = 0;
-                    }
-                }
-            }
-        }
-
-        GameObject islandBasis = new GameObject("island basis");
+        }        
     }
 
     public void SetEnvironmentalConditions(float t)

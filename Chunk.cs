@@ -1029,14 +1029,108 @@ public sealed class Chunk : MonoBehaviour
         Vector3Int blockpos = new Vector3Int((int)(hitpoint.x / bs), (int)(hitpoint.y / bs), (int)(hitpoint.z / bs));
 
         hitpoint = ( hitpoint - new Vector3(blockpos.x * bs, blockpos.y * bs, blockpos.z * bs) ) / bs;
-        print(blockpos);
+        if (hitpoint.x > 0.5f) { blockpos.x++; hitpoint.x -= 0.5f; }
+        if (hitpoint.y > 0.5f) { blockpos.y++; hitpoint.y -= 0.5f; }
+        if (hitpoint.z > 0.5f) { blockpos.z++; hitpoint.z -= 0.5f; }
+        //print(blockpos.ToString() + ' ' + hitpoint.ToString());
 
         Block b = GetBlock(blockpos.x, blockpos.y, blockpos.z);
         if (hitpoint.y == 0.5f)
         {
-            
+            if (normal == Vector3.down)
+            {
+                b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
+                face = 5;
+            }
+            else
+            {
+                if ((GetVisibilityMask(b.pos) & 16) == 0)
+                {
+                    b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
+                    face = 6; // surface block
+                }
+                else
+                {
+                    face = 4;
+                }
+            }
         }
-        return new ChunkRaycastHit(GetBlock(blockpos.x, blockpos.y, blockpos.z), face);
+        else
+        {
+            if (hitpoint.x == -0.5f)
+            {
+                if (normal == Vector3.up)
+                {
+                    b = GetBlock(blockpos.x, blockpos.y - 1, blockpos.z);
+                    face = 4;
+                }
+                else
+                {
+                    face = 5;
+                }
+            }
+            else
+            {
+                if (hitpoint.x == 0.5f)
+                {
+                    if (normal == Vector3.left)
+                    {
+                        b = GetBlock(blockpos.x + 1, blockpos.y, blockpos.z);
+                        face = 3;
+                    }
+                    else
+                    {
+                        face = 1;
+                    }
+                }
+                else
+                {
+                    if (hitpoint.x == -0.5f)
+                    {
+                        if (normal == Vector3.right)
+                        {
+                            b = GetBlock(blockpos.x - 1, blockpos.y, blockpos.z);
+                            face = 1;
+                        }
+                        else
+                        {
+                            face = 3;
+                        }
+                    }
+                    else
+                    {
+                        if (hitpoint.z == 0.5f)
+                        {
+                            if (normal == Vector3.back)
+                            {
+                                b = GetBlock(blockpos.x, blockpos.y, blockpos.z + 1);
+                                face = 2;
+                            }
+                            else
+                            {
+                                face = 0;
+                            }
+                        }
+                        else
+                        {
+                            if (hitpoint.z == -0.5f)
+                            {
+                                if (normal == Vector3.forward)
+                                {
+                                    b = GetBlock(blockpos.x, blockpos.y, blockpos.z - 1);
+                                    face = 0;
+                                }
+                                else
+                                {
+                                    face = 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return new ChunkRaycastHit(b, face);
     }
 
     public Block AddBlock(ChunkPos f_pos, BlockType f_type, int material1_id, bool naturalGeneration)

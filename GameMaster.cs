@@ -195,8 +195,8 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     if (gameStartSettings.generationMode != ChunkGenerationMode.TerrainLoading)
                     {
-                        //Constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
-                        Constructor.ConstructBlock(chunksize);
+                        Constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
+                       // Constructor.ConstructBlock(chunksize);
                         if (gameStartSettings.generationMode == ChunkGenerationMode.Peak)
                         {
                             environmentMaster.PrepareIslandBasis(ChunkGenerationMode.Peak);

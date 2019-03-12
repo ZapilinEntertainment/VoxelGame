@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum MaterialType : byte { Basic, Metal, Energy, Green }
-public enum MeshType: byte { Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeil}
+public enum MeshType: byte { NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeil, CutPlane, CutEdge}
 
 public sealed class PoolMaster : MonoBehaviour {
     private struct LightPoolInfo
@@ -152,6 +152,12 @@ public sealed class PoolMaster : MonoBehaviour {
             case MeshType.ExcavatedPlane05: return plane_excavated_05;
             case MeshType.ExcavatedPlane075: return plane_excavated_075;
         }
+    }
+    public static Mesh GetMesh(MeshType mtype, int materialID)
+    {
+        Mesh m = Instantiate(GetMesh(mtype));
+        SetMeshUVs(ref m, materialID);
+        return m;
     }
 
     public Sprite GetStarSprite()
@@ -551,7 +557,7 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
     }
-    private static Material GetMaterial(int id)
+    public static Material GetMaterial(int id)
     {
         switch (id)
         {
