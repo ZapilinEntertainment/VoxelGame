@@ -40,7 +40,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private static bool useTextureRotation = false;
     private static Dictionary<LightPoolInfo, Material> lightPoolMaterials;
     private static Material metal_material, green_material, default_material, lr_red_material, lr_green_material, basic_material;
-    private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075;   
+    private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge, caveCeil;   
 
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
@@ -48,7 +48,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private Sprite[] starsSprites;
 
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
-    public const int MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
+    public const int NO_MATERIAL_ID = -1, MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
         MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
         MATERIAL_WHITEWALL_ID = -11;
     // зависимость - ResourceType.GetResourceByID
@@ -151,6 +151,39 @@ public sealed class PoolMaster : MonoBehaviour {
             case MeshType.ExcavatedPlane025: return plane_excavated_025;
             case MeshType.ExcavatedPlane05: return plane_excavated_05;
             case MeshType.ExcavatedPlane075: return plane_excavated_075;
+            case MeshType.CutPlane:
+                {
+                    if (cutPlane == null)
+                    {
+                        cutPlane = new Mesh();
+                        cutPlane.vertices = new Vector3[4] { new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0.5f, 0.5f, -0.5f), new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(-0.5f, 0.5f, -0.5f) };
+                        cutPlane.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
+                        cutPlane.uv = new Vector2[4] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1) };
+                    }
+                    return cutPlane;
+                }
+            case MeshType.CutEdge:
+                {
+                    if (cutEdge == null)
+                    {
+                        cutEdge = new Mesh();
+                        cutEdge.vertices = new Vector3[3] { new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(-0.5f, -0.5f, 0)};
+                        cutEdge.triangles = new int[3] { 0, 1, 2};
+                        cutEdge.uv = new Vector2[3] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f) };
+                    }
+                    return cutEdge;
+                }
+            case MeshType.CaveCeil:
+                {
+                    if (caveCeil == null)
+                    {
+                        caveCeil= new Mesh();
+                        caveCeil.vertices = new Vector3[4] { new Vector3(0.5f, 0.4f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, 0.4f, 0), new Vector3(-0.5f, 0.5f, 0) };
+                        caveCeil.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };                      
+                        caveCeil.uv = new Vector2[4] { new Vector2(0, 0.9f), new Vector2(0, 1), new Vector2(1, 0.9f), new Vector2(1, 1) };
+                    }
+                    return caveCeil;
+                }
         }
     }
     public static Mesh GetMesh(MeshType mtype, int materialID)

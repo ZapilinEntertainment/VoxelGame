@@ -372,7 +372,7 @@ public class Grassland
 
 
     public void Annihilation() { Annihilation(false, true); }
-    public void Annihilation(bool forced, bool returnMaterial)
+    public void Annihilation(bool forced, bool setMaterialToDirt)
     {
         if (destroyed) return;
         else destroyed = true;      
@@ -388,7 +388,7 @@ public class Grassland
             }
         }
         if (grasslandList.Contains(this)) grasslandList.Remove(this);
-        if (returnMaterial) myBlock.ReplaceMaterial(ResourceType.DIRT_ID);
+        if (setMaterialToDirt) myBlock.ReplaceMaterial(ResourceType.DIRT_ID);
     }
 
     #region save-load

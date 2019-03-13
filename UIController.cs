@@ -611,7 +611,6 @@ sealed public class UIController : MonoBehaviour
             chosenObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
             rightPanel.SetActive(true);
-            disableCubeMenuButtons = true;
             selectionFrame.gameObject.SetActive(true);
             if (showMenuWindow)
             {
@@ -639,7 +638,6 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Cube:
                 {
                     bool activatePlatformCreatingButton = false;
-                    print("cube");
                     switch (faceIndex)
                     {
                         case 0:
@@ -1084,13 +1082,13 @@ sealed public class UIController : MonoBehaviour
                 {
                     DigSite ds = new DigSite();
                     ds.Set(chosenCube, true);
-                    workingObserver = ds.ShowOnGUI(); // вообще они должны сами в конце цепочки устанавливать здесь workingObserver, не?
+                    ShowWorksite(ds);
                 }
                 else
                 {
                     CleanSite cs = new CleanSite();
                     cs.Set(sb, true);
-                    workingObserver = cs.ShowOnGUI();
+                    ShowWorksite(cs);
                 }
             }
             else
@@ -1100,7 +1098,7 @@ sealed public class UIController : MonoBehaviour
                     TunnelBuildingSite tbs = new TunnelBuildingSite();
                     tbs.Set(chosenCube);
                     tbs.CreateSign(faceIndex);
-                    workingObserver = tbs.ShowOnGUI();
+                    ShowWorksite(tbs);
                 }
             }
         }

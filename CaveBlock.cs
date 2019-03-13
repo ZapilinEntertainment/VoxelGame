@@ -12,6 +12,7 @@ public sealed class CaveBlock : SurfaceBlock
     {
         type = BlockType.Cave;
         ceilingMaterial = f_up_material_id;
+        haveSurface = material_id != PoolMaster.NO_MATERIAL_ID;
     }
 
     public override void ReplaceMaterial(int newId)
@@ -55,7 +56,83 @@ public sealed class CaveBlock : SurfaceBlock
 
     override public List<BlockpartVisualizeInfo> GetVisualDataList(byte visibilityMask)
     {
-        return null;
+        var data = new List<BlockpartVisualizeInfo>();
+        MaterialType ceilingMaterialType = PoolMaster.GetMaterialType(ceilingMaterial),
+            floorMaterialType = PoolMaster.GetMaterialType(material_id);
+        if ((visibilityMask & 1) != 0)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(0, ceilingMaterialType, myChunk.GetLightValue(pos.x, pos.y, pos.z + 1)),
+                    MeshType.CaveCeil,
+                    ceilingMaterial
+                    ));
+        }
+        if ((visibilityMask & 2) != 0)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(1, ceilingMaterialType, myChunk.GetLightValue(pos.x + 1, pos.y, pos.z)),
+                    MeshType.CaveCeil,
+                    ceilingMaterial
+                    ));
+        }
+        if ((visibilityMask & 4) != 0)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(2, ceilingMaterialType, myChunk.GetLightValue(pos.x, pos.y, pos.z - 1)),
+                    MeshType.CaveCeil,
+                    ceilingMaterial
+                    ));
+        }
+        if ((visibilityMask & 8) != 0)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(3, ceilingMaterialType, myChunk.GetLightValue(pos.x - 1, pos.y, pos.z)),
+                    MeshType.CaveCeil,
+                    ceilingMaterial
+                    ));
+        }
+        if ((visibilityMask & 16) != 0)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(4, ceilingMaterialType, myChunk.GetLightValue(pos.x, pos.y + 1, pos.z)),
+                    MeshType.Quad,
+                    ceilingMaterial
+                    ));
+        }
+        if ((visibilityMask & 32) != 0 & haveSurface)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(5, floorMaterialType, myChunk.GetLightValue(pos.x, pos.y - 1, pos.z )),
+                    MeshType.Quad,
+                    material_id
+                    ));
+        }
+        byte innerLight = myChunk.GetLightValue(pos.x, pos.y, pos.z);
+        if ((visibilityMask & 64) != 0 & haveSurface)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(6, floorMaterialType, innerLight),
+                    MeshType.Quad,
+                    material_id
+                    ));
+        }
+        if ((visibilityMask & 128) != 0)
+        {
+            data.Add(new BlockpartVisualizeInfo(
+                    pos,
+                    new MeshVisualizeInfo(7, ceilingMaterialType, innerLight),
+                    MeshType.Quad,
+                    ceilingMaterial
+                    ));
+        }
+        return data; 
     }
     override public BlockpartVisualizeInfo GetFaceVisualData(byte face)
     {
@@ -97,6 +174,8 @@ public sealed class CaveBlock : SurfaceBlock
                     , ceilingMaterial
                     );
             case 5:
+                if (!haveSurface) return null;
+                else
                 return new BlockpartVisualizeInfo(
                     pos,
                     new MeshVisualizeInfo(face, PoolMaster.GetMaterialType(ceilingMaterial), myChunk.GetLightValue(pos.x , pos.y - 1, pos.z)),
@@ -104,6 +183,8 @@ public sealed class CaveBlock : SurfaceBlock
                     , ceilingMaterial
                     );
             case 6:
+                if (!haveSurface) return null;
+                else
                 return new BlockpartVisualizeInfo(
                     pos,
                     new MeshVisualizeInfo(face, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos.x , pos.y, pos.z)),
@@ -118,7 +199,6 @@ public sealed class CaveBlock : SurfaceBlock
                     , ceilingMaterial
                     );
             default: return null;
-
         }
     }
 

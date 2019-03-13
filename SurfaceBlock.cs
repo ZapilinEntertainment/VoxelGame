@@ -251,8 +251,8 @@ public class SurfaceBlock : Block
 
     public Vector2 WorldToMapCoordinates(Vector3 point)
     {
-        Vector3 leftDownCorner = GetLocalPosition(0,0);
-        return new Vector2(point.x - leftDownCorner.x, point.z - leftDownCorner.z);
+        Vector3 leftDownCorner = GetLocalPosition(0,0) - new Vector3(0.5f, 0, 0.5f) * QUAD_SIZE / (float)INNER_RESOLUTION;
+        return new Vector2(point.x - leftDownCorner.x, QUAD_SIZE - (point.z - leftDownCorner.z)) / QUAD_SIZE;
     }
     /// <summary>
     /// Do not use directly, use "Set Basement" instead
@@ -373,7 +373,7 @@ public class SurfaceBlock : Block
     public override void ReplaceMaterial(int newId)
     {
         material_id = newId;
-        if (grassland != null) grassland.Annihilation(false, true);
+        if (grassland != null) grassland.Annihilation(false, false);
         myChunk.ChangeBlockVisualData(this, 6);
     }
     public void ReplaceGrassTexture(int id)

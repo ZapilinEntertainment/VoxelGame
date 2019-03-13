@@ -53,10 +53,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         int[,,] data;
         switch (cmode) {
             case ChunkGenerationMode.Peak:
-                float size = SKY_SPHERE_RADIUS;
-                GameObject g = Constructor.CreatePeakBasis(8, ResourceType.STONE_ID, size);
-                g.transform.position = new Vector3(-size / 2f, - size/2f, -size / 2f);
-                g.layer = cloudEmitter.gameObject.layer;
+                int resolution = 15;
+                GameObject g = Constructor.CreatePeakBasis(resolution, ResourceType.STONE_ID);
+                float cs = Chunk.CHUNK_SIZE * Block.QUAD_SIZE;
+                g.transform.localScale = Vector3.one * cs / 2f;
+                g.transform.position = new Vector3(cs / 2f - 0.5f * Block.QUAD_SIZE , g.transform.localScale.y / 2f - 0.5f * Block.QUAD_SIZE, cs / 2f - 0.5f * Block.QUAD_SIZE);
                 break;
             default: return;
         }        

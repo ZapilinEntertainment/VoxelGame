@@ -53,7 +53,6 @@ public struct MeshVisualizeInfo
     public MeshVisualizeInfo(byte i_face, MaterialType mtype, byte i_illumination)
     {
         faceIndex = i_face;
-        if (faceIndex > 6) faceIndex = 6;
         illumination = i_illumination;
         materialType = mtype;
     }
@@ -153,7 +152,7 @@ public sealed class BlockpartVisualizeInfo
             return false;
 
         BlockpartVisualizeInfo p = (BlockpartVisualizeInfo)obj;
-        return (p.pos == pos) && (p.rinfo == rinfo) && (meshType == p.meshType);
+        return (p.pos == pos) && (p.rinfo == rinfo) && (meshType == p.meshType) && (materialID == p.materialID);
     }
     public override int GetHashCode()
     {
@@ -179,7 +178,7 @@ public sealed class Chunk : MonoBehaviour
     private float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1), chunkUpdateTimer;
     private bool chunkUpdateRequired = false, borderDrawn = false, shadowsUpdateRequired;
     private Dictionary<MeshVisualizeInfo, GameObject> renderers; // (face, material, illumitation) <- носители скомбинированных моделей
-    private List<BlockpartVisualizeInfo> blockVisualizeArray;// <- информация обо всех видимых блоках
+    private List<BlockpartVisualizeInfo> blockVisualizersList;// <- информация обо всех видимых блоках
     private List<MeshVisualizeInfo> redrawRequiredTypes; // <- будут перерисованы и снова скомбинированы
     private Roof[,] roofs;
     private GameObject roofObjectsHolder, combinedShadowCaster;
@@ -205,7 +204,7 @@ public sealed class Chunk : MonoBehaviour
         blocks = new Dictionary<ChunkPos, Block>();
         surfaceBlocks = new List<SurfaceBlock>();
         redrawRequiredTypes = new List<MeshVisualizeInfo>();
-        blockVisualizeArray = new List<BlockpartVisualizeInfo>();
+        blockVisualizersList = new List<BlockpartVisualizeInfo>();
         roofs = new Roof[CHUNK_SIZE, CHUNK_SIZE];
         if (roofObjectsHolder == null)
         {
@@ -229,7 +228,7 @@ public sealed class Chunk : MonoBehaviour
         }
         if (renderersHolders == null)
         {
-            RemadeRenderersHolders();
+            RemakeRenderersHolders();
         }
         lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         for (int x = 0; x < CHUNK_SIZE; x++)
@@ -252,6 +251,10 @@ public sealed class Chunk : MonoBehaviour
     public void Awake()
     {
         FollowingCamera.main.cameraChangedEvent += CullingUpdate;
+
+        //var g = new GameObject("test");
+        //g.AddComponent<MeshFilter>().sharedMesh = PoolMaster.GetMesh(MeshType.Quad, ResourceType.METAL_E_ID);
+        //g.AddComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(MaterialType.Metal);
     }
 
     #region updating 
@@ -476,9 +479,9 @@ public sealed class Chunk : MonoBehaviour
         byte visibilityMask = GetVisibilityMask(b.pos.x, b.pos.y, b.pos.z);
         BlockpartVisualizeInfo currentBlockInfo = null;
         int arrayIndex = -1;
-        for (int i = 0; i < blockVisualizeArray.Count; i++)
+        for (int i = 0; i < blockVisualizersList.Count; i++)
         {
-            var bvi = blockVisualizeArray[i];
+            var bvi = blockVisualizersList[i];
             if (bvi.pos == b.pos && bvi.rinfo.faceIndex == face)
             {
                 currentBlockInfo = bvi;
@@ -493,14 +496,22 @@ public sealed class Chunk : MonoBehaviour
             {
                 currentBlockInfo = b.GetFaceVisualData(face);
                 if (currentBlockInfo == null) return;
-                blockVisualizeArray.Add(currentBlockInfo);                
+                blockVisualizersList.Add(currentBlockInfo);                
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
             }
             else
             {
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
                 currentBlockInfo = b.GetFaceVisualData(face);
-                blockVisualizeArray[arrayIndex] = currentBlockInfo;
+                blockVisualizersList[arrayIndex] = currentBlockInfo;
+                if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
+            }
+        }
+        else // не должен быть виден
+        {
+            if (currentBlockInfo != null)
+            {
+                blockVisualizersList.RemoveAt(arrayIndex);
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
             }
         }
@@ -511,11 +522,11 @@ public sealed class Chunk : MonoBehaviour
         var blockParts = new BlockpartVisualizeInfo[8];
         var indexes = new int[8];
 
-        if (blockVisualizeArray.Count > 0)
+        if (blockVisualizersList.Count > 0)
         {                        
-            for (int i = 0; i < blockVisualizeArray.Count; i++)
+            for (int i = 0; i < blockVisualizersList.Count; i++)
             {
-                var bvi = blockVisualizeArray[i];
+                var bvi = blockVisualizersList[i];
                 if (bvi.pos == b.pos)
                 {
                     byte findex = bvi.rinfo.faceIndex;
@@ -525,17 +536,18 @@ public sealed class Chunk : MonoBehaviour
             }           
         }
         BlockpartVisualizeInfo currentBlockInfo, correctBlockInfo;
+
         for (byte k = 0; k < 8; k++)
-        {
+        {            
+            currentBlockInfo = blockParts[k];
             if ((visibilityMask & powersOfTwo[k]) != 0) // должен быть видимым
-            {
+            {               
                 correctBlockInfo = b.GetFaceVisualData(k);
-                currentBlockInfo = blockParts[k];                
                 if (currentBlockInfo != null) // данные о блоке есть..
                 {
                     if (correctBlockInfo == null) // ...но их быть не должно
                     {
-                        blockVisualizeArray.RemoveAt(indexes[k]);
+                        blockVisualizersList.RemoveAt(indexes[k]);
                         if (k + 1 < 8)
                         {
                             for (int j = k + 1; j < 8; j++)
@@ -548,9 +560,9 @@ public sealed class Chunk : MonoBehaviour
                     else // ...и мы сравниваем их с правильными
                     {
                         if (correctBlockInfo != currentBlockInfo)
-                        {
+                        {                            
                             if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
-                            blockVisualizeArray[indexes[k]] = currentBlockInfo;
+                            blockVisualizersList[indexes[k]] = currentBlockInfo;                            
                             if (!redrawRequiredTypes.Contains(correctBlockInfo.rinfo)) redrawRequiredTypes.Add(correctBlockInfo.rinfo);
                         }
                     }
@@ -559,27 +571,42 @@ public sealed class Chunk : MonoBehaviour
                 {
                     if (correctBlockInfo == null) continue; //...и не должно быть
                     else //... но должны быть
-                    {
-                        blockVisualizeArray.Add(correctBlockInfo);
+                    {                        
+                        blockVisualizersList.Add(correctBlockInfo);
                         if (!redrawRequiredTypes.Contains(correctBlockInfo.rinfo)) redrawRequiredTypes.Add(correctBlockInfo.rinfo);
                     }
+                }
+            }
+            else // должен быть невидимым..
+            {
+                if (currentBlockInfo != null) //.. но есть видимая часть, которую нужно удалить
+                {
+                    blockVisualizersList.RemoveAt(indexes[k]);
+                    if (k + 1 < 8)
+                    {
+                        for (int j = k + 1; j < 8; j++)
+                        {
+                            if (indexes[j] > indexes[k]) indexes[j]--;
+                        }
+                    }
+                    if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
                 }
             }
         }
     }
     private void RemoveBlockVisualisers(ChunkPos cpos)
     {
-        if (blockVisualizeArray.Count > 0)
+        if (blockVisualizersList.Count > 0)
         {
             BlockpartVisualizeInfo bvi;
             int i = 0;
-            while (i < blockVisualizeArray.Count)
+            while (i < blockVisualizersList.Count)
             {
-                bvi = blockVisualizeArray[i];
+                bvi = blockVisualizersList[i];
                 if (bvi.pos == cpos)
                 {
                     if (!redrawRequiredTypes.Contains(bvi.rinfo)) redrawRequiredTypes.Add(bvi.rinfo);
-                    blockVisualizeArray.RemoveAt(i);
+                    blockVisualizersList.RemoveAt(i);
                     continue;
                 }
                 else i++;
@@ -590,25 +617,22 @@ public sealed class Chunk : MonoBehaviour
     private void CreateBlockpartsRenderer(MeshVisualizeInfo mvi)
     {
         if (renderers.ContainsKey(mvi)) return;
-
         var processingIndexes = new List<int>();
-        for (int i = 0; i < blockVisualizeArray.Count; i++)
+        for (int i = 0; i < blockVisualizersList.Count; i++)
         {
-            if (blockVisualizeArray[i].rinfo == mvi) processingIndexes.Add(i);
+            if (blockVisualizersList[i].rinfo == mvi) processingIndexes.Add(i);
         }
 
         int pcount = processingIndexes.Count;
         if (pcount > 0)
         {
             var ci = new CombineInstance[pcount];
-            Mesh m, quadMesh = PoolMaster.GetMesh(MeshType.Quad);
+            Mesh m;
 
             for (int j = 0; j < pcount; j++)
             {
-                var cdata = blockVisualizeArray[processingIndexes[j]];
-                if (cdata.meshType == MeshType.Quad) m = quadMesh;
-                else m = Instantiate(PoolMaster.GetMesh(cdata.meshType));
-                PoolMaster.SetMeshUVs(ref m, cdata.materialID);
+                var cdata = blockVisualizersList[processingIndexes[j]];
+                m = PoolMaster.GetMesh(cdata.meshType, cdata.materialID);
                 ci[j].mesh = m;                
                 ci[j].transform = cdata.GetPositionMatrix();
             }
@@ -643,13 +667,13 @@ public sealed class Chunk : MonoBehaviour
         renderers.TryGetValue(mvi, out g);
         if (g != null)
         {
-            int n = blockVisualizeArray.Count;
+            int n = blockVisualizersList.Count;
             if (n > 0)
             {
                 var indexes = new List<int>();
                 for (int i = 0; i < n; i++)
                 {
-                    if (blockVisualizeArray[i].rinfo == mvi) indexes.Add(i);
+                    if (blockVisualizersList[i].rinfo == mvi) indexes.Add(i);
                 }
 
                 n = indexes.Count;
@@ -659,9 +683,8 @@ public sealed class Chunk : MonoBehaviour
                     BlockpartVisualizeInfo bvi;
                     for (int i = 0; i < n; i++)
                     {
-                        bvi = blockVisualizeArray[indexes[i]];
-                        Mesh m = Instantiate(PoolMaster.GetMesh(bvi.meshType));
-                        PoolMaster.SetMeshUVs(ref m, bvi.materialID);
+                        bvi = blockVisualizersList[indexes[i]];
+                        Mesh m = PoolMaster.GetMesh(bvi.meshType, bvi.materialID);
                         ci[i].mesh = m;
                         ci[i].transform = bvi.GetPositionMatrix();
                     }
@@ -669,9 +692,13 @@ public sealed class Chunk : MonoBehaviour
                     cm.CombineMeshes(ci);
                     g.GetComponent<MeshFilter>().sharedMesh = cm;
                     g.GetComponent<MeshCollider>().sharedMesh = cm;
-                    if (mvi.materialType == MaterialType.Green) print("green");
                     if (PoolMaster.useIlluminationSystem) g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
                     else g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType);
+                }
+                else
+                {                    
+                    renderers.Remove(mvi);
+                    Destroy(g);
                 }
             }
         }
@@ -680,12 +707,12 @@ public sealed class Chunk : MonoBehaviour
 
     private void RenderDataFullRecalculation()
     {
-        RemadeRenderersHolders();
+        RemakeRenderersHolders();
         if (renderers != null) renderers.Clear();
         renderers = new Dictionary<MeshVisualizeInfo, GameObject>();
 
-        blockVisualizeArray.Clear();
-        blockVisualizeArray = new List<BlockpartVisualizeInfo>();
+        blockVisualizersList.Clear();
+        blockVisualizersList = new List<BlockpartVisualizeInfo>();
         byte visibilityMask = 0;
         foreach (var b in blocks)
         {
@@ -698,17 +725,17 @@ public sealed class Chunk : MonoBehaviour
                     if (block.type == BlockType.Surface)
                     {
                         var d = block.GetFaceVisualData(6);
-                        if (d != null) blockVisualizeArray.Add(d);
+                        if (d != null) blockVisualizersList.Add(d);
                     }
                     else
                     {
                         var d = block.GetVisualDataList(visibilityMask);
-                        if (d != null) blockVisualizeArray.AddRange(d);
+                        if (d != null) blockVisualizersList.AddRange(d);
                     }
                 }
             }
         }
-        int n = blockVisualizeArray.Count;
+        int n = blockVisualizersList.Count;
         if (n > 0)
         {
             List<MeshVisualizeInfo> processedTypes = new List<MeshVisualizeInfo>();
@@ -717,7 +744,7 @@ public sealed class Chunk : MonoBehaviour
             
             int i = 0;
             for (; i < n; i++) {
-                brd = blockVisualizeArray[i];
+                brd = blockVisualizersList[i];
                 ri = brd.rinfo;
                 if (!processedTypes.Contains(ri))
                 {
@@ -866,9 +893,9 @@ public sealed class Chunk : MonoBehaviour
         }
 
         redrawRequiredTypes.Clear();
-        if (blockVisualizeArray.Count > 0)
+        if (blockVisualizersList.Count > 0)
         {
-            foreach (var brd in blockVisualizeArray)
+            foreach (var brd in blockVisualizersList)
             {
                 int a;
                 byte lightToCompare;
@@ -919,7 +946,7 @@ public sealed class Chunk : MonoBehaviour
         ChunkLightmapFullRecalculation(); // в разработке
     }
 
-    private void RemadeRenderersHolders()
+    private void RemakeRenderersHolders()
     {
         if (renderersHolders != null)
         {
@@ -931,7 +958,7 @@ public sealed class Chunk : MonoBehaviour
             Destroy(renderersHolders[5]);
             Destroy(renderersHolders[6]);
         }
-        renderersHolders = new GameObject[7];
+        renderersHolders = new GameObject[8];
         GameObject g = new GameObject("renderersHolder_face0");
         Transform t = g.transform;
         Vector3 vzero = Vector3.zero;
@@ -963,11 +990,16 @@ public sealed class Chunk : MonoBehaviour
         t.parent = transform;
         t.localPosition = vzero;
         renderersHolders[5] = g;
-        g = new GameObject("renderersHolder_otherFaces");
+        g = new GameObject("renderersHolder_face6");
         t = g.transform;
         t.parent = transform;
         t.localPosition = vzero;
         renderersHolders[6] = g;
+        g = new GameObject("renderersHolder_face7");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[7] = g;
     }
     public void LayersCut()
     {
@@ -1325,6 +1357,7 @@ public sealed class Chunk : MonoBehaviour
             Structure fillingStructure = originalBlock.mainStructure;
         }
         blocks.Remove(originalBlock.pos);
+        RemoveBlockVisualisers(originalBlock.pos);
         Block b = null;
         byte influenceMask = 63;
         bool calculateUpperBlock = false;

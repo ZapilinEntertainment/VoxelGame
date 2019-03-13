@@ -50,7 +50,6 @@
 			v2f OUT;
 			float4 invertex = mul(UNITY_MATRIX_MV, float4(0, IN.vertex.y, 0, 1));
 			invertex.x -= IN.vertex.x;
-			invertex.z -= IN.vertex.z;
 			OUT.vertex = mul(UNITY_MATRIX_P, invertex);
 			OUT.texcoord = IN.texcoord;
 			return OUT;

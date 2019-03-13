@@ -584,53 +584,59 @@ public abstract class Constructor
         }
     }
 
-    public static GameObject CreatePeakBasis(int res, int materialID, float size)
+    public static GameObject CreatePeakBasis(int res, int materialID)
     {
-        size = 1;
         var dataArray = new GeneratedMeshPartInfo[res,res,res];
-        var map = new bool[res, res];
 
         GeneratedMeshPartInfo tube = GeneratedMeshPartInfo.Tube, endFlat = GeneratedMeshPartInfo.StickHead;
         tube.SetMaterial(materialID);
         endFlat.SetMaterial(materialID);
-        for (int x = 0; x < res; x++)
+
+        int quarter = res / 4, half = res / 2;
+        int a = half - quarter, b = half + quarter;
+        int h = 0, y = 0;
+        float sqrDist = (half - a) * (half - a);
+        for (int x = a; x < b; x++)
         {
-            for (int z = 0; z< res; z++)
+            for (int z = a; z < b; z++)
             {
-                int min = x; if (min < z) min = z;
-                float d = min / (res - 2f);
-                d *= d;
-                int maxh = 1 + (int)(d * (res - 2));
-                int y = 0;
-                for (; y < maxh - 2; y++)
-                {                      
+                float d = (half - x) * (half - x) + (half - z) * (half - z);
+                d /= sqrDist;
+                d = 1 - d;
+                if (d < 0) d = 0;
+                h = (int)((res - 1) * d * d + (0.5f - Random.value) * (res / 8f));
+                if (h >= res) h = res;
+                y = 0;
+                for (; y < h - 1 ; y++)
+                {
                     dataArray[x, y, z] = tube;
                 }
-                if (y == res - 1) dataArray[x, y, z] = endFlat;
-                else
+                if (Random.value > 0.5f)
                 {
-                    if (Random.value > 0.5f)
-                    {
-                        dataArray[x, y, z] = GeneratedMeshPartInfo.MakeCutToUp((byte)Random.Range(0, 3), materialID);
-                    }
-                    else dataArray[x, y, z] = endFlat;
-                }
+                    dataArray[x, y, z] = GeneratedMeshPartInfo.MakeCutToUp((byte)Random.Range(0, 3), materialID);
+               }
+               else dataArray[x, y, z] = endFlat;
             }
         }
+        for (y = 0; y < res - 1; y++)
+        {
+            dataArray[half, y, half] = tube;
+        }
+        dataArray[half, y, half] = endFlat;
 
         GeneratedMeshPartInfo mi;
         MeshType type1, type2;
         int activeMeshesCount = 0;
-        for (int x = 0; x < res - 1; x++)
+        for (int x = 0; x < res; x++)
         {
-            for (int y = 0; y < res - 1; y++)
+            for (y = 0; y < res; y++)
             {
-                for (int z = 0; z < res - 1; z++)
+                for (int z = 0; z < res; z++)
                 {
                     mi = dataArray[x, y, z];
                     if (mi.containsData)
                     {
-                        if (dataArray[x, y, z + 1].containsData)
+                        if (z + 1 < res && dataArray[x, y, z + 1].containsData)
                         {
                             type1 = mi.fwdFaceType;
                             type2 = dataArray[x, y, z + 1].backFaceType;
@@ -658,10 +664,10 @@ public abstract class Constructor
                                 else mi.fwdFaceType = MeshType.NoMesh;
                             }
                         }
-                        if (dataArray[x +1,y,z].containsData)
+                        if (x + 1 < res && dataArray[x +1,y,z].containsData)
                         {
                             type1 = mi.rightFaceType;
-                            type2 = dataArray[x, y, z + 1].leftFaceType;
+                            type2 = dataArray[x + 1, y, z].leftFaceType;
                             if (type1 != MeshType.NoMesh & type2 != MeshType.NoMesh)
                             {
                                 if (type1 == MeshType.Quad)
@@ -686,10 +692,10 @@ public abstract class Constructor
                                 else mi.rightFaceType = MeshType.NoMesh;
                             }
                         }
-                        if (dataArray[x,y+1,z].containsData)
+                        if (y + 1 < res && dataArray[x,y+1,z].containsData)
                         {
                             type1 = mi.upFaceType;
-                            type2 = dataArray[x, y, z + 1].downFaceType;
+                            type2 = dataArray[x, y + 1, z ].downFaceType;
                             if (type1 != MeshType.NoMesh & type2 != MeshType.NoMesh)
                             {
                                 if (type1 == MeshType.Quad)
@@ -697,20 +703,20 @@ public abstract class Constructor
                                     if (type2 == MeshType.Quad)
                                     {
                                         mi.upFaceType = MeshType.NoMesh;
-                                        dataArray[x, y + 1, z].backFaceType = MeshType.NoMesh;
+                                        dataArray[x, y + 1, z].downFaceType = MeshType.NoMesh;
                                     }
                                     else
                                     {
                                         if (type2 == MeshType.CutEdge)
                                         {
-                                            dataArray[x, y + 1, z].backFaceType = MeshType.NoMesh;
+                                            dataArray[x, y + 1, z].downFaceType = MeshType.NoMesh;
                                         }
                                     }
                                 }
                             }
                             else
                             {
-                                if (type1 == MeshType.NoMesh) dataArray[x, y + 1, z].backFaceType = MeshType.NoMesh;
+                                if (type1 == MeshType.NoMesh) dataArray[x, y + 1, z].downFaceType = MeshType.NoMesh;
                                 else mi.upFaceType = MeshType.NoMesh;
                             }
                         }
@@ -728,66 +734,66 @@ public abstract class Constructor
         }
 
         // Vector3 scale = Vector3.one * (size / (float)res);
-        Vector3 scale = Vector3.one;
+        Vector3 scale = Vector3.one ;
         var ci = new CombineInstance[activeMeshesCount];
         int i = 0;
         Quaternion[] rotations = new Quaternion[6]
         {
             Quaternion.identity, Quaternion.Euler(0,90,0), Quaternion.Euler(0,180,0),
-            Quaternion.Euler(0,270,0), Quaternion.Euler(-90,0,0), Quaternion.Euler(90,0,0)
+            Quaternion.Euler(0,270,0), Quaternion.Euler(90,0,0), Quaternion.Euler(-90,0,0)
         };
         Vector3[] correctionVectors = new Vector3[6]
         {
             Vector3.forward * 0.5f * scale.z, Vector3.right * 0.5f * scale.x, Vector3.back * 0.5f * scale.z,
             Vector3.left * 0.5f * scale.x, Vector3.up * 0.5f * scale.y, Vector3.down * 0.5f * scale.y
         };
-        for (int x = 0; x < res - 1; x++)
+        for (int x = 0; x < res; x++)
         {
-            for (int y = 0; y < res - 1; y++)
+            for (y = 0; y < res ; y++)
             {
-                for (int z = 0; z < res - 1; z++)
+                for (int z = 0; z < res ; z++)
                 {
                     var gmi = dataArray[x, y, z];
                     if (gmi.fwdFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.fwdFaceType, gmi.fwdMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x,y,z) * size + correctionVectors[0], rotations[0], scale);
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half,y - res, z - half) + correctionVectors[0]), rotations[0], scale);
                         i++;
                     }
                     if (gmi.rightFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.rightFaceType, gmi.rightMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x, y, z) * size + correctionVectors[1], rotations[1], scale);
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half, y - res, z - half)+ correctionVectors[1]), rotations[1], scale);
                         i++;
                     }
                     if (gmi.backFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.backFaceType, gmi.backMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x, y, z) * size + correctionVectors[2], rotations[2], scale);
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half, y - res, z - half) + correctionVectors[2]), rotations[2], scale);
                         i++;
                     }
                     if (gmi.leftFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.leftFaceType, gmi.leftMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x, y, z) * size + correctionVectors[3], rotations[3], scale);
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half, y - res, z - half)  + correctionVectors[3]), rotations[3], scale);
                         i++;
                     }
                     if (gmi.upFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.upFaceType, gmi.upMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x, y, z) * size + correctionVectors[4], rotations[5], scale);
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half, y - res, z - half) + correctionVectors[4]) , rotations[5], scale);
                         i++;
                     }
                     if (gmi.downFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.downFaceType, gmi.downMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x, y, z) * size + correctionVectors[5], rotations[5], scale);
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half, y - res, z - half) + correctionVectors[5]), rotations[5], scale);
                         i++;
                     }
                     if (gmi.innerFaceType != MeshType.NoMesh)
                     {
                         ci[i].mesh = PoolMaster.GetMesh(gmi.innerFaceType, gmi.innerMaterialID);
-                        ci[i].transform = Matrix4x4.TRS(new Vector3(x, y, z) * size, 
+                        ci[i].transform = Matrix4x4.TRS((new Vector3(x - half, y -res, z - half)), 
                             (gmi.fwdFaceType == MeshType.NoMesh) ? rotations[0] : (gmi.rightFaceType == MeshType.NoMesh ? rotations[1] : (
                             gmi.backFaceType == MeshType.NoMesh ? rotations[2] : rotations[3]
                             )), 
@@ -807,7 +813,7 @@ public abstract class Constructor
         mr.sharedMaterial = PoolMaster.GetMaterial(materialID);
         if (PoolMaster.shadowCasting)
         {
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             mr.receiveShadows = true;
         }
         else

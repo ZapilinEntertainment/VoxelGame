@@ -7,15 +7,16 @@
 		SubShader{
 		Tags
 		{
-			"RenderType" = "Opaque"
-			//"Queue" = "Transparent"
+			"RenderType" = "Transparent"
+			"Queue" = "Transparent"
 			"ForceNoShadowCasting" = "True"
 		}
 			LOD 200
+			Cull Off
+		Blend One OneMinusSrcAlpha
 
 			CGPROGRAM
-			#pragma vertex vert
-			#pragma surface surf Lambert
+			#pragma surface surf Lambert vertex:vert alpha:fade
 			#include "AutoLight.cginc"
 
 			sampler2D _MainTex;
@@ -33,21 +34,9 @@
 
 			void vert(inout appdata_base IN)
 			{
-				float4 invertex = mul(UNITY_MATRIX_M, float4(IN.vertex.x, IN.vertex.y, IN.vertex.z, 0));
-				float4x4 rm = UNITY_MATRIX_V;
-				//переписываем матрицу будто sin z = 0, cos z= 1
-				float sinY = rm[0, 2], cosX = rm[2,2] / (rm[1,2] / sinY), sinX = sqrt(1 - cosX * cosX) ;
-				rm[1, 0] = sinX * sinY;
-				rm[2, 0] = -1 * cosX * sinY;
-				rm[3, 0] = 0;
-				rm[1, 1] = cosX;
-				rm[2, 1] = sinX;
-				rm[3, 1] = 0;
-				rm[3, 3] = 0;
-
-				invertex = mul(rm, invertex);
-				IN.vertex = mul(UNITY_MATRIX_T_MV, invertex); // возвращает обратно к непроецированным координатам
-				IN.vertex.w = 1; // работает ааааа!!!
+				float4 invertex = mul(UNITY_MATRIX_MV, float4(0, IN.vertex.y, 0, 0));
+				invertex.x += IN.vertex.x;				
+				IN.vertex = mul(UNITY_MATRIX_T_MV, invertex);	
 			}
 
 			void surf(Input IN, inout SurfaceOutput o) {
@@ -60,5 +49,5 @@
 
 
 	}
-		FallBack "BillboardShader"
+		FallBack "VerticalBillboard"
 }
