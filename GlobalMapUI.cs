@@ -317,7 +317,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 sector.transform.localRotation = Quaternion.Euler(Vector3.back * i * sectorDegree);
                 if (sectorsData[k] != null)
                 {
-                    ri.color = sectorsData[k].environment.downColor;
+                    ri.color = sectorsData[k].environment.lightSettings.sunColor;
                 }
                 sectorsImages[k] = ri;
                 k++;
@@ -406,7 +406,7 @@ public sealed class GlobalMapUI : MonoBehaviour
             {
                 if (sectorsData[i] != null)
                 {
-                    sectorsImages[i].color = sectorsData[i].environment.downColor;
+                    sectorsImages[i].color = sectorsData[i].environment.lightSettings.sunColor;
                 }
                 else
                 {
@@ -584,32 +584,6 @@ public sealed class GlobalMapUI : MonoBehaviour
         }
 
         mapRect.position = new Vector3(xpos, ypos, 0);
-
-        //test
-        bool motion = false;
-        float x = Input.GetAxis("Horizontal");
-        float angle = mapPoints[GlobalMap.CITY_POINT_INDEX].angle;
-        if (x != 0)
-        {
-            angle += x * 0.05f;
-            if (angle > 360f) angle = 360f - angle;
-            else { if (angle < 0) angle += 360f; }
-            motion = true;
-        }
-        x = Input.GetAxis("Vertical");
-        float height = mapPoints[GlobalMap.CITY_POINT_INDEX].height;
-        if (x != 0)
-        {
-            height += x * 0.001f;
-            if (height > 1) height = 1;
-            else { if (height < 0) height = 0; }
-            motion = true;
-        }
-        if (motion)
-        {
-            mapPoints[GlobalMap.CITY_POINT_INDEX].ChangeCoords(angle, height);
-            GameMaster.realMaster.environmentMaster.positionChanged = true;
-        }
     }   
    
     private void OnEnable()

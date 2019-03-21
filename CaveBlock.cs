@@ -39,7 +39,10 @@ public sealed class CaveBlock : SurfaceBlock
     public void DestroySurface()
     {
         if (!haveSurface) return;
+        var lb = myChunk.GetBlock(pos.x, pos.y - 1, pos.z);
+        if (lb != null && (lb.type == BlockType.Cave | lb.type == BlockType.Cube)) return;
         haveSurface = false;
+        material_id = PoolMaster.NO_MATERIAL_ID;
         if (grassland != null) grassland.Annihilation(false, true);
         if (surfaceObjects.Count != 0) ClearSurface(true);
         myChunk.RefreshBlockVisualising(this);
@@ -48,10 +51,31 @@ public sealed class CaveBlock : SurfaceBlock
     public void RestoreSurface(int newMaterialID)
     {
         if (haveSurface) return;
-        ceilingMaterial = newMaterialID;
+        material_id = newMaterialID;
         haveSurface = true;
-        myChunk.RefreshBlockVisualising(this);
+        myChunk.ChangeBlockVisualData(this, 6);
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 15);
+
+        var lb = myChunk.GetBlock(pos.x, pos.y - 1, pos.z);
+        if (lb != null)
+        {
+            switch (lb.type)
+            {
+                case BlockType.Shapeless:
+                    myChunk.ReplaceBlock(lb.pos, BlockType.Cave, PoolMaster.NO_MATERIAL_ID, material_id, false);
+                    break;
+                case BlockType.Surface:
+                    myChunk.ReplaceBlock(lb.pos, BlockType.Cave, lb.material_id, material_id, false);
+                    break;
+            }
+        }
+        else
+        {
+            if (pos.y - 1 >= 0)
+            {
+                myChunk.AddBlock(new ChunkPos(pos.x, pos.y - 1, pos.z), BlockType.Cave, PoolMaster.NO_MATERIAL_ID, material_id, false);
+            }
+        }
     }
 
     override public List<BlockpartVisualizeInfo> GetVisualDataList(byte visibilityMask)

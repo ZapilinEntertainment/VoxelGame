@@ -36,7 +36,7 @@ public sealed class HeadQuarters : House {
 					addon.transform.parent = transform.GetChild(0);
 					addon.transform.localPosition = Vector3.zero + (i - 3.5f) * Vector3.up * Block.QUAD_SIZE;
 					addon.transform.localRotation = transform.GetChild(0).localRotation;
-                    if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(addon);
+                    if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(addon, true);
 					i++;
 				}
 				BoxCollider bc = transform.GetChild(0).GetComponent<BoxCollider>();
@@ -141,7 +141,7 @@ public sealed class HeadQuarters : House {
                 addon.transform.parent = model;
                 addon.transform.localPosition = Vector3.zero + (level - 2.5f) * Vector3.up * Block.QUAD_SIZE;
                 addon.transform.localRotation = model.localRotation;
-                if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(addon);
+                if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(addon, true);
                 BoxCollider bc = model.GetComponent<BoxCollider>();
                 bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE);
                 bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE / 2f;

@@ -35,12 +35,12 @@ public class MapPoint
         ID = i_id;
     }
 
-    public MapPoint(float i_angle, float i_height, byte ring, MapMarkerType mtype)
+    public MapPoint(float i_angle, float i_height, MapMarkerType mtype)
     {
         ID = lastUsedID++;
         angle = i_angle;
         height = i_height;
-        ringIndex = ring;
+        ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
         type = mtype;
         stable = false;
         switch (type)

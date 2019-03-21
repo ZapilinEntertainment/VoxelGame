@@ -663,7 +663,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID:                        
-                        if (mid != ResourceType.DIRT_ID & mid != ResourceType.FERTILE_SOIL_ID) {
+                        if ( !Grassland.MaterialIsLifeSupporting(observingSurface.material_id) ) {
                             acceptable = false;
                             reason = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
                         }

@@ -33,7 +33,7 @@ public sealed class ScalableHarvestableResource : Structure {
             PoolMaster.SetMaterialByID(ref mf, ref mr, mainResource.ID, basement.myChunk.GetLightValue(basement.pos));
             model.transform.localScale = new Vector3(1, resourceCount / MAX_VOLUME, 1);
         }
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model);
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)

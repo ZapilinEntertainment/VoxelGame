@@ -12,9 +12,9 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
 
-    private bool prepared = false, cloudsEnabled = true, sunEnabled = true;
+    private bool prepared = false, cloudsEnabled = true, sunMarkerEnabled = true;
     private int vegetationShaderWindPropertyID;
-    private float windTimer = 0, prevSkyboxSaturation = 1;
+    private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0;
     private Environment currentEnvironment;
     private GameObject physicalSun;
     private GlobalMap gmap;
@@ -22,8 +22,9 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     private Material skyboxMaterial;
     private ParticleSystem.MainModule cloudEmitterMainModule;
     private Transform cloudEmitter;
+    private List<Transform> decorations;
 
-    private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120;
+    private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6;
     private const int SKY_SPHERE_RADIUS = 9;
 
     public void Prepare()
@@ -44,9 +45,10 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         gmap = GameMaster.realMaster.globalMap;
         cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
         sunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
+        decorations = new List<Transform>();
 
         skyboxMaterial = RenderSettings.skybox;
-        ChangeEnvironment(gmap.GetCurrentEnvironment(), true);
+        ChangeEnvironment(gmap.GetCurrentEnvironment());
     }
     public void PrepareIslandBasis(ChunkGenerationMode cmode)
     { // его придётся сохранять!
@@ -67,7 +69,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     {
         environmentalConditions = t;
     }
-    public void ChangeEnvironment(Environment e, bool haveSun)
+    public void ChangeEnvironment(Environment e)
     {
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         currentEnvironment = e;       
@@ -75,22 +77,39 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
         environmentalConditions = currentEnvironment.conditions;
 
+        sun.GetComponent<Light>().color = currentEnvironment.lightSettings.sunColor;
+        var haveSun = e.lightSettings.sunIsMapPoint;
         if (haveSun)
         {
-            sun.GetComponent<Light>().color = currentEnvironment.sunColor;
-            if (!sun.gameObject.activeSelf) sun.gameObject.SetActive(true);
+            
         }
         else
         {
-            if (sun.gameObject.activeSelf) sun.gameObject.SetActive(false);
+            sun.transform.forward = e.lightSettings.direction;
         }
-        sunEnabled = haveSun;
+        sunMarkerEnabled = haveSun;
         positionChanged = true;
+        environmentEventTimer = currentEnvironment.GetEventTime();
+
+        print("environment changed");
+    }
+
+    public void AddDecoration(float size, GameObject dec)
+    {
+        var mv = gmap.cityFlyDirection;
+        var v = new Vector3(mv.x, 0, mv.z).normalized;
+        v *= -1;
+        dec.layer = cloudEmitter.gameObject.layer;
+        dec.transform.position = Quaternion.AngleAxis((0.5f - Random.value) * 180f, Vector3.up) * (v * SKY_SPHERE_RADIUS) + v * lastSpawnDistance;
+        
+        decorations.Add(dec.transform);
+        lastSpawnDistance += size;
     }
 
     private void LateUpdate()
     {
-        windTimer -= Time.deltaTime;
+        float t = Time.deltaTime * GameMaster.gameSpeed;
+        windTimer -= t;
         if (windTimer <= 0)
         {
             windTimer = WIND_CHANGE_TIME * (0.1f + Random.value * 1.9f);
@@ -100,8 +119,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         if (windVector != newWindVector)
         {
-            float t = WIND_CHANGE_STEP * Time.deltaTime;            
-            windVector = Vector3.RotateTowards(windVector, newWindVector, t, t);
+            float st = WIND_CHANGE_STEP * t;            
+            windVector = Vector3.RotateTowards(windVector, newWindVector, st, st);
             if (windVector.magnitude != 0)
             {
                 cloudEmitter.transform.forward = new Vector3(windVector.x, 0, windVector.y);
@@ -115,17 +134,33 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         if (positionChanged)
         {
             byte ring = cityPoint.ringIndex;
-            float angleX = (cityPoint.angle - sunPoint.angle) / (gmap.sectorsDegrees[ring] / 2f);
-            float heightY = (cityPoint.height - sunPoint.height) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
+            float centerX = 0, centerY = 0;
+            var ls = currentEnvironment.lightSettings;
+            if (ls.sunIsMapPoint)
+            {
+                centerX = ls.sun.angle;
+                centerY = ls.sun.height;
+            }
+            else
+            {
+                var c = gmap.GetCurrentSectorCenter();
+                centerX = c.x;
+                centerY = c.y;
+            }
+            float angleX = (cityPoint.angle - centerX) / (gmap.sectorsDegrees[ring] / 2f);
+            //print(angleX);
+            float heightY = (cityPoint.height - centerY) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
             Vector2 lookDist = new Vector2(angleX, heightY);
-            sun.transform.position = new Vector3(lookDist.x * SKY_SPHERE_RADIUS, 2, lookDist.y * SKY_SPHERE_RADIUS);
-            sun.transform.LookAt(Vector3.zero);
-
+            if (sunMarkerEnabled)
+            {
+                sun.transform.position = new Vector3(lookDist.x * SKY_SPHERE_RADIUS, 2, lookDist.y * SKY_SPHERE_RADIUS);
+                sun.transform.LookAt(Vector3.zero);
+            }
 
             float d = lookDist.magnitude;
             if (d > 1) d = 1;
             float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
-            if (sunEnabled) sun.GetComponent<Light>().intensity = s;
+            sun.GetComponent<Light>().intensity = s * currentEnvironment.lightSettings.maxIntensity;
             if (s != prevSkyboxSaturation)
             {
                 prevSkyboxSaturation = s;
@@ -133,6 +168,41 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             }
             positionChanged = false;
         }
+
+        //if (currentEnvironment.presetType != Environment.EnvironmentPresets.Default)
+        //{
+            if (environmentEventTimer > 0)
+            {
+                environmentEventTimer -= t;
+                if (environmentEventTimer <= 0)
+                {
+                    currentEnvironment.Event();
+                    environmentEventTimer = currentEnvironment.GetEventTime();
+                }
+            }
+        //}
+
+        var dir = gmap.cityFlyDirection / 500f;
+        dir.y = 0;
+        if (decorations.Count > 0)
+        {
+            int i = 0;
+            Vector3 pos;
+            float sqrRadius = SKY_SPHERE_RADIUS * SKY_SPHERE_RADIUS;
+            while (i < decorations.Count)
+            {
+                pos = decorations[i].position;
+                pos += dir;
+                decorations[i].position = pos;
+                if (Vector3.SqrMagnitude(pos) > sqrRadius * 4f)
+                {
+                   Destroy(decorations[i].gameObject);
+                  decorations.RemoveAt(i);
+                }
+                else i++;
+            }
+        }
+        if (lastSpawnDistance > 0) lastSpawnDistance -= dir.magnitude;
     }
 
     public void Save( System.IO.FileStream fs)

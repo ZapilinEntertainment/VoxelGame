@@ -279,14 +279,12 @@ public sealed class Chunk : MonoBehaviour
             //{
             //    combinedShadowCaster.transform.position = GameMaster.realMaster.environmentMaster.sun.forward.normalized * 0.5f;
             //}
-
-
             if (redrawRequiredTypes.Count > 0)
             {
                 foreach (MeshVisualizeInfo mvi in redrawRequiredTypes)
                 {
                     if (renderers.ContainsKey(mvi))
-                    {                        
+                    {
                         RedrawRenderer(mvi);
                     }
                     else
@@ -295,7 +293,7 @@ public sealed class Chunk : MonoBehaviour
                     }
                 }
                 redrawRequiredTypes.Clear();
-            }
+            } // зависимость - RenderStatusUpdate
         }
     }
     private void ShadowsUpdate()
@@ -326,7 +324,6 @@ public sealed class Chunk : MonoBehaviour
         }
         shadowsUpdateRequired = false;
     }
-
     public void LifepowerUpdate()
     {
         if (surfaceBlocks.Count > 0)
@@ -338,7 +335,7 @@ public sealed class Chunk : MonoBehaviour
                 List<SurfaceBlock> dirt_for_grassland = new List<SurfaceBlock>();
                 foreach (SurfaceBlock sb in surfaceBlocks)
                 {
-                    if (sb.material_id == ResourceType.DIRT_ID & sb.grassland == null & sb.worksite == null) dirt_for_grassland.Add(sb);
+                    if (Grassland.MaterialIsLifeSupporting(sb.material_id) && sb.grassland == null && sb.worksite == null) dirt_for_grassland.Add(sb);
                 }
                 if (dirt_for_grassland.Count > 0)
                 {
@@ -358,7 +355,6 @@ public sealed class Chunk : MonoBehaviour
             lifePower = Grassland.GrasslandUpdate(grasslandLifepowerChanges);
         }
     }
-
     public void CullingUpdate()
     {
         Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
@@ -391,6 +387,25 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
             prevBitmask = renderBitmask;
+        }
+    }
+
+    public void RenderStatusUpdate()
+    {
+        if (redrawRequiredTypes.Count > 0)
+        {
+            foreach (MeshVisualizeInfo mvi in redrawRequiredTypes)
+            {
+                if (renderers.ContainsKey(mvi))
+                {
+                    RedrawRenderer(mvi);
+                }
+                else
+                {
+                    CreateBlockpartsRenderer(mvi);
+                }
+            }
+            redrawRequiredTypes.Clear();
         }
     }
     #endregion
@@ -913,12 +928,12 @@ public sealed class Chunk : MonoBehaviour
                         break;
                     case 2:
                         a = brd.pos.z - 1;
-                        if (a >= CHUNK_SIZE) lightToCompare = UP_LIGHT;
+                        if (a < 0) lightToCompare = UP_LIGHT;
                         else lightToCompare = lightMap[brd.pos.x, brd.pos.y, a];
                         break;
                     case 3:
                         a = brd.pos.x - 1;
-                        if (a >= CHUNK_SIZE) lightToCompare = UP_LIGHT;
+                        if (a < 0 ) lightToCompare = UP_LIGHT;
                         else lightToCompare = lightMap[a, brd.pos.y, brd.pos.z];
                         break;
                     case 4:
@@ -928,7 +943,7 @@ public sealed class Chunk : MonoBehaviour
                         break;
                     case 5:
                         a = brd.pos.y - 1;
-                        if (a >= CHUNK_SIZE) lightToCompare = UP_LIGHT;
+                        if (a < 0) lightToCompare = UP_LIGHT;
                         else lightToCompare = lightMap[brd.pos.x, a, brd.pos.z];
                         break;
                     default:
@@ -1076,7 +1091,7 @@ public sealed class Chunk : MonoBehaviour
             }
             else
             {
-                if ((GetVisibilityMask(b.pos) & 16) == 0)
+                if ((GetVisibilityMask(blockpos.x, blockpos.y, blockpos.z) & 16) == 0)
                 {
                     b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
                     face = 6; // surface block
@@ -1088,7 +1103,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         else
-        {
+        {            
             if (hitpoint.x == -0.5f)
             {
                 if (normal == Vector3.up)
@@ -1155,6 +1170,14 @@ public sealed class Chunk : MonoBehaviour
                                 else
                                 {
                                     face = 2;
+                                }
+                            }
+                            else
+                            {
+                                if (hitpoint.y < 0.5f - CaveBlock.CEILING_THICKNESS + 0.001f & normal == Vector3.down)
+                                {
+                                    b = GetBlock(blockpos.x, blockpos.y, blockpos.z);
+                                    face = 7;
                                 }
                             }
                         }
@@ -1308,10 +1331,18 @@ public sealed class Chunk : MonoBehaviour
         }
         if (calculateUpperBlock)
         {
-            if (GetBlock(x, y + 1, z) == null)
+            var ub = GetBlock(x, y + 1, z);
+            if (ub == null)
             {
                 if (y < CHUNK_SIZE - 1) AddBlock(new ChunkPos(x, y + 1, z), BlockType.Surface, i_ceilingMaterialID, i_ceilingMaterialID, i_naturalGeneration);
                 else SetRoof(x, z, !i_naturalGeneration);
+            }
+            else
+            {
+                if (ub.type == BlockType.Cave && !(ub as CaveBlock).haveSurface)
+                {
+                    (ub as CaveBlock).RestoreSurface(i_ceilingMaterialID);
+                }
             }
         }
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
@@ -1520,10 +1551,6 @@ public sealed class Chunk : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// занимается только удалением и побочными эффектами, никакого добавления-замещения
-    /// </summary>
-    /// <param name="pos"></param>
     public void DeleteBlock(ChunkPos pos)
     {
         // в сиквеле стоит пересмотреть всю иерархию классов ><
@@ -1579,6 +1606,7 @@ public sealed class Chunk : MonoBehaviour
         RemoveBlockVisualisers(b.pos);
         ApplyVisibleInfluenceMask(x, y, z, 63);
 
+        neighboursInfluence = false; // отложено
         if (neighboursInfluence)
         {
             Block sideBlock = GetBlock(x, y, z + 1);

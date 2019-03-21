@@ -8,18 +8,17 @@ public class GameLogUI : MonoBehaviour {
     [SerializeField] private GameObject logButton,logWindow, lastMessagePanel, blockingMask, decisionPanel, decisionLeftButton, 
         decisionRightButton,decisionMonoButton, importantAnnouncePanel;
     [SerializeField] private Text lastMessageText, decisionWindowText;
-    [SerializeField] private RectTransform contentHolder, exampleText;
+    [SerializeField] private Text[] messages;
 #pragma warning restore 0649
     private static GameLogUI current;
 
     public delegate void DecisionAction();
-    private bool logPrepared = false, activeAnnouncement = false, importantAnnouncementEnabled = false;
+    private bool activeAnnouncement = false, importantAnnouncementEnabled = false;
+    private float lastMessageTimer = 0;
     private int lastMessageIndex = 0;
-    private DecisionAction leftDecision, rightDecision, monoDecision;
-    private List<Text> messages;
-    private const byte MAX_MESSAGES = 30;
-    private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 0.15f, LAST_MESSAGE_DISSAPPEAR_TIME = 0.3f;
-
+    private DecisionAction leftDecision, rightDecision, monoDecision;    
+    private const byte MAX_MESSAGES = 10;
+    private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 0.15f, MESSAGE_DISSAPPEAR_TIME = 3f, INNER_LOG_CLEAR_TIME = 15;
 
     public static void MakeAnnouncement(string s)
     {
@@ -28,13 +27,6 @@ public class GameLogUI : MonoBehaviour {
     public static void MakeAnnouncement(string s, Color col)
     {
         if (current == null) InitializeCurrent();
-        if (!current.logPrepared)
-        {
-            current.logButton.SetActive(true);
-            current.messages = new List<Text>();
-            current.contentHolder.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, current.exampleText.rect.height * MAX_MESSAGES);
-            current.logPrepared = true;
-        }
         current.AddAnnouncement(s, col);
     }
     public static void MakeImportantAnnounce(string s)
@@ -74,7 +66,7 @@ public class GameLogUI : MonoBehaviour {
     }
     public static void DeactivateLogWindow()
     {
-        if (current == null || !current.logPrepared) return;
+        if (current == null) return;
         else
         {
             if (current.logWindow.activeSelf) current.LogButton();
@@ -99,7 +91,7 @@ public class GameLogUI : MonoBehaviour {
         if (activeAnnouncement)
         {
             Image i = lastMessagePanel.GetComponent<Image>();
-            float x = Mathf.MoveTowards(i.color.a, 0, LAST_MESSAGE_DISSAPPEAR_TIME * t);
+            float x = Mathf.MoveTowards(i.color.a, 0, 1/MESSAGE_DISSAPPEAR_TIME * t);
             if (x > 0) i.color = new Color(i.color.r, i.color.g, i.color.b, x);
             else
             {
@@ -107,58 +99,63 @@ public class GameLogUI : MonoBehaviour {
                 activeAnnouncement = false;
             }
         }
+        if (lastMessageTimer > 0)
+        {
+            lastMessageTimer -= t;
+            if (lastMessageTimer <= 0 & lastMessageIndex > 0)
+            {
+                lastMessageIndex--;
+                for (int i = 0; i < lastMessageIndex; i++)
+                {
+                    messages[i].text = messages[i + 1].text;
+                    messages[i].color = messages[i + 1].color;
+                }
+                messages[lastMessageIndex].gameObject.SetActive(false);
+                
+                lastMessageTimer = INNER_LOG_CLEAR_TIME;
+            }
+        }
     }
 
     private void AddAnnouncement(string s, Color c)
-    {
-        bool activated = contentHolder.gameObject.activeSelf;
-        if (activated) contentHolder.gameObject.SetActive(false);        
-        if (lastMessageIndex >= MAX_MESSAGES)
+    {      
+       if (lastMessageIndex == 0)
         {
-            Vector3 upv = Vector3.up * exampleText.rect.height;
-            for (int i = 1; i < MAX_MESSAGES; i++)
-            {
-                messages[i].rectTransform.transform.position += upv;
-            }
-            Text m = messages[MAX_MESSAGES - 1];
-            m.text = s;
-            m.color = c;
-            m.rectTransform.position += Vector3.down * m.rectTransform.rect.height * (MAX_MESSAGES - 1);
-        }
-        else
-        {
-            if (messages.Count < lastMessageIndex + 1)
-            {
-                Text m = Instantiate(exampleText).GetComponent<Text>();
-                m.gameObject.SetActive(true);
-                lastMessageIndex++;
-                m.transform.parent = contentHolder;
-                m.transform.position = Vector3.up * lastMessageIndex * m.rectTransform.rect.height;
-                m.text = s;
-                m.color = c;
-            }
-        }
-        if (activated)
-        {
-            contentHolder.gameObject.SetActive(true);
-            if (activeAnnouncement)
-            {
-                activeAnnouncement = false;
-                lastMessagePanel.SetActive(false);
-            }
-        }
-        else
-        {
-            Text t = lastMessagePanel.transform.GetChild(0).GetComponent<Text>();
+            var t = messages[0];
             t.text = s;
             t.color = c;
-            lastMessagePanel.GetComponent<Image>().color = Color.black;
-            if (!activeAnnouncement)
+            t.gameObject.SetActive(true);
+            lastMessageIndex++;
+        }
+       else
+        {
+            int l = messages.Length;
+            if (lastMessageIndex == l)
             {
-                activeAnnouncement = true;
-                lastMessagePanel.SetActive(true);
+                int i = 0;
+                for (; i < l - 1; i++)
+                {
+                    messages[i].text = messages[i + 1].text;
+                    messages[i].color = messages[i + 1].color;
+                }
+                messages[i].text = s;
+                messages[i].color = c;
+            }
+            else
+            {
+                var t = messages[lastMessageIndex];
+                t.text = s;
+                t.color = c;
+                t.gameObject.SetActive(true);
+                lastMessageIndex++;
             }
         }
+        lastMessageText.text = s;
+        lastMessageText.color = c;        
+        lastMessagePanel.GetComponent<Image>().color = Color.white;
+        lastMessagePanel.gameObject.SetActive(true);
+        activeAnnouncement = true;
+        lastMessageTimer = INNER_LOG_CLEAR_TIME;
     }
     private void PrepareDecisionWindow(DecisionAction monoDecision, string text)
     {
@@ -181,20 +178,17 @@ public class GameLogUI : MonoBehaviour {
     //====
     public void LogButton()
     {
-        if (logPrepared)
+        if (logWindow.activeSelf)
         {
-            if (logWindow.activeSelf)
-            {
-                current.logWindow.SetActive(false);
-                if (current.activeAnnouncement) current.lastMessagePanel.SetActive(true);
-                if (UIController.current.currentActiveWindowMode == ActiveWindowMode.LogWindow) UIController.current.DropActiveWindow(ActiveWindowMode.LogWindow);
-            }
-            else
-            {
-                if (current.activeAnnouncement) current.lastMessagePanel.SetActive(false);
-                current.logWindow.SetActive(true);
-                UIController.current.ChangeActiveWindow(ActiveWindowMode.LogWindow);
-            }
+            current.logWindow.SetActive(false);
+            if (current.activeAnnouncement) current.lastMessagePanel.SetActive(true);
+            if (UIController.current.currentActiveWindowMode == ActiveWindowMode.LogWindow) UIController.current.DropActiveWindow(ActiveWindowMode.LogWindow);
+        }
+        else
+        {
+            if (current.activeAnnouncement) current.lastMessagePanel.SetActive(false);
+            current.logWindow.SetActive(true);
+            UIController.current.ChangeActiveWindow(ActiveWindowMode.LogWindow);
         }
     } 
 

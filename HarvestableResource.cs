@@ -110,7 +110,7 @@ public class HarvestableResource : Structure
                 {
                     hr.gameObject.name = "berry bush";
                     model = Instantiate(Resources.Load<GameObject>("Prefs/berryBush"));
-                    if (PoolMaster.shadowCasting) PoolMaster.ReplaceMaterials(model);
+                    //if (PoolMaster.shadowCasting) PoolMaster.ReplaceMaterials(model, true);
                     hr.maxHp = 10;
                     hr.innerPosition = SurfaceRect.one;
                     break;
@@ -293,7 +293,7 @@ public class HarvestableResource : Structure
         model.parent = transform;
         model.localPosition = Vector3.zero;
         model.localRotation = Quaternion.Euler(Vector3.zero);
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model.gameObject);
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model.gameObject, true);
     }
 
     public void Harvest()

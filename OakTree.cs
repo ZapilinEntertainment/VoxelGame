@@ -93,6 +93,7 @@ public class OakTree : Plant
             //сначала добавляется спрайт
             sr.sprite = lodPack_stage4[0];
             sr.sharedMaterial = PoolMaster.billboardMaterial;
+            if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             spriterCarrier.transform.parent = fullModel.transform;
             spriterCarrier.transform.localPosition = Vector3.up * 0.211f;
             // потом модель
@@ -126,6 +127,7 @@ public class OakTree : Plant
             spriterCarrier = new GameObject("lodSpriter");
             sr = spriterCarrier.AddComponent<SpriteRenderer>();
             sr.sharedMaterial = PoolMaster.billboardMaterial;
+            if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             sr.sprite = lodPack_stage5[0];
             spriterCarrier.transform.parent = fullModel.transform;
             spriterCarrier.transform.localPosition = Vector3.up * 0.239f;
@@ -160,6 +162,7 @@ public class OakTree : Plant
             spriterCarrier = new GameObject("lodSpriter");
             sr = spriterCarrier.AddComponent<SpriteRenderer>();
             sr.sharedMaterial = PoolMaster.billboardMaterial;
+            if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             sr.sprite = lodPack_stage6[0];
             spriterCarrier.transform.parent = fullModel.transform;
             spriterCarrier.transform.localPosition = Vector3.up * 0.21f;
@@ -289,7 +292,9 @@ public class OakTree : Plant
 
     static GameObject LoadModel(byte stage)
     {
-        return Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
+        GameObject g =  Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(g, true);
+        return g;
     }
 
     override public void ResetToDefaults()
@@ -399,96 +404,193 @@ public class OakTree : Plant
             Vector3 cpos;
             OakDrawMode newDrawMode = OakDrawMode.NoDraw;
             float dist, lodDist = LODController.lodCoefficient;
-            while (i < count)
+
+            if (!PoolMaster.shadowCasting)
             {
-                OakTree oak = oaks[i];
-                if (oak == null) { oaks.RemoveAt(i); continue; }
-                else
+                while (i < count)
                 {
-                    if (!oak.visible) { i++; continue; }
-                    dist = (oak.transform.position - camPos).magnitude;
-                    if (oak.stage <= TRANSIT_STAGE)
+                    OakTree oak = oaks[i];
+                    if (oak == null) { oaks.RemoveAt(i); continue; }
+                    else
                     {
-                        if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage)
+                        if (!oak.visible) { i++; continue; }
+                        dist = (oak.transform.position - camPos).magnitude;
+                        if (oak.stage <= TRANSIT_STAGE)
                         {
-                            if (oak.drawmode != OakDrawMode.NoDraw)
+                            if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage)
                             {
-                                oak.spriter.enabled = false;
-                                oak.drawmode = OakDrawMode.NoDraw;
+                                if (oak.drawmode != OakDrawMode.NoDraw)
+                                {
+                                    oak.spriter.enabled = false;
+                                    oak.drawmode = OakDrawMode.NoDraw;
+                                }
+                            }
+                            else
+                            {
+                                if (oak.drawmode != OakDrawMode.DrawStartSprite)
+                                {
+                                    oak.drawmode = OakDrawMode.DrawStartSprite;
+                                    oak.spriter.enabled = true;
+                                }
                             }
                         }
                         else
-                        {
-                            if (oak.drawmode != OakDrawMode.DrawStartSprite)
+                        {                        // # change model draw mode
+                            float x = TREE_SPRITE_MAX_VISIBILITY + 3 * oak.stage;
+                            x = dist / x;
+                            if (x > lodDist)
                             {
-                                oak.drawmode = OakDrawMode.DrawStartSprite;
-                                oak.spriter.enabled = true;
+                                if (x > 1) newDrawMode = OakDrawMode.NoDraw; else newDrawMode = OakDrawMode.DrawLOD;
                             }
-                            t = oak.spriter.transform;
-                            cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
-                            t.forward = cpos.normalized;                            
-                        }
-                    }
-                    else
-                    {                        // # change model draw mode
-                        float x = TREE_SPRITE_MAX_VISIBILITY + 3 * oak.stage;
-                        x = dist / x;
-                        if (x > lodDist)
-                        {
-                            if (x > 1) newDrawMode = OakDrawMode.NoDraw; else newDrawMode = OakDrawMode.DrawLOD;
-                        }
-                        else newDrawMode = OakDrawMode.DrawModel;
-                        if (newDrawMode != oak.drawmode)
-                        {
-                            if (newDrawMode == OakDrawMode.NoDraw)
+                            else newDrawMode = OakDrawMode.DrawModel;
+                            if (newDrawMode != oak.drawmode)
                             {
-                                oak.spriter.enabled = false;
-                                oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
-                            }
-                            else
-                            {
-                                if (newDrawMode == OakDrawMode.DrawModel)
+                                if (newDrawMode == OakDrawMode.NoDraw)
                                 {
                                     oak.spriter.enabled = false;
-                                    oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
+                                    oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
                                 }
                                 else
                                 {
-                                    oak.spriter.enabled = true;
-                                    oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                                    if (newDrawMode == OakDrawMode.DrawModel)
+                                    {
+                                        oak.spriter.enabled = false;
+                                        oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
+                                    }
+                                    else
+                                    {
+                                        oak.spriter.enabled = true;
+                                        oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                                    }
+                                }
+                                oak.drawmode = newDrawMode;
+                            }
+                            // # setting lod
+                            if (oak.drawmode == OakDrawMode.DrawLOD)
+                            {
+                                byte spriteNumber = 0;
+                                float angle = Vector3.Angle(Vector3.up, camPos - oak.transform.position);
+                                if (angle < 30)
+                                {
+                                    if (angle < 10) spriteNumber = 3;
+                                    else spriteNumber = 2;
+                                }
+                                else
+                                {
+                                    if (angle > 85) spriteNumber = 0;
+                                    else spriteNumber = 1;
+                                }
+                                if (spriteNumber != oak.lodNumber)
+                                {
+                                    switch (oak.stage)
+                                    {
+                                        case 4: oak.spriter.sprite = lodPack_stage4[spriteNumber]; break;
+                                        case 5: oak.spriter.sprite = lodPack_stage5[spriteNumber]; break;
+                                        case 6: oak.spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                                    }
+                                    oak.lodNumber = spriteNumber;
                                 }
                             }
-                            oak.drawmode = newDrawMode;
+                            // eo setting lod
                         }
-                        // # setting lod
-                        if (oak.drawmode == OakDrawMode.DrawLOD)
+                        i++;
+                    }
+                }
+            }
+            else
+            { // то же самое, только с разворотом на камеру
+                while (i < count)
+                {
+                    OakTree oak = oaks[i];
+                    if (oak == null) { oaks.RemoveAt(i); continue; }
+                    else
+                    {
+                        if (!oak.visible) { i++; continue; }
+                        dist = (oak.transform.position - camPos).magnitude;
+                        if (oak.stage <= TRANSIT_STAGE)
                         {
-                            byte spriteNumber = 0;
-                            float angle = Vector3.Angle(Vector3.up, camPos - oak.transform.position);
-                            if (angle < 30)
+                            if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage)
                             {
-                                if (angle < 10) spriteNumber = 3;
-                                else spriteNumber = 2;
+                                if (oak.drawmode != OakDrawMode.NoDraw)
+                                {
+                                    oak.spriter.enabled = false;
+                                    oak.drawmode = OakDrawMode.NoDraw;
+                                }
                             }
                             else
                             {
-                                if (angle > 85) spriteNumber = 0;
-                                else spriteNumber = 1;
-                            }
-                            if (spriteNumber != oak.lodNumber)
-                            {
-                                switch (oak.stage)
+                                if (oak.drawmode != OakDrawMode.DrawStartSprite)
                                 {
-                                    case 4: oak.spriter.sprite = lodPack_stage4[spriteNumber]; break;
-                                    case 5: oak.spriter.sprite = lodPack_stage5[spriteNumber]; break;
-                                    case 6: oak.spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                                    oak.drawmode = OakDrawMode.DrawStartSprite;
+                                    oak.spriter.enabled = true;
                                 }
-                                oak.lodNumber = spriteNumber;
+                                t = oak.spriter.transform;
+                                cpos = Vector3.ProjectOnPlane(camPos - t.position, t.up);
+                                t.forward = cpos.normalized;
                             }
                         }
-                        // eo setting lod
+                        else
+                        {                        // # change model draw mode
+                            float x = TREE_SPRITE_MAX_VISIBILITY + 3 * oak.stage;
+                            x = dist / x;
+                            if (x > lodDist)
+                            {
+                                if (x > 1) newDrawMode = OakDrawMode.NoDraw; else newDrawMode = OakDrawMode.DrawLOD;
+                            }
+                            else newDrawMode = OakDrawMode.DrawModel;
+                            if (newDrawMode != oak.drawmode)
+                            {
+                                if (newDrawMode == OakDrawMode.NoDraw)
+                                {
+                                    oak.spriter.enabled = false;
+                                    oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                                }
+                                else
+                                {
+                                    if (newDrawMode == OakDrawMode.DrawModel)
+                                    {
+                                        oak.spriter.enabled = false;
+                                        oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
+                                    }
+                                    else
+                                    {
+                                        oak.spriter.enabled = true;
+                                        oak.modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(false);
+                                    }
+                                }
+                                oak.drawmode = newDrawMode;
+                            }
+                            // # setting lod
+                            if (oak.drawmode == OakDrawMode.DrawLOD)
+                            {
+                                byte spriteNumber = 0;
+                                float angle = Vector3.Angle(Vector3.up, camPos - oak.transform.position);
+                                if (angle < 30)
+                                {
+                                    if (angle < 10) spriteNumber = 3;
+                                    else spriteNumber = 2;
+                                }
+                                else
+                                {
+                                    if (angle > 85) spriteNumber = 0;
+                                    else spriteNumber = 1;
+                                }
+                                if (spriteNumber != oak.lodNumber)
+                                {
+                                    switch (oak.stage)
+                                    {
+                                        case 4: oak.spriter.sprite = lodPack_stage4[spriteNumber]; break;
+                                        case 5: oak.spriter.sprite = lodPack_stage5[spriteNumber]; break;
+                                        case 6: oak.spriter.sprite = lodPack_stage6[spriteNumber]; break;
+                                    }
+                                    oak.lodNumber = spriteNumber;
+                                }
+                                oak.spriter.transform.forward =  oak.transform.position - camPos;
+                            }
+                            // eo setting lod
+                        }
+                        i++;
                     }
-                    i++;
                 }
             }
         }

@@ -42,7 +42,7 @@ public sealed class Zeppelin : MonoBehaviour {
 
         if (current != null) Destroy(current);
         current = this;
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(gameObject);
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(gameObject, true);
     }
 
 	void Update() {

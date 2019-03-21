@@ -32,6 +32,7 @@ public class LODSpriteMaker : MonoBehaviour {
     /// </summary>
     public int CreateLODPack(LODPackType i_lpackType, GameObject model, RenderPoint[] renderPoints, int resolution, float shotSize, Color backgroundColor, LODRegisterInfo regInfo)
     {
+        backgroundColor.a = 0;
         LODController lcontroller = LODController.GetCurrent();
 
         backgroundColor.a = 0;      
@@ -41,7 +42,8 @@ public class LODSpriteMaker : MonoBehaviour {
         foreach (Renderer r in allObjects)
         {
             r.gameObject.layer = layerNumber;
-        }     
+        }
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(allObjects, false);
 
         cam.orthographicSize = shotSize;
         cam.backgroundColor = backgroundColor;
@@ -172,6 +174,8 @@ public class LODSpriteMaker : MonoBehaviour {
                 }
             default: return -1;
         }
+
+
         cam.enabled = false;
         cam.transform.parent = null;
         RenderTexture.active = null;
@@ -180,6 +184,7 @@ public class LODSpriteMaker : MonoBehaviour {
         {
             r.gameObject.layer = savedLayer;
         }
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(allObjects, true);
          return lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
     }
 

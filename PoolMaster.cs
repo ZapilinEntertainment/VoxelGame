@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum MaterialType : byte { Basic, Metal, Energy, Green }
-public enum MeshType: byte { NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeil, CutPlane, CutEdge}
+public enum MeshType: byte { NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeil, CutPlane, CutEdge012, CutEdge032}
 
 public sealed class PoolMaster : MonoBehaviour {
     private struct LightPoolInfo
@@ -40,7 +40,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private static bool useTextureRotation = false;
     private static Dictionary<LightPoolInfo, Material> lightPoolMaterials;
     private static Material metal_material, green_material, default_material, lr_red_material, lr_green_material, basic_material;
-    private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge, caveCeil;   
+    private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge012, cutEdge032, caveCeil;   
 
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
@@ -85,8 +85,7 @@ public sealed class PoolMaster : MonoBehaviour {
 		energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
         energyMaterial_disabled = Resources.Load<Material>("Materials/UnchargedMaterial");       
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
-        verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
-        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
+        verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");        
         if (useAdvancedMaterials)
         {
             glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
@@ -94,7 +93,7 @@ public sealed class PoolMaster : MonoBehaviour {
             glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
             metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
             green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-           
+            billboardMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
         }
         else
         {
@@ -103,6 +102,7 @@ public sealed class PoolMaster : MonoBehaviour {
             glassMaterial = Resources.Load<Material>("Materials/Glass");
             metal_material = Resources.Load<Material>("Materials/Metal");
             green_material = Resources.Load<Material>("Materials/Green");
+            billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         }        
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
@@ -162,16 +162,27 @@ public sealed class PoolMaster : MonoBehaviour {
                     }
                     return cutPlane;
                 }
-            case MeshType.CutEdge:
+            case MeshType.CutEdge012:
                 {
-                    if (cutEdge == null)
+                    if (cutEdge012 == null)
                     {
-                        cutEdge = new Mesh();
-                        cutEdge.vertices = new Vector3[3] { new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(-0.5f, -0.5f, 0)};
-                        cutEdge.triangles = new int[3] { 0, 1, 2};
-                        cutEdge.uv = new Vector2[3] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f) };
+                        cutEdge012 = new Mesh();
+                        cutEdge012.vertices = new Vector3[3] { new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, -0.5f, 0)};
+                        cutEdge012.triangles = new int[3] { 0, 1, 2};
+                        cutEdge012.uv = new Vector2[3] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f) };
                     }
-                    return cutEdge;
+                    return cutEdge012;
+                }
+            case MeshType.CutEdge032:
+                {
+                    if (cutEdge032 == null)
+                    {
+                        cutEdge032 = new Mesh();
+                        cutEdge032.vertices = new Vector3[3] { new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(-0.5f, -0.5f, 0) };
+                        cutEdge032.triangles = new int[3] { 0, 1, 2 };
+                        cutEdge032.uv = new Vector2[3] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f) };
+                    }
+                    return cutEdge032;
                 }
             case MeshType.CaveCeil:
                 {
@@ -242,7 +253,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/passengerShip_1")).GetComponent<Ship>();
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
                     }
                     break;
                 }
@@ -269,7 +280,7 @@ public sealed class PoolMaster : MonoBehaviour {
                             default:  s = Instantiate(Resources.Load<GameObject>("Prefs/lightCargoShip")).GetComponent<Ship>();
                                 break;
                         }
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
                     }
                     break;
                 }
@@ -291,7 +302,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/privateShip")).GetComponent<Ship>();
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
                     }
                     break;
                 }
@@ -313,7 +324,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/lightWarship")).GetComponent<Ship>();
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject);
+                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
                     }
                     break;
                 }
@@ -344,7 +355,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static GameObject GetRooftop(bool peak, bool artificial, byte number) {
         GameObject g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/" + (artificial ? "artificial" : "natural") + (peak ? "Peak" : "Rooftop") + number.ToString() ) );
         g.name = (artificial ? "a" : "n") + (peak ? "p" : "r") + number.ToString();
-        if (useAdvancedMaterials) ReplaceMaterials(g);
+        if (useAdvancedMaterials) ReplaceMaterials(g, true);
         return g;
 	}
     public static GameObject GetFlyingPlatform()
@@ -513,6 +524,8 @@ public sealed class PoolMaster : MonoBehaviour {
             case ResourceType.LUMBER_ID:
             case MATERIAL_DEAD_LUMBER_ID:
             case MATERIAL_WHITEWALL_ID:
+            case ResourceType.MINERAL_F_ID:
+            case ResourceType.MINERAL_L_ID:
                 return MaterialType.Basic;
 
             case ResourceType.METAL_K_ID:
@@ -526,9 +539,7 @@ public sealed class PoolMaster : MonoBehaviour {
             case ResourceType.METAL_P_ORE_ID:
             case ResourceType.METAL_P_ID:
             case ResourceType.METAL_S_ORE_ID:
-            case ResourceType.METAL_S_ID:
-            case ResourceType.MINERAL_F_ID:
-            case ResourceType.MINERAL_L_ID:
+            case ResourceType.METAL_S_ID:       
             case MATERIAL_WHITE_METAL_ID:
                 return MaterialType.Metal;
 
@@ -550,6 +561,8 @@ public sealed class PoolMaster : MonoBehaviour {
                 return metal_material;
             case MaterialType.Green:
                 return green_material;
+            case MaterialType.Energy:
+                return energyMaterial;
             case MaterialType.Basic:
             default:
                 return basic_material;
@@ -557,6 +570,7 @@ public sealed class PoolMaster : MonoBehaviour {
     }
     public static Material GetMaterial (MaterialType mtype, byte i_illumination)
     {
+        if (mtype == MaterialType.Energy) return GetMaterial(mtype);
         byte p = (byte)(1f / MAX_MATERIAL_LIGHT_DIVISIONS * 127.5f);
         if (i_illumination < p) return darkness_material;
         else
@@ -623,7 +637,8 @@ public sealed class PoolMaster : MonoBehaviour {
             case MATERIAL_WHITE_METAL_ID:
                 return metal_material;
 
-            case ResourceType.GRAPHONIUM_ID: return energyMaterial;
+            case ResourceType.GRAPHONIUM_ID:
+                return energyMaterial;
             case MATERIAL_GRASS_100_ID:             
             case MATERIAL_GRASS_80_ID:                
             case MATERIAL_GRASS_60_ID:               
@@ -635,6 +650,8 @@ public sealed class PoolMaster : MonoBehaviour {
     }
     private static Material GetMaterial(int id, byte i_illumination)
     {
+        var mtype = GetMaterialType(id);
+        if (mtype == MaterialType.Energy) return GetMaterial(id);
         byte p = (byte)(1f / MAX_MATERIAL_LIGHT_DIVISIONS * 127.5f);
         if (i_illumination < p) return darkness_material;
         else
@@ -646,7 +663,7 @@ public sealed class PoolMaster : MonoBehaviour {
                 i_illumination -= (byte)(i_illumination % p);
                 Material m = null;
 
-                var key = new LightPoolInfo(GetMaterialType(id), i_illumination);
+                var key = new LightPoolInfo(mtype, i_illumination);
                 if (lightPoolMaterials.ContainsKey(key))
                 {
                     lightPoolMaterials.TryGetValue(key, out m);
@@ -669,40 +686,107 @@ public sealed class PoolMaster : MonoBehaviour {
         }        
     }
 
-    public static void ReplaceMaterials(GameObject g)
+    public static void ReplaceMaterials(GameObject g, bool i_useAdvancedMaterials)
     {
-        MeshRenderer[] rrs = g.GetComponentsInChildren<MeshRenderer>();
-        foreach (MeshRenderer mr in rrs)
+        Renderer[] rrs = g.GetComponentsInChildren<Renderer>();
+        if (rrs.Length > 0)
+        {
+            ReplaceMaterials(rrs, i_useAdvancedMaterials);
+        }
+    }
+    public static void ReplaceMaterials(Renderer[] rrs, bool i_useAdvancedMaterials)
+    {
+        Material[] materials;
+        if (i_useAdvancedMaterials)
+        { // нужны улучшенные
+            if (useAdvancedMaterials) //сейчас используются улучшенные
+            {
+                materials = new Material[6]
+                {
+                basic_material,
+                glassMaterial,
+                glassMaterial_disabled,
+                green_material,
+                metal_material,
+                billboardMaterial
+                };
+            }
+            else // сейчас используются обычные
+            {
+                materials = new Material[6]
+                {
+                Resources.Load<Material>("Materials/Advanced/Basic_PBR"),
+                Resources.Load<Material>("Materials/Advanced/Glass_PBR"),
+                Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR"),
+                Resources.Load<Material>("Materials/Advanced/Green_PBR"),
+                Resources.Load<Material>("Materials/Advanced/Metal_PBR"),
+                Resources.Load<Material>("Materials/Advanced/ShadedBillboard")
+                };
+            }
+        }
+        else // нужны обычные
+        {
+            if (useAdvancedMaterials) // сейчас используются улучшенные
+            {
+                materials = new Material[6] 
+                {
+                Resources.Load<Material>("Materials/Basic"),
+                Resources.Load<Material>("Materials/Glass"),
+                Resources.Load<Material>("Materials/GlassOffline"),
+                Resources.Load<Material>("Materials/Green"),
+                Resources.Load<Material>("Materials/Metal"),
+                Resources.Load<Material>("Materials/BillboardMaterial")
+                };
+            }
+            else // сейчас используются обычные
+            {
+                materials = new Material[6]
+                {
+                basic_material,
+                glassMaterial,
+                glassMaterial_disabled,
+                green_material,
+                metal_material,
+                billboardMaterial
+                };
+            }
+        }        
+        foreach (Renderer mr in rrs)
         {
             bool castShadows = false, receiveShadows = false;
             switch (mr.sharedMaterial.name)
             {
                 case "Basic":
-                    mr.sharedMaterial = basic_material;
+                    mr.sharedMaterial = materials[0];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "Glass":
-                    mr.sharedMaterial = glassMaterial;
+                    mr.sharedMaterial = materials[1];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "GlassOffline":
-                    mr.sharedMaterial = glassMaterial_disabled;
+                    mr.sharedMaterial = materials[2];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "Vegetation":
                 case "Green":
-                    mr.sharedMaterial = green_material;
+                    mr.sharedMaterial = materials[3];
                     break;
                 case "Metal":
-                    mr.sharedMaterial = metal_material;
+                    mr.sharedMaterial = materials[4];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "Sailcloth":
                     castShadows = true;
+                    receiveShadows = true;
+                    break;
+                case "BillboardMaterial":
+                    mr.sharedMaterial = materials[5];
+                    castShadows = false;
                     receiveShadows = true;
                     break;
             }

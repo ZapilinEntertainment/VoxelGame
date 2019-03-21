@@ -11,7 +11,7 @@ public class PointOfInterest : MapPoint
 
     public PointOfInterest(int i_id) : base(i_id) { }
 
-    public PointOfInterest(float i_angle, float i_height, byte ring, MapMarkerType mtype) : base(i_angle, i_height, ring, mtype)
+    public PointOfInterest(float i_angle, float i_height, byte ring, MapMarkerType mtype) : base(i_angle, i_height, mtype)
     {
         explored = false;
         availableMissions = new List<Mission>() { new Mission(MissionType.Exploring, 0) };

@@ -10,7 +10,7 @@ public struct GameStartSettings  {
     public static readonly GameStartSettings Empty;
     static GameStartSettings()
     {
-        Empty = new GameStartSettings(ChunkGenerationMode.Peak, 16, Difficulty.Normal);
+        Empty = new GameStartSettings(ChunkGenerationMode.Standart, 16, Difficulty.Normal);
     }
     public GameStartSettings(ChunkGenerationMode i_genMode, byte i_chunkSize, Difficulty diff)
     {

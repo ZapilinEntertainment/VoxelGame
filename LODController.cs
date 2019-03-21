@@ -174,47 +174,99 @@ public sealed class LODController : MonoBehaviour
         if (count > 0)
         {
             PointLODModel plm;
-            while (i < count)
+            if (!PoolMaster.shadowCasting)
             {
-                plm = pointLODmodels[i];
-                if (plm.model3d == null)
+                while (i < count)
                 {
-                    pointLODmodels.RemoveAt(i);
-                    count = pointLODmodels.Count;
-                    continue;
-                }
-                else
-                {
-                    i++;
-                    pos = plm.model3d.transform.position;
-                    sqdist = (pos - camPos).sqrMagnitude;                    
-                    if (sqdist > plm.lodSqrDistance * lodCoefficient)
+                    plm = pointLODmodels[i];
+                    if (plm.model3d == null)
                     {
-                        if (sqdist < plm.visibilitySqrDistance * lodCoefficient) newStatus = false;
-                        else newStatus = null;                        
+                        pointLODmodels.RemoveAt(i);
+                        count = pointLODmodels.Count;
+                        continue;
                     }
-                    else newStatus = true;
-                    if (newStatus != plm.drawStatus)
+                    else
                     {
-                        if (newStatus == true)
-                        {// model view
-                            plm.model3d.SetActive(true);
-                            plm.spriteRenderer.enabled = false;
-                        }
-                        else
+                        i++;
+                        pos = plm.model3d.transform.position;
+                        sqdist = (pos - camPos).sqrMagnitude;
+                        if (sqdist > plm.lodSqrDistance * lodCoefficient)
                         {
-                            if (newStatus == false)
-                            {// lod
-                                plm.model3d.SetActive(false);
-                                plm.spriteRenderer.enabled = true;
-                            }
-                            else
-                            {// not visible
-                                plm.model3d.SetActive(false);
+                            if (sqdist < plm.visibilitySqrDistance * lodCoefficient) newStatus = false;
+                            else newStatus = null;
+                        }
+                        else newStatus = true;
+                        if (newStatus != plm.drawStatus)
+                        {
+                            if (newStatus == true)
+                            {// model view
+                                plm.model3d.SetActive(true);
                                 plm.spriteRenderer.enabled = false;
                             }
+                            else
+                            {
+                                if (newStatus == false)
+                                {// lod
+                                    plm.model3d.SetActive(false);
+                                    plm.spriteRenderer.enabled = true;
+                                }
+                                else
+                                {// not visible
+                                    plm.model3d.SetActive(false);
+                                    plm.spriteRenderer.enabled = false;
+                                }
+                            }
+                            plm.drawStatus = newStatus;
                         }
-                        plm.drawStatus = newStatus;
+                    }
+                }
+            }
+            else
+            {
+                //точная копия, только с разворотом. 
+                while (i < count)
+                {
+                    plm = pointLODmodels[i];
+                    if (plm.model3d == null)
+                    {
+                        pointLODmodels.RemoveAt(i);
+                        count = pointLODmodels.Count;
+                        continue;
+                    }
+                    else
+                    {
+                        i++;
+                        pos = plm.model3d.transform.position;
+                        sqdist = (pos - camPos).sqrMagnitude;
+                        if (sqdist > plm.lodSqrDistance * lodCoefficient)
+                        {
+                            if (sqdist < plm.visibilitySqrDistance * lodCoefficient) newStatus = false;
+                            else newStatus = null;
+                        }
+                        else newStatus = true;
+                        if (newStatus != plm.drawStatus)
+                        {
+                            if (newStatus == true)
+                            {// model view
+                                plm.model3d.SetActive(true);
+                                plm.spriteRenderer.enabled = false;
+                            }
+                            else
+                            {
+                                if (newStatus == false)
+                                {// lod
+                                    plm.model3d.SetActive(false);
+                                    plm.spriteRenderer.enabled = true;                                    
+                                }
+                                else
+                                {// not visible
+                                    plm.model3d.SetActive(false);
+                                    plm.spriteRenderer.enabled = false;
+                                }
+                            }
+                            plm.drawStatus = newStatus;
+                        }
+                        plm.spriteRenderer.transform.rotation = Quaternion.LookRotation(plm.spriteRenderer.transform.position - camPos, Vector3.up);
                     }
                 }
             }

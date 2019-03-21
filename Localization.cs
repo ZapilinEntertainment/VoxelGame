@@ -1180,14 +1180,14 @@ public static class Localization {
         {            
             case Language.Russian:
                 return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2019гг н.э. \n" +
-                    "Собрано на Unity Engine 5. \n" +
+                    "Собрано на Unity Engine 2018.2. \n" +
                     "В процессе разработки использовались следующие freeware - программы: \n" +
                     " - Blender 2.69 от Blender Foundations \n" +
                     " - Paint.net 4.1.5 \n" +
                     " - Audacity 2.2.2 \n" +
                     " - MS Visual Studio Community 2017\n" +
                     "\n" +
-                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (мной добавлена адаптированная кириллица). \n" +
+                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (добавил адаптированную кириллицу). \n" +
                     "\n" +
                     "\n" +
                     "Вы можете поддержать мои разработки, купив сюжетные дополнения к Limited Worlds или сделав пожертвование на один из следующих кошельков: \n" +
@@ -1196,8 +1196,8 @@ public static class Localization {
                     "Не забудьте приложить к дотации комментарий :)";
             case Language.English:
                 return "Imaginated and created by Zapilin Entertainment (me), 2018 - 2019 AD \n" +
-                    "Builded on Unity Engine 5. \n" +
-                    "The following freeware programs were used in the development: \n" +
+                    "Builded on Unity Engine 2018.2. \n" +
+                    "The following freeware was used in the development: \n" +
                     " - Blender 2.69 by Blender Foundations \n" +
                     " - Paint.net 4.1.5 \n" +
                     " - Audacity 2.2.2 \n" +

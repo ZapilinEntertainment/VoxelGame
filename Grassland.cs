@@ -49,7 +49,7 @@ public class GrasslandSerializer
     public byte prevStage = 0;
 }
 
-public class Grassland
+public sealed class Grassland
 {
     public const float LIFEPOWER_TO_PREPARE = 16, LIFE_CREATION_TIMER = 22, BERRY_BUSH_LIFECOST = 10;
     public const int SERIALIZER_LENGTH = 9;
@@ -62,13 +62,14 @@ public class Grassland
     private float plantCreateCooldown = 0;
     bool destroyed = false;
 
-    static List<Grassland> grasslandList = new List<Grassland>(); 
+    private static List<Grassland> grasslandList = new List<Grassland>();
+    private static readonly int[] lifeSupportingMaterials = new int[] { ResourceType.DIRT_ID, ResourceType.FERTILE_SOIL_ID,
+        PoolMaster.MATERIAL_GRASS_100_ID, PoolMaster.MATERIAL_GRASS_20_ID, PoolMaster.MATERIAL_GRASS_40_ID, PoolMaster.MATERIAL_GRASS_60_ID, PoolMaster.MATERIAL_GRASS_80_ID};
 
     public static void ScriptReset()
     {
         grasslandList = new List<Grassland>();
     }
-
     public static int GrasslandUpdate(float tax)
     {
         if (grasslandList.Count == 0) return (int)tax;
@@ -166,7 +167,6 @@ public class Grassland
         }
         return (int)returnVal;
     }
-
     public static Grassland CreateOn(SurfaceBlock sblock)
     {
         if (sblock == null) return null;
@@ -176,6 +176,14 @@ public class Grassland
         sblock.SetGrassland(gl);
         grasslandList.Add(gl);
         return gl;
+    }
+    public static bool MaterialIsLifeSupporting(int id)
+    {
+        foreach (int x in lifeSupportingMaterials)
+        {
+            if (x == id) return true;
+        }
+        return false;
     }
 
     byte CheckGrasslandStage() // удаление при недостаче - > изменение структуры списка grasslands
