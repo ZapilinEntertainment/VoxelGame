@@ -92,7 +92,7 @@ public class OakTree : Plant
             SpriteRenderer sr = spriterCarrier.AddComponent<SpriteRenderer>();
             //сначала добавляется спрайт
             sr.sprite = lodPack_stage4[0];
-            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial: PoolMaster.billboardMaterial;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             spriterCarrier.transform.parent = fullModel.transform;
             spriterCarrier.transform.localPosition = Vector3.up * 0.211f;
@@ -126,7 +126,7 @@ public class OakTree : Plant
             fullModel.SetActive(false);
             spriterCarrier = new GameObject("lodSpriter");
             sr = spriterCarrier.AddComponent<SpriteRenderer>();
-            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             sr.sprite = lodPack_stage5[0];
             spriterCarrier.transform.parent = fullModel.transform;
@@ -161,7 +161,7 @@ public class OakTree : Plant
             fullModel.SetActive(false);
             spriterCarrier = new GameObject("lodSpriter");
             sr = spriterCarrier.AddComponent<SpriteRenderer>();
-            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             sr.sprite = lodPack_stage6[0];
             spriterCarrier.transform.parent = fullModel.transform;

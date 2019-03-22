@@ -21,13 +21,14 @@ public sealed class PoolMaster : MonoBehaviour {
     public static bool useIlluminationSystem { get; private set; }
     public static bool shadowCasting { get; private set; }
     public static PoolMaster current;	 
-	public static GameObject mineElevator_pref {get;private set;}
-    public static Material billboardMaterial { get; private set; }
+	public static GameObject mineElevator_pref {get;private set;}    
     public static Material energyMaterial { get; private set; }
     public static Material energyMaterial_disabled{ get; private set; }
     public static Material glassMaterial { get; private set; }
     public static Material glassMaterial_disabled { get; private set; }
     public static Material darkness_material{ get; private set; }
+    public static Material billboardMaterial { get; private set; }
+    public static Material billboardShadedMaterial { get; private set; }
     public static Material verticalBillboardMaterial { get; private set; }
     public static Material verticalWavingBillboardMaterial { get; private set; }
     public static Material starsBillboardMaterial { get; private set; }    
@@ -45,7 +46,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
     private ParticleSystem buildEmitter, citizensLeavingEmitter;
-    private Sprite[] starsSprites;
+    private static Sprite[] starsSprites;
 
     public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
     public const int NO_MATERIAL_ID = -1, MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
@@ -85,15 +86,17 @@ public sealed class PoolMaster : MonoBehaviour {
 		energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
         energyMaterial_disabled = Resources.Load<Material>("Materials/UnchargedMaterial");       
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
-        verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");        
+        verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
+
+        billboardShadedMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
+        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         if (useAdvancedMaterials)
         {
             glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
             basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
             glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
             metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
-            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-            billboardMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
+            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");            
         }
         else
         {
@@ -101,8 +104,7 @@ public sealed class PoolMaster : MonoBehaviour {
             basic_material = Resources.Load<Material>("Materials/Basic");
             glassMaterial = Resources.Load<Material>("Materials/Glass");
             metal_material = Resources.Load<Material>("Materials/Metal");
-            green_material = Resources.Load<Material>("Materials/Green");
-            billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
+            green_material = Resources.Load<Material>("Materials/Green");            
         }        
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
@@ -204,9 +206,10 @@ public sealed class PoolMaster : MonoBehaviour {
         return m;
     }
 
-    public Sprite GetStarSprite()
+    public static Sprite GetStarSprite(bool random)
     {
-        return (starsSprites[Random.Range(0, starsSprites.Length)]);
+        if (random) return (starsSprites[Random.Range(0, 14)]);
+        else return starsSprites[15];
     }
 
     #region effects
@@ -684,7 +687,7 @@ public sealed class PoolMaster : MonoBehaviour {
                 }
             }
         }        
-    }
+    }    
 
     public static void ReplaceMaterials(GameObject g, bool i_useAdvancedMaterials)
     {
@@ -701,26 +704,24 @@ public sealed class PoolMaster : MonoBehaviour {
         { // нужны улучшенные
             if (useAdvancedMaterials) //сейчас используются улучшенные
             {
-                materials = new Material[6]
+                materials = new Material[5]
                 {
                 basic_material,
                 glassMaterial,
                 glassMaterial_disabled,
                 green_material,
-                metal_material,
-                billboardMaterial
+                metal_material
                 };
             }
             else // сейчас используются обычные
             {
-                materials = new Material[6]
+                materials = new Material[5]
                 {
                 Resources.Load<Material>("Materials/Advanced/Basic_PBR"),
                 Resources.Load<Material>("Materials/Advanced/Glass_PBR"),
                 Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR"),
                 Resources.Load<Material>("Materials/Advanced/Green_PBR"),
-                Resources.Load<Material>("Materials/Advanced/Metal_PBR"),
-                Resources.Load<Material>("Materials/Advanced/ShadedBillboard")
+                Resources.Load<Material>("Materials/Advanced/Metal_PBR")
                 };
             }
         }
@@ -728,26 +729,24 @@ public sealed class PoolMaster : MonoBehaviour {
         {
             if (useAdvancedMaterials) // сейчас используются улучшенные
             {
-                materials = new Material[6] 
+                materials = new Material[5] 
                 {
                 Resources.Load<Material>("Materials/Basic"),
                 Resources.Load<Material>("Materials/Glass"),
                 Resources.Load<Material>("Materials/GlassOffline"),
                 Resources.Load<Material>("Materials/Green"),
                 Resources.Load<Material>("Materials/Metal"),
-                Resources.Load<Material>("Materials/BillboardMaterial")
                 };
             }
             else // сейчас используются обычные
             {
-                materials = new Material[6]
+                materials = new Material[5]
                 {
                 basic_material,
                 glassMaterial,
                 glassMaterial_disabled,
                 green_material,
-                metal_material,
-                billboardMaterial
+                metal_material
                 };
             }
         }        
@@ -785,7 +784,8 @@ public sealed class PoolMaster : MonoBehaviour {
                     receiveShadows = true;
                     break;
                 case "BillboardMaterial":
-                    mr.sharedMaterial = materials[5];
+                    if (i_useAdvancedMaterials) mr.sharedMaterial = billboardShadedMaterial;
+                    else mr.sharedMaterial = billboardMaterial;
                     castShadows = false;
                     receiveShadows = true;
                     break;

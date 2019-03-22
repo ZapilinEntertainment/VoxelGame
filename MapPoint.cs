@@ -42,6 +42,7 @@ public class MapPoint
         height = i_height;
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
         type = mtype;
+        if (type == MapMarkerType.Star) type = MapMarkerType.Unknown;
         stable = false;
         switch (type)
         {
@@ -143,4 +144,14 @@ public class MapPoint
         return pts;
     }
     #endregion
+}
+
+public sealed class SunPoint : MapPoint
+{
+    public Color color {get;private set;}
+
+    public SunPoint(float i_angle, float i_height,  Color i_color) : base (i_angle, i_height, MapMarkerType.Star)
+    {
+        color = i_color;
+    }
 }

@@ -406,7 +406,8 @@ public sealed class GlobalMapUI : MonoBehaviour
             {
                 if (sectorsData[i] != null)
                 {
-                    sectorsImages[i].color = sectorsData[i].environment.lightSettings.sunColor;
+                    if (sectorsData[i].centralPoint.type != MapMarkerType.Star) sectorsImages[i].color = sectorsData[i].environment.lightSettings.sunColor;
+                    else sectorsImages[i].color = (sectorsData[i].centralPoint as SunPoint).color;
                 }
                 else
                 {
@@ -604,14 +605,6 @@ public sealed class GlobalMapUI : MonoBehaviour
                 if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
                 else infoPanelWidth = 0;
             }
-            GameMaster.realMaster.environmentMaster.sun.GetComponent<Renderer>().enabled = false;
-        }
-    }
-    private void OnDisable()
-    {
-        if (!GameMaster.sceneClearing)
-        {
-            GameMaster.realMaster.environmentMaster.sun.GetComponent<Renderer>().enabled = true;
         }
     }
     // =====================  AUXILIARY METHODS

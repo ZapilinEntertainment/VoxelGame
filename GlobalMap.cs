@@ -8,12 +8,12 @@ public class RingSector
     public readonly Environment environment;
     public const int MAX_INTEREST_POINT_COUNT = 3;
 
-    public RingSector(MapPoint i_point, Environment.EnvironmentPresets environmentPresetType, Color i_suncolor)
+
+    public RingSector(SunPoint sun_point, Environment.EnvironmentPreset environmentPresetType)
     {
-        centralPoint = i_point;
+        centralPoint = sun_point;
         var ls = Environment.defaultEnvironment.lightSettings;
-        if (i_point.type == MapMarkerType.Star) 
-        environment = new Environment(environmentPresetType, new Environment.LightSettings(i_point, 1, i_suncolor, ls.bottomColor, ls.horizonColor));
+        environment = new Environment(environmentPresetType, new Environment.LightSettings(sun_point, 1, ls.bottomColor, ls.horizonColor));
         centralPoint.SetStability(true);
     }
     public RingSector(MapPoint i_point, Environment i_environment)
@@ -39,6 +39,7 @@ public sealed class GlobalMap : MonoBehaviour
     private bool prepared = false;
     private int currentSectorIndex = 0;
     private GameObject mapUI_go;
+    private Dictionary<SunPoint, Transform> stars;
 
     public const byte RINGS_COUNT = 5;
     private const byte MAX_OBJECTS_COUNT = 50;
@@ -77,6 +78,7 @@ public sealed class GlobalMap : MonoBehaviour
         ascensionLowBorder = ascension - 0.1f;
         ascensionUpBorder = ascension + 0.1f;
 
+        stars = new Dictionary<SunPoint, Transform>();
         //start sector:
         byte ring = RINGS_COUNT / 2;
         sectorsCount = (int)(360f / sectorsDegrees[ring]);
@@ -88,9 +90,9 @@ public sealed class GlobalMap : MonoBehaviour
         currentSectorIndex = Random.Range(min, min + sectorsCount);
 
         Vector2 startPos = GetSectorPosition(currentSectorIndex);
-        MapPoint sunPoint = new MapPoint(startPos.x, startPos.y,  MapMarkerType.Star);
+        var sunPoint = new SunPoint(startPos.x, startPos.y,  new Color(Random.value, Random.value, Random.value));
         var ls = Environment.defaultEnvironment.lightSettings;
-        RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPresets.Default, new Environment.LightSettings(sunPoint, 1f, ls.sunColor, ls.bottomColor, ls.horizonColor) ));
+        RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPreset.Default, new Environment.LightSettings(sunPoint, 1f, ls.bottomColor, ls.horizonColor) ));
         mapSectors[currentSectorIndex] = startSector;
         Vector2 dir = Quaternion.AngleAxis(Random.value * 360, Vector3.forward) * Vector2.up;
         MapPoint cityPoint = new MapPoint(
@@ -101,16 +103,16 @@ public sealed class GlobalMap : MonoBehaviour
         mapPoints.Add(cityPoint); // CITY_POINT_INDEX = 0
         mapPoints.Add(sunPoint); // SUN_POINT_INDEX = 1
 
+        var g = new GameObject("star");
+        g.layer = GameConstants.CLOUDS_LAYER;
+        var sr = g.AddComponent<SpriteRenderer>();
+        sr.sprite = PoolMaster.GetStarSprite(false);
+        sr.sharedMaterial = PoolMaster.billboardMaterial;
+        sr.color = startSector.environment.lightSettings.sunColor;
+        stars.Add(sunPoint, g.transform);
+
         //TEST:
-        startPos = GetSectorPosition(currentSectorIndex + 1);
-        sunPoint = new MapPoint(startPos.x, startPos.y,  MapMarkerType.Wonder);
-        var testSector = new RingSector(sunPoint, 
-            new Environment(Environment.EnvironmentPresets.ModernRuins, 
-            new Environment.LightSettings(new Vector3(1f,-0.4f, 1f).normalized, 0.75f, PoolMaster.gameOrangeColor, ls.bottomColor, ls.horizonColor)
-            )
-            );
-        mapSectors[currentSectorIndex + 1] = testSector;
-        mapPoints.Add(sunPoint);
+
         //
 
         //
@@ -145,6 +147,18 @@ public sealed class GlobalMap : MonoBehaviour
                 }
             }
             mapPoints.Add(mp);
+            if (mp.type == MapMarkerType.Star)
+            {
+                var sp = mp as SunPoint;
+                if (!stars.ContainsKey(sp)) {
+                    var g = new GameObject("star");
+                    g.layer = GameConstants.CLOUDS_LAYER;
+                    var sr = g.AddComponent<SpriteRenderer>();
+                    sr.sprite = PoolMaster.GetStarSprite(false);
+                    sr.sharedMaterial = PoolMaster.billboardMaterial;
+                    stars.Add(sp, g.transform );
+                }
+            }
             actionsHash++;
             return true;
         }
@@ -154,15 +168,32 @@ public sealed class GlobalMap : MonoBehaviour
         if (mp.stable) return;
         if (mapPoints.Contains(mp))
         {
+            if (mp.type == MapMarkerType.Star)
+            {
+                var sp = mp as SunPoint;
+                if (stars.ContainsKey(sp))
+                {
+                    stars.Remove(sp);
+                }
+            }
             mapPoints.Remove(mp);
             actionsHash++;
         }
     }
     private void RemovePoint(int index)
     {
-        if (mapPoints[index] != null && !mapPoints[index].stable)
+        var mp = mapPoints[index];
+        if ( mp!= null && !mp.stable)
         {
-            mapPoints.RemoveAt(index);
+            if (mp.type == MapMarkerType.Star)
+            {
+                var sp = mp as SunPoint;
+                if (stars.ContainsKey(sp))
+                {
+                    stars.Remove(sp);
+                }
+            }
+            mapPoints.RemoveAt(index);            
             actionsHash++;
         }
     }
@@ -322,6 +353,18 @@ public sealed class GlobalMap : MonoBehaviour
 
         cityFlyDirection = new Vector3(cpoint.angle - prevX + rotationSpeed[cpoint.ringIndex], ascensionChange, cpoint.height - prevY);
 
+        var cp = Quaternion.AngleAxis(cpoint.angle, Vector3.back) * (Vector3.up * cpoint.height);
+        if (stars.Count > 0)
+        {
+            foreach (var se in stars)
+            {
+                var p = Quaternion.AngleAxis(se.Key.angle, Vector3.back) * (Vector3.up * se.Key.height);
+                p -= cp;
+                p.z = p.y;
+                p.y = 0.2f;
+                se.Value.position = p * 10;
+            }
+        }
 
         //test
         bool motion = false;
@@ -369,7 +412,6 @@ public sealed class GlobalMap : MonoBehaviour
             if (sIndex != currentSectorIndex)
             {
                 currentSectorIndex = sIndex;
-                print(currentSectorIndex);
                 if (mapSectors[currentSectorIndex] != null)
                 {
                     GameMaster.realMaster.environmentMaster.ChangeEnvironment(mapSectors[currentSectorIndex].environment);
@@ -403,8 +445,8 @@ public sealed class GlobalMap : MonoBehaviour
     public byte DefineSectorIndex(float angle, byte ring)
     {
         byte index = 0;
-        angle += ringsRotation[ring];
-        if (angle > 360f) angle = 360f - angle;
+        angle += ringsRotation[ring]; // так как вращается наоборот
+        if (angle > 360f) angle -= 360f;
         else { if (angle < 0) angle += 360f; }
 
         if (ring > 0)
@@ -437,7 +479,7 @@ public sealed class GlobalMap : MonoBehaviour
             else break;
         }
         float sd = sectorsDegrees[i];
-        float angle = sd * index + sd / 2f - ringsRotation[i-1];
+        float angle = sd * index + sd / 2f - ringsRotation[i];
         if (angle > 360f) angle = 360f - angle;
             else { if (angle < 0) angle += 360f; }
         float h = ringsBorders[i] - (ringsBorders[i] - ringsBorders[i + 1]) / 2f;

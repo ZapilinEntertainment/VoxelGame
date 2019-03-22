@@ -6,6 +6,7 @@
 
     public const int LIFEPOWER_PER_BLOCK = 130; // 200
     public const int LIFEPOWER_SPREAD_SPEED = 10 ;
+    public const int CLOUDS_LAYER = 9;
     public const float START_HAPPINESS = 0.5f, HAPPINESS_CHANGE_SPEED = 0.001f,
         LIFE_DECAY_SPEED = 0.1f, CAM_LOOK_SPEED = 10,
         START_BIRTHRATE_COEFFICIENT = 0.001f,        

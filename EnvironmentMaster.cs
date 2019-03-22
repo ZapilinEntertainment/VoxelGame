@@ -8,7 +8,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public bool positionChanged = false; // может быть отмечена другими скриптами
     public float environmentalConditions { get; private set; } // 0 is hell, 1 is very favourable
     public Vector2 windVector { get; private set; }
-    public Transform sun;
+    public Light sun;
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
 
@@ -16,14 +16,13 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     private int vegetationShaderWindPropertyID;
     private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0;
     private Environment currentEnvironment;
-    private GameObject physicalSun;
     private GlobalMap gmap;
     private MapPoint cityPoint, sunPoint;
     private Material skyboxMaterial;
     private ParticleSystem.MainModule cloudEmitterMainModule;
     private Transform cloudEmitter;
     private List<Transform> decorations;
-
+    
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6;
     private const int SKY_SPHERE_RADIUS = 9;
 
@@ -40,8 +39,9 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x,0, windVector.y), Vector3.up);
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         cloudEmitterMainModule.simulationSpeed = 1;
+
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
-        sun = FindObjectOfType<Light>().transform;
+        sun = FindObjectOfType<Light>();
         gmap = GameMaster.realMaster.globalMap;
         cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
         sunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
@@ -77,7 +77,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
         environmentalConditions = currentEnvironment.conditions;
 
-        sun.GetComponent<Light>().color = currentEnvironment.lightSettings.sunColor;
+        sun.color = currentEnvironment.lightSettings.sunColor;
         var haveSun = e.lightSettings.sunIsMapPoint;
         if (haveSun)
         {
@@ -90,8 +90,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sunMarkerEnabled = haveSun;
         positionChanged = true;
         environmentEventTimer = currentEnvironment.GetEventTime();
-
-        print("environment changed");
     }
 
     public void AddDecoration(float size, GameObject dec)
@@ -146,8 +144,21 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 var c = gmap.GetCurrentSectorCenter();
                 centerX = c.x;
                 centerY = c.y;
+                
             }
-            float angleX = (cityPoint.angle - centerX) / (gmap.sectorsDegrees[ring] / 2f);
+            float angleDelta = cityPoint.angle - centerX;
+            if (Mathf.Abs(angleDelta) > 180f)
+            {
+                if (centerX > cityPoint.angle)
+                {
+                    angleDelta = (360f - centerX) + cityPoint.angle;
+                }
+                else
+                {
+                    angleDelta = (360f - cityPoint.angle) + centerX;
+                }
+            }
+            float angleX = angleDelta / (gmap.sectorsDegrees[ring] / 2f);
             //print(angleX);
             float heightY = (cityPoint.height - centerY) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
             Vector2 lookDist = new Vector2(angleX, heightY);
@@ -160,7 +171,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             float d = lookDist.magnitude;
             if (d > 1) d = 1;
             float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
-            sun.GetComponent<Light>().intensity = s * currentEnvironment.lightSettings.maxIntensity;
+            sun.intensity = s * currentEnvironment.lightSettings.maxIntensity;
             if (s != prevSkyboxSaturation)
             {
                 prevSkyboxSaturation = s;

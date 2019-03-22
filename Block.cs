@@ -27,7 +27,7 @@ public class Block {
             blockedByStructure = true;
             GameObject spriteHolder = new GameObject("mark");
             SpriteRenderer sr = spriteHolder.AddComponent<SpriteRenderer>();
-            sr.sprite = PoolMaster.current.GetStarSprite();
+            sr.sprite = PoolMaster.GetStarSprite(true);
             sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
             spriteHolder.transform.localPosition = pos.ToWorldSpace();
             decorations = new List<GameObject>();

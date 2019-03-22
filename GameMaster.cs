@@ -148,6 +148,11 @@ public sealed class GameMaster : MonoBehaviour
         }
         realMaster = this;
         sceneClearing = false;
+        if (PoolMaster.current == null)
+        {
+            PoolMaster pm = gameObject.AddComponent<PoolMaster>();
+            pm.Load();
+        }
         if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();        
         if (!editMode)
         {
@@ -180,12 +185,7 @@ public sealed class GameMaster : MonoBehaviour
         if (!editMode)
         {
             lifeGrowCoefficient = 1;
-            difficulty = gameStartSettings.difficulty;
-            if (PoolMaster.current == null)
-            {
-                PoolMaster pm = gameObject.AddComponent<PoolMaster>();
-                pm.Load();
-            }
+            difficulty = gameStartSettings.difficulty;            
             //byte chunksize = gss.chunkSize;
             byte chunksize;
             chunksize = gameStartSettings.chunkSize;
