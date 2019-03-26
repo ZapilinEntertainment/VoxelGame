@@ -77,6 +77,7 @@ public class Block {
     }
     public void AddDecoration(GameObject g)
     {
+        if (decorations == null) decorations = new List<GameObject>();
         decorations.Add(g);
     }
     /// <summary>

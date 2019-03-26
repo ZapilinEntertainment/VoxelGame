@@ -15,4 +15,10 @@
     {
         destination = mp;
     }
+
+    override public bool DestructionTest()
+    {
+        if (expedition == null) return true;
+        else return expedition.SectorCollapsingTest();
+    }
 }

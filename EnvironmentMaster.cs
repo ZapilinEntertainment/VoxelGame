@@ -89,7 +89,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
         sunMarkerEnabled = haveSun;
         positionChanged = true;
-        environmentEventTimer = currentEnvironment.GetEventTime();
+        environmentEventTimer = currentEnvironment.GetInnerEventTime();
     }
 
     public void AddDecoration(float size, GameObject dec)
@@ -171,11 +171,13 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             float d = lookDist.magnitude;
             if (d > 1) d = 1;
             float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
-            sun.intensity = s * currentEnvironment.lightSettings.maxIntensity;
+            sun.intensity = s * ls.maxIntensity;
             if (s != prevSkyboxSaturation)
             {
                 prevSkyboxSaturation = s;
                 skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+                RenderSettings.ambientEquatorColor = Color.Lerp(Color.black, ls.horizonColor, s);
+                RenderSettings.ambientGroundColor = Color.Lerp(Color.black, ls.bottomColor, s);
             }
             positionChanged = false;
         }
@@ -187,8 +189,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 environmentEventTimer -= t;
                 if (environmentEventTimer <= 0)
                 {
-                    currentEnvironment.Event();
-                    environmentEventTimer = currentEnvironment.GetEventTime();
+                    currentEnvironment.InnerEvent();
+                    environmentEventTimer = currentEnvironment.GetInnerEventTime();
                 }
             }
         //}

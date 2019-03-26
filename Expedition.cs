@@ -149,9 +149,13 @@ public sealed class Expedition
         actionsHash++;
     }
 
-    public bool SectorCollapsingTest()
+    /// <summary>
+    /// returns true if expedition dissappeared in process, false otherwise
+    /// </summary>
+    /// <returns></returns>
+    public bool SectorCollapsingTest() // INDEV
     {
-        return true;
+        return false;
     }
 
     public void LabourUpdate()

@@ -165,7 +165,7 @@ public class HarvestableResource : Structure
             SpriteRenderer sr = new GameObject("lod").AddComponent<SpriteRenderer>();
             sr.transform.parent = model.transform;
             sr.transform.localPosition = Vector3.up * height;
-            sr.sharedMaterial = PoolMaster.billboardMaterial;
+            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             LODController currentLC = LODController.GetCurrent();
             LODPackType lpackType = LODPackType.Point;

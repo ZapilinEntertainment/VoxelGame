@@ -1540,6 +1540,15 @@ public sealed class Chunk : MonoBehaviour
         }
         return fsb; // we are not watching you. Honestly.
     }
+    public SurfaceBlock GetSurfaceBlock()
+    {
+        int x = surfaceBlocks.Count;
+        if (x == 0) return null;
+        else
+        {
+            return surfaceBlocks[Random.Range(0, x - 1)];
+        }
+    }
     public void RecalculateSurfaceBlocks()
     {
         surfaceBlocks = new List<SurfaceBlock>();
@@ -1581,7 +1590,7 @@ public sealed class Chunk : MonoBehaviour
                                     Block ub = AddBlock(new ChunkPos(x, y - 1, z), BlockType.Shapeless, ResourceType.METAL_S_ID, false);
                                     GameObject g = PoolMaster.GetFlyingPlatform();
                                     g.transform.position = Vector3.up * Block.QUAD_SIZE / 2f;
-                                    ub.AddDecoration(g);
+                                    if (ub != null) ub.AddDecoration(g);
                                 }
                                 return;
                             }

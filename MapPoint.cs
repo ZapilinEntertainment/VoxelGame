@@ -10,6 +10,7 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Isl
 public class MapPoint
 {
     public MapMarkerType type { get; protected set; }
+    public bool destroyed { get; protected set; }
     public bool stable { get; protected set; }
     public byte subIndex { get; protected set; }
     public byte ringIndex;    
@@ -33,6 +34,7 @@ public class MapPoint
     public MapPoint(int i_id) // для загрузки
     {
         ID = i_id;
+        destroyed = false;
     }
 
     public MapPoint(float i_angle, float i_height, MapMarkerType mtype)
@@ -42,8 +44,8 @@ public class MapPoint
         height = i_height;
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
         type = mtype;
-        if (type == MapMarkerType.Star) type = MapMarkerType.Unknown;
         stable = false;
+        destroyed = false;
         switch (type)
         {
             case MapMarkerType.Wreck: subIndex = (byte)(Random.Range(0, WRECKS_TYPE_COUNT)); break;
@@ -53,13 +55,104 @@ public class MapPoint
 
     public void ChangeCoords(float i_angle, float i_height)
     {
+        if (destroyed) return;
         angle = i_angle;
         height = i_height;
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
     }
     public void SetStability(bool x)
     {
+        if (destroyed) return;
         stable = x;
+    }
+
+    /// <summary>
+    /// returns true if something changed
+    /// </summary>
+    /// <returns></returns>
+    public bool Update() // INDEV
+    {
+        if (destroyed) return false;
+        bool destroyPoint = true;
+        switch (type)
+        {
+            case MapMarkerType.Unknown:
+                break;
+            case MapMarkerType.MyCity:
+                break;
+            case MapMarkerType.Star:
+                break;
+            case MapMarkerType.Station:
+                break;
+            case MapMarkerType.Wreck:
+                break;
+            case MapMarkerType.Shuttle:
+                break;
+            case MapMarkerType.Island:
+                break;
+            case MapMarkerType.SOS:
+                break;
+            case MapMarkerType.Portal:
+                break;
+            case MapMarkerType.QuestMark:
+                break;
+            case MapMarkerType.Colony:
+                break;
+            case MapMarkerType.Wiseman:
+                break;
+            case MapMarkerType.Wonder:
+                break;
+            case MapMarkerType.Resources:
+                break;
+        }
+        if (destroyPoint)
+        {
+            destroyed = true;
+            GameMaster.realMaster.globalMap.RemovePoint(this, true);
+        }
+        return false;
+    }
+    /// <summary>
+    /// returns true if point shall dissappear
+    /// </summary>
+    /// <returns></returns>
+    virtual public bool DestructionTest()
+    {
+        if (destroyed) return true;
+        else
+        {
+            if (stable) return false;
+            else
+            {
+                switch (type)
+                {
+                    case MapMarkerType.Unknown: return (Random.value < 0.7f); // or changing!
+                    case MapMarkerType.MyCity: return false;
+                    case MapMarkerType.Star: // changing!
+
+                        break;
+                    case MapMarkerType.Station:
+                        return (Random.value > 0.5f);
+                    case MapMarkerType.Wreck: return Random.value > 0.33f;
+                    case MapMarkerType.Shuttle: return true; // flyingExpedition.expedition.sectorCollapsingTest
+                    case MapMarkerType.Island: return Random.value > 0.5f;
+                    case MapMarkerType.SOS: return Random.value > 0.05f;
+                    case MapMarkerType.Portal:
+                    case MapMarkerType.QuestMark: return true;
+                    case MapMarkerType.Colony: return Random.value > 0.65f;
+                    case MapMarkerType.Wiseman: return (Random.value > 0.85f);
+                    case MapMarkerType.Wonder: // changing
+                        return true;
+                    case MapMarkerType.Resources: // or changing!
+                        return true;
+                }
+                return true;
+            }
+        }
+    }
+    public void MarkAsDestroyed()
+    {
+        destroyed = true;
     }
 
     #region save-load
@@ -153,5 +246,11 @@ public sealed class SunPoint : MapPoint
     public SunPoint(float i_angle, float i_height,  Color i_color) : base (i_angle, i_height, MapMarkerType.Star)
     {
         color = i_color;
+    }
+
+    public SunPoint (float i_angle, float i_height, float ascension) : base (i_angle, i_height, MapMarkerType.Star)
+    {
+        Color c = new Color((1 - ascension) * (1 - height), ascension * (1 - height), ascension * angle);
+        color = Color.Lerp(Color.white, c, Mathf.Abs(0.5f - ascension) * 2 );
     }
 }

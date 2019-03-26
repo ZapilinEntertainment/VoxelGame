@@ -15,6 +15,10 @@ public class Observatory : WorkBuilding {
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
+        if (alreadyBuilt) {
+            Destroy(gameObject);
+            return;
+        } 
         if (b == null) return;
         SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)

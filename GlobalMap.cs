@@ -2,33 +2,70 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RingSector
+public sealed class RingSector
 {
+    public bool destroyed { get; private set; }
+    public readonly int ID;
     public readonly MapPoint centralPoint;
     public readonly Environment environment;
-    public const int MAX_INTEREST_POINT_COUNT = 3;
+    public Dictionary<byte, MapPoint> points;
+    public const int MAX_POINTS_COUNT = 10;
+    public static int lastUsedID { get; private set; }
 
+    public static void SetLastUsedID (int x)
+    {
+        x = lastUsedID;
+    }
 
     public RingSector(SunPoint sun_point, Environment.EnvironmentPreset environmentPresetType)
     {
+        ID = lastUsedID;
+        lastUsedID++;
         centralPoint = sun_point;
         var ls = Environment.defaultEnvironment.lightSettings;
         environment = new Environment(environmentPresetType, new Environment.LightSettings(sun_point, 1, ls.bottomColor, ls.horizonColor));
         centralPoint.SetStability(true);
+        points = new Dictionary<byte, MapPoint>();
+        destroyed = false;
     }
     public RingSector(MapPoint i_point, Environment i_environment)
     {
+        ID = lastUsedID;
+        lastUsedID++;
         centralPoint = i_point;
         environment = i_environment;
         centralPoint.SetStability(true);
+        points = new Dictionary<byte, MapPoint>();
+        destroyed = false;
+    }
+
+    public void MarkAsDestroyed()
+    {
+        destroyed = true;
+    }
+
+    public Vector2 GetInnerPointPosition(byte x)
+    {
+        switch (x)
+        {
+            case 0: return new Vector2(-0.7f, -0.7f);
+            case 1: return new Vector2(-0.7f, 0f);
+            case 2: return new Vector2(-0.7f, 0.7f);
+            case 3: return new Vector2(-0.2f, - 0.7f);
+            case 4: return new Vector2( -0.2f, 0.7f);
+            case 5: return new Vector2(0.2f, -0.7f);
+            case 6: return new Vector2(0.2f, 0.7f);
+            case 7: return new Vector2(0.7f, -0.7f);
+            case 8: return new Vector2(0.7f, 0f);
+            case 9: return new Vector2(0.7f, 0.7f);
+            default: return Vector2.zero;
+        }
     }
 }
 
 public sealed class GlobalMap : MonoBehaviour
 {
     public float ascension { get; private set; }
-    public float ascensionLowBorder { get; private set; }
-    public float ascensionUpBorder { get; private set; }
     public float[] ringsRotation { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }
@@ -75,8 +112,6 @@ public sealed class GlobalMap : MonoBehaviour
         mapSectors = new RingSector[sectorsCount];
 
         ascension = GameConstants.START_HAPPINESS;
-        ascensionLowBorder = ascension - 0.1f;
-        ascensionUpBorder = ascension + 0.1f;
 
         stars = new Dictionary<SunPoint, Transform>();
         //start sector:
@@ -90,8 +125,8 @@ public sealed class GlobalMap : MonoBehaviour
         currentSectorIndex = Random.Range(min, min + sectorsCount);
 
         Vector2 startPos = GetSectorPosition(currentSectorIndex);
-        var sunPoint = new SunPoint(startPos.x, startPos.y,  new Color(Random.value, Random.value, Random.value));
         var ls = Environment.defaultEnvironment.lightSettings;
+        var sunPoint = new SunPoint(startPos.x, startPos.y,  ls.sunColor);        
         RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPreset.Default, new Environment.LightSettings(sunPoint, 1f, ls.bottomColor, ls.horizonColor) ));
         mapSectors[currentSectorIndex] = startSector;
         Vector2 dir = Quaternion.AngleAxis(Random.value * 360, Vector3.forward) * Vector2.up;
@@ -112,8 +147,6 @@ public sealed class GlobalMap : MonoBehaviour
         stars.Add(sunPoint, g.transform);
 
         //TEST:
-
-        //
 
         //
         actionsHash = 0;
@@ -162,39 +195,34 @@ public sealed class GlobalMap : MonoBehaviour
             actionsHash++;
             return true;
         }
-    }
-    public void RemovePoint(MapPoint mp)
+    }    
+    public void RemovePoint(MapPoint mp, bool forced)
     {
-        if (mp.stable) return;
-        if (mapPoints.Contains(mp))
+        if (!forced & mp.stable) return;
+        else 
         {
-            if (mp.type == MapMarkerType.Star)
+            if (mapPoints.Contains(mp))
             {
-                var sp = mp as SunPoint;
-                if (stars.ContainsKey(sp))
+                if (mp.type == MapMarkerType.Star)
                 {
-                    stars.Remove(sp);
+                    var sp = mp as SunPoint;
+                    if (stars.ContainsKey(sp))
+                    {
+                        stars.Remove(sp);
+                    }
                 }
+                mapPoints.Remove(mp);
+                if (!mp.destroyed) mp.MarkAsDestroyed();
+                actionsHash++;
             }
-            mapPoints.Remove(mp);
-            actionsHash++;
         }
     }
-    private void RemovePoint(int index)
+    public void RemovePoint(int index, bool forced)
     {
         var mp = mapPoints[index];
-        if ( mp!= null && !mp.stable)
+        if (mp != null)
         {
-            if (mp.type == MapMarkerType.Star)
-            {
-                var sp = mp as SunPoint;
-                if (stars.ContainsKey(sp))
-                {
-                    stars.Remove(sp);
-                }
-            }
-            mapPoints.RemoveAt(index);            
-            actionsHash++;
+            RemovePoint(mp, forced);
         }
     }
     public MapPoint GetMapPointByID(int s_id)
@@ -213,6 +241,34 @@ public sealed class GlobalMap : MonoBehaviour
         }
     }
 
+    private void CreateNewSector(int i)
+    {
+        //зависимость environment от ascension
+        Vector2 pos = GetSectorPosition(i);
+        int x = Random.Range(0, 7);
+        MapPoint centralPoint = null;        
+        switch (x)
+        {
+            case 0: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Station); break;
+            case 1: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Wreck); break;
+            case 2: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Island); break;
+            case 3: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Portal); break;
+            case 4: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Colony); break;
+            case 5: centralPoint = new SunPoint(pos.x, pos.y, ascension); break;
+            case 6: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Wonder); break;
+            case 7: centralPoint = new PointOfInterest(pos.x, pos.y, DefineRing(pos.y), MapMarkerType.Resources); break;
+        }
+        if (x != 5)
+        {
+            Environment e = Environment.defaultEnvironment;
+
+        }
+        else
+        { // sunpoint
+
+        }
+        actionsHash++;
+    }
     private void AddNewSector(byte index, MapMarkerType mtype, Environment e)
     {
         if (mapSectors[index] != null) RemoveSector(index);
@@ -234,38 +290,90 @@ public sealed class GlobalMap : MonoBehaviour
     }
     private void RemoveSector(byte index)
     {
-        if (mapSectors[index] != null)
+        RingSector rs = mapSectors[index];
+        if (rs != null)
         {
+            if (rs.centralPoint != null)
+            {
+                RemovePoint(rs.centralPoint, true);
+            }
+            if (rs.points.Count > 0)
+            {
+                MapPoint p = null;
+                foreach (var mp in rs.points)
+                {
+                    p = mp.Value;
+                    if (p.DestructionTest()) RemovePoint(mp.Value, false);
+                }
+                rs.points.Clear();
+            }            
             if (mapPoints.Count > 0)
             {
-                MapPoint mp = mapSectors[index].centralPoint;
-                byte ring = mp.ringIndex;
-                float angleStep = sectorsDegrees[ring] / 2f;
-                float heightStep = (ringsBorders[ring] - ringsBorders[ring + 1]) / 2f;
-
-                int i = 0;
+                int x = index, i = 0;
+                MapPoint mp = null ;
                 while (i < mapPoints.Count)
                 {
-                    if (!mapPoints[i].stable)
+                    mp = mapPoints[i];
+                    if (mp == null)
                     {
-                        RemovePoint(mapPoints[i]);
+                        mapPoints.RemoveAt(i);
+                        continue;
                     }
                     else
                     {
-                        if (mapPoints[i].type == MapMarkerType.Shuttle)
+                        x = DefineSectorIndex(mp.angle, mp.ringIndex);
+                        if (x == index)
                         {
-                            FlyingExpedition fe = mapPoints[i] as FlyingExpedition;
-                            if (!fe.expedition.SectorCollapsingTest())
-                            {
-                                fe.expedition.Dissappear(false);
-                                fe.SetStability(false);
-                                RemovePoint(fe);
-                            }
+                            if (mp.DestructionTest()) RemovePoint(mp, true);
                         }
+                        i++;
                     }
                 }
+                
             }
+            mapSectors[index] = null;
             actionsHash++;
+        }
+    }
+    public void RemoveSector(RingSector rs)
+    {
+        RingSector srs = null;
+        int sid = rs.ID;
+        for (byte i = 0; i < mapSectors.Length; i++)
+        {
+            srs = mapSectors[i];
+            if (srs != null && srs.ID == sid)
+            {
+                RemoveSector(i);
+                return;
+            }
+        }
+    }
+    private bool UpdateSector(int index)
+    {
+        var ms = mapSectors[index];
+        if (ms == null)
+        {
+            return false;
+        }
+        else
+        {
+            int x = Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
+            byte i = (byte)index;
+            if (ms.points.ContainsKey(i))
+            {
+                MapPoint mp = null;
+                if (ms.points.TryGetValue(i, out mp))
+                {
+                    return mp.Update();
+                }
+                else
+                {
+                    ms.points.Remove(i);
+                    return false;
+                }
+            }
+            else return false;
         }
     }
 
@@ -500,137 +608,145 @@ public sealed class GlobalMap : MonoBehaviour
 
     public bool Search()
     {
-        MapMarkerType mmtype = MapMarkerType.Unknown;
-        float f = Random.value;
-        float height = 0.5f;
-        if (f <= 0.5f)
-        {//resources            
-            f *= 2;
-            if (f <= 0.6f)
-            {
-                mmtype = MapMarkerType.Resources;
-                height = 0.1f + 0.89f * Random.value;
-            }
-            else
-            {
-                if (f > 0.9f)
-                {
-                    mmtype = MapMarkerType.Island;
-                    height = 0.45f - 0.3f * Random.value;
-                }
-                else
-                {
-                    mmtype = MapMarkerType.Wreck;
-                    height = 0.8f + Random.value * 0.2f;
-                }
-            }
-        }
-        else
+        int x = Random.Range(0, mapSectors.Length - 1);
+        RingSector rs = mapSectors[x];
+        if (rs == null)
         {
-            if (f <= 0.7f)
-            {// exp
-                f = Random.value;
-                if (f <= 0.5f)
+
+
+            MapMarkerType mmtype = MapMarkerType.Unknown;
+            float f = Random.value;
+            float height = 0.5f;
+            if (f <= 0.5f)
+            {//resources            
+                f *= 2;
+                if (f <= 0.6f)
                 {
-                    if (f < 0.25f)
-                    {
-                        mmtype = MapMarkerType.Wiseman;
-                        height = 0.1f + Random.value * 0.15f;
-                    }
-                    else
-                    {
-                        mmtype = MapMarkerType.Wonder;
-                        height = 0.1f + Random.value * 0.7f;
-                    }
+                    mmtype = MapMarkerType.Resources;
+                    height = 0.1f + 0.89f * Random.value;
                 }
                 else
                 {
-                    if (f > 0.8f)
+                    if (f > 0.9f)
                     {
-                        if (f > 0.9f)
-                        {
-                            mmtype = MapMarkerType.Portal;
-                            height = 0.8f + 0.15f * Random.value;
-                        }
-                        else
-                        {
-                            mmtype = MapMarkerType.Island;
-                            height = 0.55f + 0.3f * Random.value;
-                        }
+                        mmtype = MapMarkerType.Island;
+                        height = 0.45f - 0.3f * Random.value;
                     }
                     else
                     {
-                        if (f > 0.65f)
-                        {
-                            mmtype = MapMarkerType.Wreck;
-                            height = 0.7f + 0.2f * Random.value;
-                        }
-                        else
-                        {
-                            mmtype = MapMarkerType.SOS;
-                            height = 0.1f + 0.9f * Random.value;
-                        }
+                        mmtype = MapMarkerType.Wreck;
+                        height = 0.8f + Random.value * 0.2f;
                     }
                 }
             }
             else
             {
-                if (f > 0.9f)
-                { // special
-                    //ограничения на количество!
+                if (f <= 0.7f)
+                {// exp
                     f = Random.value;
-                    if (f > 0.5f)
+                    if (f <= 0.5f)
                     {
+                        if (f < 0.25f)
+                        {
+                            mmtype = MapMarkerType.Wiseman;
+                            height = 0.1f + Random.value * 0.15f;
+                        }
+                        else
+                        {
+                            mmtype = MapMarkerType.Wonder;
+                            height = 0.1f + Random.value * 0.7f;
+                        }
+                    }
+                    else
+                    {
+                        if (f > 0.8f)
+                        {
+                            if (f > 0.9f)
+                            {
+                                mmtype = MapMarkerType.Portal;
+                                height = 0.8f + 0.15f * Random.value;
+                            }
+                            else
+                            {
+                                mmtype = MapMarkerType.Island;
+                                height = 0.55f + 0.3f * Random.value;
+                            }
+                        }
+                        else
+                        {
+                            if (f > 0.65f)
+                            {
+                                mmtype = MapMarkerType.Wreck;
+                                height = 0.7f + 0.2f * Random.value;
+                            }
+                            else
+                            {
+                                mmtype = MapMarkerType.SOS;
+                                height = 0.1f + 0.9f * Random.value;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (f > 0.9f)
+                    { // special
+                      //ограничения на количество!
+                        f = Random.value;
+                        if (f > 0.5f)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            if (f > 0.75f)
+                            {
+                                mmtype = MapMarkerType.Colony;
+                                height = 0.3f + 0.5f * Random.value;
+                            }
+                            else
+                            {
+                                mmtype = MapMarkerType.Station;
+                                height = 0.9f + 0.09f * Random.value;
+                            }
+                        }
+                    }
+                    else
+                    { // quest-starting objects
                         return false;
                     }
-                    else
-                    {
-                        if (f > 0.75f)
-                        {
-                            mmtype = MapMarkerType.Colony;
-                            height = 0.3f + 0.5f * Random.value;
-                        }
-                        else
-                        {
-                            mmtype = MapMarkerType.Station;
-                            height = 0.9f + 0.09f * Random.value;
-                        }
-                    }
-                }
-                else
-                { // quest-starting objects
-                    return false;
                 }
             }
-        }
 
-        float angle = Random.value * 360;
-        bool somethingFound = false;
-        switch (mmtype)
-        {
-            case MapMarkerType.Station:
-            case MapMarkerType.Wreck:
-            case MapMarkerType.Island:
-            case MapMarkerType.SOS:
-            case MapMarkerType.Portal:
-            case MapMarkerType.Colony:
-            case MapMarkerType.Wiseman:
-            case MapMarkerType.Wonder:
-            case MapMarkerType.Resources:
-                {
-                    somethingFound = AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype), false);
+            float angle = Random.value * 360;
+            bool somethingFound = false;
+            switch (mmtype)
+            {
+                case MapMarkerType.Station:
+                case MapMarkerType.Wreck:
+                case MapMarkerType.Island:
+                case MapMarkerType.SOS:
+                case MapMarkerType.Portal:
+                case MapMarkerType.Colony:
+                case MapMarkerType.Wiseman:
+                case MapMarkerType.Wonder:
+                case MapMarkerType.Resources:
+                    {
+                        somethingFound = AddPoint(new PointOfInterest(angle, height, DefineRing(height), mmtype), false);
+                        break;
+                    }
+                case MapMarkerType.Star:
+                    somethingFound = AddPoint(new MapPoint(angle, height, mmtype), false);
                     break;
-                }
-            case MapMarkerType.Star:
-                somethingFound = AddPoint(new MapPoint(angle, height, mmtype), false);
-                break;
+            }
+            if (somethingFound)
+            {
+                GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewObjectFound));
+                if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.newObjectFound);
+            }
+            return somethingFound;
         }
-        if (somethingFound)
-        {
-            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewObjectFound));
-            if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.newObjectFound);
-        }
-        return somethingFound;
+        else  return UpdateSector(x);       
     }
     public void ShowOnGUI()
     {

@@ -370,6 +370,22 @@ public sealed class GameMaster : MonoBehaviour
         //testzone
         if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
         if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
+
+        if (Input.GetKeyDown("o"))
+        {
+            var sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+        }
         //eo testzone
     }
 

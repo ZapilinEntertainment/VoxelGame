@@ -7,7 +7,7 @@ public struct Environment
         Default, WhiteSpace, BlackSpace, IceSpace, FireSpace, WaterSpace, LightStorm,
         DarkCanyon, EndlessFields, UnderrealmCaverns, OceanWorld, UndergroundWorld, DiedWorld, ForestWorld, DesertWorld,
         DreamRealm, AncientRuins, ModernRuins, SoulRuins, Custom
-    }
+    } // # зависимость в GetSuitableEnvironment
     public struct LightSettings
     {
         public readonly bool sunIsMapPoint;
@@ -80,12 +80,11 @@ public struct Environment
             Color.white, new Color(0.843f, 0.843f, 0.843f), new Color(0.2261f, 0.6226f, 0.6039f)
             ));
     }
-
-    public static LightSettings GetDefaultLightSettings(EnvironmentPreset ep)
+    public static LightSettings GetPresetLightSettings(EnvironmentPreset ep)
     {
         switch (ep) {
             case EnvironmentPreset.LightStorm:
-                return new LightSettings(new Vector3(2f,-0.5f, 2f), 1.2f, new Color(1f, 0.99f, 0.86f), new Color(0.58f, 0.58f, 0.52f), new Color(0.96f, 0.79f, 0.4f))
+                return new LightSettings(new Vector3(2f, -0.5f, 2f), 1.2f, new Color(1f, 0.99f, 0.86f), new Color(0.58f, 0.58f, 0.52f), new Color(0.96f, 0.79f, 0.4f));
             case EnvironmentPreset.WaterSpace:
                 return new LightSettings(Vector3.down, 0.5f, new Color(0.18f, 0.65f, 1f), new Color(0f, 0f, 0.4f), new Color(0.06f, 0.75f, 0.98f));
             case EnvironmentPreset.FireSpace:
@@ -101,6 +100,132 @@ public struct Environment
                 return defaultEnvironment.lightSettings;
         }
     }
+    public static Environment GetSuitableEnvironment(float ascension)
+    {
+        int x;
+        EnvironmentPreset presetType = EnvironmentPreset.Default;
+        if (ascension < 0.3f) // low
+        {
+            x = Random.Range(0, 6); 
+            switch (x)
+            {
+                case 0:
+                    {
+                        presetType = EnvironmentPreset.BlackSpace;
+                        break;
+                    }
+                case 1:
+                    {
+                        presetType = EnvironmentPreset.IceSpace;
+                        break;
+                    }
+                case 2:
+                    {
+                        presetType = EnvironmentPreset.FireSpace;
+                        break;
+                    }
+                case 3:
+                    {
+                        presetType = EnvironmentPreset.DarkCanyon;
+                        break;
+                    }
+                case 4:
+                    {
+                        presetType = EnvironmentPreset.UndergroundWorld;
+                        break;
+                    }
+                case 5:
+                    {
+                        presetType = EnvironmentPreset.DiedWorld;
+                        break;
+                    }
+                case 6:
+                    {
+                        presetType = EnvironmentPreset.AncientRuins;
+                        break;
+                    }
+            }
+        }
+        else
+        {
+            if (ascension > 0.7f) // high
+            {
+                x = Random.Range(0, 4);
+                switch (x)
+                {
+                    case 0:
+                        {
+                            presetType = EnvironmentPreset.WhiteSpace;
+                            break;
+                        }
+                    case 1:
+                        {
+                            presetType = EnvironmentPreset.EndlessFields;
+                            break;
+                        }
+                    case 2:
+                        {
+                            presetType = EnvironmentPreset.DesertWorld;
+                            break;
+                        }
+                    case 3:
+                        {
+                            presetType = EnvironmentPreset.DreamRealm;
+                            break;
+                        }
+                    case 4:
+                        {
+                            presetType = EnvironmentPreset.SoulRuins;
+                            break;
+                        }
+                }
+            }
+            else // normal
+            {
+                // default waterspace lightstorm  underrealm_caverns oceanworld forestworld modernruins
+                x = Random.Range(0, 6);
+                switch (x)
+                {
+                    case 0:
+                        {
+                            presetType = EnvironmentPreset.Default;
+                            break;
+                        }
+                    case 1:
+                        {
+                            presetType = EnvironmentPreset.WaterSpace;
+                            break;
+                        }
+                    case 2:
+                        {
+                            presetType = EnvironmentPreset.LightStorm;
+                            break;
+                        }
+                    case 3:
+                        {
+                            presetType = EnvironmentPreset.UnderrealmCaverns;
+                            break;
+                        }
+                    case 4:
+                        {
+                            presetType = EnvironmentPreset.OceanWorld;
+                            break;
+                        }
+                    case 5:
+                        {
+                            presetType = EnvironmentPreset.ForestWorld;
+                            break;
+                        }
+                    case 6:
+                        {
+                            presetType = EnvironmentPreset.ModernRuins;
+                            break;
+                        }
+                }
+            }
+        }
+        return new Environment(presetType, GetPresetLightSettings(presetType));
+    }
 
     public Environment(EnvironmentPreset ep, LightSettings ls)
     {
@@ -115,7 +240,7 @@ public struct Environment
         }
     }    
 
-    public float GetEventTime()
+    public float GetInnerEventTime()
     {
         if (presetType != EnvironmentPreset.Default)
         {
@@ -123,7 +248,7 @@ public struct Environment
         }
         else return 0;
     }
-    public void Event()
+    public void InnerEvent()
     {
         switch (presetType)
         {
