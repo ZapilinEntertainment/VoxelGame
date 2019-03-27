@@ -8,7 +8,7 @@
         expedition = e;
         destination = i_destination;
         speed = i_speed;
-        stable = true;
+        stability = 1f;
     }
     
     public void ChangeDestination(MapPoint mp)

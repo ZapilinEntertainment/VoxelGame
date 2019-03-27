@@ -13,6 +13,10 @@ public class Observatory : WorkBuilding {
         alreadyBuilt = false;
     }
 
+    public static float GetVisibilityCoefficient()
+    {
+        return 1f;
+    }
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (alreadyBuilt) {

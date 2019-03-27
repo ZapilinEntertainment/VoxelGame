@@ -309,7 +309,7 @@ public sealed class Expedition
             {
                 mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
             }
-            mapMarker.ChangeCoords(System.BitConverter.ToSingle(data,0), System.BitConverter.ToSingle(data, 4));
+            mapMarker.SetCoords(System.BitConverter.ToSingle(data,0), System.BitConverter.ToSingle(data, 4));
         }
         else
         {

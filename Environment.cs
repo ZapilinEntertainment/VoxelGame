@@ -1,13 +1,17 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public struct Environment
 {
     public enum EnvironmentPreset
     {
         Default, WhiteSpace, BlackSpace, IceSpace, FireSpace, WaterSpace, LightStorm,
-        DarkCanyon, EndlessFields, UnderrealmCaverns, OceanWorld, UndergroundWorld, DiedWorld, ForestWorld, DesertWorld,
+        DarkCanyon, EndlessFields, UnderrealmCaverns, OceanWorld, DiedWorld, ForestWorld, DesertWorld,
         DreamRealm, AncientRuins, ModernRuins, SoulRuins, Custom
-    } // # зависимость в GetSuitableEnvironment
+    }
+    // # зависимость:
+    // GetSuitableEnvironment
+    // GetSuitablePoint
     public struct LightSettings
     {
         public readonly bool sunIsMapPoint;
@@ -106,7 +110,7 @@ public struct Environment
         EnvironmentPreset presetType = EnvironmentPreset.Default;
         if (ascension < 0.3f) // low
         {
-            x = Random.Range(0, 6); 
+            x = Random.Range(0, 5); 
             switch (x)
             {
                 case 0:
@@ -131,15 +135,10 @@ public struct Environment
                     }
                 case 4:
                     {
-                        presetType = EnvironmentPreset.UndergroundWorld;
-                        break;
-                    }
-                case 5:
-                    {
                         presetType = EnvironmentPreset.DiedWorld;
                         break;
                     }
-                case 6:
+                case 5:
                     {
                         presetType = EnvironmentPreset.AncientRuins;
                         break;
@@ -182,7 +181,6 @@ public struct Environment
             }
             else // normal
             {
-                // default waterspace lightstorm  underrealm_caverns oceanworld forestworld modernruins
                 x = Random.Range(0, 6);
                 switch (x)
                 {
@@ -225,7 +223,7 @@ public struct Environment
             }
         }
         return new Environment(presetType, GetPresetLightSettings(presetType));
-    }
+    }  
 
     public Environment(EnvironmentPreset ep, LightSettings ls)
     {
@@ -258,5 +256,122 @@ public struct Environment
                 GameMaster.realMaster.environmentMaster.AddDecoration(size, g);
                 break;
         }        
+    }
+
+    public MapMarkerType GetSuitablePointType(float ascension)
+    {
+        var availableTypes = MapPoint.GetAvailablePointsType(ascension);
+        int x = Random.Range(0, availableTypes.Count - 1);
+        var mp = MapPoint.CreatePointOfType(0, 0, availableTypes[x]);
+        List<MapMarkerType> envtypes = new List<MapMarkerType>() {MapMarkerType.Star};
+        //full:
+        //envtypes = new MapMarkerType[]
+        //        {
+       //             MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
+       //             MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
+        //        };
+        switch (presetType)
+        {
+            case EnvironmentPreset.WhiteSpace:
+                envtypes = new List<MapMarkerType>() { MapMarkerType.Island, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder };
+                break;
+            case EnvironmentPreset.BlackSpace:
+                envtypes = new List<MapMarkerType>() { MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.SOS, MapMarkerType.Portal, MapMarkerType.Wonder, MapMarkerType.Resources };
+                break;
+            case EnvironmentPreset.IceSpace:
+            case EnvironmentPreset.FireSpace:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.SOS, MapMarkerType.Portal,
+                    MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
+                };
+                break;
+            case EnvironmentPreset.WaterSpace:
+                envtypes = new List<MapMarkerType>()
+               {
+                    MapMarkerType.Station, MapMarkerType.Wreck, 
+                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Wonder
+               };
+               break;
+            case EnvironmentPreset.LightStorm:
+               envtypes = new List<MapMarkerType>()
+               {
+                    MapMarkerType.Wreck, MapMarkerType.SOS,
+                    MapMarkerType.Star, MapMarkerType.Wonder, MapMarkerType.Resources
+               };
+               break;
+            case EnvironmentPreset.DarkCanyon:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
+                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Resources
+                };
+                break;
+            case EnvironmentPreset.EndlessFields:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Island, MapMarkerType.Portal, MapMarkerType.Colony,
+                    MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder
+                };
+                break;
+            case EnvironmentPreset.UnderrealmCaverns:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
+                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
+                };
+                break;
+            case EnvironmentPreset.OceanWorld:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
+                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Wonder
+                };
+                break;
+            case EnvironmentPreset.DiedWorld:
+            case EnvironmentPreset.DesertWorld:
+            case EnvironmentPreset.SoulRuins:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island,
+                    MapMarkerType.Star, MapMarkerType.Wiseman, 
+                };
+                break;
+            case EnvironmentPreset.ForestWorld:
+                envtypes = new List<MapMarkerType>()
+                {
+                    MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
+                    MapMarkerType.Resources
+                };
+                break;
+            case EnvironmentPreset.DreamRealm:
+               envtypes = new List<MapMarkerType>()
+               {
+                    MapMarkerType.Island,
+                    MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
+               };
+                break;
+            case EnvironmentPreset.AncientRuins:
+            case EnvironmentPreset.ModernRuins:
+                envtypes = new List<MapMarkerType>()
+               {
+                    MapMarkerType.Station, MapMarkerType.SOS,
+                    MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
+               };
+                break;
+        }
+        int i = 0;
+        while (i < envtypes.Count)
+        {
+            if (!availableTypes.Contains(envtypes[i])) {
+                envtypes.RemoveAt(i);
+                continue;
+            }
+            else
+            {
+                i++;
+            }
+        }
+        return envtypes[Random.Range(0, envtypes.Count - 1)];
     }
 }
