@@ -176,8 +176,14 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             {
                 prevSkyboxSaturation = s;
                 skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
-                RenderSettings.ambientEquatorColor = Color.Lerp(Color.black, ls.horizonColor, s);
-                RenderSettings.ambientGroundColor = Color.Lerp(Color.black, ls.bottomColor, s);
+                var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
+                var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
+                var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
+                RenderSettings.ambientGroundColor = bottomColor;
+                RenderSettings.ambientEquatorColor = horColor;
+                RenderSettings.ambientGroundColor = bottomColor;
+                skyboxMaterial.SetColor("_BottomColor", bottomColor);
+                skyboxMaterial.SetColor("_HorizonColor", horColor);
             }
             positionChanged = false;
         }

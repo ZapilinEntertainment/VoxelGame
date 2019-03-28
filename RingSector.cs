@@ -5,6 +5,7 @@ using UnityEngine;
 public sealed class RingSector
 {
     public bool destroyed { get; private set; }
+    public bool fertile { get; private set; } // can sector produce new points inside?
     public readonly int ID;
     public readonly MapPoint centralPoint;
     public readonly Environment environment;
@@ -31,6 +32,7 @@ public sealed class RingSector
             case 7: localPos = new Vector2(0.7f, -0.7f); break;
             case 8: localPos = new Vector2(0.7f, 0f); break;
             case 9: localPos = new Vector2(0.7f, 0.7f); break;
+            default: Debug.Log("non-correct inner position");break;
         }
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         int ring = centralPoint.ringIndex;
@@ -38,6 +40,17 @@ public sealed class RingSector
             centralPoint.angle + gmap.sectorsDegrees[ring] * 0.5f * localPos.x,
             centralPoint.height + (gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) * 0.5f * localPos.y
             );
+    }
+    public void AddInnerPoint(MapPoint mp, byte index)
+    {        
+        if (points.ContainsKey(index)) {
+            MapPoint emp = null;
+            points.TryGetValue(index, out emp);
+            if (emp != null) GameMaster.realMaster.globalMap.RemovePoint(emp, true);
+            points.Remove(index);
+        }
+        mp.SetCoords(GetInnerPointPosition(index));
+        points.Add(index, mp);
     }
 
     public RingSector(SunPoint sun_point, Environment.EnvironmentPreset environmentPresetType)
@@ -66,10 +79,14 @@ public sealed class RingSector
     {
         destroyed = true;
     }
+    public void SetFertility(bool x)
+    {
+        fertile = x;
+    }
 
     public bool CreateNewPoint(byte positionIndex, float ascension, float visibility)
     {
-        if (points.ContainsKey(positionIndex)) return false;
+        if (points.ContainsKey(positionIndex) | !fertile) return false;
         else
         {
             var pos = GetInnerPointPosition(positionIndex);
@@ -94,4 +111,6 @@ public sealed class RingSector
             else return false;
         }
     }
+
+
 }

@@ -31,10 +31,8 @@ public abstract class Worksite {
     }
 
 	/// <summary>
-	/// return excess workers
+	/// returns excess workers
 	/// </summary>
-	/// <returns>The workers.</returns>
-	/// <param name="x">The x coordinate.</param>    /// 
 	public int AddWorkers ( int x) {
         int maxWorkers = GetMaxWorkers();
 		if (workersCount == maxWorkers) return x;

@@ -81,12 +81,99 @@ public struct Environment
     {
         defaultEnvironment = new Environment(EnvironmentPreset.Default, new LightSettings(
             new Vector3(1f,-0.3f,1f).normalized, 0f, 
-            Color.white, new Color(0.843f, 0.843f, 0.843f), new Color(0.2261f, 0.6226f, 0.6039f)
+            Color.white, Color.white, Color.cyan * 0.5f
             ));
     }
     public static LightSettings GetPresetLightSettings(EnvironmentPreset ep)
     {
+        Vector2 v = Random.insideUnitCircle;
         switch (ep) {
+            case EnvironmentPreset.DarkCanyon:
+                {
+                    v *= 5f;
+                    return new LightSettings(
+                        new Vector3(v.y, -1f, v.x), 0.75f,
+                        new Color(0.88f, 0.19f, 0.67f), new Color(0.6f, 0f, 0.68f), new Color(0.28f, 0.07f, 0.31f)
+                        );
+                }
+            case EnvironmentPreset.EndlessFields:
+                {
+                    v *= 2f;
+                    return new LightSettings(
+                       new Vector3(v.x, -1f, v.y), 1.3f,
+                       new Color(1f, 0.94f, 0.71f), new Color(0.88f, 0.82f, 0.54f), new Color(2f, 0.84f, 0f)
+                       );
+                }
+            case EnvironmentPreset.UnderrealmCaverns:
+                {
+                    v *= 5f;
+                    return new LightSettings(
+                       new Vector3(v.x, -0.1f, v.y), 0.8f,
+                       new Color(0.58f, 1f, 0.75f), new Color(0f, 0.65f, 0.4f), new Color(0.22f, 0.46f, 0.29f)
+                       );
+                }
+            case EnvironmentPreset.OceanWorld:
+                {
+                    v *= 3f;
+                    return new LightSettings(
+                       new Vector3(v.x, -1f, v.y), 1.1f,
+                       new Color(0.61f, 0.99f, 0.94f), new Color(0f, 0.62f, 1f), new Color(0f, 0f, 0.65f)
+                       );
+                }
+            case EnvironmentPreset.DiedWorld:
+                {
+                    return new LightSettings(
+                       Vector3.down, 0.75f,
+                       Color.white, Color.white * 0.74f, new Color(1f, 0.61f, 0.57f)
+                       );
+                }
+            case EnvironmentPreset.ForestWorld:
+                {
+                    v *= 5f;
+                    return new LightSettings(
+                       new Vector3(v.x, -1f, v.y), 0.75f,
+                       new Color(1f, 0.96f, 0.74f), new Color(0.57f, 0.84f, 0.57f), new Color(0.07f, 0.43f, 0.07f)
+                       );
+                }
+            case EnvironmentPreset.DesertWorld:
+                {
+                    v *= 3f;
+                    return new LightSettings(
+                       new Vector3(v.x, -0.5f, v.y), 1.2f,
+                       new Color(1f, 0.74f, 0.65f), new Color(1f, 0.95f, 0.74f), new Color(0.51f, 0.48f, 0.09f)
+                       );
+                }
+            case EnvironmentPreset.DreamRealm:
+                {
+                    v *= 2;
+                    return new LightSettings(
+                   new Vector3(v.x, -1f, v.y), 1f,
+                   new Color(1f, 0.67f, 0.9f), new Color(0.67f, 1f, 0.97f), new Color(0.61f, 0.19f, 0.52f)
+                   );
+                }
+            case EnvironmentPreset.AncientRuins:
+                {
+                    v *= 1.5f;
+                    return new LightSettings(
+                   new Vector3(v.x, -0.5f, v.y), 1f,
+                   new Color(0.6f, 0.6f, 0.2f), new Color(0.82f, 0.83f, 0.17f), new Color(0.25f, 0.25f, 0.15f)
+                   );
+                }
+            case EnvironmentPreset.ModernRuins:
+                {
+                    v *= 2f;
+                    return new LightSettings(
+                   new Vector3(v.x, -0.9f + Random.value * 0.2f, v.y), 1.1f,
+                   new Color(0.71f, 0.98f, 1f), new Color(0.92f, 0.94f, 0.6f), new Color(0.43f, 0.54f, 0.54f)
+                   );
+                }
+            case EnvironmentPreset.SoulRuins:
+                {
+                    return new LightSettings(
+                   new Vector3(v.x, -1f, v.y), 1f,
+                   new Color(0.27f, 0.83f, 0.85f), new Color(0.73f, 0.83f, 0.83f), new Color(0.04f, 0.91f, 0.95f)
+                   );
+                }
             case EnvironmentPreset.LightStorm:
                 return new LightSettings(new Vector3(2f, -0.5f, 2f), 1.2f, new Color(1f, 0.99f, 0.86f), new Color(0.58f, 0.58f, 0.52f), new Color(0.96f, 0.79f, 0.4f));
             case EnvironmentPreset.WaterSpace:

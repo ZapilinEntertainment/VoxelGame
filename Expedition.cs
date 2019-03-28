@@ -217,13 +217,13 @@ public sealed class Expedition
     }
 
     public void Dismiss()
-    {
+    {        
         if (stage == ExpeditionStage.Dismissed) return;
         else
         {
             if (crew != null) crew.SetStatus(CrewStatus.Free);
             if (transmitter != null) transmitter.DropExpeditionConnection();
-            if (destination != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
+            if (destination != null && destination.sentExpedition != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;

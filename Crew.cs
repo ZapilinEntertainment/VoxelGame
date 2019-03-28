@@ -99,6 +99,11 @@ public sealed class Crew : MonoBehaviour {
         }
     }
 
+    private Crew()
+    {
+
+    }
+
 	public void SetShuttle(Shuttle s) {
         if (s == shuttle) return;
         else {
@@ -121,10 +126,6 @@ public sealed class Crew : MonoBehaviour {
     public void SetStatus(CrewStatus cs)
     {
         status = cs;
-        if (shuttle != null)
-        {
-            
-        }
     }
 
 	static float CalculateExperienceLimit(byte f_level) {

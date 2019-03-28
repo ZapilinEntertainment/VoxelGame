@@ -378,6 +378,7 @@ public sealed class GameMaster : MonoBehaviour
             {
                 Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
+                (s as WorkBuilding).AddWorkers(50);
             }
             sx = mainChunk.GetSurfaceBlock();
             if (sx != null)
@@ -385,6 +386,42 @@ public sealed class GameMaster : MonoBehaviour
                 Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+
+            Crew c = Crew.CreateNewCrew(colonyController, 1f);
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+                Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
+                sh.FirstSet(s as Hangar);
+                c.SetShuttle(sh);
+            }
+            
         }
         //eo testzone
     }

@@ -41,7 +41,7 @@ public struct Mission {
         subIndex = i_subIndex;
         point = null;
         requireShuttle = false;
-        stepsCount = 1; // awaiting
+        stepsCount = 10; // awaiting
         codename = Localization.GetMissionCodename(type, subIndex);
     }
     public Mission (MissionType i_type, byte i_subIndex, PointOfInterest i_point) : this(i_type, i_subIndex)

@@ -146,15 +146,20 @@ public class MapPoint
                 break;
         }     
         destroyed = false;
-    }
-
- 
+    } 
 
     public void SetCoords(float i_angle, float i_height)
     {
         if (destroyed) return;
         angle = i_angle;
         height = i_height;
+        ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
+    }
+    public void SetCoords(Vector2 pos)
+    {
+        if (destroyed) return;
+        angle = pos.x;
+        height = pos.y;
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
     }
     public void SetStability(float s)

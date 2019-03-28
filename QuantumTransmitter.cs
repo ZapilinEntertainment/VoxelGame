@@ -85,7 +85,7 @@ public sealed class QuantumTransmitter : Building {
     }
     public void DropExpeditionConnection()
     {
-        if (expeditionID > 0)
+        if (expeditionID >= 0)
         {
             expeditionID = -1;
             SetActivationStatus(false, true);

@@ -12,7 +12,7 @@ public sealed class GlobalMap : MonoBehaviour
     public List<MapPoint> mapPoints { get; private set; }
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
 
-    private bool prepared = false;
+    private bool prepared = false, mapInterfaceActive = false;
     private int currentSectorIndex = 0;
     private GameObject mapUI_go;
     private Dictionary<SunPoint, Transform> stars;
@@ -67,11 +67,13 @@ public sealed class GlobalMap : MonoBehaviour
         var ls = Environment.defaultEnvironment.lightSettings;
         var sunPoint = new SunPoint(startPos.x, startPos.y,  ls.sunColor);        
         RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPreset.Default, new Environment.LightSettings(sunPoint, 1f, ls.bottomColor, ls.horizonColor) ));
+        startSector.SetFertility(false);
         mapSectors[currentSectorIndex] = startSector;
         Vector2 dir = Quaternion.AngleAxis(Random.value * 360, Vector3.forward) * Vector2.up;
+        float xpos = startPos.x + dir.x * 0.25f * sectorsDegrees[ring], ypos = startPos.y + dir.y * 0.25f * (ringsBorders[ring] - ringsBorders[ring + 1]);
         MapPoint cityPoint = MapPoint.CreatePointOfType(
-            startPos.x + dir.x * 0.25f * sectorsDegrees[ring], //angle
-            startPos.y + dir.y * 0.25f * (ringsBorders[ring] - ringsBorders[ring + 1]),
+            xpos, //angle
+            ypos,
              MapMarkerType.MyCity
         );
         mapPoints.Add(cityPoint); // CITY_POINT_INDEX = 0
@@ -128,6 +130,7 @@ public sealed class GlobalMap : MonoBehaviour
                     var sr = g.AddComponent<SpriteRenderer>();
                     sr.sprite = PoolMaster.GetStarSprite(false);
                     sr.sharedMaterial = PoolMaster.billboardMaterial;
+                    sr.color = sp.color;
                     stars.Add(sp, g.transform );
                 }
             }
@@ -196,6 +199,7 @@ public sealed class GlobalMap : MonoBehaviour
                 availableTypes[x]
                 );
             mapSectors[i] = new RingSector(centralPoint, Environment.GetSuitableEnvironment(ascension));
+            AddPoint(centralPoint, true);
         }
         else
         {
@@ -206,6 +210,7 @@ public sealed class GlobalMap : MonoBehaviour
                 e.lightSettings.sunColor
                 );
             mapSectors[i] = new RingSector(sunpoint, e);
+            AddPoint(sunpoint, true);
         }
         actionsHash++;
     }
@@ -289,36 +294,6 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
     }
-    private bool UpdateSector(int index)
-    {
-        var ms = mapSectors[index];
-        if (ms == null)
-        {
-            return false;
-        }
-        else
-        {
-            int x = Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
-            byte i = (byte)index;
-            if (ms.points.ContainsKey(i)) // в этой позиции уже есть точка
-            {
-                MapPoint mp = null;
-                if (ms.points.TryGetValue(i, out mp))
-                {
-                    return mp.Update();
-                }
-                else
-                {
-                    ms.points.Remove(i);
-                    return false;
-                }
-            }
-            else // пустая позиция
-            {
-                return ms.CreateNewPoint(i,ascension,Observatory.GetVisibilityCoefficient());
-            }
-        }
-    }
 
     private void Update()
     {
@@ -370,7 +345,7 @@ public sealed class GlobalMap : MonoBehaviour
                     {
                         if (mp.height != d.height)
                         {
-                            mp.height = Mathf.MoveTowards(mp.height, d.height, fe.speed * t);
+                            mp.height = Mathf.MoveTowards(mp.height, d.height, fe.speed * t * 0.01f);
                             mp.ringIndex = DefineRing(mp.height);
                         }
                         else
@@ -405,7 +380,7 @@ public sealed class GlobalMap : MonoBehaviour
         cityFlyDirection = new Vector3(cpoint.angle - prevX + rotationSpeed[cpoint.ringIndex], ascensionChange, cpoint.height - prevY);
 
         var cp = Quaternion.AngleAxis(cpoint.angle, Vector3.back) * (Vector3.up * cpoint.height);
-        if (stars.Count > 0)
+        if (stars.Count > 0 & !mapInterfaceActive)
         {
             foreach (var se in stars)
             {
@@ -558,7 +533,34 @@ public sealed class GlobalMap : MonoBehaviour
             CreateNewSector(x);
             return true;
         }
-        else return UpdateSector(x);   
+        else {
+            //update sector
+            if (rs == null)
+            {
+                return false;
+            }
+            else
+            {
+                byte x2 = (byte)Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
+                if (rs.points.ContainsKey(x2)) // в этой позиции уже есть точка
+                {
+                    MapPoint mp = null;
+                    if (rs.points.TryGetValue(x2, out mp))
+                    {
+                        return mp.Update();
+                    }
+                    else
+                    {
+                        rs.points.Remove(x2);
+                        return false;
+                    }
+                }
+                else // пустая позиция
+                {
+                    return rs.CreateNewPoint(x2, ascension, Observatory.GetVisibilityCoefficient());
+                }
+            }
+        }   
     }
     public void ShowOnGUI()
     {
@@ -568,7 +570,26 @@ public sealed class GlobalMap : MonoBehaviour
             mapUI_go = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"));
             mapUI_go.GetComponent<GlobalMapUI>().SetGlobalMap(this);
         }
+        mapInterfaceActive = true;
+        if (stars.Count > 0)
+        {
+            foreach (var sto in stars)
+            {
+                sto.Value.gameObject.SetActive(false);
+            }
+        }
         if (!mapUI_go.activeSelf) mapUI_go.SetActive(true);
+    }
+    public void MapInterfaceDisabled()
+    {
+        mapInterfaceActive = false;
+        if (stars.Count > 0)
+        {
+            foreach (var sto in stars)
+            {
+                sto.Value.gameObject.SetActive(true);
+            }
+        }
     }
 
     #region save-load system

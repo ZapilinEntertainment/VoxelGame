@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
-public enum LocalizedWord : ushort {Expedition,Close,Crew,Launch,Level, Offline, Progress, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
+public enum LocalizedWord : ushort {
+    Close, Crew, Expedition,Launch,Level,Mission, Offline, Progress, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
@@ -785,6 +786,7 @@ public static class Localization {
                         case LocalizedWord.Expedition: return "Экспедиция";                        
                         case LocalizedWord.Launch: return "Запустить";
                         case LocalizedWord.Level: return "уровень"; // building technology level
+                        case LocalizedWord.Mission: return "Миссия";
                         case LocalizedWord.Offline: return "Не подключено"; // out of power		 
                         case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Dig: return "Копать";
@@ -851,11 +853,12 @@ public static class Localization {
                 {
                     switch (word)
                     {
-                        case LocalizedWord.Close: return "Close";
+                        case LocalizedWord.Close: return "Close"; // close a panel
                         case LocalizedWord.Crew: return "Crew";
                         case LocalizedWord.Expedition: return "Expedition";                        
                         case LocalizedWord.Launch: return "Launch";
                         case LocalizedWord.Level: return "level"; // building technology level
+                        case LocalizedWord.Mission: return "Mission";
                         case LocalizedWord.Offline: return "offline"; // out of power	
                         case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Dig: return "Dig";
