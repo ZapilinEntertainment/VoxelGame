@@ -153,30 +153,39 @@ public sealed class GlobalMapUI : MonoBehaviour
                     expeditionNameField.text = poi.sentExpedition.name;
                     missionDropdown.gameObject.SetActive(false);
                     Expedition e = poi.sentExpedition;
-                    switch (e.stage)
+                    if (e.hasConnection)
                     {
-                        case Expedition.ExpeditionStage.WayIn:
-                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingToMissionPoint);
-                            break;
-                        case Expedition.ExpeditionStage.OnMission:
-                            expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
-                                Localization.GetWord(LocalizedWord.Progress) + ": " + ((int)(e.progress * 100)).ToString() + "%\n" +
-                                e.currentStep.ToString() + " / " + e.mission.stepsCount.ToString()
-                                ;
-                            break;
-                        case Expedition.ExpeditionStage.WayOut:
-                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingHome);
-                            break;
-                        case Expedition.ExpeditionStage.LeavingMission:
-                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.TryingToLeave);
-                            break;
-                        case Expedition.ExpeditionStage.Dismissed:
-                            expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.Dissmissed);
-                            break;
-                    }
+                        switch (e.stage)
+                        {
+                            case Expedition.ExpeditionStage.WayIn:
+                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingToMissionPoint);
+                                break;
+                            case Expedition.ExpeditionStage.OnMission:
+                                expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
+                                    Localization.GetWord(LocalizedWord.Progress) + ": " + ((int)(e.progress * 100)).ToString() + "%\n" +
+                                    e.currentStep.ToString() + " / " + e.mission.stepsCount.ToString()
+                                    ;
+                                break;
+                            case Expedition.ExpeditionStage.WayOut:
+                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingHome);
+                                break;
+                            case Expedition.ExpeditionStage.LeavingMission:
+                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.TryingToLeave);
+                                break;
+                            case Expedition.ExpeditionStage.Dismissed:
+                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.Dissmissed);
+                                break;
+                        }
 
-                    startButton.interactable = true;
-                    startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                        startButton.interactable = true;
+                        startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                    }
+                    else
+                    {
+                        expStatusText.text = Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
+                        startButton.interactable = false;
+                        startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                    }
                 }
                 else
                 {
@@ -379,8 +388,8 @@ public sealed class GlobalMapUI : MonoBehaviour
                 bool checkForChosen = (chosenPoint != null);
                 for (int i = 0; i < n; i++)
                 {
-                    rt = mapMarkers[i];
                     mp = mapPoints[i];
+                    rt = mapMarkers[i];                    
                     if (checkForChosen && mp == chosenPoint) rt.GetComponent<Image>().color = chosenColor;
                     else
                     {
@@ -469,16 +478,19 @@ public sealed class GlobalMapUI : MonoBehaviour
                         {
                             if (expeditionTracing)
                             {
-                                if (e.stage == Expedition.ExpeditionStage.OnMission)
+                                if (e.hasConnection)
                                 {
-                                    expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
-                                   Localization.GetWord(LocalizedWord.Progress) + ": " + e.currentStep + '/' + e.mission.stepsCount;
-                                }
-                                else
-                                {
-                                    if (e.stage == Expedition.ExpeditionStage.Dismissed)
+                                    if (e.stage == Expedition.ExpeditionStage.OnMission)
                                     {
-                                        PreparePointExpedition();
+                                        expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
+                                       Localization.GetWord(LocalizedWord.Progress) + ": " + e.currentStep + '/' + e.mission.stepsCount;
+                                    }
+                                    else
+                                    {
+                                        if (e.stage == Expedition.ExpeditionStage.Dismissed)
+                                        {
+                                            PreparePointExpedition();
+                                        }
                                     }
                                 }
                             }

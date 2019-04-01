@@ -137,12 +137,39 @@ public sealed class Crew : MonoBehaviour {
         ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
     }
 
+    public bool HardTest() // INDEV
+    {
+        return true;
+    }
+    public bool SoftCheck( float friendliness) // INDEV
+    {
+        return false;//команда решает остаться
+    }
+    public bool StaminaCheck()
+    {
+        stamina -= 0.1f;
+        if (stamina <= 0)
+        {
+            stamina = 0;
+            return false;
+        }
+        else return true;
+    }
+
     public void DismissMember() {
         actionsHash++;
+    }
+    public void LoseMember()
+    {
+        actionsHash++;
+        membersCount--;
+        if (membersCount <= 0) Disappear();
     }
 	public void AddMember() {
         actionsHash++;
     }
+    public void LowConfidence() { confidence -= 0.1f * (1 - unity) * (1 - loyalty); if (confidence < 0) confidence = 0; }
+    public void UpConfidence() { confidence += 0.1f * (1 + unity / 2f); }
 
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);

@@ -62,13 +62,13 @@ public abstract class WorkBuilding : Building {
                 break;
             case FARM_4_ID:
                 {
-                    workflowToProcess = 16;
+                    workflowToProcess = 30;
                     maxWorkers = 100;
                 }
                 break;
             case FARM_5_ID:
                 {
-                    workflowToProcess = 16;
+                    workflowToProcess = 25;
                     maxWorkers = 300;
                 }
                 break;
@@ -92,13 +92,13 @@ public abstract class WorkBuilding : Building {
                 break;
             case LUMBERMILL_4_ID:
                 {
-                    workflowToProcess = 35;
+                    workflowToProcess = 75;
                     maxWorkers = 140;
                 }
                 break;
             case LUMBERMILL_5_ID:
                 {
-                    workflowToProcess = 35;
+                    workflowToProcess = 70;
                     maxWorkers = 280;
                 }
                 break;

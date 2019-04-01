@@ -4,7 +4,6 @@ using UnityEngine;
 
 public sealed class Expedition
 {
-    public enum MissionStageType : byte { Test, Decision, Fee, Crossroad, Special, Random }
     public enum ExpeditionStage : byte { WayIn, WayOut, OnMission, LeavingMission, Dismissed }
 
     public static List<Expedition> expeditionsList { get; private set; }
@@ -15,6 +14,7 @@ public sealed class Expedition
     public readonly int ID;
     public static int lastUsedID { get; private set; } // в сохранение
 
+    public bool hasConnection { get; private set; } // есть ли связь с центром
     public float progress { get; private set; } // прогресс текущего шага
     public int currentStep { get; private set; }
     public ExpeditionStage stage { get; private set; }
@@ -85,6 +85,7 @@ public sealed class Expedition
         mission = i_mission;
         transmitter = i_qt; transmitter.AssignExpedition(this);
         destination = i_destination; destination.sentExpedition = this;
+        hasConnection = true;
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, gmap.GetCityPoint(), destination, Shuttle.SPEED);
         gmap.AddPoint(mapMarker, true);
@@ -167,9 +168,87 @@ public sealed class Expedition
                     progress += crewSpeed;
                     if (progress >= ONE_STEP_WORKFLOW)
                     {
-                        progress = 0;
-                        //тут должны быть тесты
-                        currentStep++;
+                        progress = 0;                        
+                        bool success = false;
+                        //
+                        int x = Random.Range(0, 8);
+                        switch (x)
+                        {
+                            //ignore 0 -> default
+                            case 1: // mission test
+                                if (mission.TestYourMight(crew)) success = true;
+                                break;
+                            case 2: // jump
+                                if (Random.value > crew.luck * crew.perception)
+                                {
+                                    currentStep--;
+                                    if (Random.value * crew.adaptability < destination.location.difficulty * (1 - destination.friendliness))
+                                    {
+                                        currentStep--;
+                                        crew.LowConfidence(); // уверенность падает из-за неудач
+                                    }
+                                }
+                                else
+                                {
+                                    success = true;
+                                    if (Random.value * crew.luck / destination.location.difficulty < destination.friendliness) currentStep++;
+                                }
+                                break;
+                            case 3: //suffer
+                                if (crew.HardTest()) success = true;
+                                else
+                                {
+                                    crew.LoseMember();
+                                    if (crew == null)
+                                    {
+                                        Disappear();
+                                        return;
+                                    }
+                                }
+                                break;
+                            case 4: // prize
+                                if (Random.value < destination.friendliness * crew.luck * crew.perception)
+                                {
+                                    destination.location.TakeTreasure(crew);
+                                }
+                                success = true;
+                                break;
+                            case 5: //event
+                                success = true;
+                                if (Random.value < destination.danger) {
+                                    var gmap = GameMaster.realMaster.globalMap;
+                                    gmap.UpdateSector(gmap.DefineSectorIndex(destination.angle, destination.ringIndex));
+                                }
+                                break;
+                            case 6: //paradise ?
+                                success = true;
+                                if (crew.SoftCheck(destination.friendliness))
+                                {
+                                    Disappear();
+                                    return;
+                                }
+                                break;
+                            case 7: // silence - nothing happens
+
+                                break;
+                            case 8: // connection
+                                hasConnection = !hasConnection;
+                                break;
+                            default:
+                                success = true;
+                                break;
+                        }
+
+                        crew.StaminaCheck();
+                        if (success)
+                        {
+                            currentStep++;
+                            if (!destination.explored)
+                            {
+                                destination.Explore(mission.type == MissionType.Exploring ? 2f : 1f);
+                            }
+                        }
+                        //                        
                         if (currentStep >= mission.stepsCount)
                         {
                             missionCompleted = true;
@@ -211,13 +290,21 @@ public sealed class Expedition
         }
     }
 
-    public void DrawTexture(UnityEngine.UI.RawImage iconPlace)
+    public void DrawTexture(UnityEngine.UI.RawImage iconPlace) // INDEV
     {
-        //awaiting
+    }
+    public void SetConnection(bool connected)
+    {
+        if (hasConnection != connected)
+        {
+            hasConnection = connected;
+            GameMaster.realMaster.globalMap.MarkToUpdate();
+        }
     }
 
     public void Dismiss()
     {        
+        //зависимость : Disappear()
         if (stage == ExpeditionStage.Dismissed) return;
         else
         {
@@ -233,9 +320,22 @@ public sealed class Expedition
             stage = ExpeditionStage.Dismissed;
         }
     }
-    public void Dissappear(bool deleteMapMarker)
+    public void Disappear() // INDEV
     {
-        
+        if (stage == ExpeditionStage.Dismissed) return;
+        else
+        {
+            if (crew != null) crew.Disappear();
+            if (transmitter != null) transmitter.DropExpeditionConnection();
+            if (destination != null && destination.sentExpedition != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
+            if (subscribedToUpdate & !GameMaster.sceneClearing)
+            {
+                GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
+                subscribedToUpdate = false;
+            }
+            if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            stage = ExpeditionStage.Dismissed;
+        }
     }
     #region save-load system
     public List<byte> Save()
@@ -288,7 +388,7 @@ public sealed class Expedition
         int crewID = System.BitConverter.ToInt32(data, 1);
         if (crewID != - 1) crew = Crew.GetCrewByID(crewID);
         else crew = null;
-        mission = new Mission((MissionType)data[5], data[6]);
+        mission = new Mission((MissionType)data[5]);
         progress = System.BitConverter.ToSingle(data, 7);
         currentStep = System.BitConverter.ToInt32(data, 11);
         int usingTransmitterID = System.BitConverter.ToInt32(data, 15);

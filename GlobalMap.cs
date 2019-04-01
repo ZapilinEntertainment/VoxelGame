@@ -294,6 +294,35 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
     }
+    public bool UpdateSector(int i)
+    {
+        var rs = mapSectors[i];
+        if (rs == null)
+        {
+            return false;
+        }
+        else
+        {
+            byte x2 = (byte)Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
+            if (rs.points.ContainsKey(x2)) // в этой позиции уже есть точка
+            {
+                MapPoint mp = null;
+                if (rs.points.TryGetValue(x2, out mp))
+                {
+                    return mp.Update();
+                }
+                else
+                {
+                    rs.points.Remove(x2);
+                    return false;
+                }
+            }
+            else // пустая позиция
+            {
+                return rs.CreateNewPoint(x2, ascension, Observatory.GetVisibilityCoefficient());
+            }
+        }
+    } 
 
     private void Update()
     {
@@ -450,7 +479,7 @@ public sealed class GlobalMap : MonoBehaviour
         }
     }
 
-    //=============  PUBLIC METHODS
+    //=============  
     public byte DefineRing(float ypos)
     {
         if (ypos < ringsBorders[2])
@@ -533,34 +562,7 @@ public sealed class GlobalMap : MonoBehaviour
             CreateNewSector(x);
             return true;
         }
-        else {
-            //update sector
-            if (rs == null)
-            {
-                return false;
-            }
-            else
-            {
-                byte x2 = (byte)Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
-                if (rs.points.ContainsKey(x2)) // в этой позиции уже есть точка
-                {
-                    MapPoint mp = null;
-                    if (rs.points.TryGetValue(x2, out mp))
-                    {
-                        return mp.Update();
-                    }
-                    else
-                    {
-                        rs.points.Remove(x2);
-                        return false;
-                    }
-                }
-                else // пустая позиция
-                {
-                    return rs.CreateNewPoint(x2, ascension, Observatory.GetVisibilityCoefficient());
-                }
-            }
-        }   
+        else return UpdateSector(x); 
     }
     public void ShowOnGUI()
     {
@@ -579,6 +581,10 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
         if (!mapUI_go.activeSelf) mapUI_go.SetActive(true);
+    }
+    public void MarkToUpdate()
+    {
+        actionsHash++;
     }
     public void MapInterfaceDisabled()
     {

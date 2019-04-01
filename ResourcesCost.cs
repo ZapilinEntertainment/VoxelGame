@@ -356,6 +356,15 @@ public static class ResourcesCost
                 };
                 }
                 break;
+            case Structure.OBSERVATORY_ID:
+                {
+                    cost = new ResourceContainer[]
+                    {
+                        new ResourceContainer(ResourceType.metal_S, 400), new ResourceContainer(ResourceType.Graphonium, 20),
+                        new ResourceContainer(ResourceType.metal_K, 120), new ResourceContainer(ResourceType.metal_E, 40)
+                    };
+                }
+                break;
         }
         return cost;
     }

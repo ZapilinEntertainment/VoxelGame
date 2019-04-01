@@ -7,6 +7,8 @@ public class PointOfInterest : MapPoint
     public bool explored { get; protected set; }
     public Expedition sentExpedition; // показывает последнюю отправленную
     public ExploringLocation location { get; private set; }
+
+    private float exploredPart = 0f;
     private List<Mission> availableMissions;
 
     public float richness { get; protected set; }
@@ -19,7 +21,7 @@ public class PointOfInterest : MapPoint
     public PointOfInterest(float i_angle, float i_height, MapMarkerType mtype) : base(i_angle, i_height, mtype)
     {
         explored = false;
-        availableMissions = new List<Mission>() { new Mission(MissionType.Exploring, 0) };
+        availableMissions = new List<Mission>() { new Mission(MissionType.Exploring) };
         switch (mtype)
         {
             case MapMarkerType.Unknown:
@@ -123,6 +125,15 @@ public class PointOfInterest : MapPoint
         if (index < 0 | index >= availableMissions.Count) return Mission.NoMission;
         else return availableMissions[index];
     }
+    public void Explore(float k)
+    {
+        exploredPart += 0.01f * k;
+        if (exploredPart >= 1f)
+        {
+            exploredPart = 1f;
+            explored = true;
+        }
+    }
 
     #region save-load
     override public List<byte> Save()
@@ -164,7 +175,7 @@ public class PointOfInterest : MapPoint
             {
                 var mtype = (MissionType)fs.ReadByte();
                 byte subIndex = (byte)fs.ReadByte();
-                availableMissions.Add(new Mission(mtype, subIndex, this));
+                availableMissions.Add(new Mission(mtype,this));
             }
         }
     } 

@@ -6,7 +6,7 @@ public enum LocalizedWord : ushort {
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { RecallExpedition, NoSuitableShuttles,StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
+public enum LocalizedPhrase : ushort { ConnectionLost,RecallExpedition, NoSuitableShuttles,StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
@@ -931,6 +931,7 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.PointsSec: return " ед./сек";
                         case LocalizedPhrase.PerSecond: return "в секунду";
@@ -987,6 +988,7 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.PointsSec: return "points/sec";
                         case LocalizedPhrase.PerSecond: return "per second";
@@ -1600,13 +1602,13 @@ public static class Localization {
     #endregion
 
     #region missions data
-    public static string GetMissionCodename(MissionType mtype, byte subIndex)
+    public static string GetMissionCodename(MissionType mtype)
     {
         switch (currentLanguage) {
             case Language.Russian:
                 switch (mtype)
                 {
-                    case MissionType.Exploring: return "Изучение"; break;
+                    case MissionType.Exploring: return "Изучение";
                     case MissionType.FindingKnowledge: return "В поисках знания";
                     case MissionType.FindingItem: return "Поиск предмета";
                     case MissionType.FindingPerson: return "Поиск человека";
