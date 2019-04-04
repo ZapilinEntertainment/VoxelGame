@@ -195,7 +195,7 @@ public sealed class Expedition
                                 }
                                 break;
                             case 3: //suffer
-                                if (crew.HardTest()) success = true;
+                                if (crew.HardTest(destination.location.difficulty)) success = true;
                                 else
                                 {
                                     crew.LoseMember();
@@ -218,6 +218,16 @@ public sealed class Expedition
                                 if (Random.value < destination.danger) {
                                     var gmap = GameMaster.realMaster.globalMap;
                                     gmap.UpdateSector(gmap.DefineSectorIndex(destination.angle, destination.ringIndex));
+                                }
+                                else
+                                {
+                                    if (Random.value < 0.01f)
+                                    {
+                                        if (crew.artifact != null)
+                                        {
+                                            if (crew.artifact.Event() == false) crew.DropArtifact();
+                                        }
+                                    }
                                 }
                                 break;
                             case 6: //paradise ?

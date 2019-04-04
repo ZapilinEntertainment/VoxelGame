@@ -411,6 +411,13 @@ public sealed class GameMaster : MonoBehaviour
                 s.SetBasement(sx, PixelPosByte.zero);
             }
 
+            Vector3Int ecpos = Vector3Int.zero;
+            if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+            {
+                Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
+                s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            }
+
             Crew c = Crew.CreateNewCrew(colonyController, 1f);
             sx = mainChunk.GetSurfaceBlock();
             if (sx != null)
@@ -419,6 +426,7 @@ public sealed class GameMaster : MonoBehaviour
                 s.SetBasement(sx, PixelPosByte.zero);
                 Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
                 sh.FirstSet(s as Hangar);
+                (s as Hangar).AssignShuttle(sh);
                 c.SetShuttle(sh);
             }
             

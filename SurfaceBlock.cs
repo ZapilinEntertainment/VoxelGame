@@ -32,7 +32,6 @@ public struct SurfaceRect
         SurfaceRect p = (SurfaceRect)obj;
         return (x == p.x) & (z == p.z) & (size == p.size);
     }
-
     public override int GetHashCode()
     {
         return x + z + size;
@@ -498,28 +497,28 @@ public class SurfaceBlock : Block
         return positions;
     }
 
-    public PixelPosByte GetRandomPosition(byte xsize, byte zsize)
+    public PixelPosByte GetRandomPosition(byte size)
     {
-        if (cellsStatus == 1 || xsize >= INNER_RESOLUTION || zsize >= INNER_RESOLUTION || xsize < 1 || zsize < 1) return PixelPosByte.Empty;
+        if (cellsStatus == 1 || size >= INNER_RESOLUTION || size < 1) return PixelPosByte.Empty;
         if (cellsStatus == 0) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
-        return GetAcceptablePosition(xsize, zsize);
+        else return GetAcceptablePosition(size);
     }
 
-    PixelPosByte GetAcceptablePosition(byte xsize, byte zsize)
+    PixelPosByte GetAcceptablePosition(byte size)
     {
         List<PixelPosByte> acceptablePositions = new List<PixelPosByte>();
-        for (int xpos = 0; xpos <= INNER_RESOLUTION - xsize; xpos++)
+        for (int xpos = 0; xpos <= INNER_RESOLUTION - size; xpos++)
         {
             int width = 0;
-            for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++)
+            for (int zpos = 0; zpos <= INNER_RESOLUTION - size; zpos++)
             {
                 if (map[xpos, zpos] == true) width = 0; else width++;
-                if (width >= zsize)
+                if (width >= size)
                 {
                     bool appliable = true;
-                    for (int xdelta = 1; xdelta < xsize; xdelta++)
+                    for (int xdelta = 1; xdelta < size; xdelta++)
                     {
-                        for (int zdelta = 0; zdelta < zsize; zdelta++)
+                        for (int zdelta = 0; zdelta < size; zdelta++)
                         {
                             if (map[xpos + xdelta, zpos + zdelta] == true) { appliable = false; break; }
                         }
@@ -528,9 +527,9 @@ public class SurfaceBlock : Block
                     if (appliable)
                     {
                         acceptablePositions.Add(new PixelPosByte(xpos, zpos)); width = 0;
-                        for (int xdelta = 1; xdelta < xsize; xdelta++)
+                        for (int xdelta = 1; xdelta < size; xdelta++)
                         {
-                            for (int zdelta = 0; zdelta < zsize; zdelta++)
+                            for (int zdelta = 0; zdelta < size; zdelta++)
                             {
                                 map[xpos + xdelta, zpos + zdelta] = true;
                             }

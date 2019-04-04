@@ -19,18 +19,27 @@ public abstract class UIObserver : MonoBehaviour {
 		isObserving = false;
 		gameObject.SetActive(false);
 	}
-
-	protected virtual void StatusUpdate() {		
-	}
-
-	void OnEnable() {
-		transform.SetAsLastSibling();
-        if (!subscribedToUpdate) UIController.current.statusUpdateEvent += StatusUpdate;
-	}
-
     virtual public void LocalizeTitles()
-    {    }
+    { }
+    protected virtual void StatusUpdate() {		
+	}
 
+	private void OnEnable() {
+		transform.SetAsLastSibling();
+        if (!subscribedToUpdate)
+        {
+            UIController.current.statusUpdateEvent += StatusUpdate;
+            subscribedToUpdate = true;
+        }
+	}
+    private void OnDisable()
+    {
+        if (subscribedToUpdate)
+        {
+            UIController.current.statusUpdateEvent -= StatusUpdate;
+            subscribedToUpdate = false;
+        }
+    } 
     private void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;

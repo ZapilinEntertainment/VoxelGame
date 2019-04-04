@@ -2,12 +2,12 @@
 
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
 public enum LocalizedWord : ushort {
-    Close, Crew, Expedition,Launch,Level,Mission, Offline, Progress, Dig, Upgrade, UpgradeCost, Cancel, Buy, Sell, Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
+    Buy, Cancel, Close, Crew, Dig, Expedition,Launch,Level,Mission, Offline, Progress, Sell, Upgrade, UpgradeCost,   Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
 public enum LocalizedPhrase : ushort { ConnectionLost,RecallExpedition, NoSuitableShuttles,StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
-ImproveGears, NoActivity, CrewSlots, NoFreeSlots,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+ImproveGears, NoActivity, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
 }
@@ -21,8 +21,9 @@ public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR
 public enum LocalizedExpeditionStatus : byte { CannotReachDestination}
 
 public static class Localization {
+    public const int CREW_INFO_STRINGS_COUNT = 14;
 
-	public static Language currentLanguage { get; private set; }
+    public static Language currentLanguage { get; private set; }
 
 	static Localization() {
         int x = 0;
@@ -669,21 +670,19 @@ public static class Localization {
             default: return "crew \" " + name + "\" ready";
         }
     }
-    public static string NameCrew() { // waiting for креатив
-		switch (currentLanguage) {
-            case Language.Russian:   return "Команда " + Crew.lastFreeID.ToString();
-            case Language.English:
-            default: return "Сrew " + Crew.lastFreeID.ToString();
-		}
-	}
+  
     public static string GetCrewInfo(Crew c)
     {
+        // CREW_INFO_STRINS_COUNT = 14
         switch (currentLanguage)
         {
             case Language.Russian:
                 {
                     string s = "Участников: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
-        + "\n"
+        + '\n'
+        +"Опыта до следующего уровня: " +  string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n"      
+        + "Готовность: " + ((int)(c.stamina * 100f)).ToString() + "%\n" +
+        + '\n'
         + "Восприятие: " + string.Format("{0:0.##}", c.perception) + "\n"
         + "Настойчивость: " + string.Format("{0:0.##}", c.persistence) + "\n"
         + "Храбрость: " + string.Format("{0:0.##}", c.bravery) + "\n"
@@ -699,7 +698,10 @@ public static class Localization {
             default:
                 {
                     string s = "Members: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
-        + "\n"
+        + '\n'
+        +"Stamina: " + ((int)(c.stamina * 100f)).ToString() + "%\n"
+        +"Experience need for next level: " + string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n" 
+        +'\n'
         + "Perception: " + string.Format("{0:0.##}", c.perception) + "\n"
         + "Persistence: " + string.Format("{0:0.##}", c.persistence) + "\n"
         + "Bravery: " + string.Format("{0:0.##}", c.bravery) + "\n"
@@ -765,37 +767,82 @@ public static class Localization {
                 }
         }        
     }
+    public static string GetArtifactStatus(Artifact.ArtifactStatus status)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                {
+                    switch (status)
+                    {                        
+                        case Artifact.ArtifactStatus.Researching: return "Исследуется";
+                        case Artifact.ArtifactStatus.UsingByCrew: return "Используется командой";
+                        case Artifact.ArtifactStatus.UsingInMonument: return "Используется в монументе";
+                        case Artifact.ArtifactStatus.Exists:
+                        default:  return string.Empty;
+                    }
+                }
+            case Language.English:
+            default:
+                {
+                    switch (status)
+                    {                        
+                        case Artifact.ArtifactStatus.Researching: return "Researching";
+                        case Artifact.ArtifactStatus.UsingByCrew: return "Using by crew";
+                        case Artifact.ArtifactStatus.UsingInMonument: return "Using in monument";
+                        case Artifact.ArtifactStatus.Exists:
+                        default: return string.Empty;
+                    }
+                }
+        }
+    }
 
-	public static string NameShuttle() { // waiting for креатив
+    #region naming
+    public static string NameCrew()
+    { // waiting for креатив
+        switch (currentLanguage)
+        {
+            case Language.Russian: return "Команда " + Crew.lastFreeID.ToString();
+            case Language.English:
+            default: return "Сrew " + Crew.lastFreeID.ToString();
+        }
+    }
+    public static string NameShuttle() { // waiting for креатив
 		switch (currentLanguage) {
             case Language.Russian: return "Челнок " + Shuttle.lastIndex.ToString();            
 		    case Language.English:
             default: return "shuttle "+ Shuttle.lastIndex.ToString();
 		}
 	}
+    public static string NameArtifact()
+    {
+        return "artifact name";
+    }
+    #endregion
 
-	public static string GetWord(LocalizedWord word) {
+    public static string GetWord(LocalizedWord word) {
         switch (currentLanguage)
         {
             case Language.Russian:
                 {
                     switch (word)
                     {
+                        case LocalizedWord.Buy: return "Покупать";
+                        case LocalizedWord.Cancel: return "Отмена"; // cancel work and cancel save
                         case LocalizedWord.Close: return "Закрыть";
                         case LocalizedWord.Crew: return "Команда";
-                        case LocalizedWord.Expedition: return "Экспедиция";                        
+                        case LocalizedWord.Dig: return "Копать";
+                        case LocalizedWord.Expedition: return "Экспедиция";
+                        case LocalizedWord.Gather: return "Собирать"; // gather resources	  
                         case LocalizedWord.Launch: return "Запустить";
                         case LocalizedWord.Level: return "уровень"; // building technology level
                         case LocalizedWord.Mission: return "Миссия";
                         case LocalizedWord.Offline: return "Не подключено"; // out of power		 
-                        case LocalizedWord.Progress: return "Progress";
-                        case LocalizedWord.Dig: return "Копать";
-                        case LocalizedWord.Gather: return "Собирать"; // gather resources	    
+                        case LocalizedWord.Progress: return "Прогресс";
+                        case LocalizedWord.Sell: return "Продавать";
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
                         case LocalizedWord.Upgrade: return "Улучшить"; // upgrade building
-                        case LocalizedWord.Cancel: return "Отмена"; // cancel work and cancel save
-                        case LocalizedWord.Buy: return "Покупать";
-                        case LocalizedWord.Sell: return "Продавать";
+                            
                         case LocalizedWord.Limitation: return "Ограничение"; // trade count limit
                         case LocalizedWord.Demand: return "Спрос";
                         case LocalizedWord.Price: return "Цена";
@@ -853,21 +900,22 @@ public static class Localization {
                 {
                     switch (word)
                     {
+                        case LocalizedWord.Buy: return "Buy";
+                        case LocalizedWord.Cancel: return "Cancel"; // cancel work and cancel save
                         case LocalizedWord.Close: return "Close"; // close a panel
                         case LocalizedWord.Crew: return "Crew";
-                        case LocalizedWord.Expedition: return "Expedition";                        
+                        case LocalizedWord.Dig: return "Dig";
+                        case LocalizedWord.Expedition: return "Expedition";
+                        case LocalizedWord.Gather: return "Gather"; // gather resources	    
                         case LocalizedWord.Launch: return "Launch";
                         case LocalizedWord.Level: return "level"; // building technology level
                         case LocalizedWord.Mission: return "Mission";
                         case LocalizedWord.Offline: return "offline"; // out of power	
-                        case LocalizedWord.Progress: return "Progress";
-                        case LocalizedWord.Dig: return "Dig";
-                        case LocalizedWord.Gather: return "Gather"; // gather resources	    
-                        case LocalizedWord.UpgradeCost: return "Upgrade cost";
-                        case LocalizedWord.Upgrade: return "Upgrade"; // upgrade building
-                        case LocalizedWord.Cancel: return "Cancel"; // cancel work and cancel save
-                        case LocalizedWord.Buy: return "Buy";
+                        case LocalizedWord.Progress: return "Progress";   
                         case LocalizedWord.Sell: return "Sell";
+                        case LocalizedWord.UpgradeCost: return "Upgrade cost";
+                        case LocalizedWord.Upgrade: return "Upgrade"; // upgrade building                                
+                        
                         case LocalizedWord.Limitation: return "Limitation"; // trade count limit
                         case LocalizedWord.Demand: return "Demand";
                         case LocalizedWord.Price: return "Price";
@@ -932,7 +980,9 @@ public static class Localization {
                     switch (lp)
                     {
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
+                        case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов";
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
+                        case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
                         case LocalizedPhrase.PerSecond: return "в секунду";
                         case LocalizedPhrase.RecallExpedition: return "Отозвать экспедицию";
@@ -989,7 +1039,9 @@ public static class Localization {
                     switch (lp)
                     {
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
+                        case LocalizedPhrase.NoArtifacts: return "You have no artifacts";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
+                        case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
                         case LocalizedPhrase.PerSecond: return "per second";
                         case LocalizedPhrase.RecallExpedition: return "Recall expedition";

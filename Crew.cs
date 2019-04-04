@@ -18,6 +18,7 @@ public sealed class Crew : MonoBehaviour {
 	public float nextExperienceLimit {get;private set;}
 	public byte level {get; private set;}
 	public int ID{get;private set;}
+    public Artifact artifact { get; private set; }
 	public Shuttle shuttle{get;private set;}
 	public CrewStatus status { get; private set; }
 
@@ -137,8 +138,17 @@ public sealed class Crew : MonoBehaviour {
         ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
     }
 
-    public bool HardTest() // INDEV
+    public bool HardTest(float hardness) // INDEV
     {
+        if (artifact != null)
+        {
+            bool? protection = artifact.StabilityTest(hardness);
+            if (protection == null) DropArtifact();
+            else
+            {
+                if (protection == true) return true;
+            }
+        }
         return true;
     }
     public bool SoftCheck( float friendliness) // INDEV
@@ -168,8 +178,28 @@ public sealed class Crew : MonoBehaviour {
 	public void AddMember() {
         actionsHash++;
     }
+
     public void LowConfidence() { confidence -= 0.1f * (1 - unity) * (1 - loyalty); if (confidence < 0) confidence = 0; }
     public void UpConfidence() { confidence += 0.1f * (1 + unity / 2f); }
+
+    public void AddArtifact(Artifact a)
+    {
+        if (a == null | artifact != null) return;
+        else
+        {
+            artifact = a;
+            artifact.SetOwner(this);
+        }
+    }
+    public void DropArtifact()
+    {
+        if (artifact != null)
+        {
+            artifact.SetOwner(null);
+            artifact = null;
+            actionsHash++;
+        }
+    }
 
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);

@@ -14,7 +14,7 @@ public class ExpeditionPanelUI : MonoBehaviour
     [SerializeField] private Image progressBarImage;
     [SerializeField] private Scrollbar itemsScrollbar;
     [SerializeField] private GameObject addButton, removeButton, infoPanel, infoPanel_passButton, 
-        infoPanel_scrollView, infoPanel_hangarButton, infoPanel_expeditionPreparePanel;
+        infoPanel_scrollView, infoPanel_hangarButton, infoPanel_expeditionPreparePanel, artifactButton;
     [SerializeField] private Dropdown infoPanel_dropdown;
 #pragma warning restore 0649
     private bool listConstructed = false, subscribedToUpdate = false;
@@ -84,6 +84,7 @@ public class ExpeditionPanelUI : MonoBehaviour
             default: newSection = ExpeditionPanelSection.NoChosenSection; return;
         }
         RedrawWindow(newSection);
+        SelectItem(0);
     }
 
     private void RedrawWindow(ExpeditionPanelSection newSection)
@@ -172,7 +173,7 @@ public class ExpeditionPanelUI : MonoBehaviour
     }
     private void RedrawChosenInfo()
     {
-        bool enableElements = false;
+        bool enableElements = false, enableArtifactButton = false;
         switch (chosenSection)
         {
             case ExpeditionPanelSection.Expeditions:
@@ -250,7 +251,7 @@ public class ExpeditionPanelUI : MonoBehaviour
                 }
             case ExpeditionPanelSection.Crews:
                 {
-                    if (chosenCrew != null) 
+                    if (chosenCrew != null)
                     {
                         enableElements = true;
                         nameField.text = chosenCrew.name;
@@ -268,20 +269,39 @@ public class ExpeditionPanelUI : MonoBehaviour
 
                         removeButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);
                         actionLabel.text = Localization.GetCrewStatus(chosenCrew);
-                        
+
                         RefreshShuttlesDropdown();
                         infoPanel_expeditionPreparePanel.gameObject.SetActive(false);
-                        infoPanel_scrollView.SetActive(false);
+                        infoPanel_scrollView.SetActive(true);
                         infoPanel_hangarButton.SetActive(false);
 
                         infoPanel_text.text = Localization.GetCrewInfo(chosenCrew);
-                        infoPanel_text.rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, 12 * (infoPanel_text.fontSize + infoPanel_text.lineSpacing));
-                        (infoPanel_text.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0,infoPanel_text.rectTransform.rect.height);                        
+                        infoPanel_text.rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, Localization.CREW_INFO_STRINGS_COUNT * (infoPanel_text.fontSize + infoPanel_text.lineSpacing));
+                        (infoPanel_text.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, infoPanel_text.rectTransform.rect.height);
+                        infoPanel.SetActive(true);
+                        infoPanel_scrollView.SetActive(true);
                         infoPanel_passButton.SetActive(chosenCrew.shuttle != null);
                         removeButton.SetActive(true);
                         lastCrewHashValue = Crew.actionsHash;
+
+                        enableArtifactButton = true;
+                        var a = chosenCrew.artifact;
+                        var ri = artifactButton.GetComponent<RawImage>();
+                        if (a != null)
+                        {                            
+                            ri.color = a.GetColor();
+                            ri.texture = a.GetTexture();
+                        }
+                        else
+                        {
+                            ri.color = Color.white;
+                            ri.texture = Artifact.emptyArtifactFrame_tx;
+                        }
                     }
-                    else removeButton.SetActive(false);
+                    else
+                    {
+                        removeButton.SetActive(false);
+                    }
                     break;
                 }
         }
@@ -604,8 +624,7 @@ public class ExpeditionPanelUI : MonoBehaviour
             d.enabled = true;
             lastCrewHashValue = Crew.actionsHash;
         }
-    }
-    
+    }    
 
     public void ScrollbarChanged()
     {
@@ -965,6 +984,19 @@ public class ExpeditionPanelUI : MonoBehaviour
             {
                 //for crews
             }
+        }
+    }
+    public void ArtifactButton()
+    {
+        switch (chosenSection)
+        {
+            case ExpeditionPanelSection.Crews:
+                if (chosenCrew == null) RedrawChosenInfo();
+                else
+                {
+                    //artifacts list
+                }
+                break;
         }
     }
 

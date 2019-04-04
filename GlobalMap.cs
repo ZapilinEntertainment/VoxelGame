@@ -5,6 +5,7 @@ using UnityEngine;
 public sealed class GlobalMap : MonoBehaviour
 {
     public float ascension { get; private set; }
+    public float cityStability { get; private set; }
     public float[] ringsRotation { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }
@@ -51,6 +52,7 @@ public sealed class GlobalMap : MonoBehaviour
         mapSectors = new RingSector[sectorsCount];
 
         ascension = GameConstants.START_HAPPINESS;
+        cityStability = 0.5f;
 
         stars = new Dictionary<SunPoint, Transform>();
         //start sector:

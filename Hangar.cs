@@ -334,6 +334,15 @@ public sealed class Hangar : WorkBuilding
         }
     }
 
+    /// <summary>
+    /// TEST USE ONLY
+    /// </summary>
+    /// <param name="s"></param>
+    public void AssignShuttle(Shuttle s)
+    {
+        shuttle = s;
+        constructing = false;
+    }
     public void DeconstructShuttle()
     {
         if (shuttle == null) return;

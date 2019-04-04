@@ -20,7 +20,7 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, expeditionPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
+    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
     [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] Transform storagePanelContent;
@@ -64,6 +64,7 @@ sealed public class UIController : MonoBehaviour
 
     private CubeBlock chosenCube;
     private ColonyController colony;
+    private GameObject expeditionPanel;
     private Structure chosenStructure;
     private Storage storage;
     UIObserver workingObserver;
@@ -791,6 +792,7 @@ sealed public class UIController : MonoBehaviour
         currentActiveWindowMode = mode;
         if (currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
         {
+            if (expeditionPanel == null) expeditionPanel = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), mainCanvas);
             expeditionPanel.SetActive(true);
             expeditionPanel.GetComponent<ExpeditionPanelUI>().Activate();
         }

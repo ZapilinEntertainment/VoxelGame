@@ -1549,6 +1549,61 @@ public sealed class Chunk : MonoBehaviour
             return surfaceBlocks[Random.Range(0, x - 1)];
         }
     }
+    public bool TryGetPlace(ref Vector3Int answer, byte size)
+    {
+        if (surfaceBlocks.Count == 0) return false;
+        var suitable = new List<int>();
+        int i = 0;
+        if (size == SurfaceBlock.INNER_RESOLUTION)
+        {
+            for (; i < surfaceBlocks.Count; i++)
+            {
+                if (surfaceBlocks[i].artificialStructures == 0) suitable.Add(i);
+            }
+            answer = new Vector3Int(0, 0, suitable[Random.Range(0, suitable.Count - 1)]);
+            return true;
+        }
+        else
+        {
+            if (size == 1)
+            {
+                for (; i < surfaceBlocks.Count; i++)
+                {
+                    if (surfaceBlocks[i].cellsStatus != 1) suitable.Add(i);
+                }
+                i = Random.Range(0, suitable.Count - 1);
+                int realIndex = suitable[i];
+                var ppos = surfaceBlocks[realIndex].GetRandomCell();
+                answer = new Vector3Int(ppos.x, ppos.y, i);
+                return true;
+            }
+            else
+            {
+                for (; i < surfaceBlocks.Count; i++)
+                {
+                    if (surfaceBlocks[i].cellsStatus != 1) suitable.Add(i);
+                }
+                PixelPosByte ppos = PixelPosByte.Empty;
+                int realIndex = 0;
+                while (suitable.Count > 0)
+                {
+                    i = Random.Range(0, suitable.Count - 1);
+                    realIndex = suitable[i];
+                    ppos = surfaceBlocks[realIndex].GetRandomPosition(size);
+                    if (ppos.exists)
+                    {
+                        answer = new Vector3Int(ppos.x, ppos.y, realIndex);
+                        return true;
+                    }
+                    else
+                    {
+                        suitable.RemoveAt(i);
+                    }
+                }
+                return false;
+            }
+        }
+    }
     public void RecalculateSurfaceBlocks()
     {
         surfaceBlocks = new List<SurfaceBlock>();
