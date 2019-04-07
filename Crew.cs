@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrewStatus : byte {Free, Attributed, OnLandMission} // при изменении дополнить Localization.GetCrewStatus
+public enum CrewStatus : byte {AtHome, OnMission, Travelling} // при изменении дополнить Localization.GetCrewStatus
 
 public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
@@ -12,6 +12,7 @@ public sealed class Crew : MonoBehaviour {
     public static int actionsHash { get; private set; }
     public static List<Crew> crewsList { get; private set; }
     private static GameObject crewsContainer;
+    private static UICrewObserver crewObserver;
 
 	public int membersCount {get;private set;}
 	public float experience{get; private set;}
@@ -61,7 +62,7 @@ public sealed class Crew : MonoBehaviour {
 
         c.level = 0;
         c.ID = lastFreeID; lastFreeID++;
-        c.status = CrewStatus.Free;
+        c.status = CrewStatus.AtHome;
 
         //normal parameters
         c.perception =  0.3f + Random.value * 0.5f;
@@ -105,6 +106,15 @@ public sealed class Crew : MonoBehaviour {
 
     }
 
+    public void ShowOnGUI() // INDEV
+    {
+        if (crewObserver == null)
+        {
+           crewObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();           
+        }
+        crewObserver.ShowCrew(this);
+    }
+
 	public void SetShuttle(Shuttle s) {
         if (s == shuttle) return;
         else {
@@ -127,6 +137,10 @@ public sealed class Crew : MonoBehaviour {
     public void SetStatus(CrewStatus cs)
     {
         status = cs;
+    }
+    public void Rename(string s)
+    {
+        name = s;
     }
 
 	static float CalculateExperienceLimit(byte f_level) {
@@ -182,11 +196,16 @@ public sealed class Crew : MonoBehaviour {
     public void LowConfidence() { confidence -= 0.1f * (1 - unity) * (1 - loyalty); if (confidence < 0) confidence = 0; }
     public void UpConfidence() { confidence += 0.1f * (1 + unity / 2f); }
 
-    public void AddArtifact(Artifact a)
+    public void SetArtifact(Artifact a)
     {
-        if (a == null | artifact != null) return;
+        if (a == null) return;
         else
         {
+            if (artifact != null)
+            {
+                if (status == CrewStatus.AtHome) artifact.Conservate();
+                else artifact.Destroy();
+            }
             artifact = a;
             artifact.SetOwner(this);
         }
@@ -204,10 +223,7 @@ public sealed class Crew : MonoBehaviour {
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);
         membersCount = 0;
-        if (status != CrewStatus.Free)
-        {
-            if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
-        }
+        if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
         crewsList.Remove(this);
         actionsHash++;
         Destroy(this);

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 public sealed class Artifact {
     public enum AffectionType { NoAffection, LifepowerAffection, StabilityAffection, EventsAffection}
-    public enum ArtifactStatus { Exists, UsingByCrew, Researching, UsingInMonument}
+    public enum ArtifactStatus { Exists, UsingByCrew, Researching, UsingInMonument, OnConservation}
 
     public bool activated { get; private set; }
     public bool destructed { get; private set; }
     public bool researched { get; private set; }
-    public byte stability { get; private set; }
-    public byte saturation { get; private set; }
+    public float stability { get; private set; }
+    public float saturation { get; private set; }
     public float frequency { get; private set; }
     public int ID { get; private set; }
     public string name { get; private set; }
@@ -19,19 +19,18 @@ public sealed class Artifact {
     private Texture icon;
 
     public static readonly Texture emptyArtifactFrame_tx;
-    public static int actionsHash = 0, lastUsedID = 0;
+    public static int actionsHash = 0, lastUsedID = 0;    
     public static List<Artifact> playersArtifactsList;
+    private static UIArtifactPanel uipanel;
 
-    public static bool operator ==(Artifact lhs, Artifact rhs) { return lhs.Equals(rhs); }
-    public static bool operator !=(Artifact lhs, Artifact rhs) { return !(lhs.Equals(rhs)); }
     public override bool Equals(object obj)
     {
         // Check for null values and compare run-time types.
         if (obj == null || GetType() != obj.GetType())
             return false;
 
-        Artifact p = (Artifact)obj;
-        return p.ID == ID;
+        MapPoint mp = (MapPoint)obj;
+        return (ID == mp.ID);
     }
     public override int GetHashCode()
     {
@@ -41,23 +40,28 @@ public sealed class Artifact {
     static Artifact()
     {
         emptyArtifactFrame_tx = Resources.Load<Texture>("Resources/Textures/emptyArtifactFrame");
+        playersArtifactsList = new List<Artifact>();
     }
-    
-    public static void AddArtifactToCollection(Artifact a)
+
+    public static Artifact GetArtifactByID (int id)
     {
-        actionsHash++;
-    }
-    public static void RemoveArtifactFromCollection(Artifact a)
-    {
-        actionsHash++;
+        if (playersArtifactsList.Count == 0) return null;
+        else
+        {
+            foreach (var a in playersArtifactsList)
+            {
+                if (a.ID == id) return a;
+            }
+            return null;
+        }
     }
 
     public Artifact (float i_stability, float i_saturation, float i_frequency, AffectionType i_type, bool i_activated)
     {
         i_stability = Mathf.Clamp01(i_stability);
-        stability = (byte)(i_stability * 256f);
+        stability = i_stability;
         i_saturation = Mathf.Clamp01(i_saturation);
-        saturation = (byte)(i_saturation * 256f);
+        saturation = i_saturation;
         frequency = i_frequency;
         type = i_type;
         activated = i_activated;
@@ -66,6 +70,9 @@ public sealed class Artifact {
         name = Localization.NameArtifact();
         status = ArtifactStatus.Exists;
         ID = lastUsedID++;
+        playersArtifactsList.Add(this);
+
+        actionsHash++;
     }
 
     public bool? StabilityTest(float hardness)
@@ -79,13 +86,18 @@ public sealed class Artifact {
             stability -= (byte)(hardness * 16f);
             if (stability <= 0)
             {
-                destructed = true;
-                RemoveArtifactFromCollection(this);
+                Destroy();
                 return null;
             }
             else return false;
         }
         else return true;
+    }
+    public void Destroy()
+    {
+        destructed = true;
+        if (playersArtifactsList.Contains(this)) playersArtifactsList.Remove(this);
+        actionsHash++;
     }
 
     /// <summary>
@@ -113,10 +125,26 @@ public sealed class Artifact {
             }
         }
     }
+    public Color GetHaloColor()
+    {
+        switch (type)
+        {
+            case AffectionType.EventsAffection:
+                return new Color(stability * 0.3f, 0f, frequency);
+            case AffectionType.LifepowerAffection:
+                return new Color(0f, saturation, frequency * 0.7f);
+            case AffectionType.StabilityAffection:
+                return new Color(stability, saturation * 0.25f, 0f);
+            case AffectionType.NoAffection:
+            default:
+                return new Color(1f, 1f, 1f, 0.5f * saturation);
+        }
+    }
     public Texture GetTexture() // INDEV
     {
         return emptyArtifactFrame_tx;
     }
+
     public void SetOwner(Crew c)
     {
         owner = c;
@@ -125,5 +153,21 @@ public sealed class Artifact {
     public void ChangeName(string s)
     {
         name = s;        
+    }
+    public void Conservate()
+    {
+        status = ArtifactStatus.OnConservation;
+        owner = null;
+        actionsHash++;
+    }
+
+    public void ShowOnGUI()
+    {
+        if (uipanel == null)
+        {
+            uipanel = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
+        }
+        uipanel.gameObject.SetActive(true);
+        uipanel.ShowArtifact(this);
     }
 }

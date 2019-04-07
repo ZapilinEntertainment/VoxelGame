@@ -37,7 +37,7 @@
 
         val = 1;
         double[] structuresCost = new double[Structure.TOTAL_STRUCTURES_COUNT];
-        structuresCost[Structure.PLANT_ID] = val;
+        structuresCost[Structure.PLANT_ID] = val * 0.01f;
         structuresCost[Structure.DRYED_PLANT_ID] = 0;
         structuresCost[Structure.RESOURCE_STICK_ID] = resourcesCosts[ResourceType.CONCRETE_ID];
         structuresCost[Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID] = 100 * val;
@@ -74,8 +74,9 @@
         structuresCost[Structure.EXPEDITION_CORPUS_4_ID] = val * 48;
         structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
+        structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;
 
-
+        // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];
         structuresCost[Structure.HQ_2_ID] = structuresCost[Structure.LANDED_ZEPPELIN_ID] * 4;
         structuresCost[Structure.HQ_3_ID] = structuresCost[Structure.HQ_3_ID] * 4;
@@ -162,6 +163,9 @@
             }
         }
         score *= (int)GameMaster.difficulty / 3f;
+
+        // + за артефакты
+
         return score;
     }
 }

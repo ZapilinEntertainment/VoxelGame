@@ -17,17 +17,31 @@ public sealed class RecruitingCenter : WorkBuilding {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
         recruitingCentersList = new List<RecruitingCenter>();
 	}
-    public static int GetCrewsSlotsCount()
+    public static bool SelectAny()
+    {
+        int n = recruitingCentersList.Count;
+        if (n > 0)
+        {
+            var rc = recruitingCentersList[Random.Range(0, n)];
+            if (rc != null)
+            {
+                UIController.current.Select(rc);
+                return true;
+            }
+        }
+        return false;
+    }
+
+   public static int GetCrewsSlotsCount()
     {
         return (recruitingCentersList.Count * CREW_SLOTS_FOR_BUILDING);
     }
-
    public static float GetHireCost()
     {
         if (hireCost == -1) hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
         return hireCost;
     }
-    public static void SetHireCost(float f)
+   public static void SetHireCost(float f)
     {
         hireCost = f;
     }

@@ -419,6 +419,8 @@ public sealed class GameMaster : MonoBehaviour
             }
 
             Crew c = Crew.CreateNewCrew(colonyController, 1f);
+            Artifact a = new Artifact(1, 1, 1, Artifact.AffectionType.LifepowerAffection, false);
+            c.SetArtifact(a);
             sx = mainChunk.GetSurfaceBlock();
             if (sx != null)
             {

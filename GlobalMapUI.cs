@@ -210,7 +210,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                     {
                         foreach (Shuttle s in Shuttle.shuttlesList)
                         {
-                            if (s.crew != null && s.crew.status == CrewStatus.Free)
+                            if (s.crew != null && s.crew.status == CrewStatus.AtHome)
                             {
                                 shuttlesDropdownList.Add(new Dropdown.OptionData(s.crew.name));
                                 shuttlesListIds.Add(s.ID);

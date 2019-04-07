@@ -56,7 +56,7 @@ public sealed class Expedition
         if (i_crew == null | i_mission == Mission.NoMission | i_transmitter == null | i_destination == null) return null;
         else
         {
-            if (i_crew.status != CrewStatus.Free | i_crew.shuttle == null | i_transmitter.expeditionID != -1 | i_destination.sentExpedition != null) return null;
+            if (i_crew.status != CrewStatus.OnMission | i_crew.shuttle == null | i_transmitter.expeditionID != -1 | i_destination.sentExpedition != null) return null;
             else
             {
                 return new Expedition(i_crew, i_mission, i_transmitter, i_destination, i_name);
@@ -81,7 +81,7 @@ public sealed class Expedition
         name = i_name;
         missionCompleted = false;
         stage = ExpeditionStage.WayIn;
-        crew = i_crew; crew.SetStatus(CrewStatus.Attributed);
+        crew = i_crew; crew.SetStatus(CrewStatus.OnMission);
         mission = i_mission;
         transmitter = i_qt; transmitter.AssignExpedition(this);
         destination = i_destination; destination.sentExpedition = this;
@@ -318,7 +318,7 @@ public sealed class Expedition
         if (stage == ExpeditionStage.Dismissed) return;
         else
         {
-            if (crew != null) crew.SetStatus(CrewStatus.Free);
+            if (crew != null) crew.SetStatus(CrewStatus.AtHome);
             if (transmitter != null) transmitter.DropExpeditionConnection();
             if (destination != null && destination.sentExpedition != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
             if (subscribedToUpdate & !GameMaster.sceneClearing)

@@ -792,9 +792,9 @@ sealed public class UIController : MonoBehaviour
         currentActiveWindowMode = mode;
         if (currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
         {
-            if (expeditionPanel == null) expeditionPanel = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), mainCanvas);
-            expeditionPanel.SetActive(true);
-            expeditionPanel.GetComponent<ExpeditionPanelUI>().Activate();
+            //if (expeditionPanel == null) expeditionPanel = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), mainCanvas);
+            //expeditionPanel.SetActive(true);
+            //expeditionPanel.GetComponent<ExpeditionPanelUI>().Activate();
         }
         else
         {

@@ -365,6 +365,15 @@ public static class ResourcesCost
                     };
                 }
                 break;
+            case Structure.ARTIFACTS_REPOSITORY_ID:
+                {
+                    cost = new ResourceContainer[]
+                    {
+                        new ResourceContainer(ResourceType.Stone, 550), new ResourceContainer(ResourceType.metal_K, 30),
+                        new ResourceContainer(ResourceType.metal_E, 160)
+                    };
+                    break;
+                }
         }
         return cost;
     }

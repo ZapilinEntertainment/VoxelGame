@@ -71,6 +71,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
                 blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
+                blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_5_ID) as Building);
@@ -760,8 +761,18 @@ public class Building : Structure
                     energySurplus = - 50;
                     energyCapacity = 200;
                     level = 5;
+                    break;
                 }
-                break;
+            case ARTIFACTS_REPOSITORY_ID:
+                {
+                    specialBuildingConditions = false;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = true;
+                    energySurplus = -16;
+                    energyCapacity = 160;
+                    level = 4;
+                    break;
+                }                
         }
     }
 

@@ -6,8 +6,8 @@ public enum LocalizedWord : ushort {
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { ConnectionLost,RecallExpedition, NoSuitableShuttles,StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
-ImproveGears, NoActivity, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+public enum LocalizedPhrase : ushort { ConnectionLost, GoOnATrip, RecallExpedition, NoSuitableShuttles,  StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
+ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
 }
@@ -118,6 +118,7 @@ public static class Localization {
                     case Structure.DOCK_ADDON_1_ID: return "Пристройка дока - 1";
                     case Structure.DOCK_ADDON_2_ID: return "Пристройка дока - 2";
                     case Structure.OBSERVATORY_ID: return "Обсерватория";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранилище артефактов";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -195,6 +196,7 @@ public static class Localization {
                     case Structure.DOCK_ADDON_1_ID: return "Dock addon 1";
                     case Structure.DOCK_ADDON_2_ID: return "Dock addon 2";
                     case Structure.OBSERVATORY_ID: return "Observatory";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Artifacts repository";
                     default: return "Unknown building";
                 }
         }
@@ -284,6 +286,7 @@ public static class Localization {
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<В разработке>";
                     case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха.";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранит найденные артефакты. В случае отключения питания возможны потери.";
                     default: return "Без описания";
                 }
             case Language.English:
@@ -369,6 +372,7 @@ public static class Localization {
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<In development>";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Contains artifacts. Power shortage may cause losses.";break;
                     default: return "No description.";
                 }
         }
@@ -715,28 +719,28 @@ public static class Localization {
                 }
         }
     }
-    public static string GetCrewStatus(Crew c)
+    public static string GetCrewStatus(CrewStatus cs)
     {
         switch (currentLanguage)
         {
             case Language.Russian:
                 {
-                    switch (c.status)
+                    switch (cs)
                     {
-                        case CrewStatus.Attributed: return "Приписаны к \"" + c.shuttle.name + '\"';
-                        case CrewStatus.Free: return "Не приписаны";
-                        case CrewStatus.OnLandMission: return "На наземной миссии";
+                        case CrewStatus.AtHome: return "На базе";
+                        case CrewStatus.OnMission: return "На миссии";
+                        case CrewStatus.Travelling: return "Путешествуют";
                         default: return "<статус>";
                     }
                 }
             case Language.English:
             default:
                 {
-                    switch (c.status)
+                    switch (cs)
                     {
-                        case CrewStatus.Attributed: return "Attributed to \"" + c.shuttle.name + '\"';
-                        case CrewStatus.Free: return "Not attributed";
-                        case CrewStatus.OnLandMission: return "On land mission";
+                        case CrewStatus.AtHome: return "At home";
+                        case CrewStatus.OnMission: return "On mission";
+                        case CrewStatus.Travelling: return "Travelling";
                         default: return "<crew status>";
                     }
                 }
@@ -778,6 +782,7 @@ public static class Localization {
                         case Artifact.ArtifactStatus.Researching: return "Исследуется";
                         case Artifact.ArtifactStatus.UsingByCrew: return "Используется командой";
                         case Artifact.ArtifactStatus.UsingInMonument: return "Используется в монументе";
+                        case Artifact.ArtifactStatus.OnConservation: return "Законсервирован";
                         case Artifact.ArtifactStatus.Exists:
                         default:  return string.Empty;
                     }
@@ -790,6 +795,7 @@ public static class Localization {
                         case Artifact.ArtifactStatus.Researching: return "Researching";
                         case Artifact.ArtifactStatus.UsingByCrew: return "Using by crew";
                         case Artifact.ArtifactStatus.UsingInMonument: return "Using in monument";
+                        case Artifact.ArtifactStatus.OnConservation: return "On conservation";
                         case Artifact.ArtifactStatus.Exists:
                         default: return string.Empty;
                     }
@@ -980,7 +986,9 @@ public static class Localization {
                     switch (lp)
                     {
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
-                        case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов";
+                        case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
+                        case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
+                        case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов"; // в хранилище
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
@@ -1039,7 +1047,9 @@ public static class Localization {
                     switch (lp)
                     {
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
-                        case LocalizedPhrase.NoArtifacts: return "You have no artifacts";
+                        case LocalizedPhrase.GoOnATrip: return "Go on a trip";
+                        case LocalizedPhrase.NoArtifact: return "No artifact"; // crew has no artifact
+                        case LocalizedPhrase.NoArtifacts: return "You have no artifacts"; // no artifacts in storage
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
