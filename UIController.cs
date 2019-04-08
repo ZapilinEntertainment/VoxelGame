@@ -64,7 +64,6 @@ sealed public class UIController : MonoBehaviour
 
     private CubeBlock chosenCube;
     private ColonyController colony;
-    private GameObject expeditionPanel;
     private Structure chosenStructure;
     private Storage storage;
     UIObserver workingObserver;
@@ -237,28 +236,21 @@ sealed public class UIController : MonoBehaviour
                         case ProgressPanelMode.RecruitingCenter:
                             {
                                 UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
-                                if (urc == null | !urc.isObserving) return;
+                                if (urc == null | !urc.isObserving | !urc.hiremode)
+                                {
+                                    progressPanel.SetActive(false);
+                                }
                                 else
                                 {
-                                    switch (urc.mode)
+                                    if (urc.observingRCenter.finding)
                                     {
-                                        case UIRecruitingCenterObserver.RecruitingCenterObserverMode.NoShowingCrew:
-                                            DeactivateProgressPanel();
-                                            return;
-                                        case UIRecruitingCenterObserver.RecruitingCenterObserverMode.HiringCrew:
-                                            {
-                                                float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
-                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
-                                                progressPanelFullfill.fillAmount = x;
-                                                break;
-                                            }
-                                        case UIRecruitingCenterObserver.RecruitingCenterObserverMode.ShowingCrewInfo:
-                                            {
-                                                float x = urc.showingCrew.stamina;
-                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
-                                                progressPanelFullfill.fillAmount = x;
-                                                break;
-                                            }
+                                        float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
+                                        progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                                        progressPanelFullfill.fillAmount = x;
+                                    }
+                                    else
+                                    {
+                                        urc.PrepareWindow();
                                     }
                                 }
                                 break;
@@ -781,7 +773,7 @@ sealed public class UIController : MonoBehaviour
                     if (tradePanel.activeSelf) CloseTradePanel();
                     break;
                 case ActiveWindowMode.ExpeditionPanel:
-                    if (expeditionPanel.activeSelf) expeditionPanel.SetActive(false);
+                    //
                     break;
                 case ActiveWindowMode.LogWindow:
                     GameLogUI.DeactivateLogWindow();
@@ -1422,36 +1414,16 @@ sealed public class UIController : MonoBehaviour
             case ProgressPanelMode.RecruitingCenter:
                 {
                     UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
-                    if (urc == null || !urc.isObserving) { DeactivateProgressPanel(); return; }
+                    if (urc == null || ( !urc.isObserving  | !urc.hiremode)) { DeactivateProgressPanel(); return; }
                     else
                     {
                         progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
-                        switch (urc.mode)
-                        {
-                            case UIRecruitingCenterObserver.RecruitingCenterObserverMode.NoShowingCrew:
-                                DeactivateProgressPanel();
-                                return;
-                            case UIRecruitingCenterObserver.RecruitingCenterObserverMode.HiringCrew:
-                                {
-                                    progressPanelIcon.texture = iconsTexture;
-                                    progressPanelIcon.uvRect = GetTextureUV(Icons.TaskFrame);
-                                    float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
-                                    progressPanelText.text = ((int)(x * 100)).ToString() + '%';
-                                    progressPanelFullfill.fillAmount = x;
-                                    progressPanelFullfill.color = PoolMaster.gameOrangeColor;
-                                    break;
-                                }
-                            case UIRecruitingCenterObserver.RecruitingCenterObserverMode.ShowingCrewInfo:
-                                {
-                                    progressPanelIcon.texture = iconsTexture;
-                                    float c = urc.showingCrew.stamina;
-                                    progressPanelIcon.uvRect = GetTextureUV(c > Crew.HIGH_STAMINA_VALUE ? Icons.CrewGoodIcon : (c < Crew.LOW_STAMINA_VALUE ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
-                                    progressPanelText.text = ((int)(c * 100)).ToString() + '%';
-                                    progressPanelFullfill.fillAmount = c;
-                                    progressPanelFullfill.color = Color.blue;
-                                    break;
-                                }
-                        }
+                        progressPanelIcon.texture = iconsTexture;
+                        progressPanelIcon.uvRect = GetTextureUV(Icons.TaskFrame);
+                        float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
+                        progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                        progressPanelFullfill.fillAmount = x;
+                        progressPanelFullfill.color = PoolMaster.gameOrangeColor;
                     }
                     break;
                 }
