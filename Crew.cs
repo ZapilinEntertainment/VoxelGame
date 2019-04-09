@@ -12,7 +12,7 @@ public sealed class Crew : MonoBehaviour {
     public static int actionsHash { get; private set; }
     public static List<Crew> crewsList { get; private set; }
     private static GameObject crewsContainer;
-    private static UICrewObserver crewObserver;
+    public static UICrewObserver crewObserver { get; private set; }
 
 	public int membersCount {get;private set;}
 	public float experience{get; private set;}
@@ -100,18 +100,25 @@ public sealed class Crew : MonoBehaviour {
             return null;
         }
     }
+    public static void DisableObserver()
+    {
+        if (crewObserver != null && crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(false);
+    }
 
     private Crew()
     {
 
     }
 
-    public void ShowOnGUI() // INDEV
+    public void ShowOnGUI(Vector3 pos, SpriteAlignment alignment) 
     {
         if (crewObserver == null)
         {
-           crewObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();           
+           crewObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();
+            crewObserver.LocalizeTitles();
         }
+        if (!crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(true);
+        crewObserver.SetPosition(pos, alignment);
         crewObserver.ShowCrew(this);
     }
 
@@ -180,17 +187,21 @@ public sealed class Crew : MonoBehaviour {
         else return true;
     }
 
-    public void DismissMember() {
-        actionsHash++;
+    public void DismissMember() { // INDEV
+        // перерасчет характеристик
     }
-    public void LoseMember()
+    public void LoseMember() // INDEV
     {
-        actionsHash++;
-        membersCount--;
+        membersCount--;        
         if (membersCount <= 0) Disappear();
+        else
+        {
+            // перерасчет характеристик
+        }
     }
-	public void AddMember() {
-        actionsHash++;
+	public void AddMember() { // INDEX
+        membersCount++;
+        // перерасчет характеристик
     }
 
     public void LowConfidence() { confidence -= 0.1f * (1 - unity) * (1 - loyalty); if (confidence < 0) confidence = 0; }
@@ -233,6 +244,11 @@ public sealed class Crew : MonoBehaviour {
         crewsList.Remove(this);
         actionsHash++;
         Destroy(this);
+    }
+
+    private void OnDestroy()
+    {
+        if (crewsList.Count == 0 & crewObserver != null) Destroy(crewObserver);
     }
 
     #region save-load system

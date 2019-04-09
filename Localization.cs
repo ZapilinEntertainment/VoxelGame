@@ -2,11 +2,11 @@
 
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
 public enum LocalizedWord : ushort {
-    Buy, Cancel, Close, Crew, Dig, Expedition,Launch,Level,Mission, Offline, Progress, Sell, Upgrade, UpgradeCost,   Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
+    Buy, Cancel, Close, Crew, Dig, Expedition,Launch,Level,Mission, Offline, Progress, Repair, Sell, Upgrade, UpgradeCost,   Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { ConnectionLost, GoOnATrip, RecallExpedition, NoSuitableShuttles,  StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
+public enum LocalizedPhrase : ushort { ConnectionLost, GoOnATrip, RecallExpedition, MembersCount, NoSuitableShuttles,  StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
@@ -746,31 +746,6 @@ public static class Localization {
                 }
         }       
     }
-    public static string GetShuttleStatus(Shuttle s)
-    {
-        switch (currentLanguage)
-        {
-            case Language.Russian:
-                {
-                    switch (s.status)
-                    {
-                        case ShipStatus.Docked: return "В порту";
-                        case ShipStatus.OnMission: return "На задании";
-                        default: return "<статус челнока>";
-                    }
-                }
-            case Language.English:
-            default:
-                {
-                    switch (s.status)
-                    {
-                        case ShipStatus.Docked: return "Docked";
-                        case ShipStatus.OnMission: return "On mission";
-                        default: return "<shuttle status>";
-                    }
-                }
-        }        
-    }
     public static string GetArtifactStatus(Artifact.ArtifactStatus status)
     {
         switch (currentLanguage)
@@ -845,6 +820,7 @@ public static class Localization {
                         case LocalizedWord.Mission: return "Миссия";
                         case LocalizedWord.Offline: return "Не подключено"; // out of power		 
                         case LocalizedWord.Progress: return "Прогресс";
+                        case LocalizedWord.Repair: return "Починить"; // shuttle
                         case LocalizedWord.Sell: return "Продавать";
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
                         case LocalizedWord.Upgrade: return "Улучшить"; // upgrade building
@@ -917,7 +893,8 @@ public static class Localization {
                         case LocalizedWord.Level: return "level"; // building technology level
                         case LocalizedWord.Mission: return "Mission";
                         case LocalizedWord.Offline: return "offline"; // out of power	
-                        case LocalizedWord.Progress: return "Progress";   
+                        case LocalizedWord.Progress: return "Progress";
+                        case LocalizedWord.Repair: return "Repair"; // shuttle
                         case LocalizedWord.Sell: return "Sell";
                         case LocalizedWord.UpgradeCost: return "Upgrade cost";
                         case LocalizedWord.Upgrade: return "Upgrade"; // upgrade building                                
@@ -987,6 +964,7 @@ public static class Localization {
                     {
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
+                        case LocalizedPhrase.MembersCount: return "Число участников";
                         case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
                         case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов"; // в хранилище
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
@@ -1048,6 +1026,7 @@ public static class Localization {
                     {
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
+                        case LocalizedPhrase.MembersCount: return "Members count";
                         case LocalizedPhrase.NoArtifact: return "No artifact"; // crew has no artifact
                         case LocalizedPhrase.NoArtifacts: return "You have no artifacts"; // no artifacts in storage
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";

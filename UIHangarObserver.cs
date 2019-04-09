@@ -53,7 +53,7 @@ public sealed class UIHangarObserver : UIObserver
 
         if (haveShuttle)
         {
-            mode = shuttle.status == ShipStatus.Docked ? HangarObserverMode.ShuttleInside : HangarObserverMode.ShuttleOnMission;
+            mode = shuttle.docked ? HangarObserverMode.ShuttleInside : HangarObserverMode.ShuttleOnMission;
             shuttleNameTextField.text = shuttle.name;
             resourceCostContainer.gameObject.SetActive(false);
             UIController.current.ActivateProgressPanel(ProgressPanelMode.Hangar);            
@@ -107,7 +107,7 @@ public sealed class UIHangarObserver : UIObserver
             HangarObserverMode newMode;
             if (haveShuttle)
             {
-                if (observingHangar.shuttle.status == ShipStatus.Docked)
+                if (observingHangar.shuttle.docked)
                 {
                     newMode = HangarObserverMode.ShuttleInside;
                 }

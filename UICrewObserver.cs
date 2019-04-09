@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public sealed class UICrewObserver : MonoBehaviour
 {
+#pragma warning disable 0649
     [SerializeField] private Dropdown shuttlesDropdown, artifactsDropdown;
     [SerializeField] private InputField nameField;
     [SerializeField] private Text levelText, membersButtonText, experienceText, statsText, statusText;
@@ -12,12 +13,30 @@ public sealed class UICrewObserver : MonoBehaviour
     [SerializeField] private Button membersButton, shuttleButton, artifactButton;
     [SerializeField] private GameObject dismissButton, travelButton;
     [SerializeField] private RawImage icon;
+#pragma warning restore 0649
 
     private bool subscribedToUpdate = false;
     private int lastDrawState = 0, lastShuttlesState = 0, lastArtifactsState = 0;
     private List<int> shuttlesListIDs, artifactsIDs;
     private Crew showingCrew;
 
+    public void SetPosition(Vector3 pos, SpriteAlignment alignment)
+    {
+        var rt = GetComponent<RectTransform>();
+        Vector3 correctionVector = Vector3.zero;
+        switch (alignment)
+        {
+            case SpriteAlignment.BottomRight: correctionVector = Vector3.left * rt.rect.width; break;
+            case SpriteAlignment.RightCenter: correctionVector = new Vector3(-1f * rt.rect.width, -0.5f * rt.rect.height, 0f); break;
+            case SpriteAlignment.TopRight: correctionVector = new Vector3(-1f * rt.rect.width, -1f * rt.rect.height, 0f);break;
+            case SpriteAlignment.Center: correctionVector = new Vector3(-0.5f * rt.rect.width, -0.5f * rt.rect.height, 0f);break;
+            case SpriteAlignment.TopCenter: correctionVector = new Vector3(-0.5f * rt.rect.width, -1f * rt.rect.height, 0f); break;
+            case SpriteAlignment.BottomCenter: correctionVector = new Vector3(-0.5f * rt.rect.width, 0f, 0f);break;
+            case SpriteAlignment.TopLeft: correctionVector = Vector3.down * rt.rect.height;break;
+            case SpriteAlignment.LeftCenter: correctionVector = Vector3.down * rt.rect.height * 0.5f; break;
+        }
+        rt.position = pos + correctionVector;
+    }
     public void ShowCrew(Crew c)
     {
         if (c == null)
@@ -31,7 +50,7 @@ public sealed class UICrewObserver : MonoBehaviour
         }
     }
 
-    private void RedrawWindow()
+    public void RedrawWindow()
     {
         nameField.text = showingCrew.name;
         statsText.text = Localization.GetCrewInfo(showingCrew);
@@ -108,6 +127,8 @@ public sealed class UICrewObserver : MonoBehaviour
         else
         {
             showingCrew.Rename(nameField.text);
+            if (RecruitingCenter.rcenterObserver != null && RecruitingCenter.rcenterObserver.isActiveAndEnabled)
+                RecruitingCenter.rcenterObserver.PrepareWindow();
         }
     }
     public void MembersButton()

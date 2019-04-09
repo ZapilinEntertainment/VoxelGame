@@ -623,7 +623,8 @@ public sealed class Dock : WorkBuilding {
         if (forced) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(forced);
         colony.RemoveDock(this);
-        if (maintainingShip & loadingShip != null) loadingShip.Undock();        
+        if (maintainingShip & loadingShip != null) loadingShip.Undock();
+        if (colony.docks.Count == 0 & dockObserver != null) Destroy(dockObserver);
         Destroy(gameObject);
     }
 

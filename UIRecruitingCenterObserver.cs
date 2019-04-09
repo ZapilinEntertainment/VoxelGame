@@ -10,7 +10,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     [SerializeField] private Dropdown crewsDropdown;
     [SerializeField] private Button hireButton;
     [SerializeField] private GameObject infoButton, replenishButton;
-    [SerializeField] private Text crewSlotsInfo;
+    [SerializeField] private Text crewSlotsInfo, membersText;
 #pragma warning restore 0649
     public Crew showingCrew { get; private set; }
     public bool hiremode { get; private set; }
@@ -43,35 +43,45 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     {
         PrepareCrewsDropdown();
         PrepareButtons();
+        crewSlotsInfo.text = Crew.crewsList.Count.ToString() + " / " + RecruitingCenter.GetCrewsSlotsCount().ToString();
     }
     private void PrepareButtons()
     {
         if (showingCrew == null)
         {
-            hiremode = true;
-            UIController.current.ActivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+            hiremode = true;            
             if (observingRCenter.finding)
             {
-                hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+                hireButton.gameObject.SetActive(false);
+                UIController.current.ActivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+                crewsDropdown.gameObject.SetActive(false);
             }
             else
             {
-                hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost().ToString() + ')';
-            }
-            hireButton.gameObject.SetActive(true);
+                hireButton.gameObject.SetActive(true);
+                UIController.current.DeactivateProgressPanel();
+                crewsDropdown.gameObject.SetActive(true);
+            }            
             infoButton.SetActive(false);
             replenishButton.SetActive(false);
+            membersText.enabled = false;
+            Crew.DisableObserver();
         }
         else
         {
+            crewsDropdown.gameObject.SetActive(true);
             hiremode = false;
             UIController.current.DeactivateProgressPanel();
             hireButton.gameObject.SetActive(false);
             infoButton.SetActive(true);
 
-            replenishButton.transform.GetChild(1).GetComponent<Text>().text = RecruitingCenter.GetHireCost().ToString();
-            replenishButton.GetComponent<Button>().interactable= showingCrew.membersCount != Crew.MAX_MEMBER_COUNT;
-            replenishButton.SetActive(true);
+            replenishButton.transform.GetChild(1).GetComponent<Text>().text = RecruitingCenter.REPLENISH_COST.ToString();
+            replenishButton.SetActive(showingCrew.membersCount != Crew.MAX_MEMBER_COUNT);
+
+            membersText.text = Localization.GetPhrase(LocalizedPhrase.MembersCount) + ": " + showingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
+            membersText.enabled = true;
+
+            if (Crew.crewObserver != null && Crew.crewObserver.isActiveAndEnabled) Crew.crewObserver.RedrawWindow();
         }
     }
 
@@ -97,7 +107,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     {
         List<Dropdown.OptionData> crewButtons = new List<Dropdown.OptionData>();
         crewButtons.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.HireNewCrew) ));
-        crewsIDsList.Add(-1);
+        crewsIDsList = new List<int> { -1 };
         var crews = Crew.crewsList;        
         if (crews.Count > 0)
         {
@@ -126,8 +136,12 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     //buttons
     public void SelectCrew(int i)
     {
-        if (crewsIDsList[i] == -1)  showingCrew = null;
-        else   showingCrew = Crew.GetCrewByID(crewsIDsList[i]);
+        if (crewsIDsList[i] == -1) showingCrew = null;
+        else
+        {
+            showingCrew = Crew.GetCrewByID(crewsIDsList[i]);
+            if (Crew.crewObserver != null && Crew.crewObserver.isActiveAndEnabled) InfoButton();
+        }
         PrepareButtons();
     }
     public void SelectCrew(Crew c)
@@ -138,6 +152,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     public void HireButton()
     {
         observingRCenter.StartHiring();
+        PrepareWindow();
     }
     public void InfoButton()
     {
@@ -147,8 +162,8 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         }
         else
         {
-            showingCrew.ShowOnGUI();
-            //коррекция под окно?
+            var rt = infoButton.GetComponent<RectTransform>();
+            showingCrew.ShowOnGUI(rt.position + Vector3.left * rt.rect.width / 2f + Vector3.down * 1.5f * rt.rect.height, SpriteAlignment.BottomRight );
         }
     }
     public void ReplenishButton()
@@ -156,7 +171,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         if (showingCrew == null) replenishButton.SetActive(false);
         else
         {
-            if (showingCrew.membersCount == Crew.MAX_MEMBER_COUNT) replenishButton.GetComponent<Button>().interactable = false;
+            if (showingCrew.membersCount == Crew.MAX_MEMBER_COUNT) replenishButton.SetActive(false);
             else
             {
                 var colony = GameMaster.realMaster.colonyController;
@@ -165,6 +180,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
                 {
                     colony.GetEnergyCrystals(hireCost);
                     showingCrew.AddMember();
+                    PrepareButtons();
                 }
                 else
                 {
@@ -190,5 +206,10 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         WorkBuilding.workbuildingObserver.ShutOff();
         if (hiremode) UIController.current.DeactivateProgressPanel();
         gameObject.SetActive(false);
+    }
+
+    public override void LocalizeTitles()
+    {
+        hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost().ToString() + ')';
     }
 }

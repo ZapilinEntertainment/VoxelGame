@@ -229,7 +229,8 @@ public class UIArtifactPanel : MonoBehaviour {
                 case Artifact.ArtifactStatus.UsingByCrew:
                     if (chosenArtifact.owner != null)
                     {
-                        chosenArtifact.owner.ShowOnGUI();
+                        var rt = GetComponent<RectTransform>();
+                        chosenArtifact.owner.ShowOnGUI(rt.position+ Vector3.right * rt.rect.width / 2f, SpriteAlignment.LeftCenter);
                         gameObject.SetActive(false);
                     }
                     else RedrawDescriptionWindow();

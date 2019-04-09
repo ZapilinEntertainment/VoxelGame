@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ShipStatus : byte {Docked, OnMission} // при изменении дополнить Localization.GetShuttleStatus
-
 public sealed class Shuttle : MonoBehaviour {
     public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f, SPEED = 8;
 	private const float START_VOLUME = 20;
@@ -16,10 +14,11 @@ public sealed class Shuttle : MonoBehaviour {
 #pragma warning disable 0649
     [SerializeField] Renderer[] renderers;
 #pragma warning restore 0649
+    public bool docked { get; private set; }
     public Crew crew{get; private set;}
 	public Hangar hangar{get;private set;}
-	public ShipStatus status{get;private set;}
 
+    private static UIShuttleObserver observer;
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
     public static int actionsHash { get; private set; }
@@ -45,7 +44,7 @@ public sealed class Shuttle : MonoBehaviour {
 		foreach (Renderer r in renderers) {
 			r.enabled = false;
 		}
-		status = ShipStatus.Docked;
+        docked = true;
 		name = Localization.NameShuttle();
 		ID = lastIndex; lastIndex ++;
 		volume = START_VOLUME;
@@ -65,6 +64,18 @@ public sealed class Shuttle : MonoBehaviour {
     public void SetVisibility(bool x)
     {
         foreach (Renderer r in renderers) r.enabled = x;
+    }
+    public void Rename(string s)
+    {
+        name = s;
+    }
+    public void SetCondition(float f)
+    {
+        condition = f;
+    }
+    public float GetRepairCost()
+    {
+        return Mathf.Round((1 - condition) * 0.9f * cost);
     }
 
 	public static Shuttle GetShuttle( int id ) {
@@ -113,11 +124,26 @@ public sealed class Shuttle : MonoBehaviour {
             }
             GameMaster.realMaster.colonyController.AddEnergyCrystals(cost * pc);
          }
-        if (status == ShipStatus.Docked)
+        if (docked)
         {
             shuttlesList.Remove(this);
         }
         actionsHash++;
+    }
+
+    public void ShowOnGUI(bool useHangarButton)
+    {
+        if (observer == null)
+        {
+            observer = Instantiate(Resources.Load<GameObject>("UIPrefs/shuttlePanel"), UIController.current.mainCanvas).GetComponent<UIShuttleObserver>();
+        }
+        if (!observer.isActiveAndEnabled) observer.gameObject.SetActive(true);
+        observer.ShowShuttle(this, useHangarButton);
+    }
+
+    private void OnDestroy()
+    {
+        if (shuttlesList.Count == 0 & observer != null) Destroy(observer);
     }
 
     #region save-load system
@@ -171,7 +197,7 @@ public sealed class Shuttle : MonoBehaviour {
         data.AddRange(System.BitConverter.GetBytes(cost));
         data.AddRange(System.BitConverter.GetBytes(condition));
         data.AddRange(System.BitConverter.GetBytes(ID));
-        data.Add((byte)status);
+        data.Add(docked ? (byte)1 : (byte)0);
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
         data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
@@ -196,7 +222,7 @@ public sealed class Shuttle : MonoBehaviour {
         cost = System.BitConverter.ToSingle(data, 4);
         condition = System.BitConverter.ToSingle(data, 8);
         ID = System.BitConverter.ToInt32(data, 12);
-        status = (ShipStatus)data[16];
+        docked = data[16] == 1;
 
         int bytesCount = System.BitConverter.ToInt32(data, 17); //выдаст количество байтов, не длину строки
         data = new byte[bytesCount];

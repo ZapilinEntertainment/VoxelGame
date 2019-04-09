@@ -8,7 +8,8 @@ public sealed class RecruitingCenter : WorkBuilding {
 
     float backupSpeed = 0.02f;
     public bool finding = false;
-	const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;	
+    const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
+    public const int REPLENISH_COST = 50;	
     const float FIND_SPEED = 5;
     public const float FIND_WORKFLOW = 10;
 
@@ -135,6 +136,7 @@ public sealed class RecruitingCenter : WorkBuilding {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
+        if (recruitingCentersList.Count == 0 & rcenterObserver != null) Destroy(rcenterObserver);
         Destroy(gameObject);
     }
 

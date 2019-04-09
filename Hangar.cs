@@ -247,7 +247,7 @@ public sealed class Hangar : WorkBuilding
             }
             else
             {
-                if (shuttle != null && (shuttle.status == ShipStatus.Docked & shuttle.condition < 1))
+                if (shuttle != null && (shuttle.docked & shuttle.condition < 1))
                 {
                     shuttle.condition += workSpeed / 4f;
                     if (shuttle.condition > 1) shuttle.condition = 1;
@@ -377,6 +377,8 @@ public sealed class Hangar : WorkBuilding
         PrepareWorkbuildingForDestruction(forced);
         if (hangarsList.Contains(this)) hangarsList.Remove(this);
         if (shuttle != null) shuttle.Deconstruct();
+
+        if (hangarsList.Count == 0 & hangarObserver != null) Destroy(hangarObserver);
         Destroy(gameObject);
     }
 
@@ -416,7 +418,7 @@ public sealed class Hangar : WorkBuilding
         {
             shuttle = Shuttle.GetShuttle(shuttleID);
             shuttle.AssignToHangar(this);
-            if (shuttle.status == ShipStatus.Docked)
+            if (shuttle.docked)
             {
                 shuttle.transform.parent = transform;
                 shuttle.SetVisibility(false);

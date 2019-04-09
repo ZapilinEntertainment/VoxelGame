@@ -401,12 +401,6 @@ public sealed class GameMaster : MonoBehaviour
             sx = mainChunk.GetSurfaceBlock();
             if (sx != null)
             {
-                Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-            }
-            sx = mainChunk.GetSurfaceBlock();
-            if (sx != null)
-            {
                 Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
@@ -415,6 +409,11 @@ public sealed class GameMaster : MonoBehaviour
             if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
             {
                 Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
+                s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            }
+            if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+            {
+                Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
                 s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
             }
 
