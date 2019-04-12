@@ -6,7 +6,8 @@ public enum LocalizedWord : ushort {
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { ConnectionLost, GoOnATrip, RecallExpedition, MembersCount, NoSuitableShuttles,  StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface, ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
+public enum LocalizedPhrase : ushort { ConnectionLost, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoSuitableShuttles,  StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
+    ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
 AddPlatform, OpenMap
@@ -967,6 +968,7 @@ public static class Localization {
                         case LocalizedPhrase.MembersCount: return "Число участников";
                         case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
                         case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов"; // в хранилище
+                        case LocalizedPhrase.NoCrews: return "Нет готовых команд";
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
@@ -975,6 +977,8 @@ public static class Localization {
                         case LocalizedPhrase.StopDig: return "Остановить добычу";
                         case LocalizedPhrase.StopGather: return "Остановить сбор";
                         case LocalizedPhrase.UnoccupiedTransmitters: return "Свободно передатчиков: ";
+
+
                         case LocalizedPhrase.RequiredSurface: return "Требуемая поверхность";
                         case LocalizedPhrase.ColonizationEnabled: return "Привозить колонистов";
                         case LocalizedPhrase.ColonizationDisabled: return "Не привозить колонистов";
@@ -1029,6 +1033,7 @@ public static class Localization {
                         case LocalizedPhrase.MembersCount: return "Members count";
                         case LocalizedPhrase.NoArtifact: return "No artifact"; // crew has no artifact
                         case LocalizedPhrase.NoArtifacts: return "You have no artifacts"; // no artifacts in storage
+                        case LocalizedPhrase.NoCrews: return "No crews available";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
@@ -1037,6 +1042,7 @@ public static class Localization {
                         case LocalizedPhrase.StopDig: return "Stop digging";
                         case LocalizedPhrase.StopGather: return "Stop gathering";
                         case LocalizedPhrase.UnoccupiedTransmitters: return "Unoccupied transmitters: ";
+
                         case LocalizedPhrase.RequiredSurface: return "Required surface";
                         case LocalizedPhrase.ColonizationEnabled: return "Immigration enabled";
                         case LocalizedPhrase.ColonizationDisabled: return "Immigration disabled";
