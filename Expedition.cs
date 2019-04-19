@@ -9,6 +9,7 @@ public sealed class Expedition
     public static List<Expedition> expeditionsList { get; private set; }
     public static int actionsHash { get; private set; }
     public static int expeditionsSucceed;
+    public static UIExpeditionObserver observer { get; private set; }
 
     public string name;
     public readonly int ID;
@@ -20,7 +21,8 @@ public sealed class Expedition
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
     public PointOfInterest destination { get; private set; }
-    public Crew crew;
+    public Crew crew { get; private set; }
+    public Texture icon { get; private set; }
 
     private bool subscribedToUpdate, missionCompleted = false;
     private float crewSpeed;
@@ -300,8 +302,15 @@ public sealed class Expedition
         }
     }
 
-    public void DrawTexture(UnityEngine.UI.RawImage iconPlace) // INDEV
+    public void ShowOnGUI(Vector2 pos, SpriteAlignment alignment)
     {
+        if (observer == null)
+        {
+            observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
+        }
+        if (!observer.isActiveAndEnabled) observer.gameObject.SetActive(true);
+        observer.SetPosition(pos, alignment);
+        observer.Show(this);
     }
     public void SetConnection(bool connected)
     {

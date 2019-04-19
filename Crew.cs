@@ -110,7 +110,7 @@ public sealed class Crew : MonoBehaviour {
 
     }
 
-    public void ShowOnGUI(Vector3 pos, SpriteAlignment alignment) 
+    public void ShowOnGUI(Rect rect, SpriteAlignment alignment, bool useCloseButton) 
     {
         if (crewObserver == null)
         {
@@ -118,8 +118,8 @@ public sealed class Crew : MonoBehaviour {
             crewObserver.LocalizeTitles();
         }
         if (!crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(true);
-        crewObserver.SetPosition(pos, alignment);
-        crewObserver.ShowCrew(this);
+        crewObserver.SetPosition(rect, alignment);
+        crewObserver.ShowCrew(this, useCloseButton);
     }
 
 	public void SetShuttle(Shuttle s) {

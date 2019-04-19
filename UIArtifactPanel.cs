@@ -8,7 +8,7 @@ public class UIArtifactPanel : MonoBehaviour {
     [SerializeField] private RawImage icon, iconBase;
     [SerializeField] private InputField nameField;
     [SerializeField] private Text status, description;
-    [SerializeField] private GameObject conservateButton, passButton;
+    [SerializeField] private GameObject conservateButton, passButton, closeButton;
     private bool noArtifacts = false, descriptionOff = false, subscribedToUpdate = false;
     private int lastDrawnActionHash = 0;
     private Artifact chosenArtifact;
@@ -89,10 +89,31 @@ public class UIArtifactPanel : MonoBehaviour {
         }
     }
 
-    public void ShowArtifact(Artifact a)
+    public void SetPosition(Rect r, SpriteAlignment alignment)
+    {
+        var rt = GetComponent<RectTransform>();
+        rt.position = r.position;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
+        Vector2 correctionVector = Vector2.zero;
+        switch (alignment)
+        {
+            case SpriteAlignment.BottomRight: correctionVector = Vector2.left * rt.rect.width; break;
+            case SpriteAlignment.RightCenter: correctionVector = new Vector2(-1f * rt.rect.width, -0.5f * rt.rect.height); break;
+            case SpriteAlignment.TopRight: correctionVector = new Vector2(-1f * rt.rect.width, -1f * rt.rect.height); break;
+            case SpriteAlignment.Center: correctionVector = new Vector2(-0.5f * rt.rect.width, -0.5f * rt.rect.height); break;
+            case SpriteAlignment.TopCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, -1f * rt.rect.height); break;
+            case SpriteAlignment.BottomCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, 0f); break;
+            case SpriteAlignment.TopLeft: correctionVector = Vector2.down * rt.rect.height; break;
+            case SpriteAlignment.LeftCenter: correctionVector = Vector2.down * rt.rect.height * 0.5f; break;
+        }
+        rt.anchoredPosition += correctionVector;
+    }
+    public void ShowArtifact(Artifact a, bool useCloseButton)
     {
         chosenArtifact = a;
         RedrawWindow();
+        closeButton.SetActive(useCloseButton);
     }
 
     // buttons
@@ -131,7 +152,8 @@ public class UIArtifactPanel : MonoBehaviour {
                     if (chosenArtifact.owner != null)
                     {
                         var rt = GetComponent<RectTransform>();
-                        chosenArtifact.owner.ShowOnGUI(rt.position+ Vector3.right * rt.rect.width / 2f, SpriteAlignment.LeftCenter);
+                        var r = new Rect(rt.position + Vector3.right * rt.rect.width / 2f, new Vector2(rt.rect.height, rt.rect.height));
+                        chosenArtifact.owner.ShowOnGUI(r, SpriteAlignment.LeftCenter, true);
                         gameObject.SetActive(false);
                     }
                     else RedrawWindow();

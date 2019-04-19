@@ -654,7 +654,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         if (globalMap != null) globalMap.MapInterfaceDisabled();
     }
     // =====================  AUXILIARY METHODS
-    private Rect GetMarkerRect(MapMarkerType mtype)
+    public static Rect GetMarkerRect(MapMarkerType mtype)
     {
         float p = 0.25f;
         switch (mtype)

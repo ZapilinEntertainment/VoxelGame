@@ -8,7 +8,7 @@ public sealed class UIShuttleObserver : MonoBehaviour
 #pragma warning disable 0649
     [SerializeField] private InputField nameField;
     [SerializeField] private Image hpbar;
-    [SerializeField] private GameObject repairButton, hangarButton;
+    [SerializeField] private GameObject repairButton, hangarButton, closeButton;
     [SerializeField] private Text ownerInfo;
 #pragma warning restore 0649
     private bool subscribedToUpdate = false;
@@ -16,7 +16,28 @@ public sealed class UIShuttleObserver : MonoBehaviour
     private int lastDrawnShuttleHash = 0;
     private Shuttle showingShuttle;
 
-    public void ShowShuttle(Shuttle s, bool useHangarButton)
+    public void SetPosition(Rect r, SpriteAlignment alignment)
+    {
+        var rt = GetComponent<RectTransform>();
+        rt.position = r.position;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
+        Vector2 correctionVector = Vector2.zero;
+        switch (alignment)
+        {
+            case SpriteAlignment.BottomRight: correctionVector = Vector2.left * rt.rect.width; break;
+            case SpriteAlignment.RightCenter: correctionVector = new Vector2(-1f * rt.rect.width, -0.5f * rt.rect.height); break;
+            case SpriteAlignment.TopRight: correctionVector = new Vector2(-1f * rt.rect.width, -1f * rt.rect.height); break;
+            case SpriteAlignment.Center: correctionVector = new Vector2(-0.5f * rt.rect.width, -0.5f * rt.rect.height); break;
+            case SpriteAlignment.TopCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, -1f * rt.rect.height); break;
+            case SpriteAlignment.BottomCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, 0f); break;
+            case SpriteAlignment.TopLeft: correctionVector = Vector2.down * rt.rect.height; break;
+            case SpriteAlignment.LeftCenter: correctionVector = Vector2.down * rt.rect.height * 0.5f; break;
+        }
+        rt.anchoredPosition += correctionVector;
+    }
+
+    public void ShowShuttle(Shuttle s, bool useHangarButton, bool useCloseButton)
     {
         if (s == null) gameObject.SetActive(false);
         else
@@ -27,6 +48,7 @@ public sealed class UIShuttleObserver : MonoBehaviour
                 hangarButton.SetActive(useHangarButton);
             }
             PrepareWindow();
+            closeButton.SetActive(useCloseButton);
         }
     }
 

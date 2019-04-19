@@ -2,11 +2,11 @@
 
 public enum Language : ushort{English, Russian}; // menuUI - options preparing
 public enum LocalizedWord : ushort {
-    Buy, Cancel, Close, Crew, Dig, Expedition,Launch,Level,Mission, Offline, Progress, Repair, Sell, Upgrade, UpgradeCost,   Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
+    Buy, Cancel, Close, Crew, Dig, Expedition,Launch,Level,Mission, Offline, Progress, Repair, Sell, Step, Upgrade, UpgradeCost,   Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { ConnectionLost, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoSuitableShuttles,  StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
+public enum LocalizedPhrase : ushort { CannotReachDestination,ConnectionLost, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -19,7 +19,6 @@ public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrysta
 public enum LocalizedTutorialHint : byte { Landing}
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt}
-public enum LocalizedExpeditionStatus : byte { CannotReachDestination}
 
 public static class Localization {
     public const int CREW_INFO_STRINGS_COUNT = 14;
@@ -823,6 +822,7 @@ public static class Localization {
                         case LocalizedWord.Progress: return "Прогресс";
                         case LocalizedWord.Repair: return "Починить"; // shuttle
                         case LocalizedWord.Sell: return "Продавать";
+                        case LocalizedWord.Step: return "Шаг";
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
                         case LocalizedWord.Upgrade: return "Улучшить"; // upgrade building
                             
@@ -897,6 +897,7 @@ public static class Localization {
                         case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Repair: return "Repair"; // shuttle
                         case LocalizedWord.Sell: return "Sell";
+                        case LocalizedWord.Step: return "Step";
                         case LocalizedWord.UpgradeCost: return "Upgrade cost";
                         case LocalizedWord.Upgrade: return "Upgrade"; // upgrade building                                
                         
@@ -963,12 +964,15 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.CannotReachDestination: return "не может достичь цели";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
                         case LocalizedPhrase.MembersCount: return "Число участников";
                         case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
                         case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов"; // в хранилище
                         case LocalizedPhrase.NoCrews: return "Нет готовых команд";
+                        case LocalizedPhrase.NoExpeditions: return "Нет экспедиций";
+                        case LocalizedPhrase.NoShuttles: return "Нет челноков";
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
@@ -1028,12 +1032,15 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.CannotReachDestination: return "cannot reach destination";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
                         case LocalizedPhrase.MembersCount: return "Members count";
                         case LocalizedPhrase.NoArtifact: return "No artifact"; // crew has no artifact
                         case LocalizedPhrase.NoArtifacts: return "You have no artifacts"; // no artifacts in storage
                         case LocalizedPhrase.NoCrews: return "No crews available";
+                        case LocalizedPhrase.NoExpeditions: return "No expeditions at this moment";
+                        case LocalizedPhrase.NoShuttles: return "No shuttles available";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
@@ -1184,13 +1191,36 @@ public static class Localization {
                 }
         }      
     }
-    public static string GetExpeditionStatus(LocalizedExpeditionStatus les, Expedition e)
+    public static string GetExpeditionStatus(Expedition.ExpeditionStage stage)
     {
-        switch (les)
+        switch (currentLanguage)
         {
-            case LocalizedExpeditionStatus.CannotReachDestination: return "Expedition \"" + e.name + "\" cannot reach destination.";
-            default: return "Expedition \"" + e.name + "\" is okay";
-        }
+            case Language.Russian:
+                {
+                    switch (stage)
+                    {
+                        case Expedition.ExpeditionStage.Dismissed: return "Расформирована";
+                        case Expedition.ExpeditionStage.LeavingMission: return "Завершают миссию";
+                        case Expedition.ExpeditionStage.OnMission: return "На задании";
+                        case Expedition.ExpeditionStage.WayIn: return "В пути";
+                        case Expedition.ExpeditionStage.WayOut: return "Возвращаются";
+                        default: return "Отдыхают";
+                    }
+                }
+            case Language.English:
+            default:
+                {
+                    switch (stage)
+                    {
+                        case Expedition.ExpeditionStage.Dismissed: return "Dismissed";
+                        case Expedition.ExpeditionStage.LeavingMission: return "Leaving mission";
+                        case Expedition.ExpeditionStage.OnMission: return "On mission";
+                        case Expedition.ExpeditionStage.WayIn: return "Advancing";
+                        case Expedition.ExpeditionStage.WayOut: return "Returning";
+                        default: return "Resting";
+                    }
+                }
+        }        
     }
     public static string GetEndingTitle (GameEndingType endType)
     {

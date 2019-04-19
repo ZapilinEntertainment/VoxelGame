@@ -8,7 +8,7 @@ public enum Icons : byte
 {
     GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon,
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
-    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton
+    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed
 }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
@@ -773,7 +773,7 @@ sealed public class UIController : MonoBehaviour
                     if (tradePanel.activeSelf) CloseTradePanel();
                     break;
                 case ActiveWindowMode.ExpeditionPanel:
-                    //
+                    ExplorationPanelUI.Deactivate();
                     break;
                 case ActiveWindowMode.LogWindow:
                     GameLogUI.DeactivateLogWindow();
@@ -784,9 +784,7 @@ sealed public class UIController : MonoBehaviour
         currentActiveWindowMode = mode;
         if (currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
         {
-            //if (expeditionPanel == null) expeditionPanel = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), mainCanvas);
-            //expeditionPanel.SetActive(true);
-            //expeditionPanel.GetComponent<ExpeditionPanelUI>().Activate();
+            ExplorationPanelUI.Initialize();
         }
         else
         {
@@ -859,6 +857,7 @@ sealed public class UIController : MonoBehaviour
             case Icons.QuestAwaitingIcon: return new Rect(2 * p, 3 * p, p, p);
             case Icons.QuestBlockedIcon: return new Rect(3 * p, 3 * p, p, p);
             case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
+            case Icons.TaskFailed: return new Rect(5 * p, 3 * p, p, p);
         }
     }
 

@@ -11,7 +11,7 @@ public sealed class UICrewObserver : MonoBehaviour
     [SerializeField] private Text levelText, membersButtonText, experienceText, statsText, statusText;
     [SerializeField] private Image experienceBar, staminaBar;
     [SerializeField] private Button membersButton, shuttleButton, artifactButton;
-    [SerializeField] private GameObject dismissButton, travelButton;
+    [SerializeField] private GameObject dismissButton, travelButton, closeButton;
     [SerializeField] private RawImage icon;
 #pragma warning restore 0649
 
@@ -20,24 +20,28 @@ public sealed class UICrewObserver : MonoBehaviour
     private List<int> shuttlesListIDs, artifactsIDs;
     private Crew showingCrew;
 
-    public void SetPosition(Vector3 pos, SpriteAlignment alignment)
+
+    public void SetPosition(Rect r, SpriteAlignment alignment)
     {
         var rt = GetComponent<RectTransform>();
-        Vector3 correctionVector = Vector3.zero;
+        rt.position = r.position;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
+        Vector2 correctionVector = Vector2.zero;
         switch (alignment)
         {
-            case SpriteAlignment.BottomRight: correctionVector = Vector3.left * rt.rect.width; break;
-            case SpriteAlignment.RightCenter: correctionVector = new Vector3(-1f * rt.rect.width, -0.5f * rt.rect.height, 0f); break;
-            case SpriteAlignment.TopRight: correctionVector = new Vector3(-1f * rt.rect.width, -1f * rt.rect.height, 0f);break;
-            case SpriteAlignment.Center: correctionVector = new Vector3(-0.5f * rt.rect.width, -0.5f * rt.rect.height, 0f);break;
-            case SpriteAlignment.TopCenter: correctionVector = new Vector3(-0.5f * rt.rect.width, -1f * rt.rect.height, 0f); break;
-            case SpriteAlignment.BottomCenter: correctionVector = new Vector3(-0.5f * rt.rect.width, 0f, 0f);break;
-            case SpriteAlignment.TopLeft: correctionVector = Vector3.down * rt.rect.height;break;
-            case SpriteAlignment.LeftCenter: correctionVector = Vector3.down * rt.rect.height * 0.5f; break;
-        }
-        rt.position = pos + correctionVector;
+            case SpriteAlignment.BottomRight: correctionVector = Vector2.left * rt.rect.width; break;
+            case SpriteAlignment.RightCenter: correctionVector = new Vector2(-1f * rt.rect.width, -0.5f * rt.rect.height); break;
+            case SpriteAlignment.TopRight: correctionVector = new Vector2(-1f * rt.rect.width, -1f * rt.rect.height);break;
+            case SpriteAlignment.Center: correctionVector = new Vector2(-0.5f * rt.rect.width, -0.5f * rt.rect.height);break;
+            case SpriteAlignment.TopCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, -1f * rt.rect.height); break;
+            case SpriteAlignment.BottomCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, 0f);break;
+            case SpriteAlignment.TopLeft:   correctionVector = Vector2.down * rt.rect.height;  break;
+            case SpriteAlignment.LeftCenter: correctionVector = Vector2.down * rt.rect.height * 0.5f; break;
+        }        
+        rt.anchoredPosition += correctionVector;
     }
-    public void ShowCrew(Crew c)
+    public void ShowCrew(Crew c, bool useCloseButton)
     {
         if (c == null)
         {
@@ -47,6 +51,7 @@ public sealed class UICrewObserver : MonoBehaviour
         {
             showingCrew = c;
             RedrawWindow();
+            closeButton.SetActive(useCloseButton);
         }
     }
 
@@ -61,6 +66,7 @@ public sealed class UICrewObserver : MonoBehaviour
 
     public void StatusUpdate()
     {
+
         if (showingCrew == null) gameObject.SetActive(false);
         else
         {
@@ -159,7 +165,9 @@ public sealed class UICrewObserver : MonoBehaviour
         {
             if (showingCrew.artifact != null)
             {
-                showingCrew.artifact.ShowOnGUI();
+                var rt = GetComponent<RectTransform>();
+                var r = new Rect(new Vector2(rt.position.x + rt.rect.width, rt.position.y + rt.rect.height), Vector2.one * rt.rect.height );
+                showingCrew.artifact.ShowOnGUI(r, SpriteAlignment.TopLeft, true);
                 gameObject.SetActive(false);
             }
             else RedrawWindow();

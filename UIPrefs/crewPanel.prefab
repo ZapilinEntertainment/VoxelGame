@@ -3925,6 +3925,7 @@ MonoBehaviour:
   artifactButton: {fileID: 8127665531315061022}
   dismissButton: {fileID: 8127665531548720173}
   travelButton: {fileID: 8127665532339469680}
+  closeButton: {fileID: 8127665531683073184}
   icon: {fileID: 8127665531659760606}
 --- !u!1 &8127665533137462430
 GameObject:

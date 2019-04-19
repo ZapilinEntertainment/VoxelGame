@@ -18,7 +18,7 @@ public sealed class Shuttle : MonoBehaviour {
     public Crew crew{get; private set;}
 	public Hangar hangar{get;private set;}
 
-    private static UIShuttleObserver observer;
+    public static UIShuttleObserver observer { get; private set; }
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
     public static int actionsHash { get; private set; }
@@ -131,14 +131,15 @@ public sealed class Shuttle : MonoBehaviour {
         actionsHash++;
     }
 
-    public void ShowOnGUI(bool useHangarButton)
+    public void ShowOnGUI(bool useHangarButton, Rect r, SpriteAlignment alignment, bool useCloseButton)
     {
         if (observer == null)
         {
             observer = Instantiate(Resources.Load<GameObject>("UIPrefs/shuttlePanel"), UIController.current.mainCanvas).GetComponent<UIShuttleObserver>();
-        }
+        }        
         if (!observer.isActiveAndEnabled) observer.gameObject.SetActive(true);
-        observer.ShowShuttle(this, useHangarButton);
+        observer.SetPosition(r, alignment);
+        observer.ShowShuttle(this, useHangarButton, useCloseButton);
     }
 
     private void OnDestroy()

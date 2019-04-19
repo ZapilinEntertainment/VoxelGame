@@ -21,7 +21,7 @@ public sealed class Artifact {
     public static readonly Texture emptyArtifactFrame_tx;
     public static int actionsHash = 0, lastUsedID = 0;    
     public static List<Artifact> playersArtifactsList;
-    private static UIArtifactPanel uipanel;
+    public static UIArtifactPanel observer { get; private set; }
 
     public override bool Equals(object obj)
     {
@@ -161,13 +161,14 @@ public sealed class Artifact {
         actionsHash++;
     }
 
-    public void ShowOnGUI()
+    public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool useCloseButton)
     {
-        if (uipanel == null)
+        if (observer == null)
         {
-            uipanel = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
+            observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
         }
-        uipanel.gameObject.SetActive(true);
-        uipanel.ShowArtifact(this);
+        observer.gameObject.SetActive(true);
+        observer.SetPosition(r, alignment);
+        observer.ShowArtifact(this, useCloseButton);
     }
 }

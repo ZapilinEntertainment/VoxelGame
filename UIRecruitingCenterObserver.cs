@@ -163,7 +163,9 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         else
         {
             var rt = infoButton.GetComponent<RectTransform>();
-            showingCrew.ShowOnGUI(rt.position + Vector3.left * rt.rect.width / 2f + Vector3.down * 1.5f * rt.rect.height, SpriteAlignment.BottomRight );
+            float f = rt.rect.width / 2f;
+            var r = new Rect(rt.position + Vector3.left * f + Vector3.down * 1.5f * rt.rect.height, new Vector2(f,f));
+            showingCrew.ShowOnGUI(r, SpriteAlignment.BottomRight, true );
         }
     }
     public void ReplenishButton()
