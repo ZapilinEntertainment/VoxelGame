@@ -120,6 +120,7 @@ public abstract class Constructor
         c.CreateNewChunk(dat);
         NatureCreation(c);
         CheckForLandingPosition(c);
+        c.RenderDataFullRecalculation();
     }
     public static void ConstructBlock(byte chunkSize)
     {

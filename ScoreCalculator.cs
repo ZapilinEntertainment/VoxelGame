@@ -75,6 +75,7 @@
         structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
         structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;
+        structuresCost[Structure.MONUMENT_ID] = 4 * val;
 
         // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];

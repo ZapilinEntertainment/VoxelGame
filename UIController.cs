@@ -60,7 +60,7 @@ sealed public class UIController : MonoBehaviour
         ;
     private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false,
         localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
-    private List<int> activeFastButtons;
+    public List<int> activeFastButtons { get; private set; }
 
     private CubeBlock chosenCube;
     private ColonyController colony;
@@ -1188,12 +1188,7 @@ sealed public class UIController : MonoBehaviour
     }
 
     public void AddFastButton(Structure s)
-    {
-        switch (s.id)
-        {
-            case Structure.OBSERVATORY_ID: break;
-            default: return;
-        }
+    {        
         GameObject buttonGO = null;
         if (activeFastButtons.Count == 0)
         {
@@ -1208,8 +1203,18 @@ sealed public class UIController : MonoBehaviour
         }
         Button b = buttonGO.GetComponent<Button>();
         b.onClick.RemoveAllListeners();
-        if (s.id != Structure.OBSERVATORY_ID) b.onClick.AddListener(() => { Select(s); });
-        else b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
+        switch (s.id)
+        {
+            case Structure.OBSERVATORY_ID:
+                b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
+                break;
+            case Structure.EXPEDITION_CORPUS_4_ID:
+                b.onClick.AddListener( () => { ExplorationPanelUI.Initialize(); } );
+                break;
+            default:
+                b.onClick.AddListener(() => { Select(s); });
+                break;
+        }
         buttonGO.transform.GetChild(0).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(s.id);
         activeFastButtons.Add(s.id);
     }

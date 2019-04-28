@@ -720,7 +720,7 @@ public sealed class Chunk : MonoBehaviour
         else CreateBlockpartsRenderer(mvi);
     }
 
-    private void RenderDataFullRecalculation()
+    public void RenderDataFullRecalculation()
     {
         RemakeRenderersHolders();
         if (renderers != null) renderers.Clear();
@@ -1619,6 +1619,7 @@ public sealed class Chunk : MonoBehaviour
     {
         // в сиквеле стоит пересмотреть всю иерархию классов ><
         //12.06 нет, я так не думаю
+        // 24.04.2019 фига сколько времени прошло
         Block b = GetBlock(pos);
         if (b == null) return;
         int x = pos.x, y = pos.y, z = pos.z;
@@ -1644,7 +1645,7 @@ public sealed class Chunk : MonoBehaviour
                                 {
                                     Block ub = AddBlock(new ChunkPos(x, y - 1, z), BlockType.Shapeless, ResourceType.METAL_S_ID, false);
                                     GameObject g = PoolMaster.GetFlyingPlatform();
-                                    g.transform.position = Vector3.up * Block.QUAD_SIZE / 2f;
+                                    g.transform.position = ub.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE / 2f;
                                     if (ub != null) ub.AddDecoration(g);
                                 }
                                 return;

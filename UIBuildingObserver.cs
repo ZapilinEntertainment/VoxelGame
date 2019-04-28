@@ -4,19 +4,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class UIBuildingObserver : UIObserver {
-	Building observingBuilding;
-    bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, canBeUpgraded = false;
-	float showingEnergySurplus = 0;
-	int showingHousing = 0;
-    byte savedLevel = 0;
-    Vector2[] savedResourcesValues;
+	private Building observingBuilding;
+    private bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, canBeUpgraded = false;
+	private float showingEnergySurplus = 0;
+	private int showingHousing = 0;
+    private byte savedLevel = 0;
+    private Vector2[] savedResourcesValues;
 #pragma warning disable 0649
-    [SerializeField] RawImage energyImage, housingImage; //fiti
-    [SerializeField] Text energyValue, housingValue, upgradeButtonText; // fiti
-    [SerializeField] Button upgradeButton; // fiti
-    [SerializeField] GameObject upgradeInfoPanel, chargeButton; // fiti
-    [SerializeField] GameObject[] resourceCostIndicator; // fiti
-    [SerializeField] Button energyButton; // fiti
+    [SerializeField] private RawImage energyImage, housingImage; //fiti
+    [SerializeField] private Text energyValue, housingValue, upgradeButtonText; // fiti
+    [SerializeField] private Button upgradeButton; // fiti
+    [SerializeField] private GameObject upgradeInfoPanel, chargeButton; // fiti
+    [SerializeField] private GameObject[] resourceCostIndicator; // fiti
+    [SerializeField] private Button energyButton; // fiti
 #pragma warning restore 0649
 
     private void Awake()

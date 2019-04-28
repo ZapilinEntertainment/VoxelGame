@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 
 public sealed class Artifact {
-    public enum AffectionType { NoAffection, LifepowerAffection, StabilityAffection, EventsAffection}
+    public enum AffectionType { NoAffection, LifepowerAffection, StabilityAffection, SpaceAffection}
+    //dependency : PointOfInterest.GetArtifact
+    // GetAffectionIconRect()
+    // localization.GetAffectionTitle
     public enum ArtifactStatus { Exists, UsingByCrew, Researching, UsingInMonument, OnConservation}
 
     public bool activated { get; private set; }
@@ -15,7 +18,7 @@ public sealed class Artifact {
     public string name { get; private set; }
     public ArtifactStatus status { get; private set; }
     public Crew owner { get; private set; }
-    public readonly AffectionType type;
+    public readonly AffectionType affectionType;
     private Texture icon;
 
     public static readonly Texture emptyArtifactFrame_tx;
@@ -63,7 +66,7 @@ public sealed class Artifact {
         i_saturation = Mathf.Clamp01(i_saturation);
         saturation = i_saturation;
         frequency = i_frequency;
-        type = i_type;
+        affectionType = i_type;
         activated = i_activated;
         destructed = false;
         researched = false;
@@ -110,6 +113,20 @@ public sealed class Artifact {
         return true;
     }
 
+    public float GetAffectionValue()
+    {
+        if (!researched) return 0f;
+        else
+        {
+            switch (affectionType)
+            {
+                case AffectionType.SpaceAffection: return frequency / stability;
+                case AffectionType.LifepowerAffection: return saturation / frequency;
+                case AffectionType.StabilityAffection: return stability / frequency;
+                default: return 0f;
+            }
+        }
+    }
     public Color GetColor()
     {
         if (destructed) return new Color(0f, 0f, 0f, 0f);
@@ -127,9 +144,9 @@ public sealed class Artifact {
     }
     public Color GetHaloColor()
     {
-        switch (type)
+        switch (affectionType)
         {
-            case AffectionType.EventsAffection:
+            case AffectionType.SpaceAffection:
                 return new Color(stability * 0.3f, 0f, frequency);
             case AffectionType.LifepowerAffection:
                 return new Color(0f, saturation, frequency * 0.7f);
@@ -145,6 +162,14 @@ public sealed class Artifact {
         return emptyArtifactFrame_tx;
     }
 
+    public static Rect GetAffectionIconRect(AffectionType atype)
+    {
+        switch (atype)
+        {
+            default: return Rect.zero;
+        }
+    }
+
     public void SetOwner(Crew c)
     {
         owner = c;
@@ -157,9 +182,18 @@ public sealed class Artifact {
     public void Conservate()
     {
         status = ArtifactStatus.OnConservation;
+        activated = false;
         owner = null;
         actionsHash++;
     }
+    public void UseInMonument()
+    {
+        owner = null;
+        status = ArtifactStatus.UsingInMonument;
+        activated = true;
+        actionsHash++;
+    }
+    public void SetResearchStatus(bool x) { researched = x; }
 
     public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool useCloseButton)
     {

@@ -153,8 +153,15 @@ public sealed class UICrewObserver : MonoBehaviour
             if (showingCrew.shuttle == null) RedrawWindow();
             else
             {
-                UIController.current.Select(showingCrew.shuttle.hangar);
-                gameObject.SetActive(false);
+                if (UIController.current.currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
+                {
+                    ExplorationPanelUI.current.Show(showingCrew.shuttle);
+                }
+                else
+                {
+                    var rt = statsText.GetComponent<RectTransform>();
+                    showingCrew.shuttle.ShowOnGUI(true, new Rect(rt.position, rt.rect.size), SpriteAlignment.Center, true);
+                }
             }
         }
     }
@@ -165,10 +172,15 @@ public sealed class UICrewObserver : MonoBehaviour
         {
             if (showingCrew.artifact != null)
             {
-                var rt = GetComponent<RectTransform>();
-                var r = new Rect(new Vector2(rt.position.x + rt.rect.width, rt.position.y + rt.rect.height), Vector2.one * rt.rect.height );
-                showingCrew.artifact.ShowOnGUI(r, SpriteAlignment.TopLeft, true);
-                gameObject.SetActive(false);
+                if (UIController.current.currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
+                {
+                    ExplorationPanelUI.current.Show(showingCrew.artifact);
+                }
+                else
+                {
+                    var rt = statsText.GetComponent<RectTransform>();
+                    showingCrew.artifact.ShowOnGUI(new Rect(rt.position, rt.rect.size), SpriteAlignment.Center, true);
+                }
             }
             else RedrawWindow();
         }

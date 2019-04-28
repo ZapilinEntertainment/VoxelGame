@@ -84,6 +84,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(OBSERVATORY_ID) as Building);
+                blist.Add(GetStructureByID(MONUMENT_ID) as Building);
                 break;
             case 6:
                 blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
@@ -772,7 +773,17 @@ public class Building : Structure
                     energyCapacity = 160;
                     level = 4;
                     break;
-                }                
+                }
+            case MONUMENT_ID:
+                {
+                    specialBuildingConditions = false;
+                    upgradedIndex = -1;
+                    canBePowerSwitched = false;
+                    energySurplus = -10;
+                    energyCapacity = 800;
+                    level = 5;
+                    break;
+                }
         }
     }
 

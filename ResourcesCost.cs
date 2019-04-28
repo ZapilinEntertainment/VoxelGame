@@ -374,6 +374,15 @@ public static class ResourcesCost
                     };
                     break;
                 }
+            case Structure.MONUMENT_ID:
+                {
+                    cost = new ResourceContainer[]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.Plastics, 400),
+                        new ResourceContainer(ResourceType.metal_E, 40), new ResourceContainer(ResourceType.metal_N, 40)
+                    };
+                    break;
+                }
         }
         return cost;
     }

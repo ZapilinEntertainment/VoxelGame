@@ -269,8 +269,9 @@ public sealed class GlobalMapUI : MonoBehaviour
                     Shuttle s = Shuttle.GetShuttle(shuttlesListIds[shuttlesDropdown.value]);
                     if (s != null)
                     {
-                        Expedition.CreateNewExpedition(s.crew, poi.GetMission(missionDropdown.value), QuantumTransmitter.GetFreeTransmitter(), poi, expeditionNameField.text);
-
+                        var e = Expedition.CreateNewExpedition(s.crew, poi.GetMission(missionDropdown.value), QuantumTransmitter.GetFreeTransmitter(), poi, expeditionNameField.text);
+                        if (e == null) print("null");
+                        PreparePointExpedition();
                     }
                 }
                 else

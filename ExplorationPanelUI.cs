@@ -37,6 +37,12 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
     public void SelectItem(int i)
     {
+        if (selectedItem != i)
+        {
+            if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
+            selectedItem = i;
+            items[selectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+        }
         var realIndex = i + GetListStartIndex();
         switch (mode)
         {
@@ -45,14 +51,9 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     if (realIndex >= Expedition.expeditionsList.Count) PrepareExpeditionsList();
                     else
                     {
-                        if (selectedItem != i)
-                        {
-                            if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                            selectedItem = i;
-                            items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                        }
                         var e = Expedition.expeditionsList[realIndex];
-                        e.ShowOnGUI(emptyPanel.transform.position, SpriteAlignment.TopLeft);
+                        var ert = emptyPanel.GetComponent<RectTransform>();
+                        e.ShowOnGUI(new Rect(ert.position, ert.rect.size), SpriteAlignment.TopLeft);
                         activeObserver = Expedition.observer.gameObject;
                         if (emptyPanel.activeSelf) emptyPanel.SetActive(false);
                     }
@@ -63,12 +64,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     if (realIndex >= Crew.crewsList.Count) PrepareCrewsList();
                     else
                     {
-                        if (selectedItem != i)
-                        {
-                            if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                            selectedItem = i;
-                            items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                        }
                         var e = Crew.crewsList[realIndex];
                         var ert = emptyPanel.GetComponent<RectTransform>();
                         var r = new Rect(ert.position, ert.rect.size);
@@ -82,12 +77,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 if (realIndex >= Shuttle.shuttlesList.Count) PrepareShuttlesList();
                 else
                 {
-                    if (selectedItem != i)
-                    {
-                        if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                        selectedItem = i;
-                        items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                    }
                     var e = Shuttle.shuttlesList[realIndex];
                     var ert = emptyPanel.GetComponent<RectTransform>();
                     var r = new Rect(ert.position, ert.rect.size);
@@ -100,12 +89,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 if (realIndex >= Artifact.playersArtifactsList.Count) PrepareArtifactsList();
                 else
                 {
-                    if (selectedItem != i)
-                    {
-                        if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                        selectedItem = i;
-                        items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                    }
                     var e = Artifact.playersArtifactsList[realIndex];
                     var ert = emptyPanel.GetComponent<RectTransform>();
                     var r = new Rect(ert.position, ert.rect.size);
@@ -208,10 +191,22 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         items[i].SetActive(false);
                     }
                 }
+
+                if (showingCrew != null)
+                {
+                    for (i = 0; i < listIDs.Count; i++)
+                    {
+                        if (listIDs[i] == showingCrew.ID)
+                        {
+                            currentSelectedItem = i;
+                        }
+                    }
+                }
             }
 
             if (currentSelectedItem != selectedItem)
             {
+                print(currentSelectedItem);
                 if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
                 if (currentSelectedItem != -1)
                 {
@@ -227,6 +222,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
+        lastDrawnActionHash = Crew.actionsHash;
     }
     private void PrepareArtifactsList()
     {
@@ -282,6 +278,16 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         items[i].SetActive(false);
                     }
                 }
+                if (showingArtifact != null)
+                {
+                    for (i = 0; i < listIDs.Count; i++)
+                    {
+                        if (listIDs[i] == showingArtifact.ID)
+                        {
+                            currentSelectedItem = i;
+                        }
+                    }
+                }
             }
 
             if (currentSelectedItem != selectedItem)
@@ -301,6 +307,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
+        lastDrawnActionHash = Artifact.actionsHash;
     }
     private void PrepareShuttlesList()
     {
@@ -356,6 +363,16 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         items[i].SetActive(false);
                     }
                 }
+                if (showingShuttle != null)
+                {
+                    for (i = 0; i < listIDs.Count; i++)
+                    {
+                        if (listIDs[i] == showingShuttle.ID)
+                        {
+                            currentSelectedItem = i;
+                        }
+                    }
+                }
             }
 
             if (currentSelectedItem != selectedItem)
@@ -375,6 +392,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
+        lastDrawnActionHash = Shuttle.actionsHash;
     }
     private void PrepareExpeditionsList()
     {
@@ -430,6 +448,16 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         items[i].SetActive(false);
                     }
                 }
+                if (showingExpedition != null)
+                {
+                    for (i = 0; i < listIDs.Count; i++)
+                    {
+                        if (listIDs[i] == showingExpedition.ID)
+                        {
+                            currentSelectedItem = i;
+                        }
+                    }
+                }
             }
 
             if (currentSelectedItem != selectedItem)
@@ -449,28 +477,40 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
+        lastDrawnActionHash = Expedition.actionsHash;
     }
 
     private void ChangeMode(InfoMode nmode)
     {
         if (mode != nmode)
         {
+            //prev mode            
             switch (mode)
             {
-                case InfoMode.Expeditions: expeditionButtonImage.overrideSprite = null; break;
-                case InfoMode.Crews: crewButtonImage.overrideSprite = null;break;
-                case InfoMode.Shuttles: shuttleButtonImage.overrideSprite = null;break;
-                case InfoMode.Artifacts: artifactButtonImage.overrideSprite = null;break;
+                case InfoMode.Expeditions:
+                    showingExpedition = null;
+                    expeditionButtonImage.overrideSprite = null;
+                    break;
+                case InfoMode.Crews:
+                    showingCrew = null;
+                    crewButtonImage.overrideSprite = null;
+                    break;
+                case InfoMode.Shuttles:
+                    showingShuttle = null;
+                    shuttleButtonImage.overrideSprite = null;
+                    break;
+                case InfoMode.Artifacts:
+                    showingArtifact = null;
+                    artifactButtonImage.overrideSprite = null;
+                    break;
             }
             mode = nmode;
             if (activeObserver != null) activeObserver.SetActive(false);
+            selectedItem = -1;
             switch (mode)
             {
                 case InfoMode.Crews:
                     {
-                        showingArtifact = null;
-                        showingExpedition = null;
-                        showingShuttle = null;
                         PrepareCrewsList();
                         crewButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
@@ -478,9 +518,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         {
                             var ert = emptyPanel.GetComponent<RectTransform>();
                             var r = new Rect(ert.position, ert.rect.size);
-                            Crew.crewsList[0].ShowOnGUI(r, SpriteAlignment.TopLeft, false);
-                            activeObserver = Crew.crewObserver.gameObject;
-                            emptyPanel.SetActive(false);
+                            SelectItem(0);
                         }
                         else
                         {
@@ -497,9 +535,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     }
                 case InfoMode.Artifacts:
                     {
-                        showingCrew = null;
-                        showingExpedition = null;
-                        showingShuttle = null;
                         PrepareArtifactsList();
                         artifactButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
@@ -507,9 +542,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         {
                             var ert = emptyPanel.GetComponent<RectTransform>();
                             var r = new Rect(ert.position, ert.rect.size);
-                            Artifact.playersArtifactsList[0].ShowOnGUI(r, SpriteAlignment.TopLeft, false);
-                            activeObserver = Artifact.observer.gameObject;
-                            emptyPanel.SetActive(false);
+                            SelectItem(0);
                         }
                         else
                         {
@@ -526,9 +559,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     }
                 case InfoMode.Shuttles:
                     {
-                        showingCrew = null;
-                        showingExpedition = null;
-                        showingArtifact = null;
                         PrepareShuttlesList();
                         shuttleButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
@@ -536,9 +566,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         {
                             var ert = emptyPanel.GetComponent<RectTransform>();
                             var r = new Rect(ert.position, ert.rect.size);
-                            Shuttle.shuttlesList[0].ShowOnGUI(true,r, SpriteAlignment.TopLeft, false);
-                            activeObserver = Shuttle.observer.gameObject;
-                            emptyPanel.SetActive(false);
+                            SelectItem(0);
                         }
                         else
                         {
@@ -555,17 +583,13 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     }
                 case InfoMode.Expeditions:
                     {
-                        showingCrew = null;
-                        showingShuttle = null;
-                        showingArtifact = null;
                         PrepareExpeditionsList();
                         expeditionButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
                         if (Expedition.expeditionsList.Count != 0)
                         {
-                            Expedition.expeditionsList[0].ShowOnGUI(emptyPanel.transform.position, SpriteAlignment.TopLeft);
-                            activeObserver = Expedition.observer.gameObject;
-                            emptyPanel.SetActive(false);
+                            var ert = emptyPanel.GetComponent<RectTransform>();
+                            SelectItem(0);
                         }
                         else
                         {
@@ -580,6 +604,9 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         lastDrawnActionHash = Expedition.actionsHash;
                         break;
                     }
+                case InfoMode.Inactive:
+                    lastDrawnActionHash = -1;
+                    break;
             }
         }
     }
@@ -588,6 +615,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     public void CrewsButton() { ChangeMode(InfoMode.Crews); }
     public void ShuttlesButton() { ChangeMode(InfoMode.Shuttles); }
     public void ArtifactsButton() { ChangeMode(InfoMode.Artifacts); }
+    public void CloseButton() { gameObject.SetActive(false); }
 
     public void StatusUpdate()
     {
@@ -658,6 +686,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             UIController.current.statusUpdateEvent -= StatusUpdate;
             subscribedToUpdate = false;
         }
+        ChangeMode(InfoMode.Inactive);
+        UIController.current.DropActiveWindow(ActiveWindowMode.ExpeditionPanel);
     }
     private void OnDestroy()
     {

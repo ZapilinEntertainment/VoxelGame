@@ -4,10 +4,8 @@ using UnityEngine;
 
 public sealed class Shuttle : MonoBehaviour {
     public const float GOOD_CONDITION_THRESHOLD = 0.85f, BAD_CONDITION_THRESHOLD = 0.5f, SPEED = 8;
-	private const float START_VOLUME = 20;
 
     public const float STANDART_COST = 700;
-	public float volume{get;private set;}
 	public float cost{get;private set;}
 	public int ID{get;private set;}
     public float condition = 1; // общее состояние, автоматически чинится в работающих ангарах
@@ -47,7 +45,6 @@ public sealed class Shuttle : MonoBehaviour {
         docked = true;
 		name = Localization.NameShuttle();
 		ID = lastIndex; lastIndex ++;
-		volume = START_VOLUME;
 		condition = 1;
 		cost = STANDART_COST;
 		shuttlesList.Add(this);
@@ -194,7 +191,6 @@ public sealed class Shuttle : MonoBehaviour {
 
 	public List<byte> Save() {
         var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(volume));
         data.AddRange(System.BitConverter.GetBytes(cost));
         data.AddRange(System.BitConverter.GetBytes(condition));
         data.AddRange(System.BitConverter.GetBytes(ID));
@@ -217,15 +213,14 @@ public sealed class Shuttle : MonoBehaviour {
         return data;
 	}
 	public void Load(System.IO.FileStream fs) {
-        var data = new byte[21];
-        fs.Read(data, 0, 21);
-        volume = System.BitConverter.ToSingle(data, 0);
-        cost = System.BitConverter.ToSingle(data, 4);
-        condition = System.BitConverter.ToSingle(data, 8);
-        ID = System.BitConverter.ToInt32(data, 12);
+        var data = new byte[17];
+        fs.Read(data, 0, 17);
+        cost = System.BitConverter.ToSingle(data, 0);
+        condition = System.BitConverter.ToSingle(data, 4);
+        ID = System.BitConverter.ToInt32(data, 8);
         docked = data[16] == 1;
 
-        int bytesCount = System.BitConverter.ToInt32(data, 17); //выдаст количество байтов, не длину строки
+        int bytesCount = System.BitConverter.ToInt32(data, 13); //выдаст количество байтов, не длину строки
         data = new byte[bytesCount];
         fs.Read(data, 0, bytesCount);
         if (bytesCount > 0)

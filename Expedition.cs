@@ -24,11 +24,13 @@ public sealed class Expedition
     public Crew crew { get; private set; }
     public Texture icon { get; private set; }
 
-    private bool subscribedToUpdate, missionCompleted = false;
-    private float crewSpeed;
+    private bool subscribedToUpdate;
+    private float crewSpeed, collectedMoney,currentDistanceToTarget, distanceToTarget;
     private FlyingExpedition mapMarker;
     private QuantumTransmitter transmitter;
-    private const float ONE_STEP_WORKFLOW = 100;
+
+    public const float ONE_STEP_WORKFLOW = 100, ONE_STEP_XP = 0.5f;
+    private const float ONE_STEP_STAMINA = 0.05f, ONE_STEP_TO_TARGET = 0.1f;
 
     // STATIC & equals
     static Expedition()
@@ -58,7 +60,7 @@ public sealed class Expedition
         if (i_crew == null | i_mission == Mission.NoMission | i_transmitter == null | i_destination == null) return null;
         else
         {
-            if (i_crew.status != CrewStatus.OnMission | i_crew.shuttle == null | i_transmitter.expeditionID != -1 | i_destination.sentExpedition != null) return null;
+            if (i_crew.status != CrewStatus.AtHome | i_crew.shuttle == null | i_transmitter.expeditionID != -1 | i_destination.sentExpedition != null) return null;
             else
             {
                 return new Expedition(i_crew, i_mission, i_transmitter, i_destination, i_name);
@@ -81,7 +83,6 @@ public sealed class Expedition
         ID = lastUsedID;
         lastUsedID++;
         name = i_name;
-        missionCompleted = false;
         stage = ExpeditionStage.WayIn;
         crew = i_crew; crew.SetStatus(CrewStatus.OnMission);
         mission = i_mission;
@@ -109,6 +110,8 @@ public sealed class Expedition
                 GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
                 subscribedToUpdate = true;
             }
+            distanceToTarget = mission.GetDistanceToTarget();
+            currentDistanceToTarget = distanceToTarget * (0.3f + crew.luck * 0.2f) * Random.value;
             actionsHash++;
         }
     }
@@ -139,6 +142,7 @@ public sealed class Expedition
                     break;
                 }
         }
+        currentDistanceToTarget = 0;
     }
     private void LeaveSuccessful()
     {
@@ -149,6 +153,7 @@ public sealed class Expedition
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
         gmap.AddPoint(mapMarker, true);
+        if (!hasConnection) hasConnection = true;
         actionsHash++;
     }
 
@@ -167,105 +172,150 @@ public sealed class Expedition
         {
             case ExpeditionStage.OnMission:
                 {
-                    progress += crewSpeed;
-                    if (progress >= ONE_STEP_WORKFLOW)
+                    if (crew.stamina > 0)
                     {
-                        progress = 0;                        
-                        bool success = false;
-                        //
-                        int x = Random.Range(0, 8);
-                        switch (x)
+                        crew.ConsumeStamina(destination.difficulty * ONE_STEP_STAMINA);
+                        progress += crewSpeed;
+                        if (progress >= ONE_STEP_WORKFLOW)
                         {
-                            //ignore 0 -> default
-                            case 1: // mission test
-                                if (mission.TestYourMight(crew)) success = true;
-                                break;
-                            case 2: // jump
-                                if (Random.value > crew.luck * crew.perception)
-                                {
-                                    currentStep--;
-                                    if (Random.value * crew.adaptability < destination.location.difficulty * (1 - destination.friendliness))
+                            progress = 0;
+                            bool success = false;
+                            //
+                            int x = Random.Range(0, 8);
+                            switch (x)
+                            {
+                                //ignore 0 -> default
+                                case 1: // mission test
+                                    if (mission.TestYourMight(crew)) success = true;
+                                    break;
+                                case 2: // jump
+                                    if (Random.value > crew.luck * crew.perception)
                                     {
-                                        currentStep--;
-                                        crew.LowConfidence(); // уверенность падает из-за неудач
+                                        currentDistanceToTarget -= ONE_STEP_TO_TARGET;
+                                        //дополнительно
+                                        if (Random.value * crew.adaptability < destination.mysteria * (1 - destination.friendliness))
+                                        {
+                                            currentDistanceToTarget -= ONE_STEP_TO_TARGET;
+                                            crew.LoseConfidence(); // уверенность падает из-за неудач
+                                        }
                                     }
-                                }
-                                else
-                                {
+                                    else
+                                    {
+                                        success = true;
+                                        if (Random.value * crew.luck / destination.mysteria < destination.friendliness) currentDistanceToTarget += ONE_STEP_TO_TARGET;
+                                        if (crew.persistence > Random.value) currentDistanceToTarget += ONE_STEP_TO_TARGET;
+                                    }
+                                    break;
+                                case 3: //suffer
+                                    if (crew.HardTest(destination.danger)) success = true;
+                                    else
+                                    {
+                                        crew.LoseMember();
+                                        if (crew == null)
+                                        {
+                                            Disappear();
+                                            return;
+                                        }
+                                    }
+                                    break;
+                                case 4: // prize
+                                    if (Random.value < destination.friendliness * crew.luck * crew.perception)
+                                    {
+                                        destination.TakeTreasure(crew);
+                                    }
                                     success = true;
-                                    if (Random.value * crew.luck / destination.location.difficulty < destination.friendliness) currentStep++;
-                                }
-                                break;
-                            case 3: //suffer
-                                if (crew.HardTest(destination.location.difficulty)) success = true;
-                                else
-                                {
-                                    crew.LoseMember();
-                                    if (crew == null)
+                                    break;
+                                case 5: //event
+                                    success = true;
+                                    if (Random.value < destination.danger)
+                                    {
+                                        var gmap = GameMaster.realMaster.globalMap;
+                                        gmap.UpdateSector(gmap.DefineSectorIndex(destination.angle, destination.ringIndex));
+                                    }
+                                    else
+                                    {
+                                        if (Random.value < 0.01f)
+                                        {
+                                            if (crew.artifact != null)
+                                            {
+                                                if (crew.artifact.Event() == false) crew.DropArtifact();
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case 6: //paradise ?
+                                    success = true;
+                                    if (!crew.SoftCheck(destination.friendliness))
                                     {
                                         Disappear();
                                         return;
                                     }
-                                }
-                                break;
-                            case 4: // prize
-                                if (Random.value < destination.friendliness * crew.luck * crew.perception)
+                                    break;
+                                case 7: // silence - nothing happens
+
+                                    break;
+                                case 8: // connection
+                                    hasConnection = !hasConnection;
+                                    break;
+                                default:
+                                    success = true;
+                                    break;
+                            }
+
+                            if (success)
+                            {
+                                currentStep++;
+                                if (!destination.explored)
                                 {
-                                    destination.location.TakeTreasure(crew);
-                                }
-                                success = true;
-                                break;
-                            case 5: //event
-                                success = true;
-                                if (Random.value < destination.danger) {
-                                    var gmap = GameMaster.realMaster.globalMap;
-                                    gmap.UpdateSector(gmap.DefineSectorIndex(destination.angle, destination.ringIndex));
+                                    destination.Explore(mission.type == MissionType.Exploring ? 2f : 1f);
                                 }
                                 else
                                 {
-                                    if (Random.value < 0.01f)
-                                    {
-                                        if (crew.artifact != null)
-                                        {
-                                            if (crew.artifact.Event() == false) crew.DropArtifact();
-                                        }
+                                    if (mission.type == MissionType.Exploring)
+                                    {                                       
+                                        EndMission();
+                                        break;
                                     }
                                 }
-                                break;
-                            case 6: //paradise ?
-                                success = true;
-                                if (crew.SoftCheck(destination.friendliness))
+                                crew.AddExperience((0.5f + destination.difficulty) * ONE_STEP_XP);
+                                distanceToTarget += ONE_STEP_TO_TARGET;
+                                if (distanceToTarget >= 1)
                                 {
-                                    Disappear();
-                                    return;
+                                    crew.AddExperience(ONE_STEP_XP);
+                                    if (mission.Result(this))
+                                    {
+                                        GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CrewTaskCompleted, crew));
+                                        GameMaster.audiomaster.Notify(NotificationSound.CrewTaskCompleted);                                        
+                                        EndMission();
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        currentDistanceToTarget = mission.GetDistanceToTarget() * (0.9f + crew.luck * 0.1f);
+                                    }
                                 }
-                                break;
-                            case 7: // silence - nothing happens
-
-                                break;
-                            case 8: // connection
-                                hasConnection = !hasConnection;
-                                break;
-                            default:
-                                success = true;
-                                break;
-                        }
-
-                        crew.StaminaCheck();
-                        if (success)
-                        {
-                            currentStep++;
-                            if (!destination.explored)
+                            }
+                            else
                             {
-                                destination.Explore(mission.type == MissionType.Exploring ? 2f : 1f);
+                                if (destination.danger + destination.difficulty > Random.value) crew.LoseLoyalty();
+                                if (destination.mysteria * destination.difficulty > Random.value) crew.LoseConfidence();
+                            }
+                            //                        
+                            if (currentStep >= mission.stepsCount)
+                            {
+                                EndMission();
+                                break;
                             }
                         }
-                        //                        
-                        if (currentStep >= mission.stepsCount)
+                    }
+                    else
+                    {
+                        if (destination.danger < 0.45f & crew.confidence < 0.75f)
                         {
-                            missionCompleted = true;
+                            GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotCompleteMission, crew));
                             EndMission();
                         }
+                        else crew.Rest(destination);
                     }
                     break;
                 }
@@ -300,28 +350,34 @@ public sealed class Expedition
             crewSpeed = 0;
             actionsHash++;
         }
+    } 
+    public void SetConnection(bool connected)
+    {
+        if (hasConnection != connected)
+        {
+            hasConnection = connected;
+            if (!hasConnection) crew.LoseConfidence();
+            else crew.IncreaseConfidence();
+            GameMaster.realMaster.globalMap.MarkToUpdate();
+        }
+    }
+    public void CollectMoney(float f) {
+        collectedMoney += f;
+        crew.IncreaseLoyalty();
     }
 
-    public void ShowOnGUI(Vector2 pos, SpriteAlignment alignment)
+    public void ShowOnGUI(Rect r, SpriteAlignment alignment)
     {
         if (observer == null)
         {
             observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
         }
         if (!observer.isActiveAndEnabled) observer.gameObject.SetActive(true);
-        observer.SetPosition(pos, alignment);
+        observer.SetPosition(r, alignment);
         observer.Show(this);
     }
-    public void SetConnection(bool connected)
-    {
-        if (hasConnection != connected)
-        {
-            hasConnection = connected;
-            GameMaster.realMaster.globalMap.MarkToUpdate();
-        }
-    }
 
-    public void Dismiss()
+    public void Dismiss() // экспедиция вернулась домой и распускается
     {        
         //зависимость : Disappear()
         if (stage == ExpeditionStage.Dismissed) return;
@@ -336,10 +392,16 @@ public sealed class Expedition
                 subscribedToUpdate = false;
             }
             if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            if (collectedMoney > 0)
+            {
+                GameMaster.realMaster.colonyController.AddEnergyCrystals(collectedMoney);
+                collectedMoney = 0;
+            }
             stage = ExpeditionStage.Dismissed;
         }
     }
     public void Disappear() // INDEV
+        // экспедиция исчезает
     {
         if (stage == ExpeditionStage.Dismissed) return;
         else
@@ -361,80 +423,12 @@ public sealed class Expedition
     {
         //awaiting
         var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(ID));
-
-        var nameArray = System.Text.Encoding.Default.GetBytes(name);
-        int bytesCount = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(bytesCount));
-        if (bytesCount > 0) data.AddRange(nameArray);
-
-        data.Add((byte)stage); // 0
-        int crewID = -1; if (crew != null) crewID = crew.ID;
-        data.AddRange(System.BitConverter.GetBytes(crewID)); // 1 - 4
-        data.AddRange(mission.Save());  // 5 - 6
-        data.AddRange(System.BitConverter.GetBytes(progress)); // 7 - 10
-        data.AddRange(System.BitConverter.GetBytes(currentStep)); // 11 - 14
-        int usingTransmitterID = (transmitter != null) ? transmitter.connectionID : -1;
-        data.AddRange(System.BitConverter.GetBytes(usingTransmitterID)); // 15 - 18
-        data.AddRange(System.BitConverter.GetBytes(destination.ID)); // 19 - 22
-        byte zero = 0, one = 1;
-        if (missionCompleted) data.Add(one); else data.Add(zero); // 23
-        if (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut)
-        {
-            data.AddRange(System.BitConverter.GetBytes(mapMarker.angle)); // 24 - 27
-            data.AddRange(System.BitConverter.GetBytes(mapMarker.height));//28 - 31
-        }
+        
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)
     {
         var data = new byte[4];
-        fs.Read(data, 0, 4);
-        int bytesCount = System.BitConverter.ToInt32(data, 0);
-        if (bytesCount > 0)
-        {
-            data = new byte[bytesCount];
-            fs.Read(data, 0, bytesCount);
-            System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
-            var chars = new char[d.GetCharCount(data, 0, bytesCount)];
-            d.GetChars(data, 0, bytesCount, chars, 0, true);
-            name = new string(chars);
-        }
-        else name = Localization.GetWord(LocalizedWord.Expedition) + ' ' + ID.ToString();
-        data = new byte[24];
-        fs.Read(data, 0, data.Length);
-        stage = (ExpeditionStage)data[0];
-        int crewID = System.BitConverter.ToInt32(data, 1);
-        if (crewID != - 1) crew = Crew.GetCrewByID(crewID);
-        else crew = null;
-        mission = new Mission((MissionType)data[5]);
-        progress = System.BitConverter.ToSingle(data, 7);
-        currentStep = System.BitConverter.ToInt32(data, 11);
-        int usingTransmitterID = System.BitConverter.ToInt32(data, 15);
-        if (usingTransmitterID != -1)
-        {
-            transmitter = QuantumTransmitter.GetTransmitterByID(usingTransmitterID);
-            transmitter.AssignExpedition(this);
-        }
-        GlobalMap gmap = GameMaster.realMaster.globalMap;
-        destination = gmap.GetMapPointByID(System.BitConverter.ToInt32(data, 19)) as PointOfInterest;
-        if (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut) {
-            data = new byte[8];
-            fs.Read(data, 0, data.Length);
-            if (stage == ExpeditionStage.WayIn) {
-                mapMarker = new FlyingExpedition(this, gmap.GetCityPoint(), destination, Shuttle.SPEED);
-            }
-            else
-            {
-                mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
-            }
-            mapMarker.SetCoords(System.BitConverter.ToSingle(data,0), System.BitConverter.ToSingle(data, 4));
-        }
-        else
-        {
-            destination.sentExpedition = this;
-        }
-        missionCompleted = (data[23] == 1);
         return this;
     }
 

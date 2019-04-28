@@ -6,7 +6,9 @@ public enum LocalizedWord : ushort {
 Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
 Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
 
-public enum LocalizedPhrase : ushort { CannotReachDestination,ConnectionLost, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
+public enum LocalizedPhrase : ushort {
+    ArtifactNotResearched, AffectionTypeNotMatch,
+    CannotReachDestination,ConnectionLost,CrewFoundArtifact, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -19,10 +21,9 @@ public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrysta
 public enum LocalizedTutorialHint : byte { Landing}
 public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
 public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt}
+public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted }
 
-public static class Localization {
-    public const int CREW_INFO_STRINGS_COUNT = 14;
-
+public static class Localization {  
     public static Language currentLanguage { get; private set; }
 
 	static Localization() {
@@ -119,6 +120,7 @@ public static class Localization {
                     case Structure.DOCK_ADDON_2_ID: return "Пристройка дока - 2";
                     case Structure.OBSERVATORY_ID: return "Обсерватория";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранилище артефактов";
+                    case Structure.MONUMENT_ID: return "Монумент";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -197,6 +199,7 @@ public static class Localization {
                     case Structure.DOCK_ADDON_2_ID: return "Dock addon 2";
                     case Structure.OBSERVATORY_ID: return "Observatory";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Artifacts repository";
+                    case Structure.MONUMENT_ID: return "Monument";
                     default: return "Unknown building";
                 }
         }
@@ -275,7 +278,7 @@ public static class Localization {
                     case Structure.SWITCH_TOWER_ID: return "При выделении включает срез слоя, на котором находится.";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Вмещает и обслуживает один челнок.";
                     case Structure.RECRUITING_CENTER_4_ID: return "Набирает и подготавливает команды исследователей из добровольцев.";
-                    case Structure.EXPEDITION_CORPUS_4_ID: return "Центр управления миссиями.";
+                    case Structure.EXPEDITION_CORPUS_4_ID: return "Центр управления миссиями. Может быть построено только одно такое здание.";
                     case Structure.QUANTUM_TRANSMITTER_4_ID: return "Обеспечивает связь с экспедициями за пределами острова.";                    
                     case Structure.FOUNDATION_BLOCK_5_ID: return "Содержит инфраструктуру для обеспечения высокоуровневых зданий";                              
                     case Structure.DOCK_ADDON_1_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 2.";
@@ -285,8 +288,9 @@ public static class Localization {
                     case Structure.CONNECT_TOWER_6_ID:
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<В разработке>";
-                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха.";
+                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха. /n Может быть только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранит найденные артефакты. В случае отключения питания возможны потери.";
+                    case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. В момент включения / отключения питания артефакты внутри монумента могут повредиться.";
                     default: return "Без описания";
                 }
             case Language.English:
@@ -372,7 +376,8 @@ public static class Localization {
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<In development>";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
-                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Contains artifacts. Power shortage may cause losses.";break;
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Contains artifacts. Power shortage may cause losses.";
+                    case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     default: return "No description.";
                 }
         }
@@ -746,6 +751,30 @@ public static class Localization {
                 }
         }       
     }
+    public static string GetCrewAction(LocalizedCrewAction ca, Crew c)
+    {
+        switch (currentLanguage) {
+            case Language.English:
+                {
+                    switch (ca)
+                    {
+                        case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" cannot complete mission and therefore return.";
+                        case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" leave us.";
+                        case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" completed their task";
+                        default: return '"' + c.name + "\" is da best.";
+                    }
+                }
+            case Language.Russian:
+                switch (ca)
+                {
+                    case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" не могут завершить миссию и возвращаются.";
+                    case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" покинули нас.";
+                    case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" завершили миссию";
+                    default: return '"' + c.name + "\" просто топчег.";
+                }
+            default: return '"' + c.name + "\"! 0)0))).";
+        }
+    }
     public static string GetArtifactStatus(Artifact.ArtifactStatus status)
     {
         switch (currentLanguage)
@@ -964,8 +993,11 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.AffectionTypeNotMatch: return "Тип воздействия не совпадает";
+                        case LocalizedPhrase.ArtifactNotResearched: return "Артефакт не изучен";
                         case LocalizedPhrase.CannotReachDestination: return "не может достичь цели";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
+                        case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";                       
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
                         case LocalizedPhrase.MembersCount: return "Число участников";
                         case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
@@ -1032,8 +1064,11 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.AffectionTypeNotMatch: return "Affection type not match"; // artifact aff type
+                        case LocalizedPhrase.ArtifactNotResearched: return "Artifact not researched";
                         case LocalizedPhrase.CannotReachDestination: return "cannot reach destination";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
+                        case LocalizedPhrase.CrewFoundArtifact: return "Our crew has found an artifact!";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
                         case LocalizedPhrase.MembersCount: return "Members count";
                         case LocalizedPhrase.NoArtifact: return "No artifact"; // crew has no artifact
@@ -1255,6 +1290,36 @@ public static class Localization {
                 }
         }        
     }    
+    public static string GetAffectionTitle(Artifact.AffectionType atype)
+    {
+        switch (currentLanguage)
+        {
+            case Language.English:
+                {
+                    switch (atype)
+                    {
+                        case Artifact.AffectionType.SpaceAffection: return "Space affection";                        
+                        case Artifact.AffectionType.StabilityAffection: return "Stability affection";
+                        case Artifact.AffectionType.LifepowerAffection: return "Lifepower flow affection";
+                        case Artifact.AffectionType.NoAffection:
+                        default:  return "No affection";
+
+                    }
+                }
+            case Language.Russian:
+                {
+                    switch (atype)
+                    {
+                        case Artifact.AffectionType.SpaceAffection: return "Влияние на пространство";
+                        case Artifact.AffectionType.StabilityAffection: return "Влияние на стабильность";
+                        case Artifact.AffectionType.LifepowerAffection: return "Влияние на поток жизненной силы";
+                        case Artifact.AffectionType.NoAffection:
+                        default: return "Не активен";
+                    }
+                }
+            default: return "<no affection>";
+        }
+    }
 
     public static string GetCredits()
     {
@@ -1457,7 +1522,7 @@ public static class Localization {
                                     break;
                                 case ProgressQuestID.Progress_2Docks:
                                     q.name = "Trade basement";
-                                    q.description = "Establish your colony's state by constructing two docks. Keep in mind, that docks's fly corridors must not crossing over to be functional.";
+                                    q.description = "Establish your colony's state by constructing two docks. Keep in mind, that docks's flight corridors must not crossing over to be functional.";
                                     q.steps[0] = "Docks built ";
                                     break;
                                 case ProgressQuestID.Progress_2Storages:

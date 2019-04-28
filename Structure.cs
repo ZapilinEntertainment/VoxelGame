@@ -42,8 +42,8 @@ public class Structure : MonoBehaviour
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
-        OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77;
-    public const int TOTAL_STRUCTURES_COUNT = 78, STRUCTURE_SERIALIZER_LENGTH = 16;
+        OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
+    public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
     public static UIStructureObserver structureObserver;
@@ -64,7 +64,6 @@ public class Structure : MonoBehaviour
         RecruitingCenter.ResetToDefaults_Static_RecruitingCenter();
         QuantumTransmitter.ResetToDefaults_Static_QuantumTransmitter();
         Hangar.ResetToDefaults_Static_Hangar();
-        ExpeditionCorpus.ResetToDefaults_Static_ExpeditionCorpus();
         Observatory.ResetBuiltMarker();
     }
 
@@ -150,6 +149,7 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
             case OBSERVATORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/observatory")); break;
             case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository"));break;
+            case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monumentBasement")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -295,6 +295,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Observatory").AddComponent<Observatory>();break;
             case ARTIFACTS_REPOSITORY_ID:
                 s = new GameObject("Artifacts repository").AddComponent<ArtifactsRepository>();break;
+            case MONUMENT_ID:
+                s = new GameObject("Monument").AddComponent<Monument>();break;
             default: return null;
         }
         s.id = i_id;
@@ -1064,6 +1066,16 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
+            case MONUMENT_ID:
+                {
+                    maxHp = 4000;
+                    innerPosition = SurfaceRect.full;
+                    placeInCenter = true;
+                    rotate90only = true;
+                    isArtificial = true;
+                    isBasement = false;
+                    break;
+                }
         }
         hp = maxHp;
     }

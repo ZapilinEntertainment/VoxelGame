@@ -1,28 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public sealed class ExpeditionCorpus : WorkBuilding {
-    public static List<ExpeditionCorpus> expeditionCorpusesList { get; private set; }
-
-    static ExpeditionCorpus() {
-        expeditionCorpusesList = new List<ExpeditionCorpus>();
-    }
-    public static void ResetToDefaults_Static_ExpeditionCorpus()
-    {
-        expeditionCorpusesList = new List<ExpeditionCorpus>();
-    }
+﻿public sealed class ExpeditionCorpus : WorkBuilding {
+    public static ExpeditionCorpus current;
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
+        if (current != null)
+        {
+            var c = current;
+            current = null;
+            c.Annihilate(false);
+        }
         SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        if (!expeditionCorpusesList.Contains(this)) expeditionCorpusesList.Add(this);
+        if (!UIController.current.activeFastButtons.Contains(id)) UIController.current.AddFastButton(this);
+        current = this;
     }
 
     public override UIObserver ShowOnGUI()
@@ -39,12 +34,19 @@ public sealed class ExpeditionCorpus : WorkBuilding {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (expeditionCorpusesList.Contains(this)) expeditionCorpusesList.Remove(this);
         PrepareWorkbuildingForDestruction(forced);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
+        }
+        if (current == this)
+        {
+            current = null;
+            if (UIController.current.activeFastButtons.Contains(id))
+            {
+                UIController.current.RemoveFastButton(this);
+            }
         }
         Destroy(gameObject);
     }

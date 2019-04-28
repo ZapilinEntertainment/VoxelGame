@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrewStatus : byte {AtHome, OnMission, Travelling} // при изменении дополнить Localization.GetCrewStatus
+public enum CrewStatus : byte {AtHome, OnMission, Travelling}
+// dependencies
+//Localization.GetCrewStatus()
+// Rest()
 
 public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
+    public const int CREW_INFO_STRINGS_COUNT = 14;
     public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f, CHANGING_SHUTTLE_STAMINA_CONSUMPTION = 0.1f;
+    private const float NEUROPARAMETER_STEP = 0.01f, NATIVE_CHAR_IMPROVEMENT_STEP = 0.02f, STAMINA_REFRESH_SPEED = 0.02f;
 
 	public static int lastFreeID {get;private set;}	
     public static int actionsHash { get; private set; }
@@ -20,31 +25,121 @@ public sealed class Crew : MonoBehaviour {
 	public byte level {get; private set;}
 	public int ID{get;private set;}
     public Artifact artifact { get; private set; }
+    public Expedition currentExpedition { get; private set; }
 	public Shuttle shuttle{get;private set;}
 	public CrewStatus status { get; private set; }
 
-	public float perception{get;private set;}  // тесты на нахождение и внимательность
-	public float persistence{get;private set;}   // тесты на выносливость и желание продолжать поиски
-	public float luck{get;private set;}  // не показывать игроку
-	public float bravery{get;private set;}  
-	public float techSkills{get;private set;}
-	public float survivalSkills{get;private set;} // для наземных операций
-	public float teamWork{get;private set;}
+    private float _perception;
+	public float perception // тесты на нахождение и внимательность
+    {
+        get { return _perception; } 
+        private set { if (value < 0) _perception = 0; else { if (value > 1) _perception = 1; } }
+    }
+    private float _persistence;
+	public float persistence
+    {   // тесты на выносливость и желание продолжать поиски
+        get { return _persistence; }
+        private set { if (value < 0) _persistence = 0; else { if (value > 1) _persistence = 1; } }
+    }
+    private float _luck;
+	public float luck
+    {  // не показывать игроку
+        get { return _luck; }
+        private set { if (value < 0) _luck = 0; else { if (value > 1) _luck = 1; } }
+    }
+    private float _bravery;
+	public float bravery
+    {
+        get { return _bravery; }
+        private set { if (value < 0) _bravery = 0; else { if (value > 1) _bravery = 1; } }
+    }
+    private float _techSkills;
+	public float techSkills
+    {
+        get { return _techSkills; }
+        private set { if (value < 0) _techSkills = 0; else { if (value > 1) _techSkills = 1; } }
+    }
+    private float _survivalSkills;
+	public float survivalSkills{
+        get { return _survivalSkills; }
+        private set { if (value < 0) _survivalSkills = 0; else { if (value > 1) _survivalSkills = 1; } }
+    }
+    private float _teamwork;
+	public float teamWork{
+        get { return _teamwork; }
+        private set { if (value < 0) _teamwork = 0; else { if (value > 1) _teamwork = 1; } }
+    }
     //при внесении изменений отредактировать Localization.GetCrewInfo
 
         //neuroparameters:
-    public float confidence { get; private set; }
-    public float unity { get; private set; }
-    public float loyalty { get; private set; }
-    public float adaptability { get;private set; }
+    private float _confidence;
+    public float confidence
+    {
+        get { return _confidence; }
+        private set {
+            if (value < 0)
+            {
+                _confidence = 0;
+                if (currentExpedition != null & loyalty < 0.5f)
+                {
+                    GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotCompleteMission,this));
+                    currentExpedition.EndMission();
+                }
+            }
+            else { if (value > 1) _confidence = 1; } }
+    }
+    private float _unity;
+    public float unity
+    {
+        get { return _unity; }
+        private set { if (value < 0) _unity = 0; else { if (value > 1) _unity = 1; } }
+    }
+    private float _loyalty;
+    public float loyalty
+    {
+        get { return _loyalty; }
+        private set {
+            if (value < 0) {
+                _loyalty = 0;
+                GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.LeaveUs, this));
+                currentExpedition.Disappear();
+            }
+            else { if (value > 1) _loyalty = 1; } }
+    }
+    private float _adaptability;
+    public float adaptability
+    {
+        get { return _adaptability; }
+        private set { if (value < 0) _adaptability = 0; else { if (value > 1) _adaptability = 1; } }
+    }
 
-	public float stamina{get;private set;}  // процент готовности, падает по мере проведения операции, восстанавливается дома
+    private float _stamina;
+    public float stamina
+    {
+        get { return _stamina; }
+        private set { if (value < 0) _stamina = 0; else { if (value > 1) _stamina = 1; } }
+    }  // процент готовности, падает по мере проведения операции, восстанавливается дома
+
     public int missionsParticipated { get; private set; }
     public int missionsSuccessed{get;private set;}    
 
     static Crew()
     {
         crewsList = new List<Crew>();
+        GameMaster.realMaster.lifepowerUpdateEvent += CrewsUpdateEvent;
+    }
+    public static void CrewsUpdateEvent()
+    {
+        if (crewsList != null && crewsList.Count > 0)
+        {
+            foreach (Crew c in crewsList)
+            {
+                if (c.status != CrewStatus.OnMission)
+                {
+                    c.Rest(null);
+                }
+            }
+        }
     }
 
 	public static void Reset() {
@@ -137,7 +232,6 @@ public sealed class Crew : MonoBehaviour {
                 shuttle = s;
             }
             stamina -= CHANGING_SHUTTLE_STAMINA_CONSUMPTION;
-            if (stamina < 0) stamina = 0;
             actionsHash++;
         }               
 	}
@@ -150,8 +244,12 @@ public sealed class Crew : MonoBehaviour {
         name = s;
     }
 
+    public void AddExperience(float f)
+    {
+        experience += f * (0.75f +  0.5f * adaptability);
+    }
 	static float CalculateExperienceLimit(byte f_level) {
-		return 2 * f_level;
+        return f_level < 3 ? 2 * f_level : f_level * f_level;
 	}
     public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
     {
@@ -167,18 +265,42 @@ public sealed class Crew : MonoBehaviour {
             if (protection == null) DropArtifact();
             else
             {
-                if (protection == true) return true;
+                if (protection == true)
+                {
+                    confidence += NEUROPARAMETER_STEP;
+                    return true;
+                }
             }
         }
-        return true;
+        //нет артефакта или защита не сработала
+        bool success = true;
+        if (success)
+        {
+            unity += NEUROPARAMETER_STEP;
+            adaptability += NEUROPARAMETER_STEP;
+            return true;
+        }
+        else return false;
     }
+
+    /// <summary>
+    /// returns true if successfully completed
+    /// </summary>
+    /// <param name="friendliness"></param>
+    /// <returns></returns>
     public bool SoftCheck( float friendliness) // INDEV
     {
-        return false;//команда решает остаться
+        bool success = true;
+        if (success)
+        {
+            unity += NEUROPARAMETER_STEP;
+            adaptability += NEUROPARAMETER_STEP;
+        }
+        return success;
     }
-    public bool StaminaCheck()
+    public bool ConsumeStamina(float f)
     {
-        stamina -= 0.1f;
+        stamina -= f;
         if (stamina <= 0)
         {
             stamina = 0;
@@ -186,9 +308,64 @@ public sealed class Crew : MonoBehaviour {
         }
         else return true;
     }
+    public void Rest(PointOfInterest place)
+    {
+        if (place != null)
+        {
+            stamina += 0.5f * (0.4f + place.danger * 0.3f + place.difficulty * 0.3f + place.friendliness * 0.2f);
+            unity += NEUROPARAMETER_STEP;
+        }
+        else
+        {
+            if (status == CrewStatus.AtHome)
+            {
+                stamina += STAMINA_REFRESH_SPEED;
+                adaptability -= NEUROPARAMETER_STEP / 4f;
+            }
+            else
+            {
+                stamina += STAMINA_REFRESH_SPEED / 2f;
+                adaptability -= NEUROPARAMETER_STEP / 8f;
+            }
+        }
+    }
+
+    /// <summary>
+    /// improves persistence, perception, bravery or teamwork
+    /// </summary>
+    public void ImproveNativeParameters()
+    {
+        float f = Random.value;
+        if (f < 0.5f)
+        {
+            if (f < 0.25f)
+            {
+                persistence += NATIVE_CHAR_IMPROVEMENT_STEP;
+                confidence += NEUROPARAMETER_STEP;
+            }
+            else
+            {
+                perception += NATIVE_CHAR_IMPROVEMENT_STEP;
+                adaptability += NEUROPARAMETER_STEP;
+            }
+        }
+        else
+        {
+            if (f > 0.75f)
+            {
+                bravery += NATIVE_CHAR_IMPROVEMENT_STEP;
+
+            }
+        }
+    }
 
     public void DismissMember() { // INDEV
         // перерасчет характеристик
+        if (membersCount < MAX_MEMBER_COUNT / 2)
+        {
+            unity += NEUROPARAMETER_STEP;
+            confidence -= NEUROPARAMETER_STEP;
+        }
     }
     public void LoseMember() // INDEV
     {
@@ -198,27 +375,38 @@ public sealed class Crew : MonoBehaviour {
         {
             // перерасчет характеристик
         }
+        confidence -= 4 * NEUROPARAMETER_STEP;
+        unity += NEUROPARAMETER_STEP;
     }
 	public void AddMember() { // INDEX
         membersCount++;
         // перерасчет характеристик
+        if (membersCount >= 5) unity -= NEUROPARAMETER_STEP / 2f;
+        else unity -= NEUROPARAMETER_STEP;
     }
 
-    public void LowConfidence() { confidence -= 0.1f * (1 - unity) * (1 - loyalty); if (confidence < 0) confidence = 0; }
-    public void UpConfidence() { confidence += 0.1f * (1 + unity / 2f); }
+    public void LoseConfidence() { confidence -= NEUROPARAMETER_STEP * (1 - unity) * (1 - loyalty);  }
+    public void IncreaseConfidence() { confidence += NEUROPARAMETER_STEP * (1 + unity / 2f);  }
+    public void LoseLoyalty() { loyalty -= NEUROPARAMETER_STEP * (1 - unity) * (1 - confidence); }
+    public void IncreaseLoyalty() { loyalty += NEUROPARAMETER_STEP * (1 - adaptability); }
+    public void IncreaseAdaptability() { adaptability += NEUROPARAMETER_STEP; }
 
     public void SetArtifact(Artifact a)
     {
         if (a == null) return;
         else
         {
+            //если уже есть артефакт
             if (artifact != null)
             {
                 if (status == CrewStatus.AtHome) artifact.Conservate();
                 else artifact.Destroy();
             }
+            //
             artifact = a;
             artifact.SetOwner(this);
+            loyalty += NEUROPARAMETER_STEP;
+            confidence += NEUROPARAMETER_STEP;
         }
     }
     public void DropArtifact()
@@ -227,6 +415,8 @@ public sealed class Crew : MonoBehaviour {
         {
             artifact.SetOwner(null);
             artifact = null;
+            confidence -= NEUROPARAMETER_STEP;
+            unity -= NEUROPARAMETER_STEP;
             actionsHash++;
         }
     }

@@ -15,7 +15,7 @@ public sealed class GlobalMap : MonoBehaviour
 
     private bool prepared = false, mapInterfaceActive = false;
     private int currentSectorIndex = 0;
-    private GameObject mapUI_go;
+    public GameObject observer { get; private set; }
     private Dictionary<SunPoint, Transform> stars;
 
     public const byte RINGS_COUNT = 5;
@@ -569,10 +569,10 @@ public sealed class GlobalMap : MonoBehaviour
     public void ShowOnGUI()
     {
         if (!prepared) return;
-        if (mapUI_go == null)
+        if (observer == null)
         {
-            mapUI_go = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"));
-            mapUI_go.GetComponent<GlobalMapUI>().SetGlobalMap(this);
+            observer = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"));
+            observer.GetComponent<GlobalMapUI>().SetGlobalMap(this);
         }
         mapInterfaceActive = true;
         if (stars.Count > 0)
@@ -582,7 +582,7 @@ public sealed class GlobalMap : MonoBehaviour
                 sto.Value.gameObject.SetActive(false);
             }
         }
-        if (!mapUI_go.activeSelf) mapUI_go.SetActive(true);
+        if (!observer.activeSelf) observer.SetActive(true);
     }
     public void MarkToUpdate()
     {

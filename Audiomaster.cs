@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum NotificationSound : ushort { Default, ColonyFounded,PowerFailure, BatteryCharged, NotEnoughResources, NotEnoughMoney,
-NotEnoughSlots, StorageOverload, newQuestAvailable, newObjectFound, SystemError}
+NotEnoughSlots, StorageOverload, newQuestAvailable, newObjectFound, SystemError, Disagree, CrewTaskCompleted}
 public class Audiomaster : MonoBehaviour {
     private AudioSource notificationSource;
 

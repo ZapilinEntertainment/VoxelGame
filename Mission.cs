@@ -8,7 +8,8 @@ public enum MissionType : byte
 // Dependencies:
 // конструктор
 //  TestYourMight()
-//
+//GetDistanceToTarget
+// Result
 
 //структура для проходения проверок командой
 public struct Mission {   
@@ -70,6 +71,22 @@ public struct Mission {
             return c.teamWork * c.unity + c.persistence * c.confidence + 0.1f * c.loyalty + c.adaptability;
         }
     }
+    public float GetDistanceToTarget()
+    {
+        switch (type)
+        {
+            case MissionType.Awaiting: return 0;
+            case MissionType.Exploring: return stepsCount + 1;
+            case MissionType.FindingKnowledge: return stepsCount * (0.5f + Random.value);
+            case MissionType.FindingItem: return stepsCount * (0.3f + Random.value * 0.5f);
+            case MissionType.FindingPerson: return stepsCount * (0.6f + Random.value);
+            case MissionType.FindingPlace: return stepsCount * (0.4f + Random.value * 0.3f);
+            case MissionType.FindingResources: return stepsCount / 2f + Random.value * 2f;
+            case MissionType.FindingEntrance: return stepsCount * (0.25f + Random.value * 0.3f);
+            case MissionType.FindingExit: return stepsCount * (0.35f + Random.value * 0.2f);
+            default: return stepsCount / 2f;
+        }
+    }
     public bool TestYourMight(Crew c)
     {
         switch (type)
@@ -97,6 +114,27 @@ public struct Mission {
     {
         //может и не получиться
         return true;
+    }
+
+    /// <summary>
+    /// returns true if mission should be ended
+    /// </summary>
+    /// <returns></returns>
+    public bool Result(Expedition e)
+    {
+        switch (type)
+        {
+            case MissionType.Awaiting: return false;
+            case MissionType.Exploring: e.crew.IncreaseAdaptability(); return false;
+            case MissionType.FindingKnowledge: e.crew.ImproveNativeParameters(); return false;
+            case MissionType.FindingItem: 
+            case MissionType.FindingPerson: 
+            case MissionType.FindingPlace: e.crew.AddExperience(Expedition.ONE_STEP_XP); return true;
+            case MissionType.FindingResources: point.TakeTreasure(e.crew); return false;
+            case MissionType.FindingEntrance: e.crew.AddExperience(Expedition.ONE_STEP_XP); return false;
+            case MissionType.FindingExit: e.crew.AddExperience(Expedition.ONE_STEP_XP); return true;
+            default: return false;
+        }
     }
 
     #region save-load

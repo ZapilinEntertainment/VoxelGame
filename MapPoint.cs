@@ -11,6 +11,8 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Isl
 //  функция загрузки LoadPoints()
 // GlobalMap.CreateNewSector
 // Environment.GetSuitablePointType
+// PointOfInterest.TakeTreasure
+// PointOfInterest.GetArtifact
 
 public class MapPoint
 {
