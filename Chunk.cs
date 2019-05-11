@@ -175,7 +175,7 @@ public sealed class Chunk : MonoBehaviour
     public delegate void ChunkUpdateHandler();
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
-    private float LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1), chunkUpdateTimer;
+    private float LIGHT_DECREASE_PER_BLOCK, chunkUpdateTimer;
     private bool chunkUpdateRequired = false, borderDrawn = false, shadowsUpdateRequired;
     private Dictionary<MeshVisualizeInfo, GameObject> renderers; // (face, material, illumitation) <- носители скомбинированных моделей
     private List<BlockpartVisualizeInfo> blockVisualizersList;// <- информация обо всех видимых блоках
@@ -241,6 +241,7 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
+        LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
 
         GameMaster.layerCutHeight = CHUNK_SIZE;
         GameMaster.prevCutHeight = CHUNK_SIZE;
@@ -458,7 +459,8 @@ public sealed class Chunk : MonoBehaviour
             }
             // up and down
             bx = GetBlock(x, y + 1, z);
-            if (bx == null & y != CHUNK_SIZE - 1) vmask += 16;
+            bool visionBlocked = bx != null && bx.type != BlockType.Shapeless;
+            if (!visionBlocked & y != CHUNK_SIZE - 1) vmask += 16;
 
             bx = GetBlock(x, y - 1, z);
             if (bx == null) vmask += 32;
@@ -468,6 +470,10 @@ public sealed class Chunk : MonoBehaviour
                 {
                     SurfaceBlock sb = bx as SurfaceBlock;
                     if (!sb.haveSupportingStructure) vmask += 32;
+                }
+                else
+                {
+                    if (bx.type == BlockType.Shapeless) vmask += 32;
                 }
             }
             if (vmask != 0)
@@ -1514,7 +1520,6 @@ public sealed class Chunk : MonoBehaviour
         }
         originalBlock.Annihilate();
         originalBlock = null;
-;
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
         if (calculateUpperBlock)
         {
@@ -1758,15 +1763,21 @@ public sealed class Chunk : MonoBehaviour
     {
         if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0) | (s == null)) return false;
         Block b = GetBlock(x, y, z);
-        if (b != null) b = ReplaceBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
-        else b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, 0, false);
         if (b != null)
         {
+            if (b.type == BlockType.Shapeless)
+            {
+                b.SetMainStructure(s);
+                return true;
+            }
+            else return false;
+        }
+        else
+        {
+            b = AddBlock(new ChunkPos(x, y, z), BlockType.Shapeless, -1, false);
             b.SetMainStructure(s);
-            chunkUpdateRequired = true;
             return true;
         }
-        else return false;
     }
 
     public void BlockRegion(List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
@@ -1778,8 +1789,8 @@ public sealed class Chunk : MonoBehaviour
             if (b != null) continue;
             else
             {
-                b = new Block(this, pos, s);
-                blocks.Add(pos, b);
+                b = AddBlock(pos, BlockType.Shapeless, -1, false);
+                b.SetMainStructure(s);
                 dependentBlocks.Add(b);
             }
         }
@@ -1839,7 +1850,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         else
-        {
+        {            
             for (int z = xStart; z < xEnd; z++)
             {
                 for (int y = yStart; y < yEnd; y++)
@@ -1847,6 +1858,7 @@ public sealed class Chunk : MonoBehaviour
                     for (int x = 0; x < CHUNK_SIZE; x++)
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
+                       
                         bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);

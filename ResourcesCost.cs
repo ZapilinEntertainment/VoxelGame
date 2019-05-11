@@ -4,13 +4,49 @@ using UnityEngine;
 
 public static class ResourcesCost
 {
-    public const int SHUTTLE_BUILD_COST_ID = -2;
+    public const int SHUTTLE_BUILD_COST_ID = -2, HQ_LVL2_COST_ID = -3, HQ_LVL3_COST_ID = -4, HQ_LVL4_COST_ID = -5, HQ_LVL5_COST_ID = -6, HQ_LVL6_COST_ID = -7 ;
 
     public static ResourceContainer[] GetCost(int id)
     {
         ResourceContainer[] cost = new ResourceContainer[0];
         switch (id)
         {
+            case Structure.HEADQUARTERS_ID:
+                cost = new ResourceContainer[]
+                {
+                    new ResourceContainer(ResourceType.metal_K, 10)
+                };
+                break;
+            case HQ_LVL2_COST_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_E, 6),
+                new ResourceContainer(ResourceType.Plastics, 45), new ResourceContainer(ResourceType.metal_N, 4)
+            };
+                break;
+            case HQ_LVL3_COST_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_E, 12),
+                new ResourceContainer(ResourceType.Plastics, 60), new ResourceContainer(ResourceType.metal_N, 8)
+            };
+                break;
+            case HQ_LVL4_COST_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_E, 20),
+                new ResourceContainer(ResourceType.Plastics, 250), new ResourceContainer(ResourceType.metal_N, 20)
+            };
+                break;
+            case HQ_LVL5_COST_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 80), new ResourceContainer(ResourceType.metal_E, 60),
+                new ResourceContainer(ResourceType.Plastics, 500), new ResourceContainer(ResourceType.metal_N, 100)
+            };
+                break;
+            case HQ_LVL6_COST_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 160), new ResourceContainer(ResourceType.metal_E, 120),
+                new ResourceContainer(ResourceType.Plastics, 750), new ResourceContainer(ResourceType.metal_N, 200)
+            };
+                break;
             case SHUTTLE_BUILD_COST_ID:
                 cost = new ResourceContainer[] {
                 new ResourceContainer(ResourceType.metal_S, 50), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 20),
@@ -228,24 +264,6 @@ public static class ResourcesCost
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 350), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_E, 18),
                 new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_M, 40)
-            };
-                break;
-            case Structure.HQ_2_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_E, 6),
-                new ResourceContainer(ResourceType.Plastics, 45), new ResourceContainer(ResourceType.metal_N, 4)
-            };
-                break;
-            case Structure.HQ_3_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_E, 12),
-                new ResourceContainer(ResourceType.Plastics, 60), new ResourceContainer(ResourceType.metal_N, 8)
-            };
-                break;
-            case Structure.HQ_4_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_E, 20),
-                new ResourceContainer(ResourceType.Plastics, 250), new ResourceContainer(ResourceType.metal_N, 20)
             };
                 break;
             case Structure.BIOGENERATOR_2_ID:

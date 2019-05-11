@@ -92,7 +92,7 @@ public sealed class UIDockObserver : UIObserver
         }
     }
 
-    override protected void StatusUpdate()
+    override public void StatusUpdate()
     {
         if (!isObserving) return;
         if (observingDock == null)

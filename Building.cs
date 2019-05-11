@@ -4,14 +4,16 @@ using UnityEngine;
 
 public class Building : Structure
 {
-    public int upgradedIndex { get; private set; } 
-    public bool canBePowerSwitched { get; protected set; } 
+    private int _upgradedIndex = -1;
+    public int upgradedIndex { get { return _upgradedIndex; } private set { _upgradedIndex = value; } }
+    public bool canBePowerSwitched { get; protected set; }
     public bool isActive { get; protected set; }
     public bool isEnergySupplied { get; protected set; } //управляется только ColonyController'ом
     public bool connectedToPowerGrid { get; protected set; }// установлено ли подключение к электросети
-    public float energySurplus = 0; 
-    public float energyCapacity = 0;     
-    public byte level { get; protected set; } 
+    public float energySurplus { get; protected set; }
+    public float energyCapacity { get; protected set; }
+    private byte _level = 1;
+    public byte level { get { return _level; } protected set { _level = value; } }
     public bool specialBuildingConditions { get; protected set; }
 
     public static UIBuildingObserver buildingObserver;
@@ -68,10 +70,10 @@ public class Building : Structure
                 blist.Add(GetStructureByID(SHUTTLE_HANGAR_4_ID) as Building);
                 blist.Add(GetStructureByID(RECRUITING_CENTER_4_ID) as Building);
                 blist.Add(GetStructureByID(EXPEDITION_CORPUS_4_ID) as Building);
-                blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
-                blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
+                blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);                
                 blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
                 blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
+                blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_5_ID) as Building);
@@ -105,14 +107,151 @@ public class Building : Structure
     {
         switch (id)
         {
-            case ENERGY_CAPACITOR_1_ID: return 200;
-            case ENERGY_CAPACITOR_2_ID: return 800;
-            case ENERGY_CAPACITOR_3_ID: return 2500;
-            default: return 1;
+            case ENERGY_CAPACITOR_1_ID: return 200f;
+            case ENERGY_CAPACITOR_2_ID: return 800f;
+            case ENERGY_CAPACITOR_3_ID: return 2500f;
+
+            case HOUSE_1_ID: return 1f;
+            case HOUSE_2_ID: return 10f;
+            case HOUSE_3_ID: return 20f;
+            case HOUSE_5_ID:return 150f;
+            case HOUSING_MAST_6_ID: return 1000f;
+
+            case DOCK_ID: return 24f;
+            case DOCK_2_ID: return 80f;
+            case DOCK_3_ID: return 150f;
+
+            case FARM_1_ID: return 10f;
+            case FARM_2_ID: return 20f;
+            case FARM_3_ID:return 40f;
+            case FARM_4_ID: return 120f;
+            case FARM_5_ID: return 300f;
+
+            case LUMBERMILL_1_ID: return 10f;
+            case LUMBERMILL_2_ID: return 40f;
+            case LUMBERMILL_3_ID: return 80f;
+            case LUMBERMILL_4_ID: return 80f;
+            case LUMBERMILL_5_ID: return 160f;
+
+            case SMELTERY_1_ID: return 40f;
+            case SMELTERY_2_ID: return 60f;
+            case SMELTERY_3_ID: return 100f;
+            case SMELTERY_5_ID: return 160f;
+
+            case SUPPLIES_FACTORY_4_ID: return 20f;
+            case SUPPLIES_FACTORY_5_ID: return 80f;
+
+            case FOUNDATION_BLOCK_5_ID:
+            case WIND_GENERATOR_1_ID: return 10f;
+            case XSTATION_3_ID: return 12f;
+
+            case EXPEDITION_CORPUS_4_ID:
+            case RECRUITING_CENTER_4_ID:
+            case GRPH_ENRICHER_3_ID:
+            case MINE_ID:
+            case MINERAL_POWERPLANT_2_ID:
+            case WORKSHOP_ID:
+            case BIOGENERATOR_2_ID: return 20f;
+
+            case SHUTTLE_HANGAR_4_ID:
+            case CHEMICAL_FACTORY_4_ID:
+            case PLASTICS_FACTORY_3_ID:
+            case ORE_ENRICHER_2_ID: return 40f;
+
+            case FUEL_FACILITY_3_ID:
+            case HOSPITAL_2_ID: return 50f;
+
+            case DOCK_ADDON_1_ID:
+            case DOCK_ADDON_2_ID:
+            case MINI_GRPH_REACTOR_3_ID: return 100f;
+
+            case ARTIFACTS_REPOSITORY_ID: return 160f;
+
+            case CONNECT_TOWER_6_ID: return 192f;
+
+            case OBSERVATORY_ID:
+            case REACTOR_BLOCK_5_ID: return 200f;
+
+            case CONTROL_CENTER_6_ID: return 240f;
+
+            case HOTEL_BLOCK_6_ID: return 300f;
+
+            case MONUMENT_ID: return 800f;            
+            default: return 0;
+        }
+    }
+    public static float GetEnergySurplus(int id)
+    {
+        switch (id)
+        {
+            case HOUSE_2_ID: return -5f;
+            case HOUSE_3_ID: return -8;
+            case HOUSE_5_ID: return -50f;
+            case HOUSING_MAST_6_ID: return -120f;
+
+            case DOCK_ID: return -20f;
+            case DOCK_2_ID: return -30f;
+            case DOCK_3_ID: return -12f;
+
+            case FARM_1_ID: return -1f;
+            case FARM_2_ID: return -4f;
+            case FARM_3_ID: return -20f;
+            case FARM_4_ID: return -40f;
+            case FARM_5_ID: return -100f;
+
+            case LUMBERMILL_1_ID: return -2f;
+            case LUMBERMILL_2_ID: return -4f;
+            case LUMBERMILL_3_ID: return -20f;
+            case LUMBERMILL_4_ID: return -20f;
+            case LUMBERMILL_5_ID: return -80f;
+
+            case SUPPLIES_FACTORY_4_ID: return -25f;
+            case SUPPLIES_FACTORY_5_ID: return -40f;
+
+            case MINE_ID: return -2f;
+
+            case SMELTERY_1_ID: return -8f;
+            case SMELTERY_2_ID: return -15f;
+            case SMELTERY_3_ID: return -40f;
+            case SMELTERY_5_ID: return -80f;
+
+            case HOSPITAL_2_ID: return -6f;
+            case SHUTTLE_HANGAR_4_ID:
+            case MONUMENT_ID:
+            case XSTATION_3_ID: return -10f;
+            case WORKSHOP_ID: return -8f;
+            case EXPEDITION_CORPUS_4_ID:
+            case RECRUITING_CENTER_4_ID:
+            case ORE_ENRICHER_2_ID: return -12f;
+            case ARTIFACTS_REPOSITORY_ID: return -16f;
+            case CHEMICAL_FACTORY_4_ID:
+            case PLASTICS_FACTORY_3_ID:
+            case FUEL_FACILITY_3_ID: return -20f;
+            case CONTROL_CENTER_6_ID: return -40f;
+            case OBSERVATORY_ID: return -50f;
+            case CONNECT_TOWER_6_ID: return -64f;
+            case HOTEL_BLOCK_6_ID:
+            case GRPH_ENRICHER_3_ID: return -70f;
+            
+
+            case MINERAL_POWERPLANT_2_ID: return Powerplant.MINERAL_F_PP_OUTPUT;
+            case FOUNDATION_BLOCK_5_ID:
+            case WIND_GENERATOR_1_ID: return 10f;
+            case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
+            case MINI_GRPH_REACTOR_3_ID: return 50f;
+            case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
+            case REACTOR_BLOCK_5_ID: return Powerplant.REACTOR_BLOCK_5_OUTPUT;
+
+            default: return 0;
         }
     }
 
     override public void Prepare() { PrepareBuilding(); }
+
+    protected void ChangeUpgradedIndex(int x)
+    {
+        upgradedIndex = x;
+    }
 
     /// <summary>
     /// do not use directly, use Prepare() instead
@@ -126,197 +265,94 @@ public class Building : Structure
         isEnergySupplied = false;
         connectedToPowerGrid = false;
         specialBuildingConditions = false;
+
+        upgradedIndex = -1;
+        canBePowerSwitched = false;
+        canBePowerSwitched = false;
+        energySurplus = GetEnergySurplus(id);
+        energyCapacity = GetEnergyCapacity(id);
+        level = 1;
+
         switch (id)
         {
-            case LANDED_ZEPPELIN_ID:
+            case HEADQUARTERS_ID:
                 {
-                    upgradedIndex = HQ_2_ID;
-                    canBePowerSwitched = false;
-                    energySurplus = 1;
-                    energyCapacity = 100;
-                    level = 1;
+                    upgradedIndex = 0;
+                    break;
                 }
-                break;
-            case HQ_2_ID:
-                {
-                    upgradedIndex = HQ_3_ID;
-                    canBePowerSwitched = false;
-                    energySurplus = 3;
-                    energyCapacity = 200;
-                    level = 2;
-                }
-                break;
-            case HQ_3_ID:
-                {
-                    upgradedIndex = HQ_4_ID;
-                    canBePowerSwitched = false;
-                    energySurplus = 5;
-                    energyCapacity = 400;
-                    level = 3;
-                }
-                break;
-            case HQ_4_ID:
-                {
-                    upgradedIndex = 1;
-                    canBePowerSwitched = false;
-                    energySurplus = 10;
-                    energyCapacity = 500;
-                    level = 4;
-                }
-                break;
             case STORAGE_0_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
                     level = 0;
-                }
-                break;
-            case STORAGE_1_ID:
-                {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
-                    level = 1;
                 }
                 break;
             case STORAGE_2_ID:
                 {
                     upgradedIndex = STORAGE_3_ID;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
                     level = 2;
                 }
                 break;
             case STORAGE_3_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
                     level = 3;
                 }
                 break;
             case STORAGE_5_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
                     level = 5;
                 }
                 break;
             case TENT_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
                     level = 0;
                 }
                 break;
             case HOUSE_1_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 1;
-                    
                     level = 1;
                 }
                 break;
             case HOUSE_2_ID:
                 {
                     upgradedIndex = HOUSE_3_ID;
-                    canBePowerSwitched = false;
-                    energySurplus = -5;
-                    energyCapacity = 10;
-                    
                     level = 2;
                 }
                 break;
             case HOUSE_3_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = -8;
-                    energyCapacity = 20;
-                    
                     level = 3;
                 }
                 break;
             case HOUSE_5_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = -50;
-                    energyCapacity = 150;
-                    
                     level = 5;
                 }
                 break;
             case DOCK_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = true;
-                    energySurplus = -12;
-                    energyCapacity = 24;                    
                     level = 1;
+                    canBePowerSwitched = true;
                 }
                 break;
             case DOCK_2_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 80;
                     level = 2;
                 }
                 break;
             case DOCK_3_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -30;
-                    energyCapacity = 150;
                     level = 3;
-                }
-                break;
-            case ENERGY_CAPACITOR_1_ID:
-                {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = GetEnergyCapacity(id);
-                    
-                    level = 1;
                 }
                 break;
             case ENERGY_CAPACITOR_2_ID:
                 {
                     upgradedIndex = ENERGY_CAPACITOR_3_ID;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = GetEnergyCapacity(id);
-                    
                     level = 2;
                 }
                 break;
             case ENERGY_CAPACITOR_3_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = GetEnergyCapacity(id);
-                    
                     level = 3;
                 }
                 break;
@@ -324,18 +360,13 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_2_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -1;
-                    energyCapacity = 10;
                     specialBuildingConditions = true;
-                    level = 1;
                 }
                 break;
             case FARM_2_ID:
                 {
                     upgradedIndex = FARM_3_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -4;
-                    energyCapacity = 20;
                     specialBuildingConditions = true;
                     level = 2;
                 }
@@ -344,8 +375,6 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_4_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 40;
                     specialBuildingConditions = true;
                     level = 3;
                 }
@@ -354,17 +383,12 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -40;
-                    energyCapacity = 120;
                     level = 4;
                 }
                 break;
             case FARM_5_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -100;
-                    energyCapacity = 300;
                     level = 5;
                 }
                 break;
@@ -372,28 +396,20 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_2_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -2;
-                    energyCapacity = 10;
                     specialBuildingConditions = true;
-                    level = 1;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
                     upgradedIndex = LUMBERMILL_3_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -5;
-                    energyCapacity = 40;
                     specialBuildingConditions = true;
-                    level = 2;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
                     upgradedIndex = LUMBERMILL_4_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 80;
                     specialBuildingConditions = true;
                     level = 3;
                 }
@@ -402,19 +418,12 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 80;
-                    
                     level = 4;
                 }
                 break;
             case LUMBERMILL_5_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -80;
-                    energyCapacity = 160;
-                    
                     level = 5;
                 }
                 break;
@@ -422,8 +431,6 @@ public class Building : Structure
                 {
                     upgradedIndex = 0;
                     canBePowerSwitched = true;
-                    energySurplus = -2;
-                    energyCapacity = 20;
                     level = 1;
                 }
                 break;
@@ -431,19 +438,12 @@ public class Building : Structure
                 {
                     upgradedIndex = SMELTERY_2_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -8;
-                    energyCapacity = 40;
-                    
-                    level = 1;
                 }
                 break;
             case SMELTERY_2_ID:
                 {
                     upgradedIndex = SMELTERY_3_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -15;
-                    energyCapacity = 60;
-                    
                     level = 2;
                 }
                 break;
@@ -451,119 +451,62 @@ public class Building : Structure
                 {
                     upgradedIndex = SMELTERY_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -40;
-                    energyCapacity = 100;
-                    
                     level = 3;
                 }
                 break;
             case SMELTERY_5_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -80;
-                    energyCapacity = 160;
-                    
                     level = 5;
-                }
-                break;
-            case WIND_GENERATOR_1_ID:
-                {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 10;
-                    energyCapacity = 10;
-                    
-                    level = 1;
                 }
                 break;
             case BIOGENERATOR_2_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = Powerplant.BIOGEN_OUTPUT;
-                    energyCapacity = 20;
-                    
                     level = 2;
                 }
                 break;
             case HOSPITAL_2_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -6;
-                    energyCapacity = 50;
-                    
                     level = 2;
                 }
                 break;
             case MINERAL_POWERPLANT_2_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = Powerplant.MINERAL_F_PP_OUTPUT;
-                    energyCapacity = 20;
-                    
                     level = 2;
                 }
                 break;
             case ORE_ENRICHER_2_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -12;
-                    energyCapacity = 40;
-                    
                     level = 2;
                 }
                 break;
             case WORKSHOP_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -8;
-                    energyCapacity = 20;
-                    
                     level = 2;
                 }
                 break;
             case MINI_GRPH_REACTOR_3_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 50;
-                    energyCapacity = 100;
-                    
                     level = 3;
                 }
                 break;
             case FUEL_FACILITY_3_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 50;
-                    
                     level = 3;
                 }
                 break;
             case GRPH_REACTOR_4_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = Powerplant.GRPH_REACTOR_OUTPUT;
-                    energyCapacity = 100;
-                    
                     level = 4;
                 }
                 break;
             case PLASTICS_FACTORY_3_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 40;
-                    
                     level = 3;
                 }
                 break;
@@ -571,216 +514,123 @@ public class Building : Structure
                 {
                     upgradedIndex = SUPPLIES_FACTORY_5_ID;
                     canBePowerSwitched = true;
-                    energySurplus = -25;
-                    energyCapacity = 20;
-                    
                     level = 4;
                 }
                 break;
             case SUPPLIES_FACTORY_5_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -40;
-                    energyCapacity = 80;
-                    
                     level = 5;
                 }
                 break;
             case GRPH_ENRICHER_3_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -70;
-                    energyCapacity = 20;
-                    
                     level = 3;
                 }
                 break;
             case XSTATION_3_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -10;
-                    energyCapacity = 12;
-                    
                     level = 3;
                 }
                 break;
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
                     level = 5;
                 }
                 break;
             case CHEMICAL_FACTORY_4_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -20;
-                    energyCapacity = 40;
-                    
                     level = 4;
                 }
                 break;
             case SWITCH_TOWER_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;
-                    
                     level = 6;
                 }
                 break;
             case SHUTTLE_HANGAR_4_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -10;
-                    energyCapacity = 40;
-                    
                     level = 4;
                 }
                 break;
             case RECRUITING_CENTER_4_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -12;
-                    energyCapacity = 20;
-                    
                     level = 4;
                 }
                 break;
             case EXPEDITION_CORPUS_4_ID:
                 {
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -12;
-                    energyCapacity = 20;
-                    
                     level = 4;
                 }
                 break;
             case QUANTUM_TRANSMITTER_4_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 0;                    
                     level = 4;
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = Powerplant.REACTOR_BLOCK_5_OUTPUT;
-                    energyCapacity = 200;
                     level = 5;
                 }
                 break;
             case FOUNDATION_BLOCK_5_ID:
                 {
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 10;
-                    energyCapacity = 10;
                     level = 5;
                 }
                 break;
             case CONNECT_TOWER_6_ID:
                 {
                     specialBuildingConditions = true;
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -64;
-                    energyCapacity = 192;
                     level = 6;
                 }
                 break;
             case CONTROL_CENTER_6_ID:
                 {
                     specialBuildingConditions = true;
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -40;
-                    energyCapacity = 240;
                     level = 6;
                 }
                 break;
             case HOTEL_BLOCK_6_ID:
                 {
-                    specialBuildingConditions = false;
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -70;
-                    energyCapacity = 300;
                     level = 6;
                 }
                 break;
             case HOUSING_MAST_6_ID:
                 {
                     specialBuildingConditions = true;
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = -120;
-                    energyCapacity = 1000;
                     level = 6;
-                }
-                break;
-            case DOCK_ADDON_1_ID:
-                {
-                    specialBuildingConditions = false;
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 100;
-                    level = 1;
                 }
                 break;
             case DOCK_ADDON_2_ID:
                 {
-                    specialBuildingConditions = false;
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = 0;
-                    energyCapacity = 100;
                     level = 2;
                 }
                 break;
             case OBSERVATORY_ID:
                 {
                     specialBuildingConditions = true;
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = - 50;
-                    energyCapacity = 200;
                     level = 5;
                     break;
                 }
             case ARTIFACTS_REPOSITORY_ID:
                 {
-                    specialBuildingConditions = false;
-                    upgradedIndex = -1;
                     canBePowerSwitched = true;
-                    energySurplus = -16;
-                    energyCapacity = 160;
                     level = 4;
                     break;
                 }
             case MONUMENT_ID:
                 {
-                    specialBuildingConditions = false;
-                    upgradedIndex = -1;
-                    canBePowerSwitched = false;
-                    energySurplus = -10;
-                    energyCapacity = 800;
                     level = 5;
                     break;
                 }
@@ -810,7 +660,7 @@ public class Building : Structure
         {
             GameMaster.realMaster.colonyController.RecalculatePowerGrid();
         }
-        ChangeRenderersView( x & isEnergySupplied );
+        ChangeRenderersView(x & isEnergySupplied);
     }
 
     public virtual void SetEnergySupply(bool x, bool recalculateAfter)
@@ -904,7 +754,7 @@ public class Building : Structure
                 transform.GetChild(0).gameObject.SetActive(visible);
             }
         }
-    }  
+    }
 
     public override UIObserver ShowOnGUI()
     {
@@ -983,7 +833,7 @@ public class Building : Structure
 
     protected List<byte> SerializeBuilding()
     {
-        var data = new List<byte>() { isActive ? (byte)1 : (byte)0};
+        var data = new List<byte>() { isActive ? (byte)1 : (byte)0 };
         data.AddRange(System.BitConverter.GetBytes(energySurplus));
         return data;
     }
@@ -1003,6 +853,6 @@ public class Building : Structure
     {
         energySurplus = System.BitConverter.ToSingle(data, startIndex + 1);
         SetActivationStatus(data[startIndex] == 1, true);
-    }   
+    }
     #endregion
 }

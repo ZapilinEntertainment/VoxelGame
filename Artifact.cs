@@ -8,7 +8,6 @@ public sealed class Artifact {
     // localization.GetAffectionTitle
     public enum ArtifactStatus { Exists, UsingByCrew, Researching, UsingInMonument, OnConservation}
 
-    public bool activated { get; private set; }
     public bool destructed { get; private set; }
     public bool researched { get; private set; }
     public float stability { get; private set; }
@@ -67,10 +66,9 @@ public sealed class Artifact {
         saturation = i_saturation;
         frequency = i_frequency;
         affectionType = i_type;
-        activated = i_activated;
         destructed = false;
         researched = false;
-        name = Localization.NameArtifact();
+        name = Localization.NameArtifact(this);
         status = ArtifactStatus.Exists;
         ID = lastUsedID++;
         playersArtifactsList.Add(this);
@@ -80,10 +78,6 @@ public sealed class Artifact {
 
     public bool? StabilityTest(float hardness)
     {
-        if (!activated && Random.value > 0.01f * (byte)GameMaster.difficulty)
-        {
-            activated = true;
-        }
         if (Random.value * hardness > stability)
         {
             stability -= (byte)(hardness * 16f);
@@ -182,7 +176,6 @@ public sealed class Artifact {
     public void Conservate()
     {
         status = ArtifactStatus.OnConservation;
-        activated = false;
         owner = null;
         actionsHash++;
     }
@@ -190,7 +183,6 @@ public sealed class Artifact {
     {
         owner = null;
         status = ArtifactStatus.UsingInMonument;
-        activated = true;
         actionsHash++;
     }
     public void SetResearchStatus(bool x) { researched = x; }

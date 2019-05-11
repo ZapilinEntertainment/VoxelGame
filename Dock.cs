@@ -82,7 +82,6 @@ public sealed class Dock : WorkBuilding {
             subscribedToUpdate = true;
         }        
         dependentBlocksList = new List<Block>();
-
         CheckPositionCorrectness();
         if (correctLocation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
     }

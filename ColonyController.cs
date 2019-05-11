@@ -143,8 +143,8 @@ public sealed class ColonyController : MonoBehaviour
         happinessTimer -= t;
         if (happinessTimer <= 0)
         {
-            float x = GameConstants.HQ_MAX_LEVEL - 1;
-            float lvlCf = 1 - (hq.level - 3) / x;
+            float x = GameConstants.HQ_MAX_LEVEL;
+            float lvlCf = 1 - (hq.level - x / 2) / x;
             //   STARVATION PROBLEM
             float foodSupplyHappiness = 0;
             {

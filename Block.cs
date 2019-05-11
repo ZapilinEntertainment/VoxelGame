@@ -17,23 +17,18 @@ public class Block {
 	public bool blockedByStructure {get;protected  set;}
 	public int material_id {get;protected  set;}
     protected List<GameObject> decorations;
+    private GameObject starMarker;
 
 	public virtual void ReplaceMaterial(int newId) {}
 
-	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) : this(f_chunk, f_chunkPos) {        
-        if (mainStructure != null)
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) : this(f_chunk, f_chunkPos) {
+        if (f_mainStructure != null)
         {
             mainStructure = f_mainStructure;
             blockedByStructure = true;
-            GameObject spriteHolder = new GameObject("mark");
-            SpriteRenderer sr = spriteHolder.AddComponent<SpriteRenderer>();
-            sr.sprite = PoolMaster.GetStarSprite(true);
-            sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
-            spriteHolder.transform.localPosition = pos.ToWorldSpace();
-            decorations = new List<GameObject>();
-            decorations.Add(spriteHolder);
+            AddStarMarker();
         }
-}
+    }
 	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
         destroyed = false;
         myChunk = f_chunk;
@@ -52,6 +47,17 @@ public class Block {
         return null;
     }
 
+    private void AddStarMarker()
+    {
+        starMarker = new GameObject("mark");
+        SpriteRenderer sr = starMarker.AddComponent<SpriteRenderer>();
+        sr.sprite = PoolMaster.GetStarSprite(true);
+        sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
+        starMarker.transform.localPosition = pos.ToWorldSpace();
+        decorations = new List<GameObject>();
+        decorations.Add(starMarker);
+    }
+
     public void SetWorksite(Worksite w)
     {
         if (worksite != null) worksite.StopWork();
@@ -68,12 +74,15 @@ public class Block {
 
     virtual public void SetMainStructure(Structure ms)
     {
-        if (mainStructure != null) mainStructure.SectionDeleted(pos);
+        if (mainStructure != null) mainStructure.SectionDeleted(pos);        
         mainStructure = ms;
+        blockedByStructure = true;
+        if (starMarker == null) AddStarMarker();
     }
     virtual public void ResetMainStructure()
     {
         mainStructure = null;
+        if (starMarker != null) MonoBehaviour.Destroy(starMarker);
     }
     public void AddDecoration(GameObject g)
     {

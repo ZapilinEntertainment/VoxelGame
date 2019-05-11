@@ -48,7 +48,7 @@ public sealed class PoolMaster : MonoBehaviour {
     private ParticleSystem buildEmitter, citizensLeavingEmitter;
     private static Sprite[] starsSprites;
 
-    public const byte MAX_MATERIAL_LIGHT_DIVISIONS = 5;
+    public static byte MAX_MATERIAL_LIGHT_DIVISIONS { get; private set; }
     public const int NO_MATERIAL_ID = -1, MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
         MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
         MATERIAL_WHITEWALL_ID = -11;
@@ -114,7 +114,11 @@ public sealed class PoolMaster : MonoBehaviour {
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
 
-        if (useIlluminationSystem) lightPoolMaterials = new Dictionary<LightPoolInfo, Material>();
+        if (useIlluminationSystem)
+        {
+            lightPoolMaterials = new Dictionary<LightPoolInfo, Material>();
+            MAX_MATERIAL_LIGHT_DIVISIONS = QualitySettings.GetQualityLevel() == 0 ? (byte)8 : (byte)16;
+        }
 
         //testzone
         //GameObject g = new GameObject("quad");

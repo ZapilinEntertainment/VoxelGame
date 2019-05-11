@@ -4,48 +4,67 @@ using UnityEngine;
 
 public sealed class HeadQuarters : House {
 	private bool nextStageConditionMet = false;
-	ColonyController colony;
-	GameObject rooftop;
-	
-	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
-		if (b == null) return;
+	private ColonyController colony;
+
+    public static Structure GetHQ(byte i_level)
+    {
+        Structure s = GetStructureByID(HEADQUARTERS_ID);
+        (s as HeadQuarters).SetLevel(i_level);
+        return s;
+    }
+
+    protected override void SetModel()
+    {
+        GameObject model;
+        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
+        if (level < 2) model = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
+        else model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/HQ_level_" + level.ToString()));
+        model.transform.parent = transform;
+        model.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        model.transform.localPosition = Vector3.zero;
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+    }
+
+    public void SetLevel(byte x)
+    {
+        level = x;
+        if (basement != null) SetModel();
+    }
+    override public void Prepare() {
+        PrepareBuilding();       
+        switch (level)
+        {
+            case 1: energySurplus = 1f; energyCapacity = 100f; housing = 10; break;
+            case 2: energySurplus = 3f; energyCapacity = 200f; housing = 30; break;
+            case 3: energySurplus = 5f; energyCapacity = 400f; housing = 40; break;
+            case 4: energySurplus = 12f; energyCapacity = 500f; housing = 55; break;
+            case 5: energySurplus = 20f; energyCapacity = 600f; housing = 70; break;
+            case 6: energySurplus = 25f; energyCapacity = 700f; housing = 80; ChangeUpgradedIndex(-1); break;
+        }
+    }
+
+    public override void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
         colony = GameMaster.realMaster.colonyController;
         if (colony == null)
         {
             colony = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
             colony.Prepare();
         }
-        //#set house data
-        SetBuildingData(b, pos);
-        GameMaster.realMaster.colonyController.AddHousing(this);
-        //#
-        if (level > 3 ) {
-			if (rooftop == null) {
-                if (b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + 1), b.pos.z, this))
-                {
-                    rooftop = PoolMaster.GetRooftop(false, true);
-                    rooftop.transform.parent = transform.GetChild(0);
-                    rooftop.transform.localPosition = Vector3.up * (level - 3) * Block.QUAD_SIZE;
-                }
-			}
-			if (level > 4) {
-				int i = 5;
-				while (i <= level) {
-                    b.myChunk.BlockByStructure(b.pos.x, (byte)(b.pos.y + i - 4), b.pos.z, this);
-					GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
-					addon.transform.parent = transform.GetChild(0);
-					addon.transform.localPosition = Vector3.zero + (i - 3.5f) * Vector3.up * Block.QUAD_SIZE;
-					addon.transform.localRotation = transform.GetChild(0).localRotation;
-                    if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(addon, true);
-					i++;
-				}
-				BoxCollider bc = transform.GetChild(0).GetComponent<BoxCollider>();
-				bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE/2f;
-				bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE );
-			}
-		}		        
         colony.SetHQ(this);
-	}
+
+        SetBuildingData(b, pos);
+        maxHp = 1000 * level;
+        hp = maxHp;
+
+        if (level > 3)
+        {
+            basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
+            if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+        }
+    }
+
 
     bool CheckUpgradeCondition()
     {
@@ -82,16 +101,32 @@ public sealed class HeadQuarters : House {
         {
             if (nextStageConditionMet)
             {
-                if (level > 4)
+                if (level > 2)
                 {
-                    ChunkPos upperPos = new ChunkPos(basement.pos.x, basement.pos.y + (level - 3), basement.pos.z);
-                    Block upperBlock = basement.myChunk.GetBlock(upperPos.x, upperPos.y, upperPos.z);
-                    if (upperBlock != null && upperBlock.type == BlockType.Cube)
+                    if (level == 3)
                     {
-                        refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
-                        return false;
+                        Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y + 1, basement.pos.z);
+                        if (upperBlock != null && upperBlock.type != BlockType.Shapeless)
+                        {
+                            refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                            return false;
+                        }
+                        else return true;
                     }
-                    else return true;
+                    else
+                    {
+                        if (level == 5)
+                        {
+                            Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y + 2, basement.pos.z);
+                            if (upperBlock != null && upperBlock.type != BlockType.Shapeless)
+                            {
+                                refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                                return false;
+                            }
+                            else return true;
+                        }
+                        else return true;
+                    }
                 }
                 else return true;
             }
@@ -104,6 +139,7 @@ public sealed class HeadQuarters : House {
                     case 4: refusalReason = Localization.GetRefusalReason(RefusalReason.HQ_RR4); break;
                     case 5: refusalReason = Localization.GetRefusalReason(RefusalReason.HQ_RR5); break;
                     case 6: refusalReason = Localization.GetRefusalReason(RefusalReason.HQ_RR6); break;
+                    case 7: refusalReason = Localization.GetRefusalReason(RefusalReason.MaxLevel); break;
                 }
                 return false;
             }
@@ -125,56 +161,29 @@ public sealed class HeadQuarters : House {
                     return;
                 }
         }
-        if (level < 4)
+        if (level > 3)
         {
-                Building upgraded = GetStructureByID(upgradedIndex) as Building;
-                upgraded.SetBasement(basement, PixelPosByte.zero);
-                if (returnToUI) upgraded.ShowOnGUI();
+            if (level == 4) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
+            if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
         }
-        else
-        { // building blocks on the top
-                Chunk chunk = basement.myChunk;
-                ChunkPos upperPos = new ChunkPos(basement.pos.x, basement.pos.y + (level - 3), basement.pos.z);
-                chunk.BlockByStructure(upperPos.x, upperPos.y, upperPos.z, this);
-                Transform model = transform.GetChild(0);
-                GameObject addon = Instantiate(Resources.Load<GameObject>("Structures/HQ_Addon"));
-                addon.transform.parent = model;
-                addon.transform.localPosition = Vector3.zero + (level - 2.5f) * Vector3.up * Block.QUAD_SIZE;
-                addon.transform.localRotation = model.localRotation;
-                if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(addon, true);
-                BoxCollider bc = model.GetComponent<BoxCollider>();
-                bc.size = new Vector3(Block.QUAD_SIZE, (level - 3) * Block.QUAD_SIZE, Block.QUAD_SIZE);
-                bc.center = Vector3.up * (level - 3) * Block.QUAD_SIZE / 2f;
-                if (rooftop == null)
-                {
-                    rooftop = PoolMaster.GetRooftop(false, true);
-                    rooftop.transform.parent = model;
-                }
-                rooftop.transform.localPosition = Vector3.up * (level - 2) * Block.QUAD_SIZE;
-                level++;
-        }
+        level++;
+        nextStageConditionMet = CheckUpgradeCondition();
+        SetModel();
+        buildingObserver.CheckUpgradeAvailability();
     }
     override public ResourceContainer[] GetUpgradeCost()
     {
-        if (level < 4)
+        int costId = HEADQUARTERS_ID;
+        switch (level)
         {
-            ResourceContainer[] cost = ResourcesCost.GetCost(upgradedIndex);
-            float discount = GameMaster.realMaster.upgradeDiscount;
-            for (int i = 0; i < cost.Length; i++)
-            {
-                cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
-            }
-            return cost;
+            case 1: costId = ResourcesCost.HQ_LVL2_COST_ID; break;
+            case 2: costId = ResourcesCost.HQ_LVL3_COST_ID; break;
+            case 3: costId = ResourcesCost.HQ_LVL4_COST_ID; break;
+            case 4: costId = ResourcesCost.HQ_LVL5_COST_ID; break;
+            case 5: costId = ResourcesCost.HQ_LVL6_COST_ID; break;
         }
-        else {
-            ResourceContainer[] cost = ResourcesCost.GetCost(HQ_4_ID);
-            float discount = GameMaster.realMaster.upgradeCostIncrease + level - 4;
-            for (int i = 0; i < cost.Length; i++)
-            {
-                cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * discount);
-            }
-            return cost;
-        }
+        ResourceContainer[] cost = ResourcesCost.GetCost(costId);
+        return cost;
     }
 
     public override UIObserver ShowOnGUI()

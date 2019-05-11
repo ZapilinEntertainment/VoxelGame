@@ -114,7 +114,7 @@ public class UIBuildingObserver : UIObserver {
         CheckUpgradeAvailability();       
 	}
 
-	override protected void StatusUpdate() {
+	override public void StatusUpdate() {
 		if ( !isObserving ) return;
         if (observingBuilding == null)
         {
@@ -276,7 +276,7 @@ public class UIBuildingObserver : UIObserver {
             }
         }
     }
-    void CheckUpgradeAvailability() {
+    public void CheckUpgradeAvailability() {
         if (observingBuilding.upgradedIndex != -1)
         {
             canBeUpgraded = true;

@@ -282,7 +282,7 @@ public sealed class GameMaster : MonoBehaviour
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 
-                        Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                        Structure s = HeadQuarters.GetHQ(GameConstants.HQ_MAX_LEVEL);
                         //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
@@ -404,7 +404,39 @@ public sealed class GameMaster : MonoBehaviour
                 Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+                UIController.current.Select(s);
+            }
+            //
+            var a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
+            a.SetResearchStatus(true);
+            a.Conservate();
+            Artifact.playersArtifactsList.Add(a);
 
+            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
+            a.SetResearchStatus(true);
+            a.Conservate();
+            Artifact.playersArtifactsList.Add(a);
+
+            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
+            a.SetResearchStatus(true);
+            a.Conservate();
+            Artifact.playersArtifactsList.Add(a);
+
+            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
+            a.SetResearchStatus(true);
+            a.Conservate();
+            Artifact.playersArtifactsList.Add(a);
+
+            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
+            a.SetResearchStatus(true);
+            a.Conservate();
+            Artifact.playersArtifactsList.Add(a);
+            //
             Vector3Int ecpos = Vector3Int.zero;
             if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
             {

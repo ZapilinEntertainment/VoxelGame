@@ -97,7 +97,7 @@ public sealed class UIHangarObserver : UIObserver
         }
     }
 
-    override protected void StatusUpdate()
+    override public void StatusUpdate()
     {
         if (!isObserving) return;
         if (observingHangar == null) SelfShutOff();

@@ -21,7 +21,7 @@ public abstract class UIObserver : MonoBehaviour {
 	}
     virtual public void LocalizeTitles()
     { }
-    protected virtual void StatusUpdate() {		
+    public virtual void StatusUpdate() {		
 	}
 
 	private void OnEnable() {

@@ -85,7 +85,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         }
     }
 
-    override protected void StatusUpdate()
+    override public void StatusUpdate()
     {
         if (!isObserving) return;
         if (observingRCenter == null) SelfShutOff();

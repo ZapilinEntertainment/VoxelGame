@@ -29,20 +29,21 @@ public class Structure : MonoBehaviour
     // -building - get applicable buildings list
     // -resource cost
     // score calculator
-    public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, LANDED_ZEPPELIN_ID = 5,
+    public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3,  HEADQUARTERS_ID = 4,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
-    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, HQ_2_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
+    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15,  LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
     STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41,
     HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
-    SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, HQ_3_ID = 58, HQ_4_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
+    SMELTERY_3_ID = 55, SMELTERY_5_ID = 57,  QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
+    //free ids 5,16,58, 59
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
@@ -79,7 +80,6 @@ public class Structure : MonoBehaviour
                 model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));
                 break;
             case RESOURCE_STICK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/resourcesStick")); break;
-            case LANDED_ZEPPELIN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement")); break;
             case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
             case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
             case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
@@ -104,9 +104,6 @@ public class Structure : MonoBehaviour
             case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
             case FARM_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;
             case FARM_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/farmBlock_level_5")); break;
-            case HQ_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/HQ_level_2")); break;
-            case HQ_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/HQ_level_3")); break;
-            case HQ_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/HQ_level_4")); break;
             case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
             case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
             case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
@@ -148,8 +145,8 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
             case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
             case OBSERVATORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/observatory")); break;
-            case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository"));break;
-            case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monumentBasement")); break;
+            case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository")); break;
+            case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monument")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -191,14 +188,11 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Scalable harvestable resource").AddComponent<ScalableHarvestableResource>(); break;
             case MINE_ELEVATOR_ID:
                 s = new GameObject("Mine elevator").AddComponent<MineElevator>(); break;
-            case LANDED_ZEPPELIN_ID:
-            case HQ_2_ID:
-            case HQ_3_ID:
-            case HQ_4_ID:
+            case HEADQUARTERS_ID:
                 s = new GameObject("HQ").AddComponent<HeadQuarters>(); break;
             case TREE_OF_LIFE_ID:
             case LIFESTONE_ID:
-                s = new GameObject("Lifestone").AddComponent<LifeSource>(); break;
+                s = new GameObject("Lifesource").AddComponent<LifeSource>(); break;
             case STORAGE_0_ID:
             case STORAGE_1_ID:
             case STORAGE_2_ID:
@@ -292,11 +286,11 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_2_ID:
                 s = new GameObject("Dock Addon 2").AddComponent<DockAddon>(); break;
             case OBSERVATORY_ID:
-                s = new GameObject("Observatory").AddComponent<Observatory>();break;
+                s = new GameObject("Observatory").AddComponent<Observatory>(); break;
             case ARTIFACTS_REPOSITORY_ID:
-                s = new GameObject("Artifacts repository").AddComponent<ArtifactsRepository>();break;
+                s = new GameObject("Artifacts repository").AddComponent<ArtifactsRepository>(); break;
             case MONUMENT_ID:
-                s = new GameObject("Monument").AddComponent<Monument>();break;
+                s = new GameObject("Monument").AddComponent<Monument>(); break;
             default: return null;
         }
         s.id = i_id;
@@ -349,7 +343,7 @@ public class Structure : MonoBehaviour
                     rotate90only = true;
                 }
                 break;
-            case LANDED_ZEPPELIN_ID:
+            case HEADQUARTERS_ID:
                 {
                     maxHp = 1000;
                     innerPosition = SurfaceRect.full;
@@ -591,39 +585,6 @@ public class Structure : MonoBehaviour
                     rotate90only = true;
                     isArtificial = true;
                     isBasement = true;
-                }
-                break;
-            case HQ_2_ID:
-                {
-                    maxHp = 2000;
-                    innerPosition = SurfaceRect.full;
-                    placeInCenter = true;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                    indestructible = true;
-                }
-                break;
-            case HQ_3_ID:
-                {
-                    maxHp = 3000;
-                    innerPosition = SurfaceRect.full;
-                    placeInCenter = true;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                    indestructible = true;
-                }
-                break;
-            case HQ_4_ID:
-                {
-                    maxHp = 4000;
-                    innerPosition = SurfaceRect.full;
-                    placeInCenter = true;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                    indestructible = true;
                 }
                 break;
             case LUMBERMILL_1_ID:
@@ -1053,7 +1014,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;                    
+                    isBasement = false;
                 }
                 break;
             case ARTIFACTS_REPOSITORY_ID:
@@ -1088,10 +1049,7 @@ public class Structure : MonoBehaviour
             default: return Rect.zero;
             case DRYED_PLANT_ID:
             case PLANT_ID: return new Rect(p, 7 * p, p, p);
-            case HQ_4_ID:
-            case HQ_3_ID:
-            case HQ_2_ID:
-            case LANDED_ZEPPELIN_ID: return new Rect(2 * p, 7 * p, p, p);
+            case HEADQUARTERS_ID: return new Rect(2 * p, 7 * p, p, p);
             case LIFESTONE_ID:
             case TREE_OF_LIFE_ID: return new Rect(3 * p, 7 * p, p, p);
             case STORAGE_1_ID:
@@ -1159,7 +1117,9 @@ public class Structure : MonoBehaviour
             case DOCK_2_ID:
             case DOCK_3_ID:
                 return new Rect(p, 2 * p, p, p);
-            case OBSERVATORY_ID: return new Rect(2 * p, 2*p,p,p);
+            case OBSERVATORY_ID: return new Rect(2 * p, 2 * p, p, p);
+            case ARTIFACTS_REPOSITORY_ID: return new Rect(3 * p, 2 * p, p, p);
+            case MONUMENT_ID: return new Rect(4 * p, 2 * p, p, p);
         }
     }
 

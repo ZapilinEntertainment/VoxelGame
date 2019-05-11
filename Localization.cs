@@ -8,7 +8,7 @@ Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, G
 
 public enum LocalizedPhrase : ushort {
     ArtifactNotResearched, AffectionTypeNotMatch,
-    CannotReachDestination,ConnectionLost,CrewFoundArtifact, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
+    CannotReachDestination,ConnectionLost,CrewFoundArtifact, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -42,14 +42,14 @@ public static class Localization {
 
 
 
-    public static string GetStructureName(int id) {
+    public static string GetStructureName(int id)
+    {
         switch (currentLanguage)
-        {            
+        {
             case Language.Russian:
                 switch (id)
-                {                    
+                {
                     case Structure.PLANT_ID: return "Растение";
-                    case Structure.LANDED_ZEPPELIN_ID: return "Временный штаб";
                     case Structure.STORAGE_0_ID: return "Основной склад";
                     case Structure.STORAGE_1_ID: return "Складское помещение";
                     case Structure.STORAGE_2_ID: return "Небольшой склад";
@@ -66,25 +66,23 @@ public static class Localization {
                     case Structure.DOCK_ID: return "Док";
                     case Structure.DOCK_2_ID: return "Улучшенный док";
                     case Structure.DOCK_3_ID: return "Продвинутый док";
-                    case Structure.ENERGY_CAPACITOR_1_ID: 
-                    case Structure.ENERGY_CAPACITOR_2_ID: 
+                    case Structure.ENERGY_CAPACITOR_1_ID:
+                    case Structure.ENERGY_CAPACITOR_2_ID:
                     case Structure.ENERGY_CAPACITOR_3_ID: return "Аккумулятор";
-                    case Structure.FARM_1_ID: 
-                    case Structure.FARM_2_ID: 
+                    case Structure.FARM_1_ID:
+                    case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Ферма";
                     case Structure.FARM_4_ID: return "Ферма закрытого типа ";
                     case Structure.FARM_5_ID: return "Блок фермы";
-                    case Structure.HQ_2_ID: 
-                    case Structure.HQ_3_ID: 
-                    case Structure.HQ_4_ID: return "Администрация";
-                    case Structure.LUMBERMILL_1_ID: 
-                    case Structure.LUMBERMILL_2_ID: 
+                    case Structure.HEADQUARTERS_ID: return "Администрация";
+                    case Structure.LUMBERMILL_1_ID:
+                    case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Лесопилка";
                     case Structure.LUMBERMILL_4_ID: return "Лесопилка закрытого типа";
                     case Structure.LUMBERMILL_5_ID: return "Блок лесопилки";
                     case Structure.MINE_ID: return "Шахта";
-                    case Structure.SMELTERY_1_ID: 
-                    case Structure.SMELTERY_2_ID: 
+                    case Structure.SMELTERY_1_ID:
+                    case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID: return "Плавильня";
                     case Structure.SMELTERY_5_ID: return "Плавильный блок";
                     case Structure.WIND_GENERATOR_1_ID: return "Потоковый генератор";
@@ -126,9 +124,8 @@ public static class Localization {
             case Language.English:
             default:
                 switch (id)
-                {                    
+                {
                     case Structure.PLANT_ID: return "Some plant";
-                    case Structure.LANDED_ZEPPELIN_ID: return "Landed Zeppelin";
                     case Structure.STORAGE_0_ID: return "Primary storage";
                     case Structure.STORAGE_1_ID: return "Storage pit";
                     case Structure.STORAGE_2_ID: return "Small warehouse";
@@ -153,9 +150,7 @@ public static class Localization {
                     case Structure.FARM_3_ID: return "Farm (lvl 3)";
                     case Structure.FARM_4_ID: return "Covered farm ";
                     case Structure.FARM_5_ID: return "Farm Block ";
-                    case Structure.HQ_2_ID: return "HeadQuarters";
-                    case Structure.HQ_3_ID: return "HeadQuarters";
-                    case Structure.HQ_4_ID: return "HeadQuarters";
+                    case Structure.HEADQUARTERS_ID: return "HeadQuarters";
                     case Structure.LUMBERMILL_1_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_2_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_3_ID: return "Lumbermill";
@@ -204,12 +199,13 @@ public static class Localization {
                 }
         }
     }
-	public static string GetStructureDescription(int id) {
-		switch (currentLanguage)
+    public static string GetStructureDescription(int id)
+    {
+        switch (currentLanguage)
         {
             case Language.Russian:
                 switch (id)
-                {                    
+                {
                     case Structure.STORAGE_0_ID: return "Стартовое хранилище объёмом " + StorageHouse.GetMaxVolume(0) + " eдиниц.";
                     case Structure.STORAGE_1_ID: return "Небольшое хранилище объёмом " + StorageHouse.GetMaxVolume(1) + " eдиниц.";
                     case Structure.STORAGE_2_ID: return "Хранилище объёмом " + StorageHouse.GetMaxVolume(2) + " eдиниц.";
@@ -238,27 +234,24 @@ public static class Localization {
                             string s = Dock.HEAVY_SHIPS_PATH_WIDTH.ToString();
                             return "Может принимать крупные торговые корабли. Для нормального функционирования нужен сквозной коридор " + s + " на " + s + " рядом с доком.";
                         }
-                    case Structure.ENERGY_CAPACITOR_1_ID: 
-                    case Structure.ENERGY_CAPACITOR_2_ID: 
+                    case Structure.ENERGY_CAPACITOR_1_ID:
+                    case Structure.ENERGY_CAPACITOR_2_ID:
                     case Structure.ENERGY_CAPACITOR_3_ID: return "Запасает до " + Building.GetEnergyCapacity(id) + "единиц энергии. Может конвертировать кристаллы в энергию.";
-                    case Structure.FARM_1_ID: 
-                    case Structure.FARM_2_ID: 
+                    case Structure.FARM_1_ID:
+                    case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Специально подготовленная площадка для выращивания еды. Потребляет жизненную энергию острова. Может быть построена только на грунте.";
-                    case Structure.FARM_4_ID: 
+                    case Structure.FARM_4_ID:
                     case Structure.FARM_5_ID: return "Постоянно производит некоторое количество еды. Не потребляет жизненную энергию острова.";
-                    case Structure.LANDED_ZEPPELIN_ID:
-                    case Structure.HQ_2_ID: 
-                    case Structure.HQ_3_ID: 
-                    case Structure.HQ_4_ID: return "Главное здание колонии. Производит немного энергии и имеет несколько жилых помещений.";
-                    case Structure.LUMBERMILL_1_ID: 
-                    case Structure.LUMBERMILL_2_ID: 
+                    case Structure.HEADQUARTERS_ID: return "Главное здание колонии. Производит немного энергии и имеет несколько жилых помещений.";
+                    case Structure.LUMBERMILL_1_ID:
+                    case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Выращивает и рубит деревья. Потребляет жизненную энергию острова.";
-                    case Structure.LUMBERMILL_4_ID: 
+                    case Structure.LUMBERMILL_4_ID:
                     case Structure.LUMBERMILL_5_ID: return "Постоянно производит некоторое количество древесины. Не потребляет жизненную энергию острова.";
                     case Structure.MINE_ID: return "Добыча полезных ископаемых закрытым методом.";
-                    case Structure.SMELTERY_1_ID: 
-                    case Structure.SMELTERY_2_ID: 
-                    case Structure.SMELTERY_3_ID: 
+                    case Structure.SMELTERY_1_ID:
+                    case Structure.SMELTERY_2_ID:
+                    case Structure.SMELTERY_3_ID:
                     case Structure.SMELTERY_5_ID: return "Перерабатывает ресурсы.";
                     case Structure.WIND_GENERATOR_1_ID: return "Нестабильно вырабатывает энергию в зависимости от силы местных потоков. Лучше располагать как можно выше.";
                     case Structure.BIOGENERATOR_2_ID: return "Вырабатывает энергию, потребляя органическую материю";
@@ -271,16 +264,16 @@ public static class Localization {
                     case Structure.REACTOR_BLOCK_5_ID:
                     case Structure.GRPH_REACTOR_4_ID: return "Вырабатывает большое количество энергии, потребляя Графониум.";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Специализированная фабрика для производства пластика.";
-                    case Structure.SUPPLIES_FACTORY_4_ID: 
+                    case Structure.SUPPLIES_FACTORY_4_ID:
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Производит снаряжение для экспедиций и нужд колонии.";
-                    case Structure.GRPH_ENRICHER_3_ID: return "Обогащает N-метал до Графония.";                    
+                    case Structure.GRPH_ENRICHER_3_ID: return "Обогащает N-метал до Графония.";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Конденсирует лишнюю энергию в кристаллы. Может быть построен только одно такое здание!";
                     case Structure.SWITCH_TOWER_ID: return "При выделении включает срез слоя, на котором находится.";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Вмещает и обслуживает один челнок.";
                     case Structure.RECRUITING_CENTER_4_ID: return "Набирает и подготавливает команды исследователей из добровольцев.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Центр управления миссиями. Может быть построено только одно такое здание.";
-                    case Structure.QUANTUM_TRANSMITTER_4_ID: return "Обеспечивает связь с экспедициями за пределами острова.";                    
-                    case Structure.FOUNDATION_BLOCK_5_ID: return "Содержит инфраструктуру для обеспечения высокоуровневых зданий";                              
+                    case Structure.QUANTUM_TRANSMITTER_4_ID: return "Обеспечивает связь с экспедициями за пределами острова.";
+                    case Structure.FOUNDATION_BLOCK_5_ID: return "Содержит инфраструктуру для обеспечения высокоуровневых зданий";
                     case Structure.DOCK_ADDON_1_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 3.";
                     case Structure.HOTEL_BLOCK_6_ID:
@@ -333,10 +326,7 @@ public static class Localization {
                     case Structure.FARM_3_ID: return "A field prepared for growing up food. Consumes island lifepower. Must be located on dirt.";
                     case Structure.FARM_4_ID:
                     case Structure.FARM_5_ID: return "Constantly produces food. Doesn't consume lifepower.";
-                    case Structure.LANDED_ZEPPELIN_ID:
-                    case Structure.HQ_2_ID:
-                    case Structure.HQ_3_ID:
-                    case Structure.HQ_4_ID: return "Colony's main building. Produces small amount of energy and has a small living space.";
+                    case Structure.HEADQUARTERS_ID: return "Colony's main building. Produces small amount of energy and has a small living space.";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Grows and cuts trees. Consumes island lifepower.";
@@ -381,7 +371,7 @@ public static class Localization {
                     default: return "No description.";
                 }
         }
-	}
+    }
     public static string GetResourceName(int id)
     {
         switch (currentLanguage)
@@ -824,9 +814,1419 @@ public static class Localization {
             default: return "shuttle "+ Shuttle.lastIndex.ToString();
 		}
 	}
-    public static string NameArtifact()
+    public static string NameArtifact(Artifact a)
     {
-        return "artifact name";
+        var c = a.GetColor();
+        byte r = (byte)(c.r / 0.125f), g = (byte)(c.g / 0.125f), b = (byte)(c.b / 0.125f);
+        string s = string.Empty;
+        switch (r)
+        {
+            case 0:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Abyssal "; break;
+                            case 1: s = "Black "; break;
+                            case 2: s = "Waterspace"; break;
+                            case 3: s = "Ultradark "; break; // черный ультрамариновый
+                            case 4: s = "Naval "; break; // формы морских офицеров?!
+                            case 5: s = "Farsea "; break; // дальнего моря
+                            case 6: s = "Blue "; break;
+                            case 7: s = "Waterstatic "; break;
+                            case 8: s = "Depression "; break;
+                            default: s = "Quiet "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Olivissal "; break; // olive + abyss
+                            case 1: s = "Forgotten "; break;
+                            case 2: s = "Darkblue "; break;
+                            case 3: s = "Notpheare "; break; // not sapphire
+                            case 4: s = "Eaphere"; break; // enough sapphire
+                            case 5: s = "Dustphere"; break; //blue dust + sapphire
+                            case 6: s = "Deablue "; break; //bsod + blue
+                            case 7: s = "Bersian "; break;//blue + persian
+                            case 8: s = "Sea "; break;
+                            default: s = "Lost"; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Pinal"; break; // pine + abyssal
+                            case 1: s = "Olivian "; break;
+                            case 2: s = "Greegle "; break; // green eagle
+                            case 3: s = "[DDGO] "; break; //dead indigo
+                            case 4: s = "Transported "; break;
+                            case 5: s = "Lazurity "; break;
+                            case 6: s = "Cobalt"; break;
+                            case 7: s = "[JNS] "; break;
+                            case 8: s = "Degreed "; break;
+                            default: s = "Cold "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Aborres "; break; // abyssal forest
+                            case 1: s = "Marchio"; break; //marshes
+                            case 2: s = "Dartmonth "; break;
+                            case 3: s = "Lazyon "; break; // lazur + cyan
+                            case 4: s = "Watered "; break;
+                            case 5: s = "Capreed "; break;
+                            case 6: s = "[CLN] "; break;
+                            case 7: s = "[GB7] "; break;
+                            case 8: s = "Defendo "; break;
+                            default: s = "Ice "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Virido "; break; //green
+                            case 1: s = "Harlequino "; break;
+                            case 2: s = "Mayan "; break;
+                            case 3: s = "Opalo "; break;
+                            case 4: s = "[TROCK] "; break;
+                            case 5: s = "Bondi "; break;
+                            case 6: s = "Bluehound "; break;
+                            case 7: s = "[GB11] "; break;
+                            case 8: s = "Electric "; break;
+                            default: s = "Power"; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Toaden "; break;
+                            case 1: s = "Moslin "; break;
+                            case 2: s = "Pigmented "; break;
+                            case 3: s = "Threelined "; break;
+                            case 4: s = "Shiny"; break;
+                            case 5: s = "[GB160] "; break;
+                            case 6: s = "[LK] "; break;
+                            case 7: s = "Pacific "; break;
+                            case 8: s = "Aqua "; break;
+                            default: s = "Drown"; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Jungle "; break;
+                            case 1: s = "Melchite "; break;
+                            case 2: s = "Screaming "; break;
+                            case 3: s = "Aphrite"; break;
+                            case 4: s = "Ephrite"; break;
+                            case 5: s = "Shephrite"; break; // shiny
+                            case 6: s = "Ousel "; break;
+                            case 7: s = "Seasel "; break; //ousel + sea
+                            case 8: s = "Blizzy "; break;
+                            default: s = "Winter"; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Limy "; break;
+                            case 1: s = "Melyme "; break;
+                            case 2: s = "Spreaning "; break;
+                            case 3: s = "Springy "; break;
+                            case 4: s = "Gemperate "; break; // temperate green
+                            case 5: s = "Saladian "; break;
+                            case 6: s = "Lightsea "; break;
+                            case 7: s = "Searain "; break;
+                            case 8: s = "Elcyan "; break;
+                            default: s = "Wave "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Lime"; break;
+                            case 1: s = "Lige "; break; // lime + green
+                            case 2: s = "Chromakey "; break;
+                            case 3: s = "Temperacio "; break;
+                            case 4: s = "Folian "; break; // folia
+                            case 5: s = "[B160] "; break;
+                            case 6: s = "Insomnia "; break;
+                            case 7: s = "Turqie "; break;
+                            case 8: s = "Cyan "; break;
+                            default: s = "Energy"; break;
+                        }
+                        break;
+                    default: s = "Out-of-red "; break;
+                }
+                break;
+            case 1:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Cabaret"; break;
+                            case 1: s = "Black purpur "; break;
+                            case 2: s = "Horrorific "; break;
+                            case 3: s = "Prendigo "; break; //persian idigo
+                            case 4: s = "Bluestone "; break;
+                            case 5: s = "Seastone "; break;
+                            case 6: s = "Cobaline "; break;
+                            case 7: s = "Hopeless "; break;
+                            case 8: s = "Depth "; break;
+                            default: s = "Falling"; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Frabyss "; break; //fire abyss
+                            case 1: s = "[SIGN32] "; break;
+                            case 2: s = "Nightsky "; break;
+                            case 3: s = "Nightfear "; break;
+                            case 4: s = "Nightphire "; break; // sapphire
+                            case 5: s = "Cobalamine "; break;
+                            case 6: s = "Cobbleblue "; break;
+                            case 7: s = "Secretsign "; break; // shadows in the moonlight
+                            case 8: s = "Watermean "; break;
+                            default: s = "Secret "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Virabyss "; break; // virido abyss
+                            case 1: s = "Mythilien "; break; ///myrt
+                            case 2: s = "[GBS] "; break;
+                            case 3: s = "Midnight "; break;
+                            case 4: s = "Blacksean "; break;
+                            case 5: s = "Cobaliet "; break;
+                            case 6: s = "Beroyal "; break; // royal blue
+                            case 7: s = "Mafestic "; break;
+                            case 8: s = "Hydra "; break;
+                            default: s = "Betrayal"; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Evlemon "; break; // evil(very dark) lemon
+                            case 1: s = "Mint "; break;
+                            case 2: s = "Pineleaf "; break;
+                            case 3: s = "Murena "; break;
+                            case 4: s = "Capporal "; break;
+                            case 5: s = "Blueclain "; break;
+                            case 6: s = "Jeanchan "; break; // lol
+                            case 7: s = "Lightean "; break;
+                            case 8: s = "Fazurity "; break; //far lazure
+                            default: s = "Farlander "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Hindeen "; break; // hindian green
+                            case 1: s = "Arboreal "; break;
+                            case 2: s = "Emeraldean "; break;
+                            case 3: s = "Wetropical "; break;
+                            case 4: s = "Lonepine "; break; // lone pine across the sea
+                            case 5: s = "Anticyan "; break;
+                            case 6: s = "Uncelestial "; break; // not actually celestial
+                            case 7: s = "Aqualized "; break;
+                            case 8: s = "Seazure "; break;
+                            default: s = "Longsail"; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Monk "; break;
+                            case 1: s = "Een "; break; //green
+                            case 2: s = "Grasshopper "; break;
+                            case 3: s = "Signeen "; break; // signal green
+                            case 4: s = "Krayfolia "; break; // krayola + threefolia
+                            case 5: s = "Perentia "; break; // persian green
+                            case 6: s = "Tearock "; break;
+                            case 7: s = "Precific "; break; //pacific
+                            case 8: s = "Selectric "; break; //eletric sea
+                            default: s = "Modulating"; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Hireland "; break; //ireland green
+                            case 1: s = "Verdepom "; break; //?
+                            case 2: s = "Garden "; break;
+                            case 3: s = "Treecover "; break;
+                            case 4: s = "Greasin "; break; //green sea
+                            case 5: s = "Underwater "; break;
+                            case 6: s = "Travelling "; break;
+                            case 7: s = "Twea "; break; // twitter
+                            case 8: s = "Twizard "; break;
+                            default: s = "Celestia "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Fime "; break; // forest lime;
+                            case 1: s = "Coreland "; break;
+                            case 2: s = "Itchy "; break;
+                            case 3: s = "Olochite "; break;
+                            case 4: s = "Caraib "; break;
+                            case 5: s = "Aquacaribe "; break;
+                            case 6: s = "Berious "; break; // бирюза
+                            case 7: s = "Elberious "; break; // light berious
+                            case 8: s = "Sky "; break;
+                            default: s = "Cloudshifting "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Chlorokey "; break;
+                            case 1: s = "J-flower"; break; // jungle flower
+                            case 2: s = "Acid "; break;
+                            case 3: s = "Spring "; break;
+                            case 4: s = "Tranquility "; break;
+                            case 5: s = "Salan "; break;
+                            case 6: s = "B-Cloth "; break; // birusa
+                            case 7: s = "[FFC] "; break;
+                            case 8: s = "Recyan "; break;
+                            default: s = "Timered "; break;
+                        }
+                        break;
+                    default: s = "Absorpting "; break;
+                }
+                break;
+            case 2:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Ancfire "; break; // ancient fire
+                            case 1: s = "Hardlove "; break;
+                            case 2: s = "Purple "; break;
+                            case 3: s = "Curtain "; break;
+                            case 4: s = "Mutato "; break;
+                            case 5: s = "Puredigo "; break;//purple indigo
+                            case 6: s = "Acril "; break;
+                            case 7: s = "Olei "; break;
+                            case 8: s = "Bluetour "; break; // blue + 2 red
+                            default: s = "Closed "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Daown "; break; // dark brown
+                            case 1: s = "[B-Paste] "; break;
+                            case 2: s = "Violet "; break;
+                            case 3: s = "Oolet "; break;
+                            case 4: s = "Fletch "; break;
+                            case 5: s = "[F160] "; break;
+                            case 6: s = "Foughn "; break;
+                            case 7: s = "F-Blue "; break;
+                            case 8: s = "Blues "; break;
+                            default: s = "Solution "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "[DPPL] "; break;
+                            case 1: s = "Ormitted "; break;
+                            case 2: s = "D-Grey "; break;
+                            case 3: s = "Afterdusk "; break;
+                            case 4: s = "Arctic sky "; break;
+                            case 5: s = "Dismay "; break;
+                            case 6: s = "Sad "; break;
+                            case 7: s = "Ignorance blue "; break;
+                            case 8: s = "Bluefill "; break;
+                            default: s = "End-of-the-way "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Elivian "; break;
+                            case 1: s = "Militarized "; break;
+                            case 2: s = "Tayga "; break;
+                            case 3: s = "Icewave "; break;
+                            case 4: s = "Polar "; break;
+                            case 5: s = "Coldwave "; break;
+                            case 6: s = "Coldsky "; break;
+                            case 7: s = "North "; break;
+                            case 8: s = "Full-ice "; break;
+                            default: s = "Frost "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Iguana "; break;
+                            case 1: s = "Tree "; break;
+                            case 2: s = "Uncertainity "; break;
+                            case 3: s = "Picht "; break;
+                            case 4: s = "Solesea "; break;
+                            case 5: s = "Lonesea "; break;
+                            case 6: s = "[BOLD] "; break; // blue of dark and light
+                            case 7: s = "Dead ice "; break;
+                            case 8: s = "Cold aqua "; break;
+                            default: s = "Eternity "; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Leaves "; break;
+                            case 1: s = "Leaven "; break;
+                            case 2: s = "Eloven "; break;
+                            case 3: s = "Forester "; break;
+                            case 4: s = "El Tyr "; break;
+                            case 5: s = "Mountain "; break;
+                            case 6: s = "Blue steel "; break;
+                            case 7: s = "Flying ice "; break;
+                            case 8: s = "Ice covered "; break;
+                            default: s = "Clear water "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Green city "; break;
+                            case 1: s = "Lawn "; break;
+                            case 2: s = "Oldgreen "; break;
+                            case 3: s = "Nepthturne "; break;
+                            case 4: s = "Meadows "; break;
+                            case 5: s = "Noquamarine "; break;
+                            case 6: s = "Oory "; break;
+                            case 7: s = "Blugenkampf "; break;
+                            case 8: s = "Aelytter "; break;
+                            default: s = "Precious "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Tropical "; break;
+                            case 1: s = "Grasslungs "; break;
+                            case 2: s = "Greensilk "; break;
+                            case 3: s = "Oretree "; break;
+                            case 4: s = "Dreaming grass "; break;
+                            case 5: s = "Watergrass "; break;
+                            case 6: s = "Calm "; break;
+                            case 7: s = "Epacila "; break;
+                            case 8: s = "Lightblue "; break;
+                            default: s = "Winterbreath "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Extralime "; break;
+                            case 1: s = "Extragrass "; break;
+                            case 2: s = "Grassy sky"; break;
+                            case 3: s = "Youngspring "; break;
+                            case 4: s = "Salantian "; break;
+                            case 5: s = "E salantero "; break;
+                            case 6: s = "Nettocyan "; break;
+                            case 7: s = "Electrocyan "; break;
+                            case 8: s = "Dreamlands "; break;
+                            default: s = "Okey "; break;
+                        }
+                        break;
+                    default: s = "Temporal "; break;
+                }
+                break;
+            case 3:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Loddark "; break; // blood dark
+                            case 1: s = "Far-space candy "; break;
+                            case 2: s = "Piolet "; break; //purple violet
+                            case 3: s = "Plumy "; break;
+                            case 4: s = "Suplumy "; break;
+                            case 5: s = "Inviolet "; break;
+                            case 6: s = "Purpellion "; break;
+                            case 7: s = "Untouchable "; break;
+                            case 8: s = "Slightly visible "; break;
+                            default: s = "Clothtouch "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Clockwork "; break; // orange
+                            case 1: s = "Oxyred "; break;
+                            case 2: s = "Urple "; break;
+                            case 3: s = "Pulveriser "; break;
+                            case 4: s = "Propurple "; break;
+                            case 5: s = "Slighly dead "; break;
+                            case 6: s = "Old gouache "; break;
+                            case 7: s = "Irreal sea "; break;
+                            case 8: s = "Unreachable shores "; break;
+                            default: s = "Nostromo "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Umbra pencil "; break;
+                            case 1: s = "Corryvean "; break;
+                            case 2: s = "Stonemind "; break;
+                            case 3: s = "Puregain "; break;
+                            case 4: s = "Alopurple "; break; // also purple
+                            case 5: s = "Notagain "; break;
+                            case 6: s = "Difficult "; break;
+                            case 7: s = "Patiency "; break;
+                            case 8: s = "Final "; break;
+                            default: s = "Superbad "; break; // i prefer ultraviolence howewer
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Insidious olive "; break;
+                            case 1: s = "Olive hunters "; break;
+                            case 2: s = "Obscure grey "; break;
+                            case 3: s = "[GRAY-96] "; break;
+                            case 4: s = "Nowever "; break;
+                            case 5: s = "Weatherman "; break;
+                            case 6: s = "[GREY-U] "; break;
+                            case 7: s = "Purple shark "; break;
+                            case 8: s = "Seasnake "; break;
+                            default: s = "Au revoir "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Clivian "; break;
+                            case 1: s = "Grelivian "; break;
+                            case 2: s = "Protected "; break;
+                            case 3: s = "Defending "; break;
+                            case 4: s = "Fortified "; break;
+                            case 5: s = "Iron wave "; break;
+                            case 6: s = "Steel sea "; break;
+                            case 7: s = "Silent sea "; break;
+                            default: s = "Sky "; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Vivian "; break;
+                            case 1: s = "Buried "; break;
+                            case 2: s = "Masked "; break;
+                            case 3: s = "Armed "; break;
+                            case 4: s = "Stoic "; break;
+                            case 5: s = "Unpleasant "; break;
+                            case 6: s = "Sharp edge "; break;
+                            case 7: s = "Dolphin "; break;
+                            case 8: s = "Clear sky "; break;
+                            default: s = "Wind "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Lizard king "; break;
+                            case 1: s = "Snakebyte "; break;
+                            case 2: s = "Grasslawn "; break;
+                            case 3: s = "Eternity leaf "; break;
+                            case 4: s = "Decision "; break;
+                            case 5: s = "Tough "; break;
+                            case 6: s = "Ship "; break;
+                            case 7: s = "Seawolf "; break;
+                            case 8: s = "Summersea "; break;
+                            default: s = "Aviation "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Forest maiden "; break;
+                            case 1: s = "Driad "; break;
+                            case 2: s = "Clover "; break;
+                            case 3: s = "Melancholy "; break;
+                            case 4: s = "Regressive "; break;
+                            case 5: s = "Aquazone "; break;
+                            case 6: s = "Seawhale "; break;
+                            case 7: s = "Northern "; break;
+                            case 8: s = "Skyloud "; break;
+                            default: s = "Blue ice "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Venenum "; break;
+                            case 1: s = "Vegetation "; break;
+                            case 2: s = "Connate "; break;
+                            case 3: s = "Green powder "; break;
+                            case 4: s = "Trauma "; break;
+                            case 5: s = "Youngsail "; break;
+                            case 6: s = "Aquosis "; break;
+                            case 7: s = "Cyanosis "; break;
+                            case 8: s = "Cyanity "; break;
+                            default: s = "Eraser "; break;
+                        }
+                        break;
+                    default: s = "Fast "; break;
+                }
+                break;
+            case 4:
+                switch (g) {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Raspberry "; break;
+                            case 1: s = "Pinky "; break;
+                            case 2: s = "Amygdala "; break;
+                            case 3: s = "Purplebottom "; break;
+                            case 4: s = "Purple "; break;
+                            case 5: s = "Unpurple "; break;
+                            case 6: s = "Dark orchidea "; break;
+                            case 7: s = "Purple heart "; break;
+                            case 8: s = "Purpledove "; break;
+                            default: s = "Despair "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Cinnamon "; break;
+                            case 1: s = "Deadsun "; break;
+                            case 2: s = "Brownshoe "; break;
+                            case 3: s = "Red desert "; break;
+                            case 4: s = "Ticketbooth "; break;
+                            case 5: s = "Amethyst "; break;
+                            case 6: s = "Forgotten "; break;
+                            case 7: s = "Compote "; break;
+                            case 8: s = "Villain "; break;
+                            default: s = "Alien sky "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Chair "; break;
+                            case 1: s = "Powder "; break;
+                            case 2: s = "Guilty "; break;
+                            case 3: s = "Holoplum"; break;
+                            case 4: s = "Violence "; break;
+                            case 5: s = "Viorage "; break;
+                            case 6: s = "Viaduct "; break;
+                            case 7: s = "Unknown "; break;
+                            case 8: s = "Mystic "; break;
+                            default: s = "Conphagious "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Stagnated "; break;
+                            case 1: s = "Desert dust "; break;
+                            case 2: s = "Northwood "; break;
+                            case 3: s = "Granite snow "; break;
+                            case 4: s = "Isoconcrete "; break;
+                            case 5: s = "Endtime"; break;
+                            case 6: s = "Version "; break;
+                            case 7: s = "Sentencia"; break;
+                            case 8: s = "Alien dawn "; break;
+                            default: s = "Foreign "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Untold "; break;
+                            case 1: s = "Carrying "; break;
+                            case 2: s = "Cavern "; break;
+                            case 3: s = "Venus "; break;
+                            case 4: s = "Gray "; break;
+                            case 5: s = "Turtur "; break;
+                            case 6: s = "Sad sky "; break;
+                            case 7: s = "Sad ocean "; break;
+                            case 8: s = "Morningfreeze "; break;
+                            default: s = "Kolotun "; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Froggy "; break;
+                            case 1: s = "Toppa "; break;
+                            case 2: s = "Chiseled "; break;
+                            case 3: s = "Bunkered "; break;
+                            case 4: s = "Unnamed "; break;
+                            case 5: s = "Guarding "; break;
+                            case 6: s = "Breeze "; break;
+                            case 7: s = "Skypillar "; break;
+                            case 8: s = "Celestial line "; break;
+                            default: s = "Windsteam "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Colorified "; break;
+                            case 1: s = "Python "; break;
+                            case 2: s = "Grassblade "; break;
+                            case 3: s = "Grassmade "; break;
+                            case 4: s = "Flowertongue "; break;
+                            case 5: s = "Ocean steel "; break;
+                            case 6: s = "Steel "; break;
+                            case 7: s = "Storm "; break;
+                            case 8: s = "Celestore "; break;
+                            default: s = "Steel sky "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Snakemade "; break;
+                            case 1: s = "Meadowalker "; break;
+                            case 2: s = "Grassshadow "; break;
+                            case 3: s = "Greencover "; break;
+                            case 4: s = "Little leaf "; break;
+                            case 5: s = "Veridomarine "; break;
+                            case 6: s = "Noquanox "; break;
+                            case 7: s = "Seapicture "; break;
+                            case 8: s = "Skylair "; break;
+                            default: s = "Dophamine "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Limonyte "; break;
+                            case 1: s = "Colorific "; break;
+                            case 2: s = "Flowered "; break;
+                            case 3: s = "Springreen "; break;
+                            case 4: s = "Green island "; break;
+                            case 5: s = "Gaudy "; break;
+                            case 6: s = "Laminaria "; break;
+                            case 7: s = "Green ice "; break;
+                            case 8: s = "Watercyan "; break;
+                            default: s = "Waterlife "; break;
+                        }
+                        break;
+                    default: s = "Skyfallen "; break;
+                }
+                break;
+            case 5:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Arterial "; break;
+                            case 1: s = "Wine "; break;
+                            case 2: s = "Impure "; break;
+                            case 3: s = "Purpureal "; break;
+                            case 4: s = "Qviolet "; break;
+                            case 5: s = "Byzanchium "; break;
+                            case 6: s = "Orchid "; break;
+                            case 7: s = "Nightwind "; break;
+                            case 8: s = "Jupiter "; break;
+                            default: s = "Occult "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Tomato "; break;
+                            case 1: s = "Carmine "; break;
+                            case 2: s = "Amaranto "; break;
+                            case 3: s = "Untouchable "; break;
+                            case 4: s = "Sviozine "; break;
+                            case 5: s = "Vapor "; break;
+                            case 6: s = "Strange "; break;
+                            case 7: s = "Avion "; break;
+                            case 8: s = "Quere "; break;
+                            default: s = "Perfection "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Orange dust "; break;
+                            case 1: s = "Lumber "; break;
+                            case 2: s = "Martian "; break;
+                            case 3: s = "Illirian "; break;
+                            case 4: s = "Terminal "; break;
+                            case 5: s = "Crescendo "; break;
+                            case 6: s = "Crucial "; break;
+                            case 7: s = "Evilian "; break;
+                            case 8: s = "Vicino "; break;
+                            default: s = "Fantasy "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Sand "; break;
+                            case 1: s = "Dryed "; break;
+                            case 2: s = "Pebble "; break;
+                            case 3: s = "Degranite "; break;
+                            case 4: s = "Invasive "; break;
+                            case 5: s = "Alloreactive "; break;
+                            case 6: s = "Volatus "; break;
+                            case 7: s = "Perforated "; break;
+                            case 8: s = "Poisoned "; break;
+                            default: s = "Dangerous "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Gyptus "; break;
+                            case 1: s = "Nyle "; break;
+                            case 2: s = "Chamois "; break;
+                            case 3: s = "Beaver "; break;
+                            case 4: s = "Mount baguette "; break;
+                            case 5: s = "P-Quartz "; break;
+                            case 6: s = "Mount-Majestic "; break;
+                            case 7: s = "Amethitus "; break;
+                            case 8: s = "Elegant "; break;
+                            default: s = "Paris "; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Basilisk "; break;
+                            case 1: s = "Convetional "; break;
+                            case 2: s = "Brass "; break;
+                            case 3: s = "Frogshadow "; break;
+                            case 4: s = "Chisel "; break;
+                            case 5: s = "Electrum "; break;
+                            case 6: s = "Silverbone "; break;
+                            case 7: s = "Knopweed "; break;
+                            case 8: s = "Watereagle "; break;
+                            default: s = "Junkweed "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Toxic ocean "; break;
+                            case 1: s = "Toadland "; break;
+                            case 2: s = "Crocodile "; break;
+                            case 3: s = "Caterpillar "; break;
+                            case 4: s = "Potion "; break;
+                            case 5: s = "Tea "; break;
+                            case 6: s = "Boat "; break;
+                            case 7: s = "Niagara "; break;
+                            case 8: s = "Stroken "; break;
+                            default: s = "Waterfall "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Chartres "; break;
+                            case 1: s = "Autumn dryad "; break;
+                            case 2: s = "Pond "; break;
+                            case 3: s = "July "; break;
+                            case 4: s = "June "; break;
+                            case 5: s = "Seladone "; break;
+                            case 6: s = "Magicmint "; break;
+                            case 7: s = "Dustblue "; break;
+                            case 8: s = "Hoarfrost "; break;
+                            default: s = "Season "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Bud "; break;
+                            case 1: s = "Flowersea "; break;
+                            case 2: s = "Surface "; break;
+                            case 3: s = "Truecolor "; break;
+                            case 4: s = "Wavemonger "; break;
+                            case 5: s = "Peppermint "; break;
+                            case 6: s = "Concepcion "; break;
+                            case 7: s = "Sea-like "; break;
+                            case 8: s = "Snow cyan "; break;
+                            default: s = "Snow "; break;
+                        }
+                        break;
+                    default: s = "Campfire "; break; // 
+                }
+                break;
+            case 6:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Firesmell "; break;
+                            case 1: s = "Scarlet "; break;
+                            case 2: s = "Cardinal "; break;
+                            case 3: s = "Jazz "; break;
+                            case 4: s = "Amorale "; break;
+                            case 5: s = "Bizarre "; break;
+                            case 6: s = "Majestia "; break;
+                            case 7: s = "Voxiferrum "; break;
+                            case 8: s = "Partynight "; break;
+                            default: s = "Music "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Furioso "; break;
+                            case 1: s = "Black Arlet "; break; // black scarlet
+                            case 2: s = "Persed "; break; // persian red
+                            case 3: s = "Changed "; break;
+                            case 4: s = "Tasty "; break;
+                            case 5: s = "Fuchsia "; break;
+                            case 6: s = "Fushun "; break;
+                            case 7: s = "A-Magenta "; break;
+                            case 8: s = "Mystic flame "; break;
+                            default: s = "Owl bunshee "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Redwood "; break;
+                            case 1: s = "Pepper "; break;
+                            case 2: s = "Redpearl "; break;
+                            case 3: s = "Bright cherry  "; break;
+                            case 4: s = "Dusk flyer "; break;
+                            case 5: s = "Aubergine "; break;
+                            case 6: s = "Guinny "; break;
+                            case 7: s = "Orvidia "; break;
+                            case 8: s = "Savannah "; break;
+                            default: s = "Shell "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Burned happiness "; break;
+                            case 1: s = "Burned coral "; break;
+                            case 2: s = "Burned clay "; break;
+                            case 3: s = "Pink valley "; break;
+                            case 4: s = "Antique "; break;
+                            case 5: s = "Pink gold "; break;
+                            case 6: s = "Viola "; break;
+                            case 7: s = "Toolong "; break;
+                            case 8: s = "Heliotrope "; break;
+                            default: s = "Burning man "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Zond "; break;
+                            case 1: s = "Ochre "; break;
+                            case 2: s = "Bronze "; break;
+                            case 3: s = "Bodyless "; break;
+                            case 4: s = "Opera floor "; break;
+                            case 5: s = "Curtain "; break;
+                            case 6: s = "Used "; break;
+                            case 7: s = "Yolo "; break;
+                            case 8: s = "Shocking "; break;
+                            default: s = "Meme "; break;
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Warned "; break;
+                            case 1: s = "Rakite "; break;
+                            case 2: s = "Peach "; break;
+                            case 3: s = "Tomb "; break;
+                            case 4: s = "Headstone "; break;
+                            case 5: s = "Nutstone "; break;
+                            case 6: s = "Glycynia-X "; break;
+                            case 7: s = "Glycyrine "; break;
+                            case 8: s = "Lilac "; break;
+                            default: s = "Illiad "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Fog "; break;
+                            case 1: s = "Lemontree "; break;
+                            case 2: s = "Liontooth "; break;
+                            case 3: s = "Tachi "; break;
+                            case 4: s = "Running "; break;
+                            case 5: s = "Beach "; break;
+                            case 6: s = "Silver "; break;
+                            case 7: s = "Periwinkle "; break;
+                            case 8: s = "Aerice "; break;
+                            default: s = " "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Toxic waste "; break;
+                            case 1: s = "Poisoned water "; break;
+                            case 2: s = "Peachless "; break;
+                            case 3: s = "Junglemen "; break;
+                            case 4: s = "Slightly toxic "; break;
+                            case 5: s = "Teaspoon "; break;
+                            case 6: s = "Highlander "; break;
+                            case 7: s = "Polar ice "; break;
+                            case 8: s = "Hided "; break;
+                            default: s = "Untold "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Clime "; break;
+                            case 1: s = "Slime "; break;
+                            case 2: s = "Blame "; break;
+                            case 3: s = "Claim "; break;
+                            case 4: s = "Touchnote "; break;
+                            case 5: s = "Moss "; break;
+                            case 6: s = "Herba "; break;
+                            case 7: s = "Grown "; break;
+                            case 8: s = "Perfect sky "; break;
+                            default: s = "Horse "; break;
+                        }
+                        break;
+                    default: s = "Invisible "; break;
+                }
+                break;
+            case 7:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Burning blood "; break;
+                            case 1: s = "Wish "; break;
+                            case 2: s = "Alarm "; break;
+                            case 3: s = "Access "; break;
+                            case 4: s = "Fashionable "; break;
+                            case 5: s = "Motein "; break;
+                            case 6: s = "Agenda "; break;
+                            case 7: s = "Odourant "; break;
+                            case 8: s = "Purpur wall "; break;
+                            default: s = "Prophet "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Scalar "; break;
+                            case 1: s = "Firetrick "; break;
+                            case 2: s = "Alizarin "; break;
+                            case 3: s = "Vanity "; break;
+                            case 4: s = "Parfume "; break;
+                            case 5: s = "Smiling "; break;
+                            case 6: s = "Lips "; break;
+                            case 7: s = "Oxide "; break;
+                            case 8: s = "Dusk "; break;
+                            default: s = "Fallen sun "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Tician "; break;
+                            case 1: s = "Firewood "; break;
+                            case 2: s = "Ainese "; break;
+                            case 3: s = "Loneskin "; break;
+                            case 4: s = "Boring "; break;
+                            case 5: s = "Silktouch "; break;
+                            case 6: s = "Flickering "; break;
+                            case 7: s = "Nocturne "; break;
+                            case 8: s = "Indifferent "; break;
+                            default: s = "Easy-forming "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Orange cup "; break;
+                            case 1: s = "Wrench "; break;
+                            case 2: s = "Calmon "; break;
+                            case 3: s = "Shipyard "; break;
+                            case 4: s = "Chemical "; break;
+                            case 5: s = "Tender "; break;
+                            case 6: s = "Calmaridea "; break;
+                            case 7: s = "Viotouch "; break;
+                            case 8: s = "Hexagon "; break;
+                            default: s = "Ovidian "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Carrotian "; break;
+                            case 1: s = "Menodrine"; break; //man mandarine
+                            case 2: s = "Plank "; break;
+                            case 3: s = "Oldnote "; break;
+                            case 4: s = "Satellite "; break;
+                            case 5: s = "Reminded "; break;
+                            case 6: s = "Lauranda "; break; //lavanda
+                            case 7: s = "Vial "; break;
+                            case 8: s = "Cheliocrop "; break; //heliotrop
+                            default: s = "Che confusione "; break; // sara perche ti amo
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Corn "; break;
+                            case 1: s = "Gummy "; break;
+                            case 2: s = "Elbow "; break; // yellow elbow
+                            case 3: s = "Crust "; break;
+                            case 4: s = "Somon "; break;
+                            case 5: s = "Carnation "; break;
+                            case 6: s = "Cotton "; break;
+                            case 7: s = "Aquaphobia "; break;
+                            case 8: s = "Cynthia "; break;
+                            default: s = "Glamour moon "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Saffran "; break;
+                            case 1: s = "Molden desert "; break;
+                            case 2: s = "Jugbone "; break;
+                            case 3: s = "Thickhair "; break;
+                            case 4: s = "Dirt "; break;
+                            case 5: s = "Backpanel "; break;
+                            case 6: s = "Weightless "; break;
+                            case 7: s = "Witness "; break;
+                            case 8: s = "Hologramm "; break;
+                            default: s = "Endgame "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Unacceptable "; break;
+                            case 1: s = "Spoiled "; break;
+                            case 2: s = "Determined "; break;
+                            case 3: s = "Riverbeam "; break;
+                            case 4: s = "Lazyland "; break;
+                            case 5: s = "Flax "; break;
+                            case 6: s = "Cavesilver "; break;
+                            case 7: s = "Tonnelstone "; break;
+                            case 8: s = "Wisdom "; break;
+                            default: s = "Oldtimes "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Electrotree "; break;
+                            case 1: s = "Eternal lemon "; break;
+                            case 2: s = "Juicemaster "; break;
+                            case 3: s = "Fruitbreaker "; break;
+                            case 4: s = "Yummy "; break;
+                            case 5: s = "Cleargrass "; break;
+                            case 6: s = "Highground meadows "; break;
+                            case 7: s = "Firstborn "; break;
+                            case 8: s = "Powercyan "; break;
+                            default: s = "Highsky "; break;
+                        }
+                        break;
+                    default: s = "Watching "; break;
+                }
+                break;
+            case 8:
+                switch (g)
+                {
+                    case 0:
+                        switch (b)
+                        {
+                            case 0: s = "Red "; break;
+                            case 1: s = "Redpowered "; break;
+                            case 2: s = "Redflower "; break;
+                            case 3: s = "Pseudopink "; break;
+                            case 4: s = "Touchmaster "; break;
+                            case 5: s = "Extracute "; break;
+                            case 6: s = "Capricci "; break;
+                            case 7: s = "Violand "; break;
+                            case 8: s = "Majenta "; break;
+                            default: s = "Tachibana "; break;
+                        }
+                        break;
+                    case 1:
+                        switch (b)
+                        {
+                            case 0: s = "Firestorm "; break;
+                            case 1: s = "Immolating "; break;
+                            case 2: s = "Rosengarden "; break;
+                            case 3: s = "Conservative "; break;
+                            case 4: s = "Ocean coral "; break;
+                            case 5: s = "Pinkwise "; break;
+                            case 6: s = "Elytralight "; break;
+                            case 7: s = "Midforce "; break;
+                            case 8: s = "Handclap "; break;
+                            default: s = "Fashion "; break;
+                        }
+                        break;
+                    case 2:
+                        switch (b)
+                        {
+                            case 0: s = "Orange mood "; break;
+                            case 1: s = "Sunset "; break;
+                            case 2: s = "Deepcoral "; break;
+                            case 3: s = "Radical "; break;
+                            case 4: s = "Fiancais"; break; //french
+                            case 5: s = "Dreaming "; break;
+                            case 6: s = "Manganese "; break;
+                            case 7: s = "Flamingo "; break;
+                            case 8: s = "Outerspace "; break;
+                            default: s = "Pleasure "; break;
+                        }
+                        break;
+                    case 3:
+                        switch (b)
+                        {
+                            case 0: s = "Sunhope "; break;
+                            case 1: s = "Oldsun "; break;
+                            case 2: s = "Pepperpeach "; break;
+                            case 3: s = "Golem "; break;
+                            case 4: s = "Lifeboosted "; break;
+                            case 5: s = "Fingertouch "; break;
+                            case 6: s = "Aroma "; break;
+                            case 7: s = "Skystrip "; break;
+                            case 8: s = "Volatus "; break;
+                            default: s = "Skyrunning "; break;
+                        }
+                        break;
+                    case 4:
+                        switch (b)
+                        {
+                            case 0: s = "Orange machine "; break;
+                            case 1: s = "Decision "; break;
+                            case 2: s = "Mango "; break;
+                            case 3: s = "Catalogue "; break;
+                            case 4: s = "Delicious "; break;
+                            case 5: s = "Delicate "; break;
+                            case 6: s = "Trim "; break;
+                            case 7: s = "Nightstar "; break;
+                            case 8: s = "Emotional "; break;
+                            default: s = "Bear "; break; // haha
+                        }
+                        break;
+                    case 5:
+                        switch (b)
+                        {
+                            case 0: s = "Orangepeel "; break;
+                            case 1: s = "Signal of hope "; break;
+                            case 2: s = "Palatable "; break;
+                            case 3: s = "Placid "; break;
+                            case 4: s = "Distant "; break;
+                            case 5: s = "Wide "; break;
+                            case 6: s = "Introvert "; break;
+                            case 7: s = "Flask "; break;
+                            case 8: s = "Elusive "; break;
+                            default: s = "Gorgeous "; break;
+                        }
+                        break;
+                    case 6:
+                        switch (b)
+                        {
+                            case 0: s = "Amberlight "; break;
+                            case 1: s = "Sunwave "; break;
+                            case 2: s = "Softgrass "; break;
+                            case 3: s = "Widefield "; break;
+                            case 4: s = "Pasta del "; break;
+                            case 5: s = "Appricot "; break;
+                            case 6: s = "Palehand "; break;
+                            case 7: s = "Skyfields "; break;
+                            case 8: s = "Softdream "; break;
+                            default: s = "Flying thought "; break;
+                        }
+                        break;
+                    case 7:
+                        switch (b)
+                        {
+                            case 0: s = "Flying ball "; break;
+                            case 1: s = "Orandex "; break;
+                            case 2: s = "Thick "; break;
+                            case 3: s = "Mustard "; break;
+                            case 4: s = "Housebone "; break;
+                            case 5: s = "Crates "; break;
+                            case 6: s = "Treebird "; break;
+                            case 7: s = "Dimsun "; break;
+                            case 8: s = "Creativity "; break;
+                            default: s = "Painless "; break;
+                        }
+                        break;
+                    case 8:
+                        switch (b)
+                        {
+                            case 0: s = "Yellow "; break;
+                            case 1: s = "Sulphur "; break;
+                            case 2: s = "Spacelemon "; break;
+                            case 3: s = "Lemonmint "; break;
+                            case 4: s = "Self-igniting lemon "; break;
+                            case 5: s = "Speechless lemon "; break;
+                            case 6: s = "Lemontrail "; break;
+                            case 7: s = "Yellow air "; break;
+                            case 8: s = "White "; break;
+                            default: s = "Air "; break;
+                        }
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+
+        byte x = (byte)(a.GetAffectionValue() / 0.04f);
+        switch (a.affectionType)
+        {
+            case Artifact.AffectionType.LifepowerAffection:
+                switch (x)
+                {
+                    case 0: s += "Husk"; break;
+                    case 1: s += "Stub"; break;
+                    case 2: s += "Pea"; break;
+                    case 3: s += "Dewdrop"; break;
+                    case 4: s += "Seed"; break;
+                    case 5: s += "Petal"; break;
+                    case 6: s += "Plast"; break;
+                    case 7: s += "Stalk"; break;
+                    case 8: s += "Sprout"; break;
+                    case 9: s += "Rootlet"; break;
+                    case 12: s += "Bourgeon"; break;
+                    case 13: s += "Floret"; break;
+                    case 14: s += "Bush"; break;
+                    case 15: s += "Shrub"; break;
+                    case 16: s += "Lifetree"; break;
+                    case 17: s += "Grove"; break;
+                    case 18: s += "Scafford"; break;
+                    case 19: s += "Sphere"; break;
+                    case 20: s += "Source"; break;
+                    case 21: s += "Emitter"; break;
+                    case 22: s += "Fountain"; break;
+                    case 23: s += "Grantor"; break;
+                    case 24: s += "Heart"; break;
+                    case 25: s += "Might"; break;
+                    default: s += "Hand"; break;
+                }
+                break;
+            case Artifact.AffectionType.SpaceAffection:
+                switch (x)
+                {
+                    case 0: s += "Speck"; break;
+                    case 1: s += "Drop"; break;
+                    case 2: s += "Point"; break;
+                    case 3: s += "Line"; break;
+                    case 4: s += "Layout"; break;
+                    case 5: s += "Scheme"; break;
+                    case 6: s += "Sketch"; break;
+                    case 7: s += "Canvas"; break;
+                    case 8: s += "Vignette"; break;
+                    case 9: s += "Illustatio"; break;
+                    case 10: s += "Gravur"; break;
+                    case 11: s += "Fresco"; break;
+                    case 12: s += "Graffiti"; break;
+                    case 13: s += "Painting"; break;
+                    case 14: s += "Triptych"; break;
+                    case 15: s += "Album"; break;
+                    case 16: s += "Maquette"; break;
+                    case 17: s += "Model"; break;
+                    case 18: s += "Sculpture"; break;
+                    case 19: s += "Panorama"; break;
+                    case 20: s += "Exhibition"; break;
+                    case 21: s += "Dimension"; break;
+                    case 22: s += "Simulator"; break;
+                    case 23: s += "Equalizer"; break;
+                    case 24: s += "Settingbox"; break;
+                    case 25: s += "File"; break; // напильник!)
+                    case 26: s += "Modulator"; break;
+                }
+                break;
+            case Artifact.AffectionType.StabilityAffection:
+                switch (x)
+                {
+                    case 0: s += "Negation"; break;
+                    case 1: s += "Shield"; break;
+                    case 2: s += "Box"; break;
+                    case 3: s += "Cage"; break;
+                    case 4: s += "Discord"; break;
+
+                    case 5: s += "Wraith"; break;
+                    case 6: s += "Ragequit"; break;
+                    case 7: s += "Pain"; break;
+                    case 8: s += "Injector"; break;
+                    case 9: s += "Sedative"; break;
+
+                    case 10: s += "Chaffer"; break;
+                    case 11: s += "Fighter"; break;
+                    case 12: s += "Opponent"; break;
+                    case 13: s += "Balancer"; break;
+                    case 14: s += "Gyroscope"; break;
+
+                    case 15: s += "Press"; break;
+                    case 16: s += "Pillar"; break;
+                    case 17: s += "Slab"; break;
+                    case 18: s += "Block"; break;
+                    case 19: s += "Compound"; break;
+
+                    case 20: s += "Adoption"; break;
+                    case 21: s += "Consensus"; break;
+                    case 22: s += "Freeze"; break;
+                    case 23: s += "Tranquility"; break;
+                    case 24: s += "Silence"; break;
+                    case 25: s += "Sleep"; break;
+                    default: s += "Stabilizer"; break;
+                }
+                break;
+            case Artifact.AffectionType.NoAffection:
+                switch (x)
+                {
+                    case 0: s += "Dustpile"; break;
+                    case 1: s += "Puddle"; break;
+                    case 2: s += "Shadow"; break;
+                    case 3: s += "Whisper"; break;
+                    case 4: s += "Footprint"; break;
+                    case 5: s += "Thing"; break;
+                    case 6: s += "Accessory"; break;
+                    case 7: s += "Watch"; break;
+                    case 8: s += "Key"; break;
+                    case 9: s += "Ball"; break;
+                    case 10: s += "Case"; break;
+                    case 11: s += "Cookie"; break;
+                    case 12: s += "Engine"; break;
+                    case 13: s += "Ring"; break;
+                    case 14: s += "Book"; break;
+                    case 15: s += "Broken sword"; break;
+                    case 16: s += "Chandelier"; break;
+                    case 17: s += "Throne"; break;
+                    case 18: s += "Opinion"; break;
+                    case 19: s += "Guide"; break;
+                    case 20: s += "Torch"; break;
+                    case 21: s += "Rock"; break;
+                    case 22: s += "Lamp"; break;
+                    case 23: s += "Diamond"; break;
+                    case 24: s += "Stick"; break;
+                    case 25: s += "Glasses"; break;
+                    default: s += "Chessmaster"; break;
+                }
+                break;
+            default: s += "Driver";break;
+        }
+        return s;
     }
     #endregion
 
@@ -1005,6 +2405,7 @@ public static class Localization {
                         case LocalizedPhrase.NoCrews: return "Нет готовых команд";
                         case LocalizedPhrase.NoExpeditions: return "Нет экспедиций";
                         case LocalizedPhrase.NoShuttles: return "Нет челноков";
+                        case LocalizedPhrase.NoSuitableArtifacts: return "Нет подходящих артефактов";
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
@@ -1076,6 +2477,7 @@ public static class Localization {
                         case LocalizedPhrase.NoCrews: return "No crews available";
                         case LocalizedPhrase.NoExpeditions: return "No expeditions at this moment";
                         case LocalizedPhrase.NoShuttles: return "No shuttles available";
+                        case LocalizedPhrase.NoSuitableArtifacts: return "No suitable artifacts";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
@@ -1438,7 +2840,7 @@ public static class Localization {
                                 case ProgressQuestID.Progress_CoveredFarm:
                                     q.name = "Поле под колпаком";
                                     q.description = "Замените обычную ферму крытой. Так вы стабилизируете производство пищи и снизите потребление жизненной энергии острова.";
-                                    q.steps[0] = GetStructureName(Structure.FARM_4_ID) + " построена"; 
+                                    q.steps[0] = GetStructureName(Structure.FARM_4_ID) + " построена";
                                     break;
                                 case ProgressQuestID.Progress_CoveredLumbermill:
                                     q.name = "Лес под крышей";
@@ -1448,7 +2850,7 @@ public static class Localization {
                                 case ProgressQuestID.Progress_Reactor:
                                     q.name = "Источник энергии";
                                     q.description = "Постройте полноценный графониевый реактор.";
-                                    q.steps[0] = GetStructureName(Structure.GRPH_REACTOR_4_ID) + " построен" ;
+                                    q.steps[0] = GetStructureName(Structure.GRPH_REACTOR_4_ID) + " построен";
                                     break;
                                 case ProgressQuestID.Progress_FirstExpedition:
                                     q.name = "Храбрые исследователи <в разработке>";
@@ -1648,7 +3050,7 @@ public static class Localization {
                     }
                 }
                 break;
-        }       
+        }
     }
     #endregion
 

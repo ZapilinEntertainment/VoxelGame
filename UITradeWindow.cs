@@ -39,7 +39,7 @@ public class UITradeWindow : UIObserver {
         demandText.text = Localization.GetWord(LocalizedWord.Demand);
     }
 
-    override protected void StatusUpdate()
+    override public void StatusUpdate()
     {
         if ( isObserving )
         {

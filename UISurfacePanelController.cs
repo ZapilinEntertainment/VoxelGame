@@ -90,7 +90,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
 
-    protected override void StatusUpdate()
+    override public void StatusUpdate()
     {
         if (!isObserving) return;
         if (observingSurface == null)

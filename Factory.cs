@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum FactorySpecialization : byte {Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher}
-public enum FactoryProductionMode : byte { NoLimit, Limit, Iterations} // if changing, change UIFactoryObserver prefab also
+public enum FactorySpecialization : byte { Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher }
+public enum FactoryProductionMode : byte { NoLimit, Limit, Iterations } // if changing, change UIFactoryObserver prefab also
 
-public class Factory : WorkBuilding {
+public class Factory : WorkBuilding
+{
     public bool workPaused { get; protected set; }
     public int productionModeValue { get; protected set; } // limit or iterations
     public float inputResourcesBuffer { get; protected set; }
@@ -19,9 +20,10 @@ public class Factory : WorkBuilding {
     public static UIFactoryObserver factoryObserver;
 
 
-	override public void Prepare() {
-		PrepareWorkbuilding();
-		recipe = Recipe.NoRecipe;
+    override public void Prepare()
+    {
+        PrepareWorkbuilding();
+        recipe = Recipe.NoRecipe;
         switch (id)
         {
             case SMELTERY_1_ID:
@@ -43,24 +45,27 @@ public class Factory : WorkBuilding {
                 specialization = FactorySpecialization.GraphoniumEnricher;
                 break;
         }
-		inputResourcesBuffer = 0;
-	}
+        inputResourcesBuffer = 0;
+    }
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (b == null) return;
-		SetWorkbuildingData(b, pos);        
-        if ( !subscribedToUpdate )
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        SetWorkbuildingData(b, pos);
+        if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
         SetActivationStatus(false, true);
-	}
+    }
 
-	override public void LabourUpdate() {
-        if (recipe == Recipe.NoRecipe ) return;
+    override public void LabourUpdate()
+    {
+        if (recipe == Recipe.NoRecipe) return;
         Storage storage = colony.storage;
-        if(outputResourcesBuffer > 0) {
+        if (outputResourcesBuffer > 0)
+        {
             outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
         }
         if (outputResourcesBuffer <= BUFFER_LIMIT)
@@ -79,7 +84,8 @@ public class Factory : WorkBuilding {
                         }
                         else
                         {
-                            if (storage.standartResources[recipe.output.ID] < productionModeValue) {
+                            if (storage.standartResources[recipe.output.ID] < productionModeValue)
+                            {
                                 workPaused = false;
                                 workflow += workSpeed;
                                 colony.gears_coefficient -= gearsDamage;
@@ -96,22 +102,23 @@ public class Factory : WorkBuilding {
                 }
             }
         }
-	}
+    }
 
-	override protected void LabourResult() {
+    override protected void LabourResult()
+    {
         int iterations = (int)(workflow / workflowToProcess);
         workflow = 0;
         Storage storage = colony.storage;
         if (storage.standartResources[recipe.input.ID] + inputResourcesBuffer >= recipe.inputValue)
         {
             inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
-            iterations =  Mathf.FloorToInt( inputResourcesBuffer / recipe.inputValue);
+            iterations = Mathf.FloorToInt(inputResourcesBuffer / recipe.inputValue);
             switch (productionMode)
             {
                 case FactoryProductionMode.Limit:
                     {
                         float stVal = storage.standartResources[recipe.output.ID];
-                        if (stVal+ recipe.outputValue * iterations > productionModeValue)
+                        if (stVal + recipe.outputValue * iterations > productionModeValue)
                         {
                             iterations = (int)((productionModeValue - stVal) / recipe.outputValue);
                         }
@@ -127,13 +134,13 @@ public class Factory : WorkBuilding {
             {
                 inputResourcesBuffer -= iterations * recipe.inputValue;
                 outputResourcesBuffer += iterations * recipe.outputValue;
-                outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);               
+                outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
             }
         }
         switch (productionMode)
         {
             case FactoryProductionMode.Limit:
-                workPaused = (storage.standartResources[recipe.output.ID] >= productionModeValue ) ;
+                workPaused = (storage.standartResources[recipe.output.ID] >= productionModeValue);
                 break;
             case FactoryProductionMode.Iterations:
                 productionModeValue -= iterations;
@@ -144,11 +151,13 @@ public class Factory : WorkBuilding {
                 }
                 break;
         }
-	}
+    }
 
-	public void SetRecipe( Recipe r ) {
-		if (r == recipe) return;
-		if (recipe != Recipe.NoRecipe) {
+    public void SetRecipe(Recipe r)
+    {
+        if (r == recipe) return;
+        if (recipe != Recipe.NoRecipe)
+        {
             if (inputResourcesBuffer > 0)
             {
                 colony.storage.AddResource(recipe.input, recipe.inputValue);
@@ -159,18 +168,18 @@ public class Factory : WorkBuilding {
                 colony.storage.AddResource(recipe.output, recipe.outputValue);
                 outputResourcesBuffer = 0;
             }
-            }
-		workflow = 0;		 
-		recipe = r;
+        }
+        workflow = 0;
+        recipe = r;
         productionModeValue = 0;
-		workflowToProcess = r.workflowToResult;
+        workflowToProcess = r.workflowToResult;
         workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[r.output.ID] >= productionModeValue;
-	}
+    }
     public void SetRecipe(int x)
     {
         Recipe[] allrecipes = GetFactoryRecipes();
         if (x > allrecipes.Length) return;
-        else  SetRecipe(allrecipes[x]);
+        else SetRecipe(allrecipes[x]);
     }
 
     public void SetProductionMode(FactoryProductionMode m)
@@ -189,11 +198,12 @@ public class Factory : WorkBuilding {
     }
 
     #region save-load system
-    public override List<byte> Save() {
+    public override List<byte> Save()
+    {
         var data = base.Save();
         data.AddRange(SerializeFactory());
-		return data;
-	}
+        return data;
+    }
     protected List<byte> SerializeFactory()
     {
         var data = new List<byte>() { (byte)productionMode };
@@ -205,24 +215,26 @@ public class Factory : WorkBuilding {
         return data;
     }
 
-    override public void Load (System.IO.FileStream fs, SurfaceBlock sblock) {
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
         var data = new byte[WORKBUILDING_SERIALIZER_LENGTH + FACTORY_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
         LoadFactoryData(data, WORKBUILDING_SERIALIZER_LENGTH);
         LoadWorkBuildingData(data, 0);
-	}
+    }
 
-	protected int LoadFactoryData(byte[] data, int startIndex) {
+    protected int LoadFactoryData(byte[] data, int startIndex)
+    {
         SetRecipe(Recipe.GetRecipeByNumber(System.BitConverter.ToInt32(data, startIndex + 1)));
         inputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 5);
         outputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 9);
         productionMode = (FactoryProductionMode)data[startIndex];
         productionModeValue = System.BitConverter.ToInt32(data, startIndex + 13);
         return startIndex + 17;
-	}	
-	#endregion
+    }
+    #endregion
 
     public virtual Recipe[] GetFactoryRecipes()
     {

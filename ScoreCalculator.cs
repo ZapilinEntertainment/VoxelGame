@@ -47,7 +47,7 @@
         structuresCost[Structure.FOUNDATION_BLOCK_5_ID] = 2 * val;
         structuresCost[Structure.CONNECT_TOWER_6_ID] = 10 * val;
 
-        structuresCost[Structure.LANDED_ZEPPELIN_ID] = 10 * val;
+        structuresCost[Structure.HEADQUARTERS_ID] = 10 * val;
         structuresCost[Structure.HOUSE_1_ID] = val / 4f;
         structuresCost[Structure.TREE_OF_LIFE_ID] = 1000 * val;
         structuresCost[Structure.CONTAINER_ID] = val / 10f;
@@ -79,9 +79,6 @@
 
         // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];
-        structuresCost[Structure.HQ_2_ID] = structuresCost[Structure.LANDED_ZEPPELIN_ID] * 4;
-        structuresCost[Structure.HQ_3_ID] = structuresCost[Structure.HQ_3_ID] * 4;
-        structuresCost[Structure.HQ_4_ID] = structuresCost[Structure.HQ_3_ID] * 4;
         structuresCost[Structure.PLASTICS_FACTORY_3_ID] = structuresCost[Structure.FUEL_FACILITY_3_ID];
         structuresCost[Structure.SUPPLIES_FACTORY_4_ID] = structuresCost[Structure.FARM_4_ID];
         structuresCost[Structure.SUPPLIES_FACTORY_5_ID] = structuresCost[Structure.SUPPLIES_FACTORY_4_ID] * 4;
@@ -122,29 +119,29 @@
             foreach (var bd in c.blocks)
             {
                 Block b = bd.Value;
-                    switch (b.type)
-                    {
-                        case BlockType.Shapeless:
-                            // AWAITING
-                            break;
-                        case BlockType.Cube:
-                            if (b.material_id > 0)
-                                score += (b as CubeBlock).volume * CubeBlock.MAX_VOLUME * resourcesCosts[b.material_id];
-                            break;
-                        case BlockType.Surface:
-                        case BlockType.Cave:
-                            if (b.material_id > 0)
-                                score += SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * resourcesCosts[b.material_id];
-                            SurfaceBlock sb = b as SurfaceBlock;
-                            if (sb.cellsStatus != 0)
+                switch (b.type)
+                {
+                    case BlockType.Shapeless:
+                        // AWAITING
+                        break;
+                    case BlockType.Cube:
+                        if (b.material_id > 0)
+                            score += (b as CubeBlock).volume * CubeBlock.MAX_VOLUME * resourcesCosts[b.material_id];
+                        break;
+                    case BlockType.Surface:
+                    case BlockType.Cave:
+                        if (b.material_id > 0)
+                            score += SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * resourcesCosts[b.material_id];
+                        SurfaceBlock sb = b as SurfaceBlock;
+                        if (sb.cellsStatus != 0)
+                        {
+                            foreach (Structure s in sb.surfaceObjects)
                             {
-                                foreach (Structure s in sb.surfaceObjects)
-                                {
-                                    score += structuresCost[s.id];
-                                }
+                                score += structuresCost[s.id];
                             }
-                            break;
-                    }
+                        }
+                        break;
+                }
             }
             score += c.lifePower;
         }

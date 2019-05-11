@@ -82,7 +82,7 @@ public class UIArtifactPanel : MonoBehaviour {
     {
         if (chosenArtifact != null)
         {
-            if (chosenArtifact.researched & chosenArtifact.activated)
+            if (chosenArtifact.status == Artifact.ArtifactStatus.UsingInMonument | chosenArtifact.status == Artifact.ArtifactStatus.UsingByCrew)
             {
                 iconBase.transform.Rotate(Vector3.forward, chosenArtifact.frequency * 10f * Time.deltaTime);
             }

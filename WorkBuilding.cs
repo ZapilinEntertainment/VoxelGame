@@ -2,33 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class WorkBuilding : Building {
+public abstract class WorkBuilding : Building
+{
     public static UIWorkbuildingObserver workbuildingObserver;
 
-    public float workflow {get;protected set;} 
-	public float workSpeed {get;protected set;}
-	public float workflowToProcess{get; protected set;}
-	public int maxWorkers { get; protected set; }
-	public int workersCount {get; protected set;}
+    public float workflow { get; protected set; }
+    public float workSpeed { get; protected set; }
+    public float workflowToProcess { get; protected set; }
+    public int maxWorkers { get; protected set; }
+    public int workersCount { get; protected set; }
     protected float gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
     protected ColonyController colony;
 
     public const int WORKBUILDING_SERIALIZER_LENGTH = 16;
 
-	override public void Prepare() {
-		PrepareWorkbuilding();
-	}
-	protected void PrepareWorkbuilding() {
-		PrepareBuilding();
-		workersCount = 0;
-		workflow = 0;
+    override public void Prepare()
+    {
+        PrepareWorkbuilding();
+    }
+    protected void PrepareWorkbuilding()
+    {
+        PrepareBuilding();
+        workersCount = 0;
+        workflow = 0;
         switch (id)
         {
             case DOCK_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 40;
-                 }
+                }
                 break;
             case DOCK_2_ID:
                 {
@@ -264,55 +267,65 @@ public abstract class WorkBuilding : Building {
 
     virtual public void LabourUpdate()
     {
-		if ( !isActive | !isEnergySupplied) return;
-		if (workersCount > 0) {
-			workflow += workSpeed;
+        if (!isActive | !isEnergySupplied) return;
+        if (workersCount > 0)
+        {
+            workflow += workSpeed;
             colony.gears_coefficient -= gearsDamage;
-            if (workflow >= workflowToProcess) {
-				LabourResult();
-			}
-		}
-	}
+            if (workflow >= workflowToProcess)
+            {
+                LabourResult();
+            }
+        }
+    }
 
-	protected virtual void LabourResult() {
-		workflow = 0;
-	}
+    protected virtual void LabourResult()
+    {
+        workflow = 0;
+    }
 
     /// <summary>
     /// returns excess workers
     /// </summary>
     /// <param name="x"></param>
     /// <returns></returns>
-	virtual public int AddWorkers (int x) {
-		if (workersCount == maxWorkers) return 0;
-		else {
-			if (x > maxWorkers - workersCount) {
-				x -= (maxWorkers - workersCount);
-				workersCount = maxWorkers;
-			}
-			else {
-				workersCount += x;
+	virtual public int AddWorkers(int x)
+    {
+        if (workersCount == maxWorkers) return 0;
+        else
+        {
+            if (x > maxWorkers - workersCount)
+            {
+                x -= (maxWorkers - workersCount);
+                workersCount = maxWorkers;
+            }
+            else
+            {
+                workersCount += x;
                 x = 0;
-			}
-			RecalculateWorkspeed();
-			return x;
-		}
-	}
+            }
+            RecalculateWorkspeed();
+            return x;
+        }
+    }
 
-	public void FreeWorkers() {
-		FreeWorkers(workersCount);
-	}
-	virtual public void FreeWorkers(int x) {
+    public void FreeWorkers()
+    {
+        FreeWorkers(workersCount);
+    }
+    virtual public void FreeWorkers(int x)
+    {
         if (workersCount == 0) return;
-		if (x > workersCount) x = workersCount;
-		workersCount -= x;
-		colony.AddWorkers(x);
-		RecalculateWorkspeed();
-	}
-	virtual public void RecalculateWorkspeed() {
-		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
+        if (x > workersCount) x = workersCount;
+        workersCount -= x;
+        colony.AddWorkers(x);
+        RecalculateWorkspeed();
+    }
+    virtual public void RecalculateWorkspeed()
+    {
+        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
         gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
-	}
+    }
 
     public override UIObserver ShowOnGUI()
     {
@@ -352,8 +365,9 @@ public abstract class WorkBuilding : Building {
         if (returnToUI) upgraded.ShowOnGUI();
     }
 
-    protected bool PrepareWorkbuildingForDestruction(bool forced) {		
-		if (workersCount != 0) colony.AddWorkers(workersCount);
+    protected bool PrepareWorkbuildingForDestruction(bool forced)
+    {
+        if (workersCount != 0) colony.AddWorkers(workersCount);
         return PrepareBuildingForDestruction(forced);
     }
 
@@ -374,11 +388,12 @@ public abstract class WorkBuilding : Building {
     }
 
     #region save-load system
-	override public List<byte> Save() {
+    override public List<byte> Save()
+    {
         var data = base.Save();
         data.AddRange(SerializeWorkBuilding());
-		return data;
-	}
+        return data;
+    }
 
     public List<byte> SerializeWorkBuilding()
     {
@@ -391,10 +406,11 @@ public abstract class WorkBuilding : Building {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock) {
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
         base.Load(fs, sblock);
         LoadWorkBuildingData(fs);
-	}
+    }
     protected void LoadWorkBuildingData(System.IO.FileStream fs)
     {
         var data = new byte[WORKBUILDING_SERIALIZER_LENGTH];

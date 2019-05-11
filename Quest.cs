@@ -7,7 +7,7 @@ public enum QuestType : byte
     System, Progress, Endgame, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
-public enum ProgressQuestID : byte 
+public enum ProgressQuestID : byte
 {
     Progress_HousesToMax, Progress_2Docks, Progress_2Storages, Progress_Tier2, Progress_300Population, Progress_OreRefiner, Progress_HospitalCoverage, Progress_Tier3,
     Progress_4MiniReactors, Progress_100Fuel, Progress_XStation, Progress_Tier4, Progress_CoveredFarm, Progress_CoveredLumbermill, Progress_Reactor, Progress_FirstExpedition,
@@ -18,7 +18,8 @@ public enum EndgameQuestID : byte
     Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3
 }
 
-public class Quest {
+public class Quest
+{
     public string name;
     public string description;
     public float reward { get; private set; }
@@ -38,11 +39,12 @@ public class Quest {
     // Localization -> Fill quest data
     // QuestUI -> coroutine SetNewQuest
 
-    static Quest () {
+    static Quest()
+    {
         questsCompletenessMask = new uint[(int)QuestType.Total];
         NoQuest = new Quest(QuestType.System, NO_QUEST_SUBINDEX);
         AwaitingQuest = new Quest(QuestType.System, AWAITING_QUEST_SUBINDEX);
-	}
+    }
     public static bool operator ==(Quest A, Quest B)
     {
         if (ReferenceEquals(A, null))
@@ -79,7 +81,7 @@ public class Quest {
         questsCompletenessMask = m;
     }
 
-    public Quest( QuestType i_type, byte subID)
+    public Quest(QuestType i_type, byte subID)
     {
         type = i_type;
         subIndex = subID;
@@ -130,7 +132,7 @@ public class Quest {
                     if (defaultSettings)
                     {
                         stepsCount = 1;
-                    }                    
+                    }
                     break;
                 }
             case QuestType.Endgame:
@@ -160,7 +162,7 @@ public class Quest {
         stepsFinished = new bool[stepsCount];
         Localization.FillProgressQuest(this);
     }
-    
+
     public void CheckQuestConditions()
     {
         ColonyController colony = GameMaster.realMaster.colonyController;
@@ -299,7 +301,7 @@ public class Quest {
                         break;
                     case ProgressQuestID.Progress_FirstExpedition:
                         {
-                            byte completeness = 0;                     
+                            byte completeness = 0;
                             if (Crew.crewsList.Count > 0)
                             {
                                 completeness++;
@@ -505,7 +507,7 @@ public class Quest {
                             bool hotelFound = false;
                             foreach (Building b in colony.houses)
                             {
-                                if (b.id == Structure.HOUSING_MAST_6_ID)  housingMastsCount++; // можно запихнуть и в проверку выше
+                                if (b.id == Structure.HOUSING_MAST_6_ID) housingMastsCount++; // можно запихнуть и в проверку выше
                                 else
                                 {
                                     if (b.id == Structure.HOTEL_BLOCK_6_ID) hotelFound = true;
@@ -542,7 +544,7 @@ public class Quest {
         }
         else QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
-        
+
     }
 
     #region allQuestList
@@ -565,12 +567,12 @@ public class Quest {
             ColonyController colony = GameMaster.realMaster.colonyController;
             int lvl = colony.hq.level;
             List<ProgressQuestID> acceptableQuest = new List<ProgressQuestID>();
-            for (int i = 0; i< complementQuests.Count;i++ )
+            for (int i = 0; i < complementQuests.Count; i++)
             {
                 ProgressQuestID q = complementQuests[i];
                 switch (q)
                 {
-                    case ProgressQuestID.Progress_HousesToMax:   if (colony.housingLevel < lvl & lvl != 4) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_HousesToMax: if (colony.housingLevel < lvl & lvl != 4) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_2Docks: if (colony.docks.Count < 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_2Storages: if (colony.storage.warehouses.Count < 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier2: if (lvl == 1) acceptableQuest.Add(q); break;
@@ -582,9 +584,9 @@ public class Quest {
                     case ProgressQuestID.Progress_100Fuel: if (colony.storage.standartResources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
-                    case ProgressQuestID.Progress_CoveredFarm: 
+                    case ProgressQuestID.Progress_CoveredFarm:
                     case ProgressQuestID.Progress_CoveredLumbermill:
-                    case ProgressQuestID.Progress_Reactor: 
+                    case ProgressQuestID.Progress_Reactor:
                     case ProgressQuestID.Progress_FirstExpedition: if (lvl > 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier5: if (lvl == 4) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_FactoryComplex: if (lvl > 4) acceptableQuest.Add(q); break;
@@ -594,13 +596,13 @@ public class Quest {
             if (acceptableQuest.Count > 0)
             {
                 ProgressQuestID pqi = acceptableQuest[Random.Range(0, acceptableQuest.Count)];
-                Quest q = new Quest(QuestType.Progress, (byte)pqi);                              
+                Quest q = new Quest(QuestType.Progress, (byte)pqi);
                 q.CheckQuestConditions();
                 return q;
             }
             else return Quest.NoQuest;
         }
-        else return Quest.NoQuest;        
+        else return Quest.NoQuest;
     }
     #endregion
 
@@ -608,8 +610,9 @@ public class Quest {
     {
         // for square textures only
         Texture icon = null;
-        Rect iconRect = Rect.zero ;
-        switch (q.type) {            
+        Rect iconRect = Rect.zero;
+        switch (q.type)
+        {
             case QuestType.Progress:
                 {
                     switch ((ProgressQuestID)q.subIndex)
@@ -629,7 +632,7 @@ public class Quest {
                             break;
                         case ProgressQuestID.Progress_Tier2:
                             icon = UIController.current.buildingsTexture;
-                            iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
+                            iconRect = Structure.GetTextureRect(Structure.HEADQUARTERS_ID);
                             break;
                         case ProgressQuestID.Progress_300Population:
                             icon = UIController.current.iconsTexture;
@@ -645,7 +648,7 @@ public class Quest {
                             break;
                         case ProgressQuestID.Progress_Tier3:
                             icon = UIController.current.buildingsTexture;
-                            iconRect = Structure.GetTextureRect(Structure.HQ_2_ID);
+                            iconRect = Structure.GetTextureRect(Structure.HEADQUARTERS_ID);
                             break;
                         case ProgressQuestID.Progress_4MiniReactors:
                             icon = UIController.current.buildingsTexture;
@@ -663,7 +666,7 @@ public class Quest {
                             break;
                         case ProgressQuestID.Progress_Tier4:
                             icon = UIController.current.buildingsTexture;
-                            iconRect = Structure.GetTextureRect(Structure.HQ_3_ID);
+                            iconRect = Structure.GetTextureRect(Structure.HEADQUARTERS_ID);
                             break;
                         case ProgressQuestID.Progress_CoveredFarm:
                             iconRect = new Rect(0, 0, 1, 1);
@@ -687,7 +690,7 @@ public class Quest {
                             break;
                         case ProgressQuestID.Progress_Tier5:
                             icon = UIController.current.buildingsTexture;
-                            iconRect = Structure.GetTextureRect(Structure.HQ_4_ID);
+                            iconRect = Structure.GetTextureRect(Structure.HEADQUARTERS_ID);
                             break;
                         case ProgressQuestID.Progress_FactoryComplex:
                             iconRect = new Rect(0, 0, 1, 1);
@@ -705,7 +708,8 @@ public class Quest {
             case QuestType.Endgame:
                 {
                     icon = Resources.Load<Texture>("Textures/endGameIcons");
-                    switch ((EndgameQuestID)q.subIndex) {
+                    switch ((EndgameQuestID)q.subIndex)
+                    {
                         case EndgameQuestID.Endgame_TransportHub_step1:
                         case EndgameQuestID.Endgame_TransportHub_step2:
                         case EndgameQuestID.Endgame_TransportHub_step3:
@@ -713,7 +717,7 @@ public class Quest {
                             break;
                     }
                     break;
-                }              
+                }
             default: return;
         }
         if (icon != null)
@@ -730,7 +734,8 @@ public class Quest {
     }
 
     #region save-load
-    public List<byte> Save() {
+    public List<byte> Save()
+    {
         var data = new List<byte>() { (byte)type, subIndex };
         int stepsCount = stepsFinished.Length;
         data.AddRange(System.BitConverter.GetBytes(stepsCount));
@@ -742,13 +747,14 @@ public class Quest {
                 data.Add(b ? one : zero);
             }
         }
-		return data;
-	}
-	public static Quest Load(System.IO.FileStream fs) {
+        return data;
+    }
+    public static Quest Load(System.IO.FileStream fs)
+    {
         Quest q = new Quest((QuestType)fs.ReadByte(), (byte)fs.ReadByte());
         var data = new byte[4];
         fs.Read(data, 0, 4);
-        int stepsCount = System.BitConverter.ToInt32(data,0);
+        int stepsCount = System.BitConverter.ToInt32(data, 0);
         data = new byte[stepsCount];
         fs.Read(data, 0, data.Length);
         q.stepsFinished = new bool[stepsCount];
@@ -756,8 +762,7 @@ public class Quest {
         {
             q.stepsFinished[i] = data[i] == 1;
         }
-		return q;
-	}
+        return q;
+    }
     #endregion
 }
-

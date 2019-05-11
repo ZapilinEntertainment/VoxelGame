@@ -1,10 +1,23 @@
-﻿public class Monument : Building
+﻿public sealed class Monument : Building
 {
     public Artifact[] artifacts { get; private set; }
     public Artifact.AffectionType affectionType { get; private set; }
     public float affectionValue { get; private set; }
+    private static UIMonumentObserver monumentObserver;
 
-    public void AddArtifact(Artifact a, int i)
+    public static void SetObserver(UIMonumentObserver mo)
+    {
+        monumentObserver = mo;
+    }
+
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        artifacts = new Artifact[4];
+        base.SetBasement(b, pos);
+        b.myChunk.BlockByStructure(b.pos.x, b.pos.y, b.pos.z, this);        
+    }
+
+    public void AddArtifact(Artifact a, int slotIndex)
     {
         if (a != null && !a.destructed )
         {
@@ -26,12 +39,12 @@
                     if (artifacts == null) artifacts = new Artifact[4];
                     else
                     {
-                        if (artifacts[i] != null)
+                        if (artifacts[slotIndex] != null)
                         {
-                            artifacts[i].Conservate();
+                            artifacts[slotIndex].Conservate();
                         }
                     }
-                    artifacts[i] = a;
+                    artifacts[slotIndex] = a;
                     a.UseInMonument();
                     RecalculateAffection();
                 }
@@ -141,5 +154,14 @@
             }
         }
         if (needRecalculation) RecalculateAffection();
+    }
+
+    override public UIObserver ShowOnGUI()
+    {
+        if (monumentObserver == null) monumentObserver = UIMonumentObserver.InitializeMonumentObserverScript();
+        else monumentObserver.gameObject.SetActive(true);
+        monumentObserver.SetObservingMonument(this);
+        showOnGUI = true;
+        return monumentObserver;
     }
 }

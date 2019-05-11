@@ -66,7 +66,7 @@ sealed public class UIController : MonoBehaviour
     private ColonyController colony;
     private Structure chosenStructure;
     private Storage storage;
-    UIObserver workingObserver;
+    public UIObserver workingObserver { get; private set; }
     Worksite chosenWorksite;
     ChosenObjectType chosenObjectType;
     Transform selectionFrame; Material selectionFrameMaterial;

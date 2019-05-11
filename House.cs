@@ -6,11 +6,7 @@ public class House : Building {
     public static int GetHousingValue (int id)
     {
         switch (id)
-        { // if changing - look at localized description
-            case LANDED_ZEPPELIN_ID: return 10;
-            case HQ_2_ID: return 30; 
-            case HQ_3_ID: return 40;
-            case HQ_4_ID: return 45;
+        { // if changing - look at localized description            
             case TENT_ID: return TENT_VOLUME;
             case HOUSE_1_ID: return 10;
             case HOUSE_2_ID: return 50; 

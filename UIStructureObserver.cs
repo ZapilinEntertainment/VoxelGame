@@ -4,11 +4,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class UIStructureObserver : UIObserver {
-    Structure observingStructure;
+    private Structure observingStructure;
 #pragma warning disable 0649
-    [SerializeField] Text nameField, sizeField;
-    [SerializeField]  Button demolishButton;
-    [SerializeField] GameObject specialButton;
+    [SerializeField] private Text nameField, sizeField;
+    [SerializeField] private Button demolishButton;
+    [SerializeField] private GameObject specialButton;
 #pragma warning restore 0649
     const int ROTATE_BUTTON_CHILDINDEX = 4;
 
@@ -49,7 +49,7 @@ public class UIStructureObserver : UIObserver {
 		}
 	}
 
-	override protected void StatusUpdate() {
+	override public void StatusUpdate() {
 		if ( !isObserving ) return;
 		if (observingStructure == null) SelfShutOff();
 	}

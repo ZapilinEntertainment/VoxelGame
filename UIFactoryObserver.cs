@@ -121,7 +121,7 @@ public sealed class UIFactoryObserver : UIObserver
         }
     }
 
-    override protected void StatusUpdate()
+    override public void StatusUpdate()
     {
         if (!isObserving) return;
         if (observingFactory == null) SelfShutOff();

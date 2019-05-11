@@ -62,7 +62,7 @@ public sealed class Zeppelin : MonoBehaviour {
                 {
                     destroyed = true;
                     //hq
-                    Structure s = Structure.GetStructureByID(Structure.LANDED_ZEPPELIN_ID);
+                    Structure s = HeadQuarters.GetHQ(1);
                     if (landingByZAxis == true) s.SetModelRotation(0); else s.SetModelRotation(2);
                     s.SetBasement(landingSurface, PixelPosByte.zero);
                     //storage

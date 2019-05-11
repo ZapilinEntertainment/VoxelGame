@@ -80,7 +80,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         StatusUpdate();
     }
 
-	override protected void StatusUpdate() {
+	override public void StatusUpdate() {
 		if ( !isObserving ) return;
         if (workbuildingMode)
         { // WORKBUILDING
