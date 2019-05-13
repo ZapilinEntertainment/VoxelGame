@@ -412,30 +412,27 @@ public sealed class GameMaster : MonoBehaviour
                 UIController.current.Select(s);
             }
             //
-            var a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
-            a.SetResearchStatus(true);
-            a.Conservate();
-            Artifact.playersArtifactsList.Add(a);
-
-            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
-            a.SetResearchStatus(true);
-            a.Conservate();
-            Artifact.playersArtifactsList.Add(a);
-
-            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
-            a.SetResearchStatus(true);
-            a.Conservate();
-            Artifact.playersArtifactsList.Add(a);
-
-            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
-            a.SetResearchStatus(true);
-            a.Conservate();
-            Artifact.playersArtifactsList.Add(a);
-
-            a = new Artifact(Random.value, Random.value, Random.value, Artifact.AffectionType.LifepowerAffection, false);
-            a.SetResearchStatus(true);
-            a.Conservate();
-            Artifact.playersArtifactsList.Add(a);
+            int l = Random.RandomRange(4, 60);
+            Artifact a;
+            Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
+            float f;
+            for (int i = 0; i < l; i++)
+            {
+                f = Random.value;
+                if (f < 0.25f) atype = Artifact.AffectionType.LifepowerAffection;
+                else
+                {
+                    if (f >0.5f)
+                    {
+                        if (f > 0.75f) atype = Artifact.AffectionType.SpaceAffection;
+                        else atype = Artifact.AffectionType.StabilityAffection;
+                    }
+                }
+                a = new Artifact(Random.value, Random.value, Random.value, atype, false);
+                a.SetResearchStatus(true);
+                a.Conservate();
+            }
+            
             //
             Vector3Int ecpos = Vector3Int.zero;
             if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))

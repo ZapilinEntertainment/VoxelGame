@@ -100,7 +100,7 @@ public sealed class UICrewObserver : MonoBehaviour
                     ri.uvRect = UIController.GetTextureUV(Icons.TaskFrame);
                 }
 
-                artifactButton.enabled = Artifact.playersArtifactsList.Count > 0;
+                artifactButton.enabled = Artifact.artifactsList.Count > 0;
                 ri = artifactButton.transform.GetChild(0).GetComponent<RawImage>();
                 if (showingCrew.artifact != null)
                 {
@@ -309,7 +309,7 @@ public sealed class UICrewObserver : MonoBehaviour
         else
         {
             var opts = new List<Dropdown.OptionData>();
-            var artifacts = Artifact.playersArtifactsList;
+            var artifacts = Artifact.artifactsList;
             artifactsIDs = new List<int>();
             opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoArtifact)));
             artifactsIDs.Add(-1);

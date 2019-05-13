@@ -8,7 +8,7 @@ Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, G
 
 public enum LocalizedPhrase : ushort {
     ArtifactNotResearched, AffectionTypeNotMatch,
-    CannotReachDestination,ConnectionLost,CrewFoundArtifact, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
+    CannotReachDestination, ClearSlot, ConnectionLost,CrewFoundArtifact, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
 ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
 MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -816,7 +816,7 @@ public static class Localization {
 	}
     public static string NameArtifact(Artifact a)
     {
-        var c = a.GetColor();
+        var c = a.GetColor();        
         byte r = (byte)(c.r / 0.125f), g = (byte)(c.g / 0.125f), b = (byte)(c.b / 0.125f);
         string s = string.Empty;
         switch (r)
@@ -1186,7 +1186,7 @@ public static class Localization {
                         {
                             case 0: s = "Leaves "; break;
                             case 1: s = "Leaven "; break;
-                            case 2: s = "Eloven "; break;
+                            case 2: s = "Elven "; break;
                             case 3: s = "Forester "; break;
                             case 4: s = "El Tyr "; break;
                             case 5: s = "Mountain "; break;
@@ -2396,6 +2396,7 @@ public static class Localization {
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Тип воздействия не совпадает";
                         case LocalizedPhrase.ArtifactNotResearched: return "Артефакт не изучен";
                         case LocalizedPhrase.CannotReachDestination: return "не может достичь цели";
+                        case LocalizedPhrase.ClearSlot: return "< Очистить слот >";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";                       
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
@@ -2468,6 +2469,7 @@ public static class Localization {
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Affection type not match"; // artifact aff type
                         case LocalizedPhrase.ArtifactNotResearched: return "Artifact not researched";
                         case LocalizedPhrase.CannotReachDestination: return "cannot reach destination";
+                        case LocalizedPhrase.ClearSlot: return "< Clear slot >";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.CrewFoundArtifact: return "Our crew has found an artifact!";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";

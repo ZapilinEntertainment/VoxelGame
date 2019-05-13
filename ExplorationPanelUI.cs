@@ -86,10 +86,10 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 }
                 break;
             case InfoMode.Artifacts:
-                if (realIndex >= Artifact.playersArtifactsList.Count) PrepareArtifactsList();
+                if (realIndex >= Artifact.artifactsList.Count) PrepareArtifactsList();
                 else
                 {
-                    var e = Artifact.playersArtifactsList[realIndex];
+                    var e = Artifact.artifactsList[realIndex];
                     var ert = emptyPanel.GetComponent<RectTransform>();
                     var r = new Rect(ert.position, ert.rect.size);
                     e.ShowOnGUI(r, SpriteAlignment.TopLeft, false);
@@ -226,7 +226,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     }
     private void PrepareArtifactsList()
     {
-        var arts = Artifact.playersArtifactsList;
+        var arts = Artifact.artifactsList;
         if (arts.Count == 0)
         {
             if (listEnabled)
@@ -538,7 +538,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         PrepareArtifactsList();
                         artifactButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
-                        if (Artifact.playersArtifactsList.Count != 0)
+                        if (Artifact.artifactsList.Count != 0)
                         {
                             var ert = emptyPanel.GetComponent<RectTransform>();
                             var r = new Rect(ert.position, ert.rect.size);
@@ -645,7 +645,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             case InfoMode.Crews: icount = Crew.crewsList.Count; break;
             case InfoMode.Shuttles: icount = Shuttle.shuttlesList.Count;break;
             case InfoMode.Expeditions: icount = Expedition.expeditionsList.Count; break;
-            case InfoMode.Artifacts: icount = Artifact.playersArtifactsList.Count; break;
+            case InfoMode.Artifacts: icount = Artifact.artifactsList.Count; break;
         }
         float sval = scrollbar.value;
         if (sval != 0)

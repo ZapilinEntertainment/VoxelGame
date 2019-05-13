@@ -18,11 +18,11 @@ public sealed class Artifact {
     public ArtifactStatus status { get; private set; }
     public Crew owner { get; private set; }
     public readonly AffectionType affectionType;
-    private Texture icon;
+    private Texture2D texture;
 
     public static readonly Texture emptyArtifactFrame_tx;
     public static int actionsHash = 0, lastUsedID = 0;    
-    public static List<Artifact> playersArtifactsList;
+    public static List<Artifact> artifactsList;
     public static UIArtifactPanel observer { get; private set; }
 
     public override bool Equals(object obj)
@@ -41,16 +41,16 @@ public sealed class Artifact {
 
     static Artifact()
     {
-        emptyArtifactFrame_tx = Resources.Load<Texture>("Resources/Textures/emptyArtifactFrame");
-        playersArtifactsList = new List<Artifact>();
+        emptyArtifactFrame_tx = Resources.Load<Texture>("Textures/emptyArtifactFrame");
+        artifactsList = new List<Artifact>();
     }
 
     public static Artifact GetArtifactByID (int id)
     {
-        if (playersArtifactsList.Count == 0) return null;
+        if (artifactsList.Count == 0) return null;
         else
         {
-            foreach (var a in playersArtifactsList)
+            foreach (var a in artifactsList)
             {
                 if (a.ID == id) return a;
             }
@@ -70,8 +70,8 @@ public sealed class Artifact {
         researched = false;
         name = Localization.NameArtifact(this);
         status = ArtifactStatus.Exists;
+        artifactsList.Add(this);
         ID = lastUsedID++;
-        playersArtifactsList.Add(this);
 
         actionsHash++;
     }
@@ -93,7 +93,7 @@ public sealed class Artifact {
     public void Destroy()
     {
         destructed = true;
-        if (playersArtifactsList.Contains(this)) playersArtifactsList.Remove(this);
+        if (artifactsList.Contains(this)) artifactsList.Remove(this);
         actionsHash++;
     }
 
@@ -109,31 +109,20 @@ public sealed class Artifact {
 
     public float GetAffectionValue()
     {
-        if (!researched) return 0f;
-        else
+        switch (affectionType)
         {
-            switch (affectionType)
-            {
-                case AffectionType.SpaceAffection: return frequency / stability;
-                case AffectionType.LifepowerAffection: return saturation / frequency;
-                case AffectionType.StabilityAffection: return stability / frequency;
-                default: return 0f;
-            }
+            case AffectionType.SpaceAffection: return (1f - stability) * (1f - stability) * frequency;
+            case AffectionType.LifepowerAffection: return saturation * frequency;
+            case AffectionType.StabilityAffection: return (stability + saturation) / 2f;
+            default: return stability * saturation * frequency;
         }
     }
     public Color GetColor()
     {
-        if (destructed) return new Color(0f, 0f, 0f, 0f);
+        if (destructed) return Color.black;
         else
         {
-            if (!researched) return new Color(1f, 1f, 1f, 0.5f);
-            else
-            {
-                var col = new Color((1 - stability), 1f, 1f);
-                col = Color.Lerp(Color.black, col, saturation);
-                col.a = Mathf.Clamp01(frequency);
-                return col;
-            }
+           return new Color(1 - stability, saturation, frequency * frequency);
         }
     }
     public Color GetHaloColor()
@@ -151,9 +140,263 @@ public sealed class Artifact {
                 return new Color(1f, 1f, 1f, 0.5f * saturation);
         }
     }
+
+    public Color GetAffectionColor()
+    {
+        Color c;
+        switch (affectionType)
+        {
+            case AffectionType.LifepowerAffection: c= new Color(0.2f, 0.79f, 0.14f);break;
+            case AffectionType.SpaceAffection: c = new Color(0.49f, 0.21f, 0.51f); break;
+            case AffectionType.StabilityAffection: c = new Color(0, 1f, 1f); break;
+            default: c =  Color.gray;break;
+        }
+        c.a = GetAffectionValue();
+        return c;
+    }
+
     public Texture GetTexture() // INDEV
     {
-        return emptyArtifactFrame_tx;
+        if (texture == null)
+        {
+            byte[] data = new byte[256];// 64px           
+
+            var mainColor = GetColor();
+            var emissionColor = GetHaloColor();
+            var affectionColor = GetAffectionColor();
+
+            int i = 27 * 4;
+            byte r = (byte)(affectionColor.r * 255f),
+                g = (byte)(affectionColor.g * 255f),
+                b = (byte)(affectionColor.b * 255f),
+                a = (byte)(affectionColor.a * 255f);
+            // core:
+            data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+            data[i + 4] = r; data[i + 5] = g; data[i + 6] = b; data[i + 7] = a;
+            i += 32;
+            data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+            data[i + 4] = r; data[i + 5] = g; data[i + 6] = b; data[i + 7] = a;
+            // diagonals
+            if (frequency < 0.33f)
+            {
+                var dColor = Color.Lerp(emissionColor, Color.white, 0.5f);
+                r = (byte)(dColor.r * 255f);
+                g = (byte)(dColor.g * 255f);
+                b = (byte)(dColor.b * 255f);
+                a = 128;
+
+                i = 18 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 21 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 42 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 45 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+            }
+            else
+            {
+                if (frequency <= 0.66f)
+                {
+                    var dColor = Color.Lerp(emissionColor, Color.white, 0.33f);
+                    r = (byte)(dColor.r * 255f);
+                    g = (byte)(dColor.g * 255f);
+                    b = (byte)(dColor.b * 255f);
+                    a = 170;
+
+                    i = 18 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 21 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 42 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 45 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+
+                    dColor = Color.Lerp(emissionColor, Color.white, 0.66f);
+                    r = (byte)(dColor.r * 255f);
+                    g = (byte)(dColor.g * 255f);
+                    b = (byte)(dColor.b * 255f);
+                    a = 85;
+
+                    i = 9 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 14 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 49 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 54 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                }
+                else
+                {
+                    var dColor = Color.Lerp(emissionColor, Color.white, 0.25f);
+                    r = (byte)(dColor.r * 255f);
+                    g = (byte)(dColor.g * 255f);
+                    b = (byte)(dColor.b * 255f);
+                    a = 64;
+
+                    i = 18 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 21 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 42 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 45 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+
+                    dColor = Color.Lerp(emissionColor, Color.white, 0.5f);
+                    r = (byte)(dColor.r * 255f);
+                    g = (byte)(dColor.g * 255f);
+                    b = (byte)(dColor.b * 255f);
+                    a = 128;
+
+                    i = 9 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 14 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 49 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 54 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+
+                    dColor = Color.Lerp(emissionColor, Color.white, 0.75f);
+                    r = (byte)(dColor.r * 255f);
+                    g = (byte)(dColor.g * 255f);
+                    b = (byte)(dColor.b * 255f);
+                    a = 192;
+
+                    i = 0;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 7 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 56 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 63 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                }
+            }
+            //main
+            if (saturation < 0.33f)
+            {
+                var mColor = Color.Lerp(mainColor, Color.black, 0.25f);
+                r = (byte)(mColor.r * 255f);
+                g = (byte)(mColor.g * 255f);
+                b = (byte)(mColor.b * 255f);
+                a = 128;
+
+                i = 19 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 20 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 26 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 29 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 34 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 37 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 43 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                i = 44 * 4;
+                data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+            }
+            else
+            {
+                byte[] outerRingIndexes = new byte[] { 1, 2, 3, 4, 5, 6, 8, 15, 16, 23, 24, 31, 32, 39, 40, 47, 48, 55, 57, 58, 59, 60, 61, 62 },
+                    middleRingIndexes = new byte[] { 10, 11, 12, 13, 17, 22, 25, 30, 33, 38, 41, 46, 50, 51, 52, 53 };
+                if (saturation <= 0.66f)
+                {
+                    var mColor = Color.Lerp(mainColor, Color.black, 0.1f);
+                    r = (byte)(mColor.r * 255f);
+                    g = (byte)(mColor.g * 255f);
+                    b = (byte)(mColor.b * 255f);
+                    a = 170;
+
+                    i = 19 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 20 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 26 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 29 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 34 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 37 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 43 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 44 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+
+                    mColor = Color.Lerp(mainColor, Color.black, 0.5f);
+                    r = (byte)(mColor.r * 255f);
+                    g = (byte)(mColor.g * 255f);
+                    b = (byte)(mColor.b * 255f);
+                    a = 85;
+                    foreach (int x in middleRingIndexes)
+                    {
+                        i = x * 4;
+                        data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    }
+                }
+                else
+                {
+                    var mColor = Color.Lerp(mainColor, Color.black, 0.1f);
+                    r = (byte)(mColor.r * 255f);
+                    g = (byte)(mColor.g * 255f);
+                    b = (byte)(mColor.b * 255f);
+                    a = 192;
+
+                    i = 19 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 20 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 26 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 29 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 34 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 37 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 43 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    i = 44 * 4;
+                    data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+
+                    mColor = Color.Lerp(mainColor, Color.black, 0.2f);
+                    r = (byte)(mColor.r * 255f);
+                    g = (byte)(mColor.g * 255f);
+                    b = (byte)(mColor.b * 255f);
+                    a = 128;
+                    foreach (int x in middleRingIndexes)
+                    {
+                        i = x * 4;
+                        data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    }
+
+                    mColor = Color.Lerp(mainColor, Color.black, 0.3f);
+                    r = (byte)(mColor.r * 255f);
+                    g = (byte)(mColor.g * 255f);
+                    b = (byte)(mColor.b * 255f);
+                    a = 64;
+                    foreach (int x in outerRingIndexes)
+                    {
+                        i = x * 4;
+                        data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = a;
+                    }
+                }
+            }
+            //build
+            texture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Point;
+            texture.LoadRawTextureData(data);
+            texture.Apply();
+        }
+        return texture;
     }
 
     public static Rect GetAffectionIconRect(AffectionType atype)

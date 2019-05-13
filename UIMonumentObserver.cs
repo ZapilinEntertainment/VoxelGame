@@ -16,7 +16,7 @@ public sealed class UIMonumentObserver : UIObserver
     private int listSelectedItem = -1, selectedSlotIndex = -1;
     private Monument observingMonument;
     private List<int> ids;
-    private const int IMAGE_CHILD_INDEX = 0, TEXT_CHILD_INDEX = 1, CLOSEBUTTON_CHILD_INDEX = 2;
+    private const int IMAGE_CHILD_INDEX = 0, TEXT_CHILD_INDEX = 1;
 
     public static UIMonumentObserver InitializeMonumentObserverScript()
     {
@@ -43,6 +43,10 @@ public sealed class UIMonumentObserver : UIObserver
                 isObserving = true;
                 if (listHolder.activeSelf) listHolder.SetActive(false);
             }
+            else
+            {
+                if (listHolder.activeSelf) PrepareList();
+            }
 
             var bo = Building.buildingObserver;
             if (bo == null) bo = UIBuildingObserver.InitializeBuildingObserverScript();
@@ -60,8 +64,6 @@ public sealed class UIMonumentObserver : UIObserver
                 {
                     t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                     t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetComponent<Button>().interactable = true;
                 }
                 else
                 {
@@ -71,8 +73,6 @@ public sealed class UIMonumentObserver : UIObserver
                     t2 = t.GetChild(TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(true);
-                    t.GetComponent<Button>().interactable = false;
                 }
                 // 1
                 t = slots[1]; a = observingMonument.artifacts[1];
@@ -80,8 +80,6 @@ public sealed class UIMonumentObserver : UIObserver
                 {
                     t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                     t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetComponent<Button>().interactable = true;
                 }
                 else
                 {
@@ -91,8 +89,6 @@ public sealed class UIMonumentObserver : UIObserver
                     t2 = t.GetChild(TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(true);
-                    t.GetComponent<Button>().interactable = false;
                 }
                 // 2
                 t = slots[2]; a = observingMonument.artifacts[2];
@@ -100,8 +96,6 @@ public sealed class UIMonumentObserver : UIObserver
                 {
                     t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                     t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetComponent<Button>().interactable = true;
                 }
                 else
                 {
@@ -111,8 +105,6 @@ public sealed class UIMonumentObserver : UIObserver
                     t2 = t.GetChild(TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(true);
-                    t.GetComponent<Button>().interactable = false;
                 }
                 // 3
                 t = slots[3]; a = observingMonument.artifacts[3];
@@ -120,8 +112,6 @@ public sealed class UIMonumentObserver : UIObserver
                 {
                     t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                     t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetComponent<Button>().interactable = true;
                 }
                 else
                 {
@@ -131,8 +121,6 @@ public sealed class UIMonumentObserver : UIObserver
                     t2 = t.GetChild(TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
-                    t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(true);
-                    t.GetComponent<Button>().interactable = false;
                 }
             }
             else
@@ -142,43 +130,45 @@ public sealed class UIMonumentObserver : UIObserver
                 Artifact a = observingMonument.artifacts[0];
                 t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                 t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetComponent<Button>().interactable = true;
                 //1
                 t = slots[1];
                 a = observingMonument.artifacts[1];
                 t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                 t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetComponent<Button>().interactable = true;
                 //2
                 t = slots[2];
                 a = observingMonument.artifacts[2];
                 t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                 t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetComponent<Button>().interactable = true;
                 //3
                 t = slots[3];
                 a = observingMonument.artifacts[3];
                 t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                 t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(CLOSEBUTTON_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetComponent<Button>().interactable = true;
             }
         }
     }
 
     public void SelectSlot(int i)
     {        
+        // нужна подсветка выбранного слота
         if (selectedSlotIndex != i)
         {
+            if (selectedSlotIndex != -1) slots[selectedSlotIndex].GetComponent<Image>().overrideSprite = null;
             selectedSlotIndex = i;
-            PrepareList(selectedSlotIndex);
+            slots[selectedSlotIndex].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+            PrepareList();
         }
         else
         {
-            if (listHolder.activeSelf) listHolder.SetActive(false);
+            if (listHolder.activeSelf)
+            {
+                listHolder.SetActive(false);
+                if (selectedSlotIndex != -1) {
+                    slots[selectedSlotIndex].GetComponent<Image>().overrideSprite = null;
+                    selectedSlotIndex = -1;
+                }
+            }
         }
     }
     public void ClearSlot(int x)
@@ -191,12 +181,11 @@ public sealed class UIMonumentObserver : UIObserver
         else
         {
             observingMonument.RemoveArtifact(x);
-            if (listHolder.activeSelf) listHolder.SetActive(false);
             SetObservingMonument(observingMonument);
         }
     }
 
-    public void PrepareList(int slotIndex)
+    public void PrepareList()
     {
         if (observingMonument == null)
         {
@@ -205,56 +194,73 @@ public sealed class UIMonumentObserver : UIObserver
         }
         else
         {
-            if (Artifact.playersArtifactsList.Count == 0)
+            if (selectedSlotIndex == -1)
+            {
+                listHolder.SetActive(false);
+                return;
+            }
+            if (Artifact.artifactsList.Count == 0)
             {
                 GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NoArtifacts));
                 return;
             }
             var arts = new List<Artifact>();
-            foreach (var a in Artifact.playersArtifactsList)
+            foreach (var a in Artifact.artifactsList)
             {
                 if (a.status == Artifact.ArtifactStatus.OnConservation & a.affectionType != Artifact.AffectionType.NoAffection & a.researched) arts.Add(a);
             }
+            var selectedArtifact = observingMonument.artifacts[selectedSlotIndex];
+            bool slotWithArtifact = selectedArtifact != null;
+            if (slotWithArtifact) arts.Add(selectedArtifact);
             int artsCount = arts.Count;
             if (artsCount > 0)
             {
                 // подготовка списка
-                if (ids == null) ids = new List<int>() { -1};
-                items[0].transform.GetChild(0).GetComponent<Text>().text = '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>';
-                int currentSelectedItem = -1;
+                ids = new List<int>() { -1};
+                items[0].transform.GetChild(0).GetComponent<Text>().text = slotWithArtifact ? Localization.GetPhrase(LocalizedPhrase.ClearSlot) : '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>' ;
+                int newSelectedItem = -1;
+
                 if (artsCount + 1 > items.Length)
                 {
+                    // артефакты не помещаются в одну страницу
                     int sindex = GetListStartIndex(artsCount);
                     for (int i = 1; i < items.Length; i++)
                     {
                         items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i + sindex - 1].name + '"';
-                        ids.Add(arts[i + sindex - 1].ID);
+                        ids.Add(arts[i + sindex].ID);
                         items[i].SetActive(true);
                     }
 
-                    var selectedArtifact = observingMonument.artifacts[slotIndex];
+                    
                     if (selectedArtifact != null)
                     {
                         for (int i = 0; i < items.Length; i++)
                         {
                             if (ids[i] == selectedArtifact.ID)
                             {
-                                currentSelectedItem = i;
+                                newSelectedItem = i;
                                 break;
                             }
                         }
                     }
+                    else
+                    {
+                        if (sindex != 0) newSelectedItem = -1;
+                        else newSelectedItem = 0;
+                    }
                 }
                 else
                 {
-                    print(arts.Count);
-                    int i = 1;
+                    // артефактов меньше, чем позиций списка
+                    if (scrollbar.gameObject.activeSelf) scrollbar.gameObject.SetActive(false);
+                    int i = 0;
                     for (; i < arts.Count; i++)
                     {
-                        items[i ].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i - 1].name + '"';
+                        items[i + 1].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i].name + '"';
                         ids.Add(arts[i].ID);
-                        items[i ].SetActive(true);
+                        items[i + 1].SetActive(true);
                     }
+                    i++;
                     if (i < items.Length)
                     {
                         for (; i < items.Length; i++)
@@ -262,27 +268,25 @@ public sealed class UIMonumentObserver : UIObserver
                             items[i].SetActive(false);
                         }
                     }
-                    var selectedArtifact = observingMonument.artifacts[slotIndex];
+
                     if (selectedArtifact != null)
                     {
                         for (i = 0; i < ids.Count; i++)
                         {
                             if (ids[i] == selectedArtifact.ID)
                             {
-                                currentSelectedItem = i;
+                                newSelectedItem = i;
                             }
                         }
                     }
+                    else newSelectedItem = 0;
                 }
 
-                if (currentSelectedItem != listSelectedItem)
+                if (newSelectedItem != listSelectedItem)
                 {
                     if (listSelectedItem != -1) items[listSelectedItem].GetComponent<Image>().overrideSprite = null;
-                    if (currentSelectedItem != -1)
-                    {
-                        items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                        listSelectedItem = currentSelectedItem;
-                    }
+                    if (newSelectedItem != -1)  items[newSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                    listSelectedItem = newSelectedItem;
                 }
                 if (!listHolder.activeSelf) listHolder.SetActive(true);
             }
@@ -310,11 +314,11 @@ public sealed class UIMonumentObserver : UIObserver
         {
             if (ids.Count > i)
             {
+                if (listSelectedItem != -1) items[listSelectedItem].GetComponent<Image>().overrideSprite = null;
                 listSelectedItem = i;
                 if (ids[i] == -1)
                 {
                     ClearSlot(selectedSlotIndex);
-                    return;
                 }
                 else
                 {
@@ -322,10 +326,12 @@ public sealed class UIMonumentObserver : UIObserver
                     if (a != null && (!a.destructed & a.affectionType != Artifact.AffectionType.NoAffection))
                     {
                         observingMonument.AddArtifact(a, selectedSlotIndex);
+                        SetObservingMonument(observingMonument);
                     }
                 }
+                return;
             }
-            PrepareList(selectedSlotIndex);
+            else PrepareList();
         }
     }
 
@@ -358,7 +364,11 @@ public sealed class UIMonumentObserver : UIObserver
     override public void SelfShutOff()
     {
         isObserving = false;
-        selectedSlotIndex = -1;
+        if (selectedSlotIndex != -1)
+        {
+            slots[selectedSlotIndex].GetComponent<Image>().overrideSprite = null;
+            selectedSlotIndex = -1;
+        }
         observingMonument = null;
         if (listHolder.activeSelf)
         {
