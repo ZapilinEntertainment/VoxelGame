@@ -35,8 +35,8 @@ sealed public class UIController : MonoBehaviour
     public ActiveWindowMode currentActiveWindowMode { get; private set; }
     public ProgressPanelMode progressPanelMode { get; private set; }
     public Texture iconsTexture { get; private set; }
-    public Texture resourcesTexture { get; private set; }
-    public Texture buildingsTexture { get; private set; }
+    public Texture resourcesIcons { get; private set; }
+    public Texture buildingsIcons { get; private set; }
     public Transform mainCanvas { get; private set; }
     public SurfaceBlock chosenSurface { get; private set; }
     public QuestUI questUI { get; private set; }
@@ -84,8 +84,8 @@ sealed public class UIController : MonoBehaviour
         selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
         selectionFrame.gameObject.SetActive(false);
         iconsTexture = Resources.Load<Texture>("Textures/Icons");
-        resourcesTexture = Resources.Load<Texture>("Textures/resourcesIcons");
-        buildingsTexture = Resources.Load<Texture>("Textures/buildingIcons");
+        resourcesIcons = Resources.Load<Texture>("Textures/resourcesIcons");
+        buildingsIcons = Resources.Load<Texture>("Textures/buildingIcons");
         questUI = _questUI;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
         mainCanvas = transform.GetChild(1);
@@ -193,7 +193,7 @@ sealed public class UIController : MonoBehaviour
                                 {
                                     Powerplant pp = uwb.observingWorkbuilding as Powerplant;
                                     RawImage ri = progressPanel.transform.GetChild(0).GetComponent<RawImage>();
-                                    ri.texture = resourcesTexture;
+                                    ri.texture = resourcesIcons;
                                     ri.uvRect = ResourceType.GetResourceIconRect(pp.GetFuelResourseID());
                                     progressPanelFullfill.fillAmount = pp.fuelLeft;
                                     progressPanelText.text = string.Format("{0:0.###}", pp.fuelLeft * 100) + '%';
@@ -541,6 +541,7 @@ sealed public class UIController : MonoBehaviour
                     }
                     break;
             }
+            Lightning.Strike(rh.point);
         }
         else SelectedObjectLost();
     }
@@ -1353,7 +1354,7 @@ sealed public class UIController : MonoBehaviour
                     else
                     {
                         Powerplant pp = uwb.observingWorkbuilding as Powerplant;
-                        progressPanelIcon.texture = resourcesTexture;
+                        progressPanelIcon.texture = resourcesIcons;
                         int resourceID = pp.GetFuelResourseID();
                         progressPanelIcon.uvRect = ResourceType.GetResourceIconRect(resourceID);
                         Text resourceNameText = progressPanelIcon.transform.GetChild(0).GetComponent<Text>();

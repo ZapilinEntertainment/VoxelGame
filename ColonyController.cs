@@ -33,7 +33,7 @@ public sealed class ColonyController : MonoBehaviour
     public float realBirthrate { get; private set; }
     float peopleSurplus = 0, housingTimer = 0, happinessTimer = 0;
     public int totalLivespace { get; private set; }
-    List<Hospital> hospitals;
+    private List<Hospital> hospitals;
     private float starvationTimer, targetHappiness, happinessIncreaseMultiplier = 1, happinessDecreaseMultiplier = 1;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false, housingCountChanges = false;
 

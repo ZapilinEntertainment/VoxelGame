@@ -5,8 +5,8 @@ using UnityEngine;
 sealed public class Corn : Plant {
     private Transform model;
 
-	static Sprite[] stageSprites;
-    static bool spritePackLoaded = false;
+	private static Sprite[] stageSprites;
+    private static bool spritePackLoaded = false, subscribedToCameraUpdate = false;
     private static List<Corn> corns;
 
     private static float growSpeed, decaySpeed; // in tick
@@ -21,13 +21,18 @@ sealed public class Corn : Plant {
         corns = new List<Corn>();
         maxLifeTransfer = 1;
         growSpeed = 0.01f;
-        decaySpeed = growSpeed * 0.01f;        
+        decaySpeed = growSpeed * 0.01f;
+        AddToResetList(typeof(Corn));
     }
 
-    public static void ResetToDefaults_Static_Corn()
+    public static void ResetStaticData()
     {
         corns = new List<Corn>();
-        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
+        if (!subscribedToCameraUpdate)
+        {
+            FollowingCamera.main.cameraChangedEvent += CameraUpdate;
+            subscribedToCameraUpdate = true;
+        }
     }    
 
     override public void Prepare()

@@ -321,7 +321,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         t = buttonsKeeper.GetChild(lastUsedIndex);
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
-                        ri.texture = UIController.current.resourcesTexture;
+                        ri.texture = UIController.current.resourcesIcons;
                         ri.uvRect = ResourceType.GetResourceIconRect(rt.ID);
                         t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(rt.ID);
                         Button b = t.GetComponent<Button>();

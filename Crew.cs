@@ -420,6 +420,11 @@ public sealed class Crew : MonoBehaviour {
             actionsHash++;
         }
     }
+    //system
+    public void ClearArtifactField(Artifact a)
+    {
+        if (artifact == a) artifact = null;
+    }
 
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);

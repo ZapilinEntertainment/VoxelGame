@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Reflection;
 public class Structure : MonoBehaviour
 {
     public SurfaceBlock basement { get; protected set; }
@@ -49,7 +50,13 @@ public class Structure : MonoBehaviour
 
     public static UIStructureObserver structureObserver;
     private static bool firstLaunch = true;
+    private static List<System.Type> resetTypesList;
 
+    public static void AddToResetList(System.Type t)
+    {
+        if (resetTypesList == null) resetTypesList = new List<System.Type>();
+        if (!resetTypesList.Contains(t)) resetTypesList.Add(t);
+    }
 
     public static void ResetToDefaults_Static()
     {
@@ -58,14 +65,19 @@ public class Structure : MonoBehaviour
             firstLaunch = false;
             return;
         }
-        OakTree.ResetToDefaults_Static_OakTree();
-        Corn.ResetToDefaults_Static_Corn();
-        Hospital.ResetToDefaults_Static_Hospital();
-        Dock.ResetToDefaults_Static_Dock();
-        RecruitingCenter.ResetToDefaults_Static_RecruitingCenter();
-        QuantumTransmitter.ResetToDefaults_Static_QuantumTransmitter();
-        Hangar.ResetToDefaults_Static_Hangar();
-        Observatory.ResetBuiltMarker();
+
+        if (resetTypesList != null)
+        {
+            foreach (var t in resetTypesList)
+            {
+                var func = t.GetMethod("ResetStaticData");
+                if (func != null)
+                {
+                    func.Invoke(null, null);
+                }
+                else print(t.ToString());
+            }
+        }
     }
 
     virtual protected void SetModel()

@@ -20,6 +20,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static bool useAdvancedMaterials { get; private set; }
     public static bool useIlluminationSystem { get; private set; }
     public static bool shadowCasting { get; private set; }
+    public static int qualityLevel { get; private set; }
     public static PoolMaster current;	 
 	public static GameObject mineElevator_pref {get;private set;}    
     public static Material energyMaterial { get; private set; }
@@ -45,7 +46,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
-    private ParticleSystem buildEmitter, citizensLeavingEmitter;
+    private ParticleSystem buildEmitter, citizensLeavingEmitter, lifepowerEmitter;
     private static Sprite[] starsSprites;
 
     public static byte MAX_MATERIAL_LIGHT_DIVISIONS { get; private set; }
@@ -59,11 +60,13 @@ public sealed class PoolMaster : MonoBehaviour {
 		if (current != null) return;
 		current = this;
 
-        useAdvancedMaterials = (QualitySettings.GetQualityLevel() == MAX_QUALITY_LEVEL);
+        qualityLevel = QualitySettings.GetQualityLevel();
+        useAdvancedMaterials = (qualityLevel == MAX_QUALITY_LEVEL);
         shadowCasting = useAdvancedMaterials;
         useIlluminationSystem = !shadowCasting;
 
         buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
+        lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
         inactiveShips = new List<Ship>();
 
         quadMesh = new Mesh();
@@ -226,7 +229,12 @@ public sealed class PoolMaster : MonoBehaviour {
     public void BuildSplash(Vector3 pos)
     {
         buildEmitter.transform.position = pos;
-        buildEmitter.Emit(10);
+        buildEmitter.Emit(12);
+    }
+    public void LifepowerSplash(Vector3 pos, int count)
+    {
+        lifepowerEmitter.transform.position = pos;
+        lifepowerEmitter.Emit(count);
     }
     public void DrawZone(Vector3 point, Vector3 scale, Color col)
     {

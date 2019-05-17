@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public enum BirthrateMode {Normal, Improved, Lowered}
+﻿public enum BirthrateMode { Normal, Improved, Lowered }
 public class Hospital : WorkBuilding {
 	public float coverage {get;private set;}
 	public static float hospital_birthrate_coefficient = 1;
@@ -11,7 +7,11 @@ public class Hospital : WorkBuilding {
 	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
     const int STANDART_COVERAGE = 1000;
 
-	public static void ResetToDefaults_Static_Hospital() {
+    static Hospital()
+    {
+        AddToResetList(typeof(Hospital));
+    }
+	public static void ResetStaticData() {
 		SetBirthrateMode(0);
 	}
 

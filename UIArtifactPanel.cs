@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 public class UIArtifactPanel : MonoBehaviour {
     [SerializeField] private GameObject[] items;
-    [SerializeField] private RawImage icon, iconBase;
+    [SerializeField] private Image affectionIcon;
+    [SerializeField] private RawImage mainIcon;
     [SerializeField] private InputField nameField;
     [SerializeField] private Text status, description;
     [SerializeField] private GameObject conservateButton, passButton, closeButton;
@@ -19,8 +20,7 @@ public class UIArtifactPanel : MonoBehaviour {
         {
             if (!descriptionOff)
             {
-                icon.texture = Artifact.emptyArtifactFrame_tx;
-                iconBase.gameObject.SetActive(false);
+                affectionIcon.transform.parent.gameObject.SetActive(false);
                 nameField.gameObject.SetActive(false);
                 status.enabled = false;
                 conservateButton.SetActive(false);
@@ -31,35 +31,36 @@ public class UIArtifactPanel : MonoBehaviour {
         }
         else
         {
-            icon.texture = chosenArtifact.GetTexture();
-            icon.color = chosenArtifact.GetColor();
             nameField.text = chosenArtifact.name;
             status.text = Localization.GetArtifactStatus(chosenArtifact.status);
             if (chosenArtifact.researched)
             {
-                iconBase.enabled = true;
-                iconBase.color = chosenArtifact.GetHaloColor();
+                affectionIcon.sprite = Artifact.GetAffectionSprite(chosenArtifact.affectionType);                
+                affectionIcon.enabled = true;
                 // localization - write artifact info 
             }
             else
             {
                 description.text = Localization.GetPhrase(LocalizedPhrase.NotResearched);
-                iconBase.enabled = false;
+                affectionIcon.enabled = false;
             }
+            mainIcon.texture = chosenArtifact.GetTexture();
             conservateButton.SetActive(chosenArtifact.status == Artifact.ArtifactStatus.UsingByCrew);
             if (chosenArtifact.status != Artifact.ArtifactStatus.Exists)
             {
+                var ri = passButton.transform.GetChild(0).GetComponent<RawImage>();
                 switch (chosenArtifact.status)
                 {
                     case Artifact.ArtifactStatus.Researching:
                         // установка иконки иссл лаб
                         break;
-                    case Artifact.ArtifactStatus.UsingByCrew:
-                        var ri = passButton.transform.GetChild(0).GetComponent<RawImage>();
+                    case Artifact.ArtifactStatus.UsingByCrew:                        
                         ri.texture = UIController.current.iconsTexture;
                         ri.uvRect = UIController.GetTextureUV(Icons.CrewGoodIcon);
                         break;
                     case Artifact.ArtifactStatus.UsingInMonument:
+                        ri.texture = UIController.current.buildingsIcons;
+                        ri.uvRect = Structure.GetTextureRect(Structure.MONUMENT_ID);
                         //иконка монумента
                         break;
                 }
@@ -69,7 +70,7 @@ public class UIArtifactPanel : MonoBehaviour {
 
             if (descriptionOff)
             {
-                iconBase.gameObject.SetActive(true);
+                affectionIcon.transform.parent.gameObject.SetActive(true);
                 nameField.gameObject.SetActive(true);
                 status.enabled = true;
                 descriptionOff = false;
@@ -84,7 +85,7 @@ public class UIArtifactPanel : MonoBehaviour {
         {
             if (chosenArtifact.status == Artifact.ArtifactStatus.UsingInMonument | chosenArtifact.status == Artifact.ArtifactStatus.UsingByCrew)
             {
-                iconBase.transform.Rotate(Vector3.forward, chosenArtifact.frequency * 10f * Time.deltaTime);
+                affectionIcon.transform.Rotate(Vector3.forward, chosenArtifact.frequency * 10f * Time.deltaTime);
             }
         }
     }

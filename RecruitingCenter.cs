@@ -13,8 +13,11 @@ public sealed class RecruitingCenter : WorkBuilding {
     const float FIND_SPEED = 5;
     public const float FIND_WORKFLOW = 10;
 
-    static RecruitingCenter() { recruitingCentersList = new List<RecruitingCenter>(); }
-	public static void ResetToDefaults_Static_RecruitingCenter() {
+    static RecruitingCenter() {
+        recruitingCentersList = new List<RecruitingCenter>();
+        AddToResetList(typeof(RecruitingCenter));
+    }
+	public static void ResetStaticData() {
 		hireCost = START_CREW_COST + ((int)(GameMaster.difficulty) - 2) * 50;
         recruitingCentersList = new List<RecruitingCenter>();
 	}
@@ -48,7 +51,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     }
 
 	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
-		if (hireCost == -1) ResetToDefaults_Static_RecruitingCenter();
+		if (hireCost == -1) ResetStaticData();
 		if (b == null) return;
 		SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)

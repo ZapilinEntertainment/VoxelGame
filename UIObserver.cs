@@ -24,7 +24,7 @@ public abstract class UIObserver : MonoBehaviour {
     public virtual void StatusUpdate() {		
 	}
 
-	private void OnEnable() {
+	protected void OnEnable() {
 		transform.SetAsLastSibling();
         if (!subscribedToUpdate)
         {
@@ -32,7 +32,7 @@ public abstract class UIObserver : MonoBehaviour {
             subscribedToUpdate = true;
         }
 	}
-    private void OnDisable()
+    protected void OnDisable()
     {
         if (subscribedToUpdate)
         {
@@ -40,7 +40,7 @@ public abstract class UIObserver : MonoBehaviour {
             subscribedToUpdate = false;
         }
     } 
-    private void OnDestroy()
+    protected void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;
         if (subscribedToUpdate)

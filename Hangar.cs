@@ -17,8 +17,9 @@ public sealed class Hangar : WorkBuilding
     static Hangar()
     {
         hangarsList = new List<Hangar>();
+        AddToResetList(typeof(Hangar));
     }
-    public static void ResetToDefaults_Static_Hangar()
+    public static void ResetStaticData()
     {
         hangarsList = new List<Hangar>();
     }

@@ -57,7 +57,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
             Transform tf;            
             float fspeed = FLY_SPEED * t;
             Vector3 one = Vector3.one * ROTATION_SPEED * t, up = Vector3.up * fspeed * t, down = Vector3.down * fspeed * t;
-            float upBorder = Chunk.CHUNK_SIZE * 2, lowBorder = Chunk.CHUNK_SIZE * (-1);
+            float upBorder = GameConstants.GetUpperBorder(), lowBorder = GameConstants.GetBottomBorder();
 
             while ( i < activeCubes.Count)
             {

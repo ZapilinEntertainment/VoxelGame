@@ -36,4 +36,18 @@
         GameMaster gm = GameMaster.realMaster;
         return ((SHIP_ARRIVING_TIME / (gm.tradeVesselsTrafficCoefficient)) / (gm.colonyController.docksLevel + 1) / 2f);
     }
+    public static float GetBlackoutStabilityTestHardness()
+    {
+        switch (GameMaster.difficulty)
+        {
+            case Difficulty.Utopia: return 0f;
+            case Difficulty.Easy: return 0.05f;
+            case Difficulty.Hard: return 0.25f;
+            case Difficulty.Torture: return 0.33f;
+            default: return 0.1f;
+        }
+    }
+
+    public static float GetUpperBorder() { return Chunk.CHUNK_SIZE * 2; }
+    public static float GetBottomBorder() { return Chunk.CHUNK_SIZE * (-1); }
 }

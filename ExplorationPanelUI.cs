@@ -639,30 +639,25 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
     private int GetListStartIndex() // 0-item real index
     {
-        int listStartIndex = 0, icount = 0, count = items.Length;
+        int totalListCount = 0, visibleListCount = items.Length;
         switch (mode)
         {
-            case InfoMode.Crews: icount = Crew.crewsList.Count; break;
-            case InfoMode.Shuttles: icount = Shuttle.shuttlesList.Count;break;
-            case InfoMode.Expeditions: icount = Expedition.expeditionsList.Count; break;
-            case InfoMode.Artifacts: icount = Artifact.artifactsList.Count; break;
+            case InfoMode.Crews: totalListCount = Crew.crewsList.Count; break;
+            case InfoMode.Shuttles: totalListCount = Shuttle.shuttlesList.Count;break;
+            case InfoMode.Expeditions: totalListCount = Expedition.expeditionsList.Count; break;
+            case InfoMode.Artifacts: totalListCount = Artifact.artifactsList.Count; break;
         }
-        float sval = scrollbar.value;
-        if (sval != 0)
+
+        if (totalListCount < visibleListCount) return 0;
+        else
         {
-            if (sval != 1)
+            float sval = scrollbar.value;
+            if (sval != 0)
             {
-                listStartIndex = (int)((sval - (1f / icount) * 0.5f) * count);
-                if (listStartIndex < 0) listStartIndex = 0;
-                else
-                {
-                    if (listStartIndex > count - icount) listStartIndex = count - icount;
-                }
+                return ((int)(sval * (totalListCount - visibleListCount)));
             }
-            else listStartIndex = count - icount;
+            else return 0;
         }
-        else listStartIndex = 0;
-        return listStartIndex;
     }
 
     private void OnEnable()

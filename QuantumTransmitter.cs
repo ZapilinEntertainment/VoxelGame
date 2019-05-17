@@ -14,9 +14,9 @@ public sealed class QuantumTransmitter : Building {
     static QuantumTransmitter()
     {
         transmittersList = new List<QuantumTransmitter>();
+        AddToResetList(typeof(QuantumTransmitter));
     }
-
-	public static void ResetToDefaults_Static_QuantumTransmitter() {
+	public static void ResetStaticData() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
     public static QuantumTransmitter GetTransmitterByID(int s_id)

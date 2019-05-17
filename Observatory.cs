@@ -8,7 +8,11 @@ public class Observatory : WorkBuilding {
     private bool mapOpened = false;    
     private List<Block> blockedBlocks;
 
-    public static void ResetBuiltMarker()
+    static Observatory()
+    {
+        AddToResetList(typeof(Observatory));        
+    }
+    public static void ResetStaticData()
     {
         alreadyBuilt = false;
     }

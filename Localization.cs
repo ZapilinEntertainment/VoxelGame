@@ -282,8 +282,8 @@ public static class Localization {
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<В разработке>";
                     case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха. /n Может быть только одна обсерватория.";
-                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранит найденные артефакты. В случае отключения питания возможны потери.";
-                    case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. В момент включения / отключения питания артефакты внутри монумента могут повредиться.";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
+                    case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     default: return "Без описания";
                 }
             case Language.English:
@@ -366,7 +366,7 @@ public static class Localization {
                     case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<In development>";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
-                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Contains artifacts. Power shortage may cause losses.";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Give access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     default: return "No description.";
                 }

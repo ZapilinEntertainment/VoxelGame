@@ -13,10 +13,10 @@ public sealed class UIMonumentObserver : UIObserver
     [SerializeField] private GameObject listHolder;
     [SerializeField] private Scrollbar scrollbar;
 #pragma warning restore 0649
-    private int listSelectedItem = -1, selectedSlotIndex = -1;
+    private int listSelectedItem = -1, selectedSlotIndex = -1, lastDrawnArtifactsHash = -1;
     private Monument observingMonument;
     private List<int> ids;
-    private const int IMAGE_CHILD_INDEX = 0, TEXT_CHILD_INDEX = 1;
+    private const int SLOT_IMAGE_CHILD_INDEX = 0, SLOT_TEXT_CHILD_INDEX = 1;
 
     public static UIMonumentObserver InitializeMonumentObserverScript()
     {
@@ -62,15 +62,15 @@ public sealed class UIMonumentObserver : UIObserver
                 Artifact a = observingMonument.artifacts[0];
                 if (a == null)
                 {
-                    t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 }
                 else
                 {
-                    var t2 = t.GetChild(IMAGE_CHILD_INDEX);
+                    var t2 = t.GetChild(SLOT_IMAGE_CHILD_INDEX);
                     t2.GetComponent<RawImage>().texture = a.GetTexture();
                     t2.gameObject.SetActive(true);
-                    t2 = t.GetChild(TEXT_CHILD_INDEX);
+                    t2 = t.GetChild(SLOT_TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
                 }
@@ -78,15 +78,15 @@ public sealed class UIMonumentObserver : UIObserver
                 t = slots[1]; a = observingMonument.artifacts[1];
                 if (a == null)
                 {
-                    t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 }
                 else
                 {
-                    var t2 = t.GetChild(IMAGE_CHILD_INDEX);
+                    var t2 = t.GetChild(SLOT_IMAGE_CHILD_INDEX);
                     t2.GetComponent<RawImage>().texture = a.GetTexture();
                     t2.gameObject.SetActive(true);
-                    t2 = t.GetChild(TEXT_CHILD_INDEX);
+                    t2 = t.GetChild(SLOT_TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
                 }
@@ -94,15 +94,15 @@ public sealed class UIMonumentObserver : UIObserver
                 t = slots[2]; a = observingMonument.artifacts[2];
                 if (a == null)
                 {
-                    t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 }
                 else
                 {
-                    var t2 = t.GetChild(IMAGE_CHILD_INDEX);
+                    var t2 = t.GetChild(SLOT_IMAGE_CHILD_INDEX);
                     t2.GetComponent<RawImage>().texture = a.GetTexture();
                     t2.gameObject.SetActive(true);
-                    t2 = t.GetChild(TEXT_CHILD_INDEX);
+                    t2 = t.GetChild(SLOT_TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
                 }
@@ -110,15 +110,15 @@ public sealed class UIMonumentObserver : UIObserver
                 t = slots[3]; a = observingMonument.artifacts[3];
                 if (a == null)
                 {
-                    t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                    t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                    t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 }
                 else
                 {
-                    var t2 = t.GetChild(IMAGE_CHILD_INDEX);
+                    var t2 = t.GetChild(SLOT_IMAGE_CHILD_INDEX);
                     t2.GetComponent<RawImage>().texture = a.GetTexture();
                     t2.gameObject.SetActive(true);
-                    t2 = t.GetChild(TEXT_CHILD_INDEX);
+                    t2 = t.GetChild(SLOT_TEXT_CHILD_INDEX);
                     t2.GetComponent<Text>().text = '"' + a.name + '"';
                     t2.gameObject.SetActive(true);
                 }
@@ -128,24 +128,25 @@ public sealed class UIMonumentObserver : UIObserver
                 //0
                 Transform t = slots[0];
                 Artifact a = observingMonument.artifacts[0];
-                t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 //1
                 t = slots[1];
                 a = observingMonument.artifacts[1];
-                t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 //2
                 t = slots[2];
                 a = observingMonument.artifacts[2];
-                t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
                 //3
                 t = slots[3];
                 a = observingMonument.artifacts[3];
-                t.GetChild(IMAGE_CHILD_INDEX).gameObject.SetActive(false);
-                t.GetChild(TEXT_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
+                t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
             }
+            lastDrawnArtifactsHash = Artifact.actionsHash;
         }
     }
 
@@ -185,6 +186,14 @@ public sealed class UIMonumentObserver : UIObserver
         }
     }
 
+    override public void StatusUpdate()
+    {
+        if (lastDrawnArtifactsHash != Artifact.actionsHash)
+        {
+
+        }
+    }
+
     public void PrepareList()
     {
         if (observingMonument == null)
@@ -205,29 +214,45 @@ public sealed class UIMonumentObserver : UIObserver
                 return;
             }
             var arts = new List<Artifact>();
-            foreach (var a in Artifact.artifactsList)
-            {
-                if (a.status == Artifact.ArtifactStatus.OnConservation & a.affectionType != Artifact.AffectionType.NoAffection & a.researched) arts.Add(a);
-            }
+            ids = new List<int>() { -1 };
             var selectedArtifact = observingMonument.artifacts[selectedSlotIndex];
             bool slotWithArtifact = selectedArtifact != null;
-            if (slotWithArtifact) arts.Add(selectedArtifact);
+            foreach (var a in Artifact.artifactsList)
+            {
+                if (a.affectionType != Artifact.AffectionType.NoAffection & a.researched)
+                {
+                    if (a.status == Artifact.ArtifactStatus.OnConservation | (slotWithArtifact && selectedArtifact.ID == a.ID))
+                    {
+                        arts.Add(a);
+                        ids.Add(a.ID);
+                    }
+                }
+            }
             int artsCount = arts.Count;
             if (artsCount > 0)
             {
                 // подготовка списка
-                ids = new List<int>() { -1};
+                
                 items[0].transform.GetChild(0).GetComponent<Text>().text = slotWithArtifact ? Localization.GetPhrase(LocalizedPhrase.ClearSlot) : '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>' ;
                 int newSelectedItem = -1;
 
                 if (artsCount + 1 > items.Length)
                 {
                     // артефакты не помещаются в одну страницу
-                    int sindex = GetListStartIndex(artsCount);
+                    if (!scrollbar.gameObject.activeSelf)
+                    {
+                        scrollbar.value = 0;
+                        scrollbar.gameObject.SetActive(true);
+                    }
+                    float rsize = items.Length;
+                    rsize /= artsCount;
+                    if (scrollbar.size != rsize) scrollbar.size = rsize;
+
+                    //#preparePositionedList
+                    int sindex = GetListStartIndex();
                     for (int i = 1; i < items.Length; i++)
                     {
                         items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i + sindex - 1].name + '"';
-                        ids.Add(arts[i + sindex].ID);
                         items[i].SetActive(true);
                     }
 
@@ -248,6 +273,7 @@ public sealed class UIMonumentObserver : UIObserver
                         if (sindex != 0) newSelectedItem = -1;
                         else newSelectedItem = 0;
                     }
+                    //
                 }
                 else
                 {
@@ -257,7 +283,6 @@ public sealed class UIMonumentObserver : UIObserver
                     for (; i < arts.Count; i++)
                     {
                         items[i + 1].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i].name + '"';
-                        ids.Add(arts[i].ID);
                         items[i + 1].SetActive(true);
                     }
                     i++;
@@ -271,13 +296,7 @@ public sealed class UIMonumentObserver : UIObserver
 
                     if (selectedArtifact != null)
                     {
-                        for (i = 0; i < ids.Count; i++)
-                        {
-                            if (ids[i] == selectedArtifact.ID)
-                            {
-                                newSelectedItem = i;
-                            }
-                        }
+                        newSelectedItem = ids.Count - 1;
                     }
                     else newSelectedItem = 0;
                 }
@@ -303,6 +322,70 @@ public sealed class UIMonumentObserver : UIObserver
         }
     }
 
+    public void ScrollbarChanged()
+    {
+        if (observingMonument == null)
+        {
+            SelfShutOff();
+            return;
+        }
+        else
+        {
+            if (ids.Count < items.Length)
+            {
+                PrepareList();
+                return;
+            }
+            else
+            {
+                int count = ids.Count;
+                int sindex = GetListStartIndex();
+                int realIndex;
+                var selectedArtifact = observingMonument.artifacts[selectedSlotIndex];
+                bool slotWithArtifact = selectedArtifact != null;
+                for (int i = 0; i < items.Length; i++)
+                {
+                    realIndex = i + sindex;
+                    if (ids[realIndex] != -1)
+                    {
+                        var a = Artifact.GetArtifactByID(ids[realIndex]);
+                        items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + a.name + '"';                        
+                    }
+                    else
+                    {
+                        items[i].transform.GetChild(0).GetComponent<Text>().text = slotWithArtifact ? Localization.GetPhrase(LocalizedPhrase.ClearSlot) : '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>'; 
+                    }
+                    items[i].SetActive(true);
+                }
+
+                int newSelectedItem = -1;
+                
+                if ( slotWithArtifact)
+                {
+                    for (int i = 0; i < items.Length; i++)
+                    {
+                        if (ids[i + sindex] == selectedArtifact.ID)
+                        {
+                            newSelectedItem = i;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    if (sindex != 0) newSelectedItem = -1;
+                    else newSelectedItem = 0;
+                }
+                if (newSelectedItem != listSelectedItem)
+                {
+                    if (listSelectedItem != -1) items[listSelectedItem].GetComponent<Image>().overrideSprite = null;
+                    if (newSelectedItem != -1) items[newSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                    listSelectedItem = newSelectedItem;
+                }
+            }
+        }        
+    }
+
     public void SelectItem(int i)
     {
         if (observingMonument == null)
@@ -316,6 +399,7 @@ public sealed class UIMonumentObserver : UIObserver
             {
                 if (listSelectedItem != -1) items[listSelectedItem].GetComponent<Image>().overrideSprite = null;
                 listSelectedItem = i;
+                items[listSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                 if (ids[i] == -1)
                 {
                     ClearSlot(selectedSlotIndex);
@@ -335,29 +419,19 @@ public sealed class UIMonumentObserver : UIObserver
         }
     }
 
-    private int GetListStartIndex(int suitableArtifactsLength) // 0-item real index
-    {        
+    private int GetListStartIndex() // 0-item real index
+    {
         // no checks needed
-        int listStartIndex = 0, count = items.Length;
-        if (suitableArtifactsLength < count) return 0;
+        int visibleListCount = items.Length, totalListCount = ids.Count; ;
+        if (totalListCount < visibleListCount) return 0;
         else
         {
             float sval = scrollbar.value;
             if (sval != 0)
             {
-                if (sval != 1)
-                {
-                    listStartIndex = (int)((sval - (1f / suitableArtifactsLength) * 0.5f) * count);
-                    if (listStartIndex < 0) listStartIndex = 0;
-                    else
-                    {
-                        if (listStartIndex > count - suitableArtifactsLength) listStartIndex = count - suitableArtifactsLength;
-                    }
-                }
-                else listStartIndex = count - suitableArtifactsLength;
+                return ((int)(sval * (totalListCount - visibleListCount)));
             }
-            else listStartIndex = 0;
-            return listStartIndex;
+            else return 0;
         }
     }
 

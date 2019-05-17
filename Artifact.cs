@@ -20,6 +20,7 @@ public sealed class Artifact {
     public readonly AffectionType affectionType;
     private Texture2D texture;
 
+    private static readonly Sprite[] affectionRings;
     public static readonly Texture emptyArtifactFrame_tx;
     public static int actionsHash = 0, lastUsedID = 0;    
     public static List<Artifact> artifactsList;
@@ -42,6 +43,7 @@ public sealed class Artifact {
     static Artifact()
     {
         emptyArtifactFrame_tx = Resources.Load<Texture>("Textures/emptyArtifactFrame");
+        affectionRings = Resources.LoadAll<Sprite>("Textures/affectionRings");
         artifactsList = new List<Artifact>();
     }
 
@@ -57,6 +59,16 @@ public sealed class Artifact {
             return null;
         }
     }
+    public static Sprite GetAffectionSprite(AffectionType atype)
+    {
+        switch (atype)
+        {
+            case AffectionType.SpaceAffection: return affectionRings[0];
+            case AffectionType.LifepowerAffection: return affectionRings[1];
+            case AffectionType.StabilityAffection: return affectionRings[2];
+            default: return affectionRings[3];
+        }
+    }
 
     public Artifact (float i_stability, float i_saturation, float i_frequency, AffectionType i_type, bool i_activated)
     {
@@ -70,8 +82,8 @@ public sealed class Artifact {
         researched = false;
         name = Localization.NameArtifact(this);
         status = ArtifactStatus.Exists;
-        artifactsList.Add(this);
         ID = lastUsedID++;
+        artifactsList.Add(this);        
 
         actionsHash++;
     }
@@ -89,13 +101,7 @@ public sealed class Artifact {
             else return false;
         }
         else return true;
-    }
-    public void Destroy()
-    {
-        destructed = true;
-        if (artifactsList.Contains(this)) artifactsList.Remove(this);
-        actionsHash++;
-    }
+    }  
 
     /// <summary>
     /// возвращает true, если не исчез
@@ -419,7 +425,11 @@ public sealed class Artifact {
     public void Conservate()
     {
         status = ArtifactStatus.OnConservation;
-        owner = null;
+        if (owner != null)
+        {
+            owner.ClearArtifactField(this);
+            owner = null;
+        }
         actionsHash++;
     }
     public void UseInMonument()
@@ -439,5 +449,11 @@ public sealed class Artifact {
         observer.gameObject.SetActive(true);
         observer.SetPosition(r, alignment);
         observer.ShowArtifact(this, useCloseButton);
+    }
+    public void Destroy()
+    {
+        destructed = true;
+        if (artifactsList.Contains(this)) artifactsList.Remove(this);
+        actionsHash++;
     }
 }

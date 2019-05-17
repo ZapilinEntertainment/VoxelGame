@@ -23,7 +23,12 @@ public sealed class Dock : WorkBuilding {
 
     public const int SMALL_SHIPS_PATH_WIDTH = 2, MEDIUM_SHIPS_PATH_WIDTH = 3, HEAVY_SHIPS_PATH_WIDTH = 4;
 
-	public static void ResetToDefaults_Static_Dock() {
+    static Dock()
+    {
+        AddToResetList(typeof(Dock));
+        print("dock script enabled");
+    }
+	public static void ResetStaticData() {
 		isForSale = new bool?[ResourceType.RTYPES_COUNT];
 		minValueForTrading= new int[ResourceType.RTYPES_COUNT];
 		immigrationEnabled = true;
@@ -31,10 +36,8 @@ public sealed class Dock : WorkBuilding {
 	}
 
 	override public void Prepare() {
+        if (isForSale == null) ResetStaticData();
 		PrepareWorkbuilding();
-		if (isForSale == null) {
-			ResetToDefaults_Static_Dock();
-		}
 	}
 
     override public void SetModelRotation(int r)
@@ -631,7 +634,7 @@ public sealed class Dock : WorkBuilding {
     public static void SaveStaticDockData(System.IO.FileStream fs)
     {
         byte trueByte = 1, falseByte = 0, nullByte = 2;
-        if (isForSale == null) ResetToDefaults_Static_Dock();
+        if (isForSale == null) ResetStaticData();
         for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
         {
             if (isForSale[i] == null) fs.WriteByte(nullByte);

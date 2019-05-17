@@ -27,6 +27,9 @@ public struct GameStartSettings  {
     }
 
 public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
+//dependencies:
+// GameConstants.GetBlackoutStabilityTestHardness
+
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
 public enum WorkType : byte {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 public enum GameLevel : byte { Menu, Playable, Editor}
@@ -411,8 +414,21 @@ public sealed class GameMaster : MonoBehaviour
                 s.SetBasement(sx, PixelPosByte.zero);
                 UIController.current.Select(s);
             }
+
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
+            sx = mainChunk.GetSurfaceBlock();
+            if (sx != null)
+            {
+                Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
+                s.SetBasement(sx, PixelPosByte.zero);
+            }
             //
-            int l = Random.RandomRange(4, 60);
+            int l = Random.Range(10, 100);
             Artifact a;
             Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
             float f;

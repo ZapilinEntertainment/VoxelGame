@@ -40,9 +40,10 @@ public class OakTree : Plant
         oaks = new List<OakTree>();
         maxLifeTransfer = 10;
         growSpeed = 0.1f;
-        decaySpeed = growSpeed / 10f;        
+        decaySpeed = growSpeed / 10f;
+        AddToResetList(typeof(OakTree));
     }
-    public static void ResetToDefaults_Static_OakTree()
+    public static void ResetStaticData()
     {
         if (blankModelsContainer == null)   modelsContainerReady = false;
         oaks.Clear();
@@ -639,7 +640,10 @@ public class OakTree : Plant
         if (newStage == stage) return;
         if (transform.childCount != 0)
         {
-            if (stage > TRANSIT_STAGE) ReturnModelToPool();
+            if (stage > TRANSIT_STAGE)
+            {
+                ReturnModelToPool();                
+            }
             else
             {
                 Destroy(transform.GetChild(0).gameObject);
@@ -648,6 +652,7 @@ public class OakTree : Plant
             }
         }
         stage = newStage;
+        if (PoolMaster.qualityLevel > 0) PoolMaster.current.LifepowerSplash(transform.position, stage);
         SetModel();
         visible = !visible;
         SetVisibility(!visible);
