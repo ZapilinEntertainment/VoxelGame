@@ -270,7 +270,7 @@ public class SurfaceBlock : Block
             int i = 0;
             if (sr == SurfaceRect.full)
             {// destroy everything there
-                ClearSurface(false); // false так как не нужна лишняя проверка
+                ClearSurface(false, true); // false так как не нужна лишняя проверка
             }
             else
             {
@@ -314,13 +314,13 @@ public class SurfaceBlock : Block
     /// collider check - enables surface collider, if inactive
     /// </summary>
     /// <param name="colliderCheck"></param>
-	public void ClearSurface(bool check)
+	public void ClearSurface(bool check, bool returnResources)
     {
         if (structures.Count > 0)
         {
             for (int i = 0; i < structures.Count; i++)
             {
-                structures[i].Annihilate(false, true, false); // чтобы не вызывали removeStructure здесь
+                structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
             }
             structures.Clear();
         }
@@ -769,7 +769,7 @@ public class SurfaceBlock : Block
         base.Annihilate();
         if (noEmptySpace != false)
         {
-            ClearSurface(false);
+            ClearSurface(false, false);
         }
         if (grassland != null) grassland.Annihilation(true, false);
         myChunk.RemoveFromSurfacesList(this);

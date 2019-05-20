@@ -1098,7 +1098,7 @@ public sealed class Chunk : MonoBehaviour
             }
             else
             {
-                if ((GetVisibilityMask(blockpos.x, blockpos.y, blockpos.z) & powersOfTwo[Block.SURFACE_FACE_INDEX]) == 0)
+                if ((GetVisibilityMask(blockpos.x, blockpos.y, blockpos.z) & powersOfTwo[Block.UP_FACE_INDEX]) == 0)
                 {
                     b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
                     face = Block.SURFACE_FACE_INDEX; // surface block

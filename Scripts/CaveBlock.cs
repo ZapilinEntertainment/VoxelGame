@@ -44,7 +44,7 @@ public sealed class CaveBlock : SurfaceBlock
         haveSurface = false;
         material_id = PoolMaster.NO_MATERIAL_ID;
         if (grassland != null) grassland.Annihilation(false, true);
-        if (structures.Count != 0) ClearSurface(true);
+        if (structures.Count != 0) ClearSurface(true, false);
         myChunk.RefreshBlockVisualising(this);
         myChunk.ApplyVisibleInfluenceMask(pos.x, pos.y, pos.z, 47);
     }

@@ -4,7 +4,6 @@ using UnityEngine;
 public class BlockBuildingSite : Worksite
 {
     SurfaceBlock workObject;
-    const float BUILDING_SPEED = 0.002f;
     ResourceType rtype;
     const int START_WORKERS_COUNT = 20;
 
@@ -23,112 +22,141 @@ public class BlockBuildingSite : Worksite
         {
             workflow += workSpeed;
             colony.gears_coefficient -= gearsDamage;
-            LabourResult();
+            if (workflow >= 20)
+            {
+                LabourResult();
+                workflow-= 20;
+            }
         }
     }
 
     void LabourResult()
     {
-        float totalResources = 0;
-        actionLabel = "";
-        bool?[,] pillarsMap = new bool?[8, 8];
-        for (int a = 0; a < 8; a++)
+        actionLabel = "";        
+        int length = SurfaceBlock.INNER_RESOLUTION / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE;
+        bool?[,] pillarsMap = new bool?[length, length]; // true - full pillar, false - unfinished, null - no pillar
+        for (int a = 0; a < length; a++)
         {
-            for (int b = 0; b < 8; b++)
+            for (int b = 0; b < length; b++)
             {
                 pillarsMap[a, b] = null;
             }
         }
-        int placesToWork = 64;
-        List<ScalableHarvestableResource> unfinishedPillars = new List<ScalableHarvestableResource>();
+        int maxPillarsCount = length * length;
+        int emptyPositions = maxPillarsCount;
 
-        if (workObject.noEmptySpace != false)
-        {
+        int finishedPillarsCount = 0, totalResourcesCount = 0, deletedStructures = 0;
+        var unfinishedPillarsList = new List<ScalableHarvestableResource>();
+        ScalableHarvestableResource shr = null;
+
+        if (workObject.noEmptySpace != false) { // на поверхности есть какие-то структуры
+            byte maxVolume = ScalableHarvestableResource.MAX_STICK_VOLUME;
             int i = 0;
-            while (i < workObject.structures.Count)
+            var strs = workObject.structures;
+            
+            while (i < strs.Count)
             {
-                ScalableHarvestableResource shr = workObject.structures[i] as ScalableHarvestableResource;
-                if (shr == null)
+                shr = strs[i] as ScalableHarvestableResource;
+                if (shr != null)
                 {
-                    workObject.structures[i].Annihilate(true, true, false);
+                    if (shr.mainResource != rtype) shr.Harvest();
+                    else
+                    {
+                        if (shr.resourceCount == maxVolume)
+                        {
+                            finishedPillarsCount++;
+                            pillarsMap[shr.surfaceRect.x / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE, shr.surfaceRect.z / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE] = true;
+                        }
+                        else
+                        {
+                            unfinishedPillarsList.Add(shr);
+                            pillarsMap[shr.surfaceRect.x / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE, shr.surfaceRect.z / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE] = false;
+                            totalResourcesCount += shr.resourceCount;
+                        }
+                    }
                 }
                 else
                 {
-                    if (shr.resourceCount == ScalableHarvestableResource.MAX_VOLUME)
+                    Structure s = strs[i];
+                    if (s.isArtificial)
                     {
-                        placesToWork--;
-                        pillarsMap[shr.surfaceRect.x / 2, shr.surfaceRect.z / 2] = true;
-                        totalResources += ScalableHarvestableResource.MAX_VOLUME;
+                        s.Annihilate(true, true, false);
+                        return;
                     }
                     else
                     {
-                        pillarsMap[shr.surfaceRect.x / 2, shr.surfaceRect.z / 2] = false;
-                        totalResources += shr.resourceCount;
-                        unfinishedPillars.Add(shr);
+                        if (s.id == Structure.PLANT_ID)
+                        {
+                            (s as Plant).Harvest();
+                            if (s != null) s.Annihilate(true, false, false);
+                        }
+                        else s.Annihilate(true, true, false);
+                        deletedStructures++;
+                        if (deletedStructures >= 4) return; // не больше 4-х удалений за тик
                     }
                 }
                 i++;
-            }
+            }            
         }
+        shr = null;
 
-        if (placesToWork == 0)
+        if (finishedPillarsCount == maxPillarsCount)
         {
             actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
-            workObject.ClearSurface(false); // false так как все равно его удаляем
+            workObject.ClearSurface(false, false); // false так как все равно его удаляем
             workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
+            workObject.myChunk.RenderStatusUpdate();
             StopWork();
         }
         else
         {
-            int pos = (int)(placesToWork * Random.value);
-            int n = 0;
-            for (int a = 0; a < 8; a++)
-            {
-                for (int b = 0; b < 8; b++)
+            totalResourcesCount += finishedPillarsCount * ScalableHarvestableResource.MAX_STICK_VOLUME;
+            int unfinishedCount = unfinishedPillarsList.Count;
+            byte resourceNeeded = ScalableHarvestableResource.RESOURCES_PER_LEVEL;
+            float resourceTaken = colony.storage.GetResources(rtype, resourceNeeded);
+            bool newContainerCreated = false;
+
+            if (unfinishedCount + finishedPillarsCount < maxPillarsCount)
+            {                
+                if (Random.value > 0.5f && resourceTaken == resourceNeeded) // creating new container
                 {
-                    if (pillarsMap[a, b] == true) continue;
-                    else
-                    {
-                        if (n == pos)
+                        var emptyPositionsIndexes = new List<int>();
+                        for (int x = 0; x < length; x++)
                         {
-                            ScalableHarvestableResource shr = null;
-                            float count = BUILDING_SPEED * workflow;
-                            if (pillarsMap[a, b] == false)
+                            for (int z = 0; z < length; z++)
                             {
-                                foreach (ScalableHarvestableResource fo in unfinishedPillars)
-                                {
-                                    if (fo.surfaceRect.x / 2 == a & fo.surfaceRect.z / 2 == b)
-                                    {
-                                        shr = fo;
-                                        break;
-                                    }
-                                }
-                                if (count > ScalableHarvestableResource.MAX_VOLUME - shr.resourceCount) count = ScalableHarvestableResource.MAX_VOLUME - shr.resourceCount;
-                                shr.AddResource(rtype, count);
+                                if (pillarsMap[x, z] == null) emptyPositionsIndexes.Add(x * length + z);
                             }
-                            else
-                            {
-                                shr = Structure.GetStructureByID(Structure.RESOURCE_STICK_ID) as ScalableHarvestableResource;
-                                shr.AddResource(rtype, count);
-                                shr.SetBasement(workObject, new PixelPosByte(a * 2, b * 2));
-                            }
-                            count = GameMaster.realMaster.colonyController.storage.GetResources(rtype, count);
-                            if (count == 0)
-                            {
-                                if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources);
-                            }
-                            else
-                            {
-                                totalResources += count;                                
-                                actionLabel = string.Format("{0:0.##}", totalResources / (float)CubeBlock.MAX_VOLUME * 100f) + '%';
-                            }                            
-                            return;
                         }
-                        else n++;
-                    }
+                        pillarsMap = null;
+                        int epcount = emptyPositionsIndexes.Count;
+                        if (epcount > 0)
+                        {
+                            int combinedIndex = emptyPositionsIndexes[Random.Range(0, epcount - 1)];
+                            ScalableHarvestableResource.Create(rtype, resourceNeeded, workObject,
+                                new PixelPosByte(
+                                    (combinedIndex / length) * ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE,
+                                    (combinedIndex % length) * ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE)
+                                    );
+                            newContainerCreated = true;
+                        }
+                        emptyPositionsIndexes = null;
+                }               
+            }
+            // докидываем в существующий
+            if (unfinishedCount > 0)
+            {
+                if (newContainerCreated) resourceTaken = colony.storage.GetResources(rtype, resourceNeeded);
+                if (resourceTaken > 1)
+                {
+                    shr = unfinishedPillarsList[Random.Range(0, unfinishedCount - 1)];
+                    resourceTaken = shr.AddResource(rtype, resourceTaken);
+                    if (resourceTaken > 0) colony.storage.AddResource(rtype, resourceTaken);
                 }
+                else { if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources); }
             }
         }
+        actionLabel = string.Format("{0:0.##}", totalResourcesCount / (float)CubeBlock.MAX_VOLUME * 100f) + '%';
     }
 
     protected override void RecalculateWorkspeed()
@@ -156,7 +184,7 @@ public class BlockBuildingSite : Worksite
             sign = new GameObject("Block Building Site sign").AddComponent<WorksiteSign>();
             BoxCollider bc = sign.gameObject.AddComponent<BoxCollider>();
             bc.size = new Vector3(Block.QUAD_SIZE, 0.5f, Block.QUAD_SIZE);
-            bc.center = new Vector3(0, - 0.25f, 0);
+            bc.center = new Vector3(0, - 0.75f, 0);
             bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
             sign.worksite = this;
             sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.up * 0.5f * Block.QUAD_SIZE;

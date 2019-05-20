@@ -633,6 +633,8 @@ public sealed class PoolMaster : MonoBehaviour {
             case ResourceType.LUMBER_ID:
             case MATERIAL_DEAD_LUMBER_ID:
             case MATERIAL_WHITEWALL_ID:
+            case ResourceType.MINERAL_F_ID:
+            case ResourceType.MINERAL_L_ID:
                 return basic_material;
 
             case ResourceType.METAL_K_ID:
@@ -646,9 +648,7 @@ public sealed class PoolMaster : MonoBehaviour {
             case ResourceType.METAL_P_ORE_ID:
             case ResourceType.METAL_P_ID: 
             case ResourceType.METAL_S_ORE_ID:
-            case ResourceType.METAL_S_ID: 
-            case ResourceType.MINERAL_F_ID: 
-            case ResourceType.MINERAL_L_ID:
+            case ResourceType.METAL_S_ID:            
             case MATERIAL_WHITE_METAL_ID:
                 return metal_material;
 

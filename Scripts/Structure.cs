@@ -348,7 +348,7 @@ public class Structure : MonoBehaviour
             case RESOURCE_STICK_ID:
                 {
                     maxHp = SurfaceBlock.INNER_RESOLUTION;
-                    surfaceRect = new SurfaceRect(0, 0, 2);
+                    surfaceRect = new SurfaceRect(0, 0, ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE);
                     isArtificial = false;
                     isBasement = false;
                     placeInCenter = false;

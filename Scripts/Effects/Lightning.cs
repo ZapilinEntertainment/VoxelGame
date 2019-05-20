@@ -6,9 +6,11 @@ public sealed class Lightning : MonoBehaviour
     private static float[] speeds;
     private static bool activeLRs = false;
     private static GameObject executor;
+    private static ParticleSystem splashEffect;
 
     private const float fallspeed = 3f ;
     private const float LIGHTNING_BASIC_DAMAGE = 10f;
+    private const int LIGHTNING_SPLASH_BURST = 20;
 
     public static void Strike(Vector3 startPos, Vector3 endpos)
     {
@@ -16,6 +18,7 @@ public sealed class Lightning : MonoBehaviour
         {
             executor = new GameObject("Lightning executor");
             executor.AddComponent<Lightning>();
+            splashEffect = Instantiate(Resources.Load<ParticleSystem>("Prefs/lightningSplashEffect"));
         }
         LineRenderer d = null;
         int index = -1;
@@ -158,9 +161,13 @@ public sealed class Lightning : MonoBehaviour
                             float f = akeys[1].time + speed * Time.deltaTime;
                             akeys[1].time = f;
                             akeys[2].alpha = f > 0.5f ? (f - 0.5f) * 2f : 0f;
-                            if (f >= 1 & GameMaster.soundEnabled)
+                            if (f >= 1)
                             {
-                                GameMaster.audiomaster.MakeSoundEffect(SoundEffect.Lightning, lr.GetPosition(4));
+                                var p = lr.GetPosition(4);
+                                if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.Lightning, p);
+                                splashEffect.transform.position = p;
+                                splashEffect.transform.forward = lr.GetPosition(3) - p;
+                                splashEffect.Emit(LIGHTNING_SPLASH_BURST);
                             }
                             activeLRsCount++;
                         }

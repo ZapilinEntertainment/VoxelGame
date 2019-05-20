@@ -26,42 +26,47 @@ public class Recipe {
 	METAL_K_REFINIG_ID = 10, METAL_E_REFINING_ID = 11, METAL_N_REFINING_ID = 12, METAL_M_REFINING_ID = 13, METAL_P_REFINING_ID = 14,
 	METAL_S_REFINING_ID = 15, MINERAL_F_REFINING_ID = 16, MINERAL_L_REFINING_ID = 17, FUEL_FROM_NMETAL_ID = 18, FUEL_FROM_NMETAL_ORE_ID = 19,
 	FUEL_FROM_MINERAL_F_ID = 20, GRAPHONIUM_FROM_NMETAL_ID = 21, GRAPHONIUM_FRON_NMETAL_ORE_ID = 22, FUEL_FROM_GRAPHONIUM = 23;
+    public const float RECIPE_LVL1_WORKLOAD = 10f, RECIPE_LVL2_WORKLOAD = 25f, RECIPE_LVL3_WORKLOAD = 100f;
 
-	static Recipe() {
+    static Recipe() {
 		NoRecipe = new Recipe(ResourceType.Nothing, ResourceType.Nothing,0, 0,0,  0);
 
 		List<Recipe> smelteryRecipesList = new List<Recipe>();
 		smelteryRecipesList.Add(NoRecipe);
-		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 3, 2,  8); smelteryRecipesList.Add(StoneToConcrete);
-		LumberToPlastics = new Recipe(ResourceType.Lumber, ResourceType.Plastics, LUMBER_TO_PLASTICS_ID, 3, 1,  15);  smelteryRecipesList.Add(LumberToPlastics);
-		MetalK_smelting = new Recipe(ResourceType.metal_K_ore, ResourceType.metal_K, METAL_K_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalK_smelting);
-		MetalE_smelting = new Recipe(ResourceType.metal_E_ore, ResourceType.metal_E, METAL_E_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalE_smelting);
-		MetalN_smelting = new Recipe(ResourceType.metal_N_ore, ResourceType.metal_N, METAL_N_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalN_smelting);
-		MetalM_smelting = new Recipe(ResourceType.metal_M_ore, ResourceType.metal_M, METAL_M_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalM_smelting);
-		MetalP_smelting = new Recipe(ResourceType.metal_P_ore, ResourceType.metal_P, METAL_P_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalP_smelting);
-		MetalS_smelting = new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S, METAL_S_SMELTING_ID, 1,1, 10); smelteryRecipesList.Add(MetalS_smelting);
+
+        float w1 = RECIPE_LVL1_WORKLOAD;        
+		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 3, 2,  w1 * 0.8f); smelteryRecipesList.Add(StoneToConcrete);
+		LumberToPlastics = new Recipe(ResourceType.Lumber, ResourceType.Plastics, LUMBER_TO_PLASTICS_ID, 3, 1,  w1 * 1.5f);  smelteryRecipesList.Add(LumberToPlastics);
+		MetalK_smelting = new Recipe(ResourceType.metal_K_ore, ResourceType.metal_K, METAL_K_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalK_smelting);
+		MetalE_smelting = new Recipe(ResourceType.metal_E_ore, ResourceType.metal_E, METAL_E_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalE_smelting);
+		MetalN_smelting = new Recipe(ResourceType.metal_N_ore, ResourceType.metal_N, METAL_N_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalN_smelting);
+		MetalM_smelting = new Recipe(ResourceType.metal_M_ore, ResourceType.metal_M, METAL_M_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalM_smelting);
+		MetalP_smelting = new Recipe(ResourceType.metal_P_ore, ResourceType.metal_P, METAL_P_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalP_smelting);
+		MetalS_smelting = new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S, METAL_S_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalS_smelting);
 		smelteryRecipes = smelteryRecipesList.ToArray();
 
-		oreRefiningRecipes = new Recipe[9];
-		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore, METAL_K_REFINIG_ID, 4,1, 10);
-		MetalE_refining = new Recipe(ResourceType.Stone, ResourceType.metal_E_ore, METAL_E_REFINING_ID, 8,1,23); 
-		MetalN_refining = new Recipe(ResourceType.Stone, ResourceType.metal_N_ore, METAL_N_REFINING_ID, 16,1,70); 
-		MetalM_refining = new Recipe(ResourceType.Stone, ResourceType.metal_M_ore, METAL_M_REFINING_ID, 6,1, 15); 
-		MetalP_refining = new Recipe(ResourceType.Stone, ResourceType.metal_P_ore, METAL_P_REFINING_ID, 4,1, 12); 
-		MetalS_refining= new Recipe(ResourceType.Stone, ResourceType.metal_S_ore, METAL_S_REFINING_ID, 10,1, 35); 
-		MineralF_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_F, MINERAL_F_REFINING_ID, 3, 1, 5);
-		MineralL_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_L,  MINERAL_L_REFINING_ID, 3, 1, 7);
+        float w2 = RECIPE_LVL2_WORKLOAD;
+        oreRefiningRecipes = new Recipe[9];
+		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore, METAL_K_REFINIG_ID, 4,1, w1);
+		MetalE_refining = new Recipe(ResourceType.Stone, ResourceType.metal_E_ore, METAL_E_REFINING_ID, 8,1,w2); 
+		MetalN_refining = new Recipe(ResourceType.Stone, ResourceType.metal_N_ore, METAL_N_REFINING_ID, 16f,1f, w2 * 3f); 
+		MetalM_refining = new Recipe(ResourceType.Stone, ResourceType.metal_M_ore, METAL_M_REFINING_ID, 6,1, w1); 
+		MetalP_refining = new Recipe(ResourceType.Stone, ResourceType.metal_P_ore, METAL_P_REFINING_ID, 4,1, w1); 
+		MetalS_refining= new Recipe(ResourceType.Stone, ResourceType.metal_S_ore, METAL_S_REFINING_ID, 10,1, w2 * 1.5f); 
+		MineralF_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_F, MINERAL_F_REFINING_ID, 3, 1, w1);
+		MineralL_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_L,  MINERAL_L_REFINING_ID, 3, 1, w1);
 		oreRefiningRecipes[0] = NoRecipe;
 		oreRefiningRecipes[1] = MetalK_refining; oreRefiningRecipes[2] = MetalE_refining;
 		oreRefiningRecipes[3] = MetalN_refining; oreRefiningRecipes[4] = MetalM_refining;
 		oreRefiningRecipes[5] = MetalP_refining; oreRefiningRecipes[6] = MetalS_refining;
 		oreRefiningRecipes[7] = MineralF_refining; oreRefiningRecipes[8] = MineralL_refining;
 
+        float w3 = RECIPE_LVL3_WORKLOAD;
 		fuelFacilityRecipes = new Recipe[5];
-		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 10, 100);
-		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 9, 300);
-		Fuel_fromMineralF = new Recipe(ResourceType.mineral_F, ResourceType.Fuel,  FUEL_FROM_MINERAL_F_ID, 1, 0.33f, 270);
-        Fuel_fromGraphonium = new Recipe(ResourceType.Graphonium, ResourceType.Fuel, FUEL_FROM_GRAPHONIUM, 1, 100, 600);
+		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 10, w3);
+		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 9, 3f * w3);
+		Fuel_fromMineralF = new Recipe(ResourceType.mineral_F, ResourceType.Fuel,  FUEL_FROM_MINERAL_F_ID, 1, 0.33f, 2.7f * w3);
+        Fuel_fromGraphonium = new Recipe(ResourceType.Graphonium, ResourceType.Fuel, FUEL_FROM_GRAPHONIUM, 1, 100, 6f * w3);
 		fuelFacilityRecipes[0] = NoRecipe;
 		fuelFacilityRecipes[1] = Fuel_fromNmetal;
 		fuelFacilityRecipes[2] = Fuel_fromNmetalOre;
@@ -71,12 +76,12 @@ public class Recipe {
 		plasticFactoryRecipes = new Recipe[3];
 		plasticFactoryRecipes[0] = NoRecipe;
 		plasticFactoryRecipes[1] = LumberToPlastics;
-		MineralLToPlastics = new Recipe(ResourceType.mineral_L, ResourceType.Plastics, MINERAL_L_TO_PLASTICS_ID, 1, 2, 8);
+		MineralLToPlastics = new Recipe(ResourceType.mineral_L, ResourceType.Plastics, MINERAL_L_TO_PLASTICS_ID, 1, 2, w1 * 0.8f);
 		plasticFactoryRecipes[2] = MineralLToPlastics;
 
         graphoniumEnricherRecipes = new Recipe[3];
-        Graphonium_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Graphonium, GRAPHONIUM_FROM_NMETAL_ID, 10, 1, 1000);
-        Graphonium_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Graphonium, GRAPHONIUM_FRON_NMETAL_ORE_ID, 11, 1, 1100);
+        Graphonium_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Graphonium, GRAPHONIUM_FROM_NMETAL_ID, 10, 1, 10f * w3);
+        Graphonium_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Graphonium, GRAPHONIUM_FRON_NMETAL_ORE_ID, 11, 1, 11f * w3);
         graphoniumEnricherRecipes[0] = NoRecipe;
         graphoniumEnricherRecipes[1] = Graphonium_fromNmetal;
         graphoniumEnricherRecipes[2] = Graphonium_fromNmetalOre;

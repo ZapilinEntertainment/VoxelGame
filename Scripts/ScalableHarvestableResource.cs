@@ -4,21 +4,22 @@ using System.Collections.Generic;
 public sealed class ScalableHarvestableResource : Structure {
 
 	public ResourceType mainResource {get;private set;}
-	public byte resourceCount;
-    public static int MAX_VOLUME
-    {
-        get { return CubeBlock.MAX_VOLUME / SurfaceBlock.INNER_RESOLUTION / SurfaceBlock.INNER_RESOLUTION; }
-    }
+	public byte resourceCount { get; private set; }
+    public const byte RESOURCE_STICK_RECT_SIZE = 2;
+    public static readonly byte MAX_STICK_VOLUME = (byte)(CubeBlock.MAX_VOLUME / (SurfaceBlock.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE * SurfaceBlock.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE)),
+        RESOURCES_PER_LEVEL = RESOURCE_STICK_RECT_SIZE * RESOURCE_STICK_RECT_SIZE;
 
     private static Dictionary<byte, Mesh> meshes = new Dictionary<byte, Mesh>(); 
 
-    public static void Create(ResourceType i_resource, byte count, SurfaceBlock surface, PixelPosByte pos)
+    public static ScalableHarvestableResource Create(ResourceType i_resource, byte count, SurfaceBlock surface, PixelPosByte pos)
     {
         GameObject g = new GameObject("ScalableHarvestableResource");
         var shr = g.AddComponent<ScalableHarvestableResource>();
+        shr.Prepare();
         shr.mainResource = i_resource;
         shr.resourceCount = count;
         shr.SetBasement(surface, pos);
+        return shr;
     }
 
 	override public void Prepare() {
@@ -33,9 +34,10 @@ public sealed class ScalableHarvestableResource : Structure {
         GameObject model = null;
         if (transform.childCount > 0) model = transform.GetChild(0).gameObject;
         Mesh m = null;
-        if (meshes.ContainsKey(resourceCount))
+        byte level = (byte)(resourceCount / RESOURCES_PER_LEVEL);
+        if (meshes.ContainsKey(level))
         {
-            meshes.TryGetValue(resourceCount, out m);
+            meshes.TryGetValue(level, out m);
         }
         else
         {            
@@ -47,12 +49,12 @@ public sealed class ScalableHarvestableResource : Structure {
             else
             {
                 m = new Mesh();
-                float p = Block.QUAD_SIZE / (float)SurfaceBlock.INNER_RESOLUTION, x = p / 2f;
-                float h = resourceCount * p;
+                float p = Block.QUAD_SIZE * RESOURCE_STICK_RECT_SIZE / (float)SurfaceBlock.INNER_RESOLUTION, x = p / 2f;
+                float h = level * 1f / (MAX_STICK_VOLUME / RESOURCES_PER_LEVEL) ;
                 var vertices = new Vector3[12]
                 {
                     new Vector3(-x, 0, x), new Vector3(-x, h, x), new Vector3(x, h,x), new Vector3(x,0,x),
-                    new Vector3(x,0,x), new Vector3(x,h,x),
+                    new Vector3(x,0,-x), new Vector3(x,h,-x),
                     new Vector3(-x, h, -x), new Vector3(-x,0,-x),
                     new Vector3(-x,h,x), new Vector3(x,h,x), new Vector3(x,h,-x), new Vector3(-x,h,-x)
                 };
@@ -64,43 +66,49 @@ public sealed class ScalableHarvestableResource : Structure {
                     0,1,6, 0,6,7,
                     11,8,9, 11,9,10
                 };
-                x = 0.25f * p;
+                x = 1f;
                 var uvs = new Vector2[12]
                 {
-                    new Vector2(x,0), new Vector2(x,x), new Vector2(0,x), new Vector2(0,0),
-                    new Vector2(x,0), new Vector2(x,x), 
-                    new Vector2(0,x), new Vector2(0,0),
-                    new Vector2(0,x), new Vector2(x,x), new Vector2(x,0), new Vector2(0,0)
+                    new Vector2(x - 0.01f, 0.01f), new Vector2(x - 0.01f, x - 0.01f), new Vector2(0.01f,x - 0.01f), Vector2.one * 0.01f,
+                    new Vector2(x - 0.01f,0.01f), new Vector2(x - 0.01f,x - 0.01f), 
+                    new Vector2(0.01f,x - 0.01f), Vector2.one * 0.01f,
+                    new Vector2(0,x - 0.01f ), new Vector2(x - 0.01f,x - 0.01f), new Vector2(x - 0.01f,0), Vector2.one * 0.01f
                 };
                 m.vertices = vertices;
                 m.triangles = triangles;
-                m.uv = uvs;
-                meshes.Add(resourceCount, m);
+                m.uv = uvs;                
+                meshes.Add(level, m);
             }
         }
+
+        MeshFilter mf; MeshRenderer mr;
         if (model != null)
         {
-            PoolMaster.SetMeshUVs(ref m, mainResource.ID);
-            model.GetComponent<MeshFilter>().mesh = m;
-            //byte light;
-            //if (basement != null) light = basement.myChunk.lightMap[basement.pos.x, basement.pos.y, basement.pos.z];
-            //else light = 255;
-            model.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mainResource.ID);
+            mf = model.GetComponent<MeshFilter>();
+            mr = model.GetComponent<MeshRenderer>();                      
         }
         else
         {
             model = new GameObject("resourceStick");
-            model.AddComponent<MeshFilter>().mesh = m;
-            var mr = model.AddComponent<MeshRenderer>();
+            model.transform.parent = transform;
+            model.transform.localRotation = Quaternion.Euler(0, 0, 0);
+            model.transform.localPosition = Vector3.zero;
+            mf = model.AddComponent<MeshFilter>();
+            mr = model.AddComponent<MeshRenderer>();
             mr.receiveShadows = PoolMaster.useAdvancedMaterials;
             mr.shadowCastingMode = PoolMaster.useAdvancedMaterials ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
             mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-            mr.sharedMaterial = PoolMaster.GetMaterial(mainResource.ID);
-        }     
+        }
+        byte light;
+        if (basement != null) light = basement.myChunk.lightMap[basement.pos.x, basement.pos.y, basement.pos.z];
+        else light = 255;
+        mf.sharedMesh = m;
+        PoolMaster.SetMaterialByID(ref mf, ref mr, mainResource.ID, light);
     }
 
-    public float AddResource( ResourceType type, float volume) {
+    public float AddResource( ResourceType type, float i_volume) {
+        byte volume = (byte)i_volume;
         bool modelChanging = false;
 		if (mainResource == ResourceType.Nothing) {
 			mainResource = type;
@@ -111,15 +119,15 @@ public sealed class ScalableHarvestableResource : Structure {
 				return volume;
 			}
 		}
-        float addingVolume = volume;
-		if (addingVolume > MAX_VOLUME - resourceCount) addingVolume = MAX_VOLUME - resourceCount;
+        byte addingVolume = volume;
+		if (addingVolume > MAX_STICK_VOLUME - resourceCount) addingVolume = (byte)(MAX_STICK_VOLUME - resourceCount);
 		if (addingVolume > 1)
         {
-            resourceCount += (byte)addingVolume;
+            resourceCount += addingVolume;
             modelChanging = true;
         }
         if (modelChanging) SetModel();
-		return volume - addingVolume;
+		return i_volume - addingVolume;
 	}
 	public void Harvest() {
 		resourceCount -= (byte)GameMaster.realMaster.colonyController.storage.AddResource(mainResource,resourceCount);

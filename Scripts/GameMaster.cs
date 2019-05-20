@@ -292,16 +292,11 @@ public sealed class GameMaster : MonoBehaviour
                         int zpos = sb.pos.z;
 
                         Structure s = HeadQuarters.GetHQ(GameConstants.HQ_MAX_LEVEL);
+                        weNeedNoResources = true;
                         //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
-                        //test
-                        //HeadQuarters hq = s as HeadQuarters;
-                        //weNeedNoResources = true;
-                        // hq.LevelUp(false);
-                        // hq.LevelUp(false);
-                        //
 
 
                         sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos + 1);
@@ -340,8 +335,8 @@ public sealed class GameMaster : MonoBehaviour
                         StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
                         firstStorage.SetBasement(sb, PixelPosByte.zero);
                         SetStartResources();
-                        //UI ui = gameObject.AddComponent<UI>();
-                        //ui.lineDrawer = systemDrawLR;
+
+                        colonyController.AddCitizens(400);
                         break;
                 }
                 FollowingCamera.main.WeNeedUpdate();
