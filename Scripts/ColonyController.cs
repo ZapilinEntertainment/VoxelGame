@@ -35,7 +35,7 @@ public sealed class ColonyController : MonoBehaviour
     public int totalLivespace { get; private set; }
     private List<Hospital> hospitals;
     private float starvationTimer, targetHappiness, happinessIncreaseMultiplier = 1, happinessDecreaseMultiplier = 1;
-    private bool thisIsFirstSet = true, ignoreHousingRequest = false, temporaryHousing = false, housingCountChanges = false;
+    private bool thisIsFirstSet = true, ignoreHousingRequest = false, housingCountChanges = false;
 
     public const byte MAX_HOUSING_LEVEL = 5;
     private const float START_ENERGY_CRYSTALS_COUNT = 100, HAPPINESS_RECALCULATE_TIME = 5;
@@ -53,7 +53,7 @@ public sealed class ColonyController : MonoBehaviour
             docksLevel = 0;
             energyCrystalsCount = START_ENERGY_CRYSTALS_COUNT;
 
-            cityName = "My Colony"; 
+            cityName = "My Colony";
         }
         houses = new List<House>();
         powerGrid = new List<Building>();
@@ -79,7 +79,7 @@ public sealed class ColonyController : MonoBehaviour
     void Update()
     {
         if (GameMaster.gameSpeed == 0 | hq == null | GameMaster.loading) return;
-        float t = Time.deltaTime * GameMaster.gameSpeed;        
+        float t = Time.deltaTime * GameMaster.gameSpeed;
 
         if (gears_coefficient > 1)
         {
@@ -119,9 +119,9 @@ public sealed class ColonyController : MonoBehaviour
                             if (b.isActive & b.energySurplus < 0)
                             {
                                 energySurplus -= b.energySurplus;
-                                b.SetEnergySupply(false, false);                                
+                                b.SetEnergySupply(false, false);
                                 powerGridChanged = true;
-                            }                         
+                            }
                         }
                         i--;
                     }
@@ -133,7 +133,7 @@ public sealed class ColonyController : MonoBehaviour
         housingTimer -= t;
         if (housingTimer <= 0)
         {
-            if (temporaryHousing | housingCountChanges | citizenCount > totalLivespace)
+            if (housingCountChanges | citizenCount > totalLivespace)
             {
                 RecalculateHousing();
             }
@@ -190,7 +190,7 @@ public sealed class ColonyController : MonoBehaviour
             happinessDecreaseMultiplier = 0;
             happinessIncreaseMultiplier = 0;
             //HOUSING PROBLEM
-            float housingHappiness = 0;            
+            float housingHappiness = 0;
             housingHappiness = HOUSING_MIN_HAPPINESS * lvlCf;
             if (housingLevel < 1)
             {
@@ -394,103 +394,17 @@ public sealed class ColonyController : MonoBehaviour
                 objectHousing = h.housing;
                 objectLevel = h.level;
                 i++;
-                if (objectLevel == 0)
+                if (h.isActive & h.isEnergySupplied)
                 {
-                    housingVolumes[0] += objectHousing;
-                }
-                else
-                {
-                    if (h.isActive & h.isEnergySupplied)
-                    {
-                        totalLivespace += objectHousing;
-                        if (objectLevel < MAX_HOUSING_LEVEL) housingVolumes[objectLevel] += objectHousing;
-                        else housingVolumes[MAX_HOUSING_LEVEL] += objectHousing;
-                    }
+                    totalLivespace += objectHousing;
+                    if (objectLevel < MAX_HOUSING_LEVEL) housingVolumes[objectLevel] += objectHousing;
+                    else housingVolumes[MAX_HOUSING_LEVEL] += objectHousing;
                 }
             }
         }
 
         int housingDemand = citizenCount - totalLivespace;
-        int temporaryHousingValue = housingVolumes[0];
-        int newTentsCount = 0;
-
-        if (housingDemand > 0)
-        {// недостаток жилья
-            if (temporaryHousingValue - housingDemand >= House.TENT_VOLUME)
-            { // но есть временное жилье, которого даже больше, чем нужно
-                newTentsCount = -1 * Mathf.CeilToInt((temporaryHousingValue - housingDemand) / House.TENT_VOLUME );
-            }
-            else
-            { // даже если временное есть, его недостаточно
-                newTentsCount = Mathf.CeilToInt((housingDemand - temporaryHousingValue) / House.TENT_VOLUME);
-            }
-        }
-        else
-        {
-            if (housingDemand < 0 & temporaryHousingValue > 0) // избыток жилья и еще стоит временное
-            {
-                housingDemand *= -1;
-                newTentsCount = -1 * temporaryHousingValue / House.TENT_VOLUME;
-            }
-        }
-        totalLivespace += temporaryHousingValue;
-        if (newTentsCount != 0)
-        {
-            if (newTentsCount > 0)
-            {// добавление новых палаток
-                int step = 1, xpos, zpos;
-                xpos = hq.basement.pos.x; zpos = hq.basement.pos.z;
-                Chunk colonyChunk = hq.basement.myChunk;
-                while (step < Chunk.CHUNK_SIZE / 2 & newTentsCount > 0)
-                {
-                    for (int n = 0; n < (step * 2 + 1); n++)
-                    {
-                        SurfaceBlock correctSurface = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos + step);
-                        if (correctSurface == null)
-                        {
-                            correctSurface = colonyChunk.GetSurfaceBlock(xpos + step - n, zpos - step);
-                        }
-                        if (correctSurface != null)
-                        {
-                            List<PixelPosByte> positions = correctSurface.GetRandomCells(newTentsCount);
-                            if (positions.Count > 0)
-                            {
-                                newTentsCount -= positions.Count;
-                                for (int j = 0; j < positions.Count; j++)
-                                {
-                                    House tent = Structure.GetStructureByID(Structure.TENT_ID) as House;
-                                    tent.SetBasement(correctSurface, positions[j]);
-                                    houses.Add(tent);
-                                    housingVolumes[0] += tent.housing;
-                                    totalLivespace += tent.housing;
-                                }
-                            }
-                        }
-                    }
-                    step++;
-                }
-            }
-            else
-            { // удаление палаток
-                i = 0;
-                h = null;
-                while (i < houses.Count & newTentsCount < 0)
-                {
-                    h = houses[i];
-                    if (h != null && h.level == 0)
-                    {                        
-                        housingVolumes[0] -= h.housing;
-                        totalLivespace -= h.housing;
-                        h.Annihilate(true, false, false);
-                        houses.RemoveAt(i);
-                        newTentsCount++;
-                    }
-                    else i++;
-                }
-            }
-        }
         ignoreHousingRequest = false;
-        temporaryHousing = (housingVolumes[0] > 0);
 
         //leveling
         if (citizenCount != 0)
@@ -668,7 +582,7 @@ public sealed class ColonyController : MonoBehaviour
                     }
                 }
                 i++;
-            }           
+            }
         }
         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
     }
@@ -751,7 +665,7 @@ public sealed class ColonyController : MonoBehaviour
     {
         storage.Save(fs);
 
-        fs.Write(System.BitConverter.GetBytes(gears_coefficient),0,4);
+        fs.Write(System.BitConverter.GetBytes(gears_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(labourEfficientcy_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(health_coefficient), 0, 4);
@@ -770,8 +684,8 @@ public sealed class ColonyController : MonoBehaviour
 
         var nameArray = System.Text.Encoding.Default.GetBytes(cityName);
         int count = nameArray.Length;
-        fs.Write(System.BitConverter.GetBytes(count),0,4); // количество байтов, не длина строки
-        if (count > 0) fs.Write(nameArray,0, nameArray.Length);
+        fs.Write(System.BitConverter.GetBytes(count), 0, 4); // количество байтов, не длина строки
+        if (count > 0) fs.Write(nameArray, 0, nameArray.Length);
     }
     public void Load(System.IO.FileStream fs)
     {
@@ -780,7 +694,7 @@ public sealed class ColonyController : MonoBehaviour
 
         var data = new byte[28];
         fs.Read(data, 0, 28);
-        gears_coefficient = System.BitConverter.ToSingle(data,0);
+        gears_coefficient = System.BitConverter.ToSingle(data, 0);
         labourEfficientcy_coefficient = System.BitConverter.ToSingle(data, 4);
         happiness_coefficient = System.BitConverter.ToSingle(data, 8);
         health_coefficient = System.BitConverter.ToSingle(data, 12);

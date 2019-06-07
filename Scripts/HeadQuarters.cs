@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class HeadQuarters : House {
-	private bool nextStageConditionMet = false;
-	private ColonyController colony;
+public sealed class HeadQuarters : House
+{
+    private bool nextStageConditionMet = false;
+    private ColonyController colony;
 
     public static Structure GetHQ(byte i_level)
     {
@@ -30,8 +31,9 @@ public sealed class HeadQuarters : House {
         level = x;
         if (basement != null) SetModel();
     }
-    override public void Prepare() {
-        PrepareBuilding();       
+    override public void Prepare()
+    {
+        PrepareBuilding();
         switch (level)
         {
             case 1: energySurplus = 1f; energyCapacity = 100f; housing = 10; break;
@@ -82,7 +84,7 @@ public sealed class HeadQuarters : House {
                 }
                 return false;
             case 3:
-                if (colony.powerGrid.Count != 0) 
+                if (colony.powerGrid.Count != 0)
                 {
                     foreach (Building b in colony.powerGrid)
                     {
@@ -132,7 +134,8 @@ public sealed class HeadQuarters : House {
             }
             else
             {
-                switch (level) {
+                switch (level)
+                {
                     case 1: refusalReason = Localization.GetRefusalReason(RefusalReason.HQ_RR1); break;
                     case 2: refusalReason = Localization.GetRefusalReason(RefusalReason.HQ_RR2); break;
                     case 3: refusalReason = Localization.GetRefusalReason(RefusalReason.HQ_RR3); break;
@@ -150,16 +153,16 @@ public sealed class HeadQuarters : House {
             return false;
         }
     }
-    override public void LevelUp( bool returnToUI )
+    override public void LevelUp(bool returnToUI)
     {
-        if ( !GameMaster.realMaster.weNeedNoResources )
+        if (!GameMaster.realMaster.weNeedNoResources)
         {
-            ResourceContainer[] cost = GetUpgradeCost() ;
-                if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
-                {
-                    GameLogUI.NotEnoughResourcesAnnounce();
-                    return;
-                }
+            ResourceContainer[] cost = GetUpgradeCost();
+            if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+            {
+                GameLogUI.NotEnoughResourcesAnnounce();
+                return;
+            }
         }
         if (level > 3)
         {
@@ -226,12 +229,12 @@ public sealed class HeadQuarters : House {
         // >>
         level = (byte)fs.ReadByte();
         // >>
-        SetBasement(sb, new PixelPosByte(data[0], data[ 1]));
+        SetBasement(sb, new PixelPosByte(data[0], data[1]));
         hp = System.BitConverter.ToSingle(data, 4);
-        maxHp = System.BitConverter.ToSingle(data,  8);
+        maxHp = System.BitConverter.ToSingle(data, 8);
     }
 
 
-    
+
     #endregion
 }

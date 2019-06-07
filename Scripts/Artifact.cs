@@ -63,9 +63,9 @@ public sealed class Artifact {
     {
         switch (atype)
         {
-            case AffectionType.SpaceAffection: return affectionRings[0];
+            case AffectionType.SpaceAffection: return affectionRings[2];
             case AffectionType.LifepowerAffection: return affectionRings[1];
-            case AffectionType.StabilityAffection: return affectionRings[2];
+            case AffectionType.StabilityAffection: return affectionRings[0];
             default: return affectionRings[3];
         }
     }

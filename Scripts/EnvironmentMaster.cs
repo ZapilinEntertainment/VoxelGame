@@ -235,9 +235,10 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             if (Physics.Raycast(pos, dir, out rh, 2 * f) ){
                 Lightning.Strike(pos, rh.point);
                 var hitobject = rh.collider;
+                float damage = Lightning.CalculateDamage();
                 if (hitobject.tag == Structure.STRUCTURE_COLLIDER_TAG)
                 {
-                    hitobject.transform.parent.GetComponent<Structure>().ApplyDamage(Lightning.CalculateDamage());
+                    hitobject.transform.parent.GetComponent<Structure>().ApplyDamage(damage);
                 }
                 else
                 {
@@ -246,13 +247,17 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                         var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
                         Block b = crh.block;
                         if (b != null) {
-                            if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)Lightning.CalculateDamage(), true);
+                            if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
                             else
                             {
                                 var sb = b as SurfaceBlock;
                                 if (sb != null)
                                 {
-                                    Vector2 inpos = sb.WorldToMapCoordinates(rh.point);
+                                    sb.EnvironmentalStrike(rh.point, 2, damage);
+                                }
+                                else
+                                {
+                                    if (b.mainStructure != null) b.mainStructure.ApplyDamage(damage);
                                 }
                             }
                         }

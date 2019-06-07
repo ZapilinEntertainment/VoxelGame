@@ -30,21 +30,21 @@ public class Structure : MonoBehaviour
     // -building - get applicable buildings list
     // -resource cost
     // score calculator
-    public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3,  HEADQUARTERS_ID = 4,
+    public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
-    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15,  LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
+    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
-    STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_1_ID = 39, HOUSE_2_ID = 40, HOUSE_3_ID = 41,
+    STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_ID = 39,
     HOUSE_5_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
-    SMELTERY_3_ID = 55, SMELTERY_5_ID = 57,  QUANTUM_TRANSMITTER_4_ID = 60,
+    SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 5,16,58, 59
+    //free ids 39,40,58, 59
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
@@ -101,9 +101,6 @@ public class Structure : MonoBehaviour
             case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
             case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
             case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
-            case HOUSE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_1")); break;
-            case HOUSE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_2")); break;
-            case HOUSE_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/House_level_3")); break;
             case HOUSE_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/houseBlock_level_5")); break;
             case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
             case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
@@ -159,6 +156,7 @@ public class Structure : MonoBehaviour
             case OBSERVATORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/observatory")); break;
             case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository")); break;
             case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monument")); break;
+            case SETTLEMENT_CENTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_0")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -215,9 +213,7 @@ public class Structure : MonoBehaviour
                 //use HarvestableResource.ConstructContainer instead
                 s = new GameObject("Container").AddComponent<HarvestableResource>(); break;
             case TENT_ID:
-            case HOUSE_1_ID:
-            case HOUSE_2_ID:
-            case HOUSE_3_ID:
+            case HOUSE_ID:
             case HOUSE_5_ID:
                 s = new GameObject("House").AddComponent<House>(); break;
             case DOCK_ID:
@@ -303,6 +299,10 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Artifacts repository").AddComponent<ArtifactsRepository>(); break;
             case MONUMENT_ID:
                 s = new GameObject("Monument").AddComponent<Monument>(); break;
+            case SETTLEMENT_CENTER_ID:
+                s = new GameObject("Settlement center").AddComponent<Settlement>();break;
+            case SETTLEMENT_STRUCTURE_ID:
+                s = new GameObject("Settlement structure").AddComponent<SettlementStructure>();break;
             default: return null;
         }
         s.id = i_id;
@@ -364,6 +364,17 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     indestructible = true;
+                }
+                break;
+            case SETTLEMENT_CENTER_ID:
+                {
+                    maxHp = 1000;
+                    surfaceRect = new SurfaceRect(0, 0, 4);
+                    isArtificial = true;
+                    isBasement = false;
+                    placeInCenter = true;
+                    rotate90only = true;
+                    indestructible = false;
                 }
                 break;
             case TREE_OF_LIFE_ID:
@@ -469,30 +480,10 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case HOUSE_1_ID:
+            case HOUSE_ID:
                 {
                     maxHp = 100;
                     surfaceRect = new SurfaceRect(0, 0, 4);
-                    placeInCenter = false;
-                    rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
-                }
-                break;
-            case HOUSE_2_ID:
-                {
-                    maxHp = 500;
-                    surfaceRect = new SurfaceRect(0, 0, 6);
-                    placeInCenter = false;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                }
-                break;
-            case HOUSE_3_ID:
-                {
-                    maxHp = 1000;
-                    surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
@@ -1049,6 +1040,16 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                     break;
                 }
+            case SETTLEMENT_STRUCTURE_ID:
+                {
+                    maxHp = 100;
+                    surfaceRect = new SurfaceRect(0,0,SettlementStructure.CELLSIZE);
+                    placeInCenter = false;
+                    rotate90only = true;
+                    isArtificial = true;
+                    isBasement = false;
+                    break;
+                }
         }
         hp = maxHp;
     }
@@ -1072,9 +1073,9 @@ public class Structure : MonoBehaviour
             case CONTAINER_ID: return new Rect(4 * p, 7 * p, p, p);
             case MINE_ID:
             case MINE_ELEVATOR_ID: return new Rect(6 * p, 7 * p, p, p);
-            case HOUSE_1_ID:
-            case HOUSE_2_ID:
-            case HOUSE_3_ID:
+            case SETTLEMENT_CENTER_ID:
+            case SETTLEMENT_STRUCTURE_ID:
+            case HOUSE_ID:
             case HOUSE_5_ID:
             case TENT_ID: return new Rect(7 * p, 7 * p, p, p);
             case DOCK_ID: return new Rect(0, 6 * p, p, p);

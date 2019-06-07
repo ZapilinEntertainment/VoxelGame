@@ -8,9 +8,6 @@ public class House : Building {
         switch (id)
         { // if changing - look at localized description            
             case TENT_ID: return TENT_VOLUME;
-            case HOUSE_1_ID: return 10;
-            case HOUSE_2_ID: return 50; 
-            case HOUSE_3_ID: return 100; 
             case HOUSE_5_ID: return 800; 
             case HOTEL_BLOCK_6_ID: return 600; // temporary
             case HOUSING_MAST_6_ID: return 2200;

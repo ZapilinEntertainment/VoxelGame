@@ -21,6 +21,35 @@ public struct SurfaceRect
         full = new SurfaceRect(0, 0, SurfaceBlock.INNER_RESOLUTION);
     }
 
+    public bool Intersect(SurfaceRect sr)
+    {
+        int leftX = -1, rightX = -1;
+        if (x > sr.x) leftX = x; else leftX = sr.x;
+        if (x + size > sr.x + sr.size) rightX = sr.x + sr.size; else rightX = x + size;
+        if (leftX < rightX)
+        {
+            int topZ = -1, downZ = -1;
+            if (z > sr.z) downZ = z; else downZ = sr.z;
+            if (z + size > sr.z + sr.size) topZ = sr.z + sr.size; else topZ = z + size;
+            return topZ > downZ;
+        }
+        else return false;
+    }
+    public bool Intersect(int xpos, int zpos, int xsize, int zsize)
+    {
+        int leftX = -1, rightX = -1;
+        if (x > xpos) leftX = x; else leftX = xpos;
+        if (x + size > xpos + xsize) rightX = xpos + xsize; else rightX = x + size;
+        if (leftX < rightX)
+        {
+            int topZ = -1, downZ = -1;
+            if (z > zpos) downZ = z; else downZ = zpos;
+            if (z + size > zpos + zsize) topZ = zpos + zsize; else topZ = z + size;
+            return topZ > downZ;
+        }
+        else return false;
+    }
+
     public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) { return lhs.Equals(rhs); }
     public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) { return !(lhs.Equals(rhs)); }
     public override bool Equals(object obj)
@@ -278,20 +307,10 @@ public class SurfaceBlock : Block
                 {
                     if (structures[i] != null)
                     {
-                        SurfaceRect a = structures[i].surfaceRect;
-                        int leftX = -1, rightX = -1;
-                        if (a.x > sr.x) leftX = a.x; else leftX = sr.x;
-                        if (a.x + a.size > sr.x + sr.size) rightX = sr.x + sr.size; else rightX = a.x + a.size;
-                        if (leftX < rightX)
+                        if (structures[i].surfaceRect.Intersect(sr))
                         {
-                            int topZ = -1, downZ = -1;
-                            if (a.z > sr.z) downZ = a.z; else downZ = sr.z;
-                            if (a.z + a.size > sr.z + sr.size) topZ = sr.z + sr.size; else topZ = a.z + a.size;
-                            if (topZ > downZ)
-                            {
-                                if (structures[i].isBasement) savedBasementForNow = structures[i];
-                                else structures[i].Annihilate(false, true, false);
-                            }
+                            if (structures[i].isBasement) savedBasementForNow = structures[i];
+                            else structures[i].Annihilate(false, true, false);
                         }
                     }
                     i++;
@@ -459,6 +478,57 @@ public class SurfaceBlock : Block
     {
         Vector3 leftDownCorner = GetLocalPosition(0, 0) - new Vector3(0.5f, 0, 0.5f) * QUAD_SIZE / (float)INNER_RESOLUTION;
         return new Vector2(point.x - leftDownCorner.x, QUAD_SIZE - (point.z - leftDownCorner.z)) / QUAD_SIZE;
+    }
+
+    public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
+    {
+        if (noEmptySpace == false) return;
+        else
+        {
+            if (noEmptySpace == true & structures.Count == 1)
+            {
+                structures[0].ApplyDamage(damage);
+                return;
+            }
+            else
+            {
+                Vector2 inpos = WorldToMapCoordinates(hitpoint);
+                byte xpos = (byte)(inpos.x * INNER_RESOLUTION),
+                    ypos = (byte)(inpos.y * INNER_RESOLUTION);
+                if (radius > 1)
+                {
+                    int x0 = xpos - radius,
+                        z0 = ypos - radius,
+                        x1 = xpos + radius,
+                        z1 = ypos + radius;
+                    if (x0 < 0) x0 = 0;
+                    if (z0 < 0) z0 = 0;
+                    if (x1 >= INNER_RESOLUTION) x1 = INNER_RESOLUTION - 1;
+                    if (z1 >= INNER_RESOLUTION) z1 = INNER_RESOLUTION - 1;
+                    List<Structure> strs = new List<Structure>();
+                    int i = 0;
+                    Structure s = null;
+                    while (i < structures.Count)
+                    {
+                        s = structures[i];
+                        if (s == null)
+                        {
+                            structures.RemoveAt(i);
+                            continue;
+                        }
+                        else
+                        {
+                            if (s.surfaceRect.Intersect(x0, z0, x1 - x0, z1 - z0))
+                            {
+                                if (s.id == Structure.PLANT_ID) (s as Plant).Dry();
+                                else s.ApplyDamage(damage);
+                            }
+                            if (s != null) i++;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     #region structures positioning     

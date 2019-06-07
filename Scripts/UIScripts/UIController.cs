@@ -6,11 +6,11 @@ using UnityEngine.UI;
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
 public enum Icons : byte
 {
-    GreenArrow, GuidingStar, PowerOff, PowerPlus, PowerMinus, Citizen, RedArrow, CrewBadIcon,
+    GreenArrow, GuidingStar, OutOfPowerButton, PowerPlus, PowerMinus, PowerButton, Citizen, RedArrow, CrewBadIcon,
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
-    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed
+    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed, TurnOn
 }
-public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter }
+public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter, Settlement }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
 
 
@@ -481,6 +481,7 @@ sealed public class UIController : MonoBehaviour
                     {
                         var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
                         Block b = crh.block;
+
                         faceIndex = crh.faceIndex;
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
                         else
@@ -496,7 +497,7 @@ sealed public class UIController : MonoBehaviour
                                         chosenSurface = sb;
                                         chosenStructure = null;
                                         chosenCube = null;
-                                        chosenWorksite = sb.worksite;                                        
+                                        chosenWorksite = sb.worksite;
                                         ChangeChosenObject(ChosenObjectType.Surface);
                                     }
                                     break;
@@ -815,6 +816,7 @@ sealed public class UIController : MonoBehaviour
 
     public void FullDeactivation()
     {
+        // заменить на отключение gameCanvas
         ChangeChosenObject(ChosenObjectType.None);
         ChangeActiveWindow(ActiveWindowMode.NoWindow);
         leftPanel.SetActive(false);
@@ -840,7 +842,7 @@ sealed public class UIController : MonoBehaviour
             default: return Rect.zero;
             case Icons.GreenArrow: return new Rect(6 * p, 7 * p, p, p);
             case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
-            case Icons.PowerOff: return new Rect(2 * p, 7 * p, p, p);
+            case Icons.OutOfPowerButton: return new Rect(2 * p, 7 * p, p, p);
             case Icons.PowerPlus: return new Rect(3 * p, 7 * p, p, p);
             case Icons.PowerMinus: return new Rect(4 * p, 7 * p, p, p);
             case Icons.Citizen: return new Rect(p, 6 * p, p, p);
@@ -850,14 +852,16 @@ sealed public class UIController : MonoBehaviour
             case Icons.CrewGoodIcon: return new Rect(3 * p, 5 * p, p, p);
             case Icons.ShuttleBadIcon: return new Rect(4 * p, 5 * p, p, p);
             case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
-            case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
+            case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);            
             case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
             case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
             case Icons.DisabledBuilding: return new Rect(p, 3 * p, p, p);
+            case Icons.PowerButton: return new Rect(p, 3 * p, p, p);
             case Icons.QuestAwaitingIcon: return new Rect(2 * p, 3 * p, p, p);
             case Icons.QuestBlockedIcon: return new Rect(3 * p, 3 * p, p, p);
             case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
             case Icons.TaskFailed: return new Rect(5 * p, 3 * p, p, p);
+            case Icons.TurnOn: return new Rect(6 * p, 3 * p, p, p);
         }
     }
 

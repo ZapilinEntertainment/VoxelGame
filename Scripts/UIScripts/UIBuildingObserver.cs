@@ -5,16 +5,16 @@ using UnityEngine.UI;
 
 public class UIBuildingObserver : UIObserver {
 	private Building observingBuilding;
-    private bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, canBeUpgraded = false;
+    private bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, canBeUpgraded = false, infoPanel_InUpgradeMode = true;
 	private float showingEnergySurplus = 0;
 	private int showingHousing = 0;
     private byte savedLevel = 0;
     private Vector2[] savedResourcesValues;
 #pragma warning disable 0649
     [SerializeField] private RawImage energyImage, housingImage; //fiti
-    [SerializeField] private Text energyValue, housingValue, upgradeButtonText; // fiti
+    [SerializeField] private Text energyValue, housingValue, upgradeButtonText, additionalText; // fiti
     [SerializeField] private Button upgradeButton; // fiti
-    [SerializeField] private GameObject upgradeInfoPanel, chargeButton; // fiti
+    [SerializeField] private GameObject upgradeInfoPanel, chargeButton, additionalButton; // fiti
     [SerializeField] private GameObject[] resourceCostIndicator; // fiti
     [SerializeField] private Button energyButton; // fiti
 #pragma warning restore 0649
@@ -64,8 +64,8 @@ public class UIBuildingObserver : UIObserver {
                     {
                         if (showingEnergySurplus <= 0)
                         {
-                            energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                                energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+                                energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                         }
                         else
                         {
@@ -76,7 +76,7 @@ public class UIBuildingObserver : UIObserver {
                     else
                     {
                         energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.OutOfPowerButton);
                     }
                     energyValue.enabled = true;
                     chargeButton.SetActive(false);
@@ -92,24 +92,44 @@ public class UIBuildingObserver : UIObserver {
         else
         {
             chargeButton.SetActive(false);
-            energyValue.text = Localization.GetWord(LocalizedWord.Disabled);
+            energyValue.text = Localization.GetPhrase(LocalizedPhrase.PressToTurnOn);
             energyValue.enabled = true;            
-            energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
+            energyImage.uvRect = UIController.GetTextureUV(Icons.TurnOn);
             energyImage.enabled = true;
         }
         energyButton.interactable = observingBuilding.canBePowerSwitched;
         //# eo redraw
-
+        bool enableAdditionalElements = false;
 		if (b is House) {
 			showingHousing = (b as House).housing;
 			housingValue.text = showingHousing.ToString();
 			housingValue.enabled = true;
 			housingImage.enabled = true;
+            if (b.id == Structure.SETTLEMENT_CENTER_ID)
+            {
+                enableAdditionalElements = true;
+                var st = b as Settlement;
+                additionalText.text = st.pointsFilled.ToString() + " / " + st.maxPoints.ToString();
+                additionalButton.GetComponent<Button>().interactable = st.pointsFilled < Settlement.MAX_POINTS_COUNT;
+            }
 		}
 		else {
 			housingValue.enabled = false;
 			housingImage.enabled = false;
 		}
+        if (enableAdditionalElements)
+        {
+            additionalButton.SetActive(true);
+            additionalText.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (additionalButton.activeSelf)
+            {
+                additionalButton.SetActive(false);
+                additionalText.gameObject.SetActive(false);
+            }
+        }
 
         CheckUpgradeAvailability();       
 	}
@@ -144,6 +164,7 @@ public class UIBuildingObserver : UIObserver {
                                     {
                                         showingEnergySurplus = observingBuilding.energySurplus;
                                         energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                                        mustBeRedrawn = true;
                                     }
                                 }
                             }
@@ -174,13 +195,13 @@ public class UIBuildingObserver : UIObserver {
                             else
                             {
                                 energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                                energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                             }
                         }
                         else
                         {
                             energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                            energyImage.uvRect = UIController.GetTextureUV(Icons.OutOfPowerButton);
                         }
                     }
                     else
@@ -196,6 +217,12 @@ public class UIBuildingObserver : UIObserver {
                     energyValue.enabled = true;
                     energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
                     energyImage.enabled = true;
+                }
+                if (observingBuilding.id == Structure.SETTLEMENT_CENTER_ID)
+                {
+                    var st = observingBuilding as Settlement;
+                    additionalText.text = st.pointsFilled.ToString() + " / " + st.maxPoints.ToString();
+                    additionalButton.GetComponent<Button>().interactable = st.pointsFilled < Settlement.MAX_POINTS_COUNT;
                 }
             }
             //# eo redraw
@@ -247,32 +274,78 @@ public class UIBuildingObserver : UIObserver {
         }
         if (upgradeInfoPanel.activeSelf)
         {
-            upgradeInfoPanel.SetActive(false);
+            if (infoPanel_InUpgradeMode) upgradeInfoPanel.SetActive(false);
         }
         else {
             if (observingBuilding.upgradedIndex == -1) return;
-            upgradeInfoPanel.SetActive(true);
+            upgradeInfoPanel.SetActive(true);            
+            infoPanel_InUpgradeMode = true;
+        }
+        RefreshResourcesData();
+    }
+    public void AdditionalButtonPanelSwitch()
+    {
+        if (observingBuilding == null)
+        {
+            SelfShutOff();
+            return;
+        }
+        else
+        {
+            if (infoPanel_InUpgradeMode)
+            {
+                infoPanel_InUpgradeMode = false;
+                if (!upgradeInfoPanel.activeSelf) upgradeInfoPanel.SetActive(true);
+            }
+            else
+            {
+                if (upgradeInfoPanel.activeSelf) upgradeInfoPanel.SetActive(false);
+            }
             RefreshResourcesData();
         }
     }
 
     void RefreshResourcesData() {
-        ResourceContainer[] cost = observingBuilding.GetUpgradeCost();
-        if (cost != null && cost.Length != 0)
+        if (infoPanel_InUpgradeMode)
         {
-            float[] storageVolume = GameMaster.realMaster.colonyController.storage.standartResources;
-            for (int i = 0; i < resourceCostIndicator.Length; i++)
+            ResourceContainer[] cost = observingBuilding.GetUpgradeCost();
+            if (cost != null && cost.Length != 0)
             {
-                if (i < cost.Length)
+                float[] storageVolume = GameMaster.realMaster.colonyController.storage.standartResources;
+                for (int i = 0; i < resourceCostIndicator.Length; i++)
                 {
-                    resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
-                    Text t = resourceCostIndicator[i].transform.GetChild(0).GetComponent<Text>();
-                    t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}",cost[i].volume);
-                    t.color = cost[i].volume > storageVolume[cost[i].type.ID] ? Color.red : Color.white;
-                    savedResourcesValues[i] = new Vector2(cost[i].type.ID,cost[i].volume);
-                    resourceCostIndicator[i].SetActive(true);
+                    if (i < cost.Length)
+                    {
+                        resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
+                        Text t = resourceCostIndicator[i].transform.GetChild(0).GetComponent<Text>();
+                        t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
+                        t.color = cost[i].volume > storageVolume[cost[i].type.ID] ? Color.red : Color.white;
+                        savedResourcesValues[i] = new Vector2(cost[i].type.ID, cost[i].volume);
+                        resourceCostIndicator[i].SetActive(true);
+                    }
+                    else resourceCostIndicator[i].SetActive(false);
                 }
-                else resourceCostIndicator[i].SetActive(false);
+            }
+        }
+        else
+        {
+            ResourceContainer[] cost = ResourcesCost.GetAdditionalSettlementBuildingCost(observingBuilding.level);
+            if (cost != null && cost.Length != 0)
+            {
+                float[] storageVolume = GameMaster.realMaster.colonyController.storage.standartResources;
+                for (int i = 0; i < resourceCostIndicator.Length; i++)
+                {
+                    if (i < cost.Length)
+                    {
+                        resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
+                        Text t = resourceCostIndicator[i].transform.GetChild(0).GetComponent<Text>();
+                        t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
+                        t.color = cost[i].volume > storageVolume[cost[i].type.ID] ? Color.red : Color.white;
+                        savedResourcesValues[i] = new Vector2(cost[i].type.ID, cost[i].volume);
+                        resourceCostIndicator[i].SetActive(true);
+                    }
+                    else resourceCostIndicator[i].SetActive(false);
+                }
             }
         }
     }
@@ -324,10 +397,21 @@ public class UIBuildingObserver : UIObserver {
             return;
         }
         else {
-            observingBuilding.LevelUp(true);
-            if (observingBuilding.upgradedIndex < 0)
+            if (infoPanel_InUpgradeMode)
             {
-                CheckUpgradeAvailability();
+                observingBuilding.LevelUp(true);
+                if (observingBuilding.upgradedIndex < 0)
+                {
+                    CheckUpgradeAvailability();
+                }
+            }
+            else
+            {
+                var s2 = observingBuilding as Settlement;
+                s2.CreateNewBuilding(true);
+                bool x = s2.pointsFilled < Settlement.MAX_POINTS_COUNT;
+                additionalButton.GetComponent<Button>().interactable = x;
+                if (x == false) upgradeInfoPanel.SetActive(false);
             }
         }
     }
@@ -359,7 +443,7 @@ public class UIBuildingObserver : UIObserver {
                     else
                     {
                         energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                        energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                        energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                     }
                 }
             }
@@ -371,8 +455,8 @@ public class UIBuildingObserver : UIObserver {
                     if (status_active == true)
                     {
                         status_active = false;
-                        energyValue.text = Localization.GetWord(LocalizedWord.Disabled);
-                        energyImage.uvRect = UIController.GetTextureUV(Icons.PowerOff);
+                        energyValue.text = Localization.GetPhrase(LocalizedPhrase.PressToTurnOn);
+                        energyImage.uvRect = UIController.GetTextureUV(Icons.TurnOn);
                     }
                 }
                 else
@@ -391,7 +475,7 @@ public class UIBuildingObserver : UIObserver {
                         else
                         {
                             energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerMinus);
+                            energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                         }
                     }
                 }
@@ -415,12 +499,14 @@ public class UIBuildingObserver : UIObserver {
 
 	override public void SelfShutOff() {
 		isObserving = false;
+        infoPanel_InUpgradeMode = true;
 		Structure.structureObserver.SelfShutOff();
 		gameObject.SetActive(false);
 	}
 
 	override public void ShutOff() {
-		isObserving = false;
+        infoPanel_InUpgradeMode = true;
+        isObserving = false;
 		observingBuilding = null;
 		Structure.structureObserver.ShutOff();
 		gameObject.SetActive(false);
@@ -432,5 +518,6 @@ public class UIBuildingObserver : UIObserver {
         t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.UpgradeCost);
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Accept);
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+        additionalButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.AddBuilding);
     }
 }

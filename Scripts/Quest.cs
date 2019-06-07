@@ -620,7 +620,7 @@ public class Quest
                         default: return;
                         case ProgressQuestID.Progress_HousesToMax:
                             icon = UIController.current.buildingsIcons;
-                            iconRect = Structure.GetTextureRect(Structure.HOUSE_1_ID);
+                            iconRect = Structure.GetTextureRect(Structure.SETTLEMENT_CENTER_ID);
                             break;
                         case ProgressQuestID.Progress_2Docks:
                             icon = UIController.current.buildingsIcons;

@@ -14,10 +14,12 @@
         FOOD_CONSUMPTION = 1, STARVATION_TIME = 1,
         SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
+        STABILITY_CHANGE_SPEED = 0.001f,
         RSPACE_CONSUMING_VAL = 0.125f,
         LSECTOR_CONSUMING_VAL = 0.9f,
         OBSERVATORY_FIND_SPEED_CF = 10,
-        RUINS_COEFFICIENT = 0.25f
+        RUINS_COEFFICIENT = 0.25f,
+        GRAPHONIUM_CRITICAL_MASS = 10000f
         ;
     public static float WORLD_CONSUMING_TIMER { get { return 15 * (6 - (int)GameMaster.realMaster.difficulty); } }
     public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.0000005f * (int)GameMaster.realMaster.difficulty; } }

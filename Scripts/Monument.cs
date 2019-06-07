@@ -1,9 +1,15 @@
-﻿public sealed class Monument : Building
+﻿using UnityEngine;
+
+public sealed class Monument : Building
 {
     public Artifact[] artifacts { get; private set; }
     public Artifact.AffectionType affectionType { get; private set; }
     public float affectionValue { get; private set; }
+    private bool ringEnabled = false;
+    private Transform ringSprite;
+
     private static UIMonumentObserver monumentObserver;
+    private const int ARTIFACTS_COUNT = 4;
 
     public static void SetObserver(UIMonumentObserver mo)
     {
@@ -11,10 +17,23 @@
     }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
-    {
-        artifacts = new Artifact[4];
+    {         
         base.SetBasement(b, pos);
-        b.myChunk.BlockByStructure(b.pos.x, b.pos.y, b.pos.z, this);        
+        if (ringSprite == null)
+        {
+            var g = new GameObject("ringSprite");
+            ringSprite = g.transform;
+            ringSprite.parent = transform;
+            ringSprite.localPosition = Vector3.up * 1.5f;
+            ringSprite.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            g.AddComponent<SpriteRenderer>();
+        }
+        if (artifacts == null)
+        {
+            artifacts = new Artifact[ARTIFACTS_COUNT];
+        }
+        else ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionType);
+        b.myChunk.BlockByStructure(b.pos.x, b.pos.y + 1, b.pos.z, this);        
     }
 
     public void AddArtifact(Artifact a, int slotIndex)
@@ -44,7 +63,7 @@
                             artifacts[slotIndex].Conservate();
                         }
                     }
-                    artifacts[slotIndex] = a;
+                    artifacts[slotIndex] = a;                    
                     a.UseInMonument();
                     RecalculateAffection();
                 }
@@ -66,33 +85,36 @@
         if (artifacts != null)
         {
             float af = 0; float count = 0;
-            if (artifacts[0] != null)
+            Artifact a;
+            for (int i = 0; i < artifacts.Length; i++)
             {
-                af += artifacts[0].GetAffectionValue();
-                count++;
+                a = artifacts[i];
+                if (a != null)
+                {
+                    af += a.GetAffectionValue();
+                    affectionType = a.affectionType;
+                    count++;
+                }
             }
-            if (artifacts[1] != null)
+            if (count != 0)
             {
-                af += artifacts[1].GetAffectionValue();
-                count++;
+                affectionValue = af / count;
+                ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionType);
+                ringEnabled = true;
             }
-            if (artifacts[2] != null)
-            {
-                af += artifacts[2].GetAffectionValue();
-                count++;
-            }
-            if (artifacts[3] != null)
-            {
-                af += artifacts[3].GetAffectionValue();
-                count++;
-            }
-            if (count != 0)  affectionValue = af / count;
             else
             {
                 affectionValue = 0;
                 affectionType = Artifact.AffectionType.NoAffection;
+                ringSprite.GetComponent<SpriteRenderer>().sprite = null;
+                ringEnabled = false;
             }
         }
+    }
+
+    private void Update()
+    {
+        if (ringEnabled) ringSprite.Rotate(Vector3.forward, affectionValue * 2f * GameMaster.gameSpeed * Time.deltaTime);
     }
 
     override public void SetActivationStatus(bool x, bool recalculateAfter)
@@ -102,7 +124,7 @@
     }
     override public void SetEnergySupply(bool x, bool recalculateAfter)
     {
-        if (isEnergySupplied != x) ArtifactsStabilityTest();
+        if (isEnergySupplied != x & artifacts != null) ArtifactsStabilityTest();
         base.SetEnergySupply(x, recalculateAfter);
     }
 
@@ -163,5 +185,23 @@
         monumentObserver.SetObservingMonument(this);
         showOnGUI = true;
         return monumentObserver;
+    }
+
+    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        if (basement != null)
+        {
+            var c = basement.myChunk;
+            var cpos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
+            var b = c.GetBlock(cpos);
+            if (b != null && b.mainStructure == this)
+            {
+                basement.myChunk.DeleteBlock(cpos);
+            }
+        }
+        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        Destroy(gameObject);
     }
 }

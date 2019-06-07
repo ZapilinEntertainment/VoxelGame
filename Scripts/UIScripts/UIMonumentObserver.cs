@@ -219,21 +219,26 @@ public sealed class UIMonumentObserver : UIObserver
             bool slotWithArtifact = selectedArtifact != null;
             foreach (var a in Artifact.artifactsList)
             {
-                if (a.affectionType != Artifact.AffectionType.NoAffection & a.researched)
+                if (a.researched)
                 {
-                    if (a.status == Artifact.ArtifactStatus.OnConservation | (slotWithArtifact && selectedArtifact.ID == a.ID))
+                    if (a.affectionType != Artifact.AffectionType.NoAffection 
+                        & 
+                        (observingMonument.affectionType == Artifact.AffectionType.NoAffection | (a.affectionType == observingMonument.affectionType))
+                        )
                     {
-                        arts.Add(a);
-                        ids.Add(a.ID);
+                        if (a.status == Artifact.ArtifactStatus.OnConservation | (slotWithArtifact && selectedArtifact.ID == a.ID))
+                        {
+                            arts.Add(a);
+                            ids.Add(a.ID);
+                        }
                     }
                 }
             }
             int artsCount = arts.Count;
             if (artsCount > 0)
             {
-                // подготовка списка
-                
-                items[0].transform.GetChild(0).GetComponent<Text>().text = slotWithArtifact ? Localization.GetPhrase(LocalizedPhrase.ClearSlot) : '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>' ;
+                // подготовка списка              
+               
                 int newSelectedItem = -1;
 
                 if (artsCount + 1 > items.Length)
@@ -250,7 +255,13 @@ public sealed class UIMonumentObserver : UIObserver
 
                     //#preparePositionedList
                     int sindex = GetListStartIndex();
-                    for (int i = 1; i < items.Length; i++)
+                    int i = 0;
+                    if (sindex == 0)
+                    {
+                        items[0].transform.GetChild(0).GetComponent<Text>().text = slotWithArtifact ? Localization.GetPhrase(LocalizedPhrase.ClearSlot) : '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>';
+                        i = 1;
+                    }
+                    for (; i < items.Length; i++)
                     {
                         items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i + sindex - 1].name + '"';
                         items[i].SetActive(true);
@@ -259,11 +270,11 @@ public sealed class UIMonumentObserver : UIObserver
                     
                     if (selectedArtifact != null)
                     {
-                        for (int i = 0; i < items.Length; i++)
+                        for (int j = 0; j < items.Length; j++)
                         {
-                            if (ids[i] == selectedArtifact.ID)
+                            if (ids[j + sindex] == selectedArtifact.ID)
                             {
-                                newSelectedItem = i;
+                                newSelectedItem = j;
                                 break;
                             }
                         }
@@ -278,6 +289,7 @@ public sealed class UIMonumentObserver : UIObserver
                 else
                 {
                     // артефактов меньше, чем позиций списка
+                    items[0].transform.GetChild(0).GetComponent<Text>().text = slotWithArtifact ? Localization.GetPhrase(LocalizedPhrase.ClearSlot) : '<' + Localization.GetPhrase(LocalizedPhrase.NoArtifact) + '>';
                     if (scrollbar.gameObject.activeSelf) scrollbar.gameObject.SetActive(false);
                     int i = 0;
                     for (; i < arts.Count; i++)
@@ -296,7 +308,14 @@ public sealed class UIMonumentObserver : UIObserver
 
                     if (selectedArtifact != null)
                     {
-                        newSelectedItem = ids.Count - 1;
+                        for (int j = 1; j < items.Length; j++)
+                        {
+                            if (ids[j] == selectedArtifact.ID)
+                            {
+                                newSelectedItem = j;
+                                break;
+                            }
+                        }
                     }
                     else newSelectedItem = 0;
                 }
@@ -400,6 +419,7 @@ public sealed class UIMonumentObserver : UIObserver
                 if (listSelectedItem != -1) items[listSelectedItem].GetComponent<Image>().overrideSprite = null;
                 listSelectedItem = i;
                 items[listSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                i += GetListStartIndex();
                 if (ids[i] == -1)
                 {
                     ClearSlot(selectedSlotIndex);
@@ -438,6 +458,8 @@ public sealed class UIMonumentObserver : UIObserver
     override public void SelfShutOff()
     {
         isObserving = false;
+        Building.buildingObserver.SelfShutOff();
+        //
         if (selectedSlotIndex != -1)
         {
             slots[selectedSlotIndex].GetComponent<Image>().overrideSprite = null;
@@ -454,6 +476,32 @@ public sealed class UIMonumentObserver : UIObserver
             listHolder.SetActive(false);
         }
         if (ids != null) ids.Clear();
+        //
+        gameObject.SetActive(false);
+    }
+
+    override public void ShutOff()
+    {
+        isObserving = false;
+        //
+        if (selectedSlotIndex != -1)
+        {
+            slots[selectedSlotIndex].GetComponent<Image>().overrideSprite = null;
+            selectedSlotIndex = -1;
+        }
+        observingMonument = null;
+        if (listHolder.activeSelf)
+        {
+            if (listSelectedItem != -1)
+            {
+                items[listSelectedItem].GetComponent<Image>().overrideSprite = null;
+                listSelectedItem = -1;
+            }
+            listHolder.SetActive(false);
+        }
+        if (ids != null) ids.Clear();
+        //
+        Building.buildingObserver.ShutOff();
         gameObject.SetActive(false);
     }
 }

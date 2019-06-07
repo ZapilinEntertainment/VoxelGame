@@ -48,7 +48,6 @@
         structuresCost[Structure.CONNECT_TOWER_6_ID] = 10 * val;
 
         structuresCost[Structure.HEADQUARTERS_ID] = 10 * val;
-        structuresCost[Structure.HOUSE_1_ID] = val / 4f;
         structuresCost[Structure.TREE_OF_LIFE_ID] = 1000 * val;
         structuresCost[Structure.CONTAINER_ID] = val / 10f;
         structuresCost[Structure.MINE_ELEVATOR_ID] = val / 4f;
@@ -75,7 +74,7 @@
         structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
         structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;
-        structuresCost[Structure.MONUMENT_ID] = 4 * val;
+        structuresCost[Structure.MONUMENT_ID] = 4 * val;        
 
         // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];
@@ -87,9 +86,6 @@
         structuresCost[Structure.STORAGE_2_ID] = structuresCost[Structure.STORAGE_1_ID] * 2;
         structuresCost[Structure.STORAGE_3_ID] = structuresCost[Structure.STORAGE_2_ID] * 2;
         structuresCost[Structure.STORAGE_5_ID] = structuresCost[Structure.STORAGE_3_ID] * 16;
-        structuresCost[Structure.HOUSE_2_ID] = structuresCost[Structure.HOUSE_1_ID] * 3;
-        structuresCost[Structure.HOUSE_3_ID] = structuresCost[Structure.HOUSE_2_ID] * 2;
-        structuresCost[Structure.HOUSE_5_ID] = structuresCost[Structure.HOUSE_3_ID] * 16;
         structuresCost[Structure.HOTEL_BLOCK_6_ID] = structuresCost[Structure.HOUSE_5_ID] * 1.2;
         structuresCost[Structure.HOUSING_MAST_6_ID] = structuresCost[Structure.HOUSE_5_ID] * 3;
         structuresCost[Structure.ENERGY_CAPACITOR_2_ID] = structuresCost[Structure.ENERGY_CAPACITOR_1_ID] * 2;
@@ -159,6 +155,10 @@
                     score += resourcesCosts[i] * res[i];
                 }
             }
+            //посчитать settlements list
+            //посчитать artifacts
+            // посчитать команды
+            // посчитать объекты карты
         }
         score *= (int)GameMaster.realMaster.difficulty / 3f;
 

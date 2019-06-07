@@ -9,7 +9,7 @@ public sealed class Lightning : MonoBehaviour
     private static ParticleSystem splashEffect;
 
     private const float fallspeed = 3f ;
-    private const float LIGHTNING_BASIC_DAMAGE = 10f;
+    private const float LIGHTNING_BASIC_DAMAGE = 100f;
     private const int LIGHTNING_SPLASH_BURST = 20;
 
     public static void Strike(Vector3 startPos, Vector3 endpos)

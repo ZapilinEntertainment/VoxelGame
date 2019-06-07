@@ -131,23 +131,6 @@
                 new ResourceContainer(ResourceType.Concrete, 270), new ResourceContainer(ResourceType.metal_M, 15)
             };
                 break;
-            case Structure.HOUSE_1_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.metal_K, 0.5f), new ResourceContainer(ResourceType.Plastics, 4), new ResourceContainer(ResourceType.Lumber, 20)
-            };
-                break;
-            case Structure.HOUSE_2_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 2),
-                new ResourceContainer(ResourceType.Plastics, 50)
-            };
-                break;
-            case Structure.HOUSE_3_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 60), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_E, 8),
-                new ResourceContainer(ResourceType.Plastics, 100)
-            };
-                break;
             case Structure.HOUSE_5_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 420), new ResourceContainer(ResourceType.metal_K, 280), new ResourceContainer(ResourceType.metal_E, 40),
@@ -397,7 +380,34 @@
                     };
                     break;
                 }
+            case Structure.SETTLEMENT_CENTER_ID:
+                {
+                    cost = new ResourceContainer[]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 50f), new ResourceContainer(ResourceType.metal_K, 10f)
+                    };
+                    break;
+                }
+            case Structure.SETTLEMENT_STRUCTURE_ID:
+                {
+                    cost = new ResourceContainer[]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 10f)
+                    };
+                    break;
+                }
         }
         return cost;
+    }
+    public static ResourceContainer[] GetAdditionalSettlementBuildingCost(byte level)
+    {
+        switch (level)
+        {
+            default: return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 25f),
+                new ResourceContainer(ResourceType.metal_K, 6f)
+            };
+        }
     }
 }

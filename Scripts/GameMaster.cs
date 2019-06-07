@@ -83,7 +83,7 @@ public sealed class GameMaster : MonoBehaviour
     private const float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f,
     clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     //data
-    private float timeGone;
+    private float timeGone, target_stability = 0.5f;
     public byte day { get; private set; }
     public byte month { get; private set; }
     public uint year { get; private set; }
@@ -410,6 +410,30 @@ public sealed class GameMaster : MonoBehaviour
                 Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
+
+            //
+            int l = Random.Range(10, 100);
+            Artifact a;
+            Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
+            float f;
+            for (int i = 0; i < l; i++)
+            {
+                f = Random.value;
+                if (f < 0.25f) atype = Artifact.AffectionType.LifepowerAffection;
+                else
+                {
+                    if (f > 0.5f)
+                    {
+                        if (f > 0.75f) atype = Artifact.AffectionType.SpaceAffection;
+                        else atype = Artifact.AffectionType.StabilityAffection;
+                    }
+                }
+                a = new Artifact(Random.value, Random.value, Random.value, atype, false);
+                a.SetResearchStatus(true);
+                a.Conservate();
+            }
+            //
+
             sx = mainChunk.GetSurfaceBlock();
             if (sx != null)
             {
@@ -425,34 +449,8 @@ public sealed class GameMaster : MonoBehaviour
                 s.SetBasement(sx, PixelPosByte.zero);
             }
             sx = mainChunk.GetSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-            }
-            //
-            int l = Random.Range(10, 100);
-            Artifact a;
-            Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
-            float f;
-            for (int i = 0; i < l; i++)
-            {
-                f = Random.value;
-                if (f < 0.25f) atype = Artifact.AffectionType.LifepowerAffection;
-                else
-                {
-                    if (f >0.5f)
-                    {
-                        if (f > 0.75f) atype = Artifact.AffectionType.SpaceAffection;
-                        else atype = Artifact.AffectionType.StabilityAffection;
-                    }
-                }
-                a = new Artifact(Random.value, Random.value, Random.value, atype, false);
-                a.SetResearchStatus(true);
-                a.Conservate();
-            }
+
             
-            //
             Vector3Int ecpos = Vector3Int.zero;
             if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
             {
@@ -479,6 +477,24 @@ public sealed class GameMaster : MonoBehaviour
             
         }
         //eo testzone
+
+        float hc = 1f, gc = 0f;
+        if (colonyController != null) {
+            hc = colonyController.happiness_coefficient;
+            if (colonyController.storage != null)
+            {
+                gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
+                gc *= 0.5f;
+                gc = 1f - gc;
+                // + блоки?
+            }
+        }
+        float structureStabilizersEffect = 0f;
+        target_stability = 0.25f * hc + 0.25f * gc + 0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 0.25f * structureStabilizersEffect;
+        if (stability != target_stability)
+        {
+            stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
+        }
     }
 
     private void FixedUpdate()
@@ -568,7 +584,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.metal_E, 50);
                 colonyController.storage.AddResource(ResourceType.metal_N, 1);
                 colonyController.storage.AddResource(ResourceType.Plastics, 200);
-                colonyController.storage.AddResource(ResourceType.Food, 1000);
+                colonyController.storage.AddResource(ResourceType.Food, 1000);                
                 break;
             case Difficulty.Easy:
                 colonyController.AddCitizens(70);
@@ -602,7 +618,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.Food, 750);
                 break;
         }
-
+        colonyController.storage.AddResources(ResourcesCost.GetCost(Structure.SETTLEMENT_CENTER_ID));
     }
     //test
     public void OnGUI()

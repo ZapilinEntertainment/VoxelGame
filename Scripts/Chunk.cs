@@ -47,8 +47,8 @@ public struct ChunkPos
 public struct MeshVisualizeInfo
 {
     public readonly byte faceIndex;
-    public byte illumination;
-    public MaterialType materialType;
+    public readonly byte illumination;
+    public readonly MaterialType materialType;
 
     public MeshVisualizeInfo(byte i_face, MaterialType mtype, byte i_illumination)
     {
@@ -71,6 +71,11 @@ public struct MeshVisualizeInfo
     public override int GetHashCode()
     {
         return faceIndex + illumination + (byte)materialType;
+    }
+
+    public override string ToString()
+    {
+        return (materialType.ToString() + " f:" + faceIndex.ToString() + " i:" + illumination.ToString() );
     }
 }
 public sealed class BlockpartVisualizeInfo 
@@ -175,10 +180,10 @@ public sealed class Chunk : MonoBehaviour
     public delegate void ChunkUpdateHandler();
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
-    private float LIGHT_DECREASE_PER_BLOCK, chunkUpdateTimer;
-    private bool chunkUpdateRequired = false, borderDrawn = false, shadowsUpdateRequired;
+    private float LIGHT_DECREASE_PER_BLOCK;
+    private bool chunkDataUpdateRequired = false, borderDrawn = false, shadowsUpdateRequired, chunkRenderUpdateRequired = false;
     private Dictionary<MeshVisualizeInfo, GameObject> renderers; // (face, material, illumitation) <- носители скомбинированных моделей
-    private List<BlockpartVisualizeInfo> blockVisualizersList;// <- информация обо всех видимых блоках
+    private List<BlockpartVisualizeInfo> blockVisualizersList;// <- информация обо всех видимых частях блоков
     private List<MeshVisualizeInfo> redrawRequiredTypes; // <- будут перерисованы и снова скомбинированы
     private Roof[,] roofs;
     private GameObject roofObjectsHolder, combinedShadowCaster;
@@ -259,43 +264,15 @@ public sealed class Chunk : MonoBehaviour
     }
 
     #region updating 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
-        chunkUpdateTimer -= Time.fixedDeltaTime;
-        if (chunkUpdateTimer <= 0)
+        if (chunkDataUpdateRequired)
         {
-            if (chunkUpdateRequired)
-            {
-                if (ChunkUpdateEvent != null) ChunkUpdateEvent();
-                if (PoolMaster.shadowCasting & shadowsUpdateRequired)
-                {
-                    ShadowsUpdate();
-                }
-                chunkUpdateRequired = false;
-            }
-            chunkUpdateTimer = CHUNK_UPDATE_TICK;
-
-
-            //if (combinedShadowCaster != null)
-            //{
-            //    combinedShadowCaster.transform.position = GameMaster.realMaster.environmentMaster.sun.forward.normalized * 0.5f;
-            //}
-            if (redrawRequiredTypes.Count > 0)
-            {
-                foreach (MeshVisualizeInfo mvi in redrawRequiredTypes)
-                {
-                    if (renderers.ContainsKey(mvi))
-                    {
-                        RedrawRenderer(mvi);
-                    }
-                    else
-                    {
-                        CreateBlockpartsRenderer(mvi);
-                    }
-                }
-                redrawRequiredTypes.Clear();
-            } // зависимость - RenderStatusUpdate
+            if (ChunkUpdateEvent != null) ChunkUpdateEvent();           
+            chunkDataUpdateRequired = false;
         }
+        if (chunkRenderUpdateRequired)  RenderStatusUpdate();
+        if (PoolMaster.shadowCasting & shadowsUpdateRequired)      ShadowsUpdate();
     }
     private void ShadowsUpdate()
     {
@@ -408,6 +385,7 @@ public sealed class Chunk : MonoBehaviour
             }
             redrawRequiredTypes.Clear();
         }
+        chunkRenderUpdateRequired = false;
     }
     #endregion
 
@@ -536,6 +514,7 @@ public sealed class Chunk : MonoBehaviour
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
             }
         }
+        chunkRenderUpdateRequired = true;
     }
     public void RefreshBlockVisualising(Block b)
     {
@@ -614,8 +593,9 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
+        chunkRenderUpdateRequired = true;
     }
-    private void RemoveBlockVisualisers(ChunkPos cpos)
+    private void RemoveBlockVisualisers(ChunkPos cpos) // удаление всей рендер-информации для данной точки
     {
         if (blockVisualizersList.Count > 0)
         {
@@ -626,12 +606,17 @@ public sealed class Chunk : MonoBehaviour
                 bvi = blockVisualizersList[i];
                 if (bvi.pos == cpos)
                 {
-                    if (!redrawRequiredTypes.Contains(bvi.rinfo)) redrawRequiredTypes.Add(bvi.rinfo);
+                    var ri = bvi.rinfo;
+                    if (!redrawRequiredTypes.Contains(ri))
+                    {                        
+                        redrawRequiredTypes.Add(ri);
+                    }
                     blockVisualizersList.RemoveAt(i);
                     continue;
                 }
                 else i++;
             }
+            chunkRenderUpdateRequired = true;
         }
     }
 
@@ -703,8 +688,8 @@ public sealed class Chunk : MonoBehaviour
                     var ci = new CombineInstance[n];
                     BlockpartVisualizeInfo bvi;
                     for (int i = 0; i < n; i++)
-                    {
-                        bvi = blockVisualizersList[indexes[i]];
+                    {                        
+                        bvi = blockVisualizersList[indexes[i]];                        
                         Mesh m = PoolMaster.GetMesh(bvi.meshType, bvi.materialID);
                         ci[i].mesh = m;
                         ci[i].transform = bvi.GetPositionMatrix();
@@ -775,6 +760,7 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         redrawRequiredTypes.Clear();
+        chunkRenderUpdateRequired = false;
     }
     public void ChunkLightmapFullRecalculation()
     {
@@ -913,7 +899,6 @@ public sealed class Chunk : MonoBehaviour
             }
         }
 
-        redrawRequiredTypes.Clear();
         if (blockVisualizersList.Count > 0)
         {
             foreach (var brd in blockVisualizersList)
@@ -1357,9 +1342,10 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         ApplyVisibleInfluenceMask(x, y, z, influenceMask);
-        chunkUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
         RefreshBlockVisualising(b);
+        if (f_type != BlockType.Shapeless) chunkRenderUpdateRequired = true;
         return b;
     }
 
@@ -1534,9 +1520,10 @@ public sealed class Chunk : MonoBehaviour
                 else SetRoof(x, z, !naturalGeneration);
             }
         }
-        chunkUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
         RefreshBlockVisualising(b);
+        chunkRenderUpdateRequired = true;
         return b;
     }
 
@@ -1641,6 +1628,7 @@ public sealed class Chunk : MonoBehaviour
                 upperBlockInfluence = true;
                 lowerBlockInfluence = true;
                 neighboursInfluence = true;
+                chunkRenderUpdateRequired = true;
                 break;
             case BlockType.Surface:
                 {
@@ -1668,12 +1656,14 @@ public sealed class Chunk : MonoBehaviour
                         neighboursInfluence = true;
                     }
                     lowerBlockInfluence = true;
+                    chunkRenderUpdateRequired = true;
                     break;
                 }
             case BlockType.Cave:
                 neighboursInfluence = true;
                 upperBlockInfluence = true;
                 if ((b as CaveBlock).haveSurface) lowerBlockInfluence = true;
+                chunkRenderUpdateRequired = true;
                 break;
         }
         b.Annihilate();
@@ -1735,8 +1725,9 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         if (PoolMaster.useIlluminationSystem) ChunkLightmapFullRecalculation();
-        chunkUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
+        // chunkRenderUpdateRequired = true; < в свитче
     }
     public void ClearChunk()
     {
@@ -1748,7 +1739,7 @@ public sealed class Chunk : MonoBehaviour
         blocks = new Dictionary<ChunkPos, Block>();
         surfaceBlocks.Clear();
         lifePower = 0;
-        chunkUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
         RenderDataFullRecalculation();
     }
@@ -1871,7 +1862,7 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }
-        chunkUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         return true;
     }
     /// <summary>
@@ -2094,7 +2085,7 @@ public sealed class Chunk : MonoBehaviour
                 }
                 break;
         }
-        chunkUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         return true;
     }
     public void ClearBlocksList(List<Block> list, bool clearMainStructureField)
@@ -2110,7 +2101,7 @@ public sealed class Chunk : MonoBehaviour
                 actions = true;
             }
         }
-        if (actions) chunkUpdateRequired = true;
+        if (actions) chunkDataUpdateRequired = true;
     }
     #endregion
 

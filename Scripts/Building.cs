@@ -28,7 +28,7 @@ public class Building : Structure
             case 1:
                 blist.Add(GetStructureByID(WIND_GENERATOR_1_ID) as Building);
                 blist.Add(GetStructureByID(STORAGE_1_ID) as Building);
-                blist.Add(GetStructureByID(HOUSE_1_ID) as Building);
+                blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
                 blist.Add(GetStructureByID(FARM_1_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_1_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_1_ID) as Building);
@@ -38,7 +38,7 @@ public class Building : Structure
                 break;
             case 2:
                 blist.Add(GetStructureByID(STORAGE_2_ID) as Building);
-                blist.Add(GetStructureByID(HOUSE_2_ID) as Building);
+                //blist.Add(GetStructureByID(HOUSE_2_ID) as Building);
                 blist.Add(GetStructureByID(FARM_2_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_2_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_2_ID) as Building);
@@ -51,7 +51,7 @@ public class Building : Structure
                 break;
             case 3:
                 blist.Add(GetStructureByID(STORAGE_3_ID) as Building);
-                blist.Add(GetStructureByID(HOUSE_3_ID) as Building);
+                //blist.Add(GetStructureByID(HOUSE_3_ID) as Building);
                 blist.Add(GetStructureByID(FARM_3_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_3_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_3_ID) as Building);
@@ -70,14 +70,14 @@ public class Building : Structure
                 blist.Add(GetStructureByID(SHUTTLE_HANGAR_4_ID) as Building);
                 blist.Add(GetStructureByID(RECRUITING_CENTER_4_ID) as Building);
                 blist.Add(GetStructureByID(EXPEDITION_CORPUS_4_ID) as Building);
-                blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);                
+                blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
                 blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
                 blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_5_ID) as Building);
-                blist.Add(GetStructureByID(HOUSE_5_ID) as Building);
+                //blist.Add(GetStructureByID(HOUSE_5_ID) as Building);
                 blist.Add(GetStructureByID(FARM_5_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
@@ -111,10 +111,8 @@ public class Building : Structure
             case ENERGY_CAPACITOR_2_ID: return 800f;
             case ENERGY_CAPACITOR_3_ID: return 2500f;
 
-            case HOUSE_1_ID: return 1f;
-            case HOUSE_2_ID: return 10f;
-            case HOUSE_3_ID: return 20f;
-            case HOUSE_5_ID:return 150f;
+            case SETTLEMENT_CENTER_ID: return 100f;
+            case HOUSE_5_ID: return 150f;
             case HOUSING_MAST_6_ID: return 1000f;
 
             case DOCK_ID: return 24f;
@@ -123,7 +121,7 @@ public class Building : Structure
 
             case FARM_1_ID: return 10f;
             case FARM_2_ID: return 20f;
-            case FARM_3_ID:return 40f;
+            case FARM_3_ID: return 40f;
             case FARM_4_ID: return 120f;
             case FARM_5_ID: return 300f;
 
@@ -176,7 +174,7 @@ public class Building : Structure
 
             case HOTEL_BLOCK_6_ID: return 300f;
 
-            case MONUMENT_ID: return 800f;            
+            case MONUMENT_ID: return 800f;
             default: return 0;
         }
     }
@@ -184,8 +182,8 @@ public class Building : Structure
     {
         switch (id)
         {
-            case HOUSE_2_ID: return -5f;
-            case HOUSE_3_ID: return -8;
+            case SETTLEMENT_CENTER_ID: return -10f;
+            case SETTLEMENT_STRUCTURE_ID: return -1f;
             case HOUSE_5_ID: return -50f;
             case HOUSING_MAST_6_ID: return -120f;
 
@@ -232,7 +230,7 @@ public class Building : Structure
             case CONNECT_TOWER_6_ID: return -64f;
             case HOTEL_BLOCK_6_ID:
             case GRPH_ENRICHER_3_ID: return -70f;
-            
+
 
             case MINERAL_POWERPLANT_2_ID: return Powerplant.MINERAL_F_PP_OUTPUT;
             case FOUNDATION_BLOCK_5_ID:
@@ -304,22 +302,6 @@ public class Building : Structure
             case TENT_ID:
                 {
                     level = 0;
-                }
-                break;
-            case HOUSE_1_ID:
-                {
-                    level = 1;
-                }
-                break;
-            case HOUSE_2_ID:
-                {
-                    upgradedIndex = HOUSE_3_ID;
-                    level = 2;
-                }
-                break;
-            case HOUSE_3_ID:
-                {
-                    level = 3;
                 }
                 break;
             case HOUSE_5_ID:

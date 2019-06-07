@@ -1,44 +1,56 @@
 ﻿using UnityEngine;
 
-public enum Language : ushort{English, Russian}; // menuUI - options preparing
-public enum LocalizedWord : ushort {
-    Buy, Cancel, Close, Crew, Dig, Expedition,Launch,Level,Mission, Offline, Progress, Repair, Sell, Step, Upgrade, UpgradeCost,   Limitation, Demand, Price, Trading, Gather, Colonization,  Normal, Improved, Lowered,  Dismiss, Disassemble, Total, 
-Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short,Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
-Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return};
+public enum Language : ushort { English, Russian }; // menuUI - options preparing
+public enum LocalizedWord : ushort
+{
+    Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Progress, Repair, Sell, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
+    Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
+    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return
+};
 
-public enum LocalizedPhrase : ushort {
-    ArtifactNotResearched, AffectionTypeNotMatch,
-    CannotReachDestination, ClearSlot, ConnectionLost,CrewFoundArtifact, GoOnATrip, RecallExpedition, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, StopDig, StopGather, UnoccupiedTransmitters,RequiredSurface,
-    ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode, 
-ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched,  HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
-MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets,  GenerationType, NoLimit, UpperLimit,IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-AddPlatform, OpenMap
+public enum LocalizedPhrase : ushort
+{
+    AddBuilding,ArtifactNotResearched, AffectionTypeNotMatch,
+    CannotReachDestination, ClearSlot, ConnectionLost, CrewFoundArtifact, GoOnATrip, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, PressToTurnOn, RecallExpedition, StopDig, StopGather, UnoccupiedTransmitters, RequiredSurface,
+    ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
+    ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+    MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
+    AddPlatform, OpenMap
 }
-public enum LocalizationActionLabels : ushort {Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress,
-    FlyingToMissionPoint, FlyingHome, Dissmissed, TryingToLeave }
-public enum GameAnnouncements : ushort{NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
-    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound};
-public enum LocalizedTutorialHint : byte { Landing}
-public enum RestrictionKey : ushort{SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked}
-public enum RefusalReason : ushort {Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt}
+public enum LocalizationActionLabels : ushort
+{
+    Extracted, WorkStopped, BlockCompleted, MineLevelFinished, CleanInProgress, DigInProgress, GatherInProgress, PouringInProgress,
+    FlyingToMissionPoint, FlyingHome, Dissmissed, TryingToLeave
+}
+public enum GameAnnouncements : ushort
+{
+    NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound
+};
+public enum LocalizedTutorialHint : byte { Landing }
+public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
+public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt }
 public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted }
 
-public static class Localization {  
+public static class Localization
+{
     public static Language currentLanguage { get; private set; }
 
-	static Localization() {
+    static Localization()
+    {
         int x = 0;
         if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF))
         {
             x = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
         }
-        if ((x&1) == 0) ChangeLanguage(Language.English); // default language
+        if ((x & 1) == 0) ChangeLanguage(Language.English); // default language
         else ChangeLanguage(Language.Russian);
-	}
+    }
 
-	public static void ChangeLanguage(Language lan ) {
+    public static void ChangeLanguage(Language lan)
+    {
         currentLanguage = lan;
-	}
+    }
 
 
 
@@ -59,9 +71,6 @@ public static class Localization {
                     case Structure.MINE_ELEVATOR_ID: return "Подъёмник шахты";
                     case Structure.LIFESTONE_ID: return "Камень жизни";
                     case Structure.TENT_ID: return "Палатка";
-                    case Structure.HOUSE_1_ID: return "Небольшой дом";
-                    case Structure.HOUSE_2_ID: return "Жилой дом";
-                    case Structure.HOUSE_3_ID: return "Улучшенный жилой дом";
                     case Structure.HOUSE_5_ID: return "Жилой блок";
                     case Structure.DOCK_ID: return "Док";
                     case Structure.DOCK_2_ID: return "Улучшенный док";
@@ -119,6 +128,7 @@ public static class Localization {
                     case Structure.OBSERVATORY_ID: return "Обсерватория";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранилище артефактов";
                     case Structure.MONUMENT_ID: return "Монумент";
+                    case Structure.SETTLEMENT_CENTER_ID: return "Центр поселения";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -135,9 +145,6 @@ public static class Localization {
                     case Structure.MINE_ELEVATOR_ID: return "Mine elevator";
                     case Structure.LIFESTONE_ID: return "Life stone";
                     case Structure.TENT_ID: return "Tent";
-                    case Structure.HOUSE_1_ID: return "Small house";
-                    case Structure.HOUSE_2_ID: return "House";
-                    case Structure.HOUSE_3_ID: return "Advanced house";
                     case Structure.HOUSE_5_ID: return "Residential Block";
                     case Structure.DOCK_ID: return "Dock";
                     case Structure.DOCK_2_ID: return "Improved dock";
@@ -195,6 +202,7 @@ public static class Localization {
                     case Structure.OBSERVATORY_ID: return "Observatory";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Artifacts repository";
                     case Structure.MONUMENT_ID: return "Monument";
+                    case Structure.SETTLEMENT_CENTER_ID: return "Settlement center";
                     default: return "Unknown building";
                 }
         }
@@ -213,10 +221,7 @@ public static class Localization {
                     case Structure.STORAGE_5_ID: return "Блок для хранения объёмом " + StorageHouse.GetMaxVolume(5) + " eдиниц.";
                     case Structure.CONTAINER_ID: return "Содержит ресурсы.";
                     case Structure.LIFESTONE_ID: return "Источает энергию жизни.";
-                    case Structure.TENT_ID: return "Временное жильё.";
-                    case Structure.HOUSE_1_ID: return "Небольшой дом на " + House.GetHousingValue(id) + " жилых мест.";
-                    case Structure.HOUSE_2_ID: return "Жилой дом, вмещающий " + House.GetHousingValue(id) + " человек.";
-                    case Structure.HOUSE_3_ID: return "Улучшенный жилой дом вмещает " + House.GetHousingValue(id) + " человек.";
+                    case Structure.TENT_ID: return "Временное жильё.";                  
                     case Structure.HOUSE_5_ID: return "В жилом блоке могут проживать до " + House.GetHousingValue(id) + " человек.";
                     case Structure.HOUSING_MAST_6_ID: return "Массивный жилой комплекс, вмещающий " + House.GetHousingValue(id) + " человек";
                     case Structure.DOCK_ID:
@@ -284,6 +289,7 @@ public static class Localization {
                     case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха. /n Может быть только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
+                    case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
                     default: return "Без описания";
                 }
             case Language.English:
@@ -297,10 +303,7 @@ public static class Localization {
                     case Structure.STORAGE_5_ID: return "Storage block can contain " + StorageHouse.GetMaxVolume(5) + " points.";
                     case Structure.CONTAINER_ID: return "Contain resources.";
                     case Structure.LIFESTONE_ID: return "Emit lifepower.";
-                    case Structure.TENT_ID: return "Temporary housing.";
-                    case Structure.HOUSE_1_ID: return "Small house for " + House.GetHousingValue(id) + " persons.";
-                    case Structure.HOUSE_2_ID: return "Residential house for " + House.GetHousingValue(id) + " persons.";
-                    case Structure.HOUSE_3_ID: return "Advanced house for " + House.GetHousingValue(id) + " persons.";
+                    case Structure.TENT_ID: return "Temporary housing.";                   
                     case Structure.HOUSE_5_ID: return "Residential block can be house for " + House.GetHousingValue(id) + " persons.";
                     case Structure.HOUSING_MAST_6_ID: return "Massive residential complex for " + House.GetHousingValue(id) + " persons";
                     case Structure.DOCK_ID:
@@ -368,6 +371,7 @@ public static class Localization {
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Give access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
+                    case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
                     default: return "No description.";
                 }
         }
@@ -445,16 +449,16 @@ public static class Localization {
                     }
                 }
         }
-        
+
     }
     public static string GetResourcesDescription(int id)
     {
-        switch(currentLanguage)
+        switch (currentLanguage)
         {
             case Language.Russian:
                 {
                     switch (id)
-                    {                        
+                    {
                         case 0: return string.Empty;
                         case ResourceType.DIRT_ID: return "Органическое покрытие острова.";
                         case ResourceType.FOOD_ID: return "Топливо для живых.";
@@ -503,7 +507,7 @@ public static class Localization {
             default:
                 {
                     switch (id)
-                    {                        
+                    {
                         case 0: return string.Empty;
                         case ResourceType.DIRT_ID: return "Organic cover of floating islands.";
                         case ResourceType.FOOD_ID: return "A fuel for living.";
@@ -549,16 +553,17 @@ public static class Localization {
                     }
                 }
         }
-       
+
     }
 
-	public static string GetAnnouncementString( GameAnnouncements announce) {
+    public static string GetAnnouncementString(GameAnnouncements announce)
+    {
         switch (currentLanguage)
         {
             case Language.Russian:
                 {
                     switch (announce)
-                    {                        
+                    {
                         case GameAnnouncements.NotEnoughResources: return "Недостаточно ресурсов";
                         case GameAnnouncements.NotEnoughEnergyCrystals: return "Недостаточно энергокристаллов";
                         case GameAnnouncements.NotEnoughFood: return "Нехватка продуктов!";
@@ -582,7 +587,7 @@ public static class Localization {
             default:
                 {
                     switch (announce)
-                    {                        
+                    {
                         case GameAnnouncements.NotEnoughResources: return "Not enough resources";
                         case GameAnnouncements.NotEnoughEnergyCrystals: return "Not enough energy crystals";
                         case GameAnnouncements.NotEnoughFood: return "Not enough food!";
@@ -603,16 +608,18 @@ public static class Localization {
                     }
                 }
         }
-		
-	}
-	public static string GetRestrictionPhrase(RestrictionKey rkey ) {
-		switch (rkey) {
-		    default : return "Action not possible";
-		    case RestrictionKey.SideConstruction: return "Can be built only on side blocks";
-		    case RestrictionKey.UnacceptableSurfaceMaterial: return "Unacceptable surface material";
+
+    }
+    public static string GetRestrictionPhrase(RestrictionKey rkey)
+    {
+        switch (rkey)
+        {
+            default: return "Action not possible";
+            case RestrictionKey.SideConstruction: return "Can be built only on side blocks";
+            case RestrictionKey.UnacceptableSurfaceMaterial: return "Unacceptable surface material";
             case RestrictionKey.HeightBlocked: return "Height blocked";
-		}
-	}
+        }
+    }
     public static string GetTutorialHint(LocalizedTutorialHint lth)
     {
         switch (lth)
@@ -624,8 +631,10 @@ public static class Localization {
         }
     }
 
-	public static string CostInCoins(float count) {
-		switch (currentLanguage) {
+    public static string CostInCoins(float count)
+    {
+        switch (currentLanguage)
+        {
             case Language.Russian:
                 {
                     int x = (int)count;
@@ -641,13 +650,13 @@ public static class Localization {
                         }
                     }
                 }
-		case Language.English:
+            case Language.English:
             default:
                 return count.ToString() + " crystals";
-		}
-	}
-	
-    public static string AnnounceQuestCompleted (string name)
+        }
+    }
+
+    public static string AnnounceQuestCompleted(string name)
     {
         switch (currentLanguage)
         {
@@ -669,7 +678,7 @@ public static class Localization {
             default: return "crew \" " + name + "\" ready";
         }
     }
-  
+
     public static string GetCrewInfo(Crew c)
     {
         // CREW_INFO_STRINS_COUNT = 14
@@ -679,9 +688,9 @@ public static class Localization {
                 {
                     string s = "Участников: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
         + '\n'
-        +"Опыта до следующего уровня: " +  string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n"      
+        + "Опыта до следующего уровня: " + string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n"
         + "Готовность: " + ((int)(c.stamina * 100f)).ToString() + "%\n" +
-        + '\n'
+        +'\n'
         + "Восприятие: " + string.Format("{0:0.##}", c.perception) + "\n"
         + "Настойчивость: " + string.Format("{0:0.##}", c.persistence) + "\n"
         + "Храбрость: " + string.Format("{0:0.##}", c.bravery) + "\n"
@@ -698,9 +707,9 @@ public static class Localization {
                 {
                     string s = "Members: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
         + '\n'
-        +"Stamina: " + ((int)(c.stamina * 100f)).ToString() + "%\n"
-        +"Experience need for next level: " + string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n" 
-        +'\n'
+        + "Stamina: " + ((int)(c.stamina * 100f)).ToString() + "%\n"
+        + "Experience need for next level: " + string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n"
+        + '\n'
         + "Perception: " + string.Format("{0:0.##}", c.perception) + "\n"
         + "Persistence: " + string.Format("{0:0.##}", c.persistence) + "\n"
         + "Bravery: " + string.Format("{0:0.##}", c.bravery) + "\n"
@@ -739,11 +748,12 @@ public static class Localization {
                         default: return "<crew status>";
                     }
                 }
-        }       
+        }
     }
     public static string GetCrewAction(LocalizedCrewAction ca, Crew c)
     {
-        switch (currentLanguage) {
+        switch (currentLanguage)
+        {
             case Language.English:
                 {
                     switch (ca)
@@ -772,20 +782,20 @@ public static class Localization {
             case Language.Russian:
                 {
                     switch (status)
-                    {                        
+                    {
                         case Artifact.ArtifactStatus.Researching: return "Исследуется";
                         case Artifact.ArtifactStatus.UsingByCrew: return "Используется командой";
                         case Artifact.ArtifactStatus.UsingInMonument: return "Используется в монументе";
                         case Artifact.ArtifactStatus.OnConservation: return "Законсервирован";
                         case Artifact.ArtifactStatus.Exists:
-                        default:  return string.Empty;
+                        default: return string.Empty;
                     }
                 }
             case Language.English:
             default:
                 {
                     switch (status)
-                    {                        
+                    {
                         case Artifact.ArtifactStatus.Researching: return "Researching";
                         case Artifact.ArtifactStatus.UsingByCrew: return "Using by crew";
                         case Artifact.ArtifactStatus.UsingInMonument: return "Using in monument";
@@ -807,16 +817,18 @@ public static class Localization {
             default: return "Сrew " + Crew.lastFreeID.ToString();
         }
     }
-    public static string NameShuttle() { // waiting for креатив
-		switch (currentLanguage) {
-            case Language.Russian: return "Челнок " + Shuttle.lastIndex.ToString();            
-		    case Language.English:
-            default: return "shuttle "+ Shuttle.lastIndex.ToString();
-		}
-	}
+    public static string NameShuttle()
+    { // waiting for креатив
+        switch (currentLanguage)
+        {
+            case Language.Russian: return "Челнок " + Shuttle.lastIndex.ToString();
+            case Language.English:
+            default: return "shuttle " + Shuttle.lastIndex.ToString();
+        }
+    }
     public static string NameArtifact(Artifact a)
     {
-        var c = a.GetColor();        
+        var c = a.GetColor();
         byte r = (byte)(c.r / 0.125f), g = (byte)(c.g / 0.125f), b = (byte)(c.b / 0.125f);
         string s = string.Empty;
         switch (r)
@@ -1385,7 +1397,8 @@ public static class Localization {
                 }
                 break;
             case 4:
-                switch (g) {
+                switch (g)
+                {
                     case 0:
                         switch (b)
                         {
@@ -2224,13 +2237,14 @@ public static class Localization {
                     default: s += "Chessmaster"; break;
                 }
                 break;
-            default: s += "Driver";break;
+            default: s += "Driver"; break;
         }
         return s;
     }
     #endregion
 
-    public static string GetWord(LocalizedWord word) {
+    public static string GetWord(LocalizedWord word)
+    {
         switch (currentLanguage)
         {
             case Language.Russian:
@@ -2254,7 +2268,7 @@ public static class Localization {
                         case LocalizedWord.Step: return "Шаг";
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
                         case LocalizedWord.Upgrade: return "Улучшить"; // upgrade building
-                            
+
                         case LocalizedWord.Limitation: return "Ограничение"; // trade count limit
                         case LocalizedWord.Demand: return "Спрос";
                         case LocalizedWord.Price: return "Цена";
@@ -2329,7 +2343,7 @@ public static class Localization {
                         case LocalizedWord.Step: return "Step";
                         case LocalizedWord.UpgradeCost: return "Upgrade cost";
                         case LocalizedWord.Upgrade: return "Upgrade"; // upgrade building                                
-                        
+
                         case LocalizedWord.Limitation: return "Limitation"; // trade count limit
                         case LocalizedWord.Demand: return "Demand";
                         case LocalizedWord.Price: return "Price";
@@ -2383,8 +2397,8 @@ public static class Localization {
                     }
                 }
         }
-		
-	}
+
+    }
     public static string GetPhrase(LocalizedPhrase lp)
     {
         switch (currentLanguage)
@@ -2393,12 +2407,13 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.AddBuilding: return "Добавить здание";
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Тип воздействия не совпадает";
                         case LocalizedPhrase.ArtifactNotResearched: return "Артефакт не изучен";
                         case LocalizedPhrase.CannotReachDestination: return "не может достичь цели";
                         case LocalizedPhrase.ClearSlot: return "< Очистить слот >";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
-                        case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";                       
+                        case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
                         case LocalizedPhrase.MembersCount: return "Число участников";
                         case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
@@ -2411,6 +2426,7 @@ public static class Localization {
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
                         case LocalizedPhrase.PerSecond: return "в секунду";
+                        case LocalizedPhrase.PressToTurnOn: return "Нажмите, чтобы включить";
                         case LocalizedPhrase.RecallExpedition: return "Отозвать экспедицию";
                         case LocalizedPhrase.StopDig: return "Остановить добычу";
                         case LocalizedPhrase.StopGather: return "Остановить сбор";
@@ -2466,6 +2482,7 @@ public static class Localization {
                 {
                     switch (lp)
                     {
+                        case LocalizedPhrase.AddBuilding: return "Add building";
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Affection type not match"; // artifact aff type
                         case LocalizedPhrase.ArtifactNotResearched: return "Artifact not researched";
                         case LocalizedPhrase.CannotReachDestination: return "cannot reach destination";
@@ -2484,6 +2501,7 @@ public static class Localization {
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
                         case LocalizedPhrase.PerSecond: return "per second";
+                        case LocalizedPhrase.PressToTurnOn: return "Press to turn on";
                         case LocalizedPhrase.RecallExpedition: return "Recall expedition";
                         case LocalizedPhrase.StopDig: return "Stop digging";
                         case LocalizedPhrase.StopGather: return "Stop gathering";
@@ -2525,7 +2543,7 @@ public static class Localization {
                         case LocalizedPhrase.NoLimit: return "No limit";
                         case LocalizedPhrase.UpperLimit: return "Upper limit";
                         case LocalizedPhrase.IterationsCount: return "Iterations count";
-                        case LocalizedPhrase.ChangeSurfaceMaterial:return "Change surface";
+                        case LocalizedPhrase.ChangeSurfaceMaterial: return "Change surface";
                         case LocalizedPhrase.CreateBlock: return "Create block";
                         case LocalizedPhrase.CreateColumn: return "Create column";
                         case LocalizedPhrase.AddPlatform: return "Add platform";
@@ -2533,9 +2551,10 @@ public static class Localization {
                         default: return "<...>";
                     }
                 }
-        }       
+        }
     }
-    public static string GetRefusalReason(RefusalReason rr) {
+    public static string GetRefusalReason(RefusalReason rr)
+    {
         switch (currentLanguage)
         {
             case Language.Russian:
@@ -2581,7 +2600,7 @@ public static class Localization {
                         case RefusalReason.AlreadyBuilt: return "Already built";
                     }
                 }
-        }       
+        }
     }
     public static string GetActionLabel(LocalizationActionLabels label)
     {
@@ -2628,7 +2647,7 @@ public static class Localization {
                         case LocalizationActionLabels.Dissmissed: return "Dismissed";
                     }
                 }
-        }      
+        }
     }
     public static string GetExpeditionStatus(Expedition.ExpeditionStage stage)
     {
@@ -2659,9 +2678,9 @@ public static class Localization {
                         default: return "Resting";
                     }
                 }
-        }        
+        }
     }
-    public static string GetEndingTitle (GameEndingType endType)
+    public static string GetEndingTitle(GameEndingType endType)
     {
         switch (currentLanguage)
         {
@@ -2692,8 +2711,8 @@ public static class Localization {
                             return "Game Over";
                     }
                 }
-        }        
-    }    
+        }
+    }
     public static string GetAffectionTitle(Artifact.AffectionType atype)
     {
         switch (currentLanguage)
@@ -2702,11 +2721,11 @@ public static class Localization {
                 {
                     switch (atype)
                     {
-                        case Artifact.AffectionType.SpaceAffection: return "Space affection";                        
+                        case Artifact.AffectionType.SpaceAffection: return "Space affection";
                         case Artifact.AffectionType.StabilityAffection: return "Stability affection";
                         case Artifact.AffectionType.LifepowerAffection: return "Lifepower flow affection";
                         case Artifact.AffectionType.NoAffection:
-                        default:  return "No affection";
+                        default: return "No affection";
 
                     }
                 }
@@ -2728,7 +2747,7 @@ public static class Localization {
     public static string GetCredits()
     {
         switch (currentLanguage)
-        {            
+        {
             case Language.Russian:
                 return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2019гг н.э. \n" +
                     "Собрано на Unity Engine 2018.2. \n" +
@@ -3150,7 +3169,8 @@ public static class Localization {
     #region missions data
     public static string GetMissionCodename(MissionType mtype)
     {
-        switch (currentLanguage) {
+        switch (currentLanguage)
+        {
             case Language.Russian:
                 switch (mtype)
                 {
@@ -3171,7 +3191,7 @@ public static class Localization {
                 {
                     switch (mtype)
                     {
-                        case MissionType.Exploring: return "Exploring"; 
+                        case MissionType.Exploring: return "Exploring";
                         case MissionType.FindingKnowledge: return "Finding knowledge";
                         case MissionType.FindingItem: return "Finding item";
                         case MissionType.FindingPerson: return "Finding person";
@@ -3183,7 +3203,7 @@ public static class Localization {
                         default:
                             return "Awaiting";
                     }
-        }
+                }
         }
     }
     #endregion
