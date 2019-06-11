@@ -131,11 +131,15 @@
                 new ResourceContainer(ResourceType.Concrete, 270), new ResourceContainer(ResourceType.metal_M, 15)
             };
                 break;
-            case Structure.HOUSE_5_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Plastics, 420), new ResourceContainer(ResourceType.metal_K, 280), new ResourceContainer(ResourceType.metal_E, 40),
-                new ResourceContainer(ResourceType.Concrete, 2500)
-            };
+            case Structure.HOUSE_BLOCK_ID:
+                cost = new ResourceContainer[]
+           {
+                new ResourceContainer(ResourceType.Concrete, 1400f),
+                new ResourceContainer(ResourceType.metal_K, 400f),
+                new ResourceContainer(ResourceType.Plastics, 1000f),
+                new ResourceContainer(ResourceType.metal_P, 350f),
+                new ResourceContainer(ResourceType.metal_S, 200f)
+           };
                 break;
             case Structure.ENERGY_CAPACITOR_1_ID:
                 cost = new ResourceContainer[] {
@@ -407,6 +411,76 @@
             {
                 new ResourceContainer(ResourceType.Concrete, 25f),
                 new ResourceContainer(ResourceType.metal_K, 6f)
+            };
+        }
+    }
+    public static ResourceContainer[] GetSettlementUpgradeCost(byte level)
+    {
+        switch (level)
+        {
+            case 8:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 1000f),
+                new ResourceContainer(ResourceType.metal_K, 200f),
+                new ResourceContainer(ResourceType.Plastics, 2000f),
+                new ResourceContainer(ResourceType.metal_P, 300f),
+                new ResourceContainer(ResourceType.metal_S, 100f)
+            };
+            case 7:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 800f),
+                new ResourceContainer(ResourceType.metal_K, 150f),
+                new ResourceContainer(ResourceType.Plastics, 1000f),
+                new ResourceContainer(ResourceType.metal_P, 240f),
+                new ResourceContainer(ResourceType.metal_S, 80f)
+            };
+            case 6:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 550f),
+                new ResourceContainer(ResourceType.metal_K, 110f),
+                new ResourceContainer(ResourceType.Plastics, 800f),
+                new ResourceContainer(ResourceType.metal_P, 200f),
+                new ResourceContainer(ResourceType.metal_S, 50f)
+            };
+            case 5:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 500f),
+                new ResourceContainer(ResourceType.metal_K, 100f),
+                new ResourceContainer(ResourceType.Plastics, 400f),
+                new ResourceContainer(ResourceType.metal_P, 160f)
+            };
+            case 4:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 400f),
+                new ResourceContainer(ResourceType.metal_K, 70f),
+                new ResourceContainer(ResourceType.Plastics, 250f),
+                new ResourceContainer(ResourceType.metal_P, 120f)
+            };
+            case 3:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 250f),
+                new ResourceContainer(ResourceType.metal_K, 60f),
+                new ResourceContainer(ResourceType.Plastics, 150f),
+                new ResourceContainer(ResourceType.metal_P, 60f)
+            };
+            case 2:
+                return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 200f),
+                new ResourceContainer(ResourceType.metal_K, 50f),
+                new ResourceContainer(ResourceType.Plastics, 100f)
+            };
+            default: return new ResourceContainer[]
+            {
+                new ResourceContainer(ResourceType.Concrete, 100f),
+                new ResourceContainer(ResourceType.metal_K, 30f),
+                new ResourceContainer(ResourceType.Plastics, 50f)
             };
         }
     }

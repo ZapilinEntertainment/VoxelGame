@@ -112,7 +112,7 @@ public class Building : Structure
             case ENERGY_CAPACITOR_3_ID: return 2500f;
 
             case SETTLEMENT_CENTER_ID: return 100f;
-            case HOUSE_5_ID: return 150f;
+            case HOUSE_BLOCK_ID: return 150f;
             case HOUSING_MAST_6_ID: return 1000f;
 
             case DOCK_ID: return 24f;
@@ -184,7 +184,7 @@ public class Building : Structure
         {
             case SETTLEMENT_CENTER_ID: return -10f;
             case SETTLEMENT_STRUCTURE_ID: return -1f;
-            case HOUSE_5_ID: return -50f;
+            case HOUSE_BLOCK_ID: return -50f;
             case HOUSING_MAST_6_ID: return -120f;
 
             case DOCK_ID: return -20f;
@@ -304,7 +304,7 @@ public class Building : Structure
                     level = 0;
                 }
                 break;
-            case HOUSE_5_ID:
+            case HOUSE_BLOCK_ID:
                 {
                     level = 5;
                 }
@@ -614,6 +614,12 @@ public class Building : Structure
             case MONUMENT_ID:
                 {
                     level = 5;
+                    break;
+                }
+            case SETTLEMENT_CENTER_ID:
+                {
+                    level = 1;
+                    upgradedIndex = 0;
                     break;
                 }
         }

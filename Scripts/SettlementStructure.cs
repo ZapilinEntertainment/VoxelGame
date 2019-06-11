@@ -9,7 +9,6 @@ public sealed class SettlementStructure : Structure
     // byte subIndex - подвид модели
 
     public const byte CELLSIZE = 2;
-
     override protected void SetModel()
     {
         if (type == Settlement.SettlementStructureType.Empty) return;
@@ -18,7 +17,11 @@ public sealed class SettlementStructure : Structure
         switch (type)
         {
             case Settlement.SettlementStructureType.House:
-                model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart"));
+                switch (level) {
+                    case 3: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl3")); break;
+                    case 2: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl2")); break;
+                    default:  model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl1")); break;
+                }
                 break;
             case Settlement.SettlementStructureType.Shop:
                 model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/shopPart"));
@@ -40,6 +43,14 @@ public sealed class SettlementStructure : Structure
     {
         type = i_type;
         level = i_level;
+        if (level > 1)
+        {
+            if (level == 2) surfaceRect = new SurfaceRect(0, 0, 2 * CELLSIZE);
+            else
+            {
+                if (level == 3) surfaceRect = new SurfaceRect(0, 0, 3 * CELLSIZE);
+            }
+        }
         switch (type)
         {
             case Settlement.SettlementStructureType.House:
@@ -54,7 +65,7 @@ public sealed class SettlementStructure : Structure
                 value = 1f;
                 break;
         }
-        settlement = i_settlement;
+        settlement = i_settlement;        
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

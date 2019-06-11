@@ -71,7 +71,7 @@ public static class Localization
                     case Structure.MINE_ELEVATOR_ID: return "Подъёмник шахты";
                     case Structure.LIFESTONE_ID: return "Камень жизни";
                     case Structure.TENT_ID: return "Палатка";
-                    case Structure.HOUSE_5_ID: return "Жилой блок";
+                    case Structure.HOUSE_BLOCK_ID: return "Жилой блок";
                     case Structure.DOCK_ID: return "Док";
                     case Structure.DOCK_2_ID: return "Улучшенный док";
                     case Structure.DOCK_3_ID: return "Продвинутый док";
@@ -145,7 +145,7 @@ public static class Localization
                     case Structure.MINE_ELEVATOR_ID: return "Mine elevator";
                     case Structure.LIFESTONE_ID: return "Life stone";
                     case Structure.TENT_ID: return "Tent";
-                    case Structure.HOUSE_5_ID: return "Residential Block";
+                    case Structure.HOUSE_BLOCK_ID: return "Residential Block";
                     case Structure.DOCK_ID: return "Dock";
                     case Structure.DOCK_2_ID: return "Improved dock";
                     case Structure.DOCK_3_ID: return "Advanced dock";
@@ -222,7 +222,7 @@ public static class Localization
                     case Structure.CONTAINER_ID: return "Содержит ресурсы.";
                     case Structure.LIFESTONE_ID: return "Источает энергию жизни.";
                     case Structure.TENT_ID: return "Временное жильё.";                  
-                    case Structure.HOUSE_5_ID: return "В жилом блоке могут проживать до " + House.GetHousingValue(id) + " человек.";
+                    case Structure.HOUSE_BLOCK_ID: return "В жилом блоке могут проживать до " + House.GetHousingValue(id) + " человек.";
                     case Structure.HOUSING_MAST_6_ID: return "Массивный жилой комплекс, вмещающий " + House.GetHousingValue(id) + " человек";
                     case Structure.DOCK_ID:
                         {
@@ -304,7 +304,7 @@ public static class Localization
                     case Structure.CONTAINER_ID: return "Contain resources.";
                     case Structure.LIFESTONE_ID: return "Emit lifepower.";
                     case Structure.TENT_ID: return "Temporary housing.";                   
-                    case Structure.HOUSE_5_ID: return "Residential block can be house for " + House.GetHousingValue(id) + " persons.";
+                    case Structure.HOUSE_BLOCK_ID: return "Residential block can be house for " + House.GetHousingValue(id) + " persons.";
                     case Structure.HOUSING_MAST_6_ID: return "Massive residential complex for " + House.GetHousingValue(id) + " persons";
                     case Structure.DOCK_ID:
                         {
