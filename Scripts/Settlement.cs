@@ -9,12 +9,13 @@ public sealed class Settlement : House
     private static float gardensCf = 0f, shopsCf = 0f;
     private static List<Settlement> settlements;
 
+    public bool needRecalculation = false; // hot
     public byte pointsFilled { get; private set; }
     public byte maxPoints { get; private set; }
     private float updateTimer = UPDATE_TIME;
 
     public const byte MAX_POINTS_COUNT = 60;
-    private const byte MAX_HOUSING_LEVEL = 8, FIRST_EXTENSION_LEVEL = 3, SECOND_EXTENSION_LEVEL = 6;
+    public const byte MAX_HOUSING_LEVEL = 8, FIRST_EXTENSION_LEVEL = 3, SECOND_EXTENSION_LEVEL = 6;
     private const float UPDATE_TIME = 1f, 
         SHOPS_DEMAND_CF = 0.02f, GARDENS_DEMAND_CF = 0.01f
         ;    
@@ -41,7 +42,7 @@ public sealed class Settlement : House
             case 6: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_6")); break;
             case 5: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_5")); break;
             case 4: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_4")); break;
-            case 3: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_1")); break;
+            case 3: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_3")); break;
             case 2: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_2")); break;
             default: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_1")); break;
         }
@@ -65,6 +66,7 @@ public sealed class Settlement : House
             settlements.Add(this);
             maxPoints = GetMaxPoints();
         }
+        //
     }
     private byte GetMaxPoints()
     {
@@ -90,8 +92,14 @@ public sealed class Settlement : House
             if (updateTimer <= 0)
             {
                 if (pointsFilled < maxPoints) CreateNewBuilding(false);
-                updateTimer = UPDATE_TIME * level;
+                updateTimer = UPDATE_TIME;
+                if (level > 1) updateTimer += UPDATE_TIME;
             }
+        }
+        if (needRecalculation)
+        {
+            Recalculate();
+            needRecalculation = false;
         }
     }
 
@@ -102,6 +110,9 @@ public sealed class Settlement : House
             print("settlement error");
             return;
         }
+
+        var colony = GameMaster.realMaster.colonyController;
+        if (colony.energySurplus <= 0) return; // action label?
 
         // dependency : recalculate()
         int prevHousing = housing;
@@ -139,9 +150,16 @@ public sealed class Settlement : House
                                 type = SettlementStructureType.DoublesizeHouse;
                                 extended = true;
                             }
+                            else type = SettlementStructureType.House;
                             break;
-                        case SettlementStructureType.Garden: gardensCf += s2.value; break;
-                        case SettlementStructureType.Shop: shopsCf += s2.value; break;
+                        case SettlementStructureType.Garden:
+                            gardensCf += s2.value;
+                            type = SettlementStructureType.Garden;
+                            break;
+                        case SettlementStructureType.Shop:
+                            shopsCf += s2.value;
+                            type = SettlementStructureType.Shop;
+                            break;
                     }
                     energySurplus += onePartEnergyConsumption;
                     xpos = s.surfaceRect.x / SettlementStructure.CELLSIZE;
@@ -169,9 +187,7 @@ public sealed class Settlement : House
                 }
             }
         }
-        //
-
-        var colony = GameMaster.realMaster.colonyController;
+        //        
         int citizensCount = colony.citizenCount;
         float neededShopsCf = citizensCount * SHOPS_DEMAND_CF, neededGardensCf = citizensCount * GARDENS_DEMAND_CF;
         bool needHousing = colony.totalLivespace <= citizensCount, needGardens = neededGardensCf >= 1f, needShops = neededShopsCf >= 1f;
@@ -188,30 +204,34 @@ public sealed class Settlement : House
 
             if (emptyPositions.Count > 0)
             {
-                var chosenPosition = emptyPositions[Random.Range(0, emptyPositions.Count - 1)];
+                var chosenPosition = emptyPositions[Random.Range(0, emptyPositions.Count - 1)];                
                 xpos = chosenPosition.x; zpos = chosenPosition.y;
                 var chosenType = SettlementStructureType.Empty;
                 float f = Random.value;
                 if (needHousing)
                 {
-                    if (needGardens)
+                    if (forced) chosenType = SettlementStructureType.House;
+                    else
                     {
-                        if (needShops)
+                        if (needGardens)
                         {
-                            if (f <= 0.7f) chosenType = SettlementStructureType.House;
+                            if (needShops)
+                            {
+                                if (f <= 0.7f) chosenType = SettlementStructureType.House;
+                                else
+                                {
+                                    if (f > 0.85f) chosenType = SettlementStructureType.Shop;
+                                    else chosenType = SettlementStructureType.Garden;
+                                }
+                            }
                             else
                             {
-                                if (f > 0.85f) chosenType = SettlementStructureType.Shop;
-                                else chosenType = SettlementStructureType.Garden;
+                                if (f > 0.7f) chosenType = SettlementStructureType.Garden;
+                                else chosenType = SettlementStructureType.House;
                             }
                         }
-                        else
-                        {
-                            if (f > 0.7f) chosenType = SettlementStructureType.Garden;
-                            else chosenType = SettlementStructureType.House;
-                        }
+                        else chosenType = SettlementStructureType.House;
                     }
-                    else chosenType = SettlementStructureType.House;
                 }
                 else
                 {
@@ -227,72 +247,519 @@ public sealed class Settlement : House
                     else
                     {
                         if (needShops) chosenType = SettlementStructureType.Shop;
+                        else
+                        {
+                            if (forced) chosenType = SettlementStructureType.House;
+                        }
                     }
                 }
                 if (chosenType != SettlementStructureType.Empty)
                 {
                     var s = GetStructureByID(SETTLEMENT_STRUCTURE_ID);
                     var s2 = (s as SettlementStructure);
-                    byte buildLevel = level;
-                    if (level >= FIRST_EXTENSION_LEVEL)
+                    byte buildLevel = FIRST_EXTENSION_LEVEL - 1;
+                    if (buildLevel > level) buildLevel = level;
+                    if (level >= FIRST_EXTENSION_LEVEL & chosenType == SettlementStructureType.House)
                     {
                         bool upperRowCheck = zpos + 1 < x,
                              lowerRowCheck = zpos - 1 >= 0,
                              rightColumnCheck = xpos + 1 < x,
-                             leftColumnCheck = xpos - 1 >= 0;
-                        if (level < SECOND_EXTENSION_LEVEL)
-                        { // 2 x 2
+                             leftColumnCheck = xpos - 1 >= 0,
+                             buildDoublesize = false
+                             ;
+                        if (level < SECOND_EXTENSION_LEVEL) {
+                            // 2 x 2
                             var localMap = new bool[3, 3];
                             localMap[0, 0] = (leftColumnCheck & lowerRowCheck) && (map[xpos - 1, zpos - 1] == chosenType);
                             localMap[0, 1] = lowerRowCheck && (map[xpos, zpos - 1] == chosenType);
                             localMap[0, 2] = (rightColumnCheck & lowerRowCheck) && map[xpos + 1, zpos - 1] == chosenType;
-                            localMap[1, 0] = leftColumnCheck && map[xpos - 1, zpos] == chosenType ;
-                            localMap[1, 2] = rightColumnCheck && map[xpos + 1, zpos] == chosenType ;
-                            localMap[2, 0] = (leftColumnCheck & upperRowCheck) && map[xpos - 1, zpos + 1] == chosenType ;
-                            localMap[2, 1] = upperRowCheck && map[xpos, zpos + 1] == chosenType ;
-                            localMap[2, 2] = (rightColumnCheck & upperRowCheck) && map[xpos + 1, zpos + 1] == chosenType ;
-
-                            if (localMap[0,0] & localMap[0, 1] & localMap[1, 0])
+                            localMap[1, 0] = leftColumnCheck && map[xpos - 1, zpos] == chosenType;
+                            localMap[1, 2] = rightColumnCheck && map[xpos + 1, zpos] == chosenType;
+                            localMap[2, 0] = (leftColumnCheck & upperRowCheck) && map[xpos - 1, zpos + 1] == chosenType;
+                            localMap[2, 1] = upperRowCheck && map[xpos, zpos + 1] == chosenType;
+                            localMap[2, 2] = (rightColumnCheck & upperRowCheck) && map[xpos + 1, zpos + 1] == chosenType;
+                            if (localMap[0, 0] & localMap[0, 1] & localMap[1, 0])
                             {
                                 xpos--; zpos--;
-                                energySurplus -= 3 * onePartEnergyConsumption;
+                                buildDoublesize = true;
                             }
                             else
                             {
-                                if (localMap[2,0]& localMap[1,0] & localMap[2,1])
+                                if (localMap[2, 0] & localMap[1, 0] & localMap[2, 1])
                                 {
                                     zpos--;
-                                    energySurplus -= 3 * onePartEnergyConsumption;
+                                    buildDoublesize = true;
                                 }
                                 else
                                 {
-                                    if (localMap[0,2] & localMap[0,1] & localMap[1,2])
+                                    if (localMap[0, 2] & localMap[0, 1] & localMap[1, 2])
                                     {
                                         xpos--; zpos++;
-                                        energySurplus -= 3 * onePartEnergyConsumption;
+                                        buildDoublesize = true;
+                                    }
+                                    else buildDoublesize = localMap[2, 2] & localMap[2, 1] & localMap[1, 2];
+                                }
+                            }
+                            if (buildDoublesize)
+                            {
+                                buildLevel = level < SECOND_EXTENSION_LEVEL ? level : (byte)(SECOND_EXTENSION_LEVEL - 1);
+                            }
+                        }
+                        else
+                        { // 3 x 3
+                            var localMap = new bool[5, 5];
+                            bool upperRowCheck2 = zpos + 2 < x,
+                                lowerRowCheck2 = zpos - 2 >= 0,
+                                rightColumnCheck2 = xpos + 2 < x,
+                                leftColumnCheck2 = xpos - 2 >= 0;
+                            SettlementStructureType exType = SettlementStructureType.DoublesizeHouse, mtype = SettlementStructureType.Empty; // изменить, если добавятся другие типы
+                            { // собрано для удобного сворачивания
+                                // x - 2
+                                if (leftColumnCheck2)
+                                {
+                                    int x2 = xpos - 2;
+                                    if (lowerRowCheck2)
+                                    {
+                                        mtype = map[x2, zpos - 2];
+                                        if (mtype == chosenType) localMap[0, 0] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[0, 0] = true;
+                                                localMap[0, 1] = true;
+                                                localMap[1, 0] = true;
+                                                localMap[1, 1] = true;
+                                            }
+                                        }
+                                    }
+                                    if (lowerRowCheck & !localMap[0, 1])
+                                    {
+                                        mtype = map[x2, zpos - 1];
+                                        if (mtype == chosenType) localMap[0, 1] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[0, 1] = true;
+                                                localMap[0, 2] = true;
+                                                localMap[1, 1] = true;
+                                                localMap[1, 2] = true;
+                                            }
+                                        }
+                                    }
+                                    if (!localMap[0, 2])
+                                    {
+                                        mtype = map[x2, zpos];
+                                        if (mtype == chosenType) localMap[0, 2] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[0, 2] = true;
+                                                localMap[0, 3] = true;
+                                                localMap[1, 2] = true;
+                                                localMap[1, 3] = true;
+                                            }
+                                        }
+                                    }
+                                    if (upperRowCheck & !localMap[0, 3])
+                                    {
+                                        mtype = map[x2, zpos + 1];
+                                        if (mtype == chosenType) localMap[0, 3] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[0, 3] = true;
+                                                localMap[0, 4] = true;
+                                                localMap[1, 3] = true;
+                                                localMap[1, 4] = true;
+                                            }
+                                        }
+                                    }
+                                    if (upperRowCheck2 & !localMap[0, 4])
+                                    {
+                                        localMap[0, 4] = map[x2, zpos + 2] == chosenType;
+                                    }
+                                }
+                                // x - 1
+                                if (leftColumnCheck)
+                                {
+                                    int x2 = xpos - 1;
+                                    if (lowerRowCheck2 & !localMap[1, 0])
+                                    {
+                                        mtype = map[x2, zpos - 2];
+                                        if (mtype == chosenType) localMap[1, 0] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[1, 0] = true;
+                                                localMap[1, 1] = true;
+                                                localMap[2, 0] = true;
+                                                localMap[2, 1] = true;
+                                            }
+                                        }
+                                    }
+                                    // не сливать в одно условие, так как присваивание результата условия может перезаписать значение, установленное ранее
+                                    if (!localMap[1, 1] & lowerRowCheck) localMap[1, 1] = (map[x2, zpos - 1] == chosenType);
+                                    if (!localMap[1, 2]) localMap[1, 2] = (map[x2, zpos] == chosenType);
+                                    if (upperRowCheck & !localMap[1, 3])
+                                    {
+                                        mtype = map[x2, zpos + 1];
+                                        if (mtype == chosenType) localMap[1, 3] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[1, 3] = true;
+                                                localMap[1, 4] = true;
+                                                localMap[2, 3] = true;
+                                                localMap[2, 4] = true;
+                                            }
+                                        }
+                                    }
+                                    if (upperRowCheck2 & !localMap[1, 4])
+                                    {
+                                        localMap[1, 4] = map[x2, zpos + 2] == chosenType;
+                                    }
+                                }
+                                // x
+                                if (lowerRowCheck2 & !localMap[2, 0])
+                                {
+                                    mtype = map[xpos, zpos - 2];
+                                    if (mtype == chosenType) localMap[2, 0] = true;
+                                    else
+                                    {
+                                        if (mtype == exType)
+                                        {
+                                            localMap[2, 0] = true;
+                                            localMap[2, 1] = true;
+                                            localMap[3, 0] = true;
+                                            localMap[3, 1] = true;
+                                        }
+                                    }
+                                }
+                                if (lowerRowCheck & !localMap[2, 1])
+                                {
+                                    localMap[2, 1] = map[xpos, zpos - 1] == chosenType;
+                                }
+                                if (upperRowCheck & !localMap[2, 3])
+                                {
+                                    mtype = map[xpos, zpos + 1];
+                                    if (mtype == chosenType) localMap[2, 3] = true;
+                                    else
+                                    {
+                                        if (mtype == exType)
+                                        {
+                                            localMap[2, 3] = true;
+                                            localMap[2, 4] = true;
+                                            localMap[3, 3] = true;
+                                            localMap[3, 4] = true;
+                                        }
+                                    }
+                                }
+                                if (upperRowCheck2 & !localMap[2, 4])
+                                {
+                                    localMap[2, 4] = map[xpos, zpos + 2] == chosenType;
+                                }
+                                // x + 1
+                                if (rightColumnCheck)
+                                {
+                                    int x2 = xpos + 1;
+                                    if (lowerRowCheck2 & !localMap[3, 0])
+                                    {
+                                        mtype = map[x2, zpos - 2];
+                                        if (mtype == chosenType) localMap[3, 0] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[3, 0] = true;
+                                                localMap[3, 1] = true;
+                                                localMap[4, 0] = true;
+                                                localMap[4, 1] = true;
+                                            }
+                                        }
+                                    }
+                                    if (lowerRowCheck & !localMap[3, 1])
+                                    {
+                                        mtype = map[x2, zpos - 1];
+                                        if (mtype == chosenType) localMap[3, 1] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[3, 1] = true;
+                                                localMap[3, 2] = true;
+                                                localMap[4, 1] = true;
+                                                localMap[4, 2] = true;
+                                            }
+                                        }
+                                    }
+                                    if (!localMap[3, 2])
+                                    {
+                                        mtype = map[x2, zpos];
+                                        if (mtype == chosenType) localMap[3, 2] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[3, 2] = true;
+                                                localMap[3, 3] = true;
+                                                localMap[4, 2] = true;
+                                                localMap[4, 3] = true;
+                                            }
+                                        }
+                                    }
+                                    if (upperRowCheck & !localMap[3, 3])
+                                    {
+                                        mtype = map[x2, zpos + 1];
+                                        if (mtype == chosenType) localMap[3, 3] = true;
+                                        else
+                                        {
+                                            if (mtype == exType)
+                                            {
+                                                localMap[3, 3] = true;
+                                                localMap[3, 4] = true;
+                                                localMap[4, 3] = true;
+                                                localMap[4, 4] = true;
+                                            }
+                                        }
+                                    }
+                                    if (upperRowCheck2 & !localMap[3, 4])
+                                    {
+                                        localMap[3, 4] = map[x2, zpos + 2] == chosenType;
+                                    }
+                                }
+                                // x + 2
+                                if (rightColumnCheck2)
+                                {
+                                    int x2 = xpos + 2;
+                                    if (lowerRowCheck2 & !localMap[4, 0])
+                                    {
+                                        localMap[4, 0] = map[x2, zpos - 2] == chosenType;
+                                    }
+                                    if (lowerRowCheck & !localMap[4, 1])
+                                    {
+                                        localMap[4, 1] = map[x2, zpos - 1] == chosenType;
+                                    }
+                                    if (!localMap[4, 2])
+                                    {
+                                        localMap[4, 2] = map[x2, zpos] == chosenType;
+                                    }
+                                    if (upperRowCheck & !localMap[4, 3])
+                                    {
+                                        localMap[4, 3] = map[x2, zpos + 1] == chosenType;
+                                    }
+                                    if (upperRowCheck2 & !localMap[4, 4])
+                                    {
+                                        localMap[4, 4] = map[x2, zpos + 2] == chosenType;
+                                    }
+                                }
+                            }
+
+                            bool buildTriplesize = false;
+                            int doubleSizeX = xpos, doubleSizeZ = zpos;
+                            if ( localMap[3, 2] ) { // проверка на центр правой стороны (3,2)
+                                if (localMap[2, 3] & localMap[3, 3])
+                                { // right - up (central check included)
+                                    if (map[xpos, zpos + 1] == exType)
+                                    {
+                                        buildTriplesize = (map[xpos + 1, zpos] == chosenType) && (map[xpos + 2, zpos] == chosenType)
+                                            && (map[xpos + 2, zpos + 1] == chosenType) && (map[xpos + 2, zpos + 2] == chosenType);
                                     }
                                     else
                                     {
-                                        if (localMap[2, 2] & localMap[2, 1] & localMap[1, 2])
-                                        {     
-                                            energySurplus -= 3 * onePartEnergyConsumption;
+                                        if (map[xpos + 1, zpos + 1] == exType)
+                                        {
+                                            buildTriplesize = (map[xpos + 1, zpos] == chosenType) && (map[xpos + 2, zpos] == chosenType)
+                                                 && (map[xpos, zpos + 1] == chosenType) && (map[xpos, zpos + 2] == chosenType);
+                                        }
+                                        else
+                                        {
+                                            if (map[xpos + 1, zpos] == exType)
+                                            {                                                
+                                                buildTriplesize = (map[xpos + 1, zpos + 2] == chosenType) && (map[xpos + 2, zpos + 2] == chosenType)
+                                                    && (map[xpos, zpos + 1] == chosenType) && (map[xpos, zpos + 2] == chosenType);
+                                            }
+                                            else
+                                            { // no extended
+                                                if (localMap[2, 4] & localMap[3, 4] & localMap[4, 4] & localMap[4, 3] & localMap[4, 2])
+                                                {
+                                                    buildTriplesize = true;
+                                                }
+                                                else {
+                                                    if (localMap[2, 1] & localMap[3, 1] & localMap[4, 1])
+                                                    {
+                                                        buildTriplesize = true;
+                                                        zpos--;
+                                                    }
+                                                    else buildDoublesize = true;
+                                                }
+                                            }
                                         }
                                     }
+                                }
+                                else
+                                { // right - bottom (central check included)
+                                    if (localMap[2,1] & localMap[3,1])
+                                    {
+                                        if (lowerRowCheck2 && map[xpos, zpos - 2] == exType)
+                                        {
+                                            if (localMap[3, 2] & localMap[4, 2] & localMap[4, 1] & localMap[4, 0]) buildTriplesize = true;
+                                        }
+                                        else
+                                        {
+                                            if (lowerRowCheck2 && map[xpos + 1, zpos - 2] == exType)
+                                            {
+                                                if (localMap[2, 0] & localMap[2, 1] & localMap[3, 2] & localMap[3, 4]) buildTriplesize = true;
+                                            }
+                                            else
+                                            {
+                                                if (map[xpos + 1, zpos - 1] == exType)
+                                                {
+                                                    if (localMap[2, 1] & localMap[2, 0] & localMap[3, 0] & localMap[4, 0]) buildTriplesize = true;
+                                                }
+                                                else
+                                                { // no extended
+                                                    if (localMap[2, 0] & localMap[3, 0] & localMap[4, 0] & localMap[4, 1] & localMap[4, 2]) buildTriplesize = true;
+                                                    else
+                                                    {
+                                                        buildDoublesize = true;
+                                                        doubleSizeZ = zpos - 1;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (buildTriplesize) zpos -= 2;
+                                    }
+                                }   
+                            }
+                            if (!buildTriplesize & localMap[1,2])
+                            { // левая сторона
+                                if (localMap[1,3] & localMap[2,3])
+                                { // left - up
+                                    if (leftColumnCheck2 && map[xpos - 2, zpos] == exType)
+                                    {
+                                        if (localMap[0, 4] & localMap[1, 4] & localMap[2, 4] & localMap[2, 3])
+                                        {
+                                            buildTriplesize = true;
+                                            xpos -= 2;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (leftColumnCheck2 && map[xpos - 2, zpos + 1] == exType)
+                                        {
+                                            if (localMap[0,2] & localMap[1,2] & localMap[2,3] & localMap[2,4])
+                                            {
+                                                buildTriplesize = true;
+                                                xpos -= 2;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (map[xpos - 1, zpos + 1] == exType)
+                                            {
+                                                if (localMap[0,2] & localMap[0,3] & localMap[0,4])
+                                                {
+                                                    buildTriplesize = true;
+                                                    xpos --;
+                                                }
+                                            }
+                                            else
+                                            { // no extended
+                                                if (localMap[0,2] & localMap[0,3] & localMap[0, 4] & localMap[1,4] & localMap[2,4])
+                                                {
+                                                    buildTriplesize = true;
+                                                    xpos -= 2;
+                                                }
+                                                else
+                                                {
+                                                    buildDoublesize = true;
+                                                    doubleSizeX = xpos - 1;
+                                                    doubleSizeZ = zpos;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (localMap[1,1] & localMap[2,1])
+                                    { // left - bottom
+                                        if (leftColumnCheck2 && map[xpos - 2, zpos - 1] == exType)
+                                        {
+                                            if (localMap[0,0] & localMap[1,0] & localMap[2,0])
+                                            {
+                                                buildTriplesize = true;
+                                                xpos -= 2;
+                                                zpos -= 2;
+                                            }                                            
+                                        }
+                                        else
+                                        {
+                                            if ( (leftColumnCheck2 & lowerRowCheck2) && map[xpos - 2, zpos - 2] == exType )
+                                            {
+                                                if (localMap[0,2] & localMap[2,0])
+                                                {
+                                                    buildTriplesize = true;
+                                                    xpos -= 2;
+                                                    zpos -= 2;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (lowerRowCheck2 && map[xpos - 1, zpos - 2] == exType)
+                                                {
+                                                    if (localMap[0,0] & localMap[0,1] & localMap[0, 2])
+                                                    {
+                                                        buildTriplesize = true;
+                                                        xpos -= 2;
+                                                        zpos -= 2;
+                                                    }
+                                                }
+                                                else
+                                                { // no extended
+                                                    if (localMap[0,2] & localMap[0,1] & localMap[0,0] & localMap[1,0] & localMap[2,0])
+                                                    {
+                                                        buildTriplesize = true;
+                                                        xpos -= 2;
+                                                        zpos -= 2;
+                                                    }
+                                                    else
+                                                    {
+                                                        buildDoublesize = true;
+                                                        doubleSizeX = xpos - 1;
+                                                        doubleSizeZ = zpos - 1;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (buildTriplesize & buildDoublesize) buildDoublesize = false;
+                            if (buildDoublesize)
+                            {
+                                xpos = doubleSizeX;
+                                zpos = doubleSizeZ;
+                                buildLevel = SECOND_EXTENSION_LEVEL - 1;
+                            }
+                            else
+                            {
+                                if (buildTriplesize)
+                                {
+                                    buildLevel = level;
                                 }
                             }
                         }
                     }
                     s2.SetData(chosenType, buildLevel, this);
                     s2.SetBasement(basement, new PixelPosByte(xpos * SettlementStructure.CELLSIZE, zpos * SettlementStructure.CELLSIZE));
-
-                    switch (s2.type)
-                    {
-                        case SettlementStructureType.House: housing += (int)s2.value; break;
-                        case SettlementStructureType.Garden: gardensCf += s2.value; break;
-                        case SettlementStructureType.Shop: shopsCf += s2.value; break;
-                    }
-                    energySurplus += onePartEnergyConsumption;
-                    pointsFilled++;
+                    Recalculate();
                 }
             }            
         }
@@ -300,7 +767,7 @@ public sealed class Settlement : House
         if (prevEnergySurplus != energySurplus) colony.RecalculatePowerGrid();
         if (prevHousing != housing) colony.RecalculateHousing();
     }
-    public void Recalculate()
+    private void Recalculate()
     {
         // dependency : create new building()
         int prevHousing = housing;
@@ -344,15 +811,7 @@ public sealed class Settlement : House
 
     override public bool IsLevelUpPossible(ref string refusalReason)
     {
-        if (level < GameMaster.realMaster.colonyController.hq.level)
-        {
-            if (pointsFilled == maxPoints)
-            {
-                refusalReason = Localization.GetPhrase(LocalizedPhrase.NoFreeSlots);
-                return false;
-            }
-            else return true;
-        }
+        if (level < GameMaster.realMaster.colonyController.hq.level) return true;
         else
         {
             refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
@@ -375,6 +834,7 @@ public sealed class Settlement : House
         {
             level++;
             SetModel();
+            maxPoints = GetMaxPoints();
         }
         else
         {
@@ -386,10 +846,12 @@ public sealed class Settlement : House
     override public ResourceContainer[] GetUpgradeCost()
     {
         ResourceContainer[] cost = ResourcesCost.GetSettlementUpgradeCost(level);
-        float discount = GameMaster.realMaster.upgradeDiscount;
+        float discount = GameMaster.realMaster.upgradeDiscount,
+            levelMultiplier = 1f;
+        if (level > 1) levelMultiplier = 2f;
         for (int i = 0; i < cost.Length; i++)
         {
-            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - discount));
+            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - discount) * levelMultiplier);
         }
         return cost;
     }

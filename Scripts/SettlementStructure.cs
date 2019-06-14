@@ -38,25 +38,44 @@ public sealed class SettlementStructure : Structure
         model.transform.localPosition = Vector3.zero;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }
-
+    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        basement = b;
+        surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
+        float f = Random.value;
+        if (f > 0.5f)
+        {
+            if (f > 0.75f) modelRotation = 6;
+            else modelRotation = 4;
+        }
+        else
+        {
+            if (f < 0.25f) modelRotation = 2;
+        }
+        if (transform.childCount == 0) SetModel();
+        basement.AddStructure(this);
+    }
     public void SetData(Settlement.SettlementStructureType i_type, byte i_level, Settlement i_settlement)
     {
         type = i_type;
         level = i_level;
-        if (level > 1)
+        if (level >= Settlement.FIRST_EXTENSION_LEVEL)
         {
-            if (level == 2) surfaceRect = new SurfaceRect(0, 0, 2 * CELLSIZE);
-            else
-            {
-                if (level == 3) surfaceRect = new SurfaceRect(0, 0, 3 * CELLSIZE);
-            }
+            if (level < Settlement.SECOND_EXTENSION_LEVEL) surfaceRect = new SurfaceRect(0, 0, 2 * CELLSIZE);
+            else surfaceRect = new SurfaceRect(0, 0, 3 * CELLSIZE);
         }
+        else surfaceRect = new SurfaceRect(0, 0, CELLSIZE);
         switch (type)
         {
             case Settlement.SettlementStructureType.House:
                 switch (level)
                 {
-                    case 0: value = 5f;  break;
+                    case 6: value = 522f; break;
+                    case 5:
+                    case 4: 
+                    case 3: value = 112f; break;
+                    case 2: value = 18f;break;
                     default: value = 10f; break;
                 }
                 break;
@@ -74,7 +93,7 @@ public sealed class SettlementStructure : Structure
         else destroyed = true;
         PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
         basement = null;
-        if (settlement != null) settlement.Recalculate();
+        if (settlement != null) settlement.needRecalculation = true;
         Destroy(gameObject);
     }
 }

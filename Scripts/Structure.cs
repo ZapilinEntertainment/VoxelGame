@@ -1164,6 +1164,7 @@ public class Structure : MonoBehaviour
     // в финальном виде копипастить в потомков
     protected void SetStructureData(SurfaceBlock b, PixelPosByte pos)
     {
+        // dependency - SettlementStructure.setBasement()
         //#setStructureData
         if (b.type == BlockType.Cave & isBasement)
         {

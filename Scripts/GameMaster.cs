@@ -291,10 +291,12 @@ public sealed class GameMaster : MonoBehaviour
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 
+                        //testzone
                         Structure s = HeadQuarters.GetHQ(GameConstants.HQ_MAX_LEVEL);
                         weNeedNoResources = true;
-                        //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                        
 
+                        //eo testzone
+                        //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                       
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
 
@@ -439,7 +441,7 @@ public sealed class GameMaster : MonoBehaviour
             {
                 Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
-                UIController.current.Select(s);
+               // UIController.current.Select(s);
             }
 
             sx = mainChunk.GetSurfaceBlock();

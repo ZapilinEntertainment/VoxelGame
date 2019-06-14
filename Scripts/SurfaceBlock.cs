@@ -67,6 +67,10 @@ public struct SurfaceRect
     }
     public static readonly SurfaceRect one;
     public static readonly SurfaceRect full;
+    public override string ToString()
+    {
+        return '(' + x.ToString() + ' ' + z.ToString() +") size:" + size.ToString();
+    }
 }
 
 public class SurfaceBlock : Block
