@@ -11,7 +11,7 @@ public enum LocalizedWord : ushort
 public enum LocalizedPhrase : ushort
 {
     AddBuilding,ArtifactNotResearched, AffectionTypeNotMatch,
-    CannotReachDestination, ClearSlot, ConnectionLost, CrewFoundArtifact, GoOnATrip, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, PressToTurnOn, RecallExpedition, StopDig, StopGather, UnoccupiedTransmitters, RequiredSurface,
+    CannotReachDestination, ClearSlot, ConnectionLost, ConvertToBlock, CrewFoundArtifact, GoOnATrip, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather, UnoccupiedTransmitters, RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
     ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -2413,6 +2413,7 @@ public static class Localization
                         case LocalizedPhrase.CannotReachDestination: return "не может достичь цели";
                         case LocalizedPhrase.ClearSlot: return "< Очистить слот >";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
+                        case LocalizedPhrase.ConvertToBlock: return "Перестроить в блок"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
                         case LocalizedPhrase.MembersCount: return "Число участников";
@@ -2423,6 +2424,7 @@ public static class Localization
                         case LocalizedPhrase.NoShuttles: return "Нет челноков";
                         case LocalizedPhrase.NoSuitableArtifacts: return "Нет подходящих артефактов";
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
+                        case LocalizedPhrase.NotEnoughEnergySupply: return "Недостаточно мощная энергосеть";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.PointsSec: return " ед./сек";
                         case LocalizedPhrase.PerSecond: return "в секунду";
@@ -2488,6 +2490,7 @@ public static class Localization
                         case LocalizedPhrase.CannotReachDestination: return "cannot reach destination";
                         case LocalizedPhrase.ClearSlot: return "< Clear slot >";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
+                        case LocalizedPhrase.ConvertToBlock: return "Convert to block"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Our crew has found an artifact!";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
                         case LocalizedPhrase.MembersCount: return "Members count";
@@ -2498,6 +2501,7 @@ public static class Localization
                         case LocalizedPhrase.NoShuttles: return "No shuttles available";
                         case LocalizedPhrase.NoSuitableArtifacts: return "No suitable artifacts";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
+                        case LocalizedPhrase.NotEnoughEnergySupply: return "Energy supply is low";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.PointsSec: return "points/sec";
                         case LocalizedPhrase.PerSecond: return "per second";

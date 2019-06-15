@@ -218,12 +218,6 @@ public class UIBuildingObserver : UIObserver {
                     energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
                     energyImage.enabled = true;
                 }
-                if (observingBuilding.id == Structure.SETTLEMENT_CENTER_ID)
-                {
-                    var st = observingBuilding as Settlement;
-                    additionalText.text = st.pointsFilled.ToString() + " / " + st.maxPoints.ToString();
-                    additionalButton.GetComponent<Button>().interactable = st.pointsFilled < Settlement.MAX_POINTS_COUNT;
-                }
             }
             //# eo redraw
 
@@ -234,7 +228,20 @@ public class UIBuildingObserver : UIObserver {
                 if (answer != s) {
                     if (answer == string.Empty)
                     {
-                        upgradeButtonText.text = Localization.GetWord(LocalizedWord.Upgrade);
+                        if (observingBuilding.id != Structure.SETTLEMENT_CENTER_ID)
+                            upgradeButtonText.text = Localization.GetWord(LocalizedWord.Upgrade);
+                        else
+                        {
+                            var sc = observingBuilding as Settlement;
+                            if (sc.level == Settlement.MAX_HOUSING_LEVEL & sc.pointsFilled == Settlement.MAX_POINTS_COUNT)
+                            {
+                                upgradeButtonText.text = Localization.GetPhrase(LocalizedPhrase.ConvertToBlock);
+                            }
+                            else
+                            {
+                                upgradeButtonText.text = Localization.GetWord(LocalizedWord.Upgrade);
+                            }
+                        }
                         upgradeButtonText.color = Color.white;
                     }
                     else {
@@ -263,6 +270,15 @@ public class UIBuildingObserver : UIObserver {
                         }
                     }
                 }
+            }
+
+            if (observingBuilding.id == Structure.SETTLEMENT_CENTER_ID)
+            {
+                var sc = observingBuilding as Settlement;
+                showingHousing = sc.housing;
+                housingValue.text = showingHousing.ToString();
+                additionalText.text = sc.pointsFilled.ToString() + " / " + sc.maxPoints.ToString();
+                additionalButton.GetComponent<Button>().interactable = sc.pointsFilled < Settlement.MAX_POINTS_COUNT;
             }
         }
 	}
@@ -303,6 +319,11 @@ public class UIBuildingObserver : UIObserver {
             }
             RefreshResourcesData();
         }
+    }
+    public void CancelButton()
+    {
+        upgradeInfoPanel.SetActive(false);
+        infoPanel_InUpgradeMode = true;
     }
 
     void RefreshResourcesData() {
@@ -385,9 +406,8 @@ public class UIBuildingObserver : UIObserver {
         {
             canBeUpgraded = false;
             upgradeButton.gameObject.SetActive(false);
-            upgradeInfoPanel.SetActive(false);
+            if (upgradeInfoPanel.activeSelf) upgradeInfoPanel.SetActive(false);
         }
-        upgradeInfoPanel.SetActive(false);
     }
 
     public void Upgrade() {
@@ -400,10 +420,11 @@ public class UIBuildingObserver : UIObserver {
             if (infoPanel_InUpgradeMode)
             {
                 observingBuilding.LevelUp(true);
+                upgradeInfoPanel.SetActive(false);
                 if (observingBuilding.upgradedIndex < 0)
                 {
                     CheckUpgradeAvailability();
-                }
+                }                
             }
             else
             {
@@ -412,6 +433,7 @@ public class UIBuildingObserver : UIObserver {
                 bool x = s2.pointsFilled < Settlement.MAX_POINTS_COUNT;
                 additionalButton.GetComponent<Button>().interactable = x;
                 if (x == false) upgradeInfoPanel.SetActive(false);
+                StatusUpdate();
             }
         }
     }

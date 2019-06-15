@@ -6,6 +6,7 @@ public sealed class Settlement : House
 {
     // изменение цены доп зданий в resource cost
     public enum SettlementStructureType : byte { Empty, House, Garden, Shop, DoublesizeHouse,Extension, SystemBlocked}
+    public static byte maxAchievedLevel { get; private set; }
     private static float gardensCf = 0f, shopsCf = 0f;
     private static List<Settlement> settlements;
 
@@ -24,14 +25,26 @@ public sealed class Settlement : House
     {
         AddToResetList(typeof(Settlement));
         settlements = new List<Settlement>();
+        maxAchievedLevel = 1;
     }
     public static void ResetStaticData()
     {
         settlements = new List<Settlement>();
         gardensCf = 0f;
         shopsCf = 0f;
+        maxAchievedLevel = 1;
     }
 
+    public void SetLevel(byte i_level)
+    {
+        level = i_level;
+        if (basement != null)
+        {
+            SetModel();
+            maxPoints = GetMaxPoints();
+            Recalculate();
+        }
+    }
    override protected void SetModel()
     {
         //switch skin index
@@ -39,6 +52,8 @@ public sealed class Settlement : House
         if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
         switch (level)
         {
+            case 8:
+            case 7:
             case 6: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_6")); break;
             case 5: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_5")); break;
             case 4: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_4")); break;
@@ -112,7 +127,11 @@ public sealed class Settlement : House
         }
 
         var colony = GameMaster.realMaster.colonyController;
-        if (colony.energySurplus <= 0) return; // action label?
+        if (colony.energySurplus <= 0)
+        {
+            if (forced) GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NotEnoughEnergySupply));
+            return;
+        }
 
         // dependency : recalculate()
         int prevHousing = housing;
@@ -190,7 +209,7 @@ public sealed class Settlement : House
         //        
         int citizensCount = colony.citizenCount;
         float neededShopsCf = citizensCount * SHOPS_DEMAND_CF, neededGardensCf = citizensCount * GARDENS_DEMAND_CF;
-        bool needHousing = colony.totalLivespace <= citizensCount, needGardens = neededGardensCf >= 1f, needShops = neededShopsCf >= 1f;
+        bool needHousing = colony.totalLivespace <= citizensCount, needGardens = neededGardensCf > gardensCf, needShops = neededShopsCf > shopsCf;
         if (needHousing | needGardens | needShops | forced)
         {                          
             var emptyPositions = new List<PixelPosByte>();
@@ -206,6 +225,7 @@ public sealed class Settlement : House
             {
                 var chosenPosition = emptyPositions[Random.Range(0, emptyPositions.Count - 1)];                
                 xpos = chosenPosition.x; zpos = chosenPosition.y;
+
                 var chosenType = SettlementStructureType.Empty;
                 float f = Random.value;
                 if (needHousing)
@@ -235,24 +255,25 @@ public sealed class Settlement : House
                 }
                 else
                 {
-                    if (needGardens)
-                    {
-                        if (needShops)
-                        {
-                            if (f > 0.5f) chosenType = SettlementStructureType.Shop;
-                            else chosenType = SettlementStructureType.Garden;
-                        }
-                        else chosenType = SettlementStructureType.Garden;
-                    }
+                    if (forced) chosenType = SettlementStructureType.House;
                     else
                     {
-                        if (needShops) chosenType = SettlementStructureType.Shop;
+                        if (needGardens)
+                        {
+                            if (needShops)
+                            {
+                                if (f > 0.5f) chosenType = SettlementStructureType.Shop;
+                                else chosenType = SettlementStructureType.Garden;
+                            }
+                            else chosenType = SettlementStructureType.Garden;
+                        }
                         else
                         {
-                            if (forced) chosenType = SettlementStructureType.House;
+                            if (needShops) chosenType = SettlementStructureType.Shop;
                         }
                     }
                 }
+
                 if (chosenType != SettlementStructureType.Empty)
                 {
                     var s = GetStructureByID(SETTLEMENT_STRUCTURE_ID);
@@ -567,22 +588,19 @@ public sealed class Settlement : House
                                 { // right - up (central check included)
                                     if (map[xpos, zpos + 1] == exType)
                                     {
-                                        buildTriplesize = (map[xpos + 1, zpos] == chosenType) && (map[xpos + 2, zpos] == chosenType)
-                                            && (map[xpos + 2, zpos + 1] == chosenType) && (map[xpos + 2, zpos + 2] == chosenType);
+                                        if (localMap[4, 4] & localMap[4, 3] & localMap[4, 2]) buildTriplesize = true;
                                     }
                                     else
                                     {
                                         if (map[xpos + 1, zpos + 1] == exType)
                                         {
-                                            buildTriplesize = (map[xpos + 1, zpos] == chosenType) && (map[xpos + 2, zpos] == chosenType)
-                                                 && (map[xpos, zpos + 1] == chosenType) && (map[xpos, zpos + 2] == chosenType);
+                                            if (localMap[2, 4] & localMap[4, 2]) buildTriplesize = true;
                                         }
                                         else
                                         {
                                             if (map[xpos + 1, zpos] == exType)
-                                            {                                                
-                                                buildTriplesize = (map[xpos + 1, zpos + 2] == chosenType) && (map[xpos + 2, zpos + 2] == chosenType)
-                                                    && (map[xpos, zpos + 1] == chosenType) && (map[xpos, zpos + 2] == chosenType);
+                                            {
+                                                if (localMap[2, 4] & localMap[3, 4] & localMap[4, 4]) buildTriplesize = true;
                                             }
                                             else
                                             { // no extended
@@ -762,10 +780,7 @@ public sealed class Settlement : House
                     Recalculate();
                 }
             }            
-        }
-
-        if (prevEnergySurplus != energySurplus) colony.RecalculatePowerGrid();
-        if (prevHousing != housing) colony.RecalculateHousing();
+        }        
     }
     private void Recalculate()
     {
@@ -793,11 +808,30 @@ public sealed class Settlement : House
                         case SettlementStructureType.Garden: gardensCf += s2.value; break;
                         case SettlementStructureType.Shop: shopsCf += s2.value; break;
                     }
-                    energySurplus += onePartEnergyConsumption;
-                    pointsFilled++;
+                    if (s2.level < FIRST_EXTENSION_LEVEL)
+                    {
+                        pointsFilled++;
+                        energySurplus += onePartEnergyConsumption * level;
+                    }
+                    else
+                    {
+                        if (s2.level >= SECOND_EXTENSION_LEVEL)
+                        {
+                            pointsFilled += 9;
+                            energySurplus += onePartEnergyConsumption * level * 9;
+                        }
+                        else
+                        {
+                            pointsFilled += 4;
+                            energySurplus += onePartEnergyConsumption * level * 4;
+                        }
+                    }                    
                 }
             }
         }
+        var colony = GameMaster.realMaster.colonyController;
+        if (prevEnergySurplus != energySurplus) colony.RecalculatePowerGrid();
+        if (prevHousing != housing) colony.RecalculateHousing();
     }
 
     public override UIObserver ShowOnGUI()
@@ -811,11 +845,18 @@ public sealed class Settlement : House
 
     override public bool IsLevelUpPossible(ref string refusalReason)
     {
-        if (level < GameMaster.realMaster.colonyController.hq.level) return true;
+        if (level < MAX_HOUSING_LEVEL) return true;
         else
         {
-            refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
-            return false;
+            if (pointsFilled != MAX_POINTS_COUNT)
+            {
+                refusalReason = Localization.GetRefusalReason(RefusalReason.MaxLevel);
+                return false;
+            }
+            else
+            {
+                return true; // convert to cube
+            }
         }
     }
     override public void LevelUp(bool returnToUI)
@@ -833,25 +874,38 @@ public sealed class Settlement : House
         if (level < MAX_HOUSING_LEVEL)
         {
             level++;
+            if (level > maxAchievedLevel) maxAchievedLevel = level;
             SetModel();
             maxPoints = GetMaxPoints();
+            if (showOnGUI)
+            {
+               buildingObserver.StatusUpdate();
+            }
         }
         else
         {
-            Building upgraded = GetStructureByID(HOUSE_BLOCK_ID) as Building;
-            upgraded.SetBasement(basement, PixelPosByte.zero);
-            if (returnToUI) upgraded.ShowOnGUI();
+            if (pointsFilled == MAX_POINTS_COUNT)
+            {
+                Building upgraded = GetStructureByID(HOUSE_BLOCK_ID) as Building;
+                upgraded.SetBasement(basement, PixelPosByte.zero);
+                if (returnToUI) upgraded.ShowOnGUI();
+            }
         }
     }
     override public ResourceContainer[] GetUpgradeCost()
     {
-        ResourceContainer[] cost = ResourcesCost.GetSettlementUpgradeCost(level);
-        float discount = GameMaster.realMaster.upgradeDiscount,
-            levelMultiplier = 1f;
-        if (level > 1) levelMultiplier = 2f;
-        for (int i = 0; i < cost.Length; i++)
+        ResourceContainer[] cost;
+        if (level < MAX_HOUSING_LEVEL) {
+            cost = ResourcesCost.GetSettlementUpgradeCost(level);
+        }
+        else
         {
-            cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - discount) * levelMultiplier);
+            cost = ResourcesCost.GetCost(HOUSE_BLOCK_ID);
+            float discount = GameMaster.realMaster.upgradeDiscount;
+            for (int i = 0; i < cost.Length; i++)
+            {
+                cost[i] = new ResourceContainer(cost[i].type, cost[i].volume * (1 - discount));
+            }
         }
         return cost;
     }
@@ -867,6 +921,14 @@ public sealed class Settlement : House
             GameMaster.realMaster.lifepowerUpdateEvent -= LifepowerUpdate;
             subscribedToUpdate = false;
             settlements.Remove(this);
+        }
+        maxAchievedLevel = 1;
+        if (settlements.Count > 0)
+        {
+            foreach (var s in settlements)
+            {
+                if (s.level > maxAchievedLevel) maxAchievedLevel = s.level;
+            }
         }
         Destroy(gameObject);
     }

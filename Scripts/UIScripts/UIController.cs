@@ -883,7 +883,14 @@ sealed public class UIController : MonoBehaviour
         }
         moneyFlyingText.enabled = true;
     }
-    public void StartPowerFailureTimer() { powerFailureTimer = 1; energyString.text = Localization.GetPhrase(LocalizedPhrase.PowerFailure); }
+    public void StartPowerFailureTimer() {
+        powerFailureTimer = 1;
+        energyString.text = Localization.GetPhrase(LocalizedPhrase.PowerFailure);
+        if (powerFailureTimer <= 0)
+        {
+            if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.PowerFailure);
+        }
+    }
 
     #region leftPanel
     public void ActivateQuestUI()

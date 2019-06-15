@@ -18,6 +18,11 @@ public sealed class SettlementStructure : Structure
         {
             case Settlement.SettlementStructureType.House:
                 switch (level) {
+                    case 8:
+                    case 7:
+                    case 6: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl6")); break;
+                    case 5: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl5")); break;
+                    case 4: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl4")); break;
                     case 3: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl3")); break;
                     case 2: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl2")); break;
                     default:  model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl1")); break;
@@ -72,8 +77,8 @@ public sealed class SettlementStructure : Structure
                 switch (level)
                 {
                     case 6: value = 522f; break;
-                    case 5:
-                    case 4: 
+                    case 5: value = 192f; break;
+                    case 4: value = 152f; break;
                     case 3: value = 112f; break;
                     case 2: value = 18f;break;
                     default: value = 10f; break;

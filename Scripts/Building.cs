@@ -51,7 +51,7 @@ public class Building : Structure
                 break;
             case 3:
                 blist.Add(GetStructureByID(STORAGE_3_ID) as Building);
-                //blist.Add(GetStructureByID(HOUSE_3_ID) as Building);
+                if (Settlement.maxAchievedLevel >= 3) blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
                 blist.Add(GetStructureByID(FARM_3_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_3_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_3_ID) as Building);
@@ -76,8 +76,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
                 break;
             case 5:
-                blist.Add(GetStructureByID(STORAGE_5_ID) as Building);
-                //blist.Add(GetStructureByID(HOUSE_5_ID) as Building);
+                blist.Add(GetStructureByID(STORAGE_5_ID) as Building);                
                 blist.Add(GetStructureByID(FARM_5_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
@@ -89,9 +88,15 @@ public class Building : Structure
                 blist.Add(GetStructureByID(MONUMENT_ID) as Building);
                 break;
             case 6:
+                if (Settlement.maxAchievedLevel >= 6)
+                {
+                    blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
+                    if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
+                        blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
+                }
                 blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
                 blist.Add(GetStructureByID(CONTROL_CENTER_6_ID) as Building);
-                blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
+                //blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
                 blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
@@ -183,7 +188,7 @@ public class Building : Structure
         switch (id)
         {
             case SETTLEMENT_CENTER_ID: return -10f;
-            case SETTLEMENT_STRUCTURE_ID: return -1f;
+            case SETTLEMENT_STRUCTURE_ID: return -0.5f;
             case HOUSE_BLOCK_ID: return -50f;
             case HOUSING_MAST_6_ID: return -120f;
 
@@ -236,7 +241,7 @@ public class Building : Structure
             case FOUNDATION_BLOCK_5_ID:
             case WIND_GENERATOR_1_ID: return 10f;
             case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
-            case MINI_GRPH_REACTOR_3_ID: return 50f;
+            case MINI_GRPH_REACTOR_3_ID: return 100f;
             case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
             case REACTOR_BLOCK_5_ID: return Powerplant.REACTOR_BLOCK_5_OUTPUT;
 

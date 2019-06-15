@@ -407,6 +407,12 @@
     {
         switch (level)
         {
+            case 2:
+                return new ResourceContainer[]
+        {
+                new ResourceContainer(ResourceType.Concrete, 50f),
+                new ResourceContainer(ResourceType.metal_K, 10f)
+        };
             default: return new ResourceContainer[]
             {
                 new ResourceContainer(ResourceType.Concrete, 25f),

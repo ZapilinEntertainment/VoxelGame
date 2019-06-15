@@ -24,7 +24,7 @@ public class UIStructureObserver : UIObserver {
 		else {
             if (observingStructure != null) observingStructure.DisableGUI();
 			observingStructure = s; isObserving = true;
-			nameField.text = Localization.GetStructureName(s.id);
+            CheckName();
 			demolishButton.gameObject.SetActive(!s.indestructible);
             sizeField.text = s.surfaceRect.size.ToString() + " x " + s.surfaceRect.size.ToString();
             if (s.isArtificial & s.id != Structure.WIND_GENERATOR_1_ID)
@@ -102,6 +102,14 @@ public class UIStructureObserver : UIObserver {
 		observingStructure.Annihilate(true, true, false);
 	}
     public void CheckName() {
-        nameField.text = Localization.GetStructureName(observingStructure.id);
+        if (observingStructure == null) SelfShutOff();
+        else
+        {
+            if (observingStructure.id == Structure.SETTLEMENT_CENTER_ID)
+            {
+                nameField.text = Localization.GetStructureName(observingStructure.id) + " (" + (observingStructure as Settlement).level.ToString() + ')';
+            }
+            else nameField.text = Localization.GetStructureName(observingStructure.id);
+        }
     }
 }

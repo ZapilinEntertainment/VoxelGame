@@ -2216,7 +2216,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 114738021581948964}
-        m_MethodName: UpgradeInfoPanelSwitch
+        m_MethodName: CancelButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

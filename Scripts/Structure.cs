@@ -693,7 +693,7 @@ public class Structure : MonoBehaviour
             case WIND_GENERATOR_1_ID:
                 {
                     maxHp = 700;
-                    surfaceRect = SurfaceRect.full;
+                    surfaceRect =  new SurfaceRect(0,0,8);
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -753,7 +753,7 @@ public class Structure : MonoBehaviour
             case MINI_GRPH_REACTOR_3_ID:
                 {
                     maxHp = 800;
-                    surfaceRect = SurfaceRect.full;
+                    surfaceRect = new SurfaceRect(0,0,8);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;
@@ -1171,7 +1171,8 @@ public class Structure : MonoBehaviour
             basement = b.myChunk.ReplaceBlock(b.pos, BlockType.Surface, b.material_id, false) as SurfaceBlock;
         }
         else basement = b;
-        surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
+        if (!placeInCenter) surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
+        else surfaceRect = new SurfaceRect((byte)(SurfaceBlock.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(SurfaceBlock.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
         if (transform.childCount == 0) SetModel();
         basement.AddStructure(this);
         if (isBasement)

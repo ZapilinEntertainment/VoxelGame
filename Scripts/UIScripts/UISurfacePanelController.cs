@@ -852,7 +852,9 @@ public sealed class UISurfacePanelController : UIObserver {
             else
             {
                 // all conditions met
-                ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
+                ResourceContainer[] cost;
+                if (chosenStructure.id != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(chosenStructure.id);
+                else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
                 //resource cost drawing
                 float[] storageResources = colony.storage.standartResources;
                 for (int i = 0; i < resourcesCostImage.Length; i++)
@@ -909,7 +911,9 @@ public sealed class UISurfacePanelController : UIObserver {
             SelfShutOff();
             return;
         }
-        ResourceContainer[] cost = ResourcesCost.GetCost(chosenStructure.id);
+        ResourceContainer[] cost;
+        if (chosenStructure.id != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(chosenStructure.id);
+        else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
         if (colony.storage.CheckSpendPossibility(cost))
         {
             byte strSize = chosenStructure.surfaceRect.size,  res = SurfaceBlock.INNER_RESOLUTION;
@@ -934,6 +938,10 @@ public sealed class UISurfacePanelController : UIObserver {
                 else
                 {
                     rt = (byte)(Random.value * 7);
+                }
+                if (s.id == Structure.SETTLEMENT_CENTER_ID)
+                {
+                    (s as Settlement).SetLevel(constructingLevel);
                 }
                 s.SetBasement(observingSurface, new PixelPosByte(x, z));
                 if (s.id != Structure.DOCK_ID & s.id != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
