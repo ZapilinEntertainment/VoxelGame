@@ -109,20 +109,14 @@
                 break;
             case Structure.STORAGE_1_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 10), new ResourceContainer(ResourceType.metal_K, 4), new ResourceContainer(ResourceType.metal_M, 1),
-                new ResourceContainer(ResourceType.Plastics, 10)
+                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 40), new ResourceContainer(ResourceType.metal_M, 10),
+                new ResourceContainer(ResourceType.Plastics, 100)
             };
                 break;
             case Structure.STORAGE_2_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 20), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 2),
-                new ResourceContainer(ResourceType.Plastics, 25)
-            };
-                break;
-            case Structure.STORAGE_3_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 25), new ResourceContainer(ResourceType.metal_K, 6), new ResourceContainer(ResourceType.metal_M, 4),
-                new ResourceContainer(ResourceType.Plastics, 40)
+                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 70), new ResourceContainer(ResourceType.metal_M, 25),
+                new ResourceContainer(ResourceType.Plastics, 200)
             };
                 break;
             case Structure.STORAGE_5_ID:
@@ -143,17 +137,12 @@
                 break;
             case Structure.ENERGY_CAPACITOR_1_ID:
                 cost = new ResourceContainer[] {
-                new ResourceContainer(ResourceType.metal_K, 1), new ResourceContainer(ResourceType.metal_E, 2), new ResourceContainer(ResourceType.Plastics, 8)
+                new ResourceContainer(ResourceType.metal_K, 60), new ResourceContainer(ResourceType.metal_E, 40), new ResourceContainer(ResourceType.metal_N, 10)
             };
                 break;
             case Structure.ENERGY_CAPACITOR_2_ID:
                 cost = new ResourceContainer[] {
-                new ResourceContainer(ResourceType.metal_K, 4), new ResourceContainer(ResourceType.metal_E, 4), new ResourceContainer(ResourceType.Plastics, 10)
-            };
-                break;
-            case Structure.ENERGY_CAPACITOR_3_ID:
-                cost = new ResourceContainer[] {
-                new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_E, 12),  new ResourceContainer(ResourceType.Plastics, 20)
+                new ResourceContainer(ResourceType.metal_K, 80), new ResourceContainer(ResourceType.metal_E, 80), new ResourceContainer(ResourceType.metal_N, 20)
             };
                 break;
             case Structure.FARM_1_ID:

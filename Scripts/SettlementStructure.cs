@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public sealed class SettlementStructure : Structure
 {
@@ -64,7 +65,8 @@ public sealed class SettlementStructure : Structure
     public void SetData(Settlement.SettlementStructureType i_type, byte i_level, Settlement i_settlement)
     {
         type = i_type;
-        level = i_level;
+        if (i_type == Settlement.SettlementStructureType.House) level = i_level;
+        else level = 1;
         if (level >= Settlement.FIRST_EXTENSION_LEVEL)
         {
             if (level < Settlement.SECOND_EXTENSION_LEVEL) surfaceRect = new SurfaceRect(0, 0, 2 * CELLSIZE);
@@ -76,7 +78,9 @@ public sealed class SettlementStructure : Structure
             case Settlement.SettlementStructureType.House:
                 switch (level)
                 {
-                    case 6: value = 522f; break;
+                    case 8: value = 576; break;
+                    case 7: value = 504; break;
+                    case 6: value = 432f; break;
                     case 5: value = 192f; break;
                     case 4: value = 152f; break;
                     case 3: value = 112f; break;
@@ -89,7 +93,11 @@ public sealed class SettlementStructure : Structure
                 value = 1f;
                 break;
         }
-        settlement = i_settlement;        
+        settlement = i_settlement;        // может быть null
+    }
+    public void AssignSettlement(Settlement s)
+    {
+        settlement = s;
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
@@ -100,5 +108,27 @@ public sealed class SettlementStructure : Structure
         basement = null;
         if (settlement != null) settlement.needRecalculation = true;
         Destroy(gameObject);
+    }
+
+    public override List<byte> Save()
+    {
+        var data = base.Save();
+        data.Add(level);
+        data.Add((byte)type);
+        return data;
+    }
+    public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
+        Prepare();
+        modelRotation = data[2];
+        indestructible = (data[3] == 1);
+        skinIndex = System.BitConverter.ToUInt32(data, 4);
+        var ppos = new PixelPosByte(data[0], data[1]);        
+        hp = System.BitConverter.ToSingle(data, 8);
+        maxHp = System.BitConverter.ToSingle(data, 12);
+
+        SetData((Settlement.SettlementStructureType)data[17], data[16],  null);
+        SetBasement(sblock, ppos);
     }
 }

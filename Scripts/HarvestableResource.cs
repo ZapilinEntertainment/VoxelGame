@@ -314,7 +314,7 @@ public class HarvestableResource : Structure
     #region save-load system
     override public List<byte> Save()
     {
-        List<byte> data = SerializeStructure();
+        List<byte> data = SaveStructureData();
         data.AddRange(SerializeHarvestableResource());
         return data;
     }

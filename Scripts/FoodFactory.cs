@@ -64,8 +64,8 @@ public class FoodFactory : WorkBuilding {
 
 	#region save-load system
 	override public List<byte> Save() {
-        var data = SerializeStructure();
-        data.AddRange(SerializeBuilding());
+        var data = SaveStructureData();
+        data.AddRange(SaveBuildingData());
         data.AddRange(SerializeWorkBuilding());
         data.AddRange(SerializeFoodFactory());
         return data;

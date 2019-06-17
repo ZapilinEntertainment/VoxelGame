@@ -34,6 +34,67 @@ public sealed class Settlement : House
         shopsCf = 0f;
         maxAchievedLevel = 1;
     }
+    public static void TotalRecalculation()
+    {
+        bool loading = GameMaster.loading;
+        gardensCf = 0f; shopsCf = 0f;
+        float centerEnergySurplus = GetEnergySurplus(SETTLEMENT_CENTER_ID),
+            partEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
+        SettlementStructure s2;
+        if (settlements.Count > 0)
+        {            
+            foreach (var center in settlements)
+            {
+                center.housing = 0;
+                center.energySurplus = centerEnergySurplus;
+                center.pointsFilled = 0;
+                center.maxPoints = center.GetMaxPoints();
+
+                if (center.basement.noEmptySpace != false)
+                {
+                    
+                    foreach (var s in center.basement.structures)
+                    {
+                        if (s.id == SETTLEMENT_STRUCTURE_ID)
+                        {
+                            s2 = (s as SettlementStructure);
+                            if (loading) s2.AssignSettlement(center);
+                            switch (s2.type)
+                            {
+                                case SettlementStructureType.House: center.housing += (int)s2.value; break;
+                                case SettlementStructureType.Garden: gardensCf += s2.value; break;
+                                case SettlementStructureType.Shop: shopsCf += s2.value; break;
+                            }
+                            if (s2.level < FIRST_EXTENSION_LEVEL)
+                            {
+                                center.pointsFilled++;
+                                center.energySurplus += partEnergyConsumption * center.level;
+                            }
+                            else
+                            {
+                                if (s2.level >= SECOND_EXTENSION_LEVEL)
+                                {
+                                    center.pointsFilled += 9;
+                                    center.energySurplus += partEnergyConsumption * center.level * 9;
+                                }
+                                else
+                                {
+                                    center.pointsFilled += 4;
+                                    center.energySurplus += partEnergyConsumption * center.level * 4;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!loading) // wait for colony loading
+        {
+            var colony = GameMaster.realMaster.colonyController;
+            colony.RecalculatePowerGrid();
+            colony.RecalculateHousing();
+        }
+    }
 
     public void SetLevel(byte i_level)
     {
@@ -784,7 +845,9 @@ public sealed class Settlement : House
     }
     private void Recalculate()
     {
+        if (!GameMaster.loading) return; // wait for total recalculation
         // dependency : create new building()
+        // dependecy : total recalculation()
         int prevHousing = housing;
         float prevEnergySurplus = energySurplus;
         housing = 0;
@@ -932,4 +995,30 @@ public sealed class Settlement : House
         }
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = SaveStructureData();
+        data.Add(isActive ? (byte)1 : (byte)0);
+        data.Add(level);
+        return data;
+    }
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
+        Prepare();
+        modelRotation = data[2];
+        indestructible = (data[3] == 1);
+        skinIndex = System.BitConverter.ToUInt32(data, 4);
+        var ppos = new PixelPosByte(data[0], data[1]);        
+        hp = System.BitConverter.ToSingle(data, 8);
+        maxHp = System.BitConverter.ToSingle(data, 12);
+
+        SetActivationStatus(data[16] == 1, false);
+        SetLevel(data[17]);
+
+        SetBasement(sblock, ppos);
+    }
+    #endregion
 }

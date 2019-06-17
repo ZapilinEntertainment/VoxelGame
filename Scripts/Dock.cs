@@ -679,8 +679,8 @@ public sealed class Dock : WorkBuilding {
 
     public override List<byte> Save()
     {
-        var data = SerializeStructure();
-        data.AddRange(SerializeBuilding());
+        var data = SaveStructureData();
+        data.AddRange(SaveBuildingData());
         data.AddRange(SerializeWorkBuilding());
         data.AddRange(SerializeDock());
         return data;

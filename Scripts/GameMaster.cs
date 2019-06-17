@@ -430,7 +430,7 @@ public sealed class GameMaster : MonoBehaviour
                         else atype = Artifact.AffectionType.StabilityAffection;
                     }
                 }
-                a = new Artifact(Random.value, Random.value, Random.value, atype, false);
+                a = new Artifact(Random.value, Random.value, Random.value, atype);
                 a.SetResearchStatus(true);
                 a.Conservate();
             }
@@ -708,6 +708,7 @@ public sealed class GameMaster : MonoBehaviour
         //сразу передавать файловый поток для записи, чтобы не забивать озу
         #region gms mainPartFilling
         fs.Write(System.BitConverter.GetBytes(GameConstants.SAVE_SYSTEM_VERSION),0,4);
+        // start writing
         fs.Write(System.BitConverter.GetBytes(gameSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(lifeGrowCoefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(demolitionLossesPercent), 0, 4);
@@ -717,23 +718,26 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(tradeVesselsTrafficCoefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(upgradeDiscount), 0, 4);
         fs.Write(System.BitConverter.GetBytes(upgradeCostIncrease), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(warProximity), 0, 4); // end 40
-        fs.WriteByte((byte)difficulty); // 41
+        fs.Write(System.BitConverter.GetBytes(warProximity), 0, 4); 
+        //40
+        fs.WriteByte((byte)difficulty);// 41
         fs.WriteByte((byte)startGameWith); // 42
         fs.WriteByte(prevCutHeight); //43
-        fs.WriteByte(day);
+        fs.WriteByte(day); // 44
         fs.WriteByte(month); //45
         fs.Write(System.BitConverter.GetBytes(year), 0, 4);
         fs.Write(System.BitConverter.GetBytes(timeGone), 0, 4);
         fs.Write(System.BitConverter.GetBytes(gearsDegradeSpeed), 0, 4);
-        // 57
+        fs.Write(System.BitConverter.GetBytes(stability), 0, 4);
+        // 61
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
-        // 69
+        // 73 - end
         #endregion
         environmentMaster.Save(fs);
         Shuttle.SaveStaticData(fs);
+        Artifact.SaveStaticData(fs);
         Crew.SaveStaticData(fs);
         mainChunk.SaveChunkData(fs);
         fs.Write(System.BitConverter.GetBytes(QuantumTransmitter.lastUsedID), 0, 4);
@@ -750,7 +754,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool LoadGame() { return LoadGame("autosave"); }
     public bool LoadGame(string fullname)
     {  // отдельно функцию проверки и коррекции сейв-файла
-        if (true) // <- тут будет функция проверки
+        if (true) // <- тут будет функция проверки // када она будет?
         {
             SetPause(true);
             loading = true;
@@ -776,13 +780,13 @@ public sealed class GameMaster : MonoBehaviour
 
 
             // НАЧАЛО ЗАГРУЗКИ
-            // ++++++ ДОБАВИТЬ НОВЫЕ ПОЛЯ stability
             FileStream fs = File.Open(fullname, FileMode.Open);
             #region gms mainPartLoading
             var data = new byte[4];
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
-            data = new byte[75];
+            //start writing
+            data = new byte[73]; 
             fs.Read(data, 0, data.Length);
             gameSpeed = System.BitConverter.ToSingle(data, 0);
             lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
@@ -794,21 +798,26 @@ public sealed class GameMaster : MonoBehaviour
             upgradeDiscount = System.BitConverter.ToSingle(data, 28);
             upgradeCostIncrease = System.BitConverter.ToSingle(data, 32);
             warProximity = System.BitConverter.ToSingle(data, 36);
+
             difficulty = (Difficulty)data[40];
             startGameWith = (GameStart)data[41];
             prevCutHeight = data[42];
             day = data[43];
             month = data[44];
+
             year = System.BitConverter.ToUInt32(data, 45);
             timeGone = System.BitConverter.ToSingle(data, 49);
             gearsDegradeSpeed = System.BitConverter.ToSingle(data, 53);
-            labourTimer = System.BitConverter.ToSingle(data, 57);
-            lifepowerTimer = System.BitConverter.ToSingle(data, 61);
-            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 65));
+            stability = System.BitConverter.ToSingle(data, 57);
+
+            labourTimer = System.BitConverter.ToSingle(data, 61);
+            lifepowerTimer = System.BitConverter.ToSingle(data, 65);
+            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 69));
             #endregion
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
             Shuttle.LoadStaticData(fs); // because of hangars
+            Artifact.LoadStaticData(fs); // crews & monuments
             Crew.LoadStaticData(fs);
 
             if (mainChunk == null)
@@ -817,6 +826,7 @@ public sealed class GameMaster : MonoBehaviour
                 mainChunk = g.AddComponent<Chunk>();
             }
             mainChunk.LoadChunkData(fs);
+            Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
 
             fs.Read(data, 0, 4);
             QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));

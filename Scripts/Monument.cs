@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public sealed class Monument : Building
 {
@@ -32,7 +33,10 @@ public sealed class Monument : Building
         {
             artifacts = new Artifact[ARTIFACTS_COUNT];
         }
-        else ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionType);
+        else
+        {
+            RecalculateAffection();          
+        }
         b.myChunk.BlockByStructure(b.pos.x, b.pos.y + 1, b.pos.z, this);        
     }
 
@@ -119,12 +123,12 @@ public sealed class Monument : Building
 
     override public void SetActivationStatus(bool x, bool recalculateAfter)
     {
-        if (isActive != x & artifacts != null) ArtifactsStabilityTest();
+        if (!GameMaster.loading && isActive != x & artifacts != null) ArtifactsStabilityTest();
         base.SetActivationStatus(x, recalculateAfter);
     }
     override public void SetEnergySupply(bool x, bool recalculateAfter)
     {
-        if (isEnergySupplied != x & artifacts != null) ArtifactsStabilityTest();
+        if (!GameMaster.loading && isEnergySupplied != x & artifacts != null) ArtifactsStabilityTest();
         base.SetEnergySupply(x, recalculateAfter);
     }
 
@@ -204,4 +208,32 @@ public sealed class Monument : Building
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = base.Save();
+        data.AddRange(System.BitConverter.GetBytes(artifacts[0] == null ? -1 : artifacts[0].ID));
+        data.AddRange(System.BitConverter.GetBytes(artifacts[1] == null ? -1 : artifacts[1].ID));
+        data.AddRange(System.BitConverter.GetBytes(artifacts[2] == null ? -1 : artifacts[2].ID));
+        data.AddRange(System.BitConverter.GetBytes(artifacts[3] == null ? -1 : artifacts[3].ID));
+        return data;
+    }
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
+        base.Load(fs, sblock);
+        artifacts = new Artifact[ARTIFACTS_COUNT];
+        var data = new byte[16];
+        fs.Read(data, 0, 16);
+        int x = System.BitConverter.ToInt32(data, 0);
+        if (x != -1) artifacts[0] = Artifact.GetArtifactByID(x); else artifacts[0] = null;
+        x = System.BitConverter.ToInt32(data, 4);
+        if (x != -1) artifacts[1] = Artifact.GetArtifactByID(x); else artifacts[1] = null;
+        x = System.BitConverter.ToInt32(data, 8);
+        if (x != -1) artifacts[2] = Artifact.GetArtifactByID(x); else artifacts[2] = null;
+        x = System.BitConverter.ToInt32(data, 12);
+        if (x != -1) artifacts[3] = Artifact.GetArtifactByID(x); else artifacts[3] = null;
+        RecalculateAffection();
+    }
+    #endregion
 }

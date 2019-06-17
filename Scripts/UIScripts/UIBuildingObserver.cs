@@ -52,7 +52,7 @@ public class UIBuildingObserver : UIObserver {
         {
             if (status_connectedToPowerGrid)
             {
-                if (b.id == Structure.ENERGY_CAPACITOR_1_ID | b.id == Structure.ENERGY_CAPACITOR_2_ID | b.id == Structure.ENERGY_CAPACITOR_3_ID)
+                if (b.id == Structure.ENERGY_CAPACITOR_1_ID | b.id == Structure.ENERGY_CAPACITOR_2_ID )
                 {
                     chargeButton.SetActive(true);
                     energyValue.enabled = false;

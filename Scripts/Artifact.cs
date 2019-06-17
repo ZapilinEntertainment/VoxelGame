@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 
 public sealed class Artifact {
-    public enum AffectionType { NoAffection, LifepowerAffection, StabilityAffection, SpaceAffection}
+    public enum AffectionType : byte { NoAffection, LifepowerAffection, StabilityAffection, SpaceAffection}
     //dependency : PointOfInterest.GetArtifact
     // GetAffectionIconRect()
     // localization.GetAffectionTitle
-    public enum ArtifactStatus { Exists, UsingByCrew, Researching, UsingInMonument, OnConservation}
+    public enum ArtifactStatus : byte { Exists, UsingByCrew, Researching, UsingInMonument, OnConservation}
 
     public bool destructed { get; private set; }
     public bool researched { get; private set; }
@@ -22,7 +22,7 @@ public sealed class Artifact {
 
     private static readonly Sprite[] affectionRings;
     public static readonly Texture emptyArtifactFrame_tx;
-    public static int actionsHash = 0, lastUsedID = 0;    
+    public static int actionsHash = 0, lastID = 0;    
     public static List<Artifact> artifactsList;
     public static UIArtifactPanel observer { get; private set; }
 
@@ -70,7 +70,7 @@ public sealed class Artifact {
         }
     }
 
-    public Artifact (float i_stability, float i_saturation, float i_frequency, AffectionType i_type, bool i_activated)
+    public Artifact (float i_stability, float i_saturation, float i_frequency, AffectionType i_type)
     {
         i_stability = Mathf.Clamp01(i_stability);
         stability = i_stability;
@@ -82,7 +82,7 @@ public sealed class Artifact {
         researched = false;
         name = Localization.NameArtifact(this);
         status = ArtifactStatus.Exists;
-        ID = lastUsedID++;
+        ID = lastID++;
         artifactsList.Add(this);        
 
         actionsHash++;
@@ -456,4 +456,95 @@ public sealed class Artifact {
         if (artifactsList.Contains(this)) artifactsList.Remove(this);
         actionsHash++;
     }
+
+    #region save-load system
+    public List<byte> Save()
+    {
+        var data = new List<byte>();        
+        data.AddRange(System.BitConverter.GetBytes(stability));
+        data.AddRange(System.BitConverter.GetBytes(saturation));
+        data.AddRange(System.BitConverter.GetBytes(frequency));
+        data.Add((byte)affectionType);
+        //13
+        data.AddRange(System.BitConverter.GetBytes(ID));
+        if (researched) data.Add(1); else data.Add(0);
+        data.Add((byte)status);
+
+        var nameArray = System.Text.Encoding.Default.GetBytes(name);
+        int bytesCount = nameArray.Length;
+        data.AddRange(System.BitConverter.GetBytes(bytesCount)); // количество байтов, не длина строки
+        //23
+        if (bytesCount > 0) data.AddRange(nameArray);
+
+        return data;
+    }
+
+   public static void SaveStaticData(System.IO.FileStream fs)
+    {
+        var data = new List<byte>();
+        int artsCount = artifactsList.Count;
+        if (artsCount > 0)
+        {
+            artsCount = 0;
+            while (artsCount < artifactsList.Count)
+            {
+                var a = artifactsList[artsCount];
+                if (a.destructed)
+                {
+                    artifactsList.RemoveAt(artsCount);
+                    continue;
+                }
+                else
+                {
+                    data.AddRange(a.Save());
+                    artsCount++;
+                };
+            }
+        }
+        fs.Write(System.BitConverter.GetBytes(artsCount), 0, 4);
+        if (artsCount > 0)
+        {
+            var dataArray = data.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
+        }
+        fs.Write(System.BitConverter.GetBytes(lastID), 0, 4);
+    }
+    public static void LoadStaticData(System.IO.FileStream fs)
+    {
+        if (artifactsList == null) artifactsList = new List<Artifact>();
+        else artifactsList.Clear();
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int artsCount = System.BitConverter.ToInt32(data, 0);
+
+        while (artsCount > 0)
+        {
+            data = new byte[23];
+            fs.Read(data, 0, 23);
+            var a = new Artifact(
+                System.BitConverter.ToSingle(data, 0), // stability
+                System.BitConverter.ToSingle(data, 4), //saturation
+                System.BitConverter.ToSingle(data, 8), //frequency
+                (AffectionType)data[12]
+                );
+            a.ID = System.BitConverter.ToInt32(data, 13);
+            a.researched = data[17] == 1;
+            a.status = (ArtifactStatus)data[18];
+            int bytesCount = System.BitConverter.ToInt32(data, 19); //выдаст количество байтов, не длину строки        
+            if (bytesCount > 0)
+            {
+                data = new byte[bytesCount];
+                fs.Read(data, 0, bytesCount);
+                System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
+                var chars = new char[d.GetCharCount(data, 0, bytesCount)];
+                d.GetChars(data, 0, bytesCount, chars, 0, true);
+                a.name = new string(chars);
+            }
+            artsCount++;
+        }
+
+        fs.Read(data, 0, 4);
+        lastID = System.BitConverter.ToInt32(data, 0);
+    }
+    #endregion
 }

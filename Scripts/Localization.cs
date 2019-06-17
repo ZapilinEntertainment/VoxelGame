@@ -63,9 +63,8 @@ public static class Localization
                 {
                     case Structure.PLANT_ID: return "Растение";
                     case Structure.STORAGE_0_ID: return "Основной склад";
-                    case Structure.STORAGE_1_ID: return "Складское помещение";
-                    case Structure.STORAGE_2_ID: return "Небольшой склад";
-                    case Structure.STORAGE_3_ID: return "Склад";
+                    case Structure.STORAGE_1_ID: 
+                    case Structure.STORAGE_2_ID: return "Склад";
                     case Structure.STORAGE_5_ID: return "Блок склада";
                     case Structure.CONTAINER_ID: return "Контейнер";
                     case Structure.MINE_ELEVATOR_ID: return "Подъёмник шахты";
@@ -76,8 +75,7 @@ public static class Localization
                     case Structure.DOCK_2_ID: return "Улучшенный док";
                     case Structure.DOCK_3_ID: return "Продвинутый док";
                     case Structure.ENERGY_CAPACITOR_1_ID:
-                    case Structure.ENERGY_CAPACITOR_2_ID:
-                    case Structure.ENERGY_CAPACITOR_3_ID: return "Аккумулятор";
+                    case Structure.ENERGY_CAPACITOR_2_ID:  return "Аккумулятор";
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Ферма";
@@ -137,9 +135,8 @@ public static class Localization
                 {
                     case Structure.PLANT_ID: return "Some plant";
                     case Structure.STORAGE_0_ID: return "Primary storage";
-                    case Structure.STORAGE_1_ID: return "Storage pit";
-                    case Structure.STORAGE_2_ID: return "Small warehouse";
-                    case Structure.STORAGE_3_ID: return "Warehouse";
+                    case Structure.STORAGE_1_ID:
+                    case Structure.STORAGE_2_ID: return "Warehouse";
                     case Structure.STORAGE_5_ID: return "Storage block";
                     case Structure.CONTAINER_ID: return "Container";
                     case Structure.MINE_ELEVATOR_ID: return "Mine elevator";
@@ -149,9 +146,8 @@ public static class Localization
                     case Structure.DOCK_ID: return "Dock";
                     case Structure.DOCK_2_ID: return "Improved dock";
                     case Structure.DOCK_3_ID: return "Advanced dock";
-                    case Structure.ENERGY_CAPACITOR_1_ID: return "Power capacitor";
+                    case Structure.ENERGY_CAPACITOR_1_ID:
                     case Structure.ENERGY_CAPACITOR_2_ID: return "Power capacitor";
-                    case Structure.ENERGY_CAPACITOR_3_ID: return "Power capacitor";
                     case Structure.FARM_1_ID: return "Farm (lvl 1)";
                     case Structure.FARM_2_ID: return "Farm (lvl 2)";
                     case Structure.FARM_3_ID: return "Farm (lvl 3)";
@@ -217,7 +213,6 @@ public static class Localization
                     case Structure.STORAGE_0_ID: return "Стартовое хранилище объёмом " + StorageHouse.GetMaxVolume(0) + " eдиниц.";
                     case Structure.STORAGE_1_ID: return "Небольшое хранилище объёмом " + StorageHouse.GetMaxVolume(1) + " eдиниц.";
                     case Structure.STORAGE_2_ID: return "Хранилище объёмом " + StorageHouse.GetMaxVolume(2) + " eдиниц.";
-                    case Structure.STORAGE_3_ID: return "Хранилище объёмом " + StorageHouse.GetMaxVolume(3) + " eдиниц.";
                     case Structure.STORAGE_5_ID: return "Блок для хранения объёмом " + StorageHouse.GetMaxVolume(5) + " eдиниц.";
                     case Structure.CONTAINER_ID: return "Содержит ресурсы.";
                     case Structure.LIFESTONE_ID: return "Источает энергию жизни.";
@@ -241,7 +236,7 @@ public static class Localization
                         }
                     case Structure.ENERGY_CAPACITOR_1_ID:
                     case Structure.ENERGY_CAPACITOR_2_ID:
-                    case Structure.ENERGY_CAPACITOR_3_ID: return "Запасает до " + Building.GetEnergyCapacity(id) + "единиц энергии. Может конвертировать кристаллы в энергию.";
+                     return "Запасает до " + Building.GetEnergyCapacity(id) + "единиц энергии. Может конвертировать кристаллы в энергию.";
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Специально подготовленная площадка для выращивания еды. Потребляет жизненную энергию острова. Может быть построена только на грунте.";
@@ -299,7 +294,7 @@ public static class Localization
                     case Structure.STORAGE_0_ID: return "Start storage building contains " + StorageHouse.GetMaxVolume(0) + " points.";
                     case Structure.STORAGE_1_ID: return "Small storage building contains " + StorageHouse.GetMaxVolume(1) + " points.";
                     case Structure.STORAGE_2_ID: return "This storage can contain " + StorageHouse.GetMaxVolume(2) + " points.";
-                    case Structure.STORAGE_3_ID: return "This storage can contain " + StorageHouse.GetMaxVolume(3) + " points.";
+                    
                     case Structure.STORAGE_5_ID: return "Storage block can contain " + StorageHouse.GetMaxVolume(5) + " points.";
                     case Structure.CONTAINER_ID: return "Contain resources.";
                     case Structure.LIFESTONE_ID: return "Emit lifepower.";
@@ -323,7 +318,7 @@ public static class Localization
                         }
                     case Structure.ENERGY_CAPACITOR_1_ID:
                     case Structure.ENERGY_CAPACITOR_2_ID:
-                    case Structure.ENERGY_CAPACITOR_3_ID: return "Store up to " + Building.GetEnergyCapacity(id) + "energy points. Converts energy crystals to energy points.";
+                       return "Store up to " + Building.GetEnergyCapacity(id) + "energy points. Converts energy crystals to energy points.";
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "A field prepared for growing up food. Consumes island lifepower. Must be located on dirt.";
@@ -812,9 +807,9 @@ public static class Localization
     { // waiting for креатив
         switch (currentLanguage)
         {
-            case Language.Russian: return "Команда " + Crew.lastFreeID.ToString();
+            case Language.Russian: return "Команда " + Crew.lastID.ToString();
             case Language.English:
-            default: return "Сrew " + Crew.lastFreeID.ToString();
+            default: return "Сrew " + Crew.lastID.ToString();
         }
     }
     public static string NameShuttle()

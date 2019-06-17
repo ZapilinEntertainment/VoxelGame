@@ -50,13 +50,11 @@ public class Building : Structure
                 blist.Add(GetStructureByID(WORKSHOP_ID) as Building);
                 break;
             case 3:
-                blist.Add(GetStructureByID(STORAGE_3_ID) as Building);
                 if (Settlement.maxAchievedLevel >= 3) blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
                 blist.Add(GetStructureByID(FARM_3_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_3_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_3_ID) as Building);
                 blist.Add(GetStructureByID(PLASTICS_FACTORY_3_ID) as Building);
-                blist.Add(GetStructureByID(ENERGY_CAPACITOR_3_ID) as Building);
                 blist.Add(GetStructureByID(MINI_GRPH_REACTOR_3_ID) as Building);
                 blist.Add(GetStructureByID(FUEL_FACILITY_3_ID) as Building);
                 blist.Add(GetStructureByID(XSTATION_3_ID) as Building);
@@ -112,9 +110,8 @@ public class Building : Structure
     {
         switch (id)
         {
-            case ENERGY_CAPACITOR_1_ID: return 200f;
-            case ENERGY_CAPACITOR_2_ID: return 800f;
-            case ENERGY_CAPACITOR_3_ID: return 2500f;
+            case ENERGY_CAPACITOR_1_ID: return 1000f;
+            case ENERGY_CAPACITOR_2_ID: return 4000f;
 
             case SETTLEMENT_CENTER_ID: return 100f;
             case HOUSE_BLOCK_ID: return 150f;
@@ -189,7 +186,7 @@ public class Building : Structure
         {
             case SETTLEMENT_CENTER_ID: return -10f;
             case SETTLEMENT_STRUCTURE_ID: return -0.5f;
-            case HOUSE_BLOCK_ID: return -50f;
+            case HOUSE_BLOCK_ID: return -200f;
             case HOUSING_MAST_6_ID: return -120f;
 
             case DOCK_ID: return -20f;
@@ -286,17 +283,19 @@ public class Building : Structure
             case STORAGE_0_ID:
                 {
                     level = 0;
+                    upgradedIndex = STORAGE_1_ID;
+                }
+                break;
+            case STORAGE_1_ID:
+                {
+                    level = 1;
+                    upgradedIndex = STORAGE_2_ID;
                 }
                 break;
             case STORAGE_2_ID:
                 {
-                    upgradedIndex = STORAGE_3_ID;
+                   // upgradedIndex = STORAGE_3_ID;
                     level = 2;
-                }
-                break;
-            case STORAGE_3_ID:
-                {
-                    level = 3;
                 }
                 break;
             case STORAGE_5_ID:
@@ -332,15 +331,15 @@ public class Building : Structure
                     level = 3;
                 }
                 break;
-            case ENERGY_CAPACITOR_2_ID:
+            case ENERGY_CAPACITOR_1_ID:
                 {
-                    upgradedIndex = ENERGY_CAPACITOR_3_ID;
-                    level = 2;
+                    upgradedIndex = ENERGY_CAPACITOR_2_ID;
+                    level = 1;
                 }
                 break;
-            case ENERGY_CAPACITOR_3_ID:
+            case ENERGY_CAPACITOR_2_ID:
                 {
-                    level = 3;
+                    level = 2;
                 }
                 break;
             case FARM_1_ID:
@@ -819,13 +818,15 @@ public class Building : Structure
     #region save-load system
     override public List<byte> Save()
     {
-        var data = SerializeStructure();
-        data.AddRange(SerializeBuilding());
+        // copied to Settlement.Save()
+        var data = SaveStructureData();
+        data.AddRange(SaveBuildingData());
         return data;
     }
 
-    protected List<byte> SerializeBuilding()
+    protected List<byte> SaveBuildingData()
     {
+        // copied to Settlement.Save()
         var data = new List<byte>() { isActive ? (byte)1 : (byte)0 };
         data.AddRange(System.BitConverter.GetBytes(energySurplus));
         return data;
@@ -833,6 +834,7 @@ public class Building : Structure
 
     override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
+        // changed in Settlement.Save()
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
     }

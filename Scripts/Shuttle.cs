@@ -195,6 +195,7 @@ public sealed class Shuttle : MonoBehaviour {
         data.AddRange(System.BitConverter.GetBytes(condition));
         data.AddRange(System.BitConverter.GetBytes(ID));
         data.Add(docked ? (byte)1 : (byte)0);
+        // 13
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
         data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
@@ -213,6 +214,7 @@ public sealed class Shuttle : MonoBehaviour {
         return data;
 	}
 	public void Load(System.IO.FileStream fs) {
+        // 13 - data + 4 - name string length
         var data = new byte[17];
         fs.Read(data, 0, 17);
         cost = System.BitConverter.ToSingle(data, 0);

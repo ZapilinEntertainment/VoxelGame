@@ -173,8 +173,8 @@ public class Powerplant : WorkBuilding
 
     override public List<byte> Save()
     {
-        var data = SerializeStructure();
-        data.AddRange(SerializeBuilding());
+        var data = SaveStructureData();
+        data.AddRange(SaveBuildingData());
         float saved_wtp = workflowToProcess; // подмена неиспользуемого поля
         workflowToProcess = tickTimer;
         data.AddRange(SerializeWorkBuilding());

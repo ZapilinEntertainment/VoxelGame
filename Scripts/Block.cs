@@ -115,7 +115,10 @@ public class Block {
     }
 
     #region save-load
-    virtual public void Save(System.IO.FileStream fs)
+    /// <summary>
+    /// Attention: shapeless block wont be saved
+    /// </summary>
+    virtual public void Save(System.IO.FileStream fs) 
     {
         SaveBlockData(fs);
     }

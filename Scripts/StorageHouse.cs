@@ -9,7 +9,6 @@ public sealed class StorageHouse : Building {
             case STORAGE_0_ID: volume = GetMaxVolume(0);break;
             case STORAGE_1_ID: volume = GetMaxVolume(1); break;
             case STORAGE_2_ID: volume = GetMaxVolume(2); break;
-            case STORAGE_3_ID: volume = GetMaxVolume(3); break;
             case STORAGE_5_ID: volume = GetMaxVolume(5); break;
         }
     }
@@ -19,8 +18,8 @@ public sealed class StorageHouse : Building {
         switch (level)
         {
             case 0: return 10000;
-            case 1: return 5000;
-            case 2: return 20000;
+            case 1: return 15000;
+            case 2: return 25000;
             case 3: return 50000;
             case 5: return 200000;
             default: return 1000;

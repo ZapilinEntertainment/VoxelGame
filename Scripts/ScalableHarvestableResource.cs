@@ -149,7 +149,7 @@ public sealed class ScalableHarvestableResource : Structure {
     #region save-load system
     override public List<byte> Save()
     {
-        var data = SerializeStructure();
+        var data = SaveStructureData();
         data.AddRange(System.BitConverter.GetBytes(mainResource.ID));
         data.Add(resourceCount);
         return data;

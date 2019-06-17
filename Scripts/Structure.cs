@@ -32,19 +32,19 @@ public class Structure : MonoBehaviour
     // score calculator
     public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
-    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
+    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, ENERGY_CAPACITOR_2_ID = 43, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
-    STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_3_ID = 37, STORAGE_5_ID = 38, HOUSE_ID = 39,
-    HOUSE_BLOCK_ID = 42, ENERGY_CAPACITOR_2_ID = 43, ENERGY_CAPACITOR_3_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
+    STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, HOUSE_ID = 39,
+    HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 39,40,58, 59
+    //free ids 37,39,40,44, 58, 59
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
@@ -95,8 +95,7 @@ public class Structure : MonoBehaviour
             case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
             case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
             case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
-            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;
-            case STORAGE_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_3")); break;
+            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;           
             case STORAGE_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/storageBlock_level_5")); break;
             case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
             case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
@@ -105,9 +104,8 @@ public class Structure : MonoBehaviour
             case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
             case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
             case DOCK_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_3")); break;
-            case ENERGY_CAPACITOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/EnergyCapacitor_level_1")); break;
-            case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/EnergyCapacitor_level_2")); break;
-            case ENERGY_CAPACITOR_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/EnergyCapacitor_level_3")); break;
+            case ENERGY_CAPACITOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_1")); break;
+            case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_2")); break;           
             case FARM_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_1")); break;
             case FARM_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_2")); break;
             case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
@@ -206,7 +204,6 @@ public class Structure : MonoBehaviour
             case STORAGE_0_ID:
             case STORAGE_1_ID:
             case STORAGE_2_ID:
-            case STORAGE_3_ID:
             case STORAGE_5_ID:
                 s = new GameObject("Storage").AddComponent<StorageHouse>(); break;
             case CONTAINER_ID:
@@ -258,7 +255,6 @@ public class Structure : MonoBehaviour
             case MINI_GRPH_REACTOR_3_ID:
             case ENERGY_CAPACITOR_1_ID:
             case ENERGY_CAPACITOR_2_ID:
-            case ENERGY_CAPACITOR_3_ID:
                 s = new GameObject("Energy capacitor").AddComponent<Building>(); break;
             case GRPH_ENRICHER_3_ID:
                 s = new GameObject("Graphonium Enricher").AddComponent<Factory>(); break;
@@ -401,37 +397,27 @@ public class Structure : MonoBehaviour
                 break;
             case STORAGE_1_ID:
                 {
-                    maxHp = 500;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
+                    maxHp = 4000;
+                    surfaceRect = SurfaceRect.full;
                     isArtificial = true;
                     isBasement = false;
-                    placeInCenter = false;
-                    rotate90only = false;
+                    placeInCenter = true;
+                    rotate90only = true;
                 }
                 break;
             case STORAGE_2_ID:
                 {
-                    maxHp = 700;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
+                    maxHp = 6000;
+                    surfaceRect = SurfaceRect.full;
                     isArtificial = true;
                     isBasement = false;
-                    placeInCenter = false;
-                    rotate90only = false;
-                }
-                break;
-            case STORAGE_3_ID:
-                {
-                    maxHp = 1000;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
-                    placeInCenter = false;
+                    placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
                 }
                 break;
             case STORAGE_5_ID:
                 {
-                    maxHp = 4000;
+                    maxHp = 12000;
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
@@ -512,30 +498,20 @@ public class Structure : MonoBehaviour
                 break;
             case ENERGY_CAPACITOR_1_ID:
                 {
-                    maxHp = 200;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
-                    placeInCenter = false;
-                    rotate90only = true;
+                    maxHp = 1000;
+                    surfaceRect = SurfaceRect.full;
+                    placeInCenter = true;
+                    rotate90only = false;
                     isArtificial = true;
                     isBasement = false;
                 }
                 break;
             case ENERGY_CAPACITOR_2_ID:
                 {
-                    maxHp = 400;
-                    surfaceRect = new SurfaceRect(0, 0, 7);
-                    placeInCenter = false;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                }
-                break;
-            case ENERGY_CAPACITOR_3_ID:
-                {
-                    maxHp = 1000;
-                    surfaceRect = new SurfaceRect(0, 0, 7);
-                    placeInCenter = false;
-                    rotate90only = true;
+                    maxHp = 2000;
+                    surfaceRect = SurfaceRect.full;
+                    placeInCenter = true;
+                    rotate90only = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -1067,7 +1043,6 @@ public class Structure : MonoBehaviour
             case TREE_OF_LIFE_ID: return new Rect(3 * p, 7 * p, p, p);
             case STORAGE_1_ID:
             case STORAGE_2_ID:
-            case STORAGE_3_ID:
             case STORAGE_5_ID:
             case STORAGE_0_ID: return new Rect(5 * p, 7 * p, p, p);
             case CONTAINER_ID: return new Rect(4 * p, 7 * p, p, p);
@@ -1079,7 +1054,6 @@ public class Structure : MonoBehaviour
             case HOUSE_BLOCK_ID:
             case TENT_ID: return new Rect(7 * p, 7 * p, p, p);
             case DOCK_ID: return new Rect(0, 6 * p, p, p);
-            case ENERGY_CAPACITOR_3_ID:
             case ENERGY_CAPACITOR_2_ID:
             case ENERGY_CAPACITOR_1_ID: return new Rect(p, 6 * p, p, p);
             case FARM_2_ID:
@@ -1393,7 +1367,7 @@ public class Structure : MonoBehaviour
 
     public virtual List<byte> Save()
     {
-        return SerializeStructure();
+        return SaveStructureData();
     }
 
     public virtual void Load(System.IO.FileStream fs, SurfaceBlock sblock)
@@ -1412,6 +1386,8 @@ public class Structure : MonoBehaviour
     protected void LoadStructureData(byte[] data, SurfaceBlock sblock)
     {
         //copy in harvestable resource.load - changed
+        // copy in settlement
+        //copy in settlement structure
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
@@ -1419,11 +1395,10 @@ public class Structure : MonoBehaviour
         SetBasement(sblock, new PixelPosByte(data[0], data[1]));
         hp = System.BitConverter.ToSingle(data, 8);
         maxHp = System.BitConverter.ToSingle(data, 12);
-
     }
 
     // в финальном виде копипастить в потомков
-    protected List<byte> SerializeStructure()
+    protected List<byte> SaveStructureData()
     {
         byte one = 1, zero = 0;
         List<byte> data = new List<byte> {
