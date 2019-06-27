@@ -17,7 +17,7 @@ public class House : Building {
 
     override public void Prepare() {
         PrepareBuilding();
-        housing = GetHousingValue(id);
+        housing = GetHousingValue(ID);
     }
 
     public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		

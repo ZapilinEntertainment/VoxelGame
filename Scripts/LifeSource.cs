@@ -61,7 +61,7 @@ public sealed class LifeSource : Structure {
         {
             if (!GameMaster.editMode)
             {
-                switch (id)
+                switch (ID)
                 {
                     case TREE_OF_LIFE_ID:
                         {

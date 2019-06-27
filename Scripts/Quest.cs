@@ -203,7 +203,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.ORE_ENRICHER_2_ID)
+                                    if (b.ID == Structure.ORE_ENRICHER_2_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -228,7 +228,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.MINI_GRPH_REACTOR_3_ID) mrc++;
+                                    if (b.ID == Structure.MINI_GRPH_REACTOR_3_ID) mrc++;
                                 }
                             }
                             stepsAddInfo[0] = mrc.ToString() + "/4";
@@ -256,7 +256,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.FARM_4_ID | b.id == Structure.FARM_5_ID)
+                                    if (b.ID == Structure.FARM_4_ID | b.ID == Structure.FARM_5_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -273,7 +273,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.LUMBERMILL_4_ID | b.id == Structure.LUMBERMILL_5_ID)
+                                    if (b.ID == Structure.LUMBERMILL_4_ID | b.ID == Structure.LUMBERMILL_5_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -290,7 +290,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.GRPH_REACTOR_4_ID)
+                                    if (b.ID == Structure.GRPH_REACTOR_4_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -352,13 +352,13 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.id == Structure.SMELTERY_5_ID)
+                                    if (b.ID == Structure.SMELTERY_5_ID)
                                     {
                                         if (b.basement != null) blocksPositions.Add(b.basement.pos);
                                     }
                                     else
                                     {
-                                        if (b.id == Structure.SMELTERY_3_ID | b.id == Structure.SMELTERY_2_ID | b.id == Structure.SMELTERY_1_ID)
+                                        if (b.ID == Structure.SMELTERY_3_ID | b.ID == Structure.SMELTERY_2_ID | b.ID == Structure.SMELTERY_1_ID)
                                         {
                                             if (b.basement != null) factoriesPositions.Add(b.basement.pos);
                                         }
@@ -395,7 +395,7 @@ public class Quest
                                     foreach (Structure s in sb.structures)
                                     {
                                         if (!s.isBasement) continue;
-                                        if (s.id == Structure.COLUMN_ID)
+                                        if (s.ID == Structure.COLUMN_ID)
                                         {
                                             if (sb.pos.y < Chunk.CHUNK_SIZE) checkForBuildings.Add(new ChunkPos(sb.pos.x, sb.pos.y + 1, sb.pos.z));
                                         }
@@ -494,7 +494,7 @@ public class Quest
                             byte conditionsMet = 0;
                             foreach (Building b in colony.powerGrid)
                             {
-                                if (b.id == Structure.REACTOR_BLOCK_5_ID)
+                                if (b.ID == Structure.REACTOR_BLOCK_5_ID)
                                 {
                                     stepsFinished[0] = true;
                                     conditionsMet++;
@@ -507,10 +507,10 @@ public class Quest
                             bool hotelFound = false;
                             foreach (Building b in colony.houses)
                             {
-                                if (b.id == Structure.HOUSING_MAST_6_ID) housingMastsCount++; // можно запихнуть и в проверку выше
+                                if (b.ID == Structure.HOUSING_MAST_6_ID) housingMastsCount++; // можно запихнуть и в проверку выше
                                 else
                                 {
-                                    if (b.id == Structure.HOTEL_BLOCK_6_ID) hotelFound = true;
+                                    if (b.ID == Structure.HOTEL_BLOCK_6_ID) hotelFound = true;
                                 }
                             }
                             if (housingMastsCount >= housingMastsNeeded)

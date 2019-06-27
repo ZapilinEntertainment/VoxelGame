@@ -1214,7 +1214,7 @@ sealed public class UIController : MonoBehaviour
         }
         Button b = buttonGO.GetComponent<Button>();
         b.onClick.RemoveAllListeners();
-        switch (s.id)
+        switch (s.ID)
         {
             case Structure.OBSERVATORY_ID:
                 b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
@@ -1226,8 +1226,8 @@ sealed public class UIController : MonoBehaviour
                 b.onClick.AddListener(() => { Select(s); });
                 break;
         }
-        buttonGO.transform.GetChild(0).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(s.id);
-        activeFastButtons.Add(s.id);
+        buttonGO.transform.GetChild(0).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(s.ID);
+        activeFastButtons.Add(s.ID);
     }
     public void RemoveFastButton(Structure s)
     {
@@ -1236,7 +1236,7 @@ sealed public class UIController : MonoBehaviour
         Transform t = rightFastPanel.transform;
         while (i < activeFastButtons.Count)
         {
-            if (activeFastButtons[i] == s.id)
+            if (activeFastButtons[i] == s.ID)
             {
                 if (t.childCount > 1) Destroy(t.GetChild(i).gameObject);
                 else t.GetChild(i).gameObject.SetActive(false);

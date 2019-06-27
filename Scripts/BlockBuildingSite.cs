@@ -85,7 +85,7 @@ public class BlockBuildingSite : Worksite
                     }
                     else
                     {
-                        if (s.id == Structure.PLANT_ID)
+                        if (s.ID == Structure.PLANT_ID)
                         {
                             (s as Plant).Harvest();
                             if (s != null) s.Annihilate(true, false, false);
@@ -161,7 +161,7 @@ public class BlockBuildingSite : Worksite
 
     protected override void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Pouring);
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.BLOCK_BUILDING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
     public void Set(SurfaceBlock block, ResourceType type)

@@ -98,7 +98,7 @@ override protected void LabourResult() {
 	}
 
 	override public void RecalculateWorkspeed() {
-		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Mining);
+		workSpeed = colony.labourCoefficient * workersCount * GameConstants.MINING_SPEED;
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 

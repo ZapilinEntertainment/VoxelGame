@@ -16,7 +16,7 @@ public class HarvestableResource : Structure
     public static HarvestableResource ConstructContainer(ContainerModelType i_modelType, ResourceType i_rtype, float i_count)
     {
         HarvestableResource hr = new GameObject().AddComponent<HarvestableResource>();
-        hr.id = CONTAINER_ID;
+        hr.ID = CONTAINER_ID;
         hr.PrepareStructure();
         hr.mainResource = i_rtype;
         hr.resourceCount = i_count;               

@@ -50,7 +50,7 @@ public class CleanSite : Worksite {
                 return;
             }
             float workGained = 0;
-            if (s.id == Structure.PLANT_ID)
+            if (s.ID == Structure.PLANT_ID)
             {
                 workGained = s.hp;
                 (s as Plant).Harvest();                
@@ -75,7 +75,7 @@ public class CleanSite : Worksite {
 	}
 
 	protected override void RecalculateWorkspeed() {
-		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Clearing);
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.CLEARING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 

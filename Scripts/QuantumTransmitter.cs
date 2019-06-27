@@ -19,9 +19,9 @@ public sealed class QuantumTransmitter : Building {
 	public static void ResetStaticData() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
-    public static QuantumTransmitter GetTransmitterByID(int s_id)
+    public static QuantumTransmitter GetTransmitterByConnectionID(int s_id)
     {
-        if (transmittersList.Count > 0)
+        if (s_id > 0 && transmittersList.Count > 0)
         {
             foreach (QuantumTransmitter qt in transmittersList)
             {

@@ -10,10 +10,10 @@ public sealed class Expedition
     public static int actionsHash { get; private set; }
     public static int expeditionsSucceed;
     public static UIExpeditionObserver observer { get; private set; }
+    public static int nextID { get; private set; } // в сохранение
 
     public string name;
-    public readonly int ID;
-    public static int lastUsedID { get; private set; } // в сохранение
+    public readonly int ID;    
 
     public bool hasConnection { get; private set; } // есть ли связь с центром
     public float progress { get; private set; } // прогресс текущего шага
@@ -36,7 +36,7 @@ public sealed class Expedition
     static Expedition()
     {
         expeditionsList = new List<Expedition>();
-        lastUsedID = 0;
+        nextID = 0;
     }
     public static void GameReset()
     {
@@ -80,8 +80,8 @@ public sealed class Expedition
     /// ===============================
     private Expedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_qt, PointOfInterest i_destination, string i_name)
     {
-        ID = lastUsedID;
-        lastUsedID++;
+        ID = nextID;
+        nextID++;
         name = i_name;
         stage = ExpeditionStage.WayIn;
         crew = i_crew; crew.SetStatus(CrewStatus.OnMission);
@@ -121,9 +121,13 @@ public sealed class Expedition
         {
             case ExpeditionStage.WayIn:
                 {
+                    // # mission drop
+                    Mission.RemoveMission(mission.ID);
                     mission = Mission.NoMission;
                     progress = 0;
+                    currentStep = 0;
                     stage = ExpeditionStage.WayOut;
+                    //
                     mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.GetCityPoint());
                     actionsHash++;
                     break;
@@ -144,12 +148,16 @@ public sealed class Expedition
         }
         currentDistanceToTarget = 0;
     }
+
     private void LeaveSuccessful()
     {
+        // # mission drop
+        Mission.RemoveMission(mission.ID);
         mission = Mission.NoMission;
         progress = 0;
         currentStep = 0;
         stage = ExpeditionStage.WayOut;
+        //
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
         gmap.AddPoint(mapMarker, true);
@@ -265,7 +273,7 @@ public sealed class Expedition
                             if (success)
                             {
                                 currentStep++;
-                                if (!destination.explored)
+                                if (destination.exploredPart < 1f)
                                 {
                                     destination.Explore(mission.type == MissionType.Exploring ? 2f : 1f);
                                 }
@@ -418,24 +426,67 @@ public sealed class Expedition
             stage = ExpeditionStage.Dismissed;
         }
     }
+
     #region save-load system
     public List<byte> Save()
     {
         //awaiting
         var data = new List<byte>();
+        data.AddRange(System.BitConverter.GetBytes(ID)); // read before load
+        data.Add(hasConnection ? (byte)1 : (byte)0); // 0
+        data.Add((byte)stage); // 1
+        data.AddRange(System.BitConverter.GetBytes(progress)); // 2 - 5
+        data.AddRange(System.BitConverter.GetBytes(currentStep)); // 6 - 9
+        data.AddRange(System.BitConverter.GetBytes(currentDistanceToTarget)); // 10 - 13
+        data.AddRange(System.BitConverter.GetBytes(distanceToTarget)); // 14 - 17
+        data.AddRange(System.BitConverter.GetBytes(mission.ID)); // 18 - 21
+        data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : -1)); // 22 - 25
+        data.AddRange(System.BitConverter.GetBytes(crew.ID)); // 26 -29
+        data.AddRange(System.BitConverter.GetBytes(transmitter != null ? transmitter.connectionID : -1)); // 30 - 33
+        // texture?
+        data.AddRange(System.BitConverter.GetBytes(crewSpeed)); // 34 - 37
+        data.AddRange(System.BitConverter.GetBytes(collectedMoney)); // 38 - 41
+
+        if (mapMarker != null) { // 42
+            data.Add(1);
+            data.AddRange(mapMarker.Save());
+        }
+        else data.Add(0);
         
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)
     {
-        var data = new byte[4];
+        int LENGTH = 43;
+        var data = new byte[LENGTH];
+        fs.Read(data, 0, LENGTH);
+        hasConnection = data[0] == 1;
+        stage = (ExpeditionStage)data[1];
+        progress = System.BitConverter.ToSingle(data, 2);
+        currentStep = System.BitConverter.ToInt32(data, 6);
+        currentDistanceToTarget = System.BitConverter.ToSingle(data, 10);
+        distanceToTarget = System.BitConverter.ToSingle(data, 14);
+
+        mission = Mission.GetMissionByID(System.BitConverter.ToInt32(data, 18));
+        destination = GameMaster.realMaster.globalMap.GetMapPointByID(System.BitConverter.ToInt32(data, 22)) as PointOfInterest;
+        if (destination != null) destination.sentExpedition = this;
+        crew = Crew.GetCrewByID(System.BitConverter.ToInt32(data, 26));
+        if (crew != null) crew.SetCurrentExpedition(this); else Debug.Log("expedition load error - no crew");
+        transmitter = QuantumTransmitter.GetTransmitterByConnectionID(System.BitConverter.ToInt32(data, 30));
+        if (transmitter != null) transmitter.AssignExpedition(this);
+
+        crewSpeed = System.BitConverter.ToSingle(data, 34);
+        collectedMoney = System.BitConverter.ToSingle(data, 38);
+
+        if (data[42] == 1)
+        {
+            FlyingExpedition.LoadExpeditionMarker(fs, this);
+        }
         return this;
     }
 
     public static void SaveStaticData(System.IO.FileStream fs)
-    {
-        fs.Write(System.BitConverter.GetBytes(lastUsedID), 0, 4);
-
+    {     
         int count = expeditionsList.Count;
         if (count == 0) fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         else
@@ -458,15 +509,14 @@ public sealed class Expedition
             }
         }
 
-
+        fs.Write(System.BitConverter.GetBytes(nextID), 0, 4);
         fs.Write(System.BitConverter.GetBytes(expeditionsSucceed), 0, 4);
     }
     public static void LoadStaticData(System.IO.FileStream fs)
     {
-        var data = new byte[8];
-        fs.Read(data, 0, 8);
-        lastUsedID = System.BitConverter.ToInt32(data, 0);
-        int count = System.BitConverter.ToInt32(data, 4);
+        var data = new byte[4];
+        fs.Read(data, 0, 4);        
+        int count = System.BitConverter.ToInt32(data, 0);
 
         expeditionsList = new List<Expedition>();
         if (count > 0)
@@ -479,8 +529,10 @@ public sealed class Expedition
                 e.Load(fs);
             }
         }
-        fs.Read(data, 0, 4);
-        expeditionsSucceed = System.BitConverter.ToInt32(data, 0);
+        data = new byte[8];
+        fs.Read(data, 0, 8);
+        nextID = System.BitConverter.ToInt32(data, 0);
+        expeditionsSucceed = System.BitConverter.ToInt32(data, 4);
     }
     #endregion
 }

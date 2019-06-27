@@ -13,7 +13,7 @@ public class Powerplant : WorkBuilding
     override public void Prepare()
     {
         PrepareWorkbuilding();
-        switch (id)
+        switch (ID)
         {
             case BIOGENERATOR_2_ID:
                 fuel = ResourceType.Food;

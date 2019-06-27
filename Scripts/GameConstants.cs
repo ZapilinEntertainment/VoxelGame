@@ -7,23 +7,30 @@
     public const int LIFEPOWER_PER_BLOCK = 130; // 200
     public const int LIFEPOWER_SPREAD_SPEED = 10 ;
     public const int CLOUDS_LAYER = 9;
-    public const float START_HAPPINESS = 0.5f, HAPPINESS_CHANGE_SPEED = 0.001f,
-        LIFE_DECAY_SPEED = 0.1f, CAM_LOOK_SPEED = 10,
+    public const float START_HAPPINESS = 0.5f,
+        HAPPINESS_CHANGE_SPEED = 0.001f, HEALTH_CHANGE_SPEED = 0.001f,
+        LIFE_DECAY_SPEED = 0.1f,
+        CAM_LOOK_SPEED = 10,
         START_BIRTHRATE_COEFFICIENT = 0.001f,
         HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000,
-        FOOD_CONSUMPTION = 1, STARVATION_TIME = 1,
+        FOOD_CONSUMPTION = 1, 
         SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
         STABILITY_CHANGE_SPEED = 0.001f,
         RSPACE_CONSUMING_VAL = 0.125f,
         LSECTOR_CONSUMING_VAL = 0.9f,
-        OBSERVATORY_FIND_SPEED_CF = 10,
+
+        OBSERVATORY_FIND_SPEED_CF = 10, DIGGING_SPEED = 0.5f, MINING_SPEED = 1f, POURING_SPEED = 0.5f, FACTORY_SPEED = 0.3f,
+        CLEARING_SPEED = 5f, GATHERING_SPEED = 0.1f, MACHINE_CONSTRUCTING_SPEED = 1f, BLOCK_BUILDING_SPEED = 0.5f,
+        HYDROPONICS_SPEED = 1f, OPEN_FARM_SPEED = 1f,
+        POINT_EXPLORE_SPEED = 0.01f,
+        
         RUINS_COEFFICIENT = 0.25f,
         GRAPHONIUM_CRITICAL_MASS = 10000f
         ;
-    public static float WORLD_CONSUMING_TIMER { get { return 15 * (6 - (int)GameMaster.realMaster.difficulty); } }
-    public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.0000005f * (int)GameMaster.realMaster.difficulty; } }
-    public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000002f * (int)GameMaster.realMaster.difficulty; } }
+    public static float WORLD_CONSUMING_TIMER { get { return 15 * (2f - GameMaster.realMaster.GetDifficultyCoefficient()); } }
+    public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.000003f * GameMaster.realMaster.GetDifficultyCoefficient(); } }
+    public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000012f * GameMaster.realMaster.GetDifficultyCoefficient(); } }
     public const int MAX_LIFEPOWER_TRANSFER = 16;
 
     public const string BASE_SETTINGS_PLAYERPREF = "baseSettings";
@@ -38,17 +45,6 @@
     {
         GameMaster gm = GameMaster.realMaster;
         return ((SHIP_ARRIVING_TIME / (gm.tradeVesselsTrafficCoefficient)) / (gm.colonyController.docksLevel + 1) / 2f);
-    }
-    public static float GetBlackoutStabilityTestHardness()
-    {
-        switch (GameMaster.realMaster.difficulty)
-        {
-            case Difficulty.Utopia: return 0f;
-            case Difficulty.Easy: return 0.05f;
-            case Difficulty.Hard: return 0.25f;
-            case Difficulty.Torture: return 0.33f;
-            default: return 0.1f;
-        }
     }
 
     public static float GetUpperBorder() { return Chunk.CHUNK_SIZE * 2; }

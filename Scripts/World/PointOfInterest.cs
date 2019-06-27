@@ -4,25 +4,30 @@ using System.Collections.Generic;
 
 public class PointOfInterest : MapPoint
 {
-    public bool explored { get; protected set; }
-    public Expedition sentExpedition; // показывает последнюю отправленную
-
-    private float exploredPart = 0f;
-    private List<Mission> availableMissions;
-
     public float richness { get; protected set; }
     public float danger { get; protected set; }
     public float mysteria { get; protected set; }
     public float friendliness { get; protected set; }
-
-    public float difficulty { get; private set; }
+    public float difficulty { get; protected set; }
+    public float exploredPart
+    {
+        get { return exploredPart; }
+        private set
+        {
+            if (value > 1) exploredPart = 1f;
+            else
+            {
+                if (value < 0) exploredPart = 0f;
+                else exploredPart = value;
+            }
+        }
+    }
+    public Mission[] availableMissions;
+    public Expedition sentExpedition; // не больше одной экспедиции на точку  
 
     public PointOfInterest(int i_id) : base(i_id) { }
-
     public PointOfInterest(float i_angle, float i_height, MapMarkerType mtype) : base(i_angle, i_height, mtype)
     {
-        explored = false;
-        availableMissions = new List<Mission>() { new Mission(MissionType.Exploring) };
         float locationDifficulty = 0f;
         switch (mtype)
         {
@@ -121,31 +126,85 @@ public class PointOfInterest : MapPoint
                 locationDifficulty = 0.25f + 0.25f * Random.value;
                 break;
         }
-        difficulty = 0.25f * danger + 0.25f * mysteria + 0.25f * locationDifficulty + 0.25f * (1 - friendliness);
+        difficulty =  ((danger + mysteria + locationDifficulty - friendliness) * 0.5f + Random.value * 0.5f) * (1f + GameMaster.realMaster.GetDifficultyCoefficient()) * 0.5f;
+        if (difficulty < 0f) difficulty = 0f; // ну мало ли
+        exploredPart = 0f;
     }
     
     public List<Dropdown.OptionData> GetAvailableMissionsDropdownData()
     {
         var l = new List<Dropdown.OptionData>();
-        foreach (Mission m in availableMissions)
+        if (availableMissions != null)
         {
-            l.Add(new Dropdown.OptionData(m.codename));
-        }
+            foreach (Mission m in availableMissions)
+            {
+                l.Add(new Dropdown.OptionData(Localization.GetMissionStandartName(m.type)));
+            }
+        }        
         return l;
     }
     public Mission GetMission(int index)
     {
-        if (index < 0 | index >= availableMissions.Count) return Mission.NoMission;
+        if (index < 0 | index >= availableMissions.Length) return Mission.NoMission;
         else return availableMissions[index];
     }
     public void Explore(float k)
     {
-        exploredPart += 0.01f * k;
-        if (exploredPart >= 1f)
+        exploredPart += GameConstants.POINT_EXPLORE_SPEED * k;
+    }
+
+    protected Artifact GetArtifact()
+    {
+        float a = mysteria * friendliness * 0.8f + 0.2f * Random.value;
+        var atype = Artifact.AffectionType.NoAffection;
+        bool researched = false;
+        switch (type)
         {
-            exploredPart = 1f;
-            explored = true;
+            case MapMarkerType.Unknown:
+                atype = Artifact.AffectionType.SpaceAffection;
+                break;
+            case MapMarkerType.Station:
+                if (Random.value > 0.5f) researched = true;
+                atype = Random.value > 0.5f ? Artifact.AffectionType.LifepowerAffection : Artifact.AffectionType.StabilityAffection;
+                break;
+            case MapMarkerType.Wreck:
+                if (Random.value < 0.1f) researched = true;
+                break;
+            case MapMarkerType.Island:
+                atype = Random.value > 0.4f ? Artifact.AffectionType.StabilityAffection : Artifact.AffectionType.LifepowerAffection;
+                break;
+            case MapMarkerType.Portal:
+                if (Random.value > 0.5f) atype = Artifact.AffectionType.StabilityAffection;
+                break;
+            case MapMarkerType.Colony:
+                if (Random.value > 0.6f) atype = Artifact.AffectionType.LifepowerAffection; else atype = Artifact.AffectionType.StabilityAffection;
+                if (Random.value > 0.3f) researched = true;
+                break;
+            case MapMarkerType.Wiseman:
+                {
+                    float f = Random.value;
+                    if (f <= 0.33f) atype = Artifact.AffectionType.SpaceAffection;
+                    else
+                    {
+                        if (f >= 0.66f) atype = Artifact.AffectionType.StabilityAffection;
+                        else atype = Artifact.AffectionType.LifepowerAffection;
+                    }
+                    researched = true;
+                    break;
+                }
+            case MapMarkerType.Wonder:
+                atype = Artifact.AffectionType.StabilityAffection;
+                break;
         }
+
+        var art = new Artifact(
+            (friendliness * 0.5f + richness * 0.5f) * 0.6f * Random.value + 0.4f,
+            (richness * 0.7f + 0.3f * Random.value) * 0.6f + 0.4f * Random.value,
+            (danger * richness * 0.55f + 0.45f * Random.value) * 0.5f + 0.5f * Random.value,
+           atype
+            );
+        art.SetResearchStatus(researched);
+        return art;
     }
 
     public void TakeTreasure(Crew c)
@@ -160,71 +219,7 @@ public class PointOfInterest : MapPoint
             }
         }
         GainResources(c);
-    }
-    private Artifact GetArtifact()
-    {
-        float a = mysteria * friendliness * 0.8f + 0.2f * Random.value;
-        var atype = Artifact.AffectionType.NoAffection;
-        bool researched = false, activated = false;
-        switch (type)
-        {
-            case MapMarkerType.Unknown:
-                atype = Artifact.AffectionType.SpaceAffection;
-                break;
-            case MapMarkerType.Station:
-                if (Random.value > 0.5f) researched = true;
-                atype = Random.value > 0.5f ? Artifact.AffectionType.LifepowerAffection : Artifact.AffectionType.StabilityAffection;
-                if (Random.value < 0.1f) activated = true;
-                break;
-            case MapMarkerType.Wreck:
-                if (Random.value < 0.1f) researched = true;
-                if (Random.value > 0.25f) activated = true;
-                break;
-            case MapMarkerType.Island:
-                atype = Random.value > 0.4f ? Artifact.AffectionType.StabilityAffection : Artifact.AffectionType.LifepowerAffection;
-                if (Random.value < 0.1f) activated = true;
-                break;
-            case MapMarkerType.Portal:
-                if (Random.value > 0.5f) atype = Artifact.AffectionType.StabilityAffection;
-                if (Random.value > 0.4f) activated = true;
-                break;
-            case MapMarkerType.Colony:
-                if (Random.value > 0.6f) atype = Artifact.AffectionType.LifepowerAffection; else atype = Artifact.AffectionType.StabilityAffection;
-                if (Random.value > 0.3f) researched = true;
-                if (Random.value < 0.05f) activated = false;
-                break;
-            case MapMarkerType.Wiseman:
-                {
-                    float f = Random.value;
-                    if (f <= 0.33f) atype = Artifact.AffectionType.SpaceAffection;
-                    else
-                    {
-                         if (f >= 0.66f) atype = Artifact.AffectionType.StabilityAffection;
-                         else atype = Artifact.AffectionType.LifepowerAffection;
-                    }
-                    researched = true;
-                    if (Random.value > 0.3f) activated = true;
-                    break;
-                }
-            case MapMarkerType.Wonder:
-                atype = Artifact.AffectionType.StabilityAffection;
-                if (Random.value > 0.5f) activated = true;
-                break;
-            case MapMarkerType.Resources:
-                if (Random.value < 0.05f) activated = true;
-                break;
-        }
-
-        var art = new Artifact(
-            (friendliness * 0.5f + richness * 0.5f) * 0.6f * Random.value + 0.4f,
-            (richness * 0.7f + 0.3f * Random.value) * 0.6f + 0.4f * Random.value,
-            (danger * richness * 0.55f + 0.45f * Random.value) * 0.5f + 0.5f * Random.value,
-           atype,
-           activated
-            );
-        art.SetResearchStatus(researched);
-        return art;
-    }
+    }    
     public void GainResources(Crew c)
     {
         List<ResourceType> typesList = null;
@@ -278,13 +273,43 @@ public class PointOfInterest : MapPoint
     #region save-load
     override public List<byte> Save()
     {
-        var bytes = base.Save();
-
-        return bytes;
+        var data = base.Save();
+        data.AddRange(System.BitConverter.GetBytes(richness)); // 0 - 3
+        data.AddRange(System.BitConverter.GetBytes(danger)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
+        data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
+        data.AddRange(System.BitConverter.GetBytes(difficulty)); // 16 - 19
+        data.AddRange(System.BitConverter.GetBytes(exploredPart)); // 20 - 23
+        int n = 0;
+        if (availableMissions != null)
+        {
+            n = availableMissions.Length;
+            if (n > 0)
+            {
+                foreach (Mission m in availableMissions) data.AddRange(m.Save());
+            }
+            data.AddRange(System.BitConverter.GetBytes(n));
+        }
+        else  data.AddRange(System.BitConverter.GetBytes(n));
+        return data;
     }
     public void Load(System.IO.FileStream fs)
     {
- 
+        int LENGTH = 28; // 24 + 4
+        var data = new byte[LENGTH];
+        fs.Read(data, 0, LENGTH);
+        richness = System.BitConverter.ToSingle(data, 0);
+        danger = System.BitConverter.ToSingle(data, 4);
+        mysteria = System.BitConverter.ToSingle(data, 8);
+        friendliness = System.BitConverter.ToSingle(data, 12);
+        difficulty = System.BitConverter.ToSingle(data, 16);
+        exploredPart = System.BitConverter.ToSingle(data, 20);
+        int n = System.BitConverter.ToInt32(data, 24);
+        if (n > 0)
+        {
+            availableMissions = new Mission[n];
+            Mission.StaticLoad(fs, n, this);
+        }
     } 
     #endregion
 }

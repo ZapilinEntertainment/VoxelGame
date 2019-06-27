@@ -4,7 +4,7 @@ public sealed class StorageHouse : Building {
 
     override public void Prepare() {
         PrepareBuilding();
-        switch (id)
+        switch (ID)
         {
             case STORAGE_0_ID: volume = GetMaxVolume(0);break;
             case STORAGE_1_ID: volume = GetMaxVolume(1); break;

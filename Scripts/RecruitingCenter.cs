@@ -42,7 +42,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     }
    public static float GetHireCost()
     {
-        if (hireCost == -1) hireCost = START_CREW_COST + ((int)(GameMaster.realMaster.difficulty) - 2) * 50;
+        if (hireCost == -1) hireCost = START_CREW_COST + GameMaster.realMaster.GetDifficultyCoefficient() * 50;
         return hireCost;
     }
    public static void SetHireCost(float f)

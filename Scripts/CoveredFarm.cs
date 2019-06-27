@@ -7,7 +7,7 @@ public class CoveredFarm : WorkBuilding {
 
 	override public void Prepare()  {
         PrepareWorkbuilding();
-        switch (id)
+        switch (ID)
         {
             case FARM_4_ID:
             case FARM_5_ID:
@@ -28,8 +28,8 @@ public class CoveredFarm : WorkBuilding {
 	}
 
 	override public void RecalculateWorkspeed() {
-		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
-		if (workSpeed < MIN_SPEED && workersCount > 0) workSpeed = MIN_SPEED;
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.HYDROPONICS_SPEED;
+        if (workSpeed < MIN_SPEED && workersCount > 0) workSpeed = MIN_SPEED;
         gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
 	}
 }

@@ -272,7 +272,7 @@ public sealed class Hangar : WorkBuilding
 
     override public void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.MachineConstructing);
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.MACHINE_CONSTRUCTING_SPEED;
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 2f;
     }
 

@@ -49,9 +49,7 @@ public sealed class GlobalMap : MonoBehaviour
             sectorsCount += (int)(360f / sectorsDegrees[i]);
         }
         mapSectors = new RingSector[sectorsCount];
-
         ascension = GameConstants.START_HAPPINESS;
-
         stars = new Dictionary<SunPoint, Transform>();
         //start sector:
         byte ring = RINGS_COUNT / 2;
@@ -169,7 +167,7 @@ public sealed class GlobalMap : MonoBehaviour
     }
     public MapPoint GetMapPointByID(int s_id)
     {
-        if (mapPoints.Count == 0) return null;
+        if (s_id < 0 || mapPoints.Count == 0) return null;
         else
         {
             foreach (MapPoint mp in mapPoints)

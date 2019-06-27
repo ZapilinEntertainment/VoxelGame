@@ -74,7 +74,7 @@ public struct Environment
     public static readonly Environment defaultEnvironment;
 
     public readonly EnvironmentPreset presetType;
-    public readonly float conditions;
+    public readonly float conditions; // 0 is hell, 1 is very favourable
     public LightSettings lightSettings;
 
     static Environment()

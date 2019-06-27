@@ -27,7 +27,7 @@ public class UIStructureObserver : UIObserver {
             CheckName();
 			demolishButton.gameObject.SetActive(!s.indestructible);
             sizeField.text = s.surfaceRect.size.ToString() + " x " + s.surfaceRect.size.ToString();
-            if (s.isArtificial & s.id != Structure.WIND_GENERATOR_1_ID)
+            if (s.isArtificial & s.ID != Structure.WIND_GENERATOR_1_ID)
             {
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(true);
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(true);
@@ -37,7 +37,7 @@ public class UIStructureObserver : UIObserver {
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(false);
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(false);
             }
-            if (s.id == Structure.OBSERVATORY_ID)
+            if (s.ID == Structure.OBSERVATORY_ID)
             {
                 specialButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.OpenMap);
                 specialButton.SetActive(true);
@@ -73,7 +73,7 @@ public class UIStructureObserver : UIObserver {
         if (observingStructure == null) SelfShutOff();
         else
         {
-            if (observingStructure.id == Structure.OBSERVATORY_ID)
+            if (observingStructure.ID == Structure.OBSERVATORY_ID)
             {
                 GameMaster.realMaster.globalMap.ShowOnGUI();
             }
@@ -105,11 +105,11 @@ public class UIStructureObserver : UIObserver {
         if (observingStructure == null) SelfShutOff();
         else
         {
-            if (observingStructure.id == Structure.SETTLEMENT_CENTER_ID)
+            if (observingStructure.ID == Structure.SETTLEMENT_CENTER_ID)
             {
-                nameField.text = Localization.GetStructureName(observingStructure.id) + " (" + (observingStructure as Settlement).level.ToString() + ')';
+                nameField.text = Localization.GetStructureName(observingStructure.ID) + " (" + (observingStructure as Settlement).level.ToString() + ')';
             }
-            else nameField.text = Localization.GetStructureName(observingStructure.id);
+            else nameField.text = Localization.GetStructureName(observingStructure.ID);
         }
     }
 }

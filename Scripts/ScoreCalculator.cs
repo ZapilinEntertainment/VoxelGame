@@ -133,7 +133,7 @@
                         {
                             foreach (Structure s in sb.structures)
                             {
-                                score += structuresCost[s.id];
+                                score += structuresCost[s.ID];
                             }
                         }
                         break;

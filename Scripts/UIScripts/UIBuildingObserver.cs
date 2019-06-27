@@ -52,7 +52,7 @@ public class UIBuildingObserver : UIObserver {
         {
             if (status_connectedToPowerGrid)
             {
-                if (b.id == Structure.ENERGY_CAPACITOR_1_ID | b.id == Structure.ENERGY_CAPACITOR_2_ID )
+                if (b.ID == Structure.ENERGY_CAPACITOR_1_ID | b.ID == Structure.ENERGY_CAPACITOR_2_ID )
                 {
                     chargeButton.SetActive(true);
                     energyValue.enabled = false;
@@ -105,7 +105,7 @@ public class UIBuildingObserver : UIObserver {
 			housingValue.text = showingHousing.ToString();
 			housingValue.enabled = true;
 			housingImage.enabled = true;
-            if (b.id == Structure.SETTLEMENT_CENTER_ID)
+            if (b.ID == Structure.SETTLEMENT_CENTER_ID)
             {
                 enableAdditionalElements = true;
                 var st = b as Settlement;
@@ -228,7 +228,7 @@ public class UIBuildingObserver : UIObserver {
                 if (answer != s) {
                     if (answer == string.Empty)
                     {
-                        if (observingBuilding.id != Structure.SETTLEMENT_CENTER_ID)
+                        if (observingBuilding.ID != Structure.SETTLEMENT_CENTER_ID)
                             upgradeButtonText.text = Localization.GetWord(LocalizedWord.Upgrade);
                         else
                         {
@@ -272,7 +272,7 @@ public class UIBuildingObserver : UIObserver {
                 }
             }
 
-            if (observingBuilding.id == Structure.SETTLEMENT_CENTER_ID)
+            if (observingBuilding.ID == Structure.SETTLEMENT_CENTER_ID)
             {
                 var sc = observingBuilding as Settlement;
                 showingHousing = sc.housing;

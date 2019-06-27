@@ -25,7 +25,7 @@ public abstract class WorkBuilding : Building
         PrepareBuilding();
         workersCount = 0;
         workflow = 0;
-        switch (id)
+        switch (ID)
         {
             case DOCK_ID:
                 {
@@ -323,7 +323,7 @@ public abstract class WorkBuilding : Building
     }
     virtual public void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Manufacturing);
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.FACTORY_SPEED;
         gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
     }
 

@@ -52,7 +52,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     }
     public void PrepareIslandBasis(ChunkGenerationMode cmode)
     { // его придётся сохранять!
-        int[,,] data;
         switch (cmode) {
             case ChunkGenerationMode.Peak:
                 int resolution = 15;
@@ -65,10 +64,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }        
     }
 
-    public void SetEnvironmentalConditions(float t)
-    {
-        environmentalConditions = t;
-    }
+
     public void ChangeEnvironment(Environment e)
     {
         GlobalMap gmap = GameMaster.realMaster.globalMap;
@@ -282,6 +278,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(windVector.y), 0, 4);  // 12 - 15
         fs.Write(System.BitConverter.GetBytes(environmentalConditions), 0, 4); // 16 - 19
         fs.Write(System.BitConverter.GetBytes(windTimer), 0, 4);  // 20 - 23
+        //сохранение декораций?
+        //save environment
     }
     public void Load(System.IO.FileStream fs)
     {

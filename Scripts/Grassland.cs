@@ -107,7 +107,7 @@ public sealed class Grassland
             lifepower = gl.lifepower;
             foreach (Structure s in gl.myBlock.structures)
             {
-                if (s.id == Structure.PLANT_ID) plants.Add(s as Plant);
+                if (s.ID == Structure.PLANT_ID) plants.Add(s as Plant);
             }
 
             byte stage = gl.CheckGrasslandStage();
@@ -391,7 +391,7 @@ public sealed class Grassland
             while (k < myBlock.structures.Count)
             {
                 Structure s = myBlock.structures[k];
-                if (s.id == Structure.PLANT_ID) s.Annihilate(true, false, true);
+                if (s.ID == Structure.PLANT_ID) s.Annihilate(true, false, true);
                 k++;
             }
         }

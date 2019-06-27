@@ -55,7 +55,7 @@ public sealed class Settlement : House
                     
                     foreach (var s in center.basement.structures)
                     {
-                        if (s.id == SETTLEMENT_STRUCTURE_ID)
+                        if (s.ID == SETTLEMENT_STRUCTURE_ID)
                         {
                             s2 = (s as SettlementStructure);
                             if (loading) s2.AssignSettlement(center);
@@ -201,7 +201,7 @@ public sealed class Settlement : House
         gardensCf = 0f;
         shopsCf = 0f;
         pointsFilled = 0;
-        energySurplus = GetEnergySurplus(id);
+        energySurplus = GetEnergySurplus(ID);
         float onePartEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
 
         int x = SurfaceBlock.INNER_RESOLUTION / SettlementStructure.CELLSIZE, xpos, zpos;
@@ -216,7 +216,7 @@ public sealed class Settlement : House
             SettlementStructure s2;
             foreach (var s in basement.structures)
             {
-                if (s.id == SETTLEMENT_STRUCTURE_ID)
+                if (s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
                     s2 = (s as SettlementStructure);
                     var type = SettlementStructureType.Empty;
@@ -854,7 +854,7 @@ public sealed class Settlement : House
         gardensCf = 0f;
         shopsCf = 0f;
         pointsFilled = 0;
-        energySurplus = GetEnergySurplus(id);
+        energySurplus = GetEnergySurplus(ID);
         float onePartEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
 
         if (basement.noEmptySpace != false)
@@ -862,7 +862,7 @@ public sealed class Settlement : House
             SettlementStructure s2;
             foreach (var s in basement.structures)
             {
-                if (s.id == SETTLEMENT_STRUCTURE_ID)
+                if (s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
                     s2 = (s as SettlementStructure);
                     switch (s2.type)

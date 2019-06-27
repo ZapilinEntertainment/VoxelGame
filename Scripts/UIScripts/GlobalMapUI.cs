@@ -82,7 +82,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     var e = (chosenPoint as FlyingExpedition).expedition;
                     pointLabel.text = e.crew.name;
-                    pointDescription.text = Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.codename;
+                    pointDescription.text = Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.name;
                     break;
                 }
             default: pointLabel.text = Localization.GetMapPointTitle(chosenPoint.type); break;
@@ -93,7 +93,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         {
             if (mp is PointOfInterest)
             {
-                if ((mp as PointOfInterest).sentExpedition == null) expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) + ' ' + Expedition.lastUsedID.ToString();
+                if ((mp as PointOfInterest).sentExpedition == null) expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) + ' ' + Expedition.nextID.ToString();
                 PreparePointExpedition();
             }
             else

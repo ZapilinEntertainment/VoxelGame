@@ -524,7 +524,7 @@ public class SurfaceBlock : Block
                         {
                             if (s.surfaceRect.Intersect(x0, z0, x1 - x0, z1 - z0))
                             {
-                                if (s.id == Structure.PLANT_ID) (s as Plant).Dry();
+                                if (s.ID == Structure.PLANT_ID) (s as Plant).Dry();
                                 else s.ApplyDamage(damage);
                             }
                             if (s != null) i++;

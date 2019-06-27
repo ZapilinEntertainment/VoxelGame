@@ -35,7 +35,6 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 //ScoreCalculator
 
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
-public enum WorkType : byte {Nothing, Digging, Pouring, Manufacturing, Clearing, Gathering, Mining, Farming, MachineConstructing}
 public enum GameLevel : byte { Menu, Playable, Editor}
 public enum GameEndingType : byte { Default, ColonyLost, TransportHubVictory, ConsumedByReal, ConsumedByLastSector}
 
@@ -79,9 +78,6 @@ public sealed class GameMaster : MonoBehaviour
     public float gearsDegradeSpeed { get; private set; }
     public float stability { get; private set; }
     public Difficulty difficulty { get; private set; }
-
-    private const float diggingSpeed = 0.5f, pouringSpeed = 0.5f, manufacturingSpeed = 0.3f,
-    clearingSpeed = 5, gatheringSpeed = 0.1f, miningSpeed = 1, machineConstructingSpeed = 1;
     //data
     private float timeGone, target_stability = 0.5f;
     public byte day { get; private set; }
@@ -225,7 +221,6 @@ public sealed class GameMaster : MonoBehaviour
                         sellPriceCoefficient = 1;
                         tradeVesselsTrafficCoefficient = 2;
                         upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
-                        environmentMaster.SetEnvironmentalConditions(1);
                         gearsDegradeSpeed = 0;
                         break;
                     case Difficulty.Easy:
@@ -235,7 +230,6 @@ public sealed class GameMaster : MonoBehaviour
                         sellPriceCoefficient = 0.9f;
                         tradeVesselsTrafficCoefficient = 1.5f;
                         upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
-                        environmentMaster.SetEnvironmentalConditions(1);
                         gearsDegradeSpeed = 0.00001f;
                         break;
                     case Difficulty.Normal:
@@ -245,7 +239,6 @@ public sealed class GameMaster : MonoBehaviour
                         sellPriceCoefficient = 0.75f;
                         tradeVesselsTrafficCoefficient = 1;
                         upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
-                        environmentMaster.SetEnvironmentalConditions(0.95f);
                         gearsDegradeSpeed = 0.00002f;
                         break;
                     case Difficulty.Hard:
@@ -255,7 +248,6 @@ public sealed class GameMaster : MonoBehaviour
                         sellPriceCoefficient = 0.5f;
                         tradeVesselsTrafficCoefficient = 0.9f;
                         upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
-                        environmentMaster.SetEnvironmentalConditions(0.9f);
                         gearsDegradeSpeed = 0.00003f;
                         break;
                     case Difficulty.Torture:
@@ -265,7 +257,6 @@ public sealed class GameMaster : MonoBehaviour
                         sellPriceCoefficient = 0.33f;
                         tradeVesselsTrafficCoefficient = 0.75f;
                         upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
-                        environmentMaster.SetEnvironmentalConditions(0.8f);
                         gearsDegradeSpeed = 0.00005f;
                         break;
                 }
@@ -554,26 +545,7 @@ public sealed class GameMaster : MonoBehaviour
     }
     #endregion
 
-    public float CalculateWorkspeed(int workersCount, WorkType type)
-    {
-        if (colonyController == null) return 0;
-        float workspeed = workersCount * colonyController.labourEfficientcy_coefficient * (colonyController.gears_coefficient + colonyController.health_coefficient + colonyController.happiness_coefficient - 2);
-        if (workspeed < 0) workspeed = 0.01f;
-        switch (type)
-        {
-            case WorkType.Digging: workspeed *= diggingSpeed; break;
-            case WorkType.Manufacturing: workspeed *= manufacturingSpeed; break;
-            case WorkType.Nothing: workspeed = 0; break;
-            case WorkType.Pouring: workspeed *= pouringSpeed; break;
-            case WorkType.Clearing: workspeed *= clearingSpeed; break;
-            case WorkType.Gathering: workspeed *= gatheringSpeed; break;
-            case WorkType.Mining: workspeed *= miningSpeed; break; // digging inside mine
-            case WorkType.Farming: workspeed *= lifeGrowCoefficient * environmentMaster.environmentalConditions; break;
-            case WorkType.MachineConstructing: workspeed *= machineConstructingSpeed; break;
-        }
-        return workspeed;
-    }
-
+    #region game parameters
     public void SetStartResources()
     {
         //start resources
@@ -622,6 +594,19 @@ public sealed class GameMaster : MonoBehaviour
         }
         colonyController.storage.AddResources(ResourcesCost.GetCost(Structure.SETTLEMENT_CENTER_ID));
     }
+    public float GetDifficultyCoefficient()
+    {
+        // 0 - 1 only!
+        switch(difficulty)
+        {
+            case Difficulty.Utopia: return 0.1f;
+            case Difficulty.Easy: return 0.25f;
+            case Difficulty.Hard: return 0.7f;
+            case Difficulty.Torture: return 1f;
+            default: return 0.5f;
+        }
+    }
+    #endregion
     //test
     public void OnGUI()
     {
@@ -735,6 +720,9 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
         // 73 - end
         #endregion
+
+        fs.Write(System.BitConverter.GetBytes(Mission.nextID),0,4);
+        globalMap.Save(fs);
         environmentMaster.Save(fs);
         Shuttle.SaveStaticData(fs);
         Artifact.SaveStaticData(fs);
@@ -744,8 +732,7 @@ public sealed class GameMaster : MonoBehaviour
         colonyController.Save(fs); // <------- COLONY CONTROLLER
         Dock.SaveStaticDockData(fs);
 
-        QuestUI.current.Save(fs);
-        globalMap.Save(fs);
+        QuestUI.current.Save(fs);        
         Expedition.SaveStaticData(fs);        
         fs.Close();
         SetPause(false);
@@ -814,6 +801,11 @@ public sealed class GameMaster : MonoBehaviour
             lifepowerTimer = System.BitConverter.ToSingle(data, 65);
             RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 69));
             #endregion
+
+            data = new byte[4];
+            fs.Read(data, 0, 4);
+            Mission.SetNextIDValue(System.BitConverter.ToInt32(data,0));
+            globalMap.Load(fs);
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
             Shuttle.LoadStaticData(fs); // because of hangars
@@ -833,8 +825,7 @@ public sealed class GameMaster : MonoBehaviour
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             Dock.LoadStaticData(fs);
-            QuestUI.current.Load(fs);
-            globalMap.Load(fs);
+            QuestUI.current.Load(fs);            
             Expedition.LoadStaticData(fs);            
             fs.Close();
             FollowingCamera.main.WeNeedUpdate();

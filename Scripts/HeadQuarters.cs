@@ -79,7 +79,7 @@ public sealed class HeadQuarters : House
                 {
                     foreach (Building b in colony.powerGrid)
                     {
-                        if (b.id == WORKSHOP_ID) return true;
+                        if (b.ID == WORKSHOP_ID) return true;
                     }
                 }
                 return false;
@@ -88,7 +88,7 @@ public sealed class HeadQuarters : House
                 {
                     foreach (Building b in colony.powerGrid)
                     {
-                        if (b.id == GRPH_ENRICHER_3_ID) return true;
+                        if (b.ID == GRPH_ENRICHER_3_ID) return true;
                     }
                 }
                 return false;

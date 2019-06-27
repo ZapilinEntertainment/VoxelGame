@@ -185,7 +185,7 @@ public sealed class Crew : MonoBehaviour {
     }
     public static Crew GetCrewByID(int s_id)
     {
-        if (crewsList.Count <= s_id) return null;
+        if (s_id < 0 || crewsList.Count <= s_id) return null;
         else
         {
             foreach (Crew c in crewsList)
@@ -242,6 +242,13 @@ public sealed class Crew : MonoBehaviour {
     public void Rename(string s)
     {
         name = s;
+    }
+    /// <summary>
+    /// for loading only
+    /// </summary>
+    public void SetCurrentExpedition(Expedition e)
+    {
+        currentExpedition = e;
     }
 
     public void AddExperience(float f)

@@ -40,7 +40,7 @@ public class TunnelBuildingSite : Worksite {
 		}
 
 	protected override void RecalculateWorkspeed() {
-		workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount,WorkType.Digging);
+		workSpeed = colony.labourCoefficient * workersCount * GameConstants.DIGGING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;        
 	}
 

@@ -23,7 +23,7 @@ public abstract class Plant : Structure {
             case CROP_CORN_ID: p = new GameObject("Corn").AddComponent<Corn>(); break;
             case TREE_OAK_ID: p = new GameObject("Oak Tree").AddComponent<OakTree>(); break;
         }
-        p.id = PLANT_ID;
+        p.ID = PLANT_ID;
         p.plant_ID = i_plant_id;
         p.Prepare();
         return p;
@@ -57,7 +57,7 @@ public abstract class Plant : Structure {
     }
 
     virtual public void ResetToDefaults() {
-		lifepower = GetCreateCost(id);
+		lifepower = GetCreateCost(ID);
 		lifepowerToGrow = 1;
 		stage = 0;
 		growth = 0;
@@ -65,7 +65,7 @@ public abstract class Plant : Structure {
 
 	override public void Prepare() {		
 		PrepareStructure();
-		lifepower = GetCreateCost(id);
+		lifepower = GetCreateCost(ID);
 		growth = 0;
 	}
 

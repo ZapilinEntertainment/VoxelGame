@@ -6,6 +6,9 @@ public sealed class XStation : WorkBuilding {
     private static bool indicatorPrepared = false, markerEnabled = false;
     private  float INDICATOR_EDGE_POSITION;
 
+    // EnvironmentMaster.environmentalConditions
+    //GameMaster.lifegrowCoefficient
+
     public static void ResetStaticData()
     {
         current = null;

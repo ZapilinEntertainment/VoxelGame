@@ -269,11 +269,11 @@ public class Building : Structure
         upgradedIndex = -1;
         canBePowerSwitched = false;
         canBePowerSwitched = false;
-        energySurplus = GetEnergySurplus(id);
-        energyCapacity = GetEnergyCapacity(id);
+        energySurplus = GetEnergySurplus(ID);
+        energyCapacity = GetEnergyCapacity(ID);
         level = 1;
 
-        switch (id)
+        switch (ID)
         {
             case HEADQUARTERS_ID:
                 {

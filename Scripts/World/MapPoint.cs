@@ -260,16 +260,16 @@ public class MapPoint
     #region save-load
     public virtual List<byte> Save()
     {
+        //dependency : FlyingExpedition.LoadExpeditionMarker
         var bytes = new List<byte>();
         bytes.AddRange(System.BitConverter.GetBytes(ID)); // 0 - 3
-        byte codedType = (byte)type;
-        bytes.Add(codedType); // 4 
+        bytes.Add((byte)type); // 4 
         bytes.Add(subIndex);// 5
         bytes.AddRange(System.BitConverter.GetBytes(angle)); // 6 - 9
         bytes.AddRange(System.BitConverter.GetBytes(height)); // 10 - 13
-        
+        bytes.AddRange(System.BitConverter.GetBytes(stability)); // 14 - 17
         return bytes;
-    }
+    }    
 
     public static List<MapPoint> LoadPoints(System.IO.FileStream fs)
     {
@@ -278,17 +278,17 @@ public class MapPoint
         //Debug.Log(count);
         if (count > 0)
         {            
-            int LENGTH = 15;
+            int LENGTH = 18;
             for (int i = 0; i < count; i++)
             {
                 var data = new byte[LENGTH];
                 fs.Read(data, 0, LENGTH);
                 int ID = System.BitConverter.ToInt32(data, 0);
                 var mmtype = (MapMarkerType)data[4];
-                //Debug.Log(data[4]);
                 int subIndex = data[5];
                 float angle = System.BitConverter.ToSingle(data, 6);
                 float height = System.BitConverter.ToSingle(data, 10);
+                float stability = System.BitConverter.ToSingle(data, 14);
                 GlobalMap gmap = GameMaster.realMaster.globalMap;
 
                 switch (mmtype)
@@ -311,6 +311,7 @@ public class MapPoint
                             poi.height = height;
                             poi.ringIndex = gmap.DefineRing(height);
                             poi.type = mmtype;
+                            poi.stability = stability;
                             poi.Load(fs);
                             
                             pts.Add(poi);
@@ -325,6 +326,7 @@ public class MapPoint
                             mpoint.height = height;
                             mpoint.ringIndex = gmap.DefineRing(height);
                             mpoint.type = mmtype;
+                            mpoint.stability = stability;
                             
                             pts.Add(mpoint);
                             break;

@@ -25,7 +25,7 @@ public class GatherSite : Worksite
                 List<Structure> strs = workObject.structures;
                 while (i < strs.Count & workflow > 0)
                 {
-                    switch (strs[i].id)
+                    switch (strs[i].ID)
                     {
                         case Structure.PLANT_ID:
                             Plant p = strs[i] as Plant;
@@ -71,7 +71,7 @@ public class GatherSite : Worksite
 
     protected override void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Gathering);
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.GATHERING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
     public void Set(SurfaceBlock block)

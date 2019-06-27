@@ -24,7 +24,7 @@ public class Factory : WorkBuilding
     {
         PrepareWorkbuilding();
         recipe = Recipe.NoRecipe;
-        switch (id)
+        switch (ID)
         {
             case SMELTERY_1_ID:
             case SMELTERY_2_ID:

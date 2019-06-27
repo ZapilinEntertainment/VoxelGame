@@ -12,7 +12,7 @@ public class Farm : WorkBuilding
     override public void Prepare()
     {
         PrepareWorkbuilding();
-        switch (id)
+        switch (ID)
         {
             case FARM_1_ID:
             case FARM_2_ID:
@@ -72,7 +72,7 @@ public class Farm : WorkBuilding
 
     override public void RecalculateWorkspeed()
     {
-        workSpeed = GameMaster.realMaster.CalculateWorkspeed(workersCount, WorkType.Farming);
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.OPEN_FARM_SPEED;
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
 
@@ -115,7 +115,7 @@ public class Farm : WorkBuilding
         {
             while (i < structures.Count & actionsPoints > 0)
             {
-                if (structures[i].id == PLANT_ID)
+                if (structures[i].ID == PLANT_ID)
                 {
                     Plant p = structures[i] as Plant;
                     if (p.plant_ID == crop_id)

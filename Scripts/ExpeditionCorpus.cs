@@ -16,7 +16,7 @@
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        if (!UIController.current.activeFastButtons.Contains(id)) UIController.current.AddFastButton(this);
+        if (!UIController.current.activeFastButtons.Contains(ID)) UIController.current.AddFastButton(this);
         current = this;
     }
 
@@ -43,7 +43,7 @@
         if (current == this)
         {
             current = null;
-            if (UIController.current.activeFastButtons.Contains(id))
+            if (UIController.current.activeFastButtons.Contains(ID))
             {
                 UIController.current.RemoveFastButton(this);
             }

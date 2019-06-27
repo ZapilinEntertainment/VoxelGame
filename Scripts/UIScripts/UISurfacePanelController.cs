@@ -606,7 +606,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		selectedBuildingButton = buttonIndex;
 
         infoPanel.SetActive(true);
-		nameField.text = Localization.GetStructureName(chosenStructure.id);
+		nameField.text = Localization.GetStructureName(chosenStructure.ID);
         gridTextField.text = chosenStructure.surfaceRect.size.ToString() + " x " + chosenStructure.surfaceRect.size.ToString();
         Building b = chosenStructure as Building;
         if (b != null)
@@ -641,7 +641,7 @@ public sealed class UISurfacePanelController : UIObserver {
             housingIcon.SetActive(false);
             housingTextField.gameObject.SetActive(false);
         }
-        description.text = Localization.GetStructureDescription(chosenStructure.id);
+        description.text = Localization.GetStructureDescription(chosenStructure.ID);
         (description.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, description.rectTransform.rect.height);
         
 		resourcesCostImage[0].transform.parent.gameObject.SetActive(true);
@@ -655,7 +655,7 @@ public sealed class UISurfacePanelController : UIObserver {
             if (bd.specialBuildingConditions)
             {
                 int mid = observingSurface.material_id;
-                switch (bd.id)
+                switch (bd.ID)
                 {
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
@@ -853,7 +853,7 @@ public sealed class UISurfacePanelController : UIObserver {
             {
                 // all conditions met
                 ResourceContainer[] cost;
-                if (chosenStructure.id != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(chosenStructure.id);
+                if (chosenStructure.ID != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(chosenStructure.ID);
                 else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
                 //resource cost drawing
                 float[] storageResources = colony.storage.standartResources;
@@ -912,7 +912,7 @@ public sealed class UISurfacePanelController : UIObserver {
             return;
         }
         ResourceContainer[] cost;
-        if (chosenStructure.id != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(chosenStructure.id);
+        if (chosenStructure.ID != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(chosenStructure.ID);
         else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
         if (colony.storage.CheckSpendPossibility(cost))
         {
@@ -928,7 +928,7 @@ public sealed class UISurfacePanelController : UIObserver {
             else
             {
                 colony.storage.GetResources(cost);
-                Structure s = Structure.GetStructureByID(chosenStructure.id);
+                Structure s = Structure.GetStructureByID(chosenStructure.ID);
                 byte rt = 0;
                 if (s.rotate90only)
                 {
@@ -939,12 +939,12 @@ public sealed class UISurfacePanelController : UIObserver {
                 {
                     rt = (byte)(Random.value * 7);
                 }
-                if (s.id == Structure.SETTLEMENT_CENTER_ID)
+                if (s.ID == Structure.SETTLEMENT_CENTER_ID)
                 {
                     (s as Settlement).SetLevel(constructingLevel);
                 }
                 s.SetBasement(observingSurface, new PixelPosByte(x, z));
-                if (s.id != Structure.DOCK_ID & s.id != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
+                if (s.ID != Structure.DOCK_ID & s.ID != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
                 if (observingSurface.noEmptySpace != false)
                 {
@@ -997,7 +997,7 @@ public sealed class UISurfacePanelController : UIObserver {
             if (n < abuildings.Count) {
 				g.SetActive(true);
 				RawImage rimage = buildingButtonsContainer.GetChild(n).GetChild(0).GetComponent<RawImage>();
-                rimage.uvRect = Structure.GetTextureRect(abuildings[n].id);
+                rimage.uvRect = Structure.GetTextureRect(abuildings[n].ID);
                 Button b = g.GetComponent<Button>();
 				b.onClick.RemoveAllListeners();
 				int bid = n;

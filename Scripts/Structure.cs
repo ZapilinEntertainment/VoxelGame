@@ -13,7 +13,7 @@ public class Structure : MonoBehaviour
     public float maxHp { get; protected set; } // fixed in ID
     public bool rotate90only { get; private set; } // fixed in ID
     public bool showOnGUI { get; protected set; }
-    public int id { get; protected set; }
+    public int ID { get; protected set; }
     public bool visible { get; protected set; }
     public byte modelRotation { get; protected set; }
 
@@ -85,7 +85,7 @@ public class Structure : MonoBehaviour
         //switch skin index
         GameObject model;
         if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
-        switch (id)
+        switch (ID)
         {
             default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
             case DRYED_PLANT_ID:
@@ -301,7 +301,7 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Settlement structure").AddComponent<SettlementStructure>();break;
             default: return null;
         }
-        s.id = i_id;
+        s.ID = i_id;
         s.Prepare();
         return s;
     }
@@ -319,7 +319,7 @@ public class Structure : MonoBehaviour
     protected void PrepareStructure()
     {
         indestructible = false;
-        switch (id)
+        switch (ID)
         {
             case PLANT_ID:
                 {
@@ -1165,7 +1165,7 @@ public class Structure : MonoBehaviour
                     if (upperBlock == null)
                     {
                         int replacingMaterialID = PoolMaster.MATERIAL_ADVANCED_COVERING_ID;
-                        if (id == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
+                        if (ID == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
                         basement.myChunk.AddBlock(npos, BlockType.Surface, replacingMaterialID, false);
                     }
                 }
@@ -1255,7 +1255,7 @@ public class Structure : MonoBehaviour
     {
         if (returnResources)
         {
-            ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(id);
+            ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(ID);
             if (resourcesLeft.Length > 0 & GameMaster.realMaster.demolitionLossesPercent != 1)
             {
                 for (int i = 0; i < resourcesLeft.Length; i++)
@@ -1317,7 +1317,7 @@ public class Structure : MonoBehaviour
 
     protected int CalculateRuinsVolume()
     {
-        var cost = ResourcesCost.GetCost(id);
+        var cost = ResourcesCost.GetCost(ID);
         if (cost != null && cost.Length > 0)
         {
             float x = 0;
@@ -1406,7 +1406,7 @@ public class Structure : MonoBehaviour
             modelRotation,                      // 2
             indestructible ? one : zero     //3
         };
-        data.InsertRange(0, System.BitConverter.GetBytes(id)); // считывается до load(), поэтому не учитываем в индексах
+        data.InsertRange(0, System.BitConverter.GetBytes(ID)); // считывается до load(), поэтому не учитываем в индексах
         // little endian check ignoring
         data.AddRange(System.BitConverter.GetBytes(skinIndex));  // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(maxHp)); // 8 - 11
