@@ -283,11 +283,10 @@ public sealed class GameMaster : MonoBehaviour
                         int zpos = sb.pos.z;
 
                         //testzone
-                        Structure s = HeadQuarters.GetHQ(GameConstants.HQ_MAX_LEVEL);
-                        weNeedNoResources = true;
+                        Structure s = HeadQuarters.GetHQ(1);
+                       // weNeedNoResources = true;
 
-                        //eo testzone
-                        //Structure s = Structure.GetStructureByID(Structure.HQ_4_ID);                       
+                        //eo testzone                    
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
 
@@ -328,8 +327,6 @@ public sealed class GameMaster : MonoBehaviour
                         StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
                         firstStorage.SetBasement(sb, PixelPosByte.zero);
                         SetStartResources();
-
-                        colonyController.AddCitizens(400);
                         break;
                 }
                 FollowingCamera.main.WeNeedUpdate();
@@ -367,37 +364,37 @@ public sealed class GameMaster : MonoBehaviour
         if (loading) return;
 
         //testzone
-        if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
-        if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
+       // if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
+        //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
 
-        if (Input.GetKeyDown("o"))
+        if (false && Input.GetKeyDown("o"))
         {
-            var sx = mainChunk.GetSurfaceBlock();
+            var sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
                 (s as WorkBuilding).AddWorkers(50);
             }
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
@@ -427,7 +424,7 @@ public sealed class GameMaster : MonoBehaviour
             }
             //
 
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
@@ -435,13 +432,13 @@ public sealed class GameMaster : MonoBehaviour
                // UIController.current.Select(s);
             }
 
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
                 s.SetBasement(sx, PixelPosByte.zero);
             }
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
 
             
             Vector3Int ecpos = Vector3Int.zero;
@@ -457,7 +454,7 @@ public sealed class GameMaster : MonoBehaviour
             }
 
             Crew c = Crew.CreateNewCrew(colonyController, 1f);
-            sx = mainChunk.GetSurfaceBlock();
+            sx = mainChunk.GetRandomSurfaceBlock();
             if (sx != null)
             {
                 Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);

@@ -66,7 +66,7 @@ public class FoodFactory : WorkBuilding {
 	override public List<byte> Save() {
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
-        data.AddRange(SerializeWorkBuilding());
+        data.AddRange(SaveWorkbuildingData());
         data.AddRange(SerializeFoodFactory());
         return data;
 	}

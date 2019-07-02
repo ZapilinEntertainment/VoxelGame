@@ -27,6 +27,7 @@ public class Building : Structure
         {
             case 1:
                 blist.Add(GetStructureByID(WIND_GENERATOR_1_ID) as Building);
+                blist.Add(GetStructureByID(PSYCHOKINECTIC_GENERATOR) as Building);
                 blist.Add(GetStructureByID(STORAGE_1_ID) as Building);
                 blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
                 blist.Add(GetStructureByID(FARM_1_ID) as Building);
@@ -142,7 +143,8 @@ public class Building : Structure
             case SUPPLIES_FACTORY_5_ID: return 80f;
 
             case FOUNDATION_BLOCK_5_ID:
-            case WIND_GENERATOR_1_ID: return 10f;
+            case WIND_GENERATOR_1_ID:            
+                return 10f;
             case XSTATION_3_ID: return 12f;
 
             case EXPEDITION_CORPUS_4_ID:
@@ -156,7 +158,9 @@ public class Building : Structure
             case SHUTTLE_HANGAR_4_ID:
             case CHEMICAL_FACTORY_4_ID:
             case PLASTICS_FACTORY_3_ID:
-            case ORE_ENRICHER_2_ID: return 40f;
+            case ORE_ENRICHER_2_ID:
+            case PSYCHOKINECTIC_GENERATOR:
+                return 40f;
 
             case FUEL_FACILITY_3_ID:
             case HOSPITAL_2_ID: return 50f;
@@ -184,14 +188,14 @@ public class Building : Structure
     {
         switch (id)
         {
-            case SETTLEMENT_CENTER_ID: return -10f;
+            case SETTLEMENT_CENTER_ID: return -2f;
             case SETTLEMENT_STRUCTURE_ID: return -0.5f;
             case HOUSE_BLOCK_ID: return -200f;
             case HOUSING_MAST_6_ID: return -120f;
 
-            case DOCK_ID: return -20f;
-            case DOCK_2_ID: return -30f;
-            case DOCK_3_ID: return -12f;
+            case DOCK_ID: return -10f;
+            case DOCK_2_ID: return -20f;
+            case DOCK_3_ID: return -30f;
 
             case FARM_1_ID: return -1f;
             case FARM_2_ID: return -4f;
@@ -236,7 +240,8 @@ public class Building : Structure
 
             case MINERAL_POWERPLANT_2_ID: return Powerplant.MINERAL_F_PP_OUTPUT;
             case FOUNDATION_BLOCK_5_ID:
-            case WIND_GENERATOR_1_ID: return 10f;
+            case WIND_GENERATOR_1_ID:
+                return 10f;
             case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
             case MINI_GRPH_REACTOR_3_ID: return 100f;
             case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
@@ -817,26 +822,28 @@ public class Building : Structure
 
     #region save-load system
     override public List<byte> Save()
-    {
-        // copied to Settlement.Save()
+    {        
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
         return data;
+        // copied to Settlement.Save()
+        // copy to PsychokineticGenerator.Save()
     }
 
     protected List<byte> SaveBuildingData()
     {
-        // copied to Settlement.Save()
+        // copied to Settlement.Save()        
         var data = new List<byte>() { isActive ? (byte)1 : (byte)0 };
         data.AddRange(System.BitConverter.GetBytes(energySurplus));
         return data;
     }
 
     override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
-    {
-        // changed in Settlement.Save()
+    {        
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
+        // changed in Settlement.Load()
+        // copy to PsychokineticGenerator.Load()
     }
     protected void LoadBuildingData(System.IO.FileStream fs)
     {

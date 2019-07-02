@@ -238,7 +238,7 @@ public sealed class Dock : WorkBuilding {
                 }
                 //end
             }
-            else PoolMaster.current.DisableZone();
+            else PoolMaster.current.DisableFlightZone();
         }
         // end
     }
@@ -606,7 +606,7 @@ public sealed class Dock : WorkBuilding {
         if (showOnGUI)
         {
             showOnGUI = false;
-            PoolMaster.current.DisableZone();
+            PoolMaster.current.DisableFlightZone();
             UIController.current.CloseTradePanel();
         }
     }
@@ -620,7 +620,7 @@ public sealed class Dock : WorkBuilding {
             basement.myChunk.ClearBlocksList(dependentBlocksList, true);
             dependentBlocksList.Clear();            
         }
-        if (showOnGUI & !correctLocation) PoolMaster.current.DisableZone();
+        if (showOnGUI & correctLocation) PoolMaster.current.DisableFlightZone();
         if (!clearFromSurface) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         colony.RemoveDock(this);
@@ -681,7 +681,7 @@ public sealed class Dock : WorkBuilding {
     {
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
-        data.AddRange(SerializeWorkBuilding());
+        data.AddRange(SaveWorkbuildingData());
         data.AddRange(SerializeDock());
         return data;
     }

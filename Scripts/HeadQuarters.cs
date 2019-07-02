@@ -43,6 +43,7 @@ public sealed class HeadQuarters : House
             case 5: energySurplus = 20f; energyCapacity = 600f; housing = 70; break;
             case 6: energySurplus = 25f; energyCapacity = 700f; housing = 80; ChangeUpgradedIndex(-1); break;
         }
+        indestructible = true;
     }
 
     public override void SetBasement(SurfaceBlock b, PixelPosByte pos)
@@ -173,6 +174,9 @@ public sealed class HeadQuarters : House
         nextStageConditionMet = CheckUpgradeCondition();
         SetModel();
         buildingObserver.CheckUpgradeAvailability();
+        Quest.ResetHousingQuest();
+        GameLogUI.MakeAnnouncement(Localization.LevelReachedString(level));
+        if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.HQ_Upgraded);
     }
     override public ResourceContainer[] GetUpgradeCost()
     {

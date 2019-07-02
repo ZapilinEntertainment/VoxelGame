@@ -47,7 +47,6 @@ public class TunnelBuildingSite : Worksite {
 	public void Set(CubeBlock block) {
 		workObject = block;
         workObject.SetWorksite(this);
-        colony = GameMaster.realMaster.colonyController;
 		colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate) {

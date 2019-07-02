@@ -191,15 +191,15 @@ public sealed class Shuttle : MonoBehaviour {
 
 	public List<byte> Save() {
         var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(cost));
-        data.AddRange(System.BitConverter.GetBytes(condition));
-        data.AddRange(System.BitConverter.GetBytes(ID));
-        data.Add(docked ? (byte)1 : (byte)0);
-        // 13
+        data.AddRange(System.BitConverter.GetBytes(cost)); // 0 - 3
+        data.AddRange(System.BitConverter.GetBytes(condition)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(ID)); // 8 - 11
+        data.Add(docked ? (byte)1 : (byte)0); // 12
+
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
-        int count = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
-        if (count > 0) data.AddRange(nameArray);
+        int bytesCount = nameArray.Length;
+        data.AddRange(System.BitConverter.GetBytes(bytesCount)); // количество байтов, не длина строки
+        if (bytesCount > 0) data.AddRange(nameArray);
 
         Transform t = transform;
         data.AddRange(System.BitConverter.GetBytes(t.position.x));
@@ -220,18 +220,19 @@ public sealed class Shuttle : MonoBehaviour {
         cost = System.BitConverter.ToSingle(data, 0);
         condition = System.BitConverter.ToSingle(data, 4);
         ID = System.BitConverter.ToInt32(data, 8);
-        docked = data[16] == 1;
+        docked = data[12] == 1;
 
         int bytesCount = System.BitConverter.ToInt32(data, 13); //выдаст количество байтов, не длину строки
-        data = new byte[bytesCount];
+        print(bytesCount);
+        //data = new byte[bytesCount];
         fs.Read(data, 0, bytesCount);
-        if (bytesCount > 0)
-        {
-            System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
-            var chars = new char[d.GetCharCount(data, 0, bytesCount)];
-            d.GetChars(data, 0, bytesCount,chars,0,true);
-            name = new string(chars);
-        }
+        //if (bytesCount > 0)
+        //{
+         //   System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
+         //   var chars = new char[d.GetCharCount(data, 0, bytesCount)];
+         //   d.GetChars(data, 0, bytesCount,chars,0,true);
+         //   name = new string(chars);
+       // }
 
         data = new byte[28];
         fs.Read(data, 0, 28);

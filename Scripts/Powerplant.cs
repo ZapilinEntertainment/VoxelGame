@@ -177,7 +177,7 @@ public class Powerplant : WorkBuilding
         data.AddRange(SaveBuildingData());
         float saved_wtp = workflowToProcess; // подмена неиспользуемого поля
         workflowToProcess = tickTimer;
-        data.AddRange(SerializeWorkBuilding());
+        data.AddRange(SaveWorkbuildingData());
         workflowToProcess = saved_wtp;
         return data;
     }

@@ -22,7 +22,7 @@ public sealed class Artifact {
 
     private static readonly Sprite[] affectionRings;
     public static readonly Texture emptyArtifactFrame_tx;
-    public static int actionsHash = 0, lastID = 0;    
+    public static int actionsHash = 0, nextID = 0;    
     public static List<Artifact> artifactsList;
     public static UIArtifactPanel observer { get; private set; }
 
@@ -82,7 +82,7 @@ public sealed class Artifact {
         researched = false;
         name = Localization.NameArtifact(this);
         status = ArtifactStatus.Exists;
-        ID = lastID++;
+        ID = nextID++;
         artifactsList.Add(this);        
 
         actionsHash++;
@@ -461,19 +461,18 @@ public sealed class Artifact {
     public List<byte> Save()
     {
         var data = new List<byte>();        
-        data.AddRange(System.BitConverter.GetBytes(stability));
-        data.AddRange(System.BitConverter.GetBytes(saturation));
-        data.AddRange(System.BitConverter.GetBytes(frequency));
-        data.Add((byte)affectionType);
-        //13
-        data.AddRange(System.BitConverter.GetBytes(ID));
-        if (researched) data.Add(1); else data.Add(0);
-        data.Add((byte)status);
+        data.AddRange(System.BitConverter.GetBytes(stability)); // 0 - 3
+        data.AddRange(System.BitConverter.GetBytes(saturation)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(frequency)); // 8 - 11
+        data.Add((byte)affectionType); // 12
+        data.AddRange(System.BitConverter.GetBytes(ID)); //13 - 16
+        if (researched) data.Add(1); else data.Add(0); // 17
+        data.Add((byte)status); // 18
 
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int bytesCount = nameArray.Length;
+        // 19 - 22
         data.AddRange(System.BitConverter.GetBytes(bytesCount)); // количество байтов, не длина строки
-        //23
         if (bytesCount > 0) data.AddRange(nameArray);
 
         return data;
@@ -507,7 +506,7 @@ public sealed class Artifact {
             var dataArray = data.ToArray();
             fs.Write(dataArray, 0, dataArray.Length);
         }
-        fs.Write(System.BitConverter.GetBytes(lastID), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(nextID), 0, 4);
     }
     public static void LoadStaticData(System.IO.FileStream fs)
     {
@@ -517,10 +516,11 @@ public sealed class Artifact {
         fs.Read(data, 0, 4);
         int artsCount = System.BitConverter.ToInt32(data, 0);
 
+        int LENGTH = 23;
         while (artsCount > 0)
         {
-            data = new byte[23];
-            fs.Read(data, 0, 23);
+            data = new byte[LENGTH];
+            fs.Read(data, 0, LENGTH);
             var a = new Artifact(
                 System.BitConverter.ToSingle(data, 0), // stability
                 System.BitConverter.ToSingle(data, 4), //saturation
@@ -544,7 +544,7 @@ public sealed class Artifact {
         }
 
         fs.Read(data, 0, 4);
-        lastID = System.BitConverter.ToInt32(data, 0);
+        nextID = System.BitConverter.ToInt32(data, 0);
     }
     #endregion
 }

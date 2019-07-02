@@ -81,7 +81,7 @@ public class UIStructureObserver : UIObserver {
         }
     }
 
-    override public void SelfShutOff() {
+    override public void SelfShutOff() { // публичный, потому что на кнопках
         if (observingStructure != null) observingStructure.DisableGUI();
         isObserving = false;
 		UIController.current.SelectedObjectLost();
@@ -100,6 +100,7 @@ public class UIStructureObserver : UIObserver {
 
 	public void Demolish() {
 		observingStructure.Annihilate(true, true, false);
+        SelfShutOff();
 	}
     public void CheckName() {
         if (observingStructure == null) SelfShutOff();

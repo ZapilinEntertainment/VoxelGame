@@ -170,7 +170,6 @@ public class BlockBuildingSite : Worksite
         workObject.SetWorksite(this);
         rtype = type;
         actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
-        colony = GameMaster.realMaster.colonyController;
         colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)

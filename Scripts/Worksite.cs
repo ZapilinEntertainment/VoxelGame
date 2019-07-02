@@ -18,13 +18,15 @@ public abstract class Worksite {
 
     protected bool subscribedToUpdate = false;
     protected float workflow, gearsDamage;
-    protected ColonyController colony;
+    protected static ColonyController colony;
 
 
     static Worksite()
     {
         worksitesList = new List<Worksite>();
     }
+    public static void SetColonyLink(ColonyController cc) { colony = cc; }
+
     public virtual int GetMaxWorkers() { return 32; }
     public virtual void WorkUpdate()
     {

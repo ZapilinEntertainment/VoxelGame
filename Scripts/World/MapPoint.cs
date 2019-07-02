@@ -27,7 +27,7 @@ public class MapPoint
     
 
     public readonly int ID;
-    public static int lastUsedID { get; private set; }
+    public static int nextID { get; private set; }
     private const byte WRECKS_TYPE_COUNT = 10;
 
     public override bool Equals(object obj)
@@ -94,7 +94,7 @@ public class MapPoint
     }
     protected MapPoint(float i_angle, float i_height, MapMarkerType mtype)
     {
-        ID = lastUsedID++;
+        ID = nextID++;
         angle = i_angle;
         height = i_height;
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
@@ -275,10 +275,10 @@ public class MapPoint
     {
         var pts = new List<MapPoint>();
         int count = fs.ReadByte();
-        //Debug.Log(count);
         if (count > 0)
         {            
             int LENGTH = 18;
+            GlobalMap gmap = GameMaster.realMaster.globalMap;
             for (int i = 0; i < count; i++)
             {
                 var data = new byte[LENGTH];
@@ -289,7 +289,6 @@ public class MapPoint
                 float angle = System.BitConverter.ToSingle(data, 6);
                 float height = System.BitConverter.ToSingle(data, 10);
                 float stability = System.BitConverter.ToSingle(data, 14);
-                GlobalMap gmap = GameMaster.realMaster.globalMap;
 
                 switch (mmtype)
                 {
@@ -301,20 +300,36 @@ public class MapPoint
                     case MapMarkerType.SOS:
                     case MapMarkerType.Portal:
                     case MapMarkerType.Colony:
-                    case MapMarkerType.Star:
                     case MapMarkerType.Wiseman:
                     case MapMarkerType.Wonder:
                     case MapMarkerType.Resources:
                         {
                             var poi = new PointOfInterest(ID);
+                            // base loading
                             poi.angle = angle;
                             poi.height = height;
                             poi.ringIndex = gmap.DefineRing(height);
                             poi.type = mmtype;
                             poi.stability = stability;
+                            //
                             poi.Load(fs);
-                            
+                            //
                             pts.Add(poi);
+                            break;
+                        }
+                    case MapMarkerType.Star:
+                        {
+                            var sp = new SunPoint(ID);
+                            // base loading
+                            sp.angle = angle;
+                            sp.height = height;
+                            sp.ringIndex = gmap.DefineRing(height);
+                            sp.type = mmtype;
+                            sp.stability = stability;
+                            //
+                            sp.LoadSunPointData(fs);
+                            //
+                            pts.Add(sp);
                             break;
                         }
                     case MapMarkerType.MyCity:
@@ -322,12 +337,13 @@ public class MapPoint
                     default:
                         {
                             var mpoint = new MapPoint(ID);
+                            // base loading
                             mpoint.angle = angle;
                             mpoint.height = height;
                             mpoint.ringIndex = gmap.DefineRing(height);
                             mpoint.type = mmtype;
                             mpoint.stability = stability;
-                            
+                            //
                             pts.Add(mpoint);
                             break;
                         }
@@ -336,7 +352,7 @@ public class MapPoint
         }
         var idata = new byte[4];
         fs.Read(idata, 0, 4);
-        lastUsedID = System.BitConverter.ToInt32(idata, 0);
+        nextID = System.BitConverter.ToInt32(idata, 0);
         return pts;
     }
     #endregion
@@ -344,7 +360,7 @@ public class MapPoint
 
 public sealed class SunPoint : MapPoint
 {
-    public Color color {get;private set;}
+    public Color color {get;private set;} // no alpha- channel
 
     public SunPoint(float i_angle, float i_height,  Color i_color) : base (i_angle, i_height, MapMarkerType.Star)
     {
@@ -355,5 +371,28 @@ public sealed class SunPoint : MapPoint
     {
         Color c = new Color((1 - ascension) * (1 - height), ascension * (1 - height), ascension * angle);
         color = Color.Lerp(Color.white, c, Mathf.Abs(0.5f - ascension) * 2 );
+    }
+    /// <summary>
+    /// Loading constructor
+    /// </summary>
+    public SunPoint(int i_id) : base (i_id) { type = MapMarkerType.Star; }
+
+    public override List<byte> Save()
+    {
+        var data =  base.Save();
+        data.AddRange(System.BitConverter.GetBytes(color.r));
+        data.AddRange(System.BitConverter.GetBytes(color.g));
+        data.AddRange(System.BitConverter.GetBytes(color.b));
+        return data;
+    }
+    public void LoadSunPointData(System.IO.FileStream fs)
+    {
+        var data = new byte[12];
+        fs.Read(data, 0, data.Length);
+        color = new Color(
+            System.BitConverter.ToSingle(data,0),
+            System.BitConverter.ToSingle(data, 4),
+            System.BitConverter.ToSingle(data, 8)
+            );
     }
 }

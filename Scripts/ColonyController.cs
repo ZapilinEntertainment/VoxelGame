@@ -9,6 +9,7 @@ public sealed class ColonyController : MonoBehaviour
     public string cityName { get; private set; }
     public Storage storage { get; private set; }
     public HeadQuarters hq { get; private set; }
+    public bool housingCountChanges = false, powerGridChanged = false; // hot
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
     public float labourCoefficient
@@ -22,7 +23,7 @@ public sealed class ColonyController : MonoBehaviour
     }
     public float happiness_coefficient { get; private set; }
     public float health_coefficient { get; private set; }
-    public bool accumulateEnergy = true;
+    public bool accumulateEnergy = true, buildingsWaitForReconnection = false;
 
     public float energyStored { get; private set; }
     public float energySurplus { get; private set; }
@@ -46,7 +47,7 @@ public sealed class ColonyController : MonoBehaviour
         tickTimer,
         targetHappiness, targetHealth,
         happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f;
-    private bool thisIsFirstSet = true, ignoreHousingRequest = false, housingCountChanges = false;
+    private bool thisIsFirstSet = true, ignoreHousingRequest = false;    
 
     public const byte MAX_HOUSING_LEVEL = 5;
     private const sbyte RECALCULATION_TICKS_COUNT = 5;
@@ -67,6 +68,7 @@ public sealed class ColonyController : MonoBehaviour
             birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
             energyCrystalsCount = START_ENERGY_CRYSTALS_COUNT;
+            Worksite.SetColonyLink(this);
 
             cityName = "My Colony";
         }
@@ -81,6 +83,7 @@ public sealed class ColonyController : MonoBehaviour
         docks.Clear();
         houses.Clear();
         if (hospitals != null) hospitals.Clear();
+        Worksite.SetColonyLink(this);
     }
 
     public void Prepare()
@@ -111,13 +114,14 @@ public sealed class ColonyController : MonoBehaviour
             
             //energy:
             {
-                if (energySurplus > 0)
+                if (energySurplus >= 0)
                 {
                     if (accumulateEnergy)
                     {
                         energyStored += energySurplus * TICK_TIME;
                         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
                     }
+                    if (buildingsWaitForReconnection) RecalculatePowerGrid();
                 }
                 else
                 {
@@ -127,7 +131,6 @@ public sealed class ColonyController : MonoBehaviour
                         UIController.current.StartPowerFailureTimer();
                         energyStored = 0;
                         int i = powerGrid.Count - 1;
-                        bool powerGridChanged = false;
                         while (i >= 0 & energySurplus < 0)
                         {
                             Building b = powerGrid[i];
@@ -147,9 +150,9 @@ public sealed class ColonyController : MonoBehaviour
                             }
                             i--;
                         }
-                        if (powerGridChanged) RecalculatePowerGrid();
                     }
                 }
+                if (powerGridChanged) RecalculatePowerGrid();
             }
 
             //housing
@@ -380,7 +383,6 @@ public sealed class ColonyController : MonoBehaviour
         int i = 0, objectHousing = 0;
         byte objectLevel = 0;
         House h = null;
-        ignoreHousingRequest = true;
         while (i < houses.Count)
         {
             h = houses[i];
@@ -402,10 +404,6 @@ public sealed class ColonyController : MonoBehaviour
                 }
             }
         }
-
-        int housingDemand = citizenCount - totalLivespace;
-        ignoreHousingRequest = false;
-
         //leveling
         if (citizenCount != 0)
         {
@@ -524,7 +522,7 @@ public sealed class ColonyController : MonoBehaviour
         }
         powerGrid.Add(b);
         b.SetEnergySupply(true, false);
-        RecalculatePowerGrid();
+        powerGridChanged = true;
     }
     public void DisconnectFromPowerGrid(Building b)
     {
@@ -537,17 +535,19 @@ public sealed class ColonyController : MonoBehaviour
             {
                 b.SetEnergySupply(false, false);
                 powerGrid.RemoveAt(i);
-                RecalculatePowerGrid();
+                powerGridChanged = true;
                 return;
             }
             else i++;
         }
     }
     public void RecalculatePowerGrid()
-    {
+    {        
         energySurplus = 0; totalEnergyCapacity = 0;
         if (powerGrid.Count == 0) return;
         int i = 0;
+        List<int> checklist = new List<int>();
+        buildingsWaitForReconnection = false;
         while (i < powerGrid.Count)
         {
             if (powerGrid[i] == null)
@@ -573,11 +573,8 @@ public sealed class ColonyController : MonoBehaviour
                         }
                         else
                         {
-                            if (powerGrid[i].energySurplus < 0 & energyStored >= Mathf.Abs(powerGrid[i].energySurplus) * 2)
-                            {
-                                powerGrid[i].SetEnergySupply(true, false);
-                                energySurplus += powerGrid[i].energySurplus;
-                            }
+                            checklist.Add(i);
+                            buildingsWaitForReconnection = true;
                         }
                     }
                 }
@@ -585,6 +582,25 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
+
+        if (buildingsWaitForReconnection & energySurplus > 0f)
+        {
+            i = 0;
+            Building b;
+            while (i < checklist.Count & energySurplus > 0f)
+            {
+                b = powerGrid[checklist[i]];
+                if (b.energySurplus + energySurplus >= 0f)
+                {
+                    b.SetEnergySupply(true, false);
+                    energySurplus += b.energySurplus;
+                    checklist.RemoveAt(i);
+                }
+                else i++;
+            }
+            buildingsWaitForReconnection = checklist.Count != 0;
+        }
+        powerGridChanged = false;
     }
     public void AddEnergy(float f)
     {

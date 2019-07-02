@@ -223,7 +223,7 @@ public sealed class Hangar : WorkBuilding
                 }
                 //end
             }
-            else PoolMaster.current.DisableZone();
+            else PoolMaster.current.DisableFlightZone();
         }
         // end
     }
@@ -331,7 +331,7 @@ public sealed class Hangar : WorkBuilding
         if (showOnGUI)
         {
             showOnGUI = false;
-            PoolMaster.current.DisableZone();
+            PoolMaster.current.DisableFlightZone();
         }
     }
 
@@ -373,7 +373,7 @@ public sealed class Hangar : WorkBuilding
             basement.myChunk.ClearBlocksList(dependentBlocksList, true);
             dependentBlocksList.Clear();
         }
-        if (showOnGUI & !correctLocation) PoolMaster.current.DisableZone();
+        if (showOnGUI & !correctLocation) PoolMaster.current.DisableFlightZone();
         if (!clearFromSurface) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (hangarsList.Contains(this)) hangarsList.Remove(this);

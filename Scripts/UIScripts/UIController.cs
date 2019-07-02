@@ -779,9 +779,21 @@ sealed public class UIController : MonoBehaviour
                 case ActiveWindowMode.LogWindow:
                     GameLogUI.DeactivateLogWindow();
                     break;
+                case ActiveWindowMode.GameMenu:                    
+                    menuPanel.SetActive(false);
+                    SetMenuPanelSelection(MenuSection.NoSelection);
+                    menuButton.GetComponent<Image>().overrideSprite = null;
+                    menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
 
+                    GameLogUI.ChangeVisibility(true);
+                    FollowingCamera.main.ResetTouchRightBorder();
+                    if (colony != null) leftPanel.SetActive(true);
+                    if (rightFastPanel.transform.childCount > 0) rightFastPanel.SetActive(true);
+                    GameMaster.SetPause(false);
+                    break;
             }
         }
+        // activation new panel:
         currentActiveWindowMode = mode;
         if (currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
         {
@@ -791,11 +803,19 @@ sealed public class UIController : MonoBehaviour
         {
             if (currentActiveWindowMode == ActiveWindowMode.GameMenu)
             {
+                GameMaster.SetPause(true);
                 if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
-                if (leftPanel.activeSelf) leftPanel.SetActive(false);
                 if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
+                if (leftPanel.activeSelf) leftPanel.SetActive(false);                
                 if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
                 if (showColonyInfo) ColonyButton();
+                GameLogUI.ChangeVisibility(false);
+
+                menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
+                menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
+                SetMenuPanelSelection(MenuSection.NoSelection);
+                //menuButton.transform.SetAsLastSibling(); 
+                menuPanel.SetActive(true);                                  
             }
         }
         bool deactivating = (mode == ActiveWindowMode.NoWindow);
@@ -824,6 +844,7 @@ sealed public class UIController : MonoBehaviour
         menuButton.SetActive(false);
         upPanel.SetActive(false);
         colonyRenameButton.SetActive(false);
+        GameLogUI.ChangeVisibility(false);
     }
     public void FullReactivation()
     {
@@ -832,6 +853,7 @@ sealed public class UIController : MonoBehaviour
         menuButton.SetActive(true);
         upPanel.SetActive(true);
         colonyRenameButton.SetActive(true);
+        GameLogUI.ChangeVisibility(true);
     }
 
     public static Rect GetTextureUV(Icons i)
@@ -1261,27 +1283,12 @@ sealed public class UIController : MonoBehaviour
     {
         showMenuWindow = !showMenuWindow;
         if (showMenuWindow)
-        { // on
-            GameMaster.SetPause(true);
-            ChangeActiveWindow(ActiveWindowMode.GameMenu);
-            menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
-            menuPanel.SetActive(true);
-            //menuButton.transform.SetAsLastSibling();
-            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
-            SetMenuPanelSelection(MenuSection.NoSelection);
+        { // on            
+            ChangeActiveWindow(ActiveWindowMode.GameMenu);            
         }
         else
-        { //off
-            GameMaster.SetPause(false);
-            FollowingCamera.main.ResetTouchRightBorder();
-            menuPanel.SetActive(false);
-            if (colony != null) leftPanel.SetActive(true);
-            if (rightFastPanel.transform.childCount > 0) rightFastPanel.SetActive(true);
-            SetMenuPanelSelection(MenuSection.NoSelection);
-            menuButton.GetComponent<Image>().overrideSprite = null;
-            // MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameUnpaused));
-            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
-            DropActiveWindow(ActiveWindowMode.GameMenu);
+        { //off                       
+            ChangeActiveWindow(ActiveWindowMode.NoWindow);
         }
     }
     public void SaveButton()

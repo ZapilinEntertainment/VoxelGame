@@ -18,7 +18,7 @@ public class GameLogUI : MonoBehaviour {
     private int lastMessageIndex = 0;
     private DecisionAction leftDecision, rightDecision, monoDecision;    
     private const byte MAX_MESSAGES = 10;
-    private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 1f, MESSAGE_DISSAPPEAR_TIME = 3f, INNER_LOG_CLEAR_TIME = 15;
+    private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 1f, MESSAGE_DISSAPPEAR_TIME = 3f, INNER_LOG_CLEAR_TIME = 120f;
 
     public static void MakeAnnouncement(string s)
     {
@@ -72,6 +72,7 @@ public class GameLogUI : MonoBehaviour {
             if (current.logWindow.activeSelf) current.LogButton();
         }
     }
+    public static void ChangeVisibility(bool x) { if (current != null) current.gameObject.SetActive(x); }
     // =====================
     private void Update()
     {
@@ -191,6 +192,7 @@ public class GameLogUI : MonoBehaviour {
             UIController.current.ChangeActiveWindow(ActiveWindowMode.LogWindow);
         }
     } 
+    
 
     //==== DECISION  PANEL
     public void DecisionLeft()

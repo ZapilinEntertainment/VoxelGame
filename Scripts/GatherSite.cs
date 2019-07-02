@@ -82,7 +82,6 @@ public class GatherSite : Worksite
         sign.worksite = this;
         sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.down * 0.5f * Block.QUAD_SIZE;
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
-        colony = GameMaster.realMaster.colonyController;
         colony.SendWorkers(START_WORKERS_COUNT, this);
         if (!worksitesList.Contains(this)) worksitesList.Add(this);
         if (!subscribedToUpdate)

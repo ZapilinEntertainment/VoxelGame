@@ -17,7 +17,7 @@ public sealed class Settlement : House
 
     public const byte MAX_POINTS_COUNT = 60;
     public const byte MAX_HOUSING_LEVEL = 8, FIRST_EXTENSION_LEVEL = 3, SECOND_EXTENSION_LEVEL = 6;
-    private const float UPDATE_TIME = 1f, 
+    private const float UPDATE_TIME = 10f, 
         SHOPS_DEMAND_CF = 0.02f, GARDENS_DEMAND_CF = 0.01f
         ;    
 
@@ -845,7 +845,7 @@ public sealed class Settlement : House
     }
     private void Recalculate()
     {
-        if (!GameMaster.loading) return; // wait for total recalculation
+        if (GameMaster.loading) return; // wait for total recalculation
         // dependency : create new building()
         // dependecy : total recalculation()
         int prevHousing = housing;
@@ -893,8 +893,8 @@ public sealed class Settlement : House
             }
         }
         var colony = GameMaster.realMaster.colonyController;
-        if (prevEnergySurplus != energySurplus) colony.RecalculatePowerGrid();
-        if (prevHousing != housing) colony.RecalculateHousing();
+        colony.powerGridChanged = true;
+        colony.housingCountChanges = true;
     }
 
     public override UIObserver ShowOnGUI()
@@ -1007,6 +1007,7 @@ public sealed class Settlement : House
     override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
+        fs.Read(data, 0, data.Length);
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);

@@ -243,6 +243,11 @@ public abstract class WorkBuilding : Building
                     maxWorkers = 50;
                 }
                 break;
+            case PSYCHOKINECTIC_GENERATOR:
+                {
+                    maxWorkers = 40;
+                    break;
+                }
         }
         colony = GameMaster.realMaster.colonyController;
     }
@@ -258,11 +263,13 @@ public abstract class WorkBuilding : Building
         }
         //copy to expedition corpus.cs
         //copy to expedition observatory.cs
+        // changed in PsychokineticGenerator
     }
 
     protected void SetWorkbuildingData(SurfaceBlock sb, PixelPosByte pos)
     {
         SetBuildingData(sb, pos);
+        // copy to PsychokineticGenerator.SetBasement()
     }
 
     virtual public void LabourUpdate()
@@ -385,17 +392,18 @@ public abstract class WorkBuilding : Building
         //copy to expedition corpus.cs
         //copy to hospital.cs
         //copy to observatory.cs
+        //changed in PsychokineticGenerator
     }
 
     #region save-load system
     override public List<byte> Save()
     {
         var data = base.Save();
-        data.AddRange(SerializeWorkBuilding());
+        data.AddRange(SaveWorkbuildingData());
         return data;
     }
 
-    public List<byte> SerializeWorkBuilding()
+    public List<byte> SaveWorkbuildingData()
     {
         var data = new List<byte>();
         data.AddRange(System.BitConverter.GetBytes(workflow));

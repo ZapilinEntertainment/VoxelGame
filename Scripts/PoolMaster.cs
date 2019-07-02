@@ -243,7 +243,7 @@ public sealed class PoolMaster : MonoBehaviour {
         zoneCube.GetComponent<MeshRenderer>().sharedMaterial.SetColor("_MainColor", col);
         zoneCube.gameObject.SetActive(true);
     }
-    public void DisableZone() { zoneCube.gameObject.SetActive(false); }
+    public void DisableFlightZone() { zoneCube.gameObject.SetActive(false); }
     #endregion
 
     public Ship GetShip(byte level, ShipType type) {
@@ -378,13 +378,14 @@ public sealed class PoolMaster : MonoBehaviour {
         return Instantiate(Resources.Load<GameObject>("Prefs/flyingPlatform_small"));
     }
 
-    public static void SetMaterialByID(ref MeshFilter mf, ref MeshRenderer mr, int materialID, byte i_illumination)
+    public static Mesh SetMaterialByID(ref MeshFilter mf, ref MeshRenderer mr, int materialID, byte i_illumination)
     {
         var m = mf.mesh;
         SetMeshUVs(ref m, materialID);
         mf.sharedMesh = m;
         if (useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);
         else mr.sharedMaterial = GetMaterial(materialID);
+        return m;
     }
     public static void SetMeshUVs(ref Mesh m, int materialID)
     {

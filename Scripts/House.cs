@@ -11,6 +11,7 @@ public class House : Building {
             case HOUSE_BLOCK_ID: return 4100; 
             case HOTEL_BLOCK_6_ID: return 600; // temporary
             case HOUSING_MAST_6_ID: return 2200;
+            case SETTLEMENT_CENTER_ID: return 0;
             default: return 1;
         }
     }

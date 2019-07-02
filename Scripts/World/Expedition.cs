@@ -495,7 +495,7 @@ public sealed class Expedition
             var data = new List<byte>();
             foreach (Expedition e in expeditionsList)
             {
-                if (e != null)
+                if (e != null && e.stage != ExpeditionStage.Dismissed)
                 {
                     data.AddRange(e.Save());
                     count++;

@@ -9,16 +9,17 @@ public class PointOfInterest : MapPoint
     public float mysteria { get; protected set; }
     public float friendliness { get; protected set; }
     public float difficulty { get; protected set; }
+    private float _exploredPart;
     public float exploredPart
     {
-        get { return exploredPart; }
+        get { return _exploredPart; }
         private set
         {
-            if (value > 1) exploredPart = 1f;
+            if (value > 1) _exploredPart = 1f;
             else
             {
-                if (value < 0) exploredPart = 0f;
-                else exploredPart = value;
+                if (value < 0) _exploredPart = 0f;
+                else _exploredPart = value;
             }
         }
     }
@@ -280,22 +281,23 @@ public class PointOfInterest : MapPoint
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
         data.AddRange(System.BitConverter.GetBytes(difficulty)); // 16 - 19
         data.AddRange(System.BitConverter.GetBytes(exploredPart)); // 20 - 23
-        int n = 0;
+        // 24 :
+        byte n = 0;        
         if (availableMissions != null)
         {
-            n = availableMissions.Length;
+            n = (byte)availableMissions.Length;
             if (n > 0)
             {
                 foreach (Mission m in availableMissions) data.AddRange(m.Save());
             }
-            data.AddRange(System.BitConverter.GetBytes(n));
+            data.Add(n);
         }
-        else  data.AddRange(System.BitConverter.GetBytes(n));
+        else  data.Add(n);
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 28; // 24 + 4
+        int LENGTH = 25;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         richness = System.BitConverter.ToSingle(data, 0);
@@ -304,7 +306,7 @@ public class PointOfInterest : MapPoint
         friendliness = System.BitConverter.ToSingle(data, 12);
         difficulty = System.BitConverter.ToSingle(data, 16);
         exploredPart = System.BitConverter.ToSingle(data, 20);
-        int n = System.BitConverter.ToInt32(data, 24);
+        byte n = data[24];
         if (n > 0)
         {
             availableMissions = new Mission[n];

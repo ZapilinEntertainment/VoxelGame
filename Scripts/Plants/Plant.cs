@@ -114,7 +114,7 @@ public abstract class Plant : Structure {
 
     override public void ApplyDamage(float d)
     {
-        if (destroyed) return;
+        if (destroyed | indestructible) return;
         hp -= d;
         if (hp <= 0) if (hp > -100f) Dry(); else Annihilate(true, false, false);
     }

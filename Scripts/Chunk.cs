@@ -43,6 +43,10 @@ public struct ChunkPos
     {
         return x * 100 + y * 10 + z;
     }
+    public override string ToString()
+    {
+        return '(' + x.ToString() +' '+ y.ToString() + ' '+ z.ToString() + ')';
+    }
 }
 public struct MeshVisualizeInfo
 {
@@ -1537,7 +1541,7 @@ public sealed class Chunk : MonoBehaviour
         }
         return fsb; // we are not watching you. Honestly.
     }
-    public SurfaceBlock GetSurfaceBlock()
+    public SurfaceBlock GetRandomSurfaceBlock()
     {
         int x = surfaceBlocks.Count;
         if (x == 0) return null;
@@ -1546,6 +1550,37 @@ public sealed class Chunk : MonoBehaviour
             return surfaceBlocks[Random.Range(0, x - 1)];
         }
     }
+    public SurfaceBlock GetNearestUnoccupiedSurfaceBlock( ChunkPos origin)
+    {
+        if (surfaceBlocks.Count == 0) return null;
+        else
+        {
+            int nindex = -1; float minSqr = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
+            float a, b, c, m;
+            SurfaceBlock sb = null;
+            for (int i = 0; i < surfaceBlocks.Count; i++)
+            {
+                sb = surfaceBlocks[i];                
+                if (sb != null) {
+                    if (sb.noEmptySpace == true) continue;
+                    a = sb.pos.x - origin.x; 
+                    b = sb.pos.y - origin.y; 
+                    c = sb.pos.z - origin.z;
+                    m = a * a + b * b + c * c;
+                    if (m < minSqr)
+                    {
+                        minSqr = m;
+                        nindex = i;
+                    }
+                }
+            }
+            if (nindex > 0) return surfaceBlocks[nindex];
+            else return null;
+        }
+    }
+    /// <summary>
+    /// Seek a position for structure somewhere. Returns (xpos, zpos, surface_block_index)
+    /// </summary>
     public bool TryGetPlace(ref Vector3Int answer, byte size)
     {
         if (surfaceBlocks.Count == 0) return false;

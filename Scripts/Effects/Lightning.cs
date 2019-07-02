@@ -32,72 +32,81 @@ public sealed class Lightning : MonoBehaviour
         }
         else
         {
-            if (!drawers[0].enabled)
+            if (drawers[0] == null)
             {
-                d = drawers[0];
+                d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
+                drawers[0] = d;
                 index = 0;
             }
             else
             {
-                if (drawers[1] == null)
+                if (!drawers[0].enabled)
                 {
-                    d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
-                    drawers[1] = d;
-                    index = 1;
+                    d = drawers[0];
+                    index = 0;
                 }
                 else
                 {
-                    if (!drawers[1].enabled)
+                    if (drawers[1] == null)
                     {
-                        d = drawers[1];
+                        d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
+                        drawers[1] = d;
                         index = 1;
                     }
                     else
                     {
-                        if (drawers[2] == null)
+                        if (!drawers[1].enabled)
                         {
-                            d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
-                            drawers[2] = d;
-                            index = 2;
+                            d = drawers[1];
+                            index = 1;
                         }
                         else
                         {
-                            if (!drawers[2].enabled)
+                            if (drawers[2] == null)
                             {
-                                d = drawers[2];
+                                d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
+                                drawers[2] = d;
                                 index = 2;
                             }
                             else
                             {
-                                if (drawers[3] == null)
+                                if (!drawers[2].enabled)
                                 {
-                                    d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
-                                    drawers[3] = d;
-                                    index = 3;
+                                    d = drawers[2];
+                                    index = 2;
                                 }
                                 else
                                 {
-                                    if (!drawers[3].enabled)
+                                    if (drawers[3] == null)
                                     {
-                                        d = drawers[3];
+                                        d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
+                                        drawers[3] = d;
                                         index = 3;
                                     }
                                     else
                                     {
-                                        if (drawers[4] == null)
+                                        if (!drawers[3].enabled)
                                         {
-                                            d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
-                                            drawers[4] = d;
-                                            index = 4;
+                                            d = drawers[3];
+                                            index = 3;
                                         }
                                         else
                                         {
-                                            if (!drawers[4].enabled)
+                                            if (drawers[4] == null)
                                             {
-                                                d = drawers[4];
+                                                d = Instantiate(Resources.Load<GameObject>("Prefs/LightningLR")).GetComponent<LineRenderer>();
+                                                drawers[4] = d;
                                                 index = 4;
                                             }
-                                            else return;
+                                            else
+                                            {
+                                                if (!drawers[4].enabled)
+                                                {
+                                                    d = drawers[4];
+                                                    index = 4;
+                                                }
+                                                else return;
+                                            }
                                         }
                                     }
                                 }

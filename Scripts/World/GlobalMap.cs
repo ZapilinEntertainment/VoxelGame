@@ -599,11 +599,11 @@ public sealed class GlobalMap : MonoBehaviour
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {
-        fs.Write(System.BitConverter.GetBytes(rotationSpeed[0]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(rotationSpeed[1]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(rotationSpeed[2]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(rotationSpeed[3]), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(rotationSpeed[4]), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(rotationSpeed[0]), 0, 4); // 0 - 3
+        fs.Write(System.BitConverter.GetBytes(rotationSpeed[1]), 0, 4); // 4 - 7
+        fs.Write(System.BitConverter.GetBytes(rotationSpeed[2]), 0, 4); // 8 - 11
+        fs.Write(System.BitConverter.GetBytes(rotationSpeed[3]), 0, 4); // 12 - 15
+        fs.Write(System.BitConverter.GetBytes(rotationSpeed[4]), 0, 4); // 16 - 19
 
         if (mapPoints.Count > 0)
         {
@@ -624,7 +624,7 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
         else fs.WriteByte(0);
-        fs.Write(System.BitConverter.GetBytes(MapPoint.lastUsedID), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(MapPoint.nextID), 0, 4);
         //зависимость : mapPoint.LoadPoints()
     }
     public void Load(System.IO.FileStream fs)
@@ -643,7 +643,6 @@ public sealed class GlobalMap : MonoBehaviour
             actionsHash = 1;
             prepared = true;
         }
-
         if (mapPoints == null) mapPoints = new List<MapPoint>();
         else mapPoints.Clear();
         mapPoints = MapPoint.LoadPoints(fs);

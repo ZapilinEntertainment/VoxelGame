@@ -737,33 +737,53 @@ public class SurfaceBlock : Block
         }
     }
 
-    public void ScatterResources(SurfaceRect rect, ResourceType rtype, int volume)
+    public int ScatterResources(SurfaceRect fill_rect, ResourceType rtype, int volume)
     {
-        if (volume == 0 | rect.size == 0) return;
+        if (volume == 0 | fill_rect.size == 0) return volume;
         else
         {
-            var data = new byte[INNER_RESOLUTION, INNER_RESOLUTION];
-            int total = INNER_RESOLUTION * INNER_RESOLUTION;
-            float p = volume / (float)(INNER_RESOLUTION * INNER_RESOLUTION), x,y ,v, ir = INNER_RESOLUTION;
-            byte count;
-            int xpos, ypos ;
-            int i = 0;
-            while (i < total & volume > 0)
+            // ScalableHarvestableResource stick rect size == 2
+            int rowcount = fill_rect.size / 2;
+            float rowCount_f = rowcount;
+            byte val = 0, limitVal = ScalableHarvestableResource.MAX_STICK_VOLUME, minVal = ScalableHarvestableResource.RESOURCES_PER_LEVEL;
+
+            float maxStickVolume = volume; maxStickVolume /= fill_rect.size; maxStickVolume /= fill_rect.size;
+            if (maxStickVolume < limitVal) maxStickVolume = limitVal;
+            int x0, z0;
+
+            ScalableHarvestableResource scr = null;
+            for (int x = 0; x < rowcount; x++)
             {
-                xpos = i % INNER_RESOLUTION;
-                x = xpos / ir;
-                ypos = i / INNER_RESOLUTION;
-                y = ypos / ir;
-                v = Mathf.PerlinNoise(x,y);
-                count = (byte)(v * p);
-                if (count > 0)
+                for (int z = 0; z < rowcount; z++)
                 {
-                    ScalableHarvestableResource.Create(rtype, count, this, new PixelPosByte(xpos, ypos));
-                    total -= count;
+                    if (volume <= minVal) goto ENDCYCLE;
+                    x0 = fill_rect.x + x * 2;
+                    z0 = fill_rect.z + z * 2;
+                    val = (byte)(Mathf.PerlinNoise(x / rowCount_f, z / rowCount_f) * maxStickVolume);
+                    if (val < minVal) val = minVal;
+                    else
+                    {
+                        if (val > limitVal) val = limitVal;
+                    }
+
+                    if (!map[x0, z0] & !map[x0 + 1, z0] & !map[x0, z0 + 1] & !map[x0 + 1, z0 + 1])
+                    {
+                        if (val < volume)
+                        {
+                            scr = ScalableHarvestableResource.Create(rtype, val, this, new PixelPosByte(x0, z0));
+                            volume -= val;
+                        }
+                        else
+                        {
+                            scr = ScalableHarvestableResource.Create(rtype, (byte)volume, this, new PixelPosByte(x0, z0));
+                            volume = 0;
+                        }
+                    }
                 }
-                i++;
-            }
+            }            
         }
+        ENDCYCLE:
+        return volume;
     }
     #endregion
 

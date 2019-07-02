@@ -104,7 +104,7 @@
             case Structure.DOCK_3_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 10), new ResourceContainer(ResourceType.metal_E, 2),
-                new ResourceContainer(ResourceType.Concrete, 280)
+                new ResourceContainer(ResourceType.Concrete, 300)
             };
                 break;
             case Structure.STORAGE_1_ID:
@@ -387,6 +387,14 @@
                     {
                         new ResourceContainer(ResourceType.Concrete, 10f)
                     };
+                    break;
+                }
+            case Structure.PSYCHOKINECTIC_GENERATOR:
+                {
+                    cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.Plastics, 40),
+                new ResourceContainer(ResourceType.metal_E, 2)
+            };
                     break;
                 }
         }

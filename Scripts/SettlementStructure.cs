@@ -117,9 +117,10 @@ public sealed class SettlementStructure : Structure
         data.Add((byte)type);
         return data;
     }
-    public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
+        fs.Read(data, 0, data.Length);
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
@@ -128,7 +129,7 @@ public sealed class SettlementStructure : Structure
         hp = System.BitConverter.ToSingle(data, 8);
         maxHp = System.BitConverter.ToSingle(data, 12);
 
-        SetData((Settlement.SettlementStructureType)data[17], data[16],  null);
+        SetData((Settlement.SettlementStructureType)data[STRUCTURE_SERIALIZER_LENGTH + 1], data[STRUCTURE_SERIALIZER_LENGTH],  null);
         SetBasement(sblock, ppos);
     }
 }

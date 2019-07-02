@@ -58,6 +58,38 @@ public sealed class UIFactoryObserver : UIObserver
         outputIcon.uvRect = ResourceType.GetResourceIconRect(r.output.ID);
         outputValueString.text = r.outputValue.ToString();
         recipesDropdown.value = positionInDropdown;
+        // recipe info block
+        if (observingFactory.recipe != Recipe.NoRecipe)
+        {
+            if (observingFactory.outputResourcesBuffer < Factory.BUFFER_LIMIT)
+            {
+                if (observingFactory.isActive & observingFactory.isEnergySupplied)
+                {
+                    if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
+                    else
+                    {
+                        float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                        workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+                    }
+                }
+                else
+                {
+                    workflowString.text = Localization.GetPhrase(LocalizedPhrase.NoEnergySupply);
+                }
+            }
+            else workflowString.text = Localization.GetPhrase(LocalizedPhrase.BufferOverflow);
+            if (observingFactory.productionMode != FactoryProductionMode.NoLimit)
+            {
+                int pmv = observingFactory.productionModeValue;
+                if (showingProductionValue != pmv)
+                {
+                    showingProductionValue = pmv;
+                    limitInputField.text = pmv.ToString();
+                }
+            }
+        }
+        else workflowString.text = string.Empty;
+        //
 
         modesDropdown.value = (int)observingFactory.productionMode;
         if (observingFactory.productionMode == FactoryProductionMode.NoLimit)
@@ -80,6 +112,39 @@ public sealed class UIFactoryObserver : UIObserver
         inputValueString.text = r.inputValue.ToString();
         outputIcon.uvRect = ResourceType.GetResourceIconRect(r.output.ID);
         outputValueString.text = r.outputValue.ToString();
+
+        // recipe info block
+        if (observingFactory.recipe != Recipe.NoRecipe)
+        {
+            if (observingFactory.outputResourcesBuffer < Factory.BUFFER_LIMIT)
+            {
+                if (observingFactory.isActive & observingFactory.isEnergySupplied)
+                {
+                    if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
+                    else
+                    {
+                        float z = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                        workflowString.text = string.Format("{0:0.##}", z) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+                    }
+                }
+                else
+                {
+                    workflowString.text = Localization.GetPhrase(LocalizedPhrase.NoEnergySupply);
+                }
+            }
+            else workflowString.text = Localization.GetPhrase(LocalizedPhrase.BufferOverflow);
+            if (observingFactory.productionMode != FactoryProductionMode.NoLimit)
+            {
+                int pmv = observingFactory.productionModeValue;
+                if (showingProductionValue != pmv)
+                {
+                    showingProductionValue = pmv;
+                    limitInputField.text = pmv.ToString();
+                }
+            }
+        }
+        else workflowString.text = string.Empty;
+        //
     }
 
     public void SetProductionMode(int x)
@@ -127,6 +192,7 @@ public sealed class UIFactoryObserver : UIObserver
         if (observingFactory == null) SelfShutOff();
         else
         {
+            // recipe info block
             if (observingFactory.recipe != Recipe.NoRecipe) {
                 if (observingFactory.outputResourcesBuffer < Factory.BUFFER_LIMIT)
                 {
@@ -155,7 +221,8 @@ public sealed class UIFactoryObserver : UIObserver
                     }
                 }
             }
-            else workflowString.text = string.Empty;           
+            else workflowString.text = string.Empty;  
+            //
         }
     }
 

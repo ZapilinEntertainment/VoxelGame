@@ -5,17 +5,22 @@ public sealed class ScalableHarvestableResource : Structure {
 
 	public ResourceType mainResource {get;private set;}
 	public byte resourceCount { get; private set; }
-    public const byte RESOURCE_STICK_RECT_SIZE = 2;
+    public const byte RESOURCE_STICK_RECT_SIZE = 2; // dependency : SurfaceRect.ScatterResources;
     public static readonly byte MAX_STICK_VOLUME = (byte)(CubeBlock.MAX_VOLUME / (SurfaceBlock.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE * SurfaceBlock.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE)),
         RESOURCES_PER_LEVEL = RESOURCE_STICK_RECT_SIZE * RESOURCE_STICK_RECT_SIZE;
 
-    private static Dictionary<byte, Mesh> meshes = new Dictionary<byte, Mesh>(); 
+    private static Dictionary<byte, Mesh> meshes = new Dictionary<byte, Mesh>();
+
+    private static byte prevModelLevel = 0, prevModelLight = 255;
+    private static int prevModelMaterialID = -1;
+    private static Mesh prevModelMesh = null;
 
     public static ScalableHarvestableResource Create(ResourceType i_resource, byte count, SurfaceBlock surface, PixelPosByte pos)
     {
         GameObject g = new GameObject("ScalableHarvestableResource");
         var shr = g.AddComponent<ScalableHarvestableResource>();
-        shr.Prepare();
+        shr.ID = RESOURCE_STICK_ID;
+        shr.PrepareStructure();
         shr.mainResource = i_resource;
         shr.resourceCount = count;
         shr.SetBasement(surface, pos);
@@ -25,8 +30,8 @@ public sealed class ScalableHarvestableResource : Structure {
 	override public void Prepare() {
 		PrepareStructure();
 		mainResource = ResourceType.Nothing; 
-		hp = maxHp;
 		resourceCount = 0;		
+        //dependency : Create()
 	}
 
     override protected void SetModel()
@@ -100,11 +105,26 @@ public sealed class ScalableHarvestableResource : Structure {
             mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
             mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
         }
+
         byte light;
         if (basement != null) light = basement.myChunk.lightMap[basement.pos.x, basement.pos.y, basement.pos.z];
         else light = 255;
+
+        if (prevModelMesh != null)
+        {
+            if (prevModelLight == light && prevModelLevel == level && prevModelMaterialID == mainResource.ID)
+            {
+                mf.sharedMesh = prevModelMesh;
+                mr.sharedMaterial = PoolMaster.GetMaterial(mainResource.ID);
+                return;
+            }
+        }
+        
         mf.sharedMesh = m;
-        PoolMaster.SetMaterialByID(ref mf, ref mr, mainResource.ID, light);
+        prevModelMesh = PoolMaster.SetMaterialByID(ref mf, ref mr, mainResource.ID, light);
+        prevModelLevel = level;
+        prevModelLight = light;
+        prevModelMaterialID = mainResource.ID;
     }
 
     public float AddResource( ResourceType type, float i_volume) {

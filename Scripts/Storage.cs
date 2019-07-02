@@ -57,9 +57,21 @@ public sealed class Storage : MonoBehaviour {
 	/// <param name="rtype">Rtype.</param>
 	/// <param name="count">Count.</param>
 	public float AddResource(ResourceType rtype, float count) {
-		if (totalVolume >= maxVolume | count == 0) return count;
+		if (totalVolume >= maxVolume )
+        {
+            Overloading();
+            return count;
+        }
+        else
+        {
+            if (count == 0f) return 0f;
+        }
 		float loadedCount = count;
-		if (maxVolume - totalVolume < loadedCount) loadedCount = maxVolume - (float)totalVolume;
+        if (maxVolume - totalVolume < loadedCount)
+        {
+            loadedCount = maxVolume - (float)totalVolume;
+            Overloading();
+        }
         if (rtype == ResourceType.FertileSoil) rtype = ResourceType.Dirt;
 		standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
@@ -78,14 +90,9 @@ public sealed class Storage : MonoBehaviour {
 	}
 	public void AddResources(ResourceContainer[] resourcesList) {
 		float freeSpace = maxVolume - (float)totalVolume;
-        if (freeSpace == 0)
+        if (freeSpace == 0 & !GameMaster.loading)
         {
-            if (announcementTimer <= 0)
-            {
-                GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.StorageOverloaded));
-                if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.StorageOverload);
-                announcementTimer = 5;
-            }
+            Overloading();
             return;
         }
 		int idsCount = ResourceType.resourceTypesArray.Length;
@@ -101,6 +108,60 @@ public sealed class Storage : MonoBehaviour {
         operationsDone++;
         totalVolume = maxVolume - freeSpace;
 	}
+    private void Overloading()
+    {
+        if (announcementTimer <= 0)
+        {
+            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.StorageOverloaded));
+            if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.StorageOverload);
+            announcementTimer = 10f;
+        }
+        else
+        {
+            // storage dumping
+            var chunk = GameMaster.realMaster.mainChunk;
+            ChunkPos cpos;
+            bool secondTry = false;            
+            if (warehouses.Count > 0) cpos = warehouses[Random.Range(0, warehouses.Count - 1)].basement.pos;
+            else cpos = GameMaster.realMaster.colonyController.hq.basement.pos;
+            var sblock = chunk.GetNearestUnoccupiedSurfaceBlock(cpos);
+            SECOND_TRY:
+            if (sblock != null && sblock.noEmptySpace != true)
+            {
+                int maxIndex = 0, sid = 0;
+                float maxValue = 0;
+                var bmaterials = ResourceType.blockMaterials;
+                for (int j = 0; j < bmaterials.Length; j++)
+                {
+                    sid = bmaterials[j].ID;
+                    if (standartResources[sid] > maxValue)
+                    {
+                        maxValue = standartResources[sid];
+                        maxIndex = sid;
+                    }
+                }
+                int dumpingVal = 1000;
+                if (dumpingVal > maxValue) dumpingVal = (int)maxValue;
+
+                dumpingVal -= sblock.ScatterResources(SurfaceRect.full, ResourceType.GetResourceTypeById(maxIndex), dumpingVal);
+
+                if (dumpingVal != 0)
+                {
+                    standartResources[maxIndex] -= dumpingVal;
+                    totalVolume -= dumpingVal;
+                }
+                else
+                {
+                    if (!secondTry)
+                    {
+                        secondTry = true;
+                        sblock = chunk.GetRandomSurfaceBlock();
+                        goto SECOND_TRY;
+                    }
+                }
+            }
+        }
+    }
 
 	public float GetResources(ResourceType rtype, float count) {
 		if (GameMaster.realMaster.weNeedNoResources) return count;
@@ -114,6 +175,7 @@ public sealed class Storage : MonoBehaviour {
 				gainedCount = standartResources[rtype.ID];
 				standartResources[rtype.ID] = 0;
 			}
+        totalVolume -= gainedCount;
         operationsDone++;
         return gainedCount;
 	}
@@ -126,8 +188,16 @@ public sealed class Storage : MonoBehaviour {
             foreach (ResourceContainer rc in cost)
             {
                 int rid = rc.type.ID;
-                if (standartResources[rid] < rc.volume) standartResources[rid] = 0;
-                else standartResources[rid] -= rc.volume;
+                if (standartResources[rid] < rc.volume)
+                {
+                    totalVolume -= standartResources[rid];
+                    standartResources[rid] = 0;
+                }
+                else
+                {
+                    standartResources[rid] -= rc.volume;
+                    totalVolume -= rc.volume;
+                }
             }
             operationsDone++;
         }

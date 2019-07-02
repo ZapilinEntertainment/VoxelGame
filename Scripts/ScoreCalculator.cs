@@ -54,11 +54,13 @@
         structuresCost[Structure.TENT_ID] = 0;
         structuresCost[Structure.DOCK_ID] = val * 100;
         structuresCost[Structure.ENERGY_CAPACITOR_1_ID] = 2 * val;
-        structuresCost[Structure.FARM_1_ID] = val * 6;
-        structuresCost[Structure.MINE_ID] = val * 8;
-        structuresCost[Structure.SMELTERY_1_ID] = val * 8;
+        structuresCost[Structure.PSYCHOKINECTIC_GENERATOR] = 2 * val;
+        structuresCost[Structure.MONUMENT_ID] = 4 * val;
         structuresCost[Structure.WIND_GENERATOR_1_ID] = val * 4;
+        structuresCost[Structure.FARM_1_ID] = val * 6;
         structuresCost[Structure.BIOGENERATOR_2_ID] = val * 6;
+        structuresCost[Structure.MINE_ID] = val * 8;
+        structuresCost[Structure.SMELTERY_1_ID] = val * 8;             
         structuresCost[Structure.HOSPITAL_2_ID] = val * 25;
         structuresCost[Structure.MINERAL_POWERPLANT_2_ID] = val * 12;
         structuresCost[Structure.ORE_ENRICHER_2_ID] = val * 14;
@@ -74,7 +76,8 @@
         structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
         structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;
-        structuresCost[Structure.MONUMENT_ID] = 4 * val;        
+        
+       
 
         // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];

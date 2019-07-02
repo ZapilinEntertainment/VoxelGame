@@ -13,7 +13,7 @@ public sealed class Crew : MonoBehaviour {
     public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f, CHANGING_SHUTTLE_STAMINA_CONSUMPTION = 0.1f;
     private const float NEUROPARAMETER_STEP = 0.01f, NATIVE_CHAR_IMPROVEMENT_STEP = 0.02f, STAMINA_REFRESH_SPEED = 0.02f;
 
-	public static int lastID {get;private set;}	
+	public static int nextID {get;private set;}	
     public static int actionsHash { get; private set; }
     public static List<Crew> crewsList { get; private set; }
     private static GameObject crewsContainer;
@@ -144,7 +144,7 @@ public sealed class Crew : MonoBehaviour {
 
 	public static void Reset() {
 		crewsList = new List<Crew>();
-		lastID = 0;
+		nextID = 0;
         actionsHash = 0;
 	}
 
@@ -156,7 +156,7 @@ public sealed class Crew : MonoBehaviour {
         c.transform.parent = crewsContainer.transform;
 
         c.level = 0;
-        c.ID = lastID; lastID++;
+        c.ID = nextID; nextID++;
         c.status = CrewStatus.AtHome;
 
         //normal parameters
@@ -482,7 +482,7 @@ public sealed class Crew : MonoBehaviour {
             var dataArray = data.ToArray();
             fs.Write(dataArray, 0, dataArray.Length);
         }
-        fs.Write(System.BitConverter.GetBytes(lastID), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(nextID), 0, 4);
     }
     public static void LoadStaticData(System.IO.FileStream fs)
     {
@@ -502,20 +502,21 @@ public sealed class Crew : MonoBehaviour {
         }
 
         fs.Read(data, 0, 4);
-        lastID = System.BitConverter.ToInt32(data, 0);
+        nextID = System.BitConverter.ToInt32(data, 0);
     }
 
     public List<byte> Save()
     {
         var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(ID)); 
-        data.AddRange(System.BitConverter.GetBytes(shuttle == null ? -1 : shuttle.ID));
-        data.AddRange(System.BitConverter.GetBytes(artifact == null ? -1 : artifact.ID));
+        data.AddRange(System.BitConverter.GetBytes(ID)); // 0 - 3
+        int nodata = -1;
+        data.AddRange(System.BitConverter.GetBytes(shuttle == null ? nodata : shuttle.ID));//4- 7
+        data.AddRange(System.BitConverter.GetBytes(artifact == null ? nodata : artifact.ID)); // 8 - 11
 
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
+        // 12 - 15
         data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
-        //16
         if (count > 0) data.AddRange(nameArray); 
 
         //0
@@ -540,8 +541,9 @@ public sealed class Crew : MonoBehaviour {
 
     public void Load(System.IO.FileStream fs)
     {
-        var data = new byte[16];
-        fs.Read(data, 0, 16);
+        int LENGTH = 16;
+        var data = new byte[LENGTH];
+        fs.Read(data, 0, LENGTH);
         ID = System.BitConverter.ToInt32(data,0);
         int shuttleID = System.BitConverter.ToInt32(data, 4);
         if (shuttleID != -1)
