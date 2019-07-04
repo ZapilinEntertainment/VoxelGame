@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class HeadQuarters : House
+public sealed class HeadQuarters : Building
 {
     private bool nextStageConditionMet = false;
     private ColonyController colony;
@@ -36,12 +36,12 @@ public sealed class HeadQuarters : House
         PrepareBuilding();
         switch (level)
         {
-            case 1: energySurplus = 1f; energyCapacity = 100f; housing = 10; break;
-            case 2: energySurplus = 3f; energyCapacity = 200f; housing = 30; break;
-            case 3: energySurplus = 5f; energyCapacity = 400f; housing = 40; break;
-            case 4: energySurplus = 12f; energyCapacity = 500f; housing = 55; break;
-            case 5: energySurplus = 20f; energyCapacity = 600f; housing = 70; break;
-            case 6: energySurplus = 25f; energyCapacity = 700f; housing = 80; ChangeUpgradedIndex(-1); break;
+            case 1: energySurplus = 1f; energyCapacity = 100f; break;
+            case 2: energySurplus = 3f; energyCapacity = 200f; break;
+            case 3: energySurplus = 5f; energyCapacity = 400f; break;
+            case 4: energySurplus = 12f; energyCapacity = 500f; break;
+            case 5: energySurplus = 20f; energyCapacity = 600f; break;
+            case 6: energySurplus = 25f; energyCapacity = 700f; ChangeUpgradedIndex(-1); break;
         }
         indestructible = true;
     }
@@ -215,7 +215,8 @@ public sealed class HeadQuarters : House
     #region save-load system
     override public List<byte> Save()
     {
-        var data = base.Save();
+        var data = SaveStructureData();
+        data.AddRange(SaveBuildingData());
         data.Add(level);
         return data;
     }
@@ -224,13 +225,15 @@ public sealed class HeadQuarters : House
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
-        LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
-        Prepare();
+
         //load structure data
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
-        // >>
+        skinIndex = System.BitConverter.ToUInt32(data, 4);
+        // load building data
+        energySurplus = System.BitConverter.ToSingle(data, STRUCTURE_SERIALIZER_LENGTH + 1);        
+        //
         level = (byte)fs.ReadByte();
         // >>
         SetBasement(sb, new PixelPosByte(data[0], data[1]));

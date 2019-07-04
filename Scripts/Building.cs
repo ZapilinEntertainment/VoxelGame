@@ -843,7 +843,7 @@ public class Building : Structure
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
         // changed in Settlement.Load()
-        // copy to PsychokineticGenerator.Load()
+        // copy to PsychokineticGenerator.Load()        
     }
     protected void LoadBuildingData(System.IO.FileStream fs)
     {
@@ -855,6 +855,7 @@ public class Building : Structure
     {
         energySurplus = System.BitConverter.ToSingle(data, startIndex + 1);
         SetActivationStatus(data[startIndex] == 1, true);
+        //copy to HeadQuarters
     }
     #endregion
 }

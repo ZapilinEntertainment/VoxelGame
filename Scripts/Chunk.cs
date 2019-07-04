@@ -2642,6 +2642,11 @@ public sealed class Chunk : MonoBehaviour
             data = new byte[8];
             for (int i = 0; i < blocksCount; i++)
             {
+                if (GameMaster.loadingFailed)
+                {
+                    print("loading failed");
+                    return;
+                }
                 fs.Read(data, 0, data.Length);
                 type = (BlockType)data[0];
                 pos = new ChunkPos(data[1], data[2], data[3]);

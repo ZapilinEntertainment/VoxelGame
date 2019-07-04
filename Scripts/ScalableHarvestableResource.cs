@@ -177,11 +177,19 @@ public sealed class ScalableHarvestableResource : Structure {
 
     override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
     {
-        LoadStructureData(fs, sblock);
-        var data = new byte[8];
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 5];
         fs.Read(data, 0, data.Length);
-        mainResource = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, 0));
-        resourceCount = data[4];
+        Prepare();
+        modelRotation = data[2];
+        indestructible = (data[3] == 1);
+        skinIndex = System.BitConverter.ToUInt32(data, 4);       
+        //
+        mainResource = ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, STRUCTURE_SERIALIZER_LENGTH));
+        resourceCount = data[STRUCTURE_SERIALIZER_LENGTH + 4];
+        //
+        SetBasement(sblock, new PixelPosByte(data[0], data[1]));
+        hp = System.BitConverter.ToSingle(data, 8);
+        maxHp = System.BitConverter.ToSingle(data, 12);
     }
 
     

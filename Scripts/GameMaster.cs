@@ -47,6 +47,7 @@ public sealed class GameMaster : MonoBehaviour
     public static bool sceneClearing { get; private set; }
     public static bool editMode = false, needTutorial = false;
     public static bool loading { get; private set; }
+    public static bool loadingFailed; // hot
     public static bool soundEnabled { get; private set; }
     public static string savename { get; private set; }
     public static float LUCK_COEFFICIENT { get; private set; }
@@ -129,6 +130,12 @@ public sealed class GameMaster : MonoBehaviour
         SceneManager.LoadScene((int)level);
         sceneClearing = false;
         Structure.ResetToDefaults_Static();
+    }
+    public static void LoadingFail()
+    {
+        loadingFailed = true;
+        SetPause(true);
+        Debug.Log("loading failed");
     }
     #endregion
 
@@ -803,11 +810,20 @@ public sealed class GameMaster : MonoBehaviour
             fs.Read(data, 0, 4);
             Mission.SetNextIDValue(System.BitConverter.ToInt32(data,0));
             globalMap.Load(fs);
+            if (loadingFailed) return false;
+
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
+            if (loadingFailed) return false;
+
             Shuttle.LoadStaticData(fs); // because of hangars
+            if (loadingFailed) return false;
+
             Artifact.LoadStaticData(fs); // crews & monuments
+            if (loadingFailed) return false;
+
             Crew.LoadStaticData(fs);
+            if (loadingFailed) return false;
 
             if (mainChunk == null)
             {
@@ -815,15 +831,22 @@ public sealed class GameMaster : MonoBehaviour
                 mainChunk = g.AddComponent<Chunk>();
             }
             mainChunk.LoadChunkData(fs);
+            if (loadingFailed) return false;
+
             Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
+            if (loadingFailed) return false;
 
             fs.Read(data, 0, 4);
             QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
+            if (loadingFailed) return false;
+
             Dock.LoadStaticData(fs);
-            QuestUI.current.Load(fs);            
-            Expedition.LoadStaticData(fs);            
+            if (loadingFailed) return false;
+            QuestUI.current.Load(fs);
+            if (loadingFailed) return false;
+            Expedition.LoadStaticData(fs);
             fs.Close();
             FollowingCamera.main.WeNeedUpdate();
             loading = false;

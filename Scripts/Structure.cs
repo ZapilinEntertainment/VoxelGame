@@ -91,7 +91,6 @@ public class Structure : MonoBehaviour
             case DRYED_PLANT_ID:
                 model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));
                 break;
-            case RESOURCE_STICK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/resourcesStick")); break;
             case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
             case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
             case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
@@ -1355,15 +1354,35 @@ public class Structure : MonoBehaviour
         {
             fs.Read(data, 0, 4);
             int id = System.BitConverter.ToInt32(data, 0);
+            int debug_prevID = -1;
             if (id != PLANT_ID)
             {
                 if (id != CONTAINER_ID)
                 {
-                    GetStructureByID(id).Load(fs, sblock);
+                    var s = GetStructureByID(id);
+                    if (s != null)
+                    {
+                        s.Load(fs, sblock);
+                        debug_prevID = id;
+                    }
+                    else
+                    {
+                        print("error, desu: id " + debug_prevID.ToString() + " data corrupted");
+                        GameMaster.LoadingFail();
+                        return;
+                    }
                 }
-                else HarvestableResource.LoadContainer(fs, sblock);
+                else
+                {
+                    HarvestableResource.LoadContainer(fs, sblock);
+                    debug_prevID = CONTAINER_ID;
+                }
             }
-            else Plant.LoadPlant(fs, sblock);
+            else
+            {
+                Plant.LoadPlant(fs, sblock);
+                debug_prevID = PLANT_ID;
+            }
         }
     }
 
@@ -1386,10 +1405,7 @@ public class Structure : MonoBehaviour
         LoadStructureData(data, sblock);
     }
     protected void LoadStructureData(byte[] data, SurfaceBlock sblock)
-    {
-        //copy in harvestable resource.load - changed
-        // copy in settlement
-        //copy in settlement structure
+    {        
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
@@ -1397,6 +1413,10 @@ public class Structure : MonoBehaviour
         SetBasement(sblock, new PixelPosByte(data[0], data[1]));
         hp = System.BitConverter.ToSingle(data, 8);
         maxHp = System.BitConverter.ToSingle(data, 12);
+        //copy to harvestable resource.load - changed
+        // copy to scalable harvestable resource
+        // copy to settlement
+        //copy to settlement structure
     }
 
     // в финальном виде копипастить в потомков
