@@ -39,6 +39,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x,0, windVector.y), Vector3.up);
         cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         cloudEmitterMainModule.simulationSpeed = 1;
+        cloudEmitter.gameObject.SetActive(false);
 
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
         sun = FindObjectOfType<Light>();
@@ -70,7 +71,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         currentEnvironment = e;       
         prevSkyboxSaturation = skyboxMaterial.GetFloat("_Saturation");
-        skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+        //skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
         environmentalConditions = currentEnvironment.conditions;
 
         sun.color = currentEnvironment.lightSettings.sunColor;
@@ -171,7 +172,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             if (s != prevSkyboxSaturation)
             {
                 prevSkyboxSaturation = s;
-                skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+                //skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
                 var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
                 var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
                 var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
@@ -219,54 +220,60 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
         if (lastSpawnDistance > 0) lastSpawnDistance -= dir.magnitude;
 
-        effectsTimer -= t;
-        if (effectsTimer < 0)
+        //test lightnings
+        if (false)
         {
-            float f = Chunk.CHUNK_SIZE;
-            var center = GameMaster.sceneCenter;
-            var pos = Random.onUnitSphere * f + center;
-            dir = center - pos;
-            dir += Random.onUnitSphere;
-            RaycastHit rh;
-            if (Physics.Raycast(pos, dir, out rh, 2 * f) ){
-                Lightning.Strike(pos, rh.point);
-                var hitobject = rh.collider;
-                float damage = Lightning.CalculateDamage();
-                if (hitobject.tag == Structure.STRUCTURE_COLLIDER_TAG)
+            effectsTimer -= t;
+            if (effectsTimer < 0)
+            {
+                float f = Chunk.CHUNK_SIZE;
+                var center = GameMaster.sceneCenter;
+                var pos = Random.onUnitSphere * f + center;
+                dir = center - pos;
+                dir += Random.onUnitSphere;
+                RaycastHit rh;
+                if (Physics.Raycast(pos, dir, out rh, 2 * f))
                 {
-                    hitobject.transform.parent.GetComponent<Structure>().ApplyDamage(damage);
-                }
-                else
-                {
-                    if (hitobject.tag == Chunk.BLOCK_COLLIDER_TAG)
+                    Lightning.Strike(pos, rh.point);
+                    var hitobject = rh.collider;
+                    float damage = Lightning.CalculateDamage();
+                    if (hitobject.tag == Structure.STRUCTURE_COLLIDER_TAG)
                     {
-                        var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
-                        Block b = crh.block;
-                        if (b != null) {
-                            if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
-                            else
+                        hitobject.transform.parent.GetComponent<Structure>().ApplyDamage(damage);
+                    }
+                    else
+                    {
+                        if (hitobject.tag == Chunk.BLOCK_COLLIDER_TAG)
+                        {
+                            var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
+                            Block b = crh.block;
+                            if (b != null)
                             {
-                                var sb = b as SurfaceBlock;
-                                if (sb != null)
-                                {
-                                    sb.EnvironmentalStrike(rh.point, 2, damage);
-                                }
+                                if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
                                 else
                                 {
-                                    if (b.mainStructure != null) b.mainStructure.ApplyDamage(damage);
+                                    var sb = b as SurfaceBlock;
+                                    if (sb != null)
+                                    {
+                                        sb.EnvironmentalStrike(rh.point, 2, damage);
+                                    }
+                                    else
+                                    {
+                                        if (b.mainStructure != null) b.mainStructure.ApplyDamage(damage);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                else
+                {
+                    var end = pos + Random.onUnitSphere * 5f;
+                    end.y = GameConstants.GetBottomBorder();
+                    Lightning.Strike(pos, end);
+                }
+                effectsTimer = 1f;
             }
-            else
-            {
-                var end = pos + Random.onUnitSphere * 5f;
-                end.y = GameConstants.GetBottomBorder();
-                Lightning.Strike(pos, end);
-            }
-            effectsTimer = 1f;
         }
     }
 
