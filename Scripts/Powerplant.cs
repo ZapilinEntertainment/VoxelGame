@@ -8,7 +8,7 @@ public class Powerplant : WorkBuilding
     public float fuelLeft { get; private set; }
     private int tickTimer = 0;
 
-    public const int BIOGEN_OUTPUT = 40, MINERAL_F_PP_OUTPUT = 40, GRPH_REACTOR_OUTPUT = 400, REACTOR_BLOCK_5_OUTPUT = 1600;
+    public const int BIOGEN_OUTPUT = 40, MINERAL_F_PP_OUTPUT = 180, GRPH_REACTOR_OUTPUT = 800, REACTOR_BLOCK_5_OUTPUT = 1600;
 
     override public void Prepare()
     {
@@ -20,7 +20,7 @@ public class Powerplant : WorkBuilding
                 output = BIOGEN_OUTPUT;
                 fuelNeeds = 10;
                 fuelLeft = 0;
-                fuelBurnTime = 1000; // ticks
+                fuelBurnTime = 200; // ticks
                 break;
             case MINERAL_POWERPLANT_2_ID:
                 fuel = ResourceType.mineral_F;

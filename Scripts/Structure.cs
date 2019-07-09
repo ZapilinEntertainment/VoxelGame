@@ -670,8 +670,8 @@ public class Structure : MonoBehaviour
             case BIOGENERATOR_2_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = new SurfaceRect(0, 0, 8);
-                    placeInCenter = false;
+                    surfaceRect = new SurfaceRect(0, 0, 10);
+                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     isBasement = false;
@@ -680,8 +680,8 @@ public class Structure : MonoBehaviour
             case HOSPITAL_2_ID:
                 {
                     maxHp = 1500;
-                    surfaceRect = new SurfaceRect(0, 0, 8);
-                    placeInCenter = false;
+                    surfaceRect = new SurfaceRect(0, 0, 10);
+                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     isBasement = false;
@@ -690,8 +690,8 @@ public class Structure : MonoBehaviour
             case MINERAL_POWERPLANT_2_ID:
                 {
                     maxHp = 1100;
-                    surfaceRect = new SurfaceRect(0, 0, 8);
-                    placeInCenter = false;
+                    surfaceRect = SurfaceRect.full;
+                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     isBasement = false;

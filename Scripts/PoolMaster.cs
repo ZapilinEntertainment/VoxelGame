@@ -478,23 +478,23 @@ public sealed class PoolMaster : MonoBehaviour {
         }
 
         borders = new Vector2[4] { borders[0], borders[2], borders[1], borders[3] };
-        borders[0].x += 0.01f;
-        borders[0].y += 0.01f;
-
-        borders[1].x -= 0.01f;
-        borders[1].y -= 0.01f;
-
-        borders[2].x += 0.01f;
-        borders[2].y -= 0.01f;
-
-        borders[3].x -= 0.01f;
-        borders[3].y += 0.01f;
 
         // крутим развертку, если это квад, иначе просто перетаскиваем 
         bool isQuad = (m.uv.Length == 4);
         Vector2[] uvEdited = m.uv;
         if (isQuad)
-        {                    
+        {
+            borders[0].x += 0.01f; // (0,0)
+            borders[0].y += 0.01f;
+
+            borders[1].x -= 0.01f; //(0,1)
+            borders[1].y -= 0.01f;
+
+            borders[2].x += 0.01f; // (1,1)
+            borders[2].y -= 0.01f;
+
+            borders[3].x -= 0.01f; // (1,0)
+            borders[3].y += 0.01f;
             if (useTextureRotation)
             {
                 float seed = Random.value;
@@ -517,10 +517,21 @@ public sealed class PoolMaster : MonoBehaviour {
         }
         else
         {
-            for (int i = 0; i < uvEdited.Length; i++)
+            float minY = 1, maxY = 0, minX = 1, maxX = 0;
+            foreach (var v in uvEdited)
             {
-                uvEdited[i] = new Vector2(uvEdited[i].x % piece, uvEdited[i].y % piece); // относительное положение в собственной текстуре
-                uvEdited[i] = new Vector2(borders[0].x + uvEdited[i].x, borders[0].y + uvEdited[i].y);
+                if (v.x > maxX) maxX = v.x;
+                if (v.x < minX) minX = v.x;
+                if (v.y > maxY) maxY = v.y;
+                if (v.y < minY) minY = v.y;
+            }
+            float xl = maxX - minX, yl = maxY - minY, k = 1;
+            if (xl > yl)   k = piece / xl;
+            else  k = piece / yl;
+            float x0 = borders[0].x, y0 = borders[0].y;
+            for (int i = 0; i< uvEdited.Length; i++)
+            {
+                uvEdited[i] = new Vector2(x0 + (uvEdited[i].x - minX) * k, y0 + (uvEdited[i].y - minY) * k );
             }
         }
         m.uv = uvEdited;

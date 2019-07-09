@@ -12,19 +12,17 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
 
-    private bool prepared = false, cloudsEnabled = true, sunMarkerEnabled = true;
+    private bool prepared = false, sunMarkerEnabled = true;
     private int vegetationShaderWindPropertyID;
     private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10;
     private Environment currentEnvironment;
     private GlobalMap gmap;
     private MapPoint cityPoint, sunPoint;
     private Material skyboxMaterial;
-    private ParticleSystem.MainModule cloudEmitterMainModule;
-    private Transform cloudEmitter;
     private List<Transform> decorations;
     
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6;
-    private const int SKY_SPHERE_RADIUS = 9;
+    private const int SKY_SPHERE_RADIUS = 9, CLOUD_LAYER_INDEX = 9;
 
     public void Prepare()
     {
@@ -32,14 +30,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
         windVector = Random.insideUnitCircle;
         newWindVector = windVector;
-        if (cloudEmitter == null)
-        {
-            cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity, transform);
-        }
-        cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x,0, windVector.y), Vector3.up);
-        cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
-        cloudEmitterMainModule.simulationSpeed = 1;
-        cloudEmitter.gameObject.SetActive(false);
 
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
         sun = FindObjectOfType<Light>();
@@ -94,7 +84,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         var mv = gmap.cityFlyDirection;
         var v = new Vector3(mv.x, 0, mv.z).normalized;
         v *= -1;
-        dec.layer = cloudEmitter.gameObject.layer;
+        dec.layer = CLOUD_LAYER_INDEX;
         dec.transform.position = Quaternion.AngleAxis((0.5f - Random.value) * 180f, Vector3.up) * (v * SKY_SPHERE_RADIUS) + v * lastSpawnDistance;
         
         decorations.Add(dec.transform);
@@ -116,13 +106,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         {
             float st = WIND_CHANGE_STEP * t;            
             windVector = Vector3.RotateTowards(windVector, newWindVector, st, st);
-            if (windVector.magnitude != 0)
-            {
-                cloudEmitter.transform.forward = new Vector3(windVector.x, 0, windVector.y);
-            }
             float windpower = windVector.magnitude;
             Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windpower);
-            if (cloudsEnabled) cloudEmitterMainModule.simulationSpeed = windpower;
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
 
@@ -298,14 +283,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         windTimer = System.BitConverter.ToSingle(data, 20);
 
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
-        if (cloudEmitter == null)
-        {
-            cloudEmitter = Instantiate(Resources.Load<Transform>("Prefs/cloudEmitter"), Vector3.zero, Quaternion.identity);
-        }
-        if (windVector != Vector2.zero)  cloudEmitter.rotation = Quaternion.LookRotation(new Vector3(windVector.x, 0, windVector.y), Vector3.up);
-        cloudEmitterMainModule = cloudEmitter.GetComponent<ParticleSystem>().main;
         float windPower = windVector.magnitude;
-        cloudEmitterMainModule.simulationSpeed = windPower;
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);
         prepared = true;
         if (WindUpdateEvent != null) WindUpdateEvent(windVector);

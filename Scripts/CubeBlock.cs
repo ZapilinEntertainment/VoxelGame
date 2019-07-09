@@ -164,7 +164,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 0)
                 {
                     excavatingStatus = 0;
-                    myChunk.RefreshBlockVisualising(this);
+                    myChunk.ChangeBlockVisualData(this, UP_FACE_INDEX);
                 }
             }
             else
@@ -172,7 +172,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 1)
                 {
                     excavatingStatus = 1;
-                    myChunk.RefreshBlockVisualising(this);
+                    myChunk.ChangeBlockVisualData(this, UP_FACE_INDEX);
                 }
             }
         }
@@ -183,7 +183,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 2)
                 {
                     excavatingStatus = 2;
-                    myChunk.RefreshBlockVisualising(this);
+                    myChunk.ChangeBlockVisualData(this, UP_FACE_INDEX);
                 }
             }
             else
@@ -191,7 +191,7 @@ public class CubeBlock : Block
                 if (excavatingStatus != 3)
                 {
                     excavatingStatus = 3;
-                    myChunk.RefreshBlockVisualising(this);
+                    myChunk.ChangeBlockVisualData(this, UP_FACE_INDEX);
                 }
             }
 

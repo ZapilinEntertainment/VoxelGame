@@ -58,7 +58,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(PLASTICS_FACTORY_3_ID) as Building);
                 blist.Add(GetStructureByID(MINI_GRPH_REACTOR_3_ID) as Building);
                 blist.Add(GetStructureByID(FUEL_FACILITY_3_ID) as Building);
-                blist.Add(GetStructureByID(XSTATION_3_ID) as Building);
+                //blist.Add(GetStructureByID(XSTATION_3_ID) as Building);
                 blist.Add(GetStructureByID(GRPH_ENRICHER_3_ID) as Building);
                 break;
             case 4:
