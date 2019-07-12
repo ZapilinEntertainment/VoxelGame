@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 public sealed class LifeSource : Structure {
-    private int tick = 0, lifepowerPerTick = 500;
+    private int tick = 0, lifepowerPerTick = 50;
     const int MAXIMUM_TICKS = 1000;
     public const float MAX_HP = 25000;
     private List<Block> dependentBlocks;
@@ -39,10 +39,10 @@ public sealed class LifeSource : Structure {
 	public void LifepowerUpdate () {
         tick++;
         basement.myChunk.AddLifePower(lifepowerPerTick);
-        if (tick == MAXIMUM_TICKS & !destroyed)
-        { // dry
-            Annihilate(true, false, false);
-        }
+        //if (tick == MAXIMUM_TICKS & !destroyed)
+        //{ // dry
+        //    Annihilate(true, false, false);
+        //}
 	}
 
 

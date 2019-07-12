@@ -45,11 +45,24 @@ public sealed class GameSettingsUI : MonoBehaviour
     public void Options_QualityLevelChanged()
     {
         int v = qualityDropdown.value;
-        graphicsApplyButton.gameObject.SetActive(v != QualitySettings.GetQualityLevel());
+        graphicsApplyButton.SetActive(v != QualitySettings.GetQualityLevel());
     }
     public void Options_ApplyGraphicsChange()
     {
         QualitySettings.SetQualityLevel(qualityDropdown.value);
+        if (qualityDropdown.value == 2)
+        {
+            PoolMaster.ReloadReplaceableMaterials(true);
+            PoolMaster.ReplaceMaterials(Component.FindObjectsOfType<MeshRenderer>(), true);
+            GameMaster.realMaster.mainChunk.SetShadowCastingMode(true);
+        }
+        else
+        {
+            PoolMaster.ReloadReplaceableMaterials(false);
+            PoolMaster.ReplaceMaterials(Component.FindObjectsOfType<MeshRenderer>(), false);
+            GameMaster.realMaster.mainChunk.SetShadowCastingMode(false);
+        }
+        
         graphicsApplyButton.SetActive(false); // apply button
     }
     public void TouchSwitch()
@@ -62,6 +75,7 @@ public sealed class GameSettingsUI : MonoBehaviour
         Transform t = transform;
         lodDistanceSlider.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.LODdistance);
         qualityDropdown.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
-        graphicsApplyButton.transform.GetChild(0).gameObject.SetActive(false);
+        graphicsApplyButton.SetActive(false);
+        graphicsApplyButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Apply);
     }
 }

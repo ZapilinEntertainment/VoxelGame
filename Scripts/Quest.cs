@@ -11,7 +11,7 @@ public enum ProgressQuestID : byte
 {
     Progress_HousesToMax, Progress_2Docks, Progress_2Storages, Progress_Tier2, Progress_300Population, Progress_OreRefiner, Progress_HospitalCoverage, Progress_Tier3,
     Progress_4MiniReactors, Progress_100Fuel, Progress_XStation, Progress_Tier4, Progress_CoveredFarm, Progress_CoveredLumbermill, Progress_Reactor, Progress_FirstExpedition,
-    Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor, LASTONE
+    Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor, Progress_FoodStocks, LASTONE
 }
 public enum EndgameQuestID : byte
 {
@@ -98,19 +98,20 @@ public class Quest
 
                             break;
                         case ProgressQuestID.Progress_2Docks: reward = 500; break;
-                        case ProgressQuestID.Progress_2Storages: reward = 100; break;
+                        case ProgressQuestID.Progress_2Storages: reward = 200; break;
                         case ProgressQuestID.Progress_Tier2: reward = 120; break;
-                        case ProgressQuestID.Progress_300Population: reward = 100; break;
+                        case ProgressQuestID.Progress_300Population: reward = 200; break;
                         case ProgressQuestID.Progress_OreRefiner: reward = 200; break;
                         case ProgressQuestID.Progress_HospitalCoverage: reward = 240; break;
                         case ProgressQuestID.Progress_Tier3: reward = 240; break;
                         case ProgressQuestID.Progress_4MiniReactors: reward = 800; break;
-                        case ProgressQuestID.Progress_100Fuel: reward = 210; break;
+                        case ProgressQuestID.Progress_100Fuel: reward = 200; break;
                         case ProgressQuestID.Progress_XStation: reward = 120; break;
                         case ProgressQuestID.Progress_Tier4: reward = 480; break;
                         case ProgressQuestID.Progress_CoveredFarm: reward = 200; break;
                         case ProgressQuestID.Progress_CoveredLumbermill: reward = 200; break;
                         case ProgressQuestID.Progress_Reactor: reward = 220; break;
+                        case ProgressQuestID.Progress_FoodStocks: reward = 120; break;
                         case ProgressQuestID.Progress_FirstExpedition:
                             defaultSettings = false;
                             stepsCount = 4;
@@ -428,6 +429,14 @@ public class Quest
                             else stepsFinished[0] = false;
                         }
                         break;
+                    case ProgressQuestID.Progress_FoodStocks:
+                        {
+                            var f = colony.storage.standartResources[ResourceType.FOOD_ID];
+                            var fmc = colony.foodMonthConsumption;
+                            stepsAddInfo[0] = ((int)f).ToString() + '/' + ((int)fmc).ToString();
+                            if (f >= fmc) MakeQuestCompleted();
+                            break;
+                        }
                 }
                 break;
             case QuestType.Endgame:
@@ -573,6 +582,7 @@ public class Quest
             ColonyController colony = GameMaster.realMaster.colonyController;
             int lvl = colony.hq.level;
             List<ProgressQuestID> acceptableQuest = new List<ProgressQuestID>();
+            var resources = colony.storage.standartResources;
 
             for (int i = 0; i < complementQuests.Count; i++)
             {
@@ -580,6 +590,10 @@ public class Quest
                 switch (q)
                 {
                     case ProgressQuestID.Progress_HousesToMax: if (colony.housingLevel < lvl & lvl != 4) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_FoodStocks:
+                        {
+                            if (resources[ResourceType.FOOD_ID] < colony.foodMonthConsumption / 2f) acceptableQuest.Add(q);break;
+                        }
                     case ProgressQuestID.Progress_2Docks: if (colony.docks.Count < 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_2Storages: if (colony.storage.warehouses.Count < 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier2:
@@ -597,7 +611,7 @@ public class Quest
                     case ProgressQuestID.Progress_HospitalCoverage: if (colony.hospitals_coefficient < 1 & lvl > 1) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier3: if (lvl == 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_4MiniReactors: if (lvl == 4) acceptableQuest.Add(q); break;
-                    case ProgressQuestID.Progress_100Fuel: if (colony.storage.standartResources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_100Fuel: if (resources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_CoveredFarm:
@@ -717,6 +731,11 @@ public class Quest
                             iconRect = new Rect(0, 0, 1, 1);
                             icon = UIController.current.buildingsIcons;
                             iconRect = Structure.GetTextureRect(Structure.COLUMN_ID);
+                            break;
+                        case ProgressQuestID.Progress_FoodStocks:
+                            iconRect = new Rect(0, 0, 1, 1);
+                            icon = UIController.current.resourcesIcons;
+                            iconRect = ResourceType.GetResourceIconRect(ResourceType.SUPPLIES_ID);
                             break;
                     }
                     break;

@@ -76,7 +76,7 @@
                 new ResourceContainer(ResourceType.metal_N, 10), new ResourceContainer(ResourceType.Plastics, 15)
             };
                 break;
-            case Structure.FUEL_FACILITY_3_ID:
+            case Structure.FUEL_FACILITY_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_M, 15), new ResourceContainer(ResourceType.Concrete, 60)
             };
@@ -91,12 +91,6 @@
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Concrete, 75), new ResourceContainer(ResourceType.metal_K, 18), new ResourceContainer(ResourceType.Plastics, 40),
                 new ResourceContainer(ResourceType.metal_E, 12), new ResourceContainer(ResourceType.metal_N, 3)
-            };
-                break;
-            case Structure.CHEMICAL_FACTORY_4_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 35),
-                new ResourceContainer(ResourceType.metal_E, 25)
             };
                 break;
             case Structure.DOCK_ID:
@@ -222,13 +216,13 @@
                 break;
             case Structure.SMELTERY_2_ID:
                 cost = new ResourceContainer[] {
-                new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 8), new ResourceContainer(ResourceType.Plastics, 25),
+                new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 16), new ResourceContainer(ResourceType.Plastics, 25),
                 new ResourceContainer(ResourceType.Concrete, 40)
             };
                 break;
             case Structure.SMELTERY_3_ID:
                 cost = new ResourceContainer[] {
-                new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 10), new ResourceContainer(ResourceType.Plastics, 50),
+                new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 20), new ResourceContainer(ResourceType.Plastics, 50),
                 new ResourceContainer(ResourceType.metal_E, 20)
             };
                 break;

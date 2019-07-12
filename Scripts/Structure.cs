@@ -34,8 +34,8 @@ public class Structure : MonoBehaviour
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
     DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, ENERGY_CAPACITOR_2_ID = 43, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
-    WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_3_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
-    SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33, CHEMICAL_FACTORY_4_ID = 34,
+    WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
+    SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
     STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, PSYCHOKINECTIC_GENERATOR = 39,
     HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
@@ -44,7 +44,7 @@ public class Structure : MonoBehaviour
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 37,39,40,44, 58, 59
+    //free ids 34,37,39,40,44, 58, 59
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
@@ -127,15 +127,14 @@ public class Structure : MonoBehaviour
             case ORE_ENRICHER_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/oreEnricher_level_2")); break;
             case WORKSHOP_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/rollingShop_level_2")); break;
             case MINI_GRPH_REACTOR_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/miniReactor_level_3")); break;
-            case FUEL_FACILITY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/fuelFacility_level_3")); break;
+            case FUEL_FACILITY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/fuelFacility")); break;
             case GRPH_REACTOR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumReactor_level_4")); break;
             case PLASTICS_FACTORY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/plasticsFactory_level_3")); break;
             case SUPPLIES_FACTORY_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/foodFactory_level_4")); break;
             case SUPPLIES_FACTORY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foodFactoryBlock_level_5")); break;
             case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
             case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
-            case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;
-            case CHEMICAL_FACTORY_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/chemicalFactory_level_4")); break;
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;           
             case COLUMN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Column")); break;
             case SWITCH_TOWER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/switchTower")); break;
             case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
@@ -236,7 +235,7 @@ public class Structure : MonoBehaviour
             case SMELTERY_5_ID:
             case ORE_ENRICHER_2_ID:
             case PLASTICS_FACTORY_3_ID:
-            case FUEL_FACILITY_3_ID:
+            case FUEL_FACILITY_ID:
                 s = new GameObject("Factory").AddComponent<Factory>(); break;
             case SUPPLIES_FACTORY_4_ID:
             case SUPPLIES_FACTORY_5_ID:
@@ -260,8 +259,6 @@ public class Structure : MonoBehaviour
             case XSTATION_3_ID:
                 s = new GameObject("XStation").AddComponent<XStation>(); break; // AWAITING
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: s = new GameObject("Quantum energy transmitter").AddComponent<QuantumEnergyTransmitter>(); break;
-            case CHEMICAL_FACTORY_4_ID:
-                s = new GameObject("Chemical factory").AddComponent<ChemicalFactory>(); break; // AWAITING
             case QUANTUM_TRANSMITTER_4_ID:
                 s = new GameObject("Quantum transmitter").AddComponent<QuantumTransmitter>(); break;
             case SWITCH_TOWER_ID:
@@ -727,12 +724,12 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case FUEL_FACILITY_3_ID:
+            case FUEL_FACILITY_ID:
                 {
                     maxHp = 1250;
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
-                    rotate90only = true;
+                    rotate90only = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -800,16 +797,6 @@ public class Structure : MonoBehaviour
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
                 {
                     maxHp = 2100;
-                    surfaceRect = SurfaceRect.full;
-                    placeInCenter = true;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                }
-                break;
-            case CHEMICAL_FACTORY_4_ID:
-                {
-                    maxHp = 2000;
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
@@ -1077,7 +1064,7 @@ public class Structure : MonoBehaviour
             case ORE_ENRICHER_2_ID: return new Rect(p, 5 * p, p, p);
             case WORKSHOP_ID: return new Rect(2 * p, 5 * p, p, p);
             case MINI_GRPH_REACTOR_3_ID: return new Rect(3 * p, 5 * p, p, p);
-            case FUEL_FACILITY_3_ID: return new Rect(4 * p, 5 * p, p, p);
+            case FUEL_FACILITY_ID: return new Rect(4 * p, 5 * p, p, p);
             case GRPH_REACTOR_4_ID: return new Rect(5 * p, 5 * p, p, p);
             case PLASTICS_FACTORY_3_ID: return new Rect(6 * p, 5 * p, p, p);
             case SUPPLIES_FACTORY_5_ID:
@@ -1085,7 +1072,6 @@ public class Structure : MonoBehaviour
             case GRPH_ENRICHER_3_ID: return new Rect(0, 4 * p, p, p);
             case XSTATION_3_ID: return new Rect(p, 4 * p, p, p);
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: return new Rect(2 * p, 4 * p, p, p);
-            case CHEMICAL_FACTORY_4_ID: return new Rect(3 * p, 4 * p, p, p);
             case RESOURCE_STICK_ID: return new Rect(4 * p, 4 * p, p, p);
             case COLUMN_ID: return new Rect(5 * p, 4 * p, p, p);
             case SWITCH_TOWER_ID: return new Rect(6 * p, 4 * p, p, p);

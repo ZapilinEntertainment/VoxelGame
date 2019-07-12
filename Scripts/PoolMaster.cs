@@ -92,28 +92,14 @@ public sealed class PoolMaster : MonoBehaviour {
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
 
         billboardShadedMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
-        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
-        if (useAdvancedMaterials)
-        {
-            glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
-            basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
-            glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
-            metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
-            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");            
-        }
-        else
-        {
-            glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
-            basic_material = Resources.Load<Material>("Materials/Basic");
-            glassMaterial = Resources.Load<Material>("Materials/Glass");
-            metal_material = Resources.Load<Material>("Materials/Metal");
-            green_material = Resources.Load<Material>("Materials/Green");            
-        }        
+        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");           
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
+
+        ReloadReplaceableMaterials(useAdvancedMaterials);
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
 
@@ -132,6 +118,27 @@ public sealed class PoolMaster : MonoBehaviour {
         //SetMaterialByID(ref mf, ref mr, MATERIAL_GRASS_20_ID, 255);
         //g.transform.position += Vector3.up * 2;
 	}
+    public static void ReloadReplaceableMaterials(bool i_useAdvancedMaterials)
+    {
+        useAdvancedMaterials = i_useAdvancedMaterials;
+        shadowCasting = useAdvancedMaterials;
+        if (useAdvancedMaterials)
+        {
+            glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
+            basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
+            glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
+            metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
+            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
+        }
+        else
+        {
+            glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
+            basic_material = Resources.Load<Material>("Materials/Basic");
+            glassMaterial = Resources.Load<Material>("Materials/Glass");
+            metal_material = Resources.Load<Material>("Materials/Metal");
+            green_material = Resources.Load<Material>("Materials/Green");
+        }
+    }
 
 	void LabourUpdate() {
         if (GameMaster.editMode ) return;
@@ -780,25 +787,30 @@ public sealed class PoolMaster : MonoBehaviour {
             switch (mr.sharedMaterial.name)
             {
                 case "Basic":
+                case "Basic_PBR":
                     mr.sharedMaterial = materials[0];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "Glass":
+                case "Glass_PBR":
                     mr.sharedMaterial = materials[1];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "GlassOffline":
+                case "GlassOffline_PBR":
                     mr.sharedMaterial = materials[2];
                     castShadows = true;
                     receiveShadows = true;
                     break;
                 case "Vegetation":
                 case "Green":
+                case "Green_PBR":
                     mr.sharedMaterial = materials[3];
                     break;
                 case "Metal":
+                case "Metal_PBR":
                     mr.sharedMaterial = materials[4];
                     castShadows = true;
                     receiveShadows = true;
@@ -808,6 +820,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     receiveShadows = true;
                     break;
                 case "BillboardMaterial":
+                case "ShadedBillboard":
                     if (i_useAdvancedMaterials) mr.sharedMaterial = billboardShadedMaterial;
                     else mr.sharedMaterial = billboardMaterial;
                     castShadows = false;

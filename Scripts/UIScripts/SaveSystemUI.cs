@@ -254,13 +254,6 @@ public class SaveSystemUI : MonoBehaviour
                         gameObject.SetActive(false);
                         GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameLoaded));
                     }
-                    else
-                    {
-                        string s = Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed);
-                        GameLogUI.MakeAnnouncement(s);
-                        if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
-                        saveNames[lastSelectedIndex] = s;
-                    }
                 }
                 else
                 {

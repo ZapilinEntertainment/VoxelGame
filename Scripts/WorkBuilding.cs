@@ -165,7 +165,7 @@ public abstract class WorkBuilding : Building
                     maxWorkers = 80;
                 }
                 break;
-            case FUEL_FACILITY_3_ID:
+            case FUEL_FACILITY_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 100;
@@ -211,12 +211,6 @@ public abstract class WorkBuilding : Building
                 {
                     workflowToProcess = 1;
                     maxWorkers = 40;
-                }
-                break;
-            case CHEMICAL_FACTORY_4_ID:
-                {
-                    workflowToProcess = 1;
-                    maxWorkers = 0;
                 }
                 break;
             case SHUTTLE_HANGAR_4_ID:
@@ -370,6 +364,7 @@ public abstract class WorkBuilding : Building
         upgraded.AddWorkers(workers);
         upgraded.SetBasement(basement, setPos);
         if (returnToUI) upgraded.ShowOnGUI();
+        //copied to factory.levelup
     }
 
     protected void PrepareWorkbuildingForDestruction(bool clearFromSurface, bool returnResources, bool leaveRuins)

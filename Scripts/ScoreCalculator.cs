@@ -66,7 +66,7 @@
         structuresCost[Structure.ORE_ENRICHER_2_ID] = val * 14;
         structuresCost[Structure.WORKSHOP_ID] = val * 16;
         structuresCost[Structure.MINI_GRPH_REACTOR_3_ID] = val * 20;
-        structuresCost[Structure.FUEL_FACILITY_3_ID] = val * 18;
+        structuresCost[Structure.FUEL_FACILITY_ID] = val * 18;
         structuresCost[Structure.GRPH_REACTOR_4_ID] = val * 50;
         structuresCost[Structure.XSTATION_3_ID] = val * 36;
         structuresCost[Structure.QUANTUM_TRANSMITTER_4_ID] = val * 25;
@@ -75,17 +75,14 @@
         structuresCost[Structure.EXPEDITION_CORPUS_4_ID] = val * 48;
         structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
-        structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;
-        
-       
+        structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;      
 
         // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];
-        structuresCost[Structure.PLASTICS_FACTORY_3_ID] = structuresCost[Structure.FUEL_FACILITY_3_ID];
+        structuresCost[Structure.PLASTICS_FACTORY_3_ID] = structuresCost[Structure.FUEL_FACILITY_ID];
         structuresCost[Structure.SUPPLIES_FACTORY_4_ID] = structuresCost[Structure.FARM_4_ID];
         structuresCost[Structure.SUPPLIES_FACTORY_5_ID] = structuresCost[Structure.SUPPLIES_FACTORY_4_ID] * 4;
         structuresCost[Structure.GRPH_ENRICHER_3_ID] = structuresCost[Structure.WORKSHOP_ID] * 4;
-        structuresCost[Structure.CHEMICAL_FACTORY_4_ID] = structuresCost[Structure.GRPH_ENRICHER_3_ID] * 4;
         structuresCost[Structure.STORAGE_2_ID] = structuresCost[Structure.STORAGE_1_ID] * 2;
        
         structuresCost[Structure.STORAGE_5_ID] = structuresCost[Structure.STORAGE_2_ID] * 4;

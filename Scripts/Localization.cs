@@ -99,7 +99,7 @@ public static class Localization
                     case Structure.ORE_ENRICHER_2_ID: return "Обогатитель руды";
                     case Structure.WORKSHOP_ID: return "Мастерская";
                     case Structure.MINI_GRPH_REACTOR_3_ID: return "Малый графониевый реактор";
-                    case Structure.FUEL_FACILITY_3_ID: return "Топливный завод";
+                    case Structure.FUEL_FACILITY_ID: return "Топливный завод";
                     case Structure.GRPH_REACTOR_4_ID: return "Графониевый реактор";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Фабрика пластика";
                     case Structure.SUPPLIES_FACTORY_4_ID: return "Фабрика снаряжения";
@@ -107,7 +107,6 @@ public static class Localization
                     case Structure.GRPH_ENRICHER_3_ID: return "Графониевый обогатитель";
                     case Structure.XSTATION_3_ID: return "Экспериментальная станция";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Квантовый передатчик энергии";
-                    case Structure.CHEMICAL_FACTORY_4_ID: return "Химический завод";
                     case Structure.RESOURCE_STICK_ID: return "Идет сборка блока...";
                     case Structure.COLUMN_ID: return "Опора";
                     case Structure.SWITCH_TOWER_ID: return "Башня переключения";
@@ -172,7 +171,7 @@ public static class Localization
                     case Structure.ORE_ENRICHER_2_ID: return "Ore enricher";
                     case Structure.WORKSHOP_ID: return "Workshop";
                     case Structure.MINI_GRPH_REACTOR_3_ID: return "Small Graphonum reactor";
-                    case Structure.FUEL_FACILITY_3_ID: return "Fuel facility";
+                    case Structure.FUEL_FACILITY_ID: return "Fuel facility";
                     case Structure.GRPH_REACTOR_4_ID: return "Graphonium reactor";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Plastics factory";
                     case Structure.SUPPLIES_FACTORY_4_ID: return "Supplies factory";
@@ -180,7 +179,6 @@ public static class Localization
                     case Structure.GRPH_ENRICHER_3_ID: return "Graphonium enricher";
                     case Structure.XSTATION_3_ID: return "Experimental station";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Quantum energy transmitter";
-                    case Structure.CHEMICAL_FACTORY_4_ID: return "Chemical factory";
                     case Structure.RESOURCE_STICK_ID: return "Constructing block...";
                     case Structure.COLUMN_ID: return "Column";
                     case Structure.SWITCH_TOWER_ID: return "Switch tower";
@@ -262,7 +260,7 @@ public static class Localization
                     case Structure.ORE_ENRICHER_2_ID: return "Позволяет добывать нужные руды из обычной горной породы.";
                     case Structure.WORKSHOP_ID: return "Улучшает или поддерживает в норме оборудование колонистов.";
                     case Structure.MINI_GRPH_REACTOR_3_ID: return "Вырабатывает энергию, ничего не потребляя.";
-                    case Structure.FUEL_FACILITY_3_ID: return "Производит топливо для кораблей";
+                    case Structure.FUEL_FACILITY_ID: return "Производит топливо для кораблей";
                     case Structure.REACTOR_BLOCK_5_ID:
                     case Structure.GRPH_REACTOR_4_ID: return "Вырабатывает большое количество энергии, потребляя Графониум.";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Специализированная фабрика для производства пластика.";
@@ -281,7 +279,6 @@ public static class Localization
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.CONTROL_CENTER_6_ID:
                     case Structure.CONNECT_TOWER_6_ID:
-                    case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<В разработке>";
                     case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха. /n Может быть только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
@@ -345,7 +342,7 @@ public static class Localization
                     case Structure.ORE_ENRICHER_2_ID: return "Extract ores from stone.";
                     case Structure.WORKSHOP_ID: return "Improve or stabilize colonist's gears.";
                     case Structure.MINI_GRPH_REACTOR_3_ID: return "Generate energy, consumes nothing.";
-                    case Structure.FUEL_FACILITY_3_ID: return "Produces fuel for vessels.";
+                    case Structure.FUEL_FACILITY_ID: return "Produces fuel for vessels.";
                     case Structure.REACTOR_BLOCK_5_ID:
                     case Structure.GRPH_REACTOR_4_ID: return "Generates a lot of energy, consumes Graphonium.";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Factory specialized on plastics producing.";
@@ -364,7 +361,6 @@ public static class Localization
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.CONTROL_CENTER_6_ID:
                     case Structure.CONNECT_TOWER_6_ID:
-                    case Structure.CHEMICAL_FACTORY_4_ID:
                     case Structure.XSTATION_3_ID: return "<In development>";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Give access to your non-using artifacts";
@@ -2570,7 +2566,7 @@ public static class Localization
                         case RefusalReason.HQ_RR1: return "Нет дока";
                         case RefusalReason.HQ_RR2: return "Нет мастерской";
                         case RefusalReason.HQ_RR3: return "Нет графониевого обогатителя";
-                        case RefusalReason.HQ_RR4: return "Нет химзавода";
+                        case RefusalReason.HQ_RR4: return "Нет топливного завода";
 
                         case RefusalReason.SpaceAboveBlocked: return "Пространство сверху блокируется";
                         case RefusalReason.NoBlockBelow: return "Ниже ничего нет";
@@ -2591,8 +2587,8 @@ public static class Localization
                         case RefusalReason.MaxLevel: return "Maximum level reached";
                         case RefusalReason.HQ_RR1: return "No docks built";
                         case RefusalReason.HQ_RR2: return "No workshops built";
-                        case RefusalReason.HQ_RR3: return "No graphonium enrichers built";
-                        case RefusalReason.HQ_RR4: return "No chemical factories";
+                        case RefusalReason.HQ_RR3: return "No graphonium enrichers";
+                        case RefusalReason.HQ_RR4: return "No fuel facility";
 
                         case RefusalReason.SpaceAboveBlocked: return "Space above blocked";
                         case RefusalReason.NoBlockBelow: return "No block below";
@@ -2911,6 +2907,11 @@ public static class Localization
                                     q.steps[0] = "Опора построена ";
                                     q.steps[1] = "Здание на ней построено ";
                                     break;
+                                case ProgressQuestID.Progress_FoodStocks:
+                                    q.name = "Запасы на зиму";
+                                    q.description = "Накопите месячный запас провизии.";
+                                    q.steps[0] = "Собрано еды: ";
+                                    break;
                                 default: return;
                             }
                             break;
@@ -3050,6 +3051,11 @@ public static class Localization
                                     q.description = "Construct a building onto the column";
                                     q.steps[0] = "Column constructed ";
                                     q.steps[1] = "Building over it completed ";
+                                    break;
+                                case ProgressQuestID.Progress_FoodStocks:
+                                    q.name = "Food reserve";
+                                    q.description = "Gather food enough for a month";
+                                    q.steps[0] = "Food on stocks: ";
                                     break;
                                 default: return;
                             }

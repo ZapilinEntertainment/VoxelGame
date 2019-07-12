@@ -51,7 +51,7 @@ sealed public class UIController : MonoBehaviour
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
-    updateTimer, moneyFlySpeed = 0, showingHousingCf;
+    updateTimer, moneyFlySpeed = 0;
     private byte showingStorageOccupancy, faceIndex = 10;
     private float saved_energySurplus, statusUpdateTimer = 0, powerFailureTimer = 0;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
@@ -149,11 +149,11 @@ sealed public class UIController : MonoBehaviour
                         showingBirthrate = colony.realBirthrate;
                         birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
                     }
-                    if (showingHousingCf != colony.housingLevel)
-                    {
-                        showingHousingCf = colony.housingLevel;
-                        housingText.text = string.Format("{0:0.##}", showingHousingCf);
-                    }
+
+                    int housingPercent = 0;
+                    if (colony.totalLivespace > 0) housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);
+                    housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" +  housingPercent.ToString() + "%)";
+
                     if (showingHospitalCf != colony.hospitals_coefficient)
                     {
                         showingHospitalCf = colony.hospitals_coefficient;
@@ -261,15 +261,13 @@ sealed public class UIController : MonoBehaviour
                 {
                     if (hospitalPanel.activeSelf)
                     {
-                        int nhm = Hospital.GetBirthrateModeIndex();
+                        int nhm = (int)Hospital.birthrateMode;
                         if (nhm != hospitalPanel_savedMode)
                         {
-                            switch (nhm)
-                            {
-                                case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
-                                case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
-                                case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
-                            }
+                            var t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+                            if (t != null) t.GetComponent<Image>().overrideSprite = null;
+                            t = hospitalPanel.transform.GetChild(nhm);
+                            if (t != null) t.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                             hospitalPanel_savedMode = nhm;
                         }
                     }
@@ -354,7 +352,7 @@ sealed public class UIController : MonoBehaviour
                         dataString.text = s;
                     }
                     //food val
-                    float foodValue = storage.standartResources[ResourceType.FOOD_ID] + storage.standartResources[ResourceType.SUPPLIES_ID];
+                    float foodValue = storage.standartResources[ResourceType.FOOD_ID];
                     float foodMonth = colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
                     if (foodValue > foodMonth)
                     {
@@ -943,11 +941,10 @@ sealed public class UIController : MonoBehaviour
             showingBirthrate = colony.realBirthrate;
             showingHospitalCf = colony.hospitals_coefficient;
             showingHealthCf = colony.health_coefficient;
-            showingHousingCf = colony.housingLevel;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
             happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
             birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
-            housingText.text = string.Format("{0:0.##}", showingHousingCf);
+            housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + ((int)(((float)colony.citizenCount / colony.totalLivespace) * 100f)).ToString() + "%)";
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
             healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
         }
@@ -1503,14 +1500,16 @@ sealed public class UIController : MonoBehaviour
 
     public void ActivateHospitalPanel()
     {
-        int hm = Hospital.GetBirthrateModeIndex();
-        switch (hm)
+        int hm = (int)Hospital.birthrateMode;
+        Transform t = null;
+        if (hm != hospitalPanel_savedMode)
         {
-            case 0: hospitalPanel.transform.GetChild(1).GetComponent<Toggle>().isOn = true; break; // normal
-            case 1: hospitalPanel.transform.GetChild(2).GetComponent<Toggle>().isOn = true; break; // improved
-            case 2: hospitalPanel.transform.GetChild(3).GetComponent<Toggle>().isOn = true; break; // lowered
+            t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+            if (t != null) t.GetComponent<Image>().overrideSprite = null;
         }
         hospitalPanel_savedMode = hm;
+        t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+        if (t != null) t.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
         hospitalPanel.SetActive(true);
     }
     public void DeactivateHospitalPanel()
@@ -1519,7 +1518,20 @@ sealed public class UIController : MonoBehaviour
     }
     public void Hospital_SetBirthrateMode(int i)
     {
-        if (i != Hospital.GetBirthrateModeIndex()) Hospital.SetBirthrateMode(i);
+        int hm = (int)Hospital.birthrateMode;
+        if (i != hm)
+        {
+            Hospital.SetBirthrateMode((BirthrateMode)i);
+            Transform t = null;
+            if (i != hospitalPanel_savedMode)
+            {
+                t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+                if (t != null) t.GetComponent<Image>().overrideSprite = null;
+            }
+            hospitalPanel_savedMode = i;
+            t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+            if (t != null) t.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+        }
     }
 
     public void ActivateTradePanel()
@@ -1569,10 +1581,10 @@ sealed public class UIController : MonoBehaviour
     public void LocalizeTitles()
     {
         Transform t = hospitalPanel.transform;
-        t.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.BirthrateMode) + " :";
-        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
-        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient) + "%)";
-        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient) + "%)";
+        t.GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.BirthrateMode) + " :";
+        t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
+        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient * 100f) + "%)";
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient * 100f) + "%)";
 
         menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
         t = menuPanel.transform;

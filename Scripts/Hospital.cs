@@ -1,8 +1,8 @@
-﻿public enum BirthrateMode { Normal, Improved, Lowered }
+﻿public enum BirthrateMode : byte { Normal, Improved, Lowered }
 public class Hospital : WorkBuilding {
 	public float coverage {get;private set;}
-	public static float hospital_birthrate_coefficient = 1;
-	public static  BirthrateMode birthrateMode{get; private set;}
+	public static float hospital_birthrate_coefficient { get; private set; }
+	public static  BirthrateMode birthrateMode{get; private set;} // сохраняется в colony controller
 
 	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
     const int STANDART_COVERAGE = 1000;
@@ -10,6 +10,7 @@ public class Hospital : WorkBuilding {
     static Hospital()
     {
         AddToResetList(typeof(Hospital));
+        hospital_birthrate_coefficient = 1f;
     }
 	public static void ResetStaticData() {
 		SetBirthrateMode(0);
@@ -45,22 +46,10 @@ public class Hospital : WorkBuilding {
         if (prevCoverage != coverage) colony.RecalculateHospitals();
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 20f;
     }
-
-    public static void SetBirthrateMode(int x) {
-		switch (x) {
-		case 0: birthrateMode = BirthrateMode.Normal; hospital_birthrate_coefficient = 1; break;
-		case 1: birthrateMode = BirthrateMode.Improved; hospital_birthrate_coefficient = improvedCoefficient; break;
-		case 2: birthrateMode = BirthrateMode.Lowered; hospital_birthrate_coefficient = loweredCoefficient; break;
-		}
-	}
-	public static int GetBirthrateModeIndex() {
-		switch (birthrateMode) {
-		case BirthrateMode.Normal: return 0;
-		case BirthrateMode.Improved: return 1;
-		case BirthrateMode.Lowered: return 2;
-		default: return 0;
-		}
-	}
+    public static void SetBirthrateMode(BirthrateMode bm)
+    {
+        birthrateMode = bm;
+    }
 
     public override UIObserver ShowOnGUI()
     {

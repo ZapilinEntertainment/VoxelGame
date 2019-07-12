@@ -34,6 +34,13 @@ public sealed class ColonyController : MonoBehaviour
     public List<House> houses { get; private set; }
     public byte docksLevel { get; private set; }
     public float housingLevel { get; private set; }
+    public float foodMonthConsumption
+    {
+        get
+        {
+            return citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
+        }
+    }
 
     public int freeWorkers { get; private set; }
     public int citizenCount { get; private set; }
@@ -181,10 +188,10 @@ public sealed class ColonyController : MonoBehaviour
                     happinessDecreaseMultiplier++;
                 }
                 else {
-                    float monthFoodReserves = citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
-                    foodSupplyHappiness = storage.standartResources[ResourceType.FOOD_ID] / monthFoodReserves;
+                    float fmc = foodMonthConsumption;
+                    foodSupplyHappiness = storage.standartResources[ResourceType.FOOD_ID] / fmc;
                     if (foodSupplyHappiness < FOOD_SUPPLY_MIN_HAPPINESS) foodSupplyHappiness = FOOD_SUPPLY_MIN_HAPPINESS;
-                    if (monthFoodReserves >= 1f) happinessIncreaseMultiplier++;
+                    if (fmc >= 1f) happinessIncreaseMultiplier++;
                 }
             }
 
@@ -211,7 +218,7 @@ public sealed class ColonyController : MonoBehaviour
             }
             if (health_coefficient != targetHealth) health_coefficient = Mathf.MoveTowards(health_coefficient, targetHealth, GameConstants.HEALTH_CHANGE_SPEED);
 
-            // HAPPINESS
+            // HOUSING
             float housingHappiness = HOUSING_MIN_HAPPINESS * lvlCf;
             if (housingLevel < 1)
             {
@@ -694,6 +701,7 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
         fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4); // 5 x 4
+        fs.WriteByte((byte)Hospital.birthrateMode); // + 1
 
         var nameArray = System.Text.Encoding.Default.GetBytes(cityName);
         int count = nameArray.Length;
@@ -716,16 +724,17 @@ public sealed class ColonyController : MonoBehaviour
 
         Worksite.StaticLoad(fs);
 
-        data = new byte[24]; // 20 + 4- name length
-        fs.Read(data, 0, 24);
+        data = new byte[25]; // 20 + 1 + 4- name length
+        fs.Read(data, 0, data.Length);
         freeWorkers = System.BitConverter.ToInt32(data, 0);
         citizenCount = System.BitConverter.ToInt32(data, 4);
         peopleSurplus = System.BitConverter.ToSingle(data, 8);
         realBirthrate = System.BitConverter.ToSingle(data, 12);
-        birthrateCoefficient = System.BitConverter.ToSingle(data, 16);
+        birthrateCoefficient = System.BitConverter.ToSingle(data, 16);        
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();
+        Hospital.SetBirthrateMode((BirthrateMode)data[20]);
         if (powerGrid.Count > 0)
         {
             WorkBuilding wb = null;
@@ -736,7 +745,7 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
 
-        int bytesCount = System.BitConverter.ToInt32(data, 20); //выдаст количество байтов, не длину строки
+        int bytesCount = System.BitConverter.ToInt32(data, 21); //выдаст количество байтов, не длину строки
         data = new byte[bytesCount];
         fs.Read(data, 0, bytesCount);
         if (bytesCount > 0)

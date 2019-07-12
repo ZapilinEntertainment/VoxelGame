@@ -111,67 +111,69 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
 
-        if (positionChanged)
+        if (!GameMaster.editMode)
         {
-            byte ring = cityPoint.ringIndex;
-            float centerX = 0, centerY = 0;
-            var ls = currentEnvironment.lightSettings;
-            if (ls.sunIsMapPoint)
+            if (positionChanged)
             {
-                centerX = ls.sun.angle;
-                centerY = ls.sun.height;
-            }
-            else
-            {
-                var c = gmap.GetCurrentSectorCenter();
-                centerX = c.x;
-                centerY = c.y;
-                
-            }
-            float angleDelta = cityPoint.angle - centerX;
-            if (Mathf.Abs(angleDelta) > 180f)
-            {
-                if (centerX > cityPoint.angle)
+                byte ring = cityPoint.ringIndex;
+                float centerX = 0, centerY = 0;
+                var ls = currentEnvironment.lightSettings;
+                if (ls.sunIsMapPoint)
                 {
-                    angleDelta = (360f - centerX) + cityPoint.angle;
+                    centerX = ls.sun.angle;
+                    centerY = ls.sun.height;
                 }
                 else
                 {
-                    angleDelta = (360f - cityPoint.angle) + centerX;
+                    var c = gmap.GetCurrentSectorCenter();
+                    centerX = c.x;
+                    centerY = c.y;
+
                 }
-            }
-            float angleX = angleDelta / (gmap.sectorsDegrees[ring] / 2f);
-            //print(angleX);
-            float heightY = (cityPoint.height - centerY) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
-            Vector2 lookDist = new Vector2(angleX, heightY);
-            if (sunMarkerEnabled)
-            {
-                sun.transform.position = new Vector3(lookDist.x * SKY_SPHERE_RADIUS, 2, lookDist.y * SKY_SPHERE_RADIUS);
-                sun.transform.LookAt(Vector3.zero);
+                float angleDelta = cityPoint.angle - centerX;
+                if (Mathf.Abs(angleDelta) > 180f)
+                {
+                    if (centerX > cityPoint.angle)
+                    {
+                        angleDelta = (360f - centerX) + cityPoint.angle;
+                    }
+                    else
+                    {
+                        angleDelta = (360f - cityPoint.angle) + centerX;
+                    }
+                }
+                float angleX = angleDelta / (gmap.sectorsDegrees[ring] / 2f);
+                //print(angleX);
+                float heightY = (cityPoint.height - centerY) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
+                Vector2 lookDist = new Vector2(angleX, heightY);
+                if (sunMarkerEnabled)
+                {
+                    sun.transform.position = new Vector3(lookDist.x * SKY_SPHERE_RADIUS, 2, lookDist.y * SKY_SPHERE_RADIUS);
+                    sun.transform.LookAt(Vector3.zero);
+                }
+
+                float d = lookDist.magnitude;
+                if (d > 1) d = 1;
+                float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
+                sun.intensity = s * ls.maxIntensity;
+                if (s != prevSkyboxSaturation)
+                {
+                    prevSkyboxSaturation = s;
+                    //skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+                    var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
+                    var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
+                    var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
+                    RenderSettings.ambientGroundColor = bottomColor;
+                    RenderSettings.ambientEquatorColor = horColor;
+                    RenderSettings.ambientGroundColor = bottomColor;
+                    skyboxMaterial.SetColor("_BottomColor", bottomColor);
+                    skyboxMaterial.SetColor("_HorizonColor", horColor);
+                }
+                positionChanged = false;
             }
 
-            float d = lookDist.magnitude;
-            if (d > 1) d = 1;
-            float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
-            sun.intensity = s * ls.maxIntensity;
-            if (s != prevSkyboxSaturation)
-            {
-                prevSkyboxSaturation = s;
-                //skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
-                var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
-                var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
-                var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
-                RenderSettings.ambientGroundColor = bottomColor;
-                RenderSettings.ambientEquatorColor = horColor;
-                RenderSettings.ambientGroundColor = bottomColor;
-                skyboxMaterial.SetColor("_BottomColor", bottomColor);
-                skyboxMaterial.SetColor("_HorizonColor", horColor);
-            }
-            positionChanged = false;
-        }
-
-        //if (currentEnvironment.presetType != Environment.EnvironmentPresets.Default)
-        //{
+            //if (currentEnvironment.presetType != Environment.EnvironmentPresets.Default)
+            //{
             if (environmentEventTimer > 0)
             {
                 environmentEventTimer -= t;
@@ -181,83 +183,84 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                     environmentEventTimer = currentEnvironment.GetInnerEventTime();
                 }
             }
-        //}
+            //}
 
-        var dir = gmap.cityFlyDirection / 500f;
-        dir.y = 0;
-        if (decorations.Count > 0)
-        {
-            int i = 0;
-            Vector3 pos;
-            float sqrRadius = SKY_SPHERE_RADIUS * SKY_SPHERE_RADIUS;
-            while (i < decorations.Count)
+            var dir = gmap.cityFlyDirection / 500f;
+            dir.y = 0;
+            if (decorations.Count > 0)
             {
-                pos = decorations[i].position;
-                pos += dir;
-                decorations[i].position = pos;
-                if (Vector3.SqrMagnitude(pos) > sqrRadius * 4f)
+                int i = 0;
+                Vector3 pos;
+                float sqrRadius = SKY_SPHERE_RADIUS * SKY_SPHERE_RADIUS;
+                while (i < decorations.Count)
                 {
-                   Destroy(decorations[i].gameObject);
-                  decorations.RemoveAt(i);
-                }
-                else i++;
-            }
-        }
-        if (lastSpawnDistance > 0) lastSpawnDistance -= dir.magnitude;
-
-        //test lightnings
-        if (false)
-        {
-            effectsTimer -= t;
-            if (effectsTimer < 0)
-            {
-                float f = Chunk.CHUNK_SIZE;
-                var center = GameMaster.sceneCenter;
-                var pos = Random.onUnitSphere * f + center;
-                dir = center - pos;
-                dir += Random.onUnitSphere;
-                RaycastHit rh;
-                if (Physics.Raycast(pos, dir, out rh, 2 * f))
-                {
-                    Lightning.Strike(pos, rh.point);
-                    var hitobject = rh.collider;
-                    float damage = Lightning.CalculateDamage();
-                    if (hitobject.tag == Structure.STRUCTURE_COLLIDER_TAG)
+                    pos = decorations[i].position;
+                    pos += dir;
+                    decorations[i].position = pos;
+                    if (Vector3.SqrMagnitude(pos) > sqrRadius * 4f)
                     {
-                        hitobject.transform.parent.GetComponent<Structure>().ApplyDamage(damage);
+                        Destroy(decorations[i].gameObject);
+                        decorations.RemoveAt(i);
                     }
-                    else
+                    else i++;
+                }
+            }
+            if (lastSpawnDistance > 0) lastSpawnDistance -= dir.magnitude;
+
+            //test lightnings
+            if (false)
+            {
+                effectsTimer -= t;
+                if (effectsTimer < 0)
+                {
+                    float f = Chunk.CHUNK_SIZE;
+                    var center = GameMaster.sceneCenter;
+                    var pos = Random.onUnitSphere * f + center;
+                    dir = center - pos;
+                    dir += Random.onUnitSphere;
+                    RaycastHit rh;
+                    if (Physics.Raycast(pos, dir, out rh, 2 * f))
                     {
-                        if (hitobject.tag == Chunk.BLOCK_COLLIDER_TAG)
+                        Lightning.Strike(pos, rh.point);
+                        var hitobject = rh.collider;
+                        float damage = Lightning.CalculateDamage();
+                        if (hitobject.tag == Structure.STRUCTURE_COLLIDER_TAG)
                         {
-                            var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
-                            Block b = crh.block;
-                            if (b != null)
+                            hitobject.transform.parent.GetComponent<Structure>().ApplyDamage(damage);
+                        }
+                        else
+                        {
+                            if (hitobject.tag == Chunk.BLOCK_COLLIDER_TAG)
                             {
-                                if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
-                                else
+                                var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
+                                Block b = crh.block;
+                                if (b != null)
                                 {
-                                    var sb = b as SurfaceBlock;
-                                    if (sb != null)
-                                    {
-                                        sb.EnvironmentalStrike(rh.point, 2, damage);
-                                    }
+                                    if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
                                     else
                                     {
-                                        if (b.mainStructure != null) b.mainStructure.ApplyDamage(damage);
+                                        var sb = b as SurfaceBlock;
+                                        if (sb != null)
+                                        {
+                                            sb.EnvironmentalStrike(rh.point, 2, damage);
+                                        }
+                                        else
+                                        {
+                                            if (b.mainStructure != null) b.mainStructure.ApplyDamage(damage);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    else
+                    {
+                        var end = pos + Random.onUnitSphere * 5f;
+                        end.y = GameConstants.GetBottomBorder();
+                        Lightning.Strike(pos, end);
+                    }
+                    effectsTimer = 1f;
                 }
-                else
-                {
-                    var end = pos + Random.onUnitSphere * 5f;
-                    end.y = GameConstants.GetBottomBorder();
-                    Lightning.Strike(pos, end);
-                }
-                effectsTimer = 1f;
             }
         }
     }

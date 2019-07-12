@@ -93,7 +93,17 @@ public sealed class HeadQuarters : Building
                     }
                 }
                 return false;
-            case 4: return (ChemicalFactory.current != null);
+            case 4:
+                {
+                    if (colony.powerGrid.Count != 0)
+                    {
+                        foreach (Building b in colony.powerGrid)
+                        {
+                            if (b.ID == FUEL_FACILITY_ID) return true;
+                        }
+                    }
+                    return false;
+                }
             case 5: return true;
         }
     }

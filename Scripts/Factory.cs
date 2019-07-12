@@ -38,7 +38,7 @@ public class Factory : WorkBuilding
             case PLASTICS_FACTORY_3_ID:
                 specialization = FactorySpecialization.PlasticsFactory;
                 break;
-            case FUEL_FACILITY_3_ID:
+            case FUEL_FACILITY_ID:
                 specialization = FactorySpecialization.FuelFacility;
                 break;
             case GRPH_ENRICHER_3_ID:
@@ -195,6 +195,44 @@ public class Factory : WorkBuilding
     public void SetProductionValue(int x)
     {
         productionModeValue = x;
+    }
+
+    override public void LevelUp(bool returnToUI)
+    {
+        if (upgradedIndex == -1) return;
+        if (!GameMaster.realMaster.weNeedNoResources)
+        {
+            ResourceContainer[] cost = GetUpgradeCost();
+            if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
+            {
+                GameLogUI.NotEnoughResourcesAnnounce();
+                return;
+            }
+        }
+        Factory upgraded = GetStructureByID(upgradedIndex) as Factory;
+        upgraded.Prepare();
+        PixelPosByte setPos = new PixelPosByte(surfaceRect.x, surfaceRect.z);
+        if (upgraded.surfaceRect.size == 16) setPos = new PixelPosByte(0, 0);
+        int workers = workersCount;
+        workersCount = 0;
+        if (upgraded.rotate90only & (modelRotation % 2 != 0))
+        {
+            upgraded.modelRotation = (byte)(modelRotation - 1);
+        }
+        else upgraded.modelRotation = modelRotation;
+        upgraded.AddWorkers(workers);
+        //
+        upgraded.recipe = recipe;
+        upgraded.productionMode = productionMode;
+        upgraded.productionModeValue = productionModeValue;
+        upgraded.workPaused = workPaused;
+        upgraded.workflow = workflow;
+        upgraded.inputResourcesBuffer = inputResourcesBuffer; inputResourcesBuffer = 0;
+        upgraded.outputResourcesBuffer = outputResourcesBuffer; outputResourcesBuffer = 0;
+        //
+        upgraded.SetBasement(basement, setPos);
+        if (isActive) upgraded.SetActivationStatus(true, true);
+        if (returnToUI) upgraded.ShowOnGUI();
     }
 
     #region save-load system

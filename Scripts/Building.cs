@@ -57,7 +57,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(SMELTERY_3_ID) as Building);
                 blist.Add(GetStructureByID(PLASTICS_FACTORY_3_ID) as Building);
                 blist.Add(GetStructureByID(MINI_GRPH_REACTOR_3_ID) as Building);
-                blist.Add(GetStructureByID(FUEL_FACILITY_3_ID) as Building);
+                blist.Add(GetStructureByID(FUEL_FACILITY_ID) as Building);
                 //blist.Add(GetStructureByID(XSTATION_3_ID) as Building);
                 blist.Add(GetStructureByID(GRPH_ENRICHER_3_ID) as Building);
                 break;
@@ -72,7 +72,6 @@ public class Building : Structure
                 blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
                 blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
-                blist.Add(GetStructureByID(CHEMICAL_FACTORY_4_ID) as Building);
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_5_ID) as Building);                
@@ -156,13 +155,12 @@ public class Building : Structure
             case BIOGENERATOR_2_ID: return 20f;
 
             case SHUTTLE_HANGAR_4_ID:
-            case CHEMICAL_FACTORY_4_ID:
             case PLASTICS_FACTORY_3_ID:
             case ORE_ENRICHER_2_ID:
             case PSYCHOKINECTIC_GENERATOR:
                 return 40f;
 
-            case FUEL_FACILITY_3_ID:
+            case FUEL_FACILITY_ID:
             case HOSPITAL_2_ID: return 50f;
 
             case DOCK_ADDON_1_ID:
@@ -228,9 +226,8 @@ public class Building : Structure
             case RECRUITING_CENTER_4_ID:
             case ORE_ENRICHER_2_ID: return -12f;
             case ARTIFACTS_REPOSITORY_ID: return -16f;
-            case CHEMICAL_FACTORY_4_ID:
             case PLASTICS_FACTORY_3_ID:
-            case FUEL_FACILITY_3_ID: return -20f;
+            case FUEL_FACILITY_ID: return -20f;
             case CONTROL_CENTER_6_ID: return -40f;
             case OBSERVATORY_ID: return -50f;
             case CONNECT_TOWER_6_ID: return -64f;
@@ -484,7 +481,7 @@ public class Building : Structure
                     level = 3;
                 }
                 break;
-            case FUEL_FACILITY_3_ID:
+            case FUEL_FACILITY_ID:
                 {
                     canBePowerSwitched = true;
                     level = 3;
@@ -530,12 +527,6 @@ public class Building : Structure
                 {
                     canBePowerSwitched = true;
                     level = 5;
-                }
-                break;
-            case CHEMICAL_FACTORY_4_ID:
-                {
-                    canBePowerSwitched = true;
-                    level = 4;
                 }
                 break;
             case SWITCH_TOWER_ID:

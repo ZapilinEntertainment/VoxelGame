@@ -172,6 +172,8 @@ public sealed class GameMaster : MonoBehaviour
             globalMap.Prepare();
             environmentMaster.Prepare();
         }        
+
+
     }
 
     void Start()
@@ -486,11 +488,14 @@ public sealed class GameMaster : MonoBehaviour
                 // + блоки?
             }
         }
-        float structureStabilizersEffect = 0f;
-        target_stability = 0.25f * hc + 0.25f * gc + 0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 0.25f * structureStabilizersEffect;
-        if (stability != target_stability)
+        if (!editMode)
         {
-            stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
+            float structureStabilizersEffect = 0f;
+            target_stability = 0.25f * hc + 0.25f * gc + 0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 0.25f * structureStabilizersEffect;
+            if (stability != target_stability)
+            {
+                stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
+            }
         }
     }
 
@@ -737,16 +742,25 @@ public sealed class GameMaster : MonoBehaviour
         Dock.SaveStaticDockData(fs);
 
         QuestUI.current.Save(fs);        
-        Expedition.SaveStaticData(fs);        
+        Expedition.SaveStaticData(fs);
+        fs.Position = 0;
+        double hashsum = GetHashSum(fs, false);
+        fs.Write(System.BitConverter.GetBytes(hashsum),0,8);
         fs.Close();
         SetPause(false);
         return true;
     }
     public bool LoadGame() { return LoadGame("autosave"); }
     public bool LoadGame(string fullname)
-    {  // отдельно функцию проверки и коррекции сейв-файла
-        if (true) // <- тут будет функция проверки // када она будет?
+    {  
+        FileStream fs = File.Open(fullname, FileMode.Open);        
+        double realHashSum = GetHashSum(fs, true);
+        var data = new byte[8];
+        fs.Read(data, 0, 8);
+        double readedHashSum = System.BitConverter.ToDouble(data, 0);       
+        if (realHashSum == readedHashSum) 
         {
+            fs.Position = 0;
             SetPause(true);
             loading = true;
             // ОЧИСТКА
@@ -770,10 +784,9 @@ public sealed class GameMaster : MonoBehaviour
             //UI.current.Reset();
 
 
-            // НАЧАЛО ЗАГРУЗКИ
-            FileStream fs = File.Open(fullname, FileMode.Open);
+            // НАЧАЛО ЗАГРУЗКИ            
             #region gms mainPartLoading
-            var data = new byte[4];
+            data = new byte[4];
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
             //start writing
@@ -810,20 +823,20 @@ public sealed class GameMaster : MonoBehaviour
             fs.Read(data, 0, 4);
             Mission.SetNextIDValue(System.BitConverter.ToInt32(data,0));
             globalMap.Load(fs);
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             Shuttle.LoadStaticData(fs); // because of hangars
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             Artifact.LoadStaticData(fs); // crews & monuments
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             Crew.LoadStaticData(fs);
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             if (mainChunk == null)
             {
@@ -831,21 +844,21 @@ public sealed class GameMaster : MonoBehaviour
                 mainChunk = g.AddComponent<Chunk>();
             }
             mainChunk.LoadChunkData(fs);
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             fs.Read(data, 0, 4);
             QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
 
             Dock.LoadStaticData(fs);
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
             QuestUI.current.Load(fs);
-            if (loadingFailed) return false;
+            if (loadingFailed) goto FAIL;
             Expedition.LoadStaticData(fs);
             fs.Close();
             FollowingCamera.main.WeNeedUpdate();
@@ -856,9 +869,18 @@ public sealed class GameMaster : MonoBehaviour
         }
         else
         {
-            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed));
+            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : hashsum incorrect");
+            if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
+            SetPause(true);
+            fs.Close();
             return false;
         }
+        FAIL:
+        GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
+        if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
+        SetPause(true);
+        fs.Close();
+        return false;
     }
 
     public bool SaveTerrain(string name)
@@ -889,6 +911,20 @@ public sealed class GameMaster : MonoBehaviour
         fs.Close();
         FollowingCamera.main.WeNeedUpdate();
         return true;
+    }
+
+    public double GetHashSum(FileStream fs, bool ignoreLastEightBytes)
+    {
+        double hsum = 0d, full = 255d;
+        int x = 0;
+        long count = fs.Length;
+        if (ignoreLastEightBytes) count -= 8; ;
+        for (long i = 0; i < count; i++)
+        {
+            x = fs.ReadByte();
+            hsum += x / full;            
+        }
+        return hsum;
     }
     #endregion
 

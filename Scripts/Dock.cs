@@ -105,8 +105,8 @@ public sealed class Dock : WorkBuilding {
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
-					if ( immigrationPlan > 0  & immigrationEnabled ) {
-						if (Random.value < 0.3f | colony.totalLivespace > colony.citizenCount) sendImmigrants = true;
+					if ( immigrationPlan > 0  & immigrationEnabled & colony.totalLivespace > colony.citizenCount) {
+						sendImmigrants = true;
 					}
 					int transitionsCount = 0;
 					for (int x = 0; x < isForSale.Length; x++) {

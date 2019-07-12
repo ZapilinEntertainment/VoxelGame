@@ -222,19 +222,7 @@ public sealed class Chunk : MonoBehaviour
             roofObjectsHolder.transform.localPosition = Vector3.zero;
             roofObjectsHolder.transform.localRotation = Quaternion.identity;
         }
-        if (combinedShadowCaster == null & PoolMaster.shadowCasting)
-        {
-            combinedShadowCaster = new GameObject("combinedShadowCaster");
-            combinedShadowCaster.AddComponent<MeshFilter>();
-            var mr = combinedShadowCaster.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = Resources.Load<Material>("Materials/ShadowsOnly");
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-            mr.receiveShadows = false;
-            mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-            mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            combinedShadowCaster.SetActive(false);
-            shadowsUpdateRequired = true;
-        }
+        SetShadowCastingMode(PoolMaster.shadowCasting);
         if (renderersHolders == null)
         {
             RemakeRenderersHolders();
@@ -1017,6 +1005,29 @@ public sealed class Chunk : MonoBehaviour
         roofObjectsHolder.SetActive(layerCutHeight == CHUNK_SIZE);
         RenderDataFullRecalculation();
     }
+    public void SetShadowCastingMode(bool x)
+    {
+        if (x)
+        {
+            if (combinedShadowCaster == null)
+            {
+                combinedShadowCaster = new GameObject("combinedShadowCaster");
+                combinedShadowCaster.AddComponent<MeshFilter>();
+                var mr = combinedShadowCaster.AddComponent<MeshRenderer>();
+                mr.sharedMaterial = Resources.Load<Material>("Materials/ShadowsOnly");
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                mr.receiveShadows = false;
+                mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+                mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                combinedShadowCaster.SetActive(false);                
+            }
+            shadowsUpdateRequired = true;
+        }
+        else
+        {
+            if (combinedShadowCaster != null) Destroy(combinedShadowCaster);
+        }
+    }
     #endregion 
     #region operating blocks data
 
@@ -1040,7 +1051,7 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }       
-        if (surfaceBlocks.Count > 0)
+        if (surfaceBlocks.Count > 0 & !GameMaster.editMode)
         {
             foreach (SurfaceBlock sb in surfaceBlocks)
             {
@@ -2645,6 +2656,7 @@ public sealed class Chunk : MonoBehaviour
                 if (GameMaster.loadingFailed)
                 {
                     print("loading failed");
+                    Destroy(this);
                     return;
                 }
                 fs.Read(data, 0, data.Length);
@@ -2692,7 +2704,7 @@ public sealed class Chunk : MonoBehaviour
                 {
                     Debug.Log("corrupted data");
                     corruptedData = true;
-                    continue;
+                    return;
                 }                
             } // ужасное решение
             if (PoolMaster.useIlluminationSystem) ChunkLightmapFullRecalculation();
