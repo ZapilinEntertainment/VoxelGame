@@ -5,6 +5,7 @@ public sealed class XStation : WorkBuilding {
     private static RectTransform cityMarker;
     private static bool indicatorPrepared = false, markerEnabled = false;
     private  float INDICATOR_EDGE_POSITION;
+    private const float VISIBLE_LOW_BORDER = 0.2f, VISIBLE_UP_BORDER = 0.8f;
 
     // EnvironmentMaster.environmentalConditions
     //GameMaster.lifegrowCoefficient
@@ -37,15 +38,11 @@ public sealed class XStation : WorkBuilding {
             AddToResetList(typeof(XStation));
         }
         current = this;
-        if (!indicatorPrepared & isEnergySupplied & isActive)
+        if (!indicatorPrepared)
         {
-            PrepareIndicator();
-            cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
-            if (!markerEnabled)
-            {
-                cityMarker.parent.gameObject.SetActive(true);
-                markerEnabled = true;
-            }
+            PrepareIndicator();            
+            cityMarker.parent.gameObject.SetActive(false);
+            markerEnabled = false;
         }
     }
 
@@ -58,8 +55,12 @@ public sealed class XStation : WorkBuilding {
             cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
             if (!markerEnabled)
             {
-                cityMarker.parent.gameObject.SetActive(true);
-                markerEnabled = true;
+                var s = GameMaster.realMaster.stability;
+                if (s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER | showOnGUI)
+                {
+                    cityMarker.parent.gameObject.SetActive(true);
+                    markerEnabled = true;
+                }
             }
         }
         else
@@ -73,7 +74,6 @@ public sealed class XStation : WorkBuilding {
         //
         base.SetActivationStatus(x, recalculateAfter);
     }
-
     public override void SetEnergySupply(bool x, bool recalculateAfter)
     {
         // #m1 - mod
@@ -81,10 +81,14 @@ public sealed class XStation : WorkBuilding {
         {
             if (!indicatorPrepared) PrepareIndicator();
             cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
+            var s = GameMaster.realMaster.stability;
             if (!markerEnabled)
             {
-                cityMarker.parent.gameObject.SetActive(true);
-                markerEnabled = true;
+                if (s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER | showOnGUI)
+                {
+                    cityMarker.parent.gameObject.SetActive(true);
+                    markerEnabled = true;                   
+                }
             }
         }
         else
@@ -98,6 +102,19 @@ public sealed class XStation : WorkBuilding {
         //
         base.SetEnergySupply(x, recalculateAfter);
     }
+    override public void DisableGUI()
+    {
+        showOnGUI = false;
+        if (markerEnabled)
+        {
+            var s = GameMaster.realMaster.stability;
+            if (s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER)
+            {
+                cityMarker.parent.gameObject.SetActive(false);
+                markerEnabled = false;
+            }
+        }
+    }
 
     private void PrepareIndicator()
     {
@@ -109,13 +126,31 @@ public sealed class XStation : WorkBuilding {
         t.SetAsFirstSibling();
         cityMarker = t.GetChild(0).GetComponent<RectTransform>();
         indicatorPrepared = true;
+        cityMarker.parent.gameObject.SetActive(false);
+        markerEnabled = false;
     }
     private void Update()
     {
-        if (isEnergySupplied & isActive & indicatorPrepared)
+        var s = GameMaster.realMaster.stability;
+        bool show = isEnergySupplied & isActive & indicatorPrepared & ( showOnGUI | s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER );
+        if (show)
         {
             cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
+            if (!markerEnabled)
+            {
+                cityMarker.parent.gameObject.SetActive(true);
+                markerEnabled = true;
+            }
         }
+        else
+        {
+            if (markerEnabled)
+            {
+                cityMarker.parent.gameObject.SetActive(false);
+                markerEnabled = false;
+            }
+        }
+
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

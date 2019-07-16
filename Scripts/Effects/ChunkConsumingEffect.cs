@@ -14,54 +14,58 @@ public class ChunkConsumingEffect : MonoBehaviour {
         }
     }
 
-    private float lsConsumingSpeed = 1, realConsumingSpeed = 1;
-    private float lsTimer = 1, realTimer = 1;
+    private bool realSpaceConsuming = false;
+    private float consumingSpeed;
+    private float timer;
     private Chunk chunk;
     private List<GameObject> cubesPool = new List<GameObject>();
-    private List<FlyingBlock> activeCubes = new List<FlyingBlock>();
+    private List<FlyingBlock> flyingCubes = new List<FlyingBlock>();
 
-    private const float FLY_SPEED = 16, ROTATION_SPEED = 5, CONSUMING_MULTIPLIER = 3;
+    private const float FLY_SPEED = 16, ROTATION_SPEED = 5, CONSUMING_MULTIPLIER = 3, ACCUMULATION_SPEED = 0.02f;
 
     private void Awake()
     {
         chunk = gameObject.GetComponent<Chunk>();
     }
 
-    public void SetSettings(byte upSkyStatus, byte lowSkyStatus)
+    public void Set(bool i_realSpaceConsuming)
     {
-        lsConsumingSpeed = upSkyStatus * CONSUMING_MULTIPLIER;
-        realConsumingSpeed = lowSkyStatus * CONSUMING_MULTIPLIER;
+        consumingSpeed = CONSUMING_MULTIPLIER;
+        realSpaceConsuming = i_realSpaceConsuming;
+    }
+    public float GetTimerValue()
+    {
+        return timer;
+    }
+    public void SetTimerValue(float i_timer)
+    {
+        timer = i_timer;
     }
 
     public void Update()
     {
         if (chunk == null) return;
         float t = Time.deltaTime * GameMaster.gameSpeed;
-        lsTimer -= t * lsConsumingSpeed;
-        if (lsTimer <= 0)
+        timer -= t * consumingSpeed;
+        if (timer <= 0)
         {
-            SpawnCube_UpToDown();
-            lsTimer = GameConstants.WORLD_CONSUMING_TIMER;
+            if (realSpaceConsuming) SpawnCube_BottomToUp();
+            else SpawnCube_UpToDown();
+            timer = GameConstants.WORLD_CONSUMING_TIMER;
+            if (consumingSpeed < 20f) consumingSpeed += ACCUMULATION_SPEED * CONSUMING_MULTIPLIER;            
         }
-        realTimer -= t * realConsumingSpeed;
-        if (realTimer <= 0)
-        {
-            SpawnCube_BottomToUp();
-            realTimer = GameConstants.WORLD_CONSUMING_TIMER;
-        }
-
-        if (activeCubes.Count > 0)
+        if (flyingCubes.Count > 0)
         {
             int i = 0;
             FlyingBlock fb;
-            Transform tf;            
+            Transform tf;
             float fspeed = FLY_SPEED * t;
             Vector3 one = Vector3.one * ROTATION_SPEED * t, up = Vector3.up * fspeed * t, down = Vector3.down * fspeed * t;
             float upBorder = GameConstants.GetUpperBorder(), lowBorder = GameConstants.GetBottomBorder();
 
-            while ( i < activeCubes.Count)
+            while (i < flyingCubes.Count)
             {
-                fb = activeCubes[i];
+                fb = flyingCubes[i];
                 tf = fb.cube.transform;
                 if (fb.goingUp)
                 {
@@ -69,8 +73,8 @@ public class ChunkConsumingEffect : MonoBehaviour {
                     {
                         fb.cube.SetActive(false);
                         fb.cube.transform.parent = transform;
-                        cubesPool.Add(fb.cube);                        
-                        activeCubes.RemoveAt(i);
+                        cubesPool.Add(fb.cube);
+                        flyingCubes.RemoveAt(i);
                         continue;
                     }
                     else
@@ -85,12 +89,12 @@ public class ChunkConsumingEffect : MonoBehaviour {
                         fb.cube.SetActive(false);
                         fb.cube.transform.parent = transform;
                         cubesPool.Add(fb.cube);
-                        activeCubes.RemoveAt(i);
+                        flyingCubes.RemoveAt(i);
                         continue;
                     }
                     else
                     {
-                        tf.position += down; 
+                        tf.position += down;
                     }
                 }
 
@@ -116,7 +120,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
                 return;
             }
         }
-        GameMaster.realMaster.GameOver(GameEndingType.ConsumedByReal);
+        GameMaster.realMaster.GameOver(GameEndingType.ConsumedByLastSector);
     }
 private void SpawnCube_BottomToUp()
     {        
@@ -132,7 +136,7 @@ private void SpawnCube_BottomToUp()
                 return;
             }
         }
-        GameMaster.realMaster.GameOver(GameEndingType.ConsumedByLastSector);
+        GameMaster.realMaster.GameOver(GameEndingType.ConsumedByReal);
     }
     private void SpawnEffectCube(Vector3 position, bool flyUp)
     {
@@ -148,7 +152,7 @@ private void SpawnCube_BottomToUp()
         g.GetComponent<MeshRenderer>().sharedMaterial = flyUp ? PoolMaster.energyMaterial : PoolMaster.darkness_material;
         g.transform.position = position;
         g.transform.rotation = Quaternion.identity;
-        activeCubes.Add(new FlyingBlock(g, flyUp));
+        flyingCubes.Add(new FlyingBlock(g, flyUp));
         g.SetActive(true);
     }
 }

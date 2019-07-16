@@ -31,7 +31,6 @@ public class GameLogUI : MonoBehaviour {
     }
     public static void MakeImportantAnnounce(string s)
     {
-        print("here");
         if (current == null) InitializeCurrent();
         current.importantAnnouncePanel.transform.GetChild(0).GetComponent<Text>().text = s;
         current.importantAnnouncePanel.GetComponent<Image>().color = PoolMaster.gameOrangeColor;

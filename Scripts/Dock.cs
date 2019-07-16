@@ -400,7 +400,7 @@ public sealed class Dock : WorkBuilding {
             return;
 		}
 		int peopleBefore = immigrationPlan;
-        double tradeVolume = s.volume * (0.01f + 0.99f * ((float)workersCount / (float)maxWorkers));
+        float tradeVolume = s.volume * (0.01f + 0.99f * ((float)workersCount / (float)maxWorkers));
         switch (s.type) {
 		case ShipType.Passenger:
                 {
@@ -449,13 +449,12 @@ public sealed class Dock : WorkBuilding {
                     
                     if (buyPositions.Count > 0)
                     {
-                        double boughtVolume = 0;
+                        float boughtVolume = 0;
                         foreach (int id in buyPositions)
                         {
-                            double v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
                             if (storage[id] + v > minValueForTrading[id]) v = minValueForTrading[id] - storage[id];
-                            float v2 = (float)v;
-                            if (v2 != 0)  boughtVolume += BuyResource(ResourceType.GetResourceTypeById(id), v2);
+                            if (v != 0)  boughtVolume += BuyResource(ResourceType.GetResourceTypeById(id), v);
                         }
                         tradeVolume += boughtVolume;
                     }

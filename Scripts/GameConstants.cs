@@ -16,8 +16,8 @@
         FOOD_CONSUMPTION = 1, 
         SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
-        STABILITY_CHANGE_SPEED = 0.001f,
-        RSPACE_CONSUMING_VAL = 0.125f,
+        STABILITY_CHANGE_SPEED = 0.002f,
+        RSPACE_CONSUMING_VAL = 0.1f,
         LSECTOR_CONSUMING_VAL = 0.9f,
 
         OBSERVATORY_FIND_SPEED_CF = 10, DIGGING_SPEED = 0.5f, MINING_SPEED = 1f, POURING_SPEED = 0.5f, FACTORY_SPEED = 0.3f,
@@ -28,7 +28,10 @@
         RUINS_COEFFICIENT = 0.25f,
         GRAPHONIUM_CRITICAL_MASS = 10000f
         ;
-    public static float WORLD_CONSUMING_TIMER { get { return 15 * (2f - GameMaster.realMaster.GetDifficultyCoefficient()); } }
+
+    public static float WORLD_CONSUMING_TIMER {
+        get { return 15 * (2f - GameMaster.realMaster.GetDifficultyCoefficient()); }
+    }
     public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.000003f * GameMaster.realMaster.GetDifficultyCoefficient(); } }
     public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000012f * GameMaster.realMaster.GetDifficultyCoefficient(); } }
     public const int MAX_LIFEPOWER_TRANSFER = 16;

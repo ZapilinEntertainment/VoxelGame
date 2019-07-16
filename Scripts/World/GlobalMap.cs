@@ -346,17 +346,16 @@ public sealed class GlobalMap : MonoBehaviour
         float ascensionChange = 0;
         var cpoint = GetCityPoint();
         float prevX = cpoint.angle, prevY = cpoint.height;
-
         if (mapPoints.Count > 0)
         {
             if (GameMaster.realMaster.colonyController != null)
             {
-                float h = GameMaster.realMaster.colonyController.happiness_coefficient;
-                if (h != ascension)
+                float s = GameMaster.realMaster.stability;
+                if (s > 1f) s = 1f;
+                if (cpoint.height != s)
                 {
-                    ascensionChange = h - ascension;
-                    ascension = h;
-                    //ascension sectors check
+                    cpoint.height = 1f - s;
+                    cpoint.ringIndex = DefineRing(s);
                 }
             }
             int i = 0;
@@ -403,7 +402,6 @@ public sealed class GlobalMap : MonoBehaviour
                 i++;
             }
         }
-
         cityFlyDirection = new Vector3(cpoint.angle - prevX + rotationSpeed[cpoint.ringIndex], ascensionChange, cpoint.height - prevY);
 
         var cp = Quaternion.AngleAxis(cpoint.angle, Vector3.back) * (Vector3.up * cpoint.height);

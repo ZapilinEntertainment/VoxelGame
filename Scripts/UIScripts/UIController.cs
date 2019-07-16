@@ -421,11 +421,6 @@ sealed public class UIController : MonoBehaviour
                     }
                 }
             }
-
-            if (Input.GetMouseButtonDown(0))
-            {
-
-            }
         }
 
         if (powerFailureTimer > 0)
@@ -944,7 +939,9 @@ sealed public class UIController : MonoBehaviour
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
             happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
             birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
-            housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + ((int)(((float)colony.citizenCount / colony.totalLivespace) * 100f)).ToString() + "%)";
+            int housingPercent = 0;
+            if (colony.totalLivespace > 0) housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);
+            housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + housingPercent.ToString() + "%)";
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
             healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
         }

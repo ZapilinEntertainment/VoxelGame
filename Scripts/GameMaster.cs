@@ -90,6 +90,7 @@ public sealed class GameMaster : MonoBehaviour
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
     private float labourTimer = 0, lifepowerTimer = 0;
     private bool firstSet = true;
+    private bool? realSpaceConsuming = null; // true - real space consuming, false - last sector consuming
     // FOR TESTING
     public bool weNeedNoResources { get; private set; }
     public bool generateChunk = true;
@@ -490,11 +491,36 @@ public sealed class GameMaster : MonoBehaviour
         }
         if (!editMode)
         {
+
             float structureStabilizersEffect = 0f;
             target_stability = 0.25f * hc + 0.25f * gc + 0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 0.25f * structureStabilizersEffect;
             if (stability != target_stability)
             {
                 stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
+            }
+
+            if (stability <= GameConstants.RSPACE_CONSUMING_VAL)
+            {
+                if (realSpaceConsuming != true)
+                {
+                    realSpaceConsuming = true;
+                    var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+                    if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
+                    cce.Set(true);
+                }
+            }
+            else
+            {
+                if (stability >= GameConstants.LSECTOR_CONSUMING_VAL)
+                {
+                    if (realSpaceConsuming != false)
+                    {
+                        realSpaceConsuming = false;
+                        var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+                        if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
+                        cce.Set(false);
+                    }
+                }
             }
         }
     }
@@ -727,7 +753,24 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
-        // 73 - end
+        // 73
+        if (realSpaceConsuming == null) fs.WriteByte(0);
+        else
+        {
+            if (realSpaceConsuming == true)
+            {
+                fs.WriteByte(1);
+            }
+            else
+            {
+                fs.WriteByte(2);
+            }
+            var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+            float x = 0f;
+            if (cce != null) x = cce.GetTimerValue();
+            fs.Write(System.BitConverter.GetBytes(x),0,4);
+        }
+        //74 (+4) end
         #endregion
 
         fs.Write(System.BitConverter.GetBytes(Mission.nextID),0,4);
@@ -790,7 +833,7 @@ public sealed class GameMaster : MonoBehaviour
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
             //start writing
-            data = new byte[73]; 
+            data = new byte[74]; 
             fs.Read(data, 0, data.Length);
             gameSpeed = System.BitConverter.ToSingle(data, 0);
             lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
@@ -817,6 +860,27 @@ public sealed class GameMaster : MonoBehaviour
             labourTimer = System.BitConverter.ToSingle(data, 61);
             lifepowerTimer = System.BitConverter.ToSingle(data, 65);
             RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 69));
+
+            int x = data[73];
+            float consumingTimerValue = 0f;
+            if (x != 0)
+            {
+                data = new byte[4];
+                fs.Read(data, 0, 4);
+                consumingTimerValue = System.BitConverter.ToSingle(data, 0);
+                if (x == 1)
+                {
+                    realSpaceConsuming = true;
+                }
+                else
+                {
+                    if (x == 2)
+                    {
+                        realSpaceConsuming = false;
+                    }
+                }
+            }
+            else realSpaceConsuming = null;
             #endregion
 
             data = new byte[4];
@@ -861,7 +925,15 @@ public sealed class GameMaster : MonoBehaviour
             if (loadingFailed) goto FAIL;
             Expedition.LoadStaticData(fs);
             fs.Close();
+
             FollowingCamera.main.WeNeedUpdate();
+            var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+            if (realSpaceConsuming != null)
+            {
+                if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
+                cce.Set(realSpaceConsuming == true);
+            }
+
             loading = false;
             savename = fullname;
             SetPause(false);
