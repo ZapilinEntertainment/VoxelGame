@@ -64,7 +64,7 @@ public sealed class MenuUI : MonoBehaviour
         if (newGameGenMode == ChunkGenerationMode.TerrainLoading & GameMaster.savename == string.Empty) return;
         GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value);
         GameMaster.gameStartSettings = gss;
-        GameMaster.ChangeScene(GameLevel.Playable);
+        GameMaster.ChangeScene(GameMaster.PLAY_SCENE_INDEX);
     }
     public void NewGameButton()
     {
@@ -238,7 +238,7 @@ public sealed class MenuUI : MonoBehaviour
     }
     public void Editor_Start()
     {
-        GameMaster.ChangeScene(GameLevel.Editor);
+        GameMaster.ChangeScene(GameMaster.EDITOR_SCENE_INDEX);
     }
 
     public void QualityDropdownChanged()

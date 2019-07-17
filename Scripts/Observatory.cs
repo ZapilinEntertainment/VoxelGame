@@ -43,19 +43,13 @@ public class Observatory : WorkBuilding {
             indestructible = false;
         }        
         List<ChunkPos> positionsList = new List<ChunkPos>();
-        int x = b.pos.x, z = b.pos.z;
-        for (int i = -1; i < 2; i++)
+        int x = b.pos.x, z = b.pos.z, y = b.pos.y;
+        positionsList = new List<ChunkPos>()
         {
-            for (int j = -1; j< 2; j++)
-            {
-                for (int k = 0; k < Chunk.CHUNK_SIZE; k++)
-                {
-                    positionsList.Add(new ChunkPos(x + i, k, z + j));
-                }                
-            }
-        }
-        positionsList.Remove(new ChunkPos(x, b.pos.y, z));
-        positionsList.Remove(new ChunkPos(x, b.pos.y - 1, z));
+            new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
+            new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
+            new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
+        };
         blockedBlocks = new List<Block>();
         chunk.BlockRegion(positionsList, this, ref blockedBlocks);
         UIController.current.AddFastButton(this);

@@ -236,7 +236,7 @@ public class SaveSystemUI : MonoBehaviour
                         GameMaster.SetSavename(saveNames[lastSelectedIndex]);
                         GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.TerrainLoading);
                         GameMaster.gameStartSettings = gss;
-                        GameMaster.ChangeScene(GameLevel.Editor);
+                        GameMaster.ChangeScene(GameMaster.EDITOR_SCENE_INDEX);
                     }
                     else
                     {
@@ -262,7 +262,7 @@ public class SaveSystemUI : MonoBehaviour
                         GameMaster.SetSavename(saveNames[lastSelectedIndex]);
                         GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.GameLoading);
                         GameMaster.gameStartSettings = gss;
-                        GameMaster.ChangeScene(GameLevel.Playable);
+                        GameMaster.ChangeScene(GameMaster.PLAY_SCENE_INDEX);
                     }
                     else
                     {

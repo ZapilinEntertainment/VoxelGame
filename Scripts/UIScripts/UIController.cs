@@ -56,8 +56,8 @@ sealed public class UIController : MonoBehaviour
     private float saved_energySurplus, statusUpdateTimer = 0, powerFailureTimer = 0;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
-        saved_citizenCountBeforeStarvation
-        ;
+        saved_citizenCountBeforeStarvation, rpanel_textfield_userStructureID = -1;
+        
     private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false,
         localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
     public List<int> activeFastButtons { get; private set; }
@@ -73,7 +73,7 @@ sealed public class UIController : MonoBehaviour
 
     public static UIController current;
 
-    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 4;
+    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 4, RPANEL_TEXTFIELD_INDEX = 8;
 
     public void Awake()
     {
@@ -114,6 +114,14 @@ sealed public class UIController : MonoBehaviour
         {
             if (statusUpdateEvent != null) statusUpdateEvent();
             statusUpdateTimer = STATUS_UPDATE_TIME;
+
+            if (rpanel_textfield_userStructureID != -1)
+            {
+                if (rpanel_textfield_userStructureID == Structure.XSTATION_3_ID)
+                {
+                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.realMaster.stability * 100)).ToString() + '%';
+                }
+            }
         }
         updateTimer -= tm;
 
@@ -1214,6 +1222,20 @@ sealed public class UIController : MonoBehaviour
         ChangeChosenObject(ChosenObjectType.Cube);
     }
 
+    public void EnableTextfield(int id)
+    {
+        rpanel_textfield_userStructureID = id;
+        rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).gameObject.SetActive(true);
+    }
+    public void DisableTextfield(int id)
+    {
+        if (id == rpanel_textfield_userStructureID)
+        {
+            rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).gameObject.SetActive(false);
+            rpanel_textfield_userStructureID = -1;
+        }
+    }
+
     public void AddFastButton(Structure s)
     {        
         GameObject buttonGO = null;
@@ -1304,7 +1326,7 @@ sealed public class UIController : MonoBehaviour
     {
         if (GameMaster.realMaster.colonyController != null) GameMaster.realMaster.SaveGame("autosave");
         SetMenuPanelSelection(MenuSection.NoSelection);
-        GameMaster.ChangeScene(GameLevel.Menu);
+        GameMaster.ChangeScene(GameMaster.MENU_SCENE_INDEX);
     }
     public void ExitButton()
     {

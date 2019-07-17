@@ -3,7 +3,7 @@
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
 public enum LocalizedWord : ushort
 {
-    Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Progress, Repair, Sell, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
+    Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Progress, Repair, Sell,Stability, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return
 };
@@ -29,7 +29,7 @@ public enum GameAnnouncements : ushort
 };
 public enum LocalizedTutorialHint : byte { Landing }
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
-public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt }
+public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight }
 public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted }
 
 public static class Localization
@@ -280,7 +280,7 @@ public static class Localization
                     case Structure.CONTROL_CENTER_6_ID:
                     case Structure.CONNECT_TOWER_6_ID:
                     case Structure.XSTATION_3_ID: return "<В разработке>";
-                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Нужно свободное пространство в 1 блок радиусом от самого низа до верха. /n Может быть только одна обсерватория.";
+                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена на максимальной высоте. В радиусе одного блока не должно быть других блоков и поверхностей. /n Может быть построена только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
@@ -362,7 +362,7 @@ public static class Localization
                     case Structure.CONTROL_CENTER_6_ID:
                     case Structure.CONNECT_TOWER_6_ID:
                     case Structure.XSTATION_3_ID: return "<In development>";
-                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, from down to top";
+                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. /n Only one observatory can be built.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Give access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
@@ -2260,6 +2260,7 @@ public static class Localization
                         case LocalizedWord.Progress: return "Прогресс";
                         case LocalizedWord.Repair: return "Починить"; // shuttle
                         case LocalizedWord.Sell: return "Продавать";
+                        case LocalizedWord.Stability: return "Стабильность";
                         case LocalizedWord.Step: return "Шаг";
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
                         case LocalizedWord.Upgrade: return "Улучшить"; // upgrade building
@@ -2335,6 +2336,7 @@ public static class Localization
                         case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Repair: return "Repair"; // shuttle
                         case LocalizedWord.Sell: return "Sell";
+                        case LocalizedWord.Stability: return "Stability";
                         case LocalizedWord.Step: return "Step";
                         case LocalizedWord.UpgradeCost: return "Upgrade cost";
                         case LocalizedWord.Upgrade: return "Upgrade"; // upgrade building                                
@@ -2575,6 +2577,7 @@ public static class Localization
                         case RefusalReason.MustBeBuildedOnFoundationBlock: return "Нужно строить на блоке основания";
                         case RefusalReason.NoEmptySpace: return "Нет свободного пространства";
                         case RefusalReason.AlreadyBuilt: return "Уже построено";
+                        case RefusalReason.UnacceptableHeight: return "Неподходящая высота";
                     }
                 }
             case Language.English:
@@ -2597,6 +2600,7 @@ public static class Localization
                         case RefusalReason.MustBeBuildedOnFoundationBlock: return "Must be builded on Foundation Block";
                         case RefusalReason.NoEmptySpace: return "No empty space";
                         case RefusalReason.AlreadyBuilt: return "Already built";
+                        case RefusalReason.UnacceptableHeight: return "Height is not suitable";
                     }
                 }
         }

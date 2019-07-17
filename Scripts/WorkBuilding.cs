@@ -336,6 +336,7 @@ public abstract class WorkBuilding : Building
         showOnGUI = true;
         return workbuildingObserver;
         //copy to expeditionCorpus.cs
+        //copy to xstation.cs
     }
 
     override public void LevelUp(bool returnToUI)

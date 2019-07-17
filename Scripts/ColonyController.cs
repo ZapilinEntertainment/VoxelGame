@@ -47,13 +47,14 @@ public sealed class ColonyController : MonoBehaviour
     public float realBirthrate { get; private set; }
     public int totalLivespace { get; private set; }
 
+    private Dictionary<int, float> happinessModifiers; private int nextHModifierID;
     private List<Hospital> hospitals;
     private bool starvation = false;
     private sbyte recalculationTick = 0;
     private float birthrateCoefficient,peopleSurplus = 0f, 
         tickTimer,
         targetHappiness, targetHealth,
-        happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f;
+        happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, renderingHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false;    
 
     public const byte MAX_HOUSING_LEVEL = 5;
@@ -91,6 +92,7 @@ public sealed class ColonyController : MonoBehaviour
         houses.Clear();
         if (hospitals != null) hospitals.Clear();
         Worksite.SetColonyLink(this);
+        happinessModifiers = null;
     }
 
     public void Prepare()
@@ -103,6 +105,11 @@ public sealed class ColonyController : MonoBehaviour
     #region updating
     void Update()
     {
+        if (renderingHappiness != happiness_coefficient)
+        {
+            renderingHappiness = Mathf.Lerp(renderingHappiness, happiness_coefficient, Time.deltaTime);
+            RenderSettings.skybox.SetFloat("_Saturation", renderingHappiness * 0.25f + 0.75f);
+        }
         if (GameMaster.gameSpeed == 0f | hq == null | GameMaster.loading) return;
         tickTimer -= Time.deltaTime * GameMaster.gameSpeed;
         if (tickTimer <= 0f)
@@ -641,6 +648,18 @@ public sealed class ColonyController : MonoBehaviour
             }
             i++;
         }
+    }
+
+    public int AddHappinessModifier(float val)
+    {
+        if (happinessModifiers == null) happinessModifiers = new Dictionary<int, float>();
+        int id = nextHModifierID++;
+        happinessModifiers.Add(id, val);
+        return id;
+    }
+    public void RemoveHappinessModifier(int id)
+    {
+        if (happinessModifiers != null) happinessModifiers.Remove(id);
     }
     #endregion
 

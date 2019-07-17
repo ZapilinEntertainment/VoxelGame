@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 public sealed class PsychokineticGenerator : WorkBuilding
 {
-    public const float ENERGY_MULTIPLIER = 1f;
+    public const float ENERGY_MULTIPLIER = 1f, HAPPINESS_MODIFIER = -0.05f;
+    private int hmodifier_id = -1;
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
+        if (hmodifier_id == -1) hmodifier_id = colony.AddHappinessModifier(HAPPINESS_MODIFIER);
     }
 
     override public void RecalculateWorkspeed()
@@ -20,6 +22,7 @@ public sealed class PsychokineticGenerator : WorkBuilding
         if (destroyed) return;
         else destroyed = true;
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (hmodifier_id != -1) colony.RemoveHappinessModifier(hmodifier_id);
         Destroy(gameObject);
     }
 

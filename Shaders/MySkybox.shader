@@ -93,11 +93,11 @@ Shader "Custom/MySkybox"
 
 		fixed4 cloudCol = tex2D(_cloudlayer, float2(xp , zp) );
 		fixed4 bCol = _BottomColor;
-		bCol *= (1 - cloudCol.a * (1 - sin(z * 4) * sin(x * 5 + _Time) ) / 2 * (0.3 * distex + 0.7)) ;
+		bCol *= (1 - cloudCol.a * (1 - sin(z * 4) * sin(x * 5 + _Time * _Saturation) ) / 2 * (0.3 * distex + 0.7)) ;
 
 		half4 col =
 			starCol * i.originalPos.y * p1 +
-			_HorizonColor *p2 * _Saturation  * (2 +  sin(distortion) * 0.5) / 1.5 
+			_HorizonColor *p2 * _Saturation  * (2 +  sin(distortion) * 0.5) / 1.4
 			+ bCol * p3;
 
 		return  col;

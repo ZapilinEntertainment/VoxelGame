@@ -687,150 +687,82 @@ public sealed class UISurfacePanelController : UIObserver {
                             }
                             else
                             {
-                                if (observingSurface.type == BlockType.Surface)
+                                if (observingSurface.pos.y != Chunk.CHUNK_SIZE - 1)
                                 {
-                                    var blocks = observingSurface.myChunk.blocks;
-                                    ChunkPos pos = observingSurface.pos;
-                                    int size = Chunk.CHUNK_SIZE;
-
-                                    int i = 0;
-                                    if (pos.y < size - 1)
+                                    acceptable = false;
+                                    reason = Localization.GetRefusalReason(RefusalReason.UnacceptableHeight);
+                                }
+                                else
+                                {
+                                    if (observingSurface.type == BlockType.Surface)
                                     {
-                                        if (pos.y > 1)
+                                        var blocks = observingSurface.myChunk.blocks;
+                                        ChunkPos pos = observingSurface.pos;
+                                        int size = Chunk.CHUNK_SIZE;
+
+                                        int i = 0;
+                                        if (pos.y < size - 1)
                                         {
-                                            for (; i < pos.y - 1; i++)
+                                            if (pos.y > 1)
+                                            {
+                                                for (; i < pos.y - 1; i++)
+                                                {
+                                                    ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
+                                                    if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                                                }
+                                            }
+                                            for (i = pos.y + 1; i < size; i++)
                                             {
                                                 ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
                                                 if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
                                             }
+                                            i = 0;
                                         }
-                                        for (i = pos.y + 1; i < size; i++)
-                                        {
-                                            ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                        }
-                                        i = 0;
-                                    }
-                                    bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true };
-                                    //  0  1  2
-                                    //  3     4
-                                    //  5  6  7
-                                    if (pos.x == 0)
-                                    {
-                                        checkArray[0] = false;
-                                        checkArray[3] = false;
-                                        checkArray[5] = false;
-                                    }
-                                    else
-                                    {
-                                        if (pos.x == size - 1)
-                                        {
-                                            checkArray[2] = false;
-                                            checkArray[4] = false;
-                                            checkArray[7] = false;
-                                        }
-                                    }
-                                    if (pos.z == 0)
-                                    {
-                                        checkArray[5] = false;
-                                        checkArray[6] = false;
-                                        checkArray[7] = false;
-                                    }
-                                    else
-                                    {
-                                        if (pos.z == size - 1)
+                                        bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true };
+                                        //  0  1  2
+                                        //  3     4
+                                        //  5  6  7
+                                        if (pos.x == 0)
                                         {
                                             checkArray[0] = false;
-                                            checkArray[1] = false;
-                                            checkArray[2] = false;
+                                            checkArray[3] = false;
+                                            checkArray[5] = false;
                                         }
-                                    }
-                                    if (checkArray[0])
-                                    {
-                                        int x = pos.x - 1, z = pos.z + 1;
-                                        for (; i < size; i++)
+                                        else
                                         {
-                                            ChunkPos cpos = new ChunkPos(x, i, z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                                            if (pos.x == size - 1)
+                                            {
+                                                checkArray[2] = false;
+                                                checkArray[4] = false;
+                                                checkArray[7] = false;
+                                            }
                                         }
-                                        i = 0;
-                                    }
-                                    if (checkArray[1])
-                                    {
-                                        int z = pos.z + 1;
-                                        for (; i < size; i++)
+                                        if (pos.z == 0)
                                         {
-                                            ChunkPos cpos = new ChunkPos(pos.x, i, z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                                            checkArray[5] = false;
+                                            checkArray[6] = false;
+                                            checkArray[7] = false;
                                         }
-                                        i = 0;
-                                    }
-                                    if (checkArray[2])
-                                    {
-                                        int x = pos.x + 1, z = pos.z + 1;
-                                        for (; i < size; i++)
+                                        else
                                         {
-                                            ChunkPos cpos = new ChunkPos(x, i, z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                                            if (pos.z == size - 1)
+                                            {
+                                                checkArray[0] = false;
+                                                checkArray[1] = false;
+                                                checkArray[2] = false;
+                                            }
                                         }
-                                        i = 0;
-                                    }
-                                    if (checkArray[3])
-                                    {
-                                        int x = pos.x - 1;
-                                        for (; i < size; i++)
+                                        foreach (bool ca in checkArray)
                                         {
-                                            ChunkPos cpos = new ChunkPos(x, i, pos.z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                                            if (ca == false) goto CHECK_FAILED;
                                         }
-                                        i = 0;
+                                        acceptable = true;
+                                        break;
                                     }
-                                    if (checkArray[4])
-                                    {
-                                        int x = pos.x + 1;
-                                        for (; i < size; i++)
-                                        {
-                                            ChunkPos cpos = new ChunkPos(x, i, pos.z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                        }
-                                        i = 0;
-                                    }
-                                    if (checkArray[5])
-                                    {
-                                        int x = pos.x - 1, z = pos.z - 1;
-                                        for (; i < size; i++)
-                                        {
-                                            ChunkPos cpos = new ChunkPos(x, i, z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                        }
-                                        i = 0;
-                                    }
-                                    if (checkArray[6])
-                                    {
-                                        int z = pos.z - 1;
-                                        for (; i < size; i++)
-                                        {
-                                            ChunkPos cpos = new ChunkPos(pos.x, i, z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                        }
-                                        i = 0;
-                                    }
-                                    if (checkArray[7])
-                                    {
-                                        int x = pos.x + 1, z = pos.z - 1;
-                                        for (; i < size; i++)
-                                        {
-                                            ChunkPos cpos = new ChunkPos(x, i, z);
-                                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                        }
-                                        i = 0;
-                                    }
-                                    acceptable = true;
-                                    break;
+                                    CHECK_FAILED:
+                                    acceptable = false;
+                                    reason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
                                 }
-                                CHECK_FAILED:
-                                acceptable = false;
-                                reason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
                             }
                         }
                         break;

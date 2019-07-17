@@ -1051,7 +1051,7 @@ public sealed class Chunk : MonoBehaviour
                 }
             }
         }       
-        if (surfaceBlocks.Count > 0 & !GameMaster.editMode)
+        if (surfaceBlocks.Count > 0 & GameMaster.realMaster.gameMode != GameMode.Editor)
         {
             foreach (SurfaceBlock sb in surfaceBlocks)
             {

@@ -102,6 +102,18 @@ public sealed class XStation : WorkBuilding {
         //
         base.SetEnergySupply(x, recalculateAfter);
     }
+
+    public override UIObserver ShowOnGUI()
+    {
+        if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
+        else workbuildingObserver.gameObject.SetActive(true);
+        workbuildingObserver.SetObservingWorkBuilding(this);
+        showOnGUI = true;
+
+        UIController.current.EnableTextfield(ID);
+
+        return workbuildingObserver;
+    }
     override public void DisableGUI()
     {
         showOnGUI = false;
@@ -114,6 +126,7 @@ public sealed class XStation : WorkBuilding {
                 markerEnabled = false;
             }
         }
+        UIController.current.DisableTextfield(ID);
     }
 
     private void PrepareIndicator()

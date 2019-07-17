@@ -59,7 +59,7 @@ public sealed class LifeSource : Structure {
         }
         if (basement != null )
         {
-            if (!GameMaster.editMode)
+            if (GameMaster.realMaster.gameMode != GameMode.Editor)
             {
                 switch (ID)
                 {

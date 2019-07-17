@@ -111,7 +111,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
 
-        if (!GameMaster.editMode)
+        if (GameMaster.realMaster.gameMode != GameMode.Editor)
         {
             if (positionChanged)
             {

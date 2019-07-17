@@ -49,7 +49,7 @@ public sealed class GlobalMap : MonoBehaviour
             sectorsCount += (int)(360f / sectorsDegrees[i]);
         }
         mapSectors = new RingSector[sectorsCount];
-        ascension = GameConstants.START_HAPPINESS;
+        ascension = 0f;
         stars = new Dictionary<SunPoint, Transform>();
         //start sector:
         byte ring = RINGS_COUNT / 2;

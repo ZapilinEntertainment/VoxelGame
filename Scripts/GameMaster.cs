@@ -35,7 +35,7 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 //ScoreCalculator
 
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
-public enum GameLevel : byte { Menu, Playable, Editor}
+public enum GameMode: byte { Play, Editor, Menu, Cinematic }
 public enum GameEndingType : byte { Default, ColonyLost, TransportHubVictory, ConsumedByReal, ConsumedByLastSector}
 
 /// -----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ public sealed class GameMaster : MonoBehaviour
     public static GameMaster realMaster;
     public static float gameSpeed { get; private set; }
     public static bool sceneClearing { get; private set; }
-    public static bool editMode = false, needTutorial = false;
+    public static bool needTutorial = false;
     public static bool loading { get; private set; }
     public static bool loadingFailed; // hot
     public static bool soundEnabled { get; private set; }
@@ -64,6 +64,7 @@ public sealed class GameMaster : MonoBehaviour
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
+    public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
@@ -77,14 +78,18 @@ public sealed class GameMaster : MonoBehaviour
     public float upgradeCostIncrease { get; private set; }
     public float warProximity { get; private set; } // 0 is far, 1 is nearby  
     public float gearsDegradeSpeed { get; private set; }
+
     public float stability { get; private set; }
+    private Dictionary<int, float> stabilityModifiers;
+    private int nextSModifiersID;
+
     public Difficulty difficulty { get; private set; }
     //data
     private float timeGone, target_stability = 0.5f;
     public byte day { get; private set; }
     public byte month { get; private set; }
     public uint year { get; private set; }
-    public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12;
+    public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12, PLAY_SCENE_INDEX = 1, EDITOR_SCENE_INDEX = 1, MENU_SCENE_INDEX = 0;
     public const float DAY_LONG = 60;
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
@@ -92,10 +97,10 @@ public sealed class GameMaster : MonoBehaviour
     private bool firstSet = true;
     private bool? realSpaceConsuming = null; // true - real space consuming, false - last sector consuming
     // FOR TESTING
+    [SerializeField] private GameMode _gameMode;
     public bool weNeedNoResources { get; private set; }
     public bool generateChunk = true;
     public byte test_size = 100;
-    public bool _editMode = false;
 
     private static bool hotStart = false;
     private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
@@ -125,10 +130,10 @@ public sealed class GameMaster : MonoBehaviour
             }
         }
     }
-    public static void ChangeScene(GameLevel level)
+    public static void ChangeScene(byte index)
     {
         sceneClearing = true;
-        SceneManager.LoadScene((int)level);
+        SceneManager.LoadScene(index);
         sceneClearing = false;
         Structure.ResetToDefaults_Static();
     }
@@ -142,8 +147,8 @@ public sealed class GameMaster : MonoBehaviour
 
     public void ChangeModeToPlay()
     {
-        if (!editMode) return;
-        _editMode = false;
+        if (gameMode != GameMode.Editor) return;
+        gameMode = GameMode.Play;
         Instantiate(Resources.Load<GameObject>("UIPrefs/UIController")).GetComponent<UIController>();
         firstSet = true;
         gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
@@ -159,6 +164,7 @@ public sealed class GameMaster : MonoBehaviour
             Destroy(this);
             return;
         }
+        gameMode = _gameMode;
         realMaster = this;
         sceneClearing = false;
         if (PoolMaster.current == null)
@@ -167,7 +173,7 @@ public sealed class GameMaster : MonoBehaviour
             pm.Load();
         }
         if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();        
-        if (!editMode)
+        if (gameMode != GameMode.Editor )
         {
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
             globalMap.Prepare();
@@ -187,7 +193,6 @@ public sealed class GameMaster : MonoBehaviour
         audiomaster.Prepare();
 
         //testzone
-        editMode = _editMode;
         if (hotStart)
         {
             gameStartSettings = hotStartSettings;
@@ -197,7 +202,7 @@ public sealed class GameMaster : MonoBehaviour
         //end of test data
 
         if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
-        if (!editMode)
+        if (gameMode != GameMode.Editor)
         {
             lifeGrowCoefficient = 1;
             difficulty = gameStartSettings.difficulty;            
@@ -343,6 +348,7 @@ public sealed class GameMaster : MonoBehaviour
             }
             else LoadGame(SaveSystemUI.GetSavesPath() + '/' + savename + ".sav");
             if (savename == null | savename == string.Empty) savename = "autosave";
+            RenderSettings.skybox.SetFloat("_Saturation", 0.75f + 0.25f * GameConstants.START_HAPPINESS);
         }
         else
         {
@@ -353,6 +359,7 @@ public sealed class GameMaster : MonoBehaviour
             size /= 2;
             blocksArray[size, size, size] = ResourceType.STONE_ID;
             mainChunk.CreateNewChunk(blocksArray);
+            RenderSettings.skybox.SetFloat("_Saturation", 1f);
         }
 
         stability = 0.5f;
@@ -366,6 +373,20 @@ public sealed class GameMaster : MonoBehaviour
     public void SetColonyController(ColonyController c)
     {
         colonyController = c;
+    }
+    public int AddStabilityModifier(float val)
+    {
+        if (stabilityModifiers == null) stabilityModifiers = new Dictionary<int, float>();
+        int id = nextSModifiersID++;
+        stabilityModifiers.Add(id, val);
+        return id;
+    }
+    public void RemoveStabilityModifier(int id)
+    {
+        if (stabilityModifiers != null)
+        {
+            stabilityModifiers.Remove(id);
+        }        
     }
 
     #region updates
@@ -476,24 +497,36 @@ public sealed class GameMaster : MonoBehaviour
             }
             
         }
-        //eo testzone
-
-        float hc = 1f, gc = 0f;
-        if (colonyController != null) {
-            hc = colonyController.happiness_coefficient;
-            if (colonyController.storage != null)
-            {
-                gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
-                gc *= 0.5f;
-                gc = 1f - gc;
-                // + блоки?
-            }
-        }
-        if (!editMode)
+        //eo testzone       
+        if (gameMode != GameMode.Editor)
         {
+            float hc = 1f, gc = 0f;
+            if (colonyController != null)
+            {
+                hc = colonyController.happiness_coefficient;
+                if (colonyController.storage != null)
+                {
+                    gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
+                    gc *= 0.5f;
+                    gc = 1f - gc;
+                    // + блоки?
+                }
+            }
 
-            float structureStabilizersEffect = 0f;
-            target_stability = 0.25f * hc + 0.25f * gc + 0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 0.25f * structureStabilizersEffect;
+            float structureStabilizersEffect = 1f;
+            if (stabilityModifiers != null && stabilityModifiers.Count > 0)
+            {
+                structureStabilizersEffect = 1f;
+                foreach (var sm in stabilityModifiers)
+                {
+                    structureStabilizersEffect *= (1f + sm.Value);
+                }
+            }
+            target_stability = 
+                0.25f * hc + 
+                0.25f * gc + 
+                0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 
+                0.25f * structureStabilizersEffect;
             if (stability != target_stability)
             {
                 stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
@@ -530,7 +563,7 @@ public sealed class GameMaster : MonoBehaviour
         if (gameSpeed != 0)
         {
             float fixedTime = Time.fixedDeltaTime * gameSpeed;
-            if (!editMode)
+            if (gameMode != GameMode.Editor)
             {
                 labourTimer -= fixedTime;
                 lifepowerTimer -= fixedTime;
@@ -693,7 +726,7 @@ public sealed class GameMaster : MonoBehaviour
     public void ReturnToMenuAfterGameOver()
     {
         sceneClearing = true;
-        ChangeScene(GameLevel.Menu);
+        ChangeScene(MENU_SCENE_INDEX);
         sceneClearing = false;
     }
     public void ContinueGameAfterEnd(GameObject panel)
@@ -824,6 +857,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController = gameObject.AddComponent<ColonyController>();
                 colonyController.Prepare();
             }
+            stabilityModifiers = null;
             //UI.current.Reset();
 
 

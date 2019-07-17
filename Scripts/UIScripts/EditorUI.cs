@@ -549,7 +549,7 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void BackToMenu()
     {
-        GameMaster.ChangeScene(GameLevel.Menu);
+        GameMaster.ChangeScene(GameMaster.MENU_SCENE_INDEX);
     }
 
     public void LocalizeTitles()

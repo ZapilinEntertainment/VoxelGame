@@ -141,7 +141,7 @@ public sealed class PoolMaster : MonoBehaviour {
     }
 
 	void LabourUpdate() {
-        if (GameMaster.editMode ) return;
+        if (GameMaster.realMaster.gameMode == GameMode.Editor ) return;
         ColonyController colony = GameMaster.realMaster.colonyController;
         if (colony == null) return;
 		int docksCount = colony.docks.Count;
