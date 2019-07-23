@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 public class Powerplant : WorkBuilding
 {
-    ResourceType fuel;
-    private float output, fuelNeeds, fuelBurnTime;
-    public float fuelLeft { get; private set; }
-    private int tickTimer = 0;
+    protected ResourceType fuel;
+    protected float output, fuelNeeds, fuelBurnTime;
+    public float fuelLeft { get; protected set; }
+    protected int tickTimer = 0;
 
     public const int BIOGEN_OUTPUT = 40, MINERAL_F_PP_OUTPUT = 180, GRPH_REACTOR_OUTPUT = 800, REACTOR_BLOCK_5_OUTPUT = 1600;
 
@@ -44,6 +44,7 @@ public class Powerplant : WorkBuilding
                 fuelBurnTime = 5800; //ticks
                 break;
         }
+        //dependency : IslandEngine
     }
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)

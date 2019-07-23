@@ -89,7 +89,7 @@ public sealed class GameMaster : MonoBehaviour
     public byte day { get; private set; }
     public byte month { get; private set; }
     public uint year { get; private set; }
-    public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12, PLAY_SCENE_INDEX = 1, EDITOR_SCENE_INDEX = 1, MENU_SCENE_INDEX = 0;
+    public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12, PLAY_SCENE_INDEX = 1, EDITOR_SCENE_INDEX = 2, MENU_SCENE_INDEX = 0;
     public const float DAY_LONG = 60;
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
@@ -381,6 +381,16 @@ public sealed class GameMaster : MonoBehaviour
         stabilityModifiers.Add(id, val);
         return id;
     }
+    public void ChangeStabilityModifierValue(int id, float val)
+    {
+        if (stabilityModifiers != null && stabilityModifiers.Count > 0)
+        {
+            if (stabilityModifiers.Remove(id))
+            {
+                if (val != 0) stabilityModifiers.Add(id, val);
+            }
+        }
+    }
     public void RemoveStabilityModifier(int id)
     {
         if (stabilityModifiers != null)
@@ -396,40 +406,44 @@ public sealed class GameMaster : MonoBehaviour
 
         //testzone
        // if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
-        //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
+        if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
 
-        if (false && Input.GetKeyDown("o"))
+        if ( Input.GetKeyDown("o"))
         {
+            bool makeBuildings = false;
             var sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-                (s as WorkBuilding).AddWorkers(50);
-            }
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-            }
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-            }
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-            }
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
+            if (makeBuildings)
+            {                
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                    (s as WorkBuilding).AddWorkers(50);
+                }
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                }
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                }
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                }
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                }
             }
 
             //
@@ -453,47 +467,48 @@ public sealed class GameMaster : MonoBehaviour
                 a.SetResearchStatus(true);
                 a.Conservate();
             }
-            //
+            //           
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                    // UIController.current.Select(s);
+                }
 
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-               // UIController.current.Select(s);
-            }
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                }
+                sx = mainChunk.GetRandomSurfaceBlock();
 
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
+            if (makeBuildings)
             {
-                Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-            }
-            sx = mainChunk.GetRandomSurfaceBlock();
+                Vector3Int ecpos = Vector3Int.zero;
+                if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+                {
+                    Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
+                    s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+                }
+                if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+                {
+                    Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
+                    s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+                }
 
-            
-            Vector3Int ecpos = Vector3Int.zero;
-            if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-            {
-                Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
-                s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-            }
-            if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-            {
-                Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
-                s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-            }
-
-            Crew c = Crew.CreateNewCrew(colonyController, 1f);
-            sx = mainChunk.GetRandomSurfaceBlock();
-            if (sx != null)
-            {
-                Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
-                s.SetBasement(sx, PixelPosByte.zero);
-                Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
-                sh.FirstSet(s as Hangar);
-                (s as Hangar).AssignShuttle(sh);
-                c.SetShuttle(sh);
+                Crew c = Crew.CreateNewCrew(colonyController, 1f);
+                sx = mainChunk.GetRandomSurfaceBlock();
+                if (sx != null)
+                {
+                    Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
+                    s.SetBasement(sx, PixelPosByte.zero);
+                    Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
+                    sh.FirstSet(s as Hangar);
+                    (s as Hangar).AssignShuttle(sh);
+                    c.SetShuttle(sh);
+                }
             }
             
         }

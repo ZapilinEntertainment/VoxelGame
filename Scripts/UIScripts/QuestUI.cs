@@ -267,6 +267,7 @@ public sealed class QuestUI : MonoBehaviour
         switch ((QuestSection)i) {
             case QuestSection.Progress: q = Quest.GetProgressQuest(); break;
             case QuestSection.Endgame:
+                break;
                 uint mask = Quest.questsCompletenessMask[(int)QuestType.Endgame];
                 if (mask == 0) q = new Quest(QuestType.Endgame, 0);
                 else

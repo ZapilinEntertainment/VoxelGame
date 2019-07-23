@@ -168,7 +168,6 @@ public sealed class Dock : WorkBuilding {
             }
         }
         else dependentBlocksList = new List<Block>();
-
         int corridorWidth = SMALL_SHIPS_PATH_WIDTH;
         if (level > 1)
         {

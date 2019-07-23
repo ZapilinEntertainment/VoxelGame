@@ -65,8 +65,12 @@ public sealed class PoolMaster : MonoBehaviour {
         shadowCasting = useAdvancedMaterials;
         useIlluminationSystem = !shadowCasting;
 
-        buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
-        lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
+        if (qualityLevel != 0) // dependency : change quality level()
+        {
+            buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
+            lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
+        }
+
         inactiveShips = new List<Ship>();
 
         quadMesh = new Mesh();
@@ -85,8 +89,7 @@ public sealed class PoolMaster : MonoBehaviour {
         zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);zoneCube.gameObject.SetActive(false);
 
         default_material = Resources.Load<Material>("Materials/Default");
-        darkness_material = Resources.Load<Material>("Materials/Darkness");
-		energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
+        darkness_material = Resources.Load<Material>("Materials/Darkness");		
         energyMaterial_disabled = Resources.Load<Material>("Materials/UnchargedMaterial");       
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
@@ -99,15 +102,42 @@ public sealed class PoolMaster : MonoBehaviour {
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 
-        ReloadReplaceableMaterials(useAdvancedMaterials);
-
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
-
+        if (qualityLevel == 2)
+        {
+            useAdvancedMaterials = true;
+            shadowCasting = true;
+            glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
+            basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
+            glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
+            metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
+            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
+            energyMaterial = Resources.Load<Material>("Materials/Advanced/ChargedMaterial_advanced");
+        }
+        else
+        {
+            if (qualityLevel == 2)
+            {
+                useAdvancedMaterials = false;
+                shadowCasting = false;
+                glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
+                basic_material = Resources.Load<Material>("Materials/Basic");
+                glassMaterial = Resources.Load<Material>("Materials/Glass");
+                metal_material = Resources.Load<Material>("Materials/Metal");
+                green_material = Resources.Load<Material>("Materials/Green");
+                energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
+            }
+        }
+        if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
         if (useIlluminationSystem)
         {
             lightPoolMaterials = new Dictionary<LightPoolInfo, Material>();
             MAX_MATERIAL_LIGHT_DIVISIONS = QualitySettings.GetQualityLevel() == 0 ? (byte)8 : (byte)16;
         }
+
+        
+        var rrs = Component.FindObjectsOfType<Renderer>();
+        if (rrs != null && rrs.Length != 0) ReplaceMaterials(rrs, useAdvancedMaterials);
 
         //testzone
         //GameObject g = new GameObject("quad");
@@ -117,26 +147,57 @@ public sealed class PoolMaster : MonoBehaviour {
         //mr.sharedMaterial = basic_material;
         //SetMaterialByID(ref mf, ref mr, MATERIAL_GRASS_20_ID, 255);
         //g.transform.position += Vector3.up * 2;
-	}
-    public static void ReloadReplaceableMaterials(bool i_useAdvancedMaterials)
+    }
+
+    public static void ChangeQualityLevel (int newLevel)
     {
-        useAdvancedMaterials = i_useAdvancedMaterials;
-        shadowCasting = useAdvancedMaterials;
-        if (useAdvancedMaterials)
+        if (qualityLevel != newLevel)
         {
-            glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
-            basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
-            glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
-            metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
-            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-        }
-        else
-        {
-            glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
-            basic_material = Resources.Load<Material>("Materials/Basic");
-            glassMaterial = Resources.Load<Material>("Materials/Glass");
-            metal_material = Resources.Load<Material>("Materials/Metal");
-            green_material = Resources.Load<Material>("Materials/Green");
+            if (current != null)
+            {
+                if (qualityLevel == 0)
+                {
+                    current.buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
+                    current.lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
+                }
+                else
+                {
+                    if (qualityLevel != 0 & newLevel == 0)
+                    {
+                        Destroy(current.buildEmitter);
+                        Destroy(current.lifepowerEmitter);
+                    }
+                }                
+            }
+            if (newLevel == 2)
+            {
+                useAdvancedMaterials = true;
+                shadowCasting = true;
+                glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
+                basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
+                glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
+                metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
+                green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
+                energyMaterial = Resources.Load<Material>("Materials/Advanced/ChargedMaterial_advanced");
+            }
+            else
+            {
+                if (qualityLevel == 2)
+                {
+                    useAdvancedMaterials = false;
+                    shadowCasting = false;
+                    glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
+                    basic_material = Resources.Load<Material>("Materials/Basic");
+                    glassMaterial = Resources.Load<Material>("Materials/Glass");
+                    metal_material = Resources.Load<Material>("Materials/Metal");
+                    green_material = Resources.Load<Material>("Materials/Green");
+                    energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
+                }
+            }
+            if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
+            qualityLevel = newLevel;
+            var rrs = Component.FindObjectsOfType<Renderer>();
+            ReplaceMaterials(rrs, useAdvancedMaterials);
         }
     }
 
@@ -235,11 +296,13 @@ public sealed class PoolMaster : MonoBehaviour {
     }
     public void BuildSplash(Vector3 pos)
     {
+        if (qualityLevel == 0) return;
         buildEmitter.transform.position = pos;
         buildEmitter.Emit(12);
     }
     public void LifepowerSplash(Vector3 pos, int count)
     {
+        if (qualityLevel == 0) return;
         lifepowerEmitter.transform.position = pos;
         lifepowerEmitter.Emit(count);
     }
@@ -784,53 +847,65 @@ public sealed class PoolMaster : MonoBehaviour {
         foreach (Renderer mr in rrs)
         {
             bool castShadows = false, receiveShadows = false;
-            switch (mr.sharedMaterial.name)
+            if (mr.sharedMaterial != null)
             {
-                case "Basic":
-                case "Basic_PBR":
-                    mr.sharedMaterial = materials[0];
-                    castShadows = true;
-                    receiveShadows = true;
-                    break;
-                case "Glass":
-                case "Glass_PBR":
-                    mr.sharedMaterial = materials[1];
-                    castShadows = true;
-                    receiveShadows = true;
-                    break;
-                case "GlassOffline":
-                case "GlassOffline_PBR":
-                    mr.sharedMaterial = materials[2];
-                    castShadows = true;
-                    receiveShadows = true;
-                    break;
-                case "Vegetation":
-                case "Green":
-                case "Green_PBR":
-                    mr.sharedMaterial = materials[3];
-                    break;
-                case "Metal":
-                case "Metal_PBR":
-                    mr.sharedMaterial = materials[4];
-                    castShadows = true;
-                    receiveShadows = true;
-                    break;
-                case "Sailcloth":
-                    castShadows = true;
-                    receiveShadows = true;
-                    break;
-                case "BillboardMaterial":
-                case "ShadedBillboard":
-                    if (i_useAdvancedMaterials) mr.sharedMaterial = billboardShadedMaterial;
-                    else mr.sharedMaterial = billboardMaterial;
-                    castShadows = false;
-                    receiveShadows = true;
-                    break;
+                switch (mr.sharedMaterial.name)
+                {
+                    case "Basic":
+                    case "Basic_PBR":
+                        mr.sharedMaterial = materials[0];
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "Glass":
+                    case "Glass_PBR":
+                        mr.sharedMaterial = materials[1];
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "GlassOffline":
+                    case "GlassOffline_PBR":
+                        mr.sharedMaterial = materials[2];
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "Vegetation":
+                    case "Green":
+                    case "Green_PBR":
+                        mr.sharedMaterial = materials[3];
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "Metal":
+                    case "Metal_PBR":
+                        mr.sharedMaterial = materials[4];
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "Sailcloth":
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "BillboardMaterial":
+                    case "ShadedBillboard":
+                        if (i_useAdvancedMaterials) mr.sharedMaterial = billboardShadedMaterial;
+                        else mr.sharedMaterial = billboardMaterial;
+                        castShadows = true;
+                        receiveShadows = true;
+                        break;
+                    case "ChargedMaterial":
+                    case "ChargedMaterial_advanced":
+                        mr.sharedMaterial = energyMaterial;
+                        castShadows = true;
+                        receiveShadows = false;
+                        break;
+                }
             }
             if (shadowCasting)
             {
                 if (castShadows) mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                if (receiveShadows) mr.receiveShadows = true;
+                else mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                mr.receiveShadows = receiveShadows;
             }
             else
             {

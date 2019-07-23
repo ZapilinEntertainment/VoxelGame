@@ -117,7 +117,6 @@ public static class Localization
                     case Structure.REACTOR_BLOCK_5_ID: return "Блок реактора";
                     case Structure.FOUNDATION_BLOCK_5_ID: return "Блок основания";
                     case Structure.CONNECT_TOWER_6_ID: return "Башня Сообщения";
-                    case Structure.CONTROL_CENTER_6_ID: return "Контрольный центр";
                     case Structure.HOTEL_BLOCK_6_ID: return "Блок отеля";
                     case Structure.HOUSING_MAST_6_ID: return "Жилой шпиль";
                     case Structure.DOCK_ADDON_1_ID: return "Пристройка дока - 1";
@@ -189,7 +188,6 @@ public static class Localization
                     case Structure.REACTOR_BLOCK_5_ID: return "Reactor block";
                     case Structure.FOUNDATION_BLOCK_5_ID: return "Foundation block";
                     case Structure.CONNECT_TOWER_6_ID: return "Connect Tower";
-                    case Structure.CONTROL_CENTER_6_ID: return "Control center";
                     case Structure.HOTEL_BLOCK_6_ID: return "Hotel block";
                     case Structure.HOUSING_MAST_6_ID: return "Housing spire";
                     case Structure.DOCK_ADDON_1_ID: return "Dock addon 1";
@@ -269,7 +267,7 @@ public static class Localization
                     case Structure.GRPH_ENRICHER_3_ID: return "Обогащает N-метал до Графония.";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Конденсирует лишнюю энергию в кристаллы. Может быть построен только одно такое здание!";
                     case Structure.SWITCH_TOWER_ID: return "При выделении включает срез слоя, на котором находится.";
-                    case Structure.SHUTTLE_HANGAR_4_ID: return "Вмещает и обслуживает один челнок.";
+                    case Structure.SHUTTLE_HANGAR_4_ID: return "Вмещает и обслуживает один челнок. Для корректной работы должен иметь свободный коридор до конца карты шириной в 1 блок.";
                     case Structure.RECRUITING_CENTER_4_ID: return "Набирает и подготавливает команды исследователей из добровольцев.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Центр управления миссиями. Может быть построено только одно такое здание.";
                     case Structure.QUANTUM_TRANSMITTER_4_ID: return "Обеспечивает связь с экспедициями за пределами острова.";
@@ -277,9 +275,8 @@ public static class Localization
                     case Structure.DOCK_ADDON_1_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 3.";
                     case Structure.HOTEL_BLOCK_6_ID:
-                    case Structure.CONTROL_CENTER_6_ID:
-                    case Structure.CONNECT_TOWER_6_ID:
-                    case Structure.XSTATION_3_ID: return "<В разработке>";
+                    case Structure.CONNECT_TOWER_6_ID: return "<В разработке>";
+                    case Structure.XSTATION_3_ID: return "Собирает информацию об окружающей среде, измеряет уровень Стабильности, предсказывает надвигающиеся угрозы.";
                     case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена на максимальной высоте. В радиусе одного блока не должно быть других блоков и поверхностей. /n Может быть построена только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
@@ -351,7 +348,7 @@ public static class Localization
                     case Structure.GRPH_ENRICHER_3_ID: return "Transform N-metal into Graphonium.";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Transform energy excess in energy crystals. It can be only one building of this type!";
                     case Structure.SWITCH_TOWER_ID: return "Being selected activates layer cut on its own height.";
-                    case Structure.SHUTTLE_HANGAR_4_ID: return "Base and maintain one shuttle.";
+                    case Structure.SHUTTLE_HANGAR_4_ID: return "Base and maintain one shuttle. Hangar needs one-block wide flight corridor to the edge of the map to work properly";
                     case Structure.RECRUITING_CENTER_4_ID: return "Recruit and train exploring teams from volunteers.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Control missions activities.";
                     case Structure.QUANTUM_TRANSMITTER_4_ID: return "Provide connection with expeditions outside the island.";
@@ -359,9 +356,8 @@ public static class Localization
                     case Structure.DOCK_ADDON_1_ID: return "Build it next to dock to up it to level 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Build it next to dock to up it to level 3.";
                     case Structure.HOTEL_BLOCK_6_ID:
-                    case Structure.CONTROL_CENTER_6_ID:
-                    case Structure.CONNECT_TOWER_6_ID:
-                    case Structure.XSTATION_3_ID: return "<In development>";
+                    case Structure.CONNECT_TOWER_6_ID: return "<In development>";
+                    case Structure.XSTATION_3_ID: return "Gathering environmental intelligence< measures Stability level, predicting threats.";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. /n Only one observatory can be built.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Give access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
@@ -2773,7 +2769,7 @@ public static class Localization
                     "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (добавил адаптированную кириллицу). \n" +
                     "\n" +
                     "\n" +
-                    "Вы можете поддержать мои разработки, купив сюжетные дополнения к Limited Worlds или сделав пожертвование на один из следующих кошельков: \n" +
+                    "Вы можете поддержать мои разработки, купив сюжетные дополнения к Limited Worlds (в недалеком будущем) или сделав пожертвование на один из следующих кошельков: \n" +
                     "\nЯндекс кошелёк: 410 0155 8473 6426\n" +
                     "Paypal: paypal.me/mahariusls\n" +
                     "Не забудьте приложить к дотации комментарий :)";
@@ -2789,7 +2785,7 @@ public static class Localization
                     "Used font \"neuropolitical rg\" by Typodermic Fonts Inc. \n" +
                     "\n" +
                     "\n" +
-                    "You can support my development by buying storyline addons for Limited Worlds or making a donation to one of this accounts: \n" +
+                    "You can support my development by buying storyline addons for Limited Worlds (not released yet) or making a donation to one of this accounts: \n" +
                     "\nYandex money: 410 0155 8473 6426\n" +
                     "Paypal: paypal.me/mahariusls\n" +
                     "Don't forget to leave your commentary to the transaction :)";
@@ -2932,7 +2928,7 @@ public static class Localization
                                 case EndgameQuestID.Endgame_TransportHub_step2:
                                     q.name = "Создание транспортного узла - шаг 2";
                                     q.description = "Для управления транспортным узлом потребуются соответствующие службы и оборудование. Постройте Контрольный центр и Башню Сообщения.";
-                                    q.steps[0] = GetStructureName(Structure.CONTROL_CENTER_6_ID) + " построен ";
+                                    //q.steps[0] = GetStructureName(Structure.CONTROL_CENTER_6_ID) + " построен ";
                                     q.steps[1] = GetStructureName(Structure.CONNECT_TOWER_6_ID) + " построена ";
                                     break;
                                 case EndgameQuestID.Endgame_TransportHub_step3:

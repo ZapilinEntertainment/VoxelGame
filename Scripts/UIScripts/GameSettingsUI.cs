@@ -50,19 +50,7 @@ public sealed class GameSettingsUI : MonoBehaviour
     public void Options_ApplyGraphicsChange()
     {
         QualitySettings.SetQualityLevel(qualityDropdown.value);
-        if (qualityDropdown.value == 2)
-        {
-            PoolMaster.ReloadReplaceableMaterials(true);
-            PoolMaster.ReplaceMaterials(Component.FindObjectsOfType<MeshRenderer>(), true);
-            GameMaster.realMaster.mainChunk.SetShadowCastingMode(true);
-        }
-        else
-        {
-            PoolMaster.ReloadReplaceableMaterials(false);
-            PoolMaster.ReplaceMaterials(Component.FindObjectsOfType<MeshRenderer>(), false);
-            GameMaster.realMaster.mainChunk.SetShadowCastingMode(false);
-        }
-        
+        PoolMaster.ChangeQualityLevel(qualityDropdown.value);
         graphicsApplyButton.SetActive(false); // apply button
     }
     public void TouchSwitch()

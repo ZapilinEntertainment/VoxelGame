@@ -14,7 +14,7 @@ public sealed class MonumentPillarRotator : MonoBehaviour
     private void Update()
     {
         var it = Time.deltaTime * GameMaster.gameSpeed;        
-        transform.Rotate(Vector3.forward * it * 3f, Space.Self);
+        transform.Rotate(Vector3.up * it * 3f, Space.Self);
         transform.localPosition = startPos + Vector3.up * Mathf.Sin(Time.time) * 0.002f;
     }
 }

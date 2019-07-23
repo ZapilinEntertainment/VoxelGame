@@ -483,12 +483,13 @@ public class Quest
                     case EndgameQuestID.Endgame_TransportHub_step2:
                         {
                             byte conditionsMet = 0;
-                            if (ControlCenter.current != null)
+                            //if (ControlCenter.current != null)
                             {
                                 stepsFinished[0] = true;
                                 conditionsMet++;
                             }
-                            else stepsFinished[0] = false;
+                           // else stepsFinished[0] = false;
+
                             if (ConnectTower.current != null)
                             {
                                 stepsFinished[1] = true;

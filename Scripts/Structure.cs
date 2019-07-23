@@ -23,7 +23,7 @@ public class Structure : MonoBehaviour
     //проверь при добавлении
     //- ID
     // - get structure by id
-    // -set model - загрузка модели
+    // -set model - загрузка модели, проверить разделение модели по материалам
     // -prepare - установка inner position - по всем классам
     // - localization - name & description
     // - texture rect
@@ -42,9 +42,9 @@ public class Structure : MonoBehaviour
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
-        CONTROL_CENTER_6_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
+         HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 34,37,39,40,44, 58, 59
+    //free ids 34,37,39,40,44, 58, 59, 69
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
@@ -143,8 +143,7 @@ public class Structure : MonoBehaviour
             case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;
             case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;
             case FOUNDATION_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foundationBlock")); break;
-            case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;
-            case CONTROL_CENTER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/controlCenter")); break;
+            case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
@@ -275,8 +274,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Foundation block").AddComponent<Building>(); break;
             case CONNECT_TOWER_6_ID:
                 s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break;
-            case CONTROL_CENTER_6_ID:
-                s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
+           // case CONTROL_CENTER_6_ID:
+               // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
             case HOTEL_BLOCK_6_ID:
                 s = new GameObject("Hotel block").AddComponent<House>(); break; // AWAITING
             case HOUSING_MAST_6_ID:
@@ -669,7 +668,7 @@ public class Structure : MonoBehaviour
                     maxHp = 1200;
                     surfaceRect = new SurfaceRect(0, 0, 10);
                     placeInCenter = true;
-                    rotate90only = true;
+                    rotate90only = false;
                     isArtificial = true;
                     isBasement = false;
                 }
@@ -894,16 +893,6 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                 }
                 break;
-            case CONTROL_CENTER_6_ID:
-                {
-                    maxHp = 5000;
-                    surfaceRect = SurfaceRect.full;
-                    placeInCenter = true;
-                    rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
-                }
-                break;
             case HOTEL_BLOCK_6_ID:
                 {
                     maxHp = 2700;
@@ -1082,7 +1071,6 @@ public class Structure : MonoBehaviour
             case REACTOR_BLOCK_5_ID: return new Rect(3 * p, 3 * p, p, p);
             case FOUNDATION_BLOCK_5_ID: return new Rect(4 * p, 3 * p, p, p);
             case CONNECT_TOWER_6_ID: return new Rect(5 * p, 3 * p, p, p);
-            case CONTROL_CENTER_6_ID: return new Rect(6 * p, 3 * p, p, p);
             case HOTEL_BLOCK_6_ID: return new Rect(7 * p, 3 * p, p, p);
             case HOUSING_MAST_6_ID: return new Rect(0, 2 * p, p, p);
             case DOCK_ADDON_1_ID:

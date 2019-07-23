@@ -671,7 +671,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     case Structure.CONNECT_TOWER_6_ID:
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.HOUSING_MAST_6_ID:
-                    case Structure.CONTROL_CENTER_6_ID:
+                    //case Structure.CONTROL_CENTER_6_ID:
                         if (mid != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                         {
                             acceptable = false;

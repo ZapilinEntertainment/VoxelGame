@@ -63,14 +63,14 @@ public class Building : Structure
             case 4:
                 blist.Add(GetStructureByID(FARM_4_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_4_ID) as Building);
-                blist.Add(GetStructureByID(SUPPLIES_FACTORY_4_ID) as Building);
+                //blist.Add(GetStructureByID(SUPPLIES_FACTORY_4_ID) as Building);
                 blist.Add(GetStructureByID(GRPH_REACTOR_4_ID) as Building);
                 blist.Add(GetStructureByID(SHUTTLE_HANGAR_4_ID) as Building);
                 blist.Add(GetStructureByID(RECRUITING_CENTER_4_ID) as Building);
                 blist.Add(GetStructureByID(EXPEDITION_CORPUS_4_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
-                blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
+                //blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
                 blist.Add(GetStructureByID(FUEL_FACILITY_ID) as Building);
                 break;
             case 5:
@@ -78,7 +78,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(FARM_5_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
-                blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
+                //blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);
                 blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
@@ -92,8 +92,7 @@ public class Building : Structure
                     if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
                         blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
                 }
-                blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
-                blist.Add(GetStructureByID(CONTROL_CENTER_6_ID) as Building);
+                //blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
                 //blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
@@ -174,8 +173,6 @@ public class Building : Structure
             case OBSERVATORY_ID:
             case REACTOR_BLOCK_5_ID: return 200f;
 
-            case CONTROL_CENTER_6_ID: return 240f;
-
             case HOTEL_BLOCK_6_ID: return 300f;
 
             case MONUMENT_ID: return 800f;
@@ -228,7 +225,6 @@ public class Building : Structure
             case ARTIFACTS_REPOSITORY_ID: return -16f;
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_ID: return -20f;
-            case CONTROL_CENTER_6_ID: return -40f;
             case OBSERVATORY_ID: return -50f;
             case CONNECT_TOWER_6_ID: return -64f;
             case HOTEL_BLOCK_6_ID:
@@ -568,13 +564,6 @@ public class Building : Structure
                 }
                 break;
             case CONNECT_TOWER_6_ID:
-                {
-                    specialBuildingConditions = true;
-                    canBePowerSwitched = true;
-                    level = 6;
-                }
-                break;
-            case CONTROL_CENTER_6_ID:
                 {
                     specialBuildingConditions = true;
                     canBePowerSwitched = true;

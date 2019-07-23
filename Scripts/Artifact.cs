@@ -407,9 +407,13 @@ public sealed class Artifact {
 
     public static Rect GetAffectionIconRect(AffectionType atype)
     {
+        float p = 0.5f;
         switch (atype)
         {
-            default: return Rect.zero;
+            case AffectionType.LifepowerAffection: return new Rect(p, 0f, p, p);
+            case AffectionType.StabilityAffection: return new Rect(0f, p, p, p);
+            case AffectionType.SpaceAffection: return new Rect(p, p, p, p);
+            default: return new Rect(0f,0f, p,p);
         }
     }
 

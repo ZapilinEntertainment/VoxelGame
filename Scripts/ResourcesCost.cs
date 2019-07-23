@@ -305,13 +305,7 @@
                 new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.metal_S, 300),
                 new ResourceContainer(ResourceType.metal_N, 20), new ResourceContainer(ResourceType.metal_E, 100)
             };
-                break;
-            case Structure.CONTROL_CENTER_6_ID:
-                cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
-                new ResourceContainer(ResourceType.metal_E, 50),
-            };
-                break;
+                break;        
             case Structure.HOTEL_BLOCK_6_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 600), new ResourceContainer(ResourceType.metal_K, 325), new ResourceContainer(ResourceType.metal_E, 80),
@@ -391,6 +385,12 @@
             };
                     break;
                 }
+                //case Structure.CONTROL_CENTER_6_ID:
+                // cost = new ResourceContainer[]{
+                //  new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
+                // new ResourceContainer(ResourceType.metal_E, 50),
+                //};
+                // break;
         }
         return cost;
     }

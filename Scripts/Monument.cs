@@ -7,6 +7,7 @@ public sealed class Monument : Building
     public Artifact.AffectionType affectionType { get; private set; }
     public float affectionValue { get; private set; }
     private bool ringEnabled = false;
+    private int stabilityArrayIndex = -1;
     private Transform ringSprite;
 
     private static UIMonumentObserver monumentObserver;
@@ -37,7 +38,7 @@ public sealed class Monument : Building
         {
             RecalculateAffection();          
         }
-        b.myChunk.BlockByStructure(b.pos.x, b.pos.y + 1, b.pos.z, this);        
+        b.myChunk.BlockByStructure(b.pos.x, b.pos.y + 1, b.pos.z, this);    
     }
 
     public void AddArtifact(Artifact a, int slotIndex)
@@ -105,6 +106,14 @@ public sealed class Monument : Building
                 affectionValue = af / count;
                 ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionType);
                 ringEnabled = true;
+                if (stabilityArrayIndex == -1)
+                {
+                    if (affectionValue != 0) stabilityArrayIndex = GameMaster.realMaster.AddStabilityModifier(affectionValue);
+                }
+                else
+                {
+                    GameMaster.realMaster.ChangeStabilityModifierValue(stabilityArrayIndex, affectionValue);
+                }
             }
             else
             {
@@ -112,6 +121,11 @@ public sealed class Monument : Building
                 affectionType = Artifact.AffectionType.NoAffection;
                 ringSprite.GetComponent<SpriteRenderer>().sprite = null;
                 ringEnabled = false;
+                if (stabilityArrayIndex != -1)
+                {
+                    GameMaster.realMaster.RemoveStabilityModifier(stabilityArrayIndex);
+                    stabilityArrayIndex = -1;
+                }
             }
         }
     }

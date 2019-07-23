@@ -107,9 +107,9 @@ public class Block {
         if (pos.y == Chunk.CHUNK_SIZE - 1) myChunk.DeleteRoof(pos.x, pos.z);
         if (decorations != null && decorations.Count > 0)
         {
-            while (decorations.Count > 0)
+            foreach (GameObject g in decorations)
             {
-                MonoBehaviour.Destroy(decorations[0]);
+                MonoBehaviour.Destroy(g);
             }
         }
     }

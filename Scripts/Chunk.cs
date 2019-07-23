@@ -1934,7 +1934,7 @@ public sealed class Chunk : MonoBehaviour
                         {
                             for (int z = zStart; z < CHUNK_SIZE; z++)
                             {
-                                if (GetBlock(x, y, z) != null) return false;
+                                if (blocks.ContainsKey(new ChunkPos(x,y,z))) return false;
                             }
                         }
                     }
@@ -1943,7 +1943,7 @@ public sealed class Chunk : MonoBehaviour
                 {
                     for (int z = zStart; z < CHUNK_SIZE; z++)
                     {
-                        if (GetBlock(startPoint.x, startPoint.y, z) != null) return false;
+                        if (blocks.ContainsKey(new ChunkPos(startPoint.x, startPoint.y, z))) return false;
                     }
                 }
                 break;
@@ -1956,7 +1956,7 @@ public sealed class Chunk : MonoBehaviour
                         {
                             for (int z = zStart; z < zEnd; z++)
                             {
-                                if (GetBlock(x, y, z) != null) return false;
+                                if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                             }
                         }
                     }
@@ -1965,7 +1965,7 @@ public sealed class Chunk : MonoBehaviour
                 {
                     for (int x = xStart; x < CHUNK_SIZE; x++)
                     {
-                        if (GetBlock(x, startPoint.y, startPoint.z) != null) return false;
+                        if (blocks.ContainsKey(new ChunkPos(x, startPoint.y, startPoint.z))) return false;
                     }
                 }
                 break;
@@ -1978,7 +1978,7 @@ public sealed class Chunk : MonoBehaviour
                         {
                             for (int z = zStart; z >= 0; z--)
                             {
-                                if (GetBlock(x, y, z) != null) return false;
+                                if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                             }
                         }
                     }
@@ -1987,7 +1987,7 @@ public sealed class Chunk : MonoBehaviour
                 {
                     for (int z = zStart; z >= 0; z--)
                     {
-                        if (GetBlock(startPoint.x, startPoint.y, z) != null) return false;
+                        if (blocks.ContainsKey(new ChunkPos(startPoint.x, startPoint.y, z))) return false;
                     }
                 }
                 break;
@@ -2000,7 +2000,7 @@ public sealed class Chunk : MonoBehaviour
                         {
                             for (int z = zStart; z < zEnd; z++)
                             {
-                                if (GetBlock(x, y, z) != null) return false;
+                                if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                             }
                         }
                     }
@@ -2009,7 +2009,7 @@ public sealed class Chunk : MonoBehaviour
                 {
                     for (int x = xStart; x >= 0; x--)
                     {
-                        if (GetBlock(x, startPoint.y, startPoint.z) != null) return false;
+                        if (blocks.ContainsKey(new ChunkPos(x, startPoint.y, startPoint.z))) return false;
                     }
                 }
                 break;
@@ -2143,7 +2143,8 @@ public sealed class Chunk : MonoBehaviour
             {
                 if (clearMainStructureField) b.ResetMainStructure();
                 // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
-                b.Annihilate();
+                blocks.Remove(b.pos);
+                b.Annihilate();                
                 actions = true;
             }
         }

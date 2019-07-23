@@ -73,7 +73,7 @@
         structuresCost[Structure.SHUTTLE_HANGAR_4_ID] = val * 40;
         structuresCost[Structure.RECRUITING_CENTER_4_ID] = val * 45;
         structuresCost[Structure.EXPEDITION_CORPUS_4_ID] = val * 48;
-        structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
+        //structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
         structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;      
 
