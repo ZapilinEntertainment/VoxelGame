@@ -350,13 +350,13 @@ public sealed class GlobalMap : MonoBehaviour
         {
             if (GameMaster.realMaster.colonyController != null)
             {
-                float s = GameMaster.realMaster.stability;
-                if (s > 1f) s = 1f;
-                if (cpoint.height != s)
-                {
-                    cpoint.height = 1f - s;
-                    cpoint.ringIndex = DefineRing(s);
-                }
+                //float s = GameMaster.realMaster.stability;
+                //if (s > 1f) s = 1f;
+                //if (cpoint.height != s)
+                //{
+                //    cpoint.height = 1f - s;
+                //    cpoint.ringIndex = DefineRing(s);
+                //}
             }
             int i = 0;
             while (i < mapPoints.Count)

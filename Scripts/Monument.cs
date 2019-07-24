@@ -6,7 +6,7 @@ public sealed class Monument : Building
     public Artifact[] artifacts { get; private set; }
     public Artifact.AffectionType affectionType { get; private set; }
     public float affectionValue { get; private set; }
-    private bool ringEnabled = false;
+    private bool ringEnabled = false, subscribedToRestoreBlockersEvent = false;
     private int stabilityArrayIndex = -1;
     private Transform ringSprite;
 
@@ -38,7 +38,24 @@ public sealed class Monument : Building
         {
             RecalculateAffection();          
         }
-        b.myChunk.BlockByStructure(b.pos.x, b.pos.y + 1, b.pos.z, this);    
+        if (!GameMaster.loading ) b.myChunk.BlockByStructure(b.pos.x, b.pos.y + 1, b.pos.z, this); 
+        else
+        {
+            if (!subscribedToRestoreBlockersEvent)
+            {
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersEvent = true;
+            }
+        }
+    }
+    public void RestoreBlockers()
+    {
+        if (subscribedToRestoreBlockersEvent)
+        {
+            basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
     }
 
     public void AddArtifact(Artifact a, int slotIndex)
@@ -132,7 +149,7 @@ public sealed class Monument : Building
 
     private void Update()
     {
-        if (ringEnabled) ringSprite.Rotate(Vector3.forward, affectionValue * 2f * GameMaster.gameSpeed * Time.deltaTime);
+        if (ringEnabled) ringSprite.Rotate(Vector3.forward, affectionValue * 3f * GameMaster.gameSpeed * Time.deltaTime);
     }
 
     override public void SetActivationStatus(bool x, bool recalculateAfter)
@@ -220,6 +237,11 @@ public sealed class Monument : Building
             }
         }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (subscribedToRestoreBlockersEvent)
+        {
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
         Destroy(gameObject);
     }
 

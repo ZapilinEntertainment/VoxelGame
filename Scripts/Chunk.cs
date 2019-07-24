@@ -1802,7 +1802,7 @@ public sealed class Chunk : MonoBehaviour
 
 
     public bool BlockByStructure(int x, int y, int z, Structure s)
-    {
+    {        
         if ((x >= CHUNK_SIZE | x < 0) || (y >= CHUNK_SIZE | y < 0) || (z >= CHUNK_SIZE | z < 0) | (s == null)) return false;
         Block b = GetBlock(x, y, z);
         if (b != null)
@@ -1821,7 +1821,6 @@ public sealed class Chunk : MonoBehaviour
             return true;
         }
     }
-
     public void BlockRegion(List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
     {
         foreach (ChunkPos pos in positions)
@@ -2591,17 +2590,17 @@ public sealed class Chunk : MonoBehaviour
         foreach (var block in blocks)
         {
             Block b = block.Value;
-            if (b == null || b.type == BlockType.Shapeless) continue;
-            else
-            {
-                saveableBlocks.Add(b);
-            }
+            if (b != null && b.type != BlockType.Shapeless) saveableBlocks.Add(b);
+            else continue;
         }
         int count = saveableBlocks.Count;
         fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         if (count > 0)
         {
-            foreach (Block b in saveableBlocks) b.Save(fs);
+            foreach (Block b in saveableBlocks)
+            {
+                b.Save(fs);
+            }
         }
 
         fs.Write(System.BitConverter.GetBytes(lifePower), 0, 4);
@@ -2637,7 +2636,7 @@ public sealed class Chunk : MonoBehaviour
 
     public void LoadChunkData(System.IO.FileStream fs)
     {
-        if (blocks != null) ClearChunk();        
+        if (blocks != null) ClearChunk();   
         CHUNK_SIZE = (byte)fs.ReadByte();
         Prepare();
 
@@ -2656,19 +2655,19 @@ public sealed class Chunk : MonoBehaviour
             {
                 if (GameMaster.loadingFailed)
                 {
-                    print("loading failed");
                     Destroy(this);
                     return;
                 }
                 fs.Read(data, 0, data.Length);
                 type = (BlockType)data[0];
                 pos = new ChunkPos(data[1], data[2], data[3]);
+                
                 materialID = System.BitConverter.ToInt32(data, 4);
                 switch (type)
                 {
                     case BlockType.Cube:
                         {
-                            CubeBlock cb =new CubeBlock(this, pos, materialID, false);
+                            CubeBlock cb = new CubeBlock(this, pos, materialID, false);
                             blocks.Add(pos, cb);
                             cb.LoadCubeBlockData(fs);
                             loadedBlocks[i] = cb;
@@ -2695,6 +2694,14 @@ public sealed class Chunk : MonoBehaviour
                             surfaceBlocks.Add(cvb);
                             break;
                         }
+                    case BlockType.Shapeless:
+                        {
+                            print("shapeless block wrote - save corrupted");
+                            pos = new ChunkPos(data[1], data[2], data[3]);
+                            print(pos);
+                            GameMaster.loadingFailed = true;
+                            return;
+                        }
 
                     default: continue;
                 }
@@ -2703,7 +2710,7 @@ public sealed class Chunk : MonoBehaviour
             foreach (Block b in loadedBlocks) {
                 if (b == null & !corruptedData)
                 {
-                    Debug.Log("corrupted data");
+                    Debug.Log("chunkload - corrupted data");
                     corruptedData = true;
                     return;
                 }                

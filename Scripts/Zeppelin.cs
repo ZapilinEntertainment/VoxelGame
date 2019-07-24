@@ -36,13 +36,12 @@ public sealed class Zeppelin : MonoBehaviour {
 
         landingMarkObject = Instantiate(Resources.Load<GameObject>("Prefs/LandingX")) as GameObject;
         landingMarkObject.SetActive(false);
-
-        UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(Click);
         lineDrawer = GetComponent<LineRenderer>();
 
         if (current != null) Destroy(current);
         current = this;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(gameObject, true);
+        UIController.current.BindLandButton(this);
     }
 
 	void Update() {
@@ -83,7 +82,7 @@ public sealed class Zeppelin : MonoBehaviour {
         }
     }
 
-    public void Click()
+    public void LandButtonClicked()
     {
         if (landPointSet | destroyed) return;
         RaycastHit rh;
@@ -179,9 +178,7 @@ public sealed class Zeppelin : MonoBehaviour {
                     }
                     if (landingSurface == null)
                     {
-                        lineDrawer.enabled = false;
-                        UIController.current.DeactivateLandButton();
-                        landingMarkObject.SetActive(false);                        
+                        DropSelectedSurface();                      
                         return;
                     }
                     DRAW_LINE:
@@ -214,8 +211,14 @@ public sealed class Zeppelin : MonoBehaviour {
             }
         }
     }
+    public void DropSelectedSurface()
+    {
+        lineDrawer.enabled = false;
+        UIController.current.DeactivateLandButton();
+        landingMarkObject.SetActive(false);
+    }
 
-    public void Land()
+    public void LandActionAccepted()
     {
         if (!landPointSet & !destroyed)
         {
@@ -232,10 +235,10 @@ public sealed class Zeppelin : MonoBehaviour {
                 Destroy(landingMarkObject);
                 destructionTimer = 3;
                 UIController.current.DeactivateLandButton();
+                UIController.current.UnbindLandButton(this);
             }
         }
     }
-
     private void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;
@@ -243,7 +246,8 @@ public sealed class Zeppelin : MonoBehaviour {
         {
             if (UIController.current != null)
             {
-                UIController.current.mainCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.RemoveListener(Click);
+                UIController.current.UnbindLandButton(this);
+                UIController.current.DeactivateLandButton();
             }
         }
     }

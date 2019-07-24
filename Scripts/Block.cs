@@ -124,7 +124,7 @@ public class Block {
     }
     protected void SaveBlockData(System.IO.FileStream fs)
     {
-        fs.WriteByte((byte)type);
+        fs.WriteByte((byte)type);        
         fs.WriteByte(pos.x);
         fs.WriteByte(pos.y);
         fs.WriteByte(pos.z);

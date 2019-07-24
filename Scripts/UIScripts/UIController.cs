@@ -91,7 +91,10 @@ sealed public class UIController : MonoBehaviour
         mainCanvas = transform.GetChild(1);
         activeFastButtons = new List<int>();
 
-        if (landingButton.activeSelf) landingButton.SetActive(false);
+        if (landingButton.activeSelf)
+        {
+            landingButton.SetActive(false);
+        }
         if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.GetChild(1));
         if (!localized) LocalizeTitles();
     }
@@ -810,6 +813,11 @@ sealed public class UIController : MonoBehaviour
                 if (leftPanel.activeSelf) leftPanel.SetActive(false);                
                 if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
                 if (showColonyInfo) ColonyButton();
+                if (landingButton.activeSelf)
+                {
+                    if (Zeppelin.current != null) Zeppelin.current.DropSelectedSurface();
+                    else landingButton.SetActive(false);
+                }
                 GameLogUI.ChangeVisibility(false);
 
                 menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
@@ -1352,8 +1360,7 @@ sealed public class UIController : MonoBehaviour
                     break;
                 case MenuSection.Options:
                     menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    optionsPanel.SetActive(false);
-                    if (Zeppelin.current != null && Zeppelin.current.landingSurface != null) landingButton.SetActive(true);
+                    optionsPanel.SetActive(false);                    
                     break;
             }
             selectedMenuSection = ms;
@@ -1364,6 +1371,9 @@ sealed public class UIController : MonoBehaviour
                 case MenuSection.Options:
                     menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
                     landingButton.SetActive(false);
+                    break;
+                case MenuSection.NoSelection:
+                    if (Zeppelin.current != null && Zeppelin.current.landingSurface != null) landingButton.SetActive(true);
                     break;
             }
         }
@@ -1581,9 +1591,17 @@ sealed public class UIController : MonoBehaviour
     }
     #endregion
 
+    public void BindLandButton(Zeppelin z)
+    {
+        mainCanvas.GetChild(0).GetComponent<Button>().onClick.AddListener(z.LandButtonClicked); // touchzone
+    }
+    public void UnbindLandButton(Zeppelin z)
+    {
+        mainCanvas.GetChild(0).GetComponent<Button>().onClick.RemoveListener(z.LandButtonClicked); // touchzone
+    }
     public void ActivateLandButton()
     {
-        if (!landingButton.activeSelf) landingButton.SetActive(true);
+        if (!landingButton.activeSelf) landingButton.SetActive(true);        
     }
     public void DeactivateLandButton()
     {
@@ -1593,7 +1611,7 @@ sealed public class UIController : MonoBehaviour
     {
         if (Zeppelin.current != null)
         {
-            Zeppelin.current.Land();
+            Zeppelin.current.LandActionAccepted();
         }
     }
 

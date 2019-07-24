@@ -10,6 +10,7 @@ public sealed class Hangar : WorkBuilding
     public bool constructing { get; private set; }
     public bool correctLocation { get; private set; }
     public static UIHangarObserver hangarObserver;
+    private bool subscribedToRestoreBlockersEvent = false;
     private List<Block> dependentBlocksList;
 
     public const float BUILD_SHUTTLE_WORKFLOW = 12000;
@@ -138,10 +139,27 @@ public sealed class Hangar : WorkBuilding
                     }
                 }
             }
-        }
+        }       
         SetWorkbuildingData(b, pos);
-        CheckPositionCorrectness();
+        if (!GameMaster.loading) CheckPositionCorrectness();
+        else
+        {
+            if (!subscribedToRestoreBlockersEvent)
+            {
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersEvent = true;
+            }
+        }
         if (!hangarsList.Contains(this)) hangarsList.Add(this);
+    }
+    public void RestoreBlockers()
+    {
+        if (subscribedToRestoreBlockersEvent)
+        {
+            CheckPositionCorrectness();
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
     }
 
     private void CheckPositionCorrectness()
@@ -380,6 +398,11 @@ public sealed class Hangar : WorkBuilding
         if (shuttle != null) shuttle.Deconstruct();
 
         if (hangarsList.Count == 0 & hangarObserver != null) Destroy(hangarObserver);
+        if (subscribedToRestoreBlockersEvent)
+        {
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
         Destroy(gameObject);
     }
 

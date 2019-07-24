@@ -4,7 +4,7 @@ using UnityEngine;
 
 public sealed class HeadQuarters : Building
 {
-    private bool nextStageConditionMet = false;
+    private bool nextStageConditionMet = false, subscribedToRestoreBlockersEvent = false;
     private ColonyController colony;
 
     public static Structure GetHQ(byte i_level)
@@ -61,10 +61,34 @@ public sealed class HeadQuarters : Building
         maxHp = 1000 * level;
         hp = maxHp;
 
-        if (level > 3)
+        if (level > 3 )
         {
-            basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
-            if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+            if (!GameMaster.loading)
+            {
+                basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
+                if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+            }
+            else
+            {
+                if (!subscribedToRestoreBlockersEvent)
+                {                    
+                    GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                    subscribedToRestoreBlockersEvent = true;
+                }
+            }
+        }
+    }
+    public void RestoreBlockers()
+    {
+        if (subscribedToRestoreBlockersEvent)
+        {
+            if (level > 3)
+            {
+                basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
+                if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+            }
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
         }
     }
 
@@ -219,6 +243,11 @@ public sealed class HeadQuarters : Building
         else destroyed = true;
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         // removed colony.RemoveHousing because of dropping hq field
+        if (subscribedToRestoreBlockersEvent)
+        {
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
         Destroy(gameObject);
     }
 

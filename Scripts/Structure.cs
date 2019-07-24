@@ -1341,7 +1341,7 @@ public class Structure : MonoBehaviour
                     }
                     else
                     {
-                        print("error, desu: id " + debug_prevID.ToString() + " data corrupted");
+                        print("error, desu: structure at position " + i.ToString() + ", id " + id.ToString() + " data corrupted");
                         GameMaster.LoadingFail();
                         return;
                     }

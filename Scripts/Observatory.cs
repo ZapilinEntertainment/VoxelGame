@@ -5,7 +5,7 @@ using UnityEngine;
 public class Observatory : WorkBuilding {
     public static bool alreadyBuilt = false;
     public const float SEARCH_WORKFLOW = 250, CHANCE_TO_FIND = 0.3f;
-    private bool mapOpened = false;    
+    private bool mapOpened = false, subscribedToRestoreBlockersUpdate = false;    
     private List<Block> blockedBlocks;
 
     static Observatory()
@@ -41,19 +41,44 @@ public class Observatory : WorkBuilding {
             indestructible = true;
             chunk.DeleteBlock(lowerBlock.pos);
             indestructible = false;
-        }        
-        List<ChunkPos> positionsList = new List<ChunkPos>();
-        int x = b.pos.x, z = b.pos.z, y = b.pos.y;
-        positionsList = new List<ChunkPos>()
+        }
+        if (!GameMaster.loading)
         {
-            new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
-            new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
-            new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
-        };
-        blockedBlocks = new List<Block>();
-        chunk.BlockRegion(positionsList, this, ref blockedBlocks);
+            List<ChunkPos> positionsList = new List<ChunkPos>();
+            int x = b.pos.x, z = b.pos.z, y = b.pos.y;
+            positionsList = new List<ChunkPos>()
+            {
+                new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
+                new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
+                new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
+            };
+            blockedBlocks = new List<Block>();
+            chunk.BlockRegion(positionsList, this, ref blockedBlocks);
+        }
+        else {
+            if (!subscribedToRestoreBlockersUpdate)
+            {
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersUpdate = true;
+            }
+        }
         UIController.current.AddFastButton(this);
         alreadyBuilt = true;
+    }
+    public void RestoreBlockers()
+    {
+        List<ChunkPos> positionsList = new List<ChunkPos>();
+        int x = basement.pos.x, z = basement.pos.z, y = basement.pos.y;
+        positionsList = new List<ChunkPos>()
+            {
+                new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
+                new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
+                new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
+            };
+        blockedBlocks = new List<Block>();
+        basement.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
+        GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+        subscribedToRestoreBlockersUpdate = false;
     }
 
     protected override void LabourResult()
@@ -92,6 +117,11 @@ public class Observatory : WorkBuilding {
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
+        }
+        if (subscribedToRestoreBlockersUpdate)
+        {
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersUpdate = false;
         }
         UIController.current.RemoveFastButton(this);
         alreadyBuilt = false;

@@ -67,7 +67,7 @@ public sealed class GameMaster : MonoBehaviour
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
     public delegate void StructureUpdateHandler();
-    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent;
+    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent, blockersRestoreEvent;
     public GameStart startGameWith = GameStart.Zeppelin;
 
     public float lifeGrowCoefficient { get; private set; }
@@ -547,26 +547,29 @@ public sealed class GameMaster : MonoBehaviour
                 stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
             }
 
-            if (stability <= GameConstants.RSPACE_CONSUMING_VAL)
+            if (false)
             {
-                if (realSpaceConsuming != true)
+                if (stability <= GameConstants.RSPACE_CONSUMING_VAL)
                 {
-                    realSpaceConsuming = true;
-                    var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-                    if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                    cce.Set(true);
-                }
-            }
-            else
-            {
-                if (stability >= GameConstants.LSECTOR_CONSUMING_VAL)
-                {
-                    if (realSpaceConsuming != false)
+                    if (realSpaceConsuming != true)
                     {
-                        realSpaceConsuming = false;
+                        realSpaceConsuming = true;
                         var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
                         if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                        cce.Set(false);
+                        cce.Set(true);
+                    }
+                }
+                else
+                {
+                    if (stability >= GameConstants.LSECTOR_CONSUMING_VAL)
+                    {
+                        if (realSpaceConsuming != false)
+                        {
+                            realSpaceConsuming = false;
+                            var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
+                            if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
+                            cce.Set(false);
+                        }
                     }
                 }
             }
@@ -958,6 +961,8 @@ public sealed class GameMaster : MonoBehaviour
             }
             mainChunk.LoadChunkData(fs);
             if (loadingFailed) goto FAIL;
+            else blockersRestoreEvent();
+
 
             Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
             if (loadingFailed) goto FAIL;

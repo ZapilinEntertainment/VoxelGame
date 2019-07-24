@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 public sealed class LifeSource : Structure {
+    private bool subscribedToRestoreBlockersUpdate = false;
     private int tick = 0, lifepowerPerTick = 50;
     const int MAXIMUM_TICKS = 1000;
     public const float MAX_HP = 25000;
@@ -15,7 +16,8 @@ public sealed class LifeSource : Structure {
             GameMaster.realMaster.lifepowerUpdateEvent += LifepowerUpdate;
             subscribedToUpdate = true;
         }
-        { //blocking
+        if (!GameMaster.loading) { 
+            // #blocking
             Chunk chunk = basement.myChunk;
             byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
             if (dependentBlocks != null)
@@ -33,10 +35,46 @@ public sealed class LifeSource : Structure {
                 new ChunkPos(x - 1, y+ 1, z - 1), new ChunkPos(x , y+ 1, z - 1), new ChunkPos( x + 1, y+ 1, z - 1),
             };
             chunk.BlockRegion(positions, this, ref dependentBlocks);
+            //
+        }
+        else
+        {
+            if (!subscribedToRestoreBlockersUpdate)
+            {
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersUpdate = true;
+            }
+        }
+    }
+    public void RestoreBlockers()
+    {
+        if (subscribedToRestoreBlockersUpdate)
+        {
+            // #blocking
+            Chunk chunk = basement.myChunk;
+            byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
+            if (dependentBlocks != null)
+            {
+                chunk.ClearBlocksList(dependentBlocks, true);
+            }
+            dependentBlocks = new List<Block>();
+            var positions = new List<ChunkPos>
+            {
+                new ChunkPos(x - 1, y, z + 1), new ChunkPos(x , y, z + 1), new ChunkPos( x + 1, y, z + 1),
+                new ChunkPos(x - 1, y, z), new ChunkPos(x , y, z), new ChunkPos( x + 1, y, z),
+                new ChunkPos(x - 1, y, z - 1), new ChunkPos(x , y, z - 1), new ChunkPos( x + 1, y, z - 1),
+                new ChunkPos(x - 1, y+ 1, z + 1), new ChunkPos(x , y+ 1, z + 1), new ChunkPos( x + 1, y+ 1, z + 1),
+                new ChunkPos(x - 1, y+ 1, z), new ChunkPos(x , y+ 1, z), new ChunkPos( x + 1, y+ 1, z),
+                new ChunkPos(x - 1, y+ 1, z - 1), new ChunkPos(x , y+ 1, z - 1), new ChunkPos( x + 1, y+ 1, z - 1),
+            };
+            chunk.BlockRegion(positions, this, ref dependentBlocks);
+            //
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersUpdate = false;
         }
     }
 
-	public void LifepowerUpdate () {
+    public void LifepowerUpdate () {
         tick++;
         basement.myChunk.AddLifePower(lifepowerPerTick);
         //if (tick == MAXIMUM_TICKS & !destroyed)
@@ -44,8 +82,6 @@ public sealed class LifeSource : Structure {
         //    Annihilate(true, false, false);
         //}
 	}
-
-
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
@@ -83,6 +119,11 @@ public sealed class LifeSource : Structure {
             {
                 basement.myChunk.ClearBlocksList(dependentBlocks, true);
             }
+        }
+        if (subscribedToRestoreBlockersUpdate)
+        {
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersUpdate = false;
         }
         Destroy(gameObject);
     }

@@ -14,7 +14,8 @@ public sealed class Dock : WorkBuilding {
 	public bool maintainingShip{get; private set;}
     public bool correctLocation { get; private set; }
     public float shipArrivingTimer { get; private set; }
-   
+
+    private bool subscribedToRestoreBlockersEvent = false;
 	private const float LOADING_TIME = 10;
     private float loadingTimer = 0;    
 	private int preparingResourceIndex;
@@ -74,7 +75,7 @@ public sealed class Dock : WorkBuilding {
                     }
                 }
             }
-        }
+        }       
 		SetWorkbuildingData(b, pos);	
 		basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
 		colony.AddDock(this);		
@@ -84,8 +85,28 @@ public sealed class Dock : WorkBuilding {
             subscribedToUpdate = true;
         }        
         dependentBlocksList = new List<Block>();
-        CheckPositionCorrectness();
-        if (correctLocation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+        if (!GameMaster.loading)
+        {
+            CheckPositionCorrectness();
+            if (correctLocation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+        }
+        else
+        {
+            if (!subscribedToRestoreBlockersEvent)
+            {
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersEvent = true;
+            }
+        }
+    }
+    public void RestoreBlockers()
+    {
+        if (subscribedToRestoreBlockersEvent)
+        {
+            CheckPositionCorrectness();
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
     }
 
 	override public void LabourUpdate () {
@@ -624,6 +645,11 @@ public sealed class Dock : WorkBuilding {
         colony.RemoveDock(this);
         if (maintainingShip & loadingShip != null) loadingShip.Undock();
         if (colony.docks.Count == 0 & dockObserver != null) Destroy(dockObserver);
+        if (subscribedToRestoreBlockersEvent)
+        {
+            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+            subscribedToRestoreBlockersEvent = false;
+        }
         Destroy(gameObject);
     }
 
@@ -680,10 +706,10 @@ public sealed class Dock : WorkBuilding {
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
         data.AddRange(SaveWorkbuildingData());
-        data.AddRange(SerializeDock());
+        data.AddRange(SaveDockData());
         return data;
     }
-    private List<byte> SerializeDock()
+    private List<byte> SaveDockData()
     {
         byte zero = 0, one = 1;
         var data = new List<byte>() { correctLocation ? one : zero };
@@ -714,7 +740,7 @@ public sealed class Dock : WorkBuilding {
             loadingShip = Ship.Load(fs, this);
         }
         data = new byte[8];
-        fs.Read(data, 0, data.Length);
+        fs.Read(data, 0, 8);
         loadingTimer = System.BitConverter.ToSingle(data, 0);
         shipArrivingTimer = System.BitConverter.ToSingle(data, 4);
     }

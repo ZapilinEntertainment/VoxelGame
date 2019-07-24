@@ -103,10 +103,8 @@ public sealed class PoolMaster : MonoBehaviour {
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
-        if (qualityLevel == 2)
+        if (useAdvancedMaterials)
         {
-            useAdvancedMaterials = true;
-            shadowCasting = true;
             glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
             basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
             glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
@@ -116,17 +114,12 @@ public sealed class PoolMaster : MonoBehaviour {
         }
         else
         {
-            if (qualityLevel == 2)
-            {
-                useAdvancedMaterials = false;
-                shadowCasting = false;
                 glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
                 basic_material = Resources.Load<Material>("Materials/Basic");
                 glassMaterial = Resources.Load<Material>("Materials/Glass");
                 metal_material = Resources.Load<Material>("Materials/Metal");
                 green_material = Resources.Load<Material>("Materials/Green");
                 energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
-            }
         }
         if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
         if (useIlluminationSystem)
