@@ -154,7 +154,8 @@ public sealed class Hangar : WorkBuilding
     }
     public void RestoreBlockers()
     {
-        if (subscribedToRestoreBlockersEvent)
+        // установка блокираторов после загрузки
+        if (subscribedToRestoreBlockersEvent & correctLocation)
         {
             CheckPositionCorrectness();
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
@@ -410,15 +411,16 @@ public sealed class Hangar : WorkBuilding
     override public List<byte> Save()
     {
         var data = base.Save();
-        data.AddRange(SerializeHangar());
+        data.AddRange(SaveHangarDara());
         return data;
     }
-    private List<byte> SerializeHangar()
+    private List<byte> SaveHangarDara()
     {
         int shuttleIndex = -1;
         if (shuttle != null) shuttleIndex = shuttle.ID;
-        var data =  new List<byte>() {   constructing ? (byte)1 : (byte)0};
-        data.AddRange(System.BitConverter.GetBytes(shuttleIndex));
+        byte truebyte = 1, falsebyte = 0;
+        var data =  new List<byte>() {   constructing ? truebyte : falsebyte, correctLocation ? truebyte : falsebyte}; // 0 , 1
+        data.AddRange(System.BitConverter.GetBytes(shuttleIndex)); // 2 - 5
         return data;
     }
 
@@ -429,6 +431,7 @@ public sealed class Hangar : WorkBuilding
         LoadStructureData(data, sblock);
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
         constructing = fs.ReadByte() == 1;
+        correctLocation = fs.ReadByte() == 1;
         if (constructing & !subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;

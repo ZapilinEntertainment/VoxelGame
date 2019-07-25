@@ -47,7 +47,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
 		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
 
-		workspeedStringEnabled = (showingWorkspeed > 0 & !(observingWorkbuilding is Dock) & !(observingWorkbuilding is Powerplant) & !(observingWorkbuilding is Factory) & !(observingWorkbuilding is FoodFactory));
+		workspeedStringEnabled = (showingWorkspeed > 0 & !(observingWorkbuilding is Dock) & !(observingWorkbuilding is Powerplant) & !(observingWorkbuilding is Factory) & !(observingWorkbuilding is FoodFactory) & !(observingWorkbuilding is Farm));
         workSpeedField.enabled = workspeedStringEnabled;
         actionLabel.enabled = false;        
         stopButton.SetActive(false);

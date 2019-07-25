@@ -219,21 +219,28 @@ public class Factory : WorkBuilding
         {
             upgraded.modelRotation = (byte)(modelRotation - 1);
         }
-        else upgraded.modelRotation = modelRotation;
-        upgraded.AddWorkers(workers);
+        else upgraded.modelRotation = modelRotation;        
         //
-        upgraded.recipe = recipe;
+        upgraded.SetRecipe(recipe);
         upgraded.productionMode = productionMode;
         upgraded.productionModeValue = productionModeValue;
         upgraded.workPaused = workPaused;
         upgraded.workflow = workflow;
         upgraded.inputResourcesBuffer = inputResourcesBuffer; inputResourcesBuffer = 0;
-        upgraded.outputResourcesBuffer = outputResourcesBuffer; outputResourcesBuffer = 0;
+        upgraded.outputResourcesBuffer = outputResourcesBuffer; outputResourcesBuffer = 0;        
         //
         upgraded.SetBasement(basement, setPos);
+        upgraded.AddWorkers(workers);
         if (isActive) upgraded.SetActivationStatus(true, true);
         if (returnToUI) upgraded.ShowOnGUI();
     }
+
+    override public void RecalculateWorkspeed()
+    {
+        workSpeed = colony.labourCoefficient * workersCount * GameConstants.FACTORY_SPEED * level * 1.5f;
+        gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
+    }
+
 
     #region save-load system
     public override List<byte> Save()

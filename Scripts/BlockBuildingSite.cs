@@ -87,7 +87,7 @@ public class BlockBuildingSite : Worksite
                     {
                         if (s.ID == Structure.PLANT_ID)
                         {
-                            (s as Plant).Harvest();
+                            (s as Plant).Harvest(false);
                             if (s != null) s.Annihilate(true, false, false);
                         }
                         else s.Annihilate(true, true, false);

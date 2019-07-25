@@ -77,36 +77,7 @@ public class Powerplant : WorkBuilding
         {
             tickTimer--;
             float rel = workersCount / (float)maxWorkers;
-            float newEnergySurplus = 0;
-            if (rel != 0)
-            {
-                if (rel > 0.5f)
-                {
-                    if (rel > 0.83f)
-                    {
-                        rel = (rel - 0.83f) / 0.16f;
-                        newEnergySurplus = Mathf.Lerp(0.5f, 1, rel) * output;
-                    }
-                    else
-                    {
-                        rel = (rel - 0.5f) / 0.33f;
-                        newEnergySurplus = Mathf.Lerp(0, 0.5f, rel) * output;
-                    }
-                }
-                else
-                {
-                    if (rel > 0.16f)
-                    {
-                        rel = (rel - 0.16f) / 0.34f;
-                        newEnergySurplus = Mathf.Lerp(0.25f, 0.5f, rel) * output;
-                    }
-                    else
-                    {
-                        rel /= 0.1f;
-                        newEnergySurplus = Mathf.Lerp(0, 0.1f, rel) * output;
-                    }
-                }
-            }
+            float newEnergySurplus = rel * output;            
             if (newEnergySurplus != energySurplus)
             {
                 energySurplus = newEnergySurplus;

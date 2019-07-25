@@ -222,17 +222,15 @@ public sealed class Shuttle : MonoBehaviour {
         ID = System.BitConverter.ToInt32(data, 8);
         docked = data[12] == 1;
 
-        int bytesCount = System.BitConverter.ToInt32(data, 13); //выдаст количество байтов, не длину строки
-        print(bytesCount);
-        //data = new byte[bytesCount];
+        int bytesCount = System.BitConverter.ToInt32(data, 13); //выдаст количество байтов, не длину строки       
         fs.Read(data, 0, bytesCount);
-        //if (bytesCount > 0)
-        //{
-         //   System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
-         //   var chars = new char[d.GetCharCount(data, 0, bytesCount)];
-         //   d.GetChars(data, 0, bytesCount,chars,0,true);
-         //   name = new string(chars);
-       // }
+        if (bytesCount > 0)
+        {
+           System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
+            var chars = new char[d.GetCharCount(data, 0, bytesCount)];
+            d.GetChars(data, 0, bytesCount,chars,0,true);
+            name = new string(chars);
+        }
 
         data = new byte[28];
         fs.Read(data, 0, 28);

@@ -252,15 +252,15 @@ public static class Localization
                     case Structure.SMELTERY_3_ID:
                     case Structure.SMELTERY_5_ID: return "Перерабатывает ресурсы.";
                     case Structure.WIND_GENERATOR_1_ID: return "Нестабильно вырабатывает энергию в зависимости от силы местных потоков. Лучше располагать как можно выше.";
-                    case Structure.BIOGENERATOR_2_ID: return "Вырабатывает энергию, потребляя органическую материю";
+                    case Structure.BIOGENERATOR_2_ID: return "Вырабатывает энергию, потребляя органическую материю, эффективность зависит от количества рабочих.";
                     case Structure.HOSPITAL_2_ID: return "Обеспечивает колонию медицинской помощью. Может регулировать темп появления новых жителей.";
-                    case Structure.MINERAL_POWERPLANT_2_ID: return "Вырабатывает энергию, потребляя минерал F.";
+                    case Structure.MINERAL_POWERPLANT_2_ID: return "Вырабатывает энергию, потребляя минерал F. Выход энергии зависит от количества рабочих.";
                     case Structure.ORE_ENRICHER_2_ID: return "Позволяет добывать нужные руды из обычной горной породы.";
                     case Structure.WORKSHOP_ID: return "Улучшает или поддерживает в норме оборудование колонистов.";
-                    case Structure.MINI_GRPH_REACTOR_3_ID: return "Вырабатывает энергию, ничего не потребляя.";
+                    case Structure.MINI_GRPH_REACTOR_3_ID: return "Бесконечный источник энергии, не требует рабочих.";
                     case Structure.FUEL_FACILITY_ID: return "Производит топливо для кораблей";
                     case Structure.REACTOR_BLOCK_5_ID:
-                    case Structure.GRPH_REACTOR_4_ID: return "Вырабатывает большое количество энергии, потребляя Графониум.";
+                    case Structure.GRPH_REACTOR_4_ID: return "Вырабатывает большое количество энергии, потребляя Графониум. Выход энергии зависит от количества рабочих";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Специализированная фабрика для производства пластика.";
                     case Structure.SUPPLIES_FACTORY_4_ID:
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Производит снаряжение для экспедиций и нужд колонии.";
@@ -281,7 +281,7 @@ public static class Localization
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
-                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Вырабатывает энергию с помощью человеческих усилий. Не требует топлива, но снижает настроение колонии.";
+                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Вырабатывает энергию с помощью человеческих усилий, эффективность зависит от количества рабочих. Не требует топлива, но снижает настроение колонии.";
                     default: return "Без описания";
                 }
             case Language.English:
@@ -293,8 +293,8 @@ public static class Localization
                     case Structure.STORAGE_2_ID: return "This storage can contain " + StorageHouse.GetMaxVolume(2) + " points.";
                     
                     case Structure.STORAGE_5_ID: return "Storage block can contain " + StorageHouse.GetMaxVolume(5) + " points.";
-                    case Structure.CONTAINER_ID: return "Contain resources.";
-                    case Structure.LIFESTONE_ID: return "Emit lifepower.";
+                    case Structure.CONTAINER_ID: return "Contains resources.";
+                    case Structure.LIFESTONE_ID: return "Emits lifepower.";
                     case Structure.TENT_ID: return "Temporary housing.";                   
                     case Structure.HOUSE_BLOCK_ID: return "Residential block can be house for " + House.GetHousingValue(id) + " persons.";
                     case Structure.HOUSING_MAST_6_ID: return "Massive residential complex for " + House.GetHousingValue(id) + " persons";
@@ -306,12 +306,12 @@ public static class Localization
                     case Structure.DOCK_2_ID:
                         {
                             string s = Dock.MEDIUM_SHIPS_PATH_WIDTH.ToString();
-                            return "Maintain medium trade vessels.  Needs in " + s + " x " + s + " corridor close to the dock to function.";
+                            return "Maintains medium trade vessels.  Needs in " + s + " x " + s + " corridor close to the dock to function.";
                         }
                     case Structure.DOCK_3_ID:
                         {
                             string s = Dock.HEAVY_SHIPS_PATH_WIDTH.ToString();
-                            return "Maintain heavy trade vessels.  Needs in " + s + " x " + s + " corridor close to the dock to function.";
+                            return "Maintains heavy trade vessels.  Needs in " + s + " x " + s + " corridor close to the dock to function.";
                         }
                     case Structure.ENERGY_CAPACITOR_1_ID:
                     case Structure.ENERGY_CAPACITOR_2_ID:
@@ -327,42 +327,42 @@ public static class Localization
                     case Structure.LUMBERMILL_3_ID: return "Grows and cuts trees. Consumes island lifepower.";
                     case Structure.LUMBERMILL_4_ID:
                     case Structure.LUMBERMILL_5_ID: return "Constantly produces wood. Doesn't consume lifepower.";
-                    case Structure.MINE_ID: return "Extract fossils in closed way.";
+                    case Structure.MINE_ID: return "Extracts fossils in closed way.";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID:
                     case Structure.SMELTERY_5_ID: return "Process resources.";
-                    case Structure.WIND_GENERATOR_1_ID: return "Generate energy in dependence of local streams. It is better to place as high as possible.";
-                    case Structure.BIOGENERATOR_2_ID: return "Generate energy from organic.";
+                    case Structure.WIND_GENERATOR_1_ID: return "Generates energy in dependence of local streams. Build it as high as possible.";
+                    case Structure.BIOGENERATOR_2_ID: return "Generates energy from organic. Energy production depends on the number of workers.";
                     case Structure.HOSPITAL_2_ID: return "Supplies colony with healthcare. Can control the spawnrate.";
-                    case Structure.MINERAL_POWERPLANT_2_ID: return "Generate energy from mineral F.";
-                    case Structure.ORE_ENRICHER_2_ID: return "Extract ores from stone.";
-                    case Structure.WORKSHOP_ID: return "Improve or stabilize colonist's gears.";
-                    case Structure.MINI_GRPH_REACTOR_3_ID: return "Generate energy, consumes nothing.";
+                    case Structure.MINERAL_POWERPLANT_2_ID: return "Generates energy from mineral F. Energy production depends on the number of workers.";
+                    case Structure.ORE_ENRICHER_2_ID: return "Extracts ores from stone.";
+                    case Structure.WORKSHOP_ID: return "Improves or stabilizes colonist's gears.";
+                    case Structure.MINI_GRPH_REACTOR_3_ID: return "Generates energy, consumes nothing. No need in workers.";
                     case Structure.FUEL_FACILITY_ID: return "Produces fuel for vessels.";
                     case Structure.REACTOR_BLOCK_5_ID:
-                    case Structure.GRPH_REACTOR_4_ID: return "Generates a lot of energy, consumes Graphonium.";
+                    case Structure.GRPH_REACTOR_4_ID: return "Generates a lot of energy, consumes Graphonium. Energy production depends on the number of workers.";
                     case Structure.PLASTICS_FACTORY_3_ID: return "Factory specialized on plastics producing.";
                     case Structure.SUPPLIES_FACTORY_4_ID:
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Produces supplies for expeditions and colony needs.";
-                    case Structure.GRPH_ENRICHER_3_ID: return "Transform N-metal into Graphonium.";
-                    case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Transform energy excess in energy crystals. It can be only one building of this type!";
-                    case Structure.SWITCH_TOWER_ID: return "Being selected activates layer cut on its own height.";
-                    case Structure.SHUTTLE_HANGAR_4_ID: return "Base and maintain one shuttle. Hangar needs one-block wide flight corridor to the edge of the map to work properly";
-                    case Structure.RECRUITING_CENTER_4_ID: return "Recruit and train exploring teams from volunteers.";
-                    case Structure.EXPEDITION_CORPUS_4_ID: return "Control missions activities.";
-                    case Structure.QUANTUM_TRANSMITTER_4_ID: return "Provide connection with expeditions outside the island.";
+                    case Structure.GRPH_ENRICHER_3_ID: return "Transforms N-metal into Graphonium.";
+                    case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Transforms energy excess in energy crystals. It can be only one building of this type!";
+                    case Structure.SWITCH_TOWER_ID: return "Activates layer cut on its own height when selected.";
+                    case Structure.SHUTTLE_HANGAR_4_ID: return "Holds and maintains one shuttle. Hangar needs one-block wide flight corridor to the edge of the map to work properly";
+                    case Structure.RECRUITING_CENTER_4_ID: return "Recruits and trains exploring teams.";
+                    case Structure.EXPEDITION_CORPUS_4_ID: return "Controls missions activities.";
+                    case Structure.QUANTUM_TRANSMITTER_4_ID: return "Provides connection with expeditions outside the island.";
                     case Structure.FOUNDATION_BLOCK_5_ID: return "Infrastructure for support high-level structures.";
                     case Structure.DOCK_ADDON_1_ID: return "Build it next to dock to up it to level 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Build it next to dock to up it to level 3.";
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.CONNECT_TOWER_6_ID: return "<In development>";
-                    case Structure.XSTATION_3_ID: return "Gathering environmental intelligence< measures Stability level, predicting threats.";
+                    case Structure.XSTATION_3_ID: return "Gathering environmental intelligence, measures Stability level, predicting threats.";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. /n Only one observatory can be built.";
-                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Give access to your non-using artifacts";
+                    case Structure.ARTIFACTS_REPOSITORY_ID: return "Gives access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
-                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Produces energy through colonists effort. Does not require fuel, but lowers colony's happiness.";
+                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Produces energy through colonists effort, energy production depends on the number of workers. Does not require fuel, but lowers colony's happiness.";
                     default: return "No description.";
                 }
         }

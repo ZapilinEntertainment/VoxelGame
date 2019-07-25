@@ -361,7 +361,7 @@ public class SaveSystemUI : MonoBehaviour
     public void LocalizeTitles()
     {
         deleteButtonText.text = Localization.GetWord(LocalizedWord.Delete);
-        inputFieldPanel.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
-        inputFieldPanel.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+        inputFieldPanel.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
+        inputFieldPanel.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
     }
 }

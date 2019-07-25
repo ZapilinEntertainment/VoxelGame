@@ -21,26 +21,26 @@
                 break;
             case HQ_LVL3_COST_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_E, 12),
+                new ResourceContainer(ResourceType.Concrete, 80), new ResourceContainer(ResourceType.metal_K, 40), new ResourceContainer(ResourceType.metal_E, 12),
                 new ResourceContainer(ResourceType.Plastics, 60), new ResourceContainer(ResourceType.metal_N, 8)
             };
                 break;
             case HQ_LVL4_COST_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_E, 20),
+                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 60), new ResourceContainer(ResourceType.metal_E, 20),
                 new ResourceContainer(ResourceType.Plastics, 250), new ResourceContainer(ResourceType.metal_N, 20)
             };
                 break;
             case HQ_LVL5_COST_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 80), new ResourceContainer(ResourceType.metal_E, 60),
-                new ResourceContainer(ResourceType.Plastics, 500), new ResourceContainer(ResourceType.metal_N, 100)
+                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 100), new ResourceContainer(ResourceType.metal_E, 60),
+                new ResourceContainer(ResourceType.Plastics, 500), new ResourceContainer(ResourceType.Graphonium, 20)
             };
                 break;
             case HQ_LVL6_COST_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 160), new ResourceContainer(ResourceType.metal_E, 120),
-                new ResourceContainer(ResourceType.Plastics, 750), new ResourceContainer(ResourceType.metal_N, 200)
+                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.metal_E, 120),
+                new ResourceContainer(ResourceType.Plastics, 750), new ResourceContainer(ResourceType.Graphonium, 200)
             };
                 break;
             case SHUTTLE_BUILD_COST_ID:
@@ -78,7 +78,8 @@
                 break;
             case Structure.FUEL_FACILITY_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.metal_K, 25), new ResourceContainer(ResourceType.metal_M, 15), new ResourceContainer(ResourceType.Concrete, 60)
+                new ResourceContainer(ResourceType.metal_K, 120), new ResourceContainer(ResourceType.metal_M, 160), new ResourceContainer(ResourceType.Concrete, 300),
+                new ResourceContainer(ResourceType.metal_E, 80), new ResourceContainer(ResourceType.Graphonium, 5)
             };
                 break;
             case Structure.GRPH_ENRICHER_3_ID:

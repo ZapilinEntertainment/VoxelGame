@@ -261,7 +261,7 @@ public sealed class FollowingCamera : MonoBehaviour {
    {
         if (camPosChanged)
         {
-            cameraChangedEvent();
+            if (cameraChangedEvent != null) cameraChangedEvent();
             camPosChanged = false;
         }
    }

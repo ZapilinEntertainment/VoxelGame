@@ -200,11 +200,6 @@ public sealed class Crew : MonoBehaviour {
         if (crewObserver != null && crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(false);
     }
 
-    private Crew()
-    {
-
-    }
-
     public void ShowOnGUI(Rect rect, SpriteAlignment alignment, bool useCloseButton) 
     {
         if (crewObserver == null)

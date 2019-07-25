@@ -34,7 +34,7 @@ public class GatherSite : Worksite
                                 byte hstage = p.GetHarvestableStage();
                                 if (hstage != 255 & p.stage >= hstage)
                                 {
-                                    p.Harvest();
+                                    p.Harvest(false);
                                     resourcesFound = true;
                                     workflow--;
                                 }

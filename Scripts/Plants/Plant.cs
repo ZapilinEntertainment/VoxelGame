@@ -122,8 +122,8 @@ public abstract class Plant : Structure {
 		Annihilate(true, false, false);
 	}
 
-	virtual public void Harvest() {
-		// аннигиляция со сбором ресурсов
+	virtual public void Harvest(bool replenish) {
+		// сбор ресурсов и перепосадка
 	}
 
     protected void PreparePlantForDestruction(bool clearFromSurface, bool returnResources)

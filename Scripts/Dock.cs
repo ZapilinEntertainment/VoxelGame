@@ -101,7 +101,8 @@ public sealed class Dock : WorkBuilding {
     }
     public void RestoreBlockers()
     {
-        if (subscribedToRestoreBlockersEvent)
+        // установка блокираторов после загрузки
+        if (subscribedToRestoreBlockersEvent & correctLocation)
         {
             CheckPositionCorrectness();
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
@@ -126,7 +127,8 @@ public sealed class Dock : WorkBuilding {
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
-					if ( immigrationPlan > 0  & immigrationEnabled & colony.totalLivespace > colony.citizenCount) {
+					if ( immigrationEnabled  ) {
+                        if (immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value < colony.happiness_coefficient / 2f)
 						sendImmigrants = true;
 					}
 					int transitionsCount = 0;
@@ -134,6 +136,7 @@ public sealed class Dock : WorkBuilding {
 						if (isForSale[x] != null) transitionsCount++;
 					}
 					if (transitionsCount > 0) sendGoods = true;
+
 					ShipType stype = ShipType.Cargo;
 					if (sendImmigrants) {
 						if (sendGoods) {

@@ -94,17 +94,13 @@ public sealed class GameMaster : MonoBehaviour
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
     private float labourTimer = 0, lifepowerTimer = 0;
-    private bool firstSet = true;
+    private bool gameStarted = false;
     private bool? realSpaceConsuming = null; // true - real space consuming, false - last sector consuming
     // FOR TESTING
     [SerializeField] private GameMode _gameMode;
     public bool weNeedNoResources { get; private set; }
     public bool generateChunk = true;
     public byte test_size = 100;
-
-    private static bool hotStart = false;
-    private GameStartSettings hotStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
-    private string hotStart_savename = "base";
     //
 
     #region static functions
@@ -132,6 +128,11 @@ public sealed class GameMaster : MonoBehaviour
     }
     public static void ChangeScene(byte index)
     {
+        if (SceneManager.GetActiveScene().buildIndex == MENU_SCENE_INDEX)
+        {
+            var m = Component.FindObjectOfType<MenuUI>();
+            if (m != null) m.ToLoadingView();
+        }
         sceneClearing = true;
         SceneManager.LoadScene(index);
         sceneClearing = false;
@@ -149,8 +150,9 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (gameMode != GameMode.Editor) return;
         gameMode = GameMode.Play;
+        _gameMode = gameMode;
         Instantiate(Resources.Load<GameObject>("UIPrefs/UIController")).GetComponent<UIController>();
-        firstSet = true;
+        gameStarted = false;
         gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
         startGameWith = GameStart.Zeppelin;
         Awake();
@@ -178,34 +180,22 @@ public sealed class GameMaster : MonoBehaviour
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
             globalMap.Prepare();
             environmentMaster.Prepare();
-        }        
-
-
+        }
+        if (audiomaster == null)
+        {
+            audiomaster = gameObject.AddComponent<Audiomaster>();
+            audiomaster.Prepare();
+        }
+        if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
     }
-
     void Start()
     {
-        if (!firstSet) return;
-        Time.timeScale = 1;
-        gameSpeed = 1;
-        pauseRequests = 0;
-        audiomaster = gameObject.AddComponent<Audiomaster>();
-        audiomaster.Prepare();
-
-        //testzone
-        if (hotStart)
-        {
-            gameStartSettings = hotStartSettings;
-            savename = hotStart_savename;
-            hotStart = false;
-        }
-        //end of test data
-
-        if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
+        if (gameStarted) return;
+        
         if (gameMode != GameMode.Editor)
-        {
-            lifeGrowCoefficient = 1;
-            difficulty = gameStartSettings.difficulty;            
+        {            
+            difficulty = gameStartSettings.difficulty;
+            SetDefaultValues();
             //byte chunksize = gss.chunkSize;
             byte chunksize;
             chunksize = gameStartSettings.chunkSize;
@@ -216,7 +206,7 @@ public sealed class GameMaster : MonoBehaviour
                     if (gameStartSettings.generationMode != ChunkGenerationMode.TerrainLoading)
                     {
                         Constructor.ConstructChunk(chunksize, gameStartSettings.generationMode);
-                       // Constructor.ConstructBlock(chunksize);
+                        // Constructor.ConstructBlock(chunksize);
                         if (gameStartSettings.generationMode == ChunkGenerationMode.Peak)
                         {
                             environmentMaster.PrepareIslandBasis(ChunkGenerationMode.Peak);
@@ -226,55 +216,6 @@ public sealed class GameMaster : MonoBehaviour
                 }
                 FollowingCamera.main.ResetTouchRightBorder();
                 FollowingCamera.main.CameraRotationBlock(false);
-
-                switch (difficulty)
-                {
-                    case Difficulty.Utopia:
-                        LUCK_COEFFICIENT = 1;
-                        demolitionLossesPercent = 0;
-                        lifepowerLossesPercent = 0;
-                        sellPriceCoefficient = 1;
-                        tradeVesselsTrafficCoefficient = 2;
-                        upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
-                        gearsDegradeSpeed = 0;
-                        break;
-                    case Difficulty.Easy:
-                        LUCK_COEFFICIENT = 0.7f;
-                        demolitionLossesPercent = 0.2f;
-                        lifepowerLossesPercent = 0.1f;
-                        sellPriceCoefficient = 0.9f;
-                        tradeVesselsTrafficCoefficient = 1.5f;
-                        upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
-                        gearsDegradeSpeed = 0.00001f;
-                        break;
-                    case Difficulty.Normal:
-                        LUCK_COEFFICIENT = 0.5f;
-                        demolitionLossesPercent = 0.4f;
-                        lifepowerLossesPercent = 0.3f;
-                        sellPriceCoefficient = 0.75f;
-                        tradeVesselsTrafficCoefficient = 1;
-                        upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
-                        gearsDegradeSpeed = 0.00002f;
-                        break;
-                    case Difficulty.Hard:
-                        LUCK_COEFFICIENT = 0.1f;
-                        demolitionLossesPercent = 0.7f;
-                        lifepowerLossesPercent = 0.5f;
-                        sellPriceCoefficient = 0.5f;
-                        tradeVesselsTrafficCoefficient = 0.9f;
-                        upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
-                        gearsDegradeSpeed = 0.00003f;
-                        break;
-                    case Difficulty.Torture:
-                        LUCK_COEFFICIENT = 0.01f;
-                        demolitionLossesPercent = 1;
-                        lifepowerLossesPercent = 0.85f;
-                        sellPriceCoefficient = 0.33f;
-                        tradeVesselsTrafficCoefficient = 0.75f;
-                        upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
-                        gearsDegradeSpeed = 0.00005f;
-                        break;
-                }
                 warProximity = 0.01f;
                 layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
                 switch (startGameWith)
@@ -299,7 +240,7 @@ public sealed class GameMaster : MonoBehaviour
 
                         //testzone
                         Structure s = HeadQuarters.GetHQ(1);
-                       // weNeedNoResources = true;
+                        // weNeedNoResources = true;
 
                         //eo testzone                    
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
@@ -343,12 +284,13 @@ public sealed class GameMaster : MonoBehaviour
                         firstStorage.SetBasement(sb, PixelPosByte.zero);
                         SetStartResources();
                         break;
-                }
+                }               
                 FollowingCamera.main.WeNeedUpdate();
             }
-            else LoadGame(SaveSystemUI.GetSavesPath() + '/' + savename + ".sav");
-            if (savename == null | savename == string.Empty) savename = "autosave";
-            RenderSettings.skybox.SetFloat("_Saturation", 0.75f + 0.25f * GameConstants.START_HAPPINESS);
+            else
+            {
+                LoadGame(SaveSystemUI.GetSavesPath() + '/' + savename + ".sav");
+            }
         }
         else
         {
@@ -358,15 +300,77 @@ public sealed class GameMaster : MonoBehaviour
             int[,,] blocksArray = new int[size, size, size];
             size /= 2;
             blocksArray[size, size, size] = ResourceType.STONE_ID;
-            mainChunk.CreateNewChunk(blocksArray);
-            RenderSettings.skybox.SetFloat("_Saturation", 1f);
-        }
-
-        stability = 0.5f;
+            mainChunk.CreateNewChunk(blocksArray);            
+        }       
 
         { // set look point
             FollowingCamera.camBasisTransform.position = sceneCenter;
         }
+        gameStarted = true;
+    }
+
+    private void SetDefaultValues()
+    {        
+        Time.timeScale = 1;
+        gameSpeed = 1;
+        pauseRequests = 0;        
+        if (savename == null || savename == string.Empty) savename = "autosave";
+        stability = 0.5f;
+        if (gameMode != GameMode.Editor)
+        {
+            lifeGrowCoefficient = 1;
+            switch (difficulty)
+            {
+                case Difficulty.Utopia:
+                    LUCK_COEFFICIENT = 1;
+                    demolitionLossesPercent = 0;
+                    lifepowerLossesPercent = 0;
+                    sellPriceCoefficient = 1;
+                    tradeVesselsTrafficCoefficient = 2;
+                    upgradeDiscount = 0.5f; upgradeCostIncrease = 1.1f;
+                    gearsDegradeSpeed = 0;
+                    break;
+                case Difficulty.Easy:
+                    LUCK_COEFFICIENT = 0.7f;
+                    demolitionLossesPercent = 0.2f;
+                    lifepowerLossesPercent = 0.1f;
+                    sellPriceCoefficient = 0.9f;
+                    tradeVesselsTrafficCoefficient = 1.5f;
+                    upgradeDiscount = 0.3f; upgradeCostIncrease = 1.3f;
+                    gearsDegradeSpeed = 0.00001f;
+                    break;
+                case Difficulty.Normal:
+                    LUCK_COEFFICIENT = 0.5f;
+                    demolitionLossesPercent = 0.4f;
+                    lifepowerLossesPercent = 0.3f;
+                    sellPriceCoefficient = 0.75f;
+                    tradeVesselsTrafficCoefficient = 1;
+                    upgradeDiscount = 0.25f; upgradeCostIncrease = 1.5f;
+                    gearsDegradeSpeed = 0.00002f;
+                    break;
+                case Difficulty.Hard:
+                    LUCK_COEFFICIENT = 0.1f;
+                    demolitionLossesPercent = 0.7f;
+                    lifepowerLossesPercent = 0.5f;
+                    sellPriceCoefficient = 0.5f;
+                    tradeVesselsTrafficCoefficient = 0.9f;
+                    upgradeDiscount = 0.2f; upgradeCostIncrease = 1.7f;
+                    gearsDegradeSpeed = 0.00003f;
+                    break;
+                case Difficulty.Torture:
+                    LUCK_COEFFICIENT = 0.01f;
+                    demolitionLossesPercent = 1;
+                    lifepowerLossesPercent = 0.85f;
+                    sellPriceCoefficient = 0.33f;
+                    tradeVesselsTrafficCoefficient = 0.75f;
+                    upgradeDiscount = 0.1f; upgradeCostIncrease = 2f;
+                    gearsDegradeSpeed = 0.00005f;
+                    break;
+            }
+            RenderSettings.skybox.SetFloat("_Saturation", 0.75f + 0.25f * GameConstants.START_HAPPINESS);
+        }
+        else RenderSettings.skybox.SetFloat("_Saturation", 1f);
+        
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
@@ -405,69 +409,71 @@ public sealed class GameMaster : MonoBehaviour
         if (loading) return;
 
         //testzone
-       // if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
-        if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
-
-        if ( Input.GetKeyDown("o"))
+        // if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
+        if (false)
         {
-            bool makeBuildings = false;
-            var sx = mainChunk.GetRandomSurfaceBlock();
-            if (makeBuildings)
-            {                
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                    (s as WorkBuilding).AddWorkers(50);
-                }
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                }
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                }
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                }
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                }
-            }
+            if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
 
-            //
-            int l = Random.Range(10, 100);
-            Artifact a;
-            Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
-            float f;
-            for (int i = 0; i < l; i++)
+            if (Input.GetKeyDown("o"))
             {
-                f = Random.value;
-                if (f < 0.25f) atype = Artifact.AffectionType.LifepowerAffection;
-                else
+                bool makeBuildings = false;
+                var sx = mainChunk.GetRandomSurfaceBlock();
+                if (makeBuildings)
                 {
-                    if (f > 0.5f)
+                    if (sx != null)
                     {
-                        if (f > 0.75f) atype = Artifact.AffectionType.SpaceAffection;
-                        else atype = Artifact.AffectionType.StabilityAffection;
+                        Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
+                        s.SetBasement(sx, PixelPosByte.zero);
+                        (s as WorkBuilding).AddWorkers(50);
+                    }
+                    sx = mainChunk.GetRandomSurfaceBlock();
+                    if (sx != null)
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                        s.SetBasement(sx, PixelPosByte.zero);
+                    }
+                    sx = mainChunk.GetRandomSurfaceBlock();
+                    if (sx != null)
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                        s.SetBasement(sx, PixelPosByte.zero);
+                    }
+                    sx = mainChunk.GetRandomSurfaceBlock();
+                    if (sx != null)
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                        s.SetBasement(sx, PixelPosByte.zero);
+                    }
+                    sx = mainChunk.GetRandomSurfaceBlock();
+                    if (sx != null)
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
+                        s.SetBasement(sx, PixelPosByte.zero);
                     }
                 }
-                a = new Artifact(Random.value, Random.value, Random.value, atype);
-                a.SetResearchStatus(true);
-                a.Conservate();
-            }
-            //           
+
+                //
+                int l = Random.Range(10, 100);
+                Artifact a;
+                Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
+                float f;
+                for (int i = 0; i < l; i++)
+                {
+                    f = Random.value;
+                    if (f < 0.25f) atype = Artifact.AffectionType.LifepowerAffection;
+                    else
+                    {
+                        if (f > 0.5f)
+                        {
+                            if (f > 0.75f) atype = Artifact.AffectionType.SpaceAffection;
+                            else atype = Artifact.AffectionType.StabilityAffection;
+                        }
+                    }
+                    a = new Artifact(Random.value, Random.value, Random.value, atype);
+                    a.SetResearchStatus(true);
+                    a.Conservate();
+                }
+                //           
                 sx = mainChunk.GetRandomSurfaceBlock();
                 if (sx != null)
                 {
@@ -484,33 +490,34 @@ public sealed class GameMaster : MonoBehaviour
                 }
                 sx = mainChunk.GetRandomSurfaceBlock();
 
-            if (makeBuildings)
-            {
-                Vector3Int ecpos = Vector3Int.zero;
-                if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+                if (makeBuildings)
                 {
-                    Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
-                    s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-                }
-                if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-                {
-                    Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
-                    s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+                    Vector3Int ecpos = Vector3Int.zero;
+                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
+                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+                    }
+                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
+                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+                    }
+
+                    Crew c = Crew.CreateNewCrew(colonyController, 1f);
+                    sx = mainChunk.GetRandomSurfaceBlock();
+                    if (sx != null)
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
+                        s.SetBasement(sx, PixelPosByte.zero);
+                        Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
+                        sh.FirstSet(s as Hangar);
+                        (s as Hangar).AssignShuttle(sh);
+                        c.SetShuttle(sh);
+                    }
                 }
 
-                Crew c = Crew.CreateNewCrew(colonyController, 1f);
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                    Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
-                    sh.FirstSet(s as Hangar);
-                    (s as Hangar).AssignShuttle(sh);
-                    c.SetShuttle(sh);
-                }
             }
-            
         }
         //eo testzone       
         if (gameMode != GameMode.Editor)
@@ -846,7 +853,7 @@ public sealed class GameMaster : MonoBehaviour
     }
     public bool LoadGame() { return LoadGame("autosave"); }
     public bool LoadGame(string fullname)
-    {  
+    {
         FileStream fs = File.Open(fullname, FileMode.Open);        
         double realHashSum = GetHashSum(fs, true);
         var data = new byte[8];
@@ -879,8 +886,9 @@ public sealed class GameMaster : MonoBehaviour
             //UI.current.Reset();
 
 
-            // НАЧАЛО ЗАГРУЗКИ            
-            #region gms mainPartLoading
+            // НАЧАЛО ЗАГРУЗКИ   
+            if (gameStarted) SetDefaultValues();
+            #region gms mainPartLoading            
             data = new byte[4];
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
@@ -941,7 +949,6 @@ public sealed class GameMaster : MonoBehaviour
             globalMap.Load(fs);
             if (loadingFailed) goto FAIL;
 
-            if (environmentMaster == null) environmentMaster = gameObject.AddComponent<EnvironmentMaster>();
             environmentMaster.Load(fs);
             if (loadingFailed) goto FAIL;
 
@@ -961,7 +968,10 @@ public sealed class GameMaster : MonoBehaviour
             }
             mainChunk.LoadChunkData(fs);
             if (loadingFailed) goto FAIL;
-            else blockersRestoreEvent();
+            else
+            {
+                if (blockersRestoreEvent != null) blockersRestoreEvent();
+            }
 
 
             Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan

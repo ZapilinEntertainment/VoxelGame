@@ -1082,7 +1082,7 @@ public sealed class Chunk : MonoBehaviour
         var orig = hitpoint;
         Vector3Int blockpos = new Vector3Int((int)(hitpoint.x / bs), (int)(hitpoint.y / bs), (int)(hitpoint.z / bs));
 
-        hitpoint = ( hitpoint - new Vector3(blockpos.x * bs, blockpos.y * bs, blockpos.z * bs) ) / bs;
+        hitpoint = ( hitpoint - new Vector3(blockpos.x * bs, blockpos.y * bs, blockpos.z * bs) ) / bs;        
         if (hitpoint.x > 0.5f) { blockpos.x++; hitpoint.x -= 0.5f; }
         if (hitpoint.y > 0.5f) { blockpos.y++; hitpoint.y -= 0.5f; }
         if (hitpoint.z > 0.5f) { blockpos.z++; hitpoint.z -= 0.5f; }
@@ -1098,20 +1098,23 @@ public sealed class Chunk : MonoBehaviour
             }
             else
             {
-                if ((GetVisibilityMask(blockpos.x, blockpos.y, blockpos.z) & powersOfTwo[Block.UP_FACE_INDEX]) == 0)
+                if (normal == Vector3.up)
                 {
-                    b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
-                    face = Block.SURFACE_FACE_INDEX; // surface block
-                }
-                else
-                {
-                    face = Block.UP_FACE_INDEX;
+                    if ((GetVisibilityMask(blockpos.x, blockpos.y, blockpos.z) & powersOfTwo[Block.UP_FACE_INDEX]) == 0)
+                    {
+                        b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
+                        face = Block.SURFACE_FACE_INDEX; // surface block
+                    }
+                    else
+                    {
+                        face = Block.UP_FACE_INDEX;
+                    }
                 }
             }
         }
         else
         {            
-            if (hitpoint.x == -0.5f)
+            if (hitpoint.y == -0.5f)
             {
                 if (normal == Vector3.up)
                 {
@@ -1184,7 +1187,7 @@ public sealed class Chunk : MonoBehaviour
                                 if (hitpoint.y < 0.5f - CaveBlock.CEILING_THICKNESS + 0.001f & normal == Vector3.down)
                                 {
                                     b = GetBlock(blockpos.x, blockpos.y, blockpos.z);
-                                    face = Block.CEILING_FACE_INDEX; 
+                                    face = Block.CEILING_FACE_INDEX;
                                 }
                                 else
                                 {

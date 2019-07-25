@@ -418,58 +418,62 @@ public sealed class GlobalMap : MonoBehaviour
         }
 
         //test
-        bool motion = false;
-        float angle = cpoint.angle;
-        if (Input.GetKey("l"))
+        if (false)
         {
-            angle += 4 * Time.deltaTime;
-            if (angle > 360f) angle = 360f - angle;
-            else { if (angle < 0) angle += 360f; }
-            motion = true;
-        }
-        else
-        {
-            if (Input.GetKey("j"))
+            bool motion = false;
+            float angle = cpoint.angle;
+            if (Input.GetKey("l"))
             {
-                angle -= 4 * Time.deltaTime;
+                angle += 4 * Time.deltaTime;
                 if (angle > 360f) angle = 360f - angle;
                 else { if (angle < 0) angle += 360f; }
                 motion = true;
             }
-        }
-        float height = cpoint.height;
-        if (Input.GetKey("i"))
-        {
-            height += 0.03f * Time.deltaTime;
-            if (height > 1) height = 1;
-            else { if (height < 0) height = 0; }
-            motion = true;
-        }
-        else
-        {
-            if (Input.GetKey("k"))
+            else
             {
-                height -= 0.03f * Time.deltaTime;
+                if (Input.GetKey("j"))
+                {
+                    angle -= 4 * Time.deltaTime;
+                    if (angle > 360f) angle = 360f - angle;
+                    else { if (angle < 0) angle += 360f; }
+                    motion = true;
+                }
+            }
+            float height = cpoint.height;
+            if (Input.GetKey("i"))
+            {
+                height += 0.03f * Time.deltaTime;
                 if (height > 1) height = 1;
                 else { if (height < 0) height = 0; }
                 motion = true;
             }
-        }
-        if (motion)
-        {
-            cpoint.SetCoords(angle, height);
-            GameMaster.realMaster.environmentMaster.positionChanged = true;
-            var sIndex = DefineSectorIndex(angle, cpoint.ringIndex);
-            if (sIndex != currentSectorIndex)
+            else
             {
-                currentSectorIndex = sIndex;
-                if (mapSectors[currentSectorIndex] != null)
+                if (Input.GetKey("k"))
                 {
-                    GameMaster.realMaster.environmentMaster.ChangeEnvironment(mapSectors[currentSectorIndex].environment);
+                    height -= 0.03f * Time.deltaTime;
+                    if (height > 1) height = 1;
+                    else { if (height < 0) height = 0; }
+                    motion = true;
                 }
-                else
+            }
+
+            if (motion)
+            {
+                cpoint.SetCoords(angle, height);
+                GameMaster.realMaster.environmentMaster.positionChanged = true;
+                var sIndex = DefineSectorIndex(angle, cpoint.ringIndex);
+                if (sIndex != currentSectorIndex)
                 {
-                    GameMaster.realMaster.environmentMaster.ChangeEnvironment(Environment.defaultEnvironment);
+                    currentSectorIndex = sIndex;
+                    if (mapSectors[currentSectorIndex] != null)
+                    {
+                        GameMaster.realMaster.environmentMaster.ChangeEnvironment(mapSectors[currentSectorIndex].environment);
+                    }
+                    else
+                    {
+                        GameMaster.realMaster.environmentMaster.ChangeEnvironment(Environment.defaultEnvironment);
+                    }
                 }
             }
         }

@@ -48,11 +48,20 @@ public class OakTree : Plant
         if (blankModelsContainer == null)   modelsContainerReady = false;
         oaks.Clear();
     }
+    override public void ResetToDefaults()
+    {
+        lifepower = CREATE_COST;
+        lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
+        stage = 0;
+        growth = 0;
+        hp = maxHp;
+        SetStage(0);
+    }
 
     // тоже можно рассовать по методам
     override protected void SetModel()
     {
-        // проверка на предыдущую модель не нужна        
+        // проверка на предыдущую модель не нужна  - устанавливается через SetStage  
         if (!modelsContainerReady) // первая загрузка
         {
             startStageSprites = Resources.LoadAll<Sprite>("Textures/Plants/oakTree");
@@ -296,16 +305,6 @@ public class OakTree : Plant
         GameObject g =  Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(g, true);
         return g;
-    }
-
-    override public void ResetToDefaults()
-    {
-        lifepower = CREATE_COST;
-        lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
-        stage = 0;
-        growth = 0;
-        hp = maxHp;
-        SetStage(0);
     }
 
     override public void Prepare()
@@ -675,7 +674,7 @@ public class OakTree : Plant
     }
     #endregion
 
-    override public void Harvest()
+    override public void Harvest(bool replenish)
     {
         if (destroyed) return;
         GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Lumber, CountLumber());
@@ -688,7 +687,9 @@ public class OakTree : Plant
             modelHolder = null;
             spriter = null;
         }
-        Annihilate(true, false, false);
+        //if (!replenish) 
+        Annihilate(true, false, false); // реплениш отключен, тк глючит - не успевает поставить спрайтер до обновления
+        //else ResetToDefaults();
     }
 
     override public void Dry()

@@ -122,7 +122,7 @@ public class Farm : WorkBuilding
                     {
                         if (p.stage >= harvestableStage & p.growth >= 1)
                         {
-                            p.Harvest();
+                            p.Harvest(true);
                             actionsPoints -= HARVEST_ACTIVITY_COST;
                         }
                         else
@@ -137,7 +137,7 @@ public class Farm : WorkBuilding
                     }
                     else
                     {
-                        p.Harvest();
+                        p.Harvest(false);
                     }
                 }
                 i++;

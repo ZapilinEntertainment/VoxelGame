@@ -51,8 +51,7 @@ public sealed class Settlement : House
                 center.maxPoints = center.GetMaxPoints();
 
                 if (center.basement.noEmptySpace != false)
-                {
-                    
+                {                    
                     foreach (var s in center.basement.structures)
                     {
                         if (s.ID == SETTLEMENT_STRUCTURE_ID)
@@ -82,10 +81,11 @@ public sealed class Settlement : House
                                     center.pointsFilled += 4;
                                     center.energySurplus += partEnergyConsumption * center.level * 4;
                                 }
-                            }
+                            }                            
                         }
                     }
                 }
+                if (center.level > maxAchievedLevel) maxAchievedLevel = center.level;
             }
         }
         if (!loading) // wait for colony loading

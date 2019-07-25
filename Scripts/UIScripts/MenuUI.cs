@@ -10,7 +10,7 @@ public sealed class MenuUI : MonoBehaviour
 #pragma warning disable 0649
     [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton, authorsButton;
     [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, 
-        highscoresPanel, authorsPanel;
+        highscoresPanel, authorsPanel, loadingLabel;
     [SerializeField] private Slider sizeSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown, languageDropdown;
     [SerializeField] private Sprite overridingSprite;
@@ -63,8 +63,8 @@ public sealed class MenuUI : MonoBehaviour
     {
         if (newGameGenMode == ChunkGenerationMode.TerrainLoading & GameMaster.savename == string.Empty) return;
         GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value);
-        GameMaster.gameStartSettings = gss;
-        GameMaster.ChangeScene(GameMaster.PLAY_SCENE_INDEX);
+        GameMaster.gameStartSettings = gss;        
+        GameMaster.ChangeScene(GameMaster.PLAY_SCENE_INDEX);            
     }
     public void NewGameButton()
     {
@@ -99,6 +99,12 @@ public sealed class MenuUI : MonoBehaviour
     public void ExitButton()
     {
         Application.Quit();
+    }
+
+    public void ToLoadingView()
+    {
+        loadingLabel.SetActive(true);
+        Destroy(gameObject);
     }
 
     public void NG_GenerateButton()

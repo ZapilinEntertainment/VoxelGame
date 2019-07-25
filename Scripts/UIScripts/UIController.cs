@@ -493,18 +493,28 @@ sealed public class UIController : MonoBehaviour
                             switch (b.type)
                             {
                                 case BlockType.Cave:
-                                case BlockType.Surface:
-                                    SurfaceBlock sb = b as SurfaceBlock;
-                                    if (sb == chosenSurface & chosenObjectType == ChosenObjectType.Surface) return;
-                                    else
                                     {
+                                        CaveBlock sb = b as CaveBlock;
+                                        if (faceIndex == Block.SURFACE_FACE_INDEX & sb.haveSurface)
+                                        {
+                                            chosenSurface = sb;
+                                            chosenStructure = null;
+                                            chosenCube = null;
+                                            chosenWorksite = sb.worksite;
+                                            ChangeChosenObject(ChosenObjectType.Surface);                                            
+                                        }
+                                        break;
+                                    }
+                                case BlockType.Surface:                                    
+                                    {
+                                        SurfaceBlock sb = b as SurfaceBlock;
                                         chosenSurface = sb;
                                         chosenStructure = null;
                                         chosenCube = null;
                                         chosenWorksite = sb.worksite;
                                         ChangeChosenObject(ChosenObjectType.Surface);
-                                    }
-                                    break;
+                                        break;
+                                    }                                    
                                 case BlockType.Cube:
                                     {
                                         CubeBlock cb = b as CubeBlock;

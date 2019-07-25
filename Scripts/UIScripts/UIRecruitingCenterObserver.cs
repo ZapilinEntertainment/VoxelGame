@@ -163,10 +163,13 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         else
         {
             var rt = infoButton.GetComponent<RectTransform>();
-            float f = Screen.height / 3f;
-            if (f < 500) f = 500;
-            if (f > Screen.height * 0.8f) f = Screen.height * 0.8f;
-            var r = new Rect(new Vector2(rt.position.x - rt.rect.width / 2f, 50f), new Vector2(f,f));
+            float xpos = rt.position.x - rt.rect.width / 2f;
+            float f = 400f;
+            var screenrect = UIController.current.mainCanvas.GetComponent<RectTransform>().rect;
+            if (f > xpos * 0.9f) f = xpos * 0.9f;
+            if (f > screenrect.height * 0.7f) f = screenrect.height * 0.7f;
+            
+            var r = new Rect(new Vector2(xpos, 50f), new Vector2(f,f));
             showingCrew.ShowOnGUI(r, SpriteAlignment.BottomRight, true );
         }
     }

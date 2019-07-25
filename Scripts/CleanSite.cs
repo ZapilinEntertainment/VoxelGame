@@ -53,7 +53,7 @@ public class CleanSite : Worksite {
             if (s.ID == Structure.PLANT_ID)
             {
                 workGained = s.hp;
-                (s as Plant).Harvest();                
+                (s as Plant).Harvest(false);                
             }
             else
             {

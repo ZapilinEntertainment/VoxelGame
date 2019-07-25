@@ -195,9 +195,10 @@ sealed public class Corn : Plant {
 	}
 	#endregion
 
-	override public void Harvest() {
+	override public void Harvest(bool replenish) {
 		GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Food, GATHER);
-		ResetToDefaults();
+        if (replenish) ResetToDefaults();
+        else Annihilate(true, false, false);
 	}
 
 	override public void Dry() {
