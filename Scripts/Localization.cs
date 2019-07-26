@@ -277,7 +277,7 @@ public static class Localization
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.CONNECT_TOWER_6_ID: return "<В разработке>";
                     case Structure.XSTATION_3_ID: return "Собирает информацию об окружающей среде, измеряет уровень Стабильности, предсказывает надвигающиеся угрозы.";
-                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена на максимальной высоте. В радиусе одного блока не должно быть других блоков и поверхностей. /n Может быть построена только одна обсерватория.";
+                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена на максимальной высоте. В радиусе одного блока не должно быть других блоков и поверхностей. Может быть построена только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
@@ -358,7 +358,7 @@ public static class Localization
                     case Structure.HOTEL_BLOCK_6_ID:
                     case Structure.CONNECT_TOWER_6_ID: return "<In development>";
                     case Structure.XSTATION_3_ID: return "Gathering environmental intelligence, measures Stability level, predicting threats.";
-                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. /n Only one observatory can be built.";
+                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. Only one observatory can be built.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Gives access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
@@ -452,7 +452,7 @@ public static class Localization
                     {
                         case 0: return string.Empty;
                         case ResourceType.DIRT_ID: return "Органическое покрытие острова.";
-                        case ResourceType.FOOD_ID: return "Топливо для живых.";
+                        case ResourceType.FOOD_ID: return "Топливо для живущих.";
                         case ResourceType.LUMBER_ID:
                             return "Эластичная древесина, растущая на островах. Используются для производства пластика и строительства небольших конструкций.";
                         case ResourceType.STONE_ID:
@@ -2854,7 +2854,7 @@ public static class Localization
                                     break;
                                 case ProgressQuestID.Progress_100Fuel:
                                     q.name = "Космическая заправка";
-                                    q.description = "Множество космических путешественников было бы радо заправляться в ваших доках. Постройте топливный завод и произведите 100 единиц топлива - так вы очень поможете исследователям Последнего Сектора.";
+                                    q.description = "Множество космических путешественников были бы рады заправляться в ваших доках. Постройте топливный завод и произведите 100 единиц топлива - так вы очень поможете исследователям Последнего Сектора.";
                                     q.steps[0] = "Собрать 100 топлива ";
                                     break;
                                 case ProgressQuestID.Progress_XStation:

@@ -40,7 +40,7 @@
             case HQ_LVL6_COST_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.metal_E, 120),
-                new ResourceContainer(ResourceType.Plastics, 750), new ResourceContainer(ResourceType.Graphonium, 200)
+                new ResourceContainer(ResourceType.Plastics, 750), new ResourceContainer(ResourceType.Graphonium, 100)
             };
                 break;
             case SHUTTLE_BUILD_COST_ID:
@@ -157,7 +157,8 @@
                 break;
             case Structure.FARM_4_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Plastics, 80), new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_E, 10)
+                new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_K, 60), new ResourceContainer(ResourceType.metal_E, 20),
+                new ResourceContainer(ResourceType.Concrete, 280)
             };
                 break;
             case Structure.FARM_5_ID:

@@ -103,6 +103,7 @@ public sealed class PoolMaster : MonoBehaviour {
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+        energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
         if (useAdvancedMaterials)
         {
             glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
@@ -110,7 +111,6 @@ public sealed class PoolMaster : MonoBehaviour {
             glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
             metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
             green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-            energyMaterial = Resources.Load<Material>("Materials/Advanced/ChargedMaterial_advanced");
         }
         else
         {
@@ -119,7 +119,7 @@ public sealed class PoolMaster : MonoBehaviour {
                 glassMaterial = Resources.Load<Material>("Materials/Glass");
                 metal_material = Resources.Load<Material>("Materials/Metal");
                 green_material = Resources.Load<Material>("Materials/Green");
-                energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
+                
         }
         if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
         if (useIlluminationSystem)
@@ -171,7 +171,6 @@ public sealed class PoolMaster : MonoBehaviour {
                 glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
                 metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
                 green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-                energyMaterial = Resources.Load<Material>("Materials/Advanced/ChargedMaterial_advanced");
             }
             else
             {
@@ -183,8 +182,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     basic_material = Resources.Load<Material>("Materials/Basic");
                     glassMaterial = Resources.Load<Material>("Materials/Glass");
                     metal_material = Resources.Load<Material>("Materials/Metal");
-                    green_material = Resources.Load<Material>("Materials/Green");
-                    energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
+                    green_material = Resources.Load<Material>("Materials/Green");                    
                 }
             }
             if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);

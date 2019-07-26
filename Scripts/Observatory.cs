@@ -33,15 +33,7 @@ public class Observatory : WorkBuilding {
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
-        }
-        Chunk chunk = b.myChunk;
-        Block lowerBlock = chunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z);
-        if (lowerBlock != null)
-        {
-            indestructible = true;
-            chunk.DeleteBlock(lowerBlock.pos);
-            indestructible = false;
-        }
+        }        
         if (!GameMaster.loading)
         {
             List<ChunkPos> positionsList = new List<ChunkPos>();
@@ -53,7 +45,7 @@ public class Observatory : WorkBuilding {
                 new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
             };
             blockedBlocks = new List<Block>();
-            chunk.BlockRegion(positionsList, this, ref blockedBlocks);
+            b.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
         }
         else {
             if (!subscribedToRestoreBlockersUpdate)

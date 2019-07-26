@@ -9,7 +9,7 @@ public sealed class Dock : WorkBuilding {
 	public static int immigrationPlan {get; private set;} 
 	public static bool immigrationEnabled{get; private set;}
     public static UIDockObserver dockObserver;
-    private static bool announceNewShips = true;
+    private static bool announceNewShips = false;
 
 	public bool maintainingShip{get; private set;}
     public bool correctLocation { get; private set; }
@@ -526,7 +526,7 @@ public sealed class Dock : WorkBuilding {
 		shipArrivingTimer = GameConstants.GetShipArrivingTimer();
 
 		int newPeople = peopleBefore - immigrationPlan;
-		if (newPeople > 0 & announceNewShips) GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
+		if (newPeople > 0) GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
 	}
 
 	private void SellResource(ResourceType rt, float volume) {

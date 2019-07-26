@@ -74,8 +74,6 @@ public sealed class UICrewObserver : MonoBehaviour
             {
                 RedrawWindow();
             }
-            else
-            {
                 //#redraw dynamic crew info
                 levelText.text = showingCrew.level.ToString();
                 levelText.color = Color.Lerp(Color.white, Color.cyan, (float)showingCrew.level / 255f);
@@ -121,7 +119,6 @@ public sealed class UICrewObserver : MonoBehaviour
 
                 if (lastShuttlesState != Shuttle.actionsHash) PrepareShuttlesDropdown();
                 if (lastArtifactsState != Artifact.actionsHash) PrepareArtifactsDropdown();
-            }
 
         }
     }
@@ -202,7 +199,12 @@ public sealed class UICrewObserver : MonoBehaviour
     }
     public void DismissButton() // сделать подтверждение
     {
-        if (showingCrew != null) showingCrew.Dismiss();
+        if (showingCrew != null)
+        {
+            showingCrew.Dismiss();
+            showingCrew = null;
+            gameObject.SetActive(false);
+        }
     }
 
     public void SelectShuttle(int i)

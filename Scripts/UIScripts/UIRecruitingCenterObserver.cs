@@ -44,6 +44,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         PrepareCrewsDropdown();
         PrepareButtons();
         crewSlotsInfo.text = Crew.crewsList.Count.ToString() + " / " + RecruitingCenter.GetCrewsSlotsCount().ToString();
+        hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost().ToString() + ')';
     }
     private void PrepareButtons()
     {
@@ -140,7 +141,13 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         else
         {
             showingCrew = Crew.GetCrewByID(crewsIDsList[i]);
-            if (Crew.crewObserver != null && Crew.crewObserver.isActiveAndEnabled) InfoButton();
+            if (showingCrew != null)
+            {
+                if (Crew.crewObserver != null && Crew.crewObserver.isActiveAndEnabled) InfoButton();
+                if (!infoButton.activeSelf) infoButton.SetActive(true);
+                if (showingCrew.membersCount < Crew.MAX_MEMBER_COUNT & !replenishButton.activeSelf) replenishButton.SetActive(true);
+            }
+            else PrepareCrewsDropdown();
         }
         PrepareButtons();
     }
@@ -213,10 +220,5 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         WorkBuilding.workbuildingObserver.ShutOff();
         if (hiremode) UIController.current.DeactivateProgressPanel();
         gameObject.SetActive(false);
-    }
-
-    public override void LocalizeTitles()
-    {
-        hireButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.HireNewCrew) + " (" + RecruitingCenter.GetHireCost().ToString() + ')';
     }
 }

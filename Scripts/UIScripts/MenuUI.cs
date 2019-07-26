@@ -376,11 +376,14 @@ public sealed class MenuUI : MonoBehaviour
                             RectTransform rt = Instantiate(exampleItem, exampleItem.parent);
                             rt.localPosition += Vector3.down * exampleItem.rect.height * (i - 1);
                             h = highscores[i];
-                            rt.GetChild(0).GetComponent<Text>().text = h.colonyName;
-                            rt.GetChild(1).GetComponent<Text>().text = ((int)h.score).ToString();
-                            ri = rt.GetChild(2).GetComponent<RawImage>();
-                            ri.uvRect = GetEndGameIconRect(h.endType);
-                            ri.enabled = true;
+                            if (h != null)
+                            {
+                                rt.GetChild(0).GetComponent<Text>().text = h.colonyName;
+                                rt.GetChild(1).GetComponent<Text>().text = ((int)h.score).ToString();
+                                ri = rt.GetChild(2).GetComponent<RawImage>();
+                                ri.uvRect = GetEndGameIconRect(h.endType);
+                                ri.enabled = true;
+                            }
                         }
                     }
                 }

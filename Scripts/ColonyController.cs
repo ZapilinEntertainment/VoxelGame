@@ -188,7 +188,8 @@ public sealed class ColonyController : MonoBehaviour
                     {
                         if (freeWorkers > 0f) { freeWorkers--; citizenCount--; }
                         else StartCoroutine(DeportateWorkingCitizen());
-                        PoolMaster.current.CitizenLeaveEffect(houses[Random.Range(0, houses.Count)].transform.position);
+                        if (houses.Count > 0) PoolMaster.current.CitizenLeaveEffect(houses[Random.Range(0, houses.Count - 1)].transform.position);
+                        else PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
                     }
                     foodSupplyHappiness = 0f;
                     realBirthrate = 0f;

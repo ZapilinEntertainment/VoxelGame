@@ -595,7 +595,7 @@ public class Quest
                         {
                             if (resources[ResourceType.FOOD_ID] < colony.foodMonthConsumption / 2f) acceptableQuest.Add(q);break;
                         }
-                    case ProgressQuestID.Progress_2Docks: if (colony.docks.Count < 2) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_2Docks: if (colony.docks.Count < 2 & lvl > 1) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_2Storages: if (colony.storage.warehouses.Count < 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier2:
                         {

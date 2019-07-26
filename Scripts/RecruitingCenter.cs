@@ -75,7 +75,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 					hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
 					hireCost = ((int)(hireCost * 100)) / 100f;
                     if (showOnGUI) rcenterObserver.SelectCrew(c);
-				}
+                }
 			}
 		}
 		else {

@@ -428,9 +428,14 @@ public sealed class Chunk : MonoBehaviour
                 if (bx.type == BlockType.Cube ) vmask -= 8;
             }
             // up and down
+            var blockInPosition = GetBlock(x, y, z);
             bx = GetBlock(x, y + 1, z);
             bool visionBlocked = bx != null && bx.type != BlockType.Shapeless;
             if (!visionBlocked & y != CHUNK_SIZE - 1) vmask += 16;
+            else
+            {
+                if (GameMaster.layerCutHeight == y & (blockInPosition != null && blockInPosition.type == BlockType.Cube)) vmask += 16;
+            }
 
             bx = GetBlock(x, y - 1, z);
             if (bx == null) vmask += 32;
@@ -1004,6 +1009,20 @@ public sealed class Chunk : MonoBehaviour
         int layerCutHeight = GameMaster.layerCutHeight;
         roofObjectsHolder.SetActive(layerCutHeight == CHUNK_SIZE);
         RenderDataFullRecalculation();
+        foreach (var sb in surfaceBlocks)
+        {
+            bool viewStatus = true;
+            if (sb.pos.y > layerCutHeight) viewStatus = false;
+            if (sb.noEmptySpace != false)
+            {
+                if (sb == null) continue;
+                foreach (var s in sb.structures)
+                {
+                    if (s == null) continue;
+                    else s.SetVisibility(viewStatus);
+                }
+            }
+        }
     }
     public void SetShadowCastingMode(bool x)
     {

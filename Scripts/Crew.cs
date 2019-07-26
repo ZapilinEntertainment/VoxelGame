@@ -29,98 +29,23 @@ public sealed class Crew : MonoBehaviour {
 	public Shuttle shuttle{get;private set;}
 	public CrewStatus status { get; private set; }
 
-    private float _perception;
-	public float perception // тесты на нахождение и внимательность
-    {
-        get { return _perception; } 
-        private set { if (value < 0) _perception = 0; else { if (value > 1) _perception = 1; } }
-    }
-    private float _persistence;
-	public float persistence
-    {   // тесты на выносливость и желание продолжать поиски
-        get { return _persistence; }
-        private set { if (value < 0) _persistence = 0; else { if (value > 1) _persistence = 1; } }
-    }
-    private float _luck;
-	public float luck
-    {  // не показывать игроку
-        get { return _luck; }
-        private set { if (value < 0) _luck = 0; else { if (value > 1) _luck = 1; } }
-    }
-    private float _bravery;
-	public float bravery
-    {
-        get { return _bravery; }
-        private set { if (value < 0) _bravery = 0; else { if (value > 1) _bravery = 1; } }
-    }
-    private float _techSkills;
-	public float techSkills
-    {
-        get { return _techSkills; }
-        private set { if (value < 0) _techSkills = 0; else { if (value > 1) _techSkills = 1; } }
-    }
-    private float _survivalSkills;
-	public float survivalSkills{
-        get { return _survivalSkills; }
-        private set { if (value < 0) _survivalSkills = 0; else { if (value > 1) _survivalSkills = 1; } }
-    }
-    private float _teamwork;
-	public float teamWork{
-        get { return _teamwork; }
-        private set { if (value < 0) _teamwork = 0; else { if (value > 1) _teamwork = 1; } }
-    }
+	public float perception { get; private set; }// тесты на нахождение и внимательность
+    public float persistence { get; private set; }
+	public float luck { get; private set; }
+	public float bravery { get; private set; }
+	public float techSkills { get; private set; }
+	public float survivalSkills { get; private set; }
+	public float teamWork { get; private set; }
     //при внесении изменений отредактировать Localization.GetCrewInfo
 
         //neuroparameters:
-    private float _confidence;
-    public float confidence
-    {
-        get { return _confidence; }
-        private set {
-            if (value < 0)
-            {
-                _confidence = 0;
-                if (currentExpedition != null & loyalty < 0.5f)
-                {
-                    GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotCompleteMission,this));
-                    currentExpedition.EndMission();
-                }
-            }
-            else { if (value > 1) _confidence = 1; } }
-    }
-    private float _unity;
-    public float unity
-    {
-        get { return _unity; }
-        private set { if (value < 0) _unity = 0; else { if (value > 1) _unity = 1; } }
-    }
-    private float _loyalty;
-    public float loyalty
-    {
-        get { return _loyalty; }
-        private set {
-            if (value < 0) {
-                _loyalty = 0;
-                GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.LeaveUs, this));
-                currentExpedition.Disappear();
-            }
-            else { if (value > 1) _loyalty = 1; } }
-    }
-    private float _adaptability;
-    public float adaptability
-    {
-        get { return _adaptability; }
-        private set { if (value < 0) _adaptability = 0; else { if (value > 1) _adaptability = 1; } }
-    }
+    public float confidence { get; private set; }
+    public float unity { get; private set; }
+    public float loyalty { get; private set; }
+    public float adaptability { get; private set; }
+    public float stamina { get; private set; } // процент готовности, падает по мере проведения операции, восстанавливается дома
 
-    private float _stamina;
-    public float stamina
-    {
-        get { return _stamina; }
-        private set { if (value < 0) _stamina = 0; else { if (value > 1) _stamina = 1; } }
-    }  // процент готовности, падает по мере проведения операции, восстанавливается дома
-
-    public int missionsParticipated { get; private set; }
+public int missionsParticipated { get; private set; }
     public int missionsSuccessed{get;private set;}    
 
     static Crew()
@@ -185,7 +110,7 @@ public sealed class Crew : MonoBehaviour {
     }
     public static Crew GetCrewByID(int s_id)
     {
-        if (s_id < 0 || crewsList.Count <= s_id) return null;
+        if (s_id < 0 || crewsList.Count == 0) return null;
         else
         {
             foreach (Crew c in crewsList)

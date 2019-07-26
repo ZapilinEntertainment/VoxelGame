@@ -545,9 +545,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 deltaY = Input.GetAxis("Mouse Y");
             }
             deltaZoom = Input.GetAxis("Mouse ScrollWheel");
-        }
-
-       
+        }       
 
         if (deltaZoom != 0)
         {
@@ -627,7 +625,10 @@ public sealed class GlobalMapUI : MonoBehaviour
             }
         }
 
+
         mapRect.position = new Vector3(xpos, ypos, 0);
+
+        RedrawMap();
     }   
    
     private void OnEnable()
