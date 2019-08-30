@@ -28,6 +28,9 @@ sealed public class Corn : Plant {
     public static void ResetStaticData()
     {
         corns = new List<Corn>();
+        //
+        subscribedToCameraUpdate = true;
+        //
         if (!subscribedToCameraUpdate)
         {
             FollowingCamera.main.cameraChangedEvent += CameraUpdate;

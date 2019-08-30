@@ -27,7 +27,7 @@ public class Building : Structure
         {
             case 1:
                 blist.Add(GetStructureByID(WIND_GENERATOR_1_ID) as Building);
-                blist.Add(GetStructureByID(PSYCHOKINECTIC_GENERATOR) as Building);
+                blist.Add(GetStructureByID(PSYCHOKINECTIC_GEN_ID) as Building);
                 blist.Add(GetStructureByID(STORAGE_1_ID) as Building);
                 blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
                 blist.Add(GetStructureByID(FARM_1_ID) as Building);
@@ -97,6 +97,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
                 //blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
+                blist.Add(GetStructureByID(RESEARCH_LAB_ID) as Building);
                 break;
         }
         return blist;
@@ -143,6 +144,7 @@ public class Building : Structure
             case FOUNDATION_BLOCK_5_ID:
             case WIND_GENERATOR_1_ID:            
                 return 10f;
+            case RESEARCH_LAB_ID:
             case XSTATION_3_ID: return 12f;
 
             case EXPEDITION_CORPUS_4_ID:
@@ -156,7 +158,7 @@ public class Building : Structure
             case SHUTTLE_HANGAR_4_ID:
             case PLASTICS_FACTORY_3_ID:
             case ORE_ENRICHER_2_ID:
-            case PSYCHOKINECTIC_GENERATOR:
+            case PSYCHOKINECTIC_GEN_ID:
                 return 40f;
 
             case FUEL_FACILITY_ID:
@@ -223,8 +225,11 @@ public class Building : Structure
             case RECRUITING_CENTER_4_ID:
             case ORE_ENRICHER_2_ID: return -12f;
             case ARTIFACTS_REPOSITORY_ID: return -16f;
+
+            case RESEARCH_LAB_ID:
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_ID: return -20f;
+
             case OBSERVATORY_ID: return -50f;
             case CONNECT_TOWER_6_ID: return -64f;
             case HOTEL_BLOCK_6_ID:
@@ -611,6 +616,11 @@ public class Building : Structure
                     upgradedIndex = 0;
                     break;
                 }
+            case RESEARCH_LAB_ID:
+                {
+                    level = 6;
+                    break;
+                }
         }
     }
 
@@ -718,6 +728,8 @@ public class Building : Structure
                 }
             }
         }
+
+        //copy to SettlementStructure.SetActivationStatus
     }
 
     override public void SetVisibility(bool x)

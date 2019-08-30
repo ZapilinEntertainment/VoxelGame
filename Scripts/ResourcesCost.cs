@@ -379,7 +379,7 @@
                     };
                     break;
                 }
-            case Structure.PSYCHOKINECTIC_GENERATOR:
+            case Structure.PSYCHOKINECTIC_GEN_ID:
                 {
                     cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Concrete, 100), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.Plastics, 40),
@@ -387,12 +387,12 @@
             };
                     break;
                 }
-                //case Structure.CONTROL_CENTER_6_ID:
-                // cost = new ResourceContainer[]{
-                //  new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
-                // new ResourceContainer(ResourceType.metal_E, 50),
-                //};
-                // break;
+                case Structure.RESEARCH_LAB_ID:
+                 cost = new ResourceContainer[]{
+                  new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
+                 new ResourceContainer(ResourceType.metal_E, 50), new ResourceContainer(ResourceType.metal_N, 50)
+                };
+                 break;
         }
         return cost;
     }

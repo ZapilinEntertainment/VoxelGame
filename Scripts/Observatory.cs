@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Observatory : WorkBuilding {
+public sealed class Observatory : WorkBuilding {
     public static bool alreadyBuilt = false;
     public const float SEARCH_WORKFLOW = 250, CHANCE_TO_FIND = 0.3f;
     private bool mapOpened = false, subscribedToRestoreBlockersUpdate = false;    

@@ -1264,6 +1264,7 @@ sealed public class UIController : MonoBehaviour
         }
         else
         {
+            if (activeFastButtons.Contains(s.ID)) return;
             buttonGO = Instantiate(rightFastPanel.transform.GetChild(0).gameObject, rightFastPanel.transform);
             RectTransform rt = buttonGO.GetComponent<RectTransform>();
             rt.position += Vector3.down * rt.rect.height * activeFastButtons.Count;
@@ -1272,6 +1273,9 @@ sealed public class UIController : MonoBehaviour
         b.onClick.RemoveAllListeners();
         switch (s.ID)
         {
+            case Structure.RESEARCH_LAB_ID:
+                b.onClick.AddListener(() => { ScienceTabUI.Initialize(); });
+                break;
             case Structure.OBSERVATORY_ID:
                 b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
                 break;

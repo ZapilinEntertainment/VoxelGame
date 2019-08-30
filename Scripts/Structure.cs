@@ -36,7 +36,7 @@ public class Structure : MonoBehaviour
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
-    STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, PSYCHOKINECTIC_GENERATOR = 39,
+        RESEARCH_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
     HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
@@ -44,7 +44,7 @@ public class Structure : MonoBehaviour
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
          HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 34,37,39,40,44, 58, 59, 69
+    //free ids 37,39,40,44, 58, 59, 69
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure";
 
@@ -57,7 +57,6 @@ public class Structure : MonoBehaviour
         if (resetTypesList == null) resetTypesList = new List<System.Type>();
         if (!resetTypesList.Contains(t)) resetTypesList.Add(t);
     }
-
     public static void ResetToDefaults_Static()
     {
         if (firstLaunch)
@@ -78,106 +77,6 @@ public class Structure : MonoBehaviour
                 else print(t.ToString());
             }
         }
-    }
-
-    virtual protected void SetModel()
-    {
-        //switch skin index
-        GameObject model;
-        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
-        switch (ID)
-        {
-            default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
-            case DRYED_PLANT_ID:
-                model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));
-                break;
-            case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
-            case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
-            case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
-            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;           
-            case STORAGE_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/storageBlock_level_5")); break;
-            case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
-            case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
-            case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
-            case HOUSE_BLOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/houseBlock_level_5")); break;
-            case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
-            case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
-            case DOCK_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_3")); break;
-            case ENERGY_CAPACITOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_1")); break;
-            case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_2")); break;           
-            case FARM_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_1")); break;
-            case FARM_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_2")); break;
-            case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
-            case FARM_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;
-            case FARM_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/farmBlock_level_5")); break;
-            case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
-            case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
-            case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
-            case LUMBERMILL_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;
-            case LUMBERMILL_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/lumbermillBlock_level_5")); break;
-            case MINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Mine_level_1")); break;
-            case SMELTERY_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_1")); break;
-            case SMELTERY_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_2")); break;
-            case SMELTERY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_3")); break;
-            case SMELTERY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/smelteryBlock_level_5")); break;
-            case WIND_GENERATOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/windGenerator_level_1")); break;
-            case BIOGENERATOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Biogenerator_level_2")); break;
-            case HOSPITAL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Hospital_level_2")); break;
-            case MINERAL_POWERPLANT_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/mineralPP_level_2")); break;
-            case ORE_ENRICHER_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/oreEnricher_level_2")); break;
-            case WORKSHOP_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/rollingShop_level_2")); break;
-            case MINI_GRPH_REACTOR_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/miniReactor_level_3")); break;
-            case FUEL_FACILITY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/fuelFacility")); break;
-            case GRPH_REACTOR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumReactor_level_4")); break;
-            case PLASTICS_FACTORY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/plasticsFactory_level_3")); break;
-            case SUPPLIES_FACTORY_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/foodFactory_level_4")); break;
-            case SUPPLIES_FACTORY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foodFactoryBlock_level_5")); break;
-            case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
-            case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
-            case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;           
-            case COLUMN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Column")); break;
-            case SWITCH_TOWER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/switchTower")); break;
-            case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
-            case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
-            case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
-            case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;
-            case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;
-            case FOUNDATION_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foundationBlock")); break;
-            case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
-            case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
-            case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
-            case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
-            case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
-            case OBSERVATORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/observatory")); break;
-            case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository")); break;
-            case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monument")); break;
-            case SETTLEMENT_CENTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_0")); break;
-            case PSYCHOKINECTIC_GENERATOR: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/psychokineticGenerator"));break;
-        }
-        model.transform.parent = transform;
-        model.transform.localRotation = Quaternion.Euler(0, 0, 0);
-        model.transform.localPosition = Vector3.zero;
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
-    }
-
-    virtual public void SetModelRotation(int r)
-    {
-        if (r > 7) r %= 8;
-        else
-        {
-            if (r < 0) r += 8;
-        }
-        modelRotation = (byte)r;
-
-        if (basement != null)
-        {
-            transform.localRotation = Quaternion.AngleAxis(modelRotation * 45, Vector3.up);
-        }
-    }
-    public void SetHP(float t)
-    {
-        hp = t;
-        if (hp == 0) Annihilate(true, false, true);
     }
 
     public static Structure GetStructureByID(int i_id)
@@ -274,8 +173,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Foundation block").AddComponent<Building>(); break;
             case CONNECT_TOWER_6_ID:
                 s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break;
-           // case CONTROL_CENTER_6_ID:
-               // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
+            // case CONTROL_CENTER_6_ID:
+            // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
             case HOTEL_BLOCK_6_ID:
                 s = new GameObject("Hotel block").AddComponent<House>(); break; // AWAITING
             case HOUSING_MAST_6_ID:
@@ -291,17 +190,199 @@ public class Structure : MonoBehaviour
             case MONUMENT_ID:
                 s = new GameObject("Monument").AddComponent<Monument>(); break;
             case SETTLEMENT_CENTER_ID:
-                s = new GameObject("Settlement center").AddComponent<Settlement>();break;
+                s = new GameObject("Settlement center").AddComponent<Settlement>(); break;
             case SETTLEMENT_STRUCTURE_ID:
-                s = new GameObject("Settlement structure").AddComponent<SettlementStructure>();break;
-            case PSYCHOKINECTIC_GENERATOR:
-                s = new GameObject("Psychocinetic gen").AddComponent<PsychokineticGenerator>();break;
+                s = new GameObject("Settlement structure").AddComponent<SettlementStructure>(); break;
+            case PSYCHOKINECTIC_GEN_ID:
+                s = new GameObject("Psychocinetic gen").AddComponent<PsychokineticGenerator>(); break;
+            case RESEARCH_LAB_ID:
+                s = new GameObject("Science Lab").AddComponent<ScienceLab>(); break;
             default: return null;
         }
         s.ID = i_id;
         s.Prepare();
         return s;
     }
+    public static Rect GetTextureRect(int f_id)
+    {
+        float p = 0.125f;
+        switch (f_id)
+        {
+            default: return Rect.zero;
+            case DRYED_PLANT_ID:
+            case PLANT_ID: return new Rect(p, 7 * p, p, p);
+            case HEADQUARTERS_ID: return new Rect(2 * p, 7 * p, p, p);
+            case LIFESTONE_ID:
+            case TREE_OF_LIFE_ID: return new Rect(3 * p, 7 * p, p, p);
+            case STORAGE_1_ID:
+            case STORAGE_2_ID:
+            case STORAGE_5_ID:
+            case STORAGE_0_ID: return new Rect(5 * p, 7 * p, p, p);
+            case CONTAINER_ID: return new Rect(4 * p, 7 * p, p, p);
+            case MINE_ID:
+            case MINE_ELEVATOR_ID: return new Rect(6 * p, 7 * p, p, p);
+            case SETTLEMENT_CENTER_ID:
+            case SETTLEMENT_STRUCTURE_ID:
+            case HOUSE_BLOCK_ID:
+            case TENT_ID: return new Rect(7 * p, 7 * p, p, p);
+            case DOCK_ID: return new Rect(0, 6 * p, p, p);
+            case ENERGY_CAPACITOR_2_ID:
+            case ENERGY_CAPACITOR_1_ID: return new Rect(p, 6 * p, p, p);
+            case FARM_2_ID:
+            case FARM_3_ID:
+            case FARM_4_ID:
+            case FARM_5_ID:
+            case FARM_1_ID: return new Rect(2 * p, 6 * p, p, p);
+            case LUMBERMILL_2_ID:
+            case LUMBERMILL_3_ID:
+            case LUMBERMILL_4_ID:
+            case LUMBERMILL_5_ID:
+            case LUMBERMILL_1_ID: return new Rect(3 * p, 6 * p, p, p);
+            case SMELTERY_2_ID:
+            case SMELTERY_3_ID:
+            case SMELTERY_5_ID:
+            case SMELTERY_1_ID: return new Rect(4 * p, 6 * p, p, p);
+            case WIND_GENERATOR_1_ID: return new Rect(5 * p, 6 * p, p, p);
+            case BIOGENERATOR_2_ID: return new Rect(6 * p, 6 * p, p, p);
+            case HOSPITAL_2_ID: return new Rect(7 * p, 6 * p, p, p);
+            case MINERAL_POWERPLANT_2_ID: return new Rect(0, 5 * p, p, p);
+            case ORE_ENRICHER_2_ID: return new Rect(p, 5 * p, p, p);
+            case WORKSHOP_ID: return new Rect(2 * p, 5 * p, p, p);
+            case MINI_GRPH_REACTOR_3_ID: return new Rect(3 * p, 5 * p, p, p);
+            case FUEL_FACILITY_ID: return new Rect(4 * p, 5 * p, p, p);
+            case GRPH_REACTOR_4_ID: return new Rect(5 * p, 5 * p, p, p);
+            case PLASTICS_FACTORY_3_ID: return new Rect(6 * p, 5 * p, p, p);
+            case SUPPLIES_FACTORY_5_ID:
+            case SUPPLIES_FACTORY_4_ID: return new Rect(7 * p, 5 * p, p, p);
+            case GRPH_ENRICHER_3_ID: return new Rect(0, 4 * p, p, p);
+            case XSTATION_3_ID: return new Rect(p, 4 * p, p, p);
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID: return new Rect(2 * p, 4 * p, p, p);
+            case RESOURCE_STICK_ID: return new Rect(4 * p, 4 * p, p, p);
+            case COLUMN_ID: return new Rect(5 * p, 4 * p, p, p);
+            case SWITCH_TOWER_ID: return new Rect(6 * p, 4 * p, p, p);
+            case SHUTTLE_HANGAR_4_ID: return new Rect(7 * p, 4 * p, p, p);
+            case RECRUITING_CENTER_4_ID: return new Rect(0, 3 * p, p, p);
+            case EXPEDITION_CORPUS_4_ID: return new Rect(p, 3 * p, p, p);
+            case QUANTUM_TRANSMITTER_4_ID: return new Rect(2 * p, 3 * p, p, p);
+            case REACTOR_BLOCK_5_ID: return new Rect(3 * p, 3 * p, p, p);
+            case FOUNDATION_BLOCK_5_ID: return new Rect(4 * p, 3 * p, p, p);
+            case CONNECT_TOWER_6_ID: return new Rect(5 * p, 3 * p, p, p);
+            case HOTEL_BLOCK_6_ID: return new Rect(7 * p, 3 * p, p, p);
+            case HOUSING_MAST_6_ID: return new Rect(0, 2 * p, p, p);
+            case DOCK_ADDON_1_ID:
+            case DOCK_ADDON_2_ID:
+            case DOCK_2_ID:
+            case DOCK_3_ID:
+                return new Rect(p, 2 * p, p, p);
+            case OBSERVATORY_ID: return new Rect(2 * p, 2 * p, p, p);
+            case ARTIFACTS_REPOSITORY_ID: return new Rect(3 * p, 2 * p, p, p);
+            case MONUMENT_ID: return new Rect(4 * p, 2 * p, p, p);
+            case PSYCHOKINECTIC_GEN_ID: return new Rect(5 * p, 2 * p, p, p);
+        }
+    }
+
+    virtual protected void SetModel()
+    {
+        //switch skin index
+        GameObject model;
+        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
+        switch (ID)
+        {
+            default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
+            case DRYED_PLANT_ID:
+                model = Instantiate(Resources.Load<GameObject>("Structures/dryedPlant"));
+                break;
+            case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
+            case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
+            case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
+            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;           
+            case STORAGE_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/storageBlock_level_5")); break;
+            case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
+            case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
+            case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
+            case HOUSE_BLOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/houseBlock_level_5")); break;
+            case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
+            case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
+            case DOCK_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_3")); break;
+            case ENERGY_CAPACITOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_1")); break;
+            case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_2")); break;           
+            case FARM_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_1")); break;
+            case FARM_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_2")); break;
+            case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
+            case FARM_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;
+            case FARM_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/farmBlock_level_5")); break;
+            case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
+            case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
+            case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
+            case LUMBERMILL_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;
+            case LUMBERMILL_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/lumbermillBlock_level_5")); break;
+            case MINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Mine_level_1")); break;
+            case SMELTERY_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_1")); break;
+            case SMELTERY_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_2")); break;
+            case SMELTERY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_3")); break;
+            case SMELTERY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/smelteryBlock_level_5")); break;
+            case WIND_GENERATOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/windGenerator_level_1")); break;
+            case BIOGENERATOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Biogenerator_level_2")); break;
+            case HOSPITAL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Hospital_level_2")); break;
+            case MINERAL_POWERPLANT_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/mineralPP_level_2")); break;
+            case ORE_ENRICHER_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/oreEnricher_level_2")); break;
+            case WORKSHOP_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/rollingShop_level_2")); break;
+            case MINI_GRPH_REACTOR_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/miniReactor_level_3")); break;
+            case FUEL_FACILITY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/fuelFacility")); break;
+            case GRPH_REACTOR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumReactor_level_4")); break;
+            case PLASTICS_FACTORY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/plasticsFactory_level_3")); break;
+            case SUPPLIES_FACTORY_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/foodFactory_level_4")); break;
+            case SUPPLIES_FACTORY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foodFactoryBlock_level_5")); break;
+            case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
+            case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;           
+            case COLUMN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Column")); break;
+            case SWITCH_TOWER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/switchTower")); break;
+            case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
+            case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
+            case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
+            case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;
+            case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;
+            case FOUNDATION_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foundationBlock")); break;
+            case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
+            case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
+            case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
+            case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
+            case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;
+            case OBSERVATORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/observatory")); break;
+            case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository")); break;
+            case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monument")); break;
+            case SETTLEMENT_CENTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_0")); break;
+            case PSYCHOKINECTIC_GEN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/psychokineticGenerator"));break;
+            case RESEARCH_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/laboratory")); break;
+        }
+        model.transform.parent = transform;
+        model.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        model.transform.localPosition = Vector3.zero;
+        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+    }
+
+    virtual public void SetModelRotation(int r)
+    {
+        if (r > 7) r %= 8;
+        else
+        {
+            if (r < 0) r += 8;
+        }
+        modelRotation = (byte)r;
+
+        if (basement != null)
+        {
+            transform.localRotation = Quaternion.AngleAxis(modelRotation * 45, Vector3.up);
+        }
+    }
+    public void SetHP(float t)
+    {
+        hp = t;
+        if (hp == 0) Annihilate(true, false, true);
+    }
+
+   
 
     virtual public void Prepare()
     {
@@ -366,7 +447,7 @@ public class Structure : MonoBehaviour
                     isArtificial = true;
                     isBasement = false;
                     placeInCenter = true;
-                    rotate90only = true;
+                    rotate90only = false;
                     indestructible = false;
                 }
                 break;
@@ -993,7 +1074,7 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                     break;
                 }
-            case PSYCHOKINECTIC_GENERATOR:
+            case PSYCHOKINECTIC_GEN_ID:
                 {
                     maxHp = 800;
                     surfaceRect = SurfaceRect.full;
@@ -1001,89 +1082,21 @@ public class Structure : MonoBehaviour
                     rotate90only = false;
                     isArtificial = true;
                     isBasement = false;
+                    break;
                 }
-                break;
+            case RESEARCH_LAB_ID:
+                {
+                    maxHp = 1400;
+                    surfaceRect = new SurfaceRect(0, 0, 12);
+                    placeInCenter = true;
+                    rotate90only = false;
+                    isArtificial = true;
+                    isBasement = false;
+                    break;
+                }
         }
         hp = maxHp;
-    }
-
-    public static Rect GetTextureRect(int f_id)
-    {
-        float p = 0.125f;
-        switch (f_id)
-        {
-            default: return Rect.zero;
-            case DRYED_PLANT_ID:
-            case PLANT_ID: return new Rect(p, 7 * p, p, p);
-            case HEADQUARTERS_ID: return new Rect(2 * p, 7 * p, p, p);
-            case LIFESTONE_ID:
-            case TREE_OF_LIFE_ID: return new Rect(3 * p, 7 * p, p, p);
-            case STORAGE_1_ID:
-            case STORAGE_2_ID:
-            case STORAGE_5_ID:
-            case STORAGE_0_ID: return new Rect(5 * p, 7 * p, p, p);
-            case CONTAINER_ID: return new Rect(4 * p, 7 * p, p, p);
-            case MINE_ID:
-            case MINE_ELEVATOR_ID: return new Rect(6 * p, 7 * p, p, p);
-            case SETTLEMENT_CENTER_ID:
-            case SETTLEMENT_STRUCTURE_ID:
-            case HOUSE_BLOCK_ID:
-            case TENT_ID: return new Rect(7 * p, 7 * p, p, p);
-            case DOCK_ID: return new Rect(0, 6 * p, p, p);
-            case ENERGY_CAPACITOR_2_ID:
-            case ENERGY_CAPACITOR_1_ID: return new Rect(p, 6 * p, p, p);
-            case FARM_2_ID:
-            case FARM_3_ID:
-            case FARM_4_ID:
-            case FARM_5_ID:
-            case FARM_1_ID: return new Rect(2 * p, 6 * p, p, p);
-            case LUMBERMILL_2_ID:
-            case LUMBERMILL_3_ID:
-            case LUMBERMILL_4_ID:
-            case LUMBERMILL_5_ID:
-            case LUMBERMILL_1_ID: return new Rect(3 * p, 6 * p, p, p);
-            case SMELTERY_2_ID:
-            case SMELTERY_3_ID:
-            case SMELTERY_5_ID:
-            case SMELTERY_1_ID: return new Rect(4 * p, 6 * p, p, p);
-            case WIND_GENERATOR_1_ID: return new Rect(5 * p, 6 * p, p, p);
-            case BIOGENERATOR_2_ID: return new Rect(6 * p, 6 * p, p, p);
-            case HOSPITAL_2_ID: return new Rect(7 * p, 6 * p, p, p);
-            case MINERAL_POWERPLANT_2_ID: return new Rect(0, 5 * p, p, p);
-            case ORE_ENRICHER_2_ID: return new Rect(p, 5 * p, p, p);
-            case WORKSHOP_ID: return new Rect(2 * p, 5 * p, p, p);
-            case MINI_GRPH_REACTOR_3_ID: return new Rect(3 * p, 5 * p, p, p);
-            case FUEL_FACILITY_ID: return new Rect(4 * p, 5 * p, p, p);
-            case GRPH_REACTOR_4_ID: return new Rect(5 * p, 5 * p, p, p);
-            case PLASTICS_FACTORY_3_ID: return new Rect(6 * p, 5 * p, p, p);
-            case SUPPLIES_FACTORY_5_ID:
-            case SUPPLIES_FACTORY_4_ID: return new Rect(7 * p, 5 * p, p, p);
-            case GRPH_ENRICHER_3_ID: return new Rect(0, 4 * p, p, p);
-            case XSTATION_3_ID: return new Rect(p, 4 * p, p, p);
-            case QUANTUM_ENERGY_TRANSMITTER_5_ID: return new Rect(2 * p, 4 * p, p, p);
-            case RESOURCE_STICK_ID: return new Rect(4 * p, 4 * p, p, p);
-            case COLUMN_ID: return new Rect(5 * p, 4 * p, p, p);
-            case SWITCH_TOWER_ID: return new Rect(6 * p, 4 * p, p, p);
-            case SHUTTLE_HANGAR_4_ID: return new Rect(7 * p, 4 * p, p, p);
-            case RECRUITING_CENTER_4_ID: return new Rect(0, 3 * p, p, p);
-            case EXPEDITION_CORPUS_4_ID: return new Rect(p, 3 * p, p, p);
-            case QUANTUM_TRANSMITTER_4_ID: return new Rect(2 * p, 3 * p, p, p);
-            case REACTOR_BLOCK_5_ID: return new Rect(3 * p, 3 * p, p, p);
-            case FOUNDATION_BLOCK_5_ID: return new Rect(4 * p, 3 * p, p, p);
-            case CONNECT_TOWER_6_ID: return new Rect(5 * p, 3 * p, p, p);
-            case HOTEL_BLOCK_6_ID: return new Rect(7 * p, 3 * p, p, p);
-            case HOUSING_MAST_6_ID: return new Rect(0, 2 * p, p, p);
-            case DOCK_ADDON_1_ID:
-            case DOCK_ADDON_2_ID:
-            case DOCK_2_ID:
-            case DOCK_3_ID:
-                return new Rect(p, 2 * p, p, p);
-            case OBSERVATORY_ID: return new Rect(2 * p, 2 * p, p, p);
-            case ARTIFACTS_REPOSITORY_ID: return new Rect(3 * p, 2 * p, p, p);
-            case MONUMENT_ID: return new Rect(4 * p, 2 * p, p, p);
-            case PSYCHOKINECTIC_GENERATOR: return new Rect(5 * p, 2 * p, p, p);
-        }
-    }
+    }   
 
     virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {

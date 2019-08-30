@@ -125,7 +125,8 @@ public static class Localization
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Хранилище артефактов";
                     case Structure.MONUMENT_ID: return "Монумент";
                     case Structure.SETTLEMENT_CENTER_ID: return "Центр поселения";
-                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Психокинетический генератор";
+                    case Structure.PSYCHOKINECTIC_GEN_ID: return "Психокинетический генератор";
+                    case Structure.RESEARCH_LAB_ID: return "Исследовательская лаборатория";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -196,7 +197,8 @@ public static class Localization
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Artifacts repository";
                     case Structure.MONUMENT_ID: return "Monument";
                     case Structure.SETTLEMENT_CENTER_ID: return "Settlement center";
-                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Psychokinetic generator";
+                    case Structure.PSYCHOKINECTIC_GEN_ID: return "Psychokinetic generator";
+                    case Structure.RESEARCH_LAB_ID: return "Research laboratory";
                     default: return "Unknown building";
                 }
         }
@@ -281,8 +283,9 @@ public static class Localization
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
-                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Вырабатывает энергию с помощью человеческих усилий, эффективность зависит от количества рабочих. Не требует топлива, но снижает настроение колонии.";
-                    default: return "Без описания";
+                    case Structure.PSYCHOKINECTIC_GEN_ID: return "Вырабатывает энергию с помощью человеческих усилий, эффективность зависит от количества рабочих. Не требует топлива, но снижает настроение колонии.";
+                    case Structure.RESEARCH_LAB_ID: return "Исследует найденные Закономерности или вырабатывает очки Знания.";
+                    default: return "Описание отсутствует";
                 }
             case Language.English:
             default:
@@ -362,7 +365,8 @@ public static class Localization
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Gives access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
-                    case Structure.PSYCHOKINECTIC_GENERATOR: return "Produces energy through colonists effort, energy production depends on the number of workers. Does not require fuel, but lowers colony's happiness.";
+                    case Structure.PSYCHOKINECTIC_GEN_ID: return "Produces energy through colonists effort, energy production depends on the number of workers. Does not require fuel, but lowers colony's happiness.";
+                    case Structure.RESEARCH_LAB_ID: return "Investigates Regularities found or generates Knowledge points.";
                     default: return "No description.";
                 }
         }

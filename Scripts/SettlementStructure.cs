@@ -4,6 +4,7 @@ using UnityEngine;
 public sealed class SettlementStructure : Structure
 {
     public Settlement.SettlementStructureType type { get; private set; }
+    public bool isActive { get; private set; }
     public byte level { get; private set; }
     public float value { get; private set; }
     private Settlement settlement;
@@ -98,6 +99,81 @@ public sealed class SettlementStructure : Structure
     public void AssignSettlement(Settlement s)
     {
         settlement = s;
+    }
+
+    public void SetActivationStatus(bool x)
+    {
+        // source: Building. ChangeRenderersView
+        isActive = x;
+        if (transform.childCount == 0) return;
+        Renderer[] myRenderers = transform.GetChild(0).GetComponentsInChildren<Renderer>();
+        if (myRenderers == null | myRenderers.Length == 0) return;
+        if (!isActive)
+        {
+            for (int i = 0; i < myRenderers.Length; i++)
+            {
+                if (myRenderers[i].sharedMaterials.Length > 1)
+                {
+                    bool replacing = false;
+                    Material[] newMaterials = new Material[myRenderers[i].sharedMaterials.Length];
+                    for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++)
+                    {
+                        Material m = myRenderers[i].sharedMaterials[j];
+                        if (m == PoolMaster.glassMaterial) { m = PoolMaster.glassMaterial_disabled; replacing = true; }
+                        else
+                        {
+                            if (m == PoolMaster.energyMaterial) { m = PoolMaster.energyMaterial_disabled; replacing = true; }
+                        }
+                        newMaterials[j] = m;
+                    }
+                    if (replacing) myRenderers[i].sharedMaterials = newMaterials;
+                }
+                else
+                {
+                    Material m = myRenderers[i].sharedMaterial;
+                    bool replacing = false;
+                    if (m == PoolMaster.glassMaterial) { m = PoolMaster.glassMaterial_disabled; replacing = true; }
+                    else
+                    {
+                        if (m == PoolMaster.energyMaterial) { m = PoolMaster.energyMaterial_disabled; replacing = true; }
+                    }
+                    if (replacing) myRenderers[i].sharedMaterial = m;
+                }
+            }
+        }
+        else
+        { // Включение
+            for (int i = 0; i < myRenderers.Length; i++)
+            {
+                if (myRenderers[i].sharedMaterials.Length > 1)
+                {
+                    bool replacing = false;
+                    Material[] newMaterials = new Material[myRenderers[i].sharedMaterials.Length];
+                    for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++)
+                    {
+                        Material m = myRenderers[i].sharedMaterials[j];
+                        if (m == PoolMaster.glassMaterial_disabled) { m = PoolMaster.glassMaterial; replacing = true; }
+                        else
+                        {
+                            if (m == PoolMaster.energyMaterial_disabled) { m = PoolMaster.energyMaterial; replacing = true; }
+                        }
+                        newMaterials[j] = m;
+                    }
+                    if (replacing) myRenderers[i].sharedMaterials = newMaterials;
+                }
+                else
+                {
+                    Material m = myRenderers[i].sharedMaterial;
+                    bool replacing = false;
+                    if (m == PoolMaster.glassMaterial_disabled) { m = PoolMaster.glassMaterial; replacing = true; }
+                    else
+                    {
+                        if (m == PoolMaster.energyMaterial_disabled) { m = PoolMaster.energyMaterial; replacing = true; }
+                    }
+                    if (replacing) myRenderers[i].sharedMaterial = m;
+                }
+            }
+        }
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

@@ -54,7 +54,7 @@
         structuresCost[Structure.TENT_ID] = 0;
         structuresCost[Structure.DOCK_ID] = val * 100;
         structuresCost[Structure.ENERGY_CAPACITOR_1_ID] = 2 * val;
-        structuresCost[Structure.PSYCHOKINECTIC_GENERATOR] = 2 * val;
+        structuresCost[Structure.PSYCHOKINECTIC_GEN_ID] = 2 * val;
         structuresCost[Structure.MONUMENT_ID] = 4 * val;
         structuresCost[Structure.WIND_GENERATOR_1_ID] = val * 4;
         structuresCost[Structure.FARM_1_ID] = val * 6;
@@ -84,6 +84,7 @@
         structuresCost[Structure.SUPPLIES_FACTORY_5_ID] = structuresCost[Structure.SUPPLIES_FACTORY_4_ID] * 4;
         structuresCost[Structure.GRPH_ENRICHER_3_ID] = structuresCost[Structure.WORKSHOP_ID] * 4;
         structuresCost[Structure.STORAGE_2_ID] = structuresCost[Structure.STORAGE_1_ID] * 2;
+        structuresCost[Structure.RESEARCH_LAB_ID] = structuresCost[Structure.XSTATION_3_ID] * 2f;
        
         structuresCost[Structure.STORAGE_5_ID] = structuresCost[Structure.STORAGE_2_ID] * 4;
         structuresCost[Structure.HOTEL_BLOCK_6_ID] = structuresCost[Structure.HOUSE_BLOCK_ID] * 1.2;

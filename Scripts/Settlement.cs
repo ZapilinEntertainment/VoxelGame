@@ -81,7 +81,8 @@ public sealed class Settlement : House
                                     center.pointsFilled += 4;
                                     center.energySurplus += partEnergyConsumption * center.level * 4;
                                 }
-                            }                            
+                            }
+                            s2.SetActivationStatus(center.isEnergySupplied);
                         }
                     }
                 }
@@ -141,8 +142,22 @@ public sealed class Settlement : House
             subscribedToUpdate = true;
             settlements.Add(this);
             maxPoints = GetMaxPoints();
+            Recalculate();
         }
         //
+    }
+    override public void SetEnergySupply(bool x, bool recalculateAfter)
+    {
+        isEnergySupplied = x;
+        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+        ChangeRenderersView(x & isActive);
+        foreach (var s in basement.structures)
+        {
+            if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
+            {
+                (s as SettlementStructure).SetActivationStatus(isEnergySupplied);
+            }
+        }
     }
     private byte GetMaxPoints()
     {
@@ -888,7 +903,8 @@ public sealed class Settlement : House
                             pointsFilled += 4;
                             energySurplus += onePartEnergyConsumption * level * 4;
                         }
-                    }                    
+                    }
+                    s2.SetActivationStatus(isEnergySupplied);
                 }
             }
         }
@@ -973,10 +989,21 @@ public sealed class Settlement : House
         return cost;
     }
 
+
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
         else destroyed = true;
+        if (basement != null)
+        {
+            foreach (var s in basement.structures)
+            {
+                if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
+                {
+                    (s as SettlementStructure).SetActivationStatus(false);
+                }
+            }
+        }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         GameMaster.realMaster.colonyController.DeleteHousing(this);
         if (subscribedToUpdate)

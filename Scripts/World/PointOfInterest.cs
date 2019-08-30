@@ -46,13 +46,14 @@ public class PointOfInterest : MapPoint
                 friendliness = GameMaster.realMaster.environmentMaster.environmentalConditions;
                 locationDifficulty = 0f;
                 break;
-            case MapMarkerType.Star:
-                richness = 0.1f;
-                danger = 1f;
-                mysteria = 0.1f + Random.value * 0.2f;
-                friendliness = Random.value;
-                locationDifficulty = 1f;
-                break;
+                // SUNPOINT:
+            //case MapMarkerType.Star:  
+               // richness = 0.1f;
+               // danger = 1f;
+              //  mysteria = 0.1f + Random.value * 0.2f;
+              //  friendliness = Random.value;
+               // locationDifficulty = 1f;
+              //  break;
             case MapMarkerType.Station:
                 richness = Random.value * 0.8f + 0.2f;
                 danger = Random.value * 0.2f;
@@ -135,13 +136,14 @@ public class PointOfInterest : MapPoint
     public List<Dropdown.OptionData> GetAvailableMissionsDropdownData()
     {
         var l = new List<Dropdown.OptionData>();
-        if (availableMissions != null)
+        if (availableMissions == null)
         {
-            foreach (Mission m in availableMissions)
-            {
-                l.Add(new Dropdown.OptionData(Localization.GetMissionStandartName(m.type)));
-            }
-        }        
+            availableMissions = new Mission[] { new Mission(MissionType.Exploring, this) };
+        }
+        foreach (Mission m in availableMissions)
+        {
+            l.Add(new Dropdown.OptionData(Localization.GetMissionStandartName(m.type)));
+        }
         return l;
     }
     public Mission GetMission(int index)
@@ -152,6 +154,7 @@ public class PointOfInterest : MapPoint
     public void Explore(float k)
     {
         exploredPart += GameConstants.POINT_EXPLORE_SPEED * k;
+        ScienceLab.PointExplored(this);
     }
 
     protected Artifact GetArtifact()

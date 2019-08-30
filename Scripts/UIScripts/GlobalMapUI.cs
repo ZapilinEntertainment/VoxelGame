@@ -627,8 +627,6 @@ public sealed class GlobalMapUI : MonoBehaviour
 
 
         mapRect.position = new Vector3(xpos, ypos, 0);
-
-        RedrawMap();
     }   
    
     private void OnEnable()

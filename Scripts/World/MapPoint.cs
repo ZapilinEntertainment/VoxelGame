@@ -13,6 +13,7 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Isl
 // Environment.GetSuitablePointType
 // PointOfInterest.TakeTreasure
 // PointOfInterest.GetArtifact
+// ScienceLab.PointExplored
 
 public class MapPoint
 {

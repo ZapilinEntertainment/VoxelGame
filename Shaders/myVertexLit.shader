@@ -10,7 +10,7 @@
 	{
 		Pass
 		{
-			Tags {"LightMode" = "ForwardBase"}
+			Tags {"LightMode" = "ForwardBase" "DisableBatching" = "True"}
 
 			CGPROGRAM
 			#pragma vertex vert
