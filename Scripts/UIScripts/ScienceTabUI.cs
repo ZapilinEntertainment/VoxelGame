@@ -8,12 +8,27 @@ public sealed class ScienceTabUI : MonoBehaviour
     public enum ScienceTabPart : byte { UnexploredPosition, SelectedPosition, Position20, Position40, Position60, Position80, ExploredPosition}
     [SerializeField] private GameObject centerCrystal_basis;
     [SerializeField] private RawImage[] centerCrystal_effects, rays, techButtons;
+    [SerializeField] private Text knowledgePtsInfo, ascensionLvlInfo;
     private static ScienceTabUI current;
     private int selectedResearchIndex = -1;
+    private float basisEffect_cf1 = 0f, basisEffect_cf2 = 0f, basisEffect_cf3 = 0f;
+    private const float BASIS_EFFECT_SPEED = 0.2f;
 
-    public static void Initialize()
+    public static void OpenResearchTab()
     {
-        //current
+        if (current == null)
+        {
+            current = Instantiate(Resources.Load<GameObject>("UIPrefs/scienceTab")).GetComponent<ScienceTabUI>();            
+        }
+        current.gameObject.SetActive(true);
+        UIController.current.gameObject.SetActive(false);
+        FollowingCamera.main.gameObject.SetActive(false);
+        current.FullRedraw();
+        current.transform.GetChild(1).gameObject.SetActive(true); // cam
+    }
+    public static void DestroyInterface()
+    {
+        if (current != null) Destroy(current);
     }
 
     public void SelectTech(int index)
@@ -26,6 +41,12 @@ public sealed class ScienceTabUI : MonoBehaviour
         techButtons[selectedResearchIndex].uvRect = GetResearchPointRect(ScienceTabPart.SelectedPosition);
         //draw info
     }
+    public void Close() {
+        gameObject.SetActive(false);
+        transform.GetChild(1).gameObject.SetActive(false); // cam
+        UIController.current.gameObject.SetActive(true);
+        FollowingCamera.main.gameObject.SetActive(true);
+    }    
 
     private void FullRedraw()
     {
@@ -41,6 +62,12 @@ public sealed class ScienceTabUI : MonoBehaviour
         int count = (int)ScienceLab.ResearchRoute.Total;
         Rect completedIconRect = GetResearchPointRect(ScienceTabPart.ExploredPosition),
             unexploredIconRect = GetResearchPointRect(ScienceTabPart.UnexploredPosition);
+
+        techButtons[populationSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(populationSecretIndex));
+        techButtons[ascensionSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(ascensionSecretIndex));
+        techButtons[crystalSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(crystalSecretIndex));
+        techButtons[lifepowerSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(lifepowerSecretIndex));
+
         if (basicResearchesReady)
         {
             for (int i = 0; i < count; i++)
@@ -48,30 +75,28 @@ public sealed class ScienceTabUI : MonoBehaviour
                 rays[i].color = new Color(1f, 1f, 1f, 0.25f + 0.75f * ScienceLab.routePoints[i]);
                 rays[i].gameObject.SetActive(true);
             }
-            techButtons[populationSecretIndex].uvRect = completedIconRect;
-            techButtons[ascensionSecretIndex].uvRect = completedIconRect;
-            techButtons[crystalSecretIndex].uvRect = completedIconRect;
-            techButtons[lifepowerSecretIndex].uvRect = completedIconRect;
-
-            centerCrystal_basis.SetActive(true);
+            basisEffect_cf1 = 1f;
+            basisEffect_cf2 = 1f;
+            basisEffect_cf3 = 1f;
         }
         else
         {
             for (int i = 0; i < count; i++) rays[i].gameObject.SetActive(false);
-            techButtons[populationSecretIndex].uvRect = rst[populationSecretIndex] == true ? completedIconRect : unexploredIconRect;
-            techButtons[ascensionSecretIndex].uvRect = rst[populationSecretIndex] == true ? completedIconRect : unexploredIconRect;
-            techButtons[crystalSecretIndex].uvRect = rst[populationSecretIndex] == true ? completedIconRect : unexploredIconRect;
-            techButtons[lifepowerSecretIndex].uvRect = rst[populationSecretIndex] == true ? completedIconRect : unexploredIconRect;
+            float sum = ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Population] + ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Pipe] 
+                + ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Monument] + ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Butterfly];
+            if (sum > 0.33f)
+            {
+                basisEffect_cf1 = 1f;
+                if (sum > 0.66f)
+                {
+                    basisEffect_cf2 = 1f;
+                    if (sum > 1f) basisEffect_cf3 = 1f;
+                }
+            }
+        }
 
-            centerCrystal_basis.SetActive(false);
-        }
-        /*
-        count = (int)ScienceLab.Research.Last;
-        for (int i = 1; i < count; i++)
-        {
-            
-        }
-        */
+        ascensionLvlInfo.text = Localization.GetPhrase(LocalizedPhrase.AscensionLevel) + ":\n" + ((int)(GameMaster.realMaster.globalMap.ascension * 100 )).ToString() + '%';
+        knowledgePtsInfo.text = Localization.GetPhrase(LocalizedPhrase.KnowledgePoints) + ":\n" + ScienceLab.knowledgePoints.ToString();
     }
 
     private Rect GetResearchPointRect(ScienceTabPart stp)
@@ -87,5 +112,12 @@ public sealed class ScienceTabUI : MonoBehaviour
             case ScienceTabPart.Position20: return new Rect(p, 0f, p, p);
             default: return new Rect(0f, 0f, p,p);
         }
+    }
+
+    private void Update()
+    {
+        centerCrystal_effects[0].color = new Color(1f, 1f, 1f, Mathf.PingPong(centerCrystal_effects[0].color.a, basisEffect_cf1));
+        centerCrystal_effects[1].color = new Color(1f, 1f, 1f, Mathf.PingPong(centerCrystal_effects[1].color.a, basisEffect_cf1));
+        centerCrystal_effects[2].color = new Color(1f, 1f, 1f, Mathf.PingPong(centerCrystal_effects[2].color.a, basisEffect_cf1));
     }
 }

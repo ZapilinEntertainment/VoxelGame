@@ -37,9 +37,9 @@ public class UIStructureObserver : UIObserver {
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(false);
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(false);
             }
-            if (s.ID == Structure.OBSERVATORY_ID)
+            if (s.ID == Structure.OBSERVATORY_ID | s.ID == Structure.SCIENCE_LAB_ID)
             {
-                specialButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.OpenMap);
+                specialButton.transform.GetChild(0).GetComponent<Text>().text = (s.ID == Structure.OBSERVATORY_ID) ? Localization.GetPhrase(LocalizedPhrase.OpenMap) : Localization.GetPhrase(LocalizedPhrase.OpenResearchTab);
                 specialButton.SetActive(true);
             }
             else
@@ -73,11 +73,12 @@ public class UIStructureObserver : UIObserver {
         if (observingStructure == null) SelfShutOff();
         else
         {
-            if (observingStructure.ID == Structure.OBSERVATORY_ID)
+            switch (observingStructure.ID)
             {
-                GameMaster.realMaster.globalMap.ShowOnGUI();
+                case Structure.OBSERVATORY_ID: GameMaster.realMaster.globalMap.ShowOnGUI(); break;
+                case Structure.SCIENCE_LAB_ID: ScienceTabUI.OpenResearchTab();break;
+                default: specialButton.SetActive(false);break;
             }
-            else specialButton.SetActive(false);
         }
     }
 

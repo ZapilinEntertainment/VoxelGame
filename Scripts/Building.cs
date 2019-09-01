@@ -97,7 +97,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
                 //blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
-                blist.Add(GetStructureByID(RESEARCH_LAB_ID) as Building);
+                blist.Add(GetStructureByID(SCIENCE_LAB_ID) as Building);
                 break;
         }
         return blist;
@@ -144,7 +144,7 @@ public class Building : Structure
             case FOUNDATION_BLOCK_5_ID:
             case WIND_GENERATOR_1_ID:            
                 return 10f;
-            case RESEARCH_LAB_ID:
+            case SCIENCE_LAB_ID:
             case XSTATION_3_ID: return 12f;
 
             case EXPEDITION_CORPUS_4_ID:
@@ -226,7 +226,7 @@ public class Building : Structure
             case ORE_ENRICHER_2_ID: return -12f;
             case ARTIFACTS_REPOSITORY_ID: return -16f;
 
-            case RESEARCH_LAB_ID:
+            case SCIENCE_LAB_ID:
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_ID: return -20f;
 
@@ -616,7 +616,7 @@ public class Building : Structure
                     upgradedIndex = 0;
                     break;
                 }
-            case RESEARCH_LAB_ID:
+            case SCIENCE_LAB_ID:
                 {
                     level = 6;
                     break;

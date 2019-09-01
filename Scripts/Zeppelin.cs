@@ -82,9 +82,9 @@ public sealed class Zeppelin : MonoBehaviour {
         }
     }
 
-    public void LandButtonClicked()
+    public void Raycasting()
     {
-        if (landPointSet | destroyed) return;
+        if (GameMaster.gameSpeed == 0 || landPointSet || destroyed) return;
         RaycastHit rh;
         if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
         {

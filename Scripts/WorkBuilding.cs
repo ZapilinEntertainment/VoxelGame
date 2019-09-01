@@ -238,7 +238,7 @@ public abstract class WorkBuilding : Building
                 }
                 break;
             case PSYCHOKINECTIC_GEN_ID:
-            case RESEARCH_LAB_ID:
+            case SCIENCE_LAB_ID:
                 {
                     maxWorkers = 40;
                     break;
@@ -390,6 +390,7 @@ public abstract class WorkBuilding : Building
         //copy to expedition corpus.cs
         //copy to hospital.cs
         //copy to observatory.cs
+        //copy to science lab.cs
         //changed in PsychokineticGenerator
     }
 

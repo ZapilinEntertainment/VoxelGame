@@ -36,7 +36,7 @@ public class Structure : MonoBehaviour
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
-        RESEARCH_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
+        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
     HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
@@ -195,7 +195,7 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Settlement structure").AddComponent<SettlementStructure>(); break;
             case PSYCHOKINECTIC_GEN_ID:
                 s = new GameObject("Psychocinetic gen").AddComponent<PsychokineticGenerator>(); break;
-            case RESEARCH_LAB_ID:
+            case SCIENCE_LAB_ID:
                 s = new GameObject("Science Lab").AddComponent<ScienceLab>(); break;
             default: return null;
         }
@@ -354,7 +354,7 @@ public class Structure : MonoBehaviour
             case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monument")); break;
             case SETTLEMENT_CENTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_0")); break;
             case PSYCHOKINECTIC_GEN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/psychokineticGenerator"));break;
-            case RESEARCH_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/laboratory")); break;
+            case SCIENCE_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/scienceLab")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -1084,7 +1084,7 @@ public class Structure : MonoBehaviour
                     isBasement = false;
                     break;
                 }
-            case RESEARCH_LAB_ID:
+            case SCIENCE_LAB_ID:
                 {
                     maxHp = 1400;
                     surfaceRect = new SurfaceRect(0, 0, 12);

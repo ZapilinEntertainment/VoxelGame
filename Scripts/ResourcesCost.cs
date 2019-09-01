@@ -387,7 +387,7 @@
             };
                     break;
                 }
-                case Structure.RESEARCH_LAB_ID:
+                case Structure.SCIENCE_LAB_ID:
                  cost = new ResourceContainer[]{
                   new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
                  new ResourceContainer(ResourceType.metal_E, 50), new ResourceContainer(ResourceType.metal_N, 50)

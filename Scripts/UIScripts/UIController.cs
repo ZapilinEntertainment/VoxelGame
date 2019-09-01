@@ -1273,8 +1273,8 @@ sealed public class UIController : MonoBehaviour
         b.onClick.RemoveAllListeners();
         switch (s.ID)
         {
-            case Structure.RESEARCH_LAB_ID:
-                b.onClick.AddListener(() => { ScienceTabUI.Initialize(); });
+            case Structure.SCIENCE_LAB_ID:
+                b.onClick.AddListener(() => { ScienceTabUI.OpenResearchTab(); });
                 break;
             case Structure.OBSERVATORY_ID:
                 b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
@@ -1607,11 +1607,11 @@ sealed public class UIController : MonoBehaviour
 
     public void BindLandButton(Zeppelin z)
     {
-        mainCanvas.GetChild(0).GetComponent<Button>().onClick.AddListener(z.LandButtonClicked); // touchzone
+        mainCanvas.GetChild(0).GetComponent<Button>().onClick.AddListener(z.Raycasting); // touchzone
     }
     public void UnbindLandButton(Zeppelin z)
     {
-        mainCanvas.GetChild(0).GetComponent<Button>().onClick.RemoveListener(z.LandButtonClicked); // touchzone
+        mainCanvas.GetChild(0).GetComponent<Button>().onClick.RemoveListener(z.Raycasting); // touchzone
     }
     public void ActivateLandButton()
     {

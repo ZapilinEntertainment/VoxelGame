@@ -4,15 +4,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 
-public class SaveSystemUI : MonoBehaviour
+public sealed class SaveSystemUI : MonoBehaviour
 {
     public bool saveMode = false, ingame = false;
     private bool deleteSubmit = false, terrainsLoading = false;
     string[] saveNames;
 #pragma warning disable 0649
-    [SerializeField] RectTransform exampleButton, saveNamesContainer; // fiti
-    [SerializeField] Text saveLoadButtonText, deleteButtonText, submitButtonText, rejectButtonText, submitQuestionText, saveDateString; // fiti
-    [SerializeField] GameObject submitWindow, inputFieldPanel;
+    [SerializeField] private RectTransform exampleButton, saveNamesContainer; // fiti
+    [SerializeField] private Text saveLoadButtonText, deleteButtonText, submitButtonText, rejectButtonText, submitQuestionText, saveDateString; // fiti
+    [SerializeField] private GameObject submitWindow, inputFieldBasis;
+    [SerializeField] private InputField savenameField;
 #pragma warning restore 0649
     private int lastSelectedIndex = -1;
 
@@ -42,7 +43,7 @@ public class SaveSystemUI : MonoBehaviour
     public void Activate(bool openSaveMode, bool i_terrainsLoading)
     {
         gameObject.SetActive(true);
-        if (inputFieldPanel.activeSelf) inputFieldPanel.SetActive(false);
+        if (inputFieldBasis.activeSelf) inputFieldBasis.SetActive(false);
         if (submitWindow.activeSelf) submitWindow.SetActive(false);
         if (lastSelectedIndex != -1)
         {
@@ -164,20 +165,32 @@ public class SaveSystemUI : MonoBehaviour
 
     public void CreateNewSave()
     {
-        inputFieldPanel.SetActive(true);
-        inputFieldPanel.GetComponent<InputField>().text = terrainsLoading ? "new terrain" : GameMaster.realMaster.colonyController.cityName;
+        //#visual unselecting
+        if (lastSelectedIndex != -1)
+        {
+            Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
+            if (t != null)
+            {
+                t.GetComponent<Image>().color = Color.white;
+                t.GetChild(0).GetComponent<Text>().color = Color.white;
+            }
+        }
+        //
+        inputFieldBasis.SetActive(true);
+        savenameField.text = terrainsLoading ? "new terrain" : GameMaster.realMaster.colonyController.cityName;
     }
     public void InputField_SaveGame()
     {
-        if (terrainsLoading) GameMaster.realMaster.SaveTerrain(inputFieldPanel.GetComponent<InputField>().text);
-        else GameMaster.realMaster.SaveGame(inputFieldPanel.GetComponent<InputField>().text);
-        inputFieldPanel.SetActive(false);
+        if (terrainsLoading) GameMaster.realMaster.SaveTerrain(inputFieldBasis.GetComponent<InputField>().text);
+        else GameMaster.realMaster.SaveGame(savenameField.text);
+        inputFieldBasis.SetActive(false);
         gameObject.SetActive(false);
     }
 
     public void SelectSave(int index) // индекс имени, индекс среди child будет index+1
     {
         Transform t;
+        //#visual unselecting
         if (lastSelectedIndex != -1)
         {
             t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
@@ -187,6 +200,7 @@ public class SaveSystemUI : MonoBehaviour
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
             }
         }
+        //
         t = saveNamesContainer.GetChild(index + 1);
         t.GetComponent<Image>().color = Color.black;
         t.GetChild(0).GetComponent<Text>().color = Color.cyan;
@@ -361,7 +375,8 @@ public class SaveSystemUI : MonoBehaviour
     public void LocalizeTitles()
     {
         deleteButtonText.text = Localization.GetWord(LocalizedWord.Delete);
-        inputFieldPanel.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
-        inputFieldPanel.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+        inputFieldBasis.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
+        inputFieldBasis.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
     }
+
 }

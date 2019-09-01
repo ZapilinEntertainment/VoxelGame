@@ -84,7 +84,7 @@
         structuresCost[Structure.SUPPLIES_FACTORY_5_ID] = structuresCost[Structure.SUPPLIES_FACTORY_4_ID] * 4;
         structuresCost[Structure.GRPH_ENRICHER_3_ID] = structuresCost[Structure.WORKSHOP_ID] * 4;
         structuresCost[Structure.STORAGE_2_ID] = structuresCost[Structure.STORAGE_1_ID] * 2;
-        structuresCost[Structure.RESEARCH_LAB_ID] = structuresCost[Structure.XSTATION_3_ID] * 2f;
+        structuresCost[Structure.SCIENCE_LAB_ID] = structuresCost[Structure.XSTATION_3_ID] * 2f;
        
         structuresCost[Structure.STORAGE_5_ID] = structuresCost[Structure.STORAGE_2_ID] * 4;
         structuresCost[Structure.HOTEL_BLOCK_6_ID] = structuresCost[Structure.HOUSE_BLOCK_ID] * 1.2;

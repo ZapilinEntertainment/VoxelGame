@@ -32,7 +32,6 @@ public sealed class ScienceLab : WorkBuilding
         routePoints = new float[count];
         routeFullfilled = new bool[count];
     }
-
     public static void PointExplored(PointOfInterest poi)
     {
         float val = BASIC_EXPLORING_BOOST * poi.difficulty * (1.1f - poi.exploredPart);
@@ -110,7 +109,6 @@ public sealed class ScienceLab : WorkBuilding
                 }
         }
     }
-
     public static void AddResearchPoints(ResearchRoute route, float val)
     {
         int index = (int)route;
@@ -188,7 +186,6 @@ public sealed class ScienceLab : WorkBuilding
                 }
         }
     }
-
     public static ScienceTabUI.ScienceTabPart GetTechIcon(int index)
     {
         var r = (Research)index;
@@ -262,5 +259,20 @@ public sealed class ScienceLab : WorkBuilding
                 LabourResult();
             }
         }
+    }
+
+    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
+        var slabs = Component.FindObjectsOfType<ScienceLab>();
+        if (slabs.Length == 1 && slabs[0] == this) ScienceTabUI.DestroyInterface();
+        Destroy(gameObject);
     }
 }
