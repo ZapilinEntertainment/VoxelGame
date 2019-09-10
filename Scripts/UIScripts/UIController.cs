@@ -1274,7 +1274,7 @@ sealed public class UIController : MonoBehaviour
         switch (s.ID)
         {
             case Structure.SCIENCE_LAB_ID:
-                b.onClick.AddListener(() => { ScienceTabUI.OpenResearchTab(); });
+                b.onClick.AddListener(() => { GameMaster.realMaster.researchStar.OpenResearchTab(); });
                 break;
             case Structure.OBSERVATORY_ID:
                 b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });

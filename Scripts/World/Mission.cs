@@ -13,23 +13,17 @@ public enum MissionType : byte
 //GetDistanceToTarget
 // Result
 
-//тестер для проходения проверок командой
-public class Mission {    
+//класс-тестировщик на проходение проверок командой
+public sealed class Mission {    
 	public static readonly Mission NoMission;
-    public static int nextID { get; protected set; }
+    private static int nextID;
     private static List<Mission> missions;
 
-    public string name
-    {
-        get
-        {
-            return Localization.GetMissionStandartName(type);
-        }
-    }
-    public MissionType type { get; protected set; }
-    public PointOfInterest point { get; protected set; }
+    public MissionType type { get; private set; }
     public readonly int stepsCount, ID;
     public readonly bool requireShuttle;
+
+    private byte nameIdentifierA = 0, nameIdentifierB = 0;
 
     public static bool operator ==(Mission lhs, Mission rhs) { return lhs.Equals(rhs); }
     public static bool operator !=(Mission lhs, Mission rhs) { return !(lhs.Equals(rhs)); }
@@ -42,14 +36,14 @@ public class Mission {
         Mission p = (Mission)obj;
         return (type == p.type);
     }
+    public override int GetHashCode()
+    {
+        return ID + stepsCount * 6 + nameIdentifierA * 2 + nameIdentifierB * 2;
+    }
 
     static Mission()
     {
         NoMission = new Mission(MissionType.Awaiting);
-    }
-    public static void SetNextIDValue(int x)
-    {
-        nextID = x;
     }
     public static Mission GetMissionByID(int s_id)
     {
@@ -81,7 +75,6 @@ public class Mission {
     public Mission(MissionType i_type)
     {
         type = i_type;
-        point = null;
         requireShuttle = false;
         stepsCount = 1; // awaiting
         ID = nextID++;
@@ -91,30 +84,38 @@ public class Mission {
     public Mission (MissionType i_type, PointOfInterest i_point) : this(i_type)
     {
         requireShuttle = true;
-        point = i_point;
         switch (type)
         {
-            case MissionType.Exploring: stepsCount = 10; break;
-            case MissionType.FindingKnowledge: stepsCount = 3 + Random.Range(0,9);break;
-            case MissionType.FindingItem: stepsCount = 2 + Random.Range(0, 4);break;
-            case MissionType.FindingPerson: stepsCount = 4 + Random.Range(0,3);break;
-            case MissionType.FindingPlace: stepsCount = 2 + Random.Range(0, 3);break;
-            case MissionType.FindingResources: stepsCount = 3;break;
+            case MissionType.Exploring: stepsCount = 5 + (int)(i_point.difficulty * 6f); break;
+            case MissionType.FindingKnowledge: stepsCount = 4 + (int)(Random.Range(0,6) * i_point.difficulty);break;
+            case MissionType.FindingItem: stepsCount = 2 + (int)(Random.Range(0, 4) * i_point.difficulty); break;
+            case MissionType.FindingPerson: stepsCount = 4 + (int)(Random.Range(0, 5) * i_point.difficulty); break;
+            case MissionType.FindingPlace: stepsCount = 2 + (int)(Random.Range(0, 3) * i_point.difficulty); break;
+            case MissionType.FindingResources: stepsCount = 3 + (int)(Random.Range(0, 2) * i_point.difficulty); break;
+            default: stepsCount = 1 + (int)i_point.difficulty;break;
                 //остальные - по единице
         }
         ID = nextID++;
+        nameIdentifierA = 0;
+        nameIdentifierB = nameIdentifierA;
         if (missions == null) missions = new List<Mission>();
         missions.Add(this);
     }
     /// <summary>
     /// loading constructor
     /// </summary>
-    public Mission (int i_ID, int i_stepsCount,  bool i_requireShuttle)
+    public Mission (int i_ID, int i_stepsCount, bool i_requireShuttle)
     {
         ID = i_ID;
         stepsCount = i_stepsCount;              
         requireShuttle = i_requireShuttle;
         missions.Add(this);
+        nameIdentifierA = 0;
+        nameIdentifierB = nameIdentifierA;
+    }
+    public string GetName()
+    {
+        return Localization.GetMissionName(type, nameIdentifierA, nameIdentifierB);
     }
 
     public float CalculateCrewSpeed(Crew c)
@@ -170,59 +171,59 @@ public class Mission {
     {
         //может и не получиться
         return true;
-    }
-
-    /// <summary>
-    /// returns true if mission should be ended
-    /// </summary>
-    /// <returns></returns>
-    public bool Result(Expedition e)
-    {
-        switch (type)
-        {
-            case MissionType.Awaiting: return false;
-            case MissionType.Exploring: e.crew.IncreaseAdaptability(); return false;
-            case MissionType.FindingKnowledge: e.crew.ImproveNativeParameters(); return false;
-            case MissionType.FindingItem: 
-            case MissionType.FindingPerson: 
-            case MissionType.FindingPlace: e.crew.AddExperience(Expedition.ONE_STEP_XP); return true;
-            case MissionType.FindingResources: point.TakeTreasure(e.crew); return false;
-            case MissionType.FindingEntrance: e.crew.AddExperience(Expedition.ONE_STEP_XP); return false;
-            case MissionType.FindingExit: e.crew.AddExperience(Expedition.ONE_STEP_XP); return true;
-            default: return false;
-        }
-    }
+    }    
 
     #region save-load
-    public List<byte> Save() 
+    public static void StaticSave(System.IO.FileStream fs) 
     {
-        var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(ID));
-        data.AddRange(System.BitConverter.GetBytes(stepsCount));
-        data.Add(requireShuttle ? (byte)1 : (byte)0);
-        data.Add((byte)type);
-        return data;
-    }
-    public static void StaticLoad(System.IO.FileStream fs, int count, PointOfInterest i_point)
-    {
-        missions = new List<Mission>();
-        byte[] data;
-        Mission m;
-        for (int i = 0; i < count; i++)
+        int count = 0;
+        List<byte> savedata = null;
+        if (missions != null && missions.Count > 0)
         {
-            data = new byte[10];
-            fs.Read(data, 0, 9);
-            m = new Mission(
-                System.BitConverter.ToInt32(data, 0), // id
-                System.BitConverter.ToInt32(data, 4), //stepsCount
-                data[8] == 1
-                );
-            m.type = (MissionType)data[9];
-            m.point = i_point;
+            foreach (Mission m in missions)
+            {
+                savedata.AddRange(System.BitConverter.GetBytes(m.ID)); // 0 -3
+                savedata.AddRange(System.BitConverter.GetBytes(m.stepsCount)); // 4 - 7
+                savedata.Add(m.requireShuttle ? (byte)1 : (byte)0); // 8
+                savedata.Add((byte)m.type); // 9
+                savedata.Add(m.nameIdentifierA);// 10
+                savedata.Add(m.nameIdentifierB);// 11
+
+                count++;
+            }
         }
-        data = new byte[4];
+        fs.Write(System.BitConverter.GetBytes(count),0,4);
+        if (count > 0) {
+            var saveArray = savedata.ToArray();
+            fs.Write(saveArray, 0, saveArray.Length);
+        }
+    }
+    public static void StaticLoad(System.IO.FileStream fs)
+    {
+        if (missions != null) missions.Clear();
+        var data = new byte[4];
         fs.Read(data, 0, 4);
-        nextID = System.BitConverter.ToInt32(data, 0);
+        int count = System.BitConverter.ToInt32(data, 0);
+        if (count > 0)
+        {
+            Mission m;
+            for (int i = 0; i < count; i++)
+            {
+                data = new byte[12];
+                fs.Read(data, 0, data.Length);
+                m = new Mission(
+                    System.BitConverter.ToInt32(data, 0), // id
+                    System.BitConverter.ToInt32(data, 4), //stepsCount
+                    data[8] == 1
+                    );
+                m.type = (MissionType)data[9];
+                m.nameIdentifierA = data[10];
+                m.nameIdentifierB = data[11];
+            }
+            data = new byte[4];
+            fs.Read(data, 0, 4);
+            nextID = System.BitConverter.ToInt32(data, 0);
+        }
     }
     #endregion
 }

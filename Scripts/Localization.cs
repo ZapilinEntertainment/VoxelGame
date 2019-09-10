@@ -3194,7 +3194,7 @@ public static class Localization
     #endregion
 
     #region missions data
-    public static string GetMissionStandartName(MissionType mtype)
+    public static string GetMissionName(MissionType mtype, byte indentifierA, byte identifierB)
     {
         switch (currentLanguage)
         {

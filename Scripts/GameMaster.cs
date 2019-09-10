@@ -66,6 +66,24 @@ public sealed class GameMaster : MonoBehaviour
     public EnvironmentMaster environmentMaster { get; private set; }
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
+
+    public ResearchStar researchStar {
+        get {
+            if (_researchStar == null)
+            {
+                _researchStar = new ResearchStar();
+                researchStarActivated = true;
+            }
+            return _researchStar;
+        }
+        set
+        {
+            _researchStar = value;
+        }
+    }
+    private ResearchStar _researchStar;
+    public bool researchStarActivated = false;
+
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent, blockersRestoreEvent;
     public GameStart startGameWith = GameStart.Zeppelin;
@@ -161,6 +179,9 @@ public sealed class GameMaster : MonoBehaviour
 
     private void Awake()
     {
+       // gameStartSettings.generationMode = ChunkGenerationMode.GameLoading;
+        //savename = "test2";
+
         if (realMaster != null & realMaster != this)
         {
             Destroy(this);
@@ -519,6 +540,11 @@ public sealed class GameMaster : MonoBehaviour
 
             }
         }
+
+        if (Input.GetKeyDown("m"))
+        {
+            if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
+        }
         //eo testzone       
         if (gameMode != GameMode.Editor)
         {
@@ -831,7 +857,7 @@ public sealed class GameMaster : MonoBehaviour
         //74 (+4) end
         #endregion
 
-        fs.Write(System.BitConverter.GetBytes(Mission.nextID),0,4);
+        Mission.StaticSave(fs);
         globalMap.Save(fs);
         environmentMaster.Save(fs);
         Shuttle.SaveStaticData(fs);
@@ -858,7 +884,8 @@ public sealed class GameMaster : MonoBehaviour
         double realHashSum = GetHashSum(fs, true);
         var data = new byte[8];
         fs.Read(data, 0, 8);
-        double readedHashSum = System.BitConverter.ToDouble(data, 0);       
+        double readedHashSum = System.BitConverter.ToDouble(data, 0);
+        string errorReason = "reason not stated";
         if (realHashSum == readedHashSum) 
         {
             fs.Position = 0;
@@ -883,6 +910,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.Prepare();
             }
             stabilityModifiers = null;
+            if (researchStarActivated) researchStar.Reset();
             //UI.current.Reset();
 
 
@@ -943,23 +971,41 @@ public sealed class GameMaster : MonoBehaviour
             else realSpaceConsuming = null;
             #endregion
 
-            data = new byte[4];
-            fs.Read(data, 0, 4);
-            Mission.SetNextIDValue(System.BitConverter.ToInt32(data,0));
-            globalMap.Load(fs);
-            if (loadingFailed) goto FAIL;
+            Mission.StaticLoad(fs);
+            globalMap.Load(fs);            
+            if (loadingFailed)
+            {
+                errorReason = "global map error";
+                goto FAIL;
+            }
 
             environmentMaster.Load(fs);
-            if (loadingFailed) goto FAIL;
-
+            if (loadingFailed)
+            {
+                errorReason = "environment error";
+                goto FAIL;
+            }
+            //return false;
             Shuttle.LoadStaticData(fs); // because of hangars
-            if (loadingFailed) goto FAIL;
+            if (loadingFailed)
+            {
+                errorReason = "shuttles load failure";
+                goto FAIL;
+            }
 
             Artifact.LoadStaticData(fs); // crews & monuments
-            if (loadingFailed) goto FAIL;
-
+            if (loadingFailed)
+            {
+                errorReason = "artifacts load failure";
+                goto FAIL;
+            }
+            
             Crew.LoadStaticData(fs);
-            if (loadingFailed) goto FAIL;
+            if (loadingFailed)
+            {
+                errorReason = "crews load failure";
+                goto FAIL;
+            }
 
             if (mainChunk == null)
             {
@@ -967,7 +1013,11 @@ public sealed class GameMaster : MonoBehaviour
                 mainChunk = g.AddComponent<Chunk>();
             }
             mainChunk.LoadChunkData(fs);
-            if (loadingFailed) goto FAIL;
+            if (loadingFailed)
+            {
+                errorReason = "chunk load failure";
+                goto FAIL;
+            }
             else
             {
                 if (blockersRestoreEvent != null) blockersRestoreEvent();
@@ -975,19 +1025,35 @@ public sealed class GameMaster : MonoBehaviour
 
 
             Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
-            if (loadingFailed) goto FAIL;
+            if (loadingFailed)
+            {
+                errorReason = "settlements load failure";
+                goto FAIL;
+            }
 
             fs.Read(data, 0, 4);
             QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
-            if (loadingFailed) goto FAIL;
+            if (loadingFailed)
+            {
+                errorReason = "colony controller load failure";
+                goto FAIL;
+            }
 
             Dock.LoadStaticData(fs);
-            if (loadingFailed) goto FAIL;
+            if (loadingFailed)
+            {
+                errorReason = "dock load failure";
+                goto FAIL;
+            }
             QuestUI.current.Load(fs);
-            if (loadingFailed) goto FAIL;
-            Expedition.LoadStaticData(fs);
+            if (loadingFailed)
+            {
+                errorReason = "quest load failure";
+                goto FAIL;
+            }
+            //Expedition.LoadStaticData(fs);
             fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();
@@ -1014,6 +1080,7 @@ public sealed class GameMaster : MonoBehaviour
         FAIL:
         GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
         if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
+        print(errorReason);
         SetPause(true);
         fs.Close();
         return false;

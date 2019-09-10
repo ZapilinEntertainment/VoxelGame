@@ -191,6 +191,7 @@ public sealed class Expedition
                     {
                         crew.ConsumeStamina(destination.difficulty * ONE_STEP_STAMINA);
                         progress += crewSpeed;
+                        Debug.Log(progress);
                         if (progress >= ONE_STEP_WORKFLOW)
                         {
                             progress = 0;
@@ -216,7 +217,7 @@ public sealed class Expedition
                                     {
                                         currentDistanceToTarget -= ONE_STEP_TO_TARGET;
                                         //дополнительно
-                                        if (Random.value * crew.adaptability < destination.mysteria * (1 - destination.friendliness))
+                                        if (destination.TryToJump(crew))
                                         {
                                             currentDistanceToTarget -= ONE_STEP_TO_TARGET;
                                             crew.LoseConfidence(); // уверенность падает из-за неудач
@@ -233,13 +234,13 @@ public sealed class Expedition
                                     else
                                     {
                                         success = true;
-                                        if (Random.value * crew.luck / destination.mysteria < destination.friendliness) currentDistanceToTarget += ONE_STEP_TO_TARGET;
+                                        if (destination.TryAdditionalJump(crew)) currentDistanceToTarget += ONE_STEP_TO_TARGET;
                                         if (crew.persistence > Random.value) currentDistanceToTarget += ONE_STEP_TO_TARGET;
                                         if (hasConnection) AddMessageToLog(ExpeditionLogMessage.FastPath);
                                     }
                                     break;
                                 case 3: //suffer
-                                    if (crew.HardTest(destination.danger))
+                                    if (destination.HardTest(crew))
                                     {
                                         success = true;
                                         if (hasConnection) AddMessageToLog(ExpeditionLogMessage.HardtestPassed);
@@ -260,9 +261,8 @@ public sealed class Expedition
                                     }
                                     break;
                                 case 4: // prize
-                                    if (Random.value < destination.friendliness * crew.luck * crew.perception)
+                                    if (destination.TryTakeTreasure(crew))
                                     {
-                                        destination.TakeTreasure(crew);
                                         if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TreasureFound);
                                     }
                                     else if (hasConnection) AddMessageToLog(ExpeditionLogMessage.ContinueMission);
@@ -270,7 +270,7 @@ public sealed class Expedition
                                     break;
                                 case 5: //event
                                     success = true;
-                                    if (Random.value < destination.danger)
+                                    if (destination.IsSomethingChanged())
                                     {
                                         var gmap = GameMaster.realMaster.globalMap;
                                         gmap.UpdateSector(gmap.DefineSectorIndex(destination.angle, destination.ringIndex));
@@ -295,7 +295,7 @@ public sealed class Expedition
                                     break;
                                 case 6: //paradise ?
                                     success = true;
-                                    if (!crew.SoftCheck(destination.friendliness))
+                                    if (!destination.SoftTest(crew))
                                     {
                                         Disappear();
                                         if (hasConnection) AddMessageToLog(ExpeditionLogMessage.SoftDisappear);
@@ -335,7 +335,7 @@ public sealed class Expedition
                                 if (distanceToTarget >= 1)
                                 {
                                     crew.AddExperience(ONE_STEP_XP);
-                                    if (mission.Result(this))
+                                    if (Result())
                                     {
                                         if (hasConnection)
                                         {
@@ -354,12 +354,12 @@ public sealed class Expedition
                             }
                             else
                             {
-                                if (destination.danger + destination.difficulty > Random.value)
+                                if (!destination.LoyaltyTest(crew))
                                 {
                                     crew.LoseLoyalty();
                                     if (hasConnection &&  Random.value < crew.loyalty) AddMessageToLog(ExpeditionLogMessage.Disapproval);
                                 }
-                                if (destination.mysteria * destination.difficulty > Random.value)
+                                if (!destination.AdaptabilityTest(crew))
                                 {
                                     crew.LoseConfidence();
                                     if (hasConnection && Random.value < crew.loyalty) AddMessageToLog(ExpeditionLogMessage.LoseConfidence);
@@ -375,7 +375,7 @@ public sealed class Expedition
                     }
                     else
                     {
-                        if (destination.danger < 0.45f & crew.confidence < 0.75f)
+                        if (!destination.StaminaTest(crew))
                         {
                             if (hasConnection)
                             {
@@ -415,6 +415,27 @@ public sealed class Expedition
                     }
                     break;
                 }
+        }
+    }
+
+    /// <summary>
+    /// returns true if mission should be ended
+    /// </summary>
+    /// <returns></returns>
+    public bool Result()
+    {
+        switch (mission.type)
+        {
+            case MissionType.Awaiting: return false;
+            case MissionType.Exploring: crew.IncreaseAdaptability(); return false;
+            case MissionType.FindingKnowledge: crew.ImproveNativeParameters(); return false;
+            case MissionType.FindingItem:
+            case MissionType.FindingPerson:
+            case MissionType.FindingPlace: crew.AddExperience(ONE_STEP_XP); return true;
+            case MissionType.FindingResources: destination.TakeTreasure(crew); return false;
+            case MissionType.FindingEntrance: crew.AddExperience(ONE_STEP_XP); return false;
+            case MissionType.FindingExit: crew.AddExperience(ONE_STEP_XP); return true;
+            default: return false;
         }
     }
 
@@ -606,37 +627,34 @@ public sealed class Expedition
 
     public static void SaveStaticData(System.IO.FileStream fs)
     {     
-        int count = expeditionsList.Count;
-        if (count == 0) fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-        else
+        int realCount = 0;
+        var savedata = new List<byte>();
+        if (expeditionsList.Count > 0)
         {
-            count = 0;
-            var data = new List<byte>();
             foreach (Expedition e in expeditionsList)
             {
                 if (e != null && e.stage != ExpeditionStage.Dismissed)
                 {
-                    data.AddRange(e.Save());
-                    count++;
+                    savedata.AddRange(e.Save());
+                    realCount++;
                 }
-            }
-            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-            if (count > 0)
-            {
-                var dataArray = data.ToArray();
-                fs.Write(dataArray, 0, dataArray.Length);
-            }
+            }            
         }
 
+        fs.Write(System.BitConverter.GetBytes(realCount), 0, 4);
+        if (realCount > 0)
+        {
+            var dataArray = savedata.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
+        }
         fs.Write(System.BitConverter.GetBytes(nextID), 0, 4);
         fs.Write(System.BitConverter.GetBytes(expeditionsSucceed), 0, 4);
     }
     public static void LoadStaticData(System.IO.FileStream fs)
     {
         var data = new byte[4];
-        fs.Read(data, 0, 4);        
+        fs.Read(data, 0, 4);
         int count = System.BitConverter.ToInt32(data, 0);
-
         expeditionsList = new List<Expedition>();
         if (count > 0)
         {

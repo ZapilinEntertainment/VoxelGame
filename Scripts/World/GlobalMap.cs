@@ -607,25 +607,25 @@ public sealed class GlobalMap : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[3]), 0, 4); // 12 - 15
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[4]), 0, 4); // 16 - 19
 
+        int realCount = 0;
+        var savedata = new List<byte>();
         if (mapPoints.Count > 0)
-        {
-            int realCount = 0;
-            var saveArray = new List<byte>();
+        {             
             foreach (MapPoint mp in mapPoints)
             {
                 if (mp.type != MapMarkerType.Shuttle)
                 {
-                    saveArray.AddRange(mp.Save());
+                    savedata.AddRange(mp.Save());
                     realCount++;
-                }
-            }
-            if (realCount > 0)
-            {
-                fs.WriteByte((byte)realCount);
-                fs.Write(saveArray.ToArray(), 0, saveArray.Count);
+                }                
             }
         }
-        else fs.WriteByte(0);
+        fs.Write(System.BitConverter.GetBytes(realCount),0,4);
+        if (realCount > 0)
+        {
+            var saveArray = savedata.ToArray();
+            fs.Write(saveArray, 0, saveArray.Length);
+        }
         fs.Write(System.BitConverter.GetBytes(MapPoint.nextID), 0, 4);
         //зависимость : mapPoint.LoadPoints()
     }

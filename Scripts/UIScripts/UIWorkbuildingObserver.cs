@@ -9,7 +9,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
     public Text workersCountField, workSpeedField, actionLabel; // fiti
 	int showingWorkersCount, showingWorkersMaxCount;
 	float showingWorkspeed;
-    bool workbuildingMode = true, workspeedStringEnabled = true;
+    private bool workbuildingMode = true, workspeedStringEnabled = true, ignoreWorkersSlider = false;
 
 	public WorkBuilding observingWorkbuilding { get; private set; }
     public Worksite observingWorksite { get; private set; }
@@ -40,10 +40,13 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 		showingWorkersCount = wb.workersCount;
 		showingWorkersMaxCount = wb.maxWorkers;
 		showingWorkspeed = wb.workSpeed;
-		
-		slider.minValue = 0; 
+
+        ignoreWorkersSlider = true;// иначе будет вызывать ивент
+        slider.minValue = 0; 
 		slider.maxValue = showingWorkersMaxCount;
         slider.value = showingWorkersCount;
+        ignoreWorkersSlider = false;
+
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
 		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
 
@@ -67,11 +70,12 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         showingWorkersMaxCount = ws.GetMaxWorkers();
         showingWorkspeed = ws.workSpeed;
 
-        slider.enabled = false; // иначе будет вызывать ивент
+        ignoreWorkersSlider = true;// иначе будет вызывать ивент
         slider.value = showingWorkersCount; 
         slider.minValue = 0;
         slider.maxValue = showingWorkersMaxCount;
-        slider.enabled = true;
+        ignoreWorkersSlider = false;
+
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
         workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
         workSpeedField.enabled = (showingWorkspeed > 0 );
@@ -95,12 +99,16 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     showingWorkersCount = observingWorkbuilding.workersCount;
                     workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
+                    ignoreWorkersSlider = true;
                     slider.value = showingWorkersCount;
+                    ignoreWorkersSlider = false;
                 }
                 if (showingWorkersMaxCount != observingWorkbuilding.maxWorkers)
                 {
                     showingWorkersMaxCount = observingWorkbuilding.maxWorkers;
+                    ignoreWorkersSlider = true;
                     slider.maxValue = showingWorkersMaxCount;
+                    ignoreWorkersSlider = false;
                 }
                 if (workspeedStringEnabled)
                 {
@@ -129,13 +137,17 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 {
                     showingWorkersCount = observingWorksite.workersCount;
                     workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
+                    ignoreWorkersSlider = true;
                     slider.value = showingWorkersCount;
+                    ignoreWorkersSlider = false;
                 }
                 int maxWorkers = observingWorksite.GetMaxWorkers();
                 if (showingWorkersMaxCount != maxWorkers)
                 {
                     showingWorkersMaxCount = maxWorkers;
+                    ignoreWorkersSlider = true;
                     slider.maxValue = showingWorkersMaxCount;
+                    ignoreWorkersSlider = false;
                 }
                 if (workspeedStringEnabled && showingWorkspeed != observingWorksite.workSpeed)
                 {
@@ -337,7 +349,8 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             SelfShutOff();            
         }
     }
-    public void Slider_SetWorkersCount() {        
+    public void Slider_SetWorkersCount() {
+        if (ignoreWorkersSlider) return;
         int x = (int)slider.value;
         if (workbuildingMode)
         {

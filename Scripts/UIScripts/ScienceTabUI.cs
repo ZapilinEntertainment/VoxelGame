@@ -9,33 +9,22 @@ public sealed class ScienceTabUI : MonoBehaviour
     [SerializeField] private GameObject centerCrystal_basis;
     [SerializeField] private RawImage[] centerCrystal_effects, rays, techButtons;
     [SerializeField] private Text knowledgePtsInfo, ascensionLvlInfo;
-    private static ScienceTabUI current;
     private int selectedResearchIndex = -1;
     private float basisEffect_cf1 = 0f, basisEffect_cf2 = 0f, basisEffect_cf3 = 0f;
+    private ResearchStar researchStar;
     private const float BASIS_EFFECT_SPEED = 0.2f;
 
-    public static void OpenResearchTab()
+    public static ScienceTabUI CreateVisualizer(ResearchStar i_rs)
     {
-        if (current == null)
-        {
-            current = Instantiate(Resources.Load<GameObject>("UIPrefs/scienceTab")).GetComponent<ScienceTabUI>();            
-        }
-        current.gameObject.SetActive(true);
-        UIController.current.gameObject.SetActive(false);
-        FollowingCamera.main.gameObject.SetActive(false);
-        current.FullRedraw();
-        current.transform.GetChild(1).gameObject.SetActive(true); // cam
+        var rs = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/scienceTab")).GetComponent<ScienceTabUI>();
+        rs.researchStar = i_rs;
+        return rs;
     }
-    public static void DestroyInterface()
-    {
-        if (current != null) Destroy(current);
-    }
-
     public void SelectTech(int index)
     {
         if (selectedResearchIndex != -1 & selectedResearchIndex != index)
         {
-            techButtons[selectedResearchIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(index));
+            techButtons[selectedResearchIndex].uvRect = GetResearchPointRect(researchStar.GetTechIcon(index));
         }
         selectedResearchIndex = index;
         techButtons[selectedResearchIndex].uvRect = GetResearchPointRect(ScienceTabPart.SelectedPosition);
@@ -47,32 +36,31 @@ public sealed class ScienceTabUI : MonoBehaviour
         UIController.current.gameObject.SetActive(true);
         FollowingCamera.main.gameObject.SetActive(true);
     }    
-
-    private void FullRedraw()
+    public void FullRedraw()
     {
-        var rst = ScienceLab.researchStatus;
-        int populationSecretIndex = (int)ScienceLab.Research.PopulationSecret,
-            ascensionSecretIndex = (int)ScienceLab.Research.AscensionSecret,
-            crystalSecretIndex = (int)ScienceLab.Research.CrystalSecret,
-            lifepowerSecretIndex = (int)ScienceLab.Research.LifepowerSecret;
+        var rst = researchStar.researchStatus;
+        int populationSecretIndex = (int)ResearchStar.Research.PopulationSecret,
+            ascensionSecretIndex = (int)ResearchStar.Research.AscensionSecret,
+            crystalSecretIndex = (int)ResearchStar.Research.CrystalSecret,
+            lifepowerSecretIndex = (int)ResearchStar.Research.LifepowerSecret;
         bool basicResearchesReady =
              (rst[populationSecretIndex] == true) & (rst[ascensionSecretIndex] == true) &
              (rst[crystalSecretIndex] == true) & (rst[lifepowerSecretIndex] == true);
 
-        int count = (int)ScienceLab.ResearchRoute.Total;
+        int count = (int)ResearchStar.ResearchRoute.Total;
         Rect completedIconRect = GetResearchPointRect(ScienceTabPart.ExploredPosition),
             unexploredIconRect = GetResearchPointRect(ScienceTabPart.UnexploredPosition);
 
-        techButtons[populationSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(populationSecretIndex));
-        techButtons[ascensionSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(ascensionSecretIndex));
-        techButtons[crystalSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(crystalSecretIndex));
-        techButtons[lifepowerSecretIndex].uvRect = GetResearchPointRect(ScienceLab.GetTechIcon(lifepowerSecretIndex));
+        techButtons[populationSecretIndex].uvRect = GetResearchPointRect(researchStar.GetTechIcon(populationSecretIndex));
+        techButtons[ascensionSecretIndex].uvRect = GetResearchPointRect(researchStar.GetTechIcon(ascensionSecretIndex));
+        techButtons[crystalSecretIndex].uvRect = GetResearchPointRect(researchStar.GetTechIcon(crystalSecretIndex));
+        techButtons[lifepowerSecretIndex].uvRect = GetResearchPointRect(researchStar.GetTechIcon(lifepowerSecretIndex));
 
         if (basicResearchesReady)
         {
             for (int i = 0; i < count; i++)
             {
-                rays[i].color = new Color(1f, 1f, 1f, 0.25f + 0.75f * ScienceLab.routePoints[i]);
+                rays[i].color = new Color(1f, 1f, 1f, 0.25f + 0.75f * researchStar.routePoints[i]);
                 rays[i].gameObject.SetActive(true);
             }
             basisEffect_cf1 = 1f;
@@ -82,8 +70,9 @@ public sealed class ScienceTabUI : MonoBehaviour
         else
         {
             for (int i = 0; i < count; i++) rays[i].gameObject.SetActive(false);
-            float sum = ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Population] + ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Pipe] 
-                + ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Monument] + ScienceLab.routePoints[(int)ScienceLab.ResearchRoute.Butterfly];
+            var rps = researchStar.routePoints;
+            float sum = rps[(int)ResearchStar.ResearchRoute.Population] + rps[(int)ResearchStar.ResearchRoute.Pipe] 
+                + rps[(int)ResearchStar.ResearchRoute.Monument] + rps[(int)ResearchStar.ResearchRoute.Butterfly];
             if (sum > 0.33f)
             {
                 basisEffect_cf1 = 1f;
@@ -96,7 +85,7 @@ public sealed class ScienceTabUI : MonoBehaviour
         }
 
         ascensionLvlInfo.text = Localization.GetPhrase(LocalizedPhrase.AscensionLevel) + ":\n" + ((int)(GameMaster.realMaster.globalMap.ascension * 100 )).ToString() + '%';
-        knowledgePtsInfo.text = Localization.GetPhrase(LocalizedPhrase.KnowledgePoints) + ":\n" + ScienceLab.knowledgePoints.ToString();
+        knowledgePtsInfo.text = Localization.GetPhrase(LocalizedPhrase.KnowledgePoints) + ":\n" + researchStar.knowledgePoints.ToString();
     }
 
     private Rect GetResearchPointRect(ScienceTabPart stp)

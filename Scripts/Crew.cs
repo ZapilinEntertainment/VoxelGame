@@ -239,7 +239,7 @@ public int missionsParticipated { get; private set; }
     {
         if (place != null)
         {
-            stamina += 0.5f * (0.4f + place.danger * 0.3f + place.difficulty * 0.3f + place.friendliness * 0.2f);
+            stamina +=  place.GetRestValue();
             unity += NEUROPARAMETER_STEP;
         }
         else
@@ -376,28 +376,21 @@ public int missionsParticipated { get; private set; }
     #region save-load system
     public static void SaveStaticData( System.IO.FileStream fs)
     {
+        int realCount = 0;
         var data = new List<byte>();
-        int crewsCount = crewsList.Count;
-        if (crewsCount > 0)
+        if (crewsList.Count > 0)
         {
-            crewsCount = 0;
-            while (crewsCount < crewsList.Count)
+            foreach (var c in crewsList)
             {
-                Crew c = crewsList[crewsCount];
-                if (c == null)
-                {
-                    crewsList.RemoveAt(crewsCount);
-                    continue;
-                }
-                else
+                if (c != null)
                 {
                     data.AddRange(c.Save());
-                    crewsCount++;
-                };
+                    realCount++;
+                }
             }
         }
-        fs.Write(System.BitConverter.GetBytes(crewsCount), 0, 4);
-        if (crewsCount > 0)
+        fs.Write(System.BitConverter.GetBytes(realCount), 0, 4);
+        if (realCount > 0)
         {
             var dataArray = data.ToArray();
             fs.Write(dataArray, 0, dataArray.Length);
@@ -412,13 +405,15 @@ public int missionsParticipated { get; private set; }
         fs.Read(data, 0, 4);
         int crewsCount = System.BitConverter.ToInt32(data, 0);
 
-        while (crewsCount >0)
+        if (crewsCount > 0)
         {
-            Crew c = new GameObject().AddComponent<Crew>();
-            c.transform.parent = crewsContainer.transform;
-            c.Load(fs);
-            crewsList.Add(c);
-            crewsCount--;
+            for (int i = 0; i < crewsCount; i++)
+            {
+                Crew c = new GameObject().AddComponent<Crew>();
+                c.transform.parent = crewsContainer.transform;
+                c.Load(fs);
+                crewsList.Add(c);
+            }
         }
 
         fs.Read(data, 0, 4);
@@ -469,14 +464,14 @@ public int missionsParticipated { get; private set; }
         if (shuttleID != -1)
         {
             shuttle = Shuttle.GetShuttle(shuttleID);
-            shuttle.SetCrew(this);
+            if (shuttle != null) shuttle.SetCrew(this);
         }
         else shuttle = null;
         int artifactID = System.BitConverter.ToInt32(data, 8);
         if (artifactID != -1)
         {
             artifact = Artifact.GetArtifactByID(artifactID);
-            artifact.SetOwner(this);
+            if (artifact != null) artifact.SetOwner(this);
         }
         else artifact = null;
 

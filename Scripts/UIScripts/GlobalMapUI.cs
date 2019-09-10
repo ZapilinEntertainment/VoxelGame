@@ -82,7 +82,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     var e = (chosenPoint as FlyingExpedition).expedition;
                     pointLabel.text = e.crew.name;
-                    pointDescription.text = Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.name;
+                    pointDescription.text = Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.GetName();
                     break;
                 }
             default: pointLabel.text = Localization.GetMapPointTitle(chosenPoint.type); break;
@@ -191,12 +191,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     //окно подготовки экспедиции       
                     expeditionTracing = false;
-                    var mdrop = poi.GetAvailableMissionsDropdownData();
-                    if (mdrop.Count > 0)
-                    {
-                        missionDropdown.options = mdrop;
-                    }
-                    else
+                    if (poi.exploredPart == 1f && poi.availableMissionsIDs == null)
                     {
                         missionDropdown.options = new List<Dropdown.OptionData>() { new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)) };
                     }
@@ -267,12 +262,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 if (poi.sentExpedition == null)
                 { //отправить экспедицию
                     Shuttle s = Shuttle.GetShuttle(shuttlesListIds[shuttlesDropdown.value]);
-                    if (s != null)
-                    {
-                        var e = Expedition.CreateNewExpedition(s.crew, poi.GetMission(missionDropdown.value), QuantumTransmitter.GetFreeTransmitter(), poi, expeditionNameField.text);
-                        if (e == null) print("null");
-                        PreparePointExpedition();
-                    }
+                    if (s != null) Expedition.CreateNewExpedition(s.crew, poi.GetMission(missionDropdown.value), QuantumTransmitter.GetFreeTransmitter(), poi, expeditionNameField.text);
                 }
                 else
                 { //вернуть экспедицию

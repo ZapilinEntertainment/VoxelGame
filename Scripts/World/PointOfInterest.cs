@@ -4,33 +4,140 @@ using System.Collections.Generic;
 
 public class PointOfInterest : MapPoint
 {
-    public float richness { get; protected set; }
-    public float danger { get; protected set; }
-    public float mysteria { get; protected set; }
-    public float friendliness { get; protected set; }
-    public float difficulty { get; protected set; }
-    private float _exploredPart;
-    public float exploredPart
-    {
-        get { return _exploredPart; }
-        private set
-        {
-            if (value > 1) _exploredPart = 1f;
-            else
-            {
-                if (value < 0) _exploredPart = 0f;
-                else _exploredPart = value;
-            }
-        }
-    }
-    public Mission[] availableMissions;
+    protected float richness, danger, mysteria, friendliness;
+    public readonly float difficulty;
+    public float exploredPart { get; protected set; }
+    public int[] availableMissionsIDs { get; private set; }
     public Expedition sentExpedition; // не больше одной экспедиции на точку  
 
-    public PointOfInterest(int i_id) : base(i_id) { }
+    public PointOfInterest(int i_id) : base(i_id) {
+        difficulty = RecalculateDifficulty();
+    }
     public PointOfInterest(float i_angle, float i_height, MapMarkerType mtype) : base(i_angle, i_height, mtype)
     {
+        difficulty = RecalculateDifficulty();
+        exploredPart = 0f;
+    }
+
+    public void Explore(float k)
+    {
+        if (k < 0f) k = 0f;
+        exploredPart += GameConstants.POINT_EXPLORE_SPEED * k;
+        if (exploredPart >= 1f) exploredPart = 1f;
+        GameMaster.realMaster.researchStar.PointExplored(this);
+    }  
+    public bool TryTakeTreasure(Crew c)
+    {
+        if (Random.value < friendliness * c.luck * c.perception)
+        {
+            TakeTreasure(c);
+            return true;
+        }
+        else return false;
+    }
+    public void TakeTreasure(Crew c)
+    {
+        if (c.artifact == null)
+        {
+            if (Random.value * c.perception * c.perception * c.luck > Random.value * mysteria)
+            {
+                c.SetArtifact(GetArtifact());
+                GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.CrewFoundArtifact));
+                return;
+            }
+        }
+        GainResources(c);
+    }    
+    public void GainResources(Crew c)
+    {
+        List<ResourceType> typesList = null;
+        switch (type)
+        {
+            case MapMarkerType.Station:
+                typesList = new List<ResourceType>() { ResourceType.metal_K, ResourceType.metal_M, ResourceType.Plastics, ResourceType.Fuel };
+                if (Random.value < 0.4f) c.AddExperience(Expedition.ONE_STEP_XP);
+                break;
+            case MapMarkerType.Wreck:
+                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.metal_M, ResourceType.Graphonium };
+                break;
+            case MapMarkerType.Island:
+                typesList = new List<ResourceType>() { ResourceType.metal_M_ore, ResourceType.metal_E_ore, ResourceType.metal_N_ore, ResourceType.metal_P_ore };
+                break;
+            case MapMarkerType.SOS:
+                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.Supplies };
+                if (Random.value < 0.3f) c.AddExperience(Expedition.ONE_STEP_XP);
+                break;
+            case MapMarkerType.Portal:
+                typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.metal_N_ore, ResourceType.Graphonium };
+                break;
+            case MapMarkerType.QuestMark:
+                // ?
+                break;
+            case MapMarkerType.Colony:
+                typesList = new List<ResourceType>() { ResourceType.Food, ResourceType.Supplies, ResourceType.metal_K };
+                break;
+            case MapMarkerType.Wiseman:
+                if (Random.value > 0.3f) c.AddExperience(Expedition.ONE_STEP_XP * 10f);
+                else c.ImproveNativeParameters();
+                break;
+            case MapMarkerType.Wonder:
+                if (Random.value > 0.5f) typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.Graphonium };
+                else c.AddExperience(Expedition.ONE_STEP_XP * 2f);
+                break;
+            case MapMarkerType.Resources: // or changing!
+                typesList = new List<ResourceType>()
+                {
+                    ResourceType.metal_K_ore, ResourceType.metal_M_ore, ResourceType.metal_N_ore, ResourceType.metal_E_ore, ResourceType.metal_P_ore,
+                    ResourceType.metal_S_ore, ResourceType.mineral_F, ResourceType.mineral_L
+                };
+                break;
+        }
+        if (typesList != null && typesList.Count > 0)
+        {
+            GameMaster.realMaster.colonyController.storage.AddResource(typesList[Random.Range(0,typesList.Count - 1)], 50f * c.membersCount / (float)Crew.MAX_MEMBER_COUNT * c.persistence);
+        }
+    }
+    public bool TryToJump(Crew c)
+    {
+        return (Random.value * c.adaptability < mysteria * (1f - friendliness));
+    }
+    public bool TryAdditionalJump(Crew c)
+    {
+        return Random.value * c.luck / mysteria < friendliness;
+    }
+    public float GetRestValue()
+    {
+        return (0.4f + danger * 0.3f + difficulty * 0.3f + friendliness * 0.2f) * 0.5f;
+    }
+    public bool HardTest(Crew c)
+    {
+        return c.HardTest(danger);
+    }
+    public bool SoftTest(Crew c)
+    {
+        return c.SoftCheck(friendliness);
+    }
+    public bool LoyaltyTest(Crew c)
+    {
+        return danger + difficulty < Random.value * c.confidence * c.loyalty;
+    }
+    public bool AdaptabilityTest(Crew c)
+    {
+        return mysteria * difficulty < Random.value * c.adaptability * c.bravery;
+    }
+    public bool StaminaTest(Crew c)
+    {
+        return danger * Random.value < c.loyalty * c.confidence;
+    }
+    public bool IsSomethingChanged()
+    {
+        return Random.value < danger;
+    }
+
+    protected float RecalculateDifficulty()
+    {
         float locationDifficulty = 0f;
-        switch (mtype)
+        switch (type)
         {
             case MapMarkerType.Unknown:
                 richness = Random.value;
@@ -46,14 +153,14 @@ public class PointOfInterest : MapPoint
                 friendliness = GameMaster.realMaster.environmentMaster.environmentalConditions;
                 locationDifficulty = 0f;
                 break;
-                // SUNPOINT:
+            // SUNPOINT:
             //case MapMarkerType.Star:  
-               // richness = 0.1f;
-               // danger = 1f;
-              //  mysteria = 0.1f + Random.value * 0.2f;
-              //  friendliness = Random.value;
-               // locationDifficulty = 1f;
-              //  break;
+            // richness = 0.1f;
+            // danger = 1f;
+            //  mysteria = 0.1f + Random.value * 0.2f;
+            //  friendliness = Random.value;
+            // locationDifficulty = 1f;
+            //  break;
             case MapMarkerType.Station:
                 richness = Random.value * 0.8f + 0.2f;
                 danger = Random.value * 0.2f;
@@ -128,35 +235,10 @@ public class PointOfInterest : MapPoint
                 locationDifficulty = 0.25f + 0.25f * Random.value;
                 break;
         }
-        difficulty =  ((danger + mysteria + locationDifficulty - friendliness) * 0.5f + Random.value * 0.5f) * (1f + GameMaster.realMaster.GetDifficultyCoefficient()) * 0.5f;
-        if (difficulty < 0f) difficulty = 0f; // ну мало ли
-        exploredPart = 0f;
+        float _difficulty = ((danger + mysteria + locationDifficulty - friendliness) * 0.5f + Random.value * 0.5f) * (1f + GameMaster.realMaster.GetDifficultyCoefficient()) * 0.5f;
+        if (_difficulty < 0f) _difficulty = 0f; // ну мало ли
+        return _difficulty;
     }
-    
-    public List<Dropdown.OptionData> GetAvailableMissionsDropdownData()
-    {
-        var l = new List<Dropdown.OptionData>();
-        if (availableMissions == null)
-        {
-            availableMissions = new Mission[] { new Mission(MissionType.Exploring, this) };
-        }
-        foreach (Mission m in availableMissions)
-        {
-            l.Add(new Dropdown.OptionData(Localization.GetMissionStandartName(m.type)));
-        }
-        return l;
-    }
-    public Mission GetMission(int index)
-    {
-        if (index < 0 | index >= availableMissions.Length) return Mission.NoMission;
-        else return availableMissions[index];
-    }
-    public void Explore(float k)
-    {
-        exploredPart += GameConstants.POINT_EXPLORE_SPEED * k;
-        ScienceLab.PointExplored(this);
-    }
-
     protected Artifact GetArtifact()
     {
         float a = mysteria * friendliness * 0.8f + 0.2f * Random.value;
@@ -211,69 +293,6 @@ public class PointOfInterest : MapPoint
         return art;
     }
 
-    public void TakeTreasure(Crew c)
-    {
-        if (c.artifact == null)
-        {
-            if (Random.value * c.perception * c.perception * c.luck > Random.value * mysteria)
-            {
-                c.SetArtifact(GetArtifact());
-                GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.CrewFoundArtifact));
-                return;
-            }
-        }
-        GainResources(c);
-    }    
-    public void GainResources(Crew c)
-    {
-        List<ResourceType> typesList = null;
-        switch (type)
-        {
-            case MapMarkerType.Station:
-                typesList = new List<ResourceType>() { ResourceType.metal_K, ResourceType.metal_M, ResourceType.Plastics, ResourceType.Fuel };
-                if (Random.value < 0.4f) c.AddExperience(Expedition.ONE_STEP_XP);
-                break;
-            case MapMarkerType.Wreck:
-                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.metal_M, ResourceType.Graphonium };
-                break;
-            case MapMarkerType.Island:
-                typesList = new List<ResourceType>() { ResourceType.metal_M_ore, ResourceType.metal_E_ore, ResourceType.metal_N_ore, ResourceType.metal_P_ore };
-                break;
-            case MapMarkerType.SOS:
-                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.Supplies };
-                if (Random.value < 0.3f) c.AddExperience(Expedition.ONE_STEP_XP);
-                break;
-            case MapMarkerType.Portal:
-                typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.metal_N_ore, ResourceType.Graphonium };
-                break;
-            case MapMarkerType.QuestMark:
-                // ?
-                break;
-            case MapMarkerType.Colony:
-                typesList = new List<ResourceType>() { ResourceType.Food, ResourceType.Supplies, ResourceType.metal_K };
-                break;
-            case MapMarkerType.Wiseman:
-                if (Random.value > 0.3f) c.AddExperience(Expedition.ONE_STEP_XP * 10f);
-                else c.ImproveNativeParameters();
-                break;
-            case MapMarkerType.Wonder:
-                if (Random.value > 0.5f) typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.Graphonium };
-                else c.AddExperience(Expedition.ONE_STEP_XP * 2f);
-                break;
-            case MapMarkerType.Resources: // or changing!
-                typesList = new List<ResourceType>()
-                {
-                    ResourceType.metal_K_ore, ResourceType.metal_M_ore, ResourceType.metal_N_ore, ResourceType.metal_E_ore, ResourceType.metal_P_ore,
-                    ResourceType.metal_S_ore, ResourceType.mineral_F, ResourceType.mineral_L
-                };
-                break;
-        }
-        if (typesList != null && typesList.Count > 0)
-        {
-            GameMaster.realMaster.colonyController.storage.AddResource(typesList[Random.Range(0,typesList.Count - 1)], 50f * c.membersCount / (float)Crew.MAX_MEMBER_COUNT * c.persistence);
-        }
-    }
-
     #region save-load
     override public List<byte> Save()
     {
@@ -282,38 +301,42 @@ public class PointOfInterest : MapPoint
         data.AddRange(System.BitConverter.GetBytes(danger)); // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
-        data.AddRange(System.BitConverter.GetBytes(difficulty)); // 16 - 19
-        data.AddRange(System.BitConverter.GetBytes(exploredPart)); // 20 - 23
-        // 24 :
-        byte n = 0;        
-        if (availableMissions != null)
+        data.AddRange(System.BitConverter.GetBytes(exploredPart)); // 16 - 19
+
+        byte missionsCount = 0;
+        var missionsData = new List<byte>();
+        if (availableMissionsIDs != null)
         {
-            n = (byte)availableMissions.Length;
-            if (n > 0)
+            for (int i = 0; i < availableMissionsIDs.Length; i++)
             {
-                foreach (Mission m in availableMissions) data.AddRange(m.Save());
+                missionsData.AddRange(System.BitConverter.GetBytes(availableMissionsIDs[i]));
+                missionsCount++;
             }
-            data.Add(n);
         }
-        else  data.Add(n);
+        data.Add(missionsCount); // 24
+        if (missionsCount != 0) data.AddRange(missionsData);
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 25;
+        int LENGTH = 21;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         richness = System.BitConverter.ToSingle(data, 0);
         danger = System.BitConverter.ToSingle(data, 4);
         mysteria = System.BitConverter.ToSingle(data, 8);
         friendliness = System.BitConverter.ToSingle(data, 12);
-        difficulty = System.BitConverter.ToSingle(data, 16);
-        exploredPart = System.BitConverter.ToSingle(data, 20);
-        byte n = data[24];
+        exploredPart = System.BitConverter.ToSingle(data, 16);        
+        byte n = data[20];
         if (n > 0)
         {
-            availableMissions = new Mission[n];
-            Mission.StaticLoad(fs, n, this);
+            availableMissionsIDs = new int[n];
+            data = new byte[4 * n];
+            fs.Read(data, 0, data.Length);
+            for (int i = 0; i < n; i++)
+            {
+                availableMissionsIDs[i] = System.BitConverter.ToInt32(data, i * 4);
+            }
         }
     } 
     #endregion

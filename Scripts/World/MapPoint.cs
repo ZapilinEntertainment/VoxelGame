@@ -169,6 +169,7 @@ public class MapPoint
     {
         stability = s;
     }
+    
     /// <summary>
     /// returns true if something changed
     /// </summary>
@@ -275,14 +276,16 @@ public class MapPoint
     public static List<MapPoint> LoadPoints(System.IO.FileStream fs)
     {
         var pts = new List<MapPoint>();
-        int count = fs.ReadByte();
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int count = System.BitConverter.ToInt32(data,0);
         if (count > 0)
         {            
             int LENGTH = 18;
             GlobalMap gmap = GameMaster.realMaster.globalMap;
             for (int i = 0; i < count; i++)
             {
-                var data = new byte[LENGTH];
+                data = new byte[LENGTH];
                 fs.Read(data, 0, LENGTH);
                 int ID = System.BitConverter.ToInt32(data, 0);
                 var mmtype = (MapMarkerType)data[4];
@@ -351,9 +354,9 @@ public class MapPoint
                 }
             }
         }
-        var idata = new byte[4];
-        fs.Read(idata, 0, 4);
-        nextID = System.BitConverter.ToInt32(idata, 0);
+        data = new byte[4];
+        fs.Read(data, 0, 4);
+        nextID = System.BitConverter.ToInt32(data, 0);
         return pts;
     }
     #endregion
