@@ -49,6 +49,7 @@ public sealed class FlyingExpedition : MapPoint {
 
         fe.speed = System.BitConverter.ToSingle(data, 18);       
         fe.destination = e.destination;
+        GameMaster.realMaster.globalMap.AddPoint(fe, true);
     }
     #endregion
 }

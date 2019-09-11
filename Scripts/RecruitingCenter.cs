@@ -68,13 +68,19 @@ public sealed class RecruitingCenter : WorkBuilding {
 			if (finding) {
 				workflow += ( FIND_SPEED * workSpeed * 0.4f + colony.happiness_coefficient * 0.4f   + 0.2f * Random.value )* GameMaster.LABOUR_TICK / workflowToProcess;
 				if (workflow >= workflowToProcess) {
-                    Crew c = Crew.CreateNewCrew(colony, workersCount / (float)maxWorkers);
-                    workflow = 0;
-					finding = false;
-                    GameLogUI.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));
-					hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
-					hireCost = ((int)(hireCost * 100)) / 100f;
-                    if (showOnGUI) rcenterObserver.SelectCrew(c);
+                    int memCount = (int)((workersCount / (float)maxWorkers) * Crew.MAX_MEMBER_COUNT);
+                    if (workersCount < memCount) memCount = workersCount;
+                    if (memCount > 0)
+                    {
+                        Crew c = Crew.CreateNewCrew(colony, memCount);
+                        workersCount -= memCount;
+                        workflow = 0;
+                        finding = false;
+                        GameLogUI.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));
+                        hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
+                        hireCost = ((int)(hireCost * 100)) / 100f;
+                        if (showOnGUI) rcenterObserver.SelectCrew(c);
+                    }
                 }
 			}
 		}

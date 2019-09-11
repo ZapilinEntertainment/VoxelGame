@@ -34,7 +34,7 @@ public sealed class Expedition
     private QuantumTransmitter transmitter;
 
     public const float ONE_STEP_WORKFLOW = 100, ONE_STEP_XP = 0.5f;
-    private const float ONE_STEP_STAMINA = 0.05f, ONE_STEP_TO_TARGET = 0.1f;
+    private const float ONE_STEP_STAMINA = 0.005f, ONE_STEP_TO_TARGET = 0.1f;
     // STATIC & equals
     static Expedition()
     {
@@ -60,10 +60,10 @@ public sealed class Expedition
     }
     public static Expedition CreateNewExpedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_transmitter, PointOfInterest i_destination, string i_name)
     {
-        if (i_crew == null | i_mission == Mission.NoMission | i_transmitter == null | i_destination == null) return null;
+        if (i_crew == null | i_mission == null | i_transmitter == null | i_destination == null) return null;
         else
         {
-            if (i_crew.status != CrewStatus.AtHome | i_crew.shuttle == null | i_transmitter.expeditionID != -1 | i_destination.sentExpedition != null) return null;
+            if (i_crew.status != CrewStatus.AtHome | i_crew.shuttle == null | i_transmitter.expeditionID != -1) return null;
             else
             {
                 return new Expedition(i_crew, i_mission, i_transmitter, i_destination, i_name);
@@ -90,7 +90,7 @@ public sealed class Expedition
         crew = i_crew; crew.SetStatus(CrewStatus.OnMission);
         mission = i_mission;
         transmitter = i_qt; transmitter.AssignExpedition(this);
-        destination = i_destination; destination.sentExpedition = this;
+        destination = i_destination; destination.ListAnExpedition(this);
         hasConnection = true;
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, gmap.GetCityPoint(), destination, Shuttle.SPEED);
@@ -108,6 +108,7 @@ public sealed class Expedition
         {
             stage = ExpeditionStage.OnMission;
             crewSpeed = mission.CalculateCrewSpeed(crew);
+             MonoBehaviour.print(crewSpeed);
             if (!subscribedToUpdate)
             {
                 GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
@@ -127,7 +128,7 @@ public sealed class Expedition
                 {
                     // # mission drop
                     Mission.RemoveMission(mission.ID);
-                    mission = Mission.NoMission;
+                    mission = null;
                     progress = 0;
                     currentStep = 0;
                     stage = ExpeditionStage.WayOut;
@@ -159,7 +160,7 @@ public sealed class Expedition
     {
         // # mission drop
         Mission.RemoveMission(mission.ID);
-        mission = Mission.NoMission;
+        mission = null;
         progress = 0;
         currentStep = 0;
         stage = ExpeditionStage.WayOut;
@@ -191,7 +192,6 @@ public sealed class Expedition
                     {
                         crew.ConsumeStamina(destination.difficulty * ONE_STEP_STAMINA);
                         progress += crewSpeed;
-                        Debug.Log(progress);
                         if (progress >= ONE_STEP_WORKFLOW)
                         {
                             progress = 0;
@@ -320,11 +320,11 @@ public sealed class Expedition
                                 currentStep++;
                                 if (destination.exploredPart < 1f)
                                 {
-                                    destination.Explore(mission.type == MissionType.Exploring ? 2f : 1f);
+                                    destination.Explore(mission.preset.type == MissionType.Exploring ? 2f : 1f);
                                 }
                                 else
                                 {
-                                    if (mission.type == MissionType.Exploring)
+                                    if (mission.preset.type == MissionType.Exploring)
                                     {                                       
                                         EndMission();
                                         break;
@@ -424,7 +424,7 @@ public sealed class Expedition
     /// <returns></returns>
     public bool Result()
     {
-        switch (mission.type)
+        switch (mission.preset.type)
         {
             case MissionType.Awaiting: return false;
             case MissionType.Exploring: crew.IncreaseAdaptability(); return false;
@@ -441,7 +441,7 @@ public sealed class Expedition
 
     public void ChangeMission(Mission m)
     {
-        if (m == Mission.NoMission)
+        if (m == null)
         {
             EndMission();
             return;
@@ -532,7 +532,7 @@ public sealed class Expedition
         {
             if (crew != null) crew.SetStatus(CrewStatus.AtHome);
             if (transmitter != null) transmitter.DropExpeditionConnection();
-            if (destination != null && destination.sentExpedition != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
+            if (destination != null) destination.ExcludeExpeditionFromList(this);
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
@@ -556,7 +556,7 @@ public sealed class Expedition
         {
             if (crew != null) crew.Disappear();
             if (transmitter != null) transmitter.DropExpeditionConnection();
-            if (destination != null && destination.sentExpedition != null && destination.sentExpedition.ID == ID) destination.sentExpedition = null;
+            if (destination != null) destination.ExcludeExpeditionFromList(this);
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
@@ -609,7 +609,7 @@ public sealed class Expedition
 
         mission = Mission.GetMissionByID(System.BitConverter.ToInt32(data, 18));
         destination = GameMaster.realMaster.globalMap.GetMapPointByID(System.BitConverter.ToInt32(data, 22)) as PointOfInterest;
-        if (destination != null) destination.sentExpedition = this;
+        if (destination != null) destination.ListAnExpedition(this);
         crew = Crew.GetCrewByID(System.BitConverter.ToInt32(data, 26));
         if (crew != null) crew.SetCurrentExpedition(this); else Debug.Log("expedition load error - no crew");
         transmitter = QuantumTransmitter.GetTransmitterByConnectionID(System.BitConverter.ToInt32(data, 30));

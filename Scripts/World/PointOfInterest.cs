@@ -7,8 +7,8 @@ public class PointOfInterest : MapPoint
     protected float richness, danger, mysteria, friendliness;
     public readonly float difficulty;
     public float exploredPart { get; protected set; }
-    public int[] availableMissionsIDs { get; private set; }
-    public Expedition sentExpedition; // не больше одной экспедиции на точку  
+    public List<MissionPreset> availableMissions { get; private set; }
+    public List<Expedition> workingExpeditions { get; private set; }
 
     public PointOfInterest(int i_id) : base(i_id) {
         difficulty = RecalculateDifficulty();
@@ -17,6 +17,35 @@ public class PointOfInterest : MapPoint
     {
         difficulty = RecalculateDifficulty();
         exploredPart = 0f;
+    }
+
+    public void ListAnExpedition(Expedition e)
+    {
+        if (workingExpeditions == null)
+        {
+            workingExpeditions = new List<Expedition>();
+            workingExpeditions.Add(e);
+        }
+        else
+        {
+            if (!workingExpeditions.Contains(e)) workingExpeditions.Add(e);
+        }
+    }
+    public void ExcludeExpeditionFromList(Expedition e)
+    {
+        if (workingExpeditions != null)
+        {
+            workingExpeditions.Remove(e);
+            if (workingExpeditions.Count == 0) workingExpeditions = null;
+        }
+    }
+    public Mission GetMissionByIndex(int i)
+    {
+        if (availableMissions != null && availableMissions.Count > i)
+        {
+            return new Mission(availableMissions[i]);
+        }
+        else return null;
     }
 
     public void Explore(float k)
@@ -305,11 +334,11 @@ public class PointOfInterest : MapPoint
 
         byte missionsCount = 0;
         var missionsData = new List<byte>();
-        if (availableMissionsIDs != null)
+        if (availableMissions != null)
         {
-            for (int i = 0; i < availableMissionsIDs.Length; i++)
+            foreach (MissionPreset mp in availableMissions)
             {
-                missionsData.AddRange(System.BitConverter.GetBytes(availableMissionsIDs[i]));
+                missionsData.AddRange(mp.Save());
                 missionsCount++;
             }
         }
@@ -330,12 +359,10 @@ public class PointOfInterest : MapPoint
         byte n = data[20];
         if (n > 0)
         {
-            availableMissionsIDs = new int[n];
-            data = new byte[4 * n];
-            fs.Read(data, 0, data.Length);
+            availableMissions = new List<MissionPreset>();
             for (int i = 0; i < n; i++)
             {
-                availableMissionsIDs[i] = System.BitConverter.ToInt32(data, i * 4);
+                availableMissions.Add(MissionPreset.Load(fs));
             }
         }
     } 

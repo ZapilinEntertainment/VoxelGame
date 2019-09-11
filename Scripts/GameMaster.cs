@@ -525,7 +525,7 @@ public sealed class GameMaster : MonoBehaviour
                         s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
                     }
 
-                    Crew c = Crew.CreateNewCrew(colonyController, 1f);
+                    Crew c = Crew.CreateNewCrew(colonyController, Crew.MAX_MEMBER_COUNT);
                     sx = mainChunk.GetRandomSurfaceBlock();
                     if (sx != null)
                     {
@@ -1053,7 +1053,7 @@ public sealed class GameMaster : MonoBehaviour
                 errorReason = "quest load failure";
                 goto FAIL;
             }
-            //Expedition.LoadStaticData(fs);
+            Expedition.LoadStaticData(fs);
             fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();

@@ -20,10 +20,11 @@ public sealed class GlobalMapUI : MonoBehaviour
     [SerializeField] private GameObject mapCanvas, mapCamera;
 #pragma warning restore 0649
 
-    private bool prepared = false, infopanelEnabled = false, descriptionMode = true, expeditionTracing = false;
+    private bool prepared = false, infopanelEnabled = false, descriptionMode = true, showExpeditionInfo = false;
     private float infoPanelWidth = Screen.width;
     private float[] ringsRotation;
     private int lastDrawnStateHash = 0;
+    private Expedition showingExpedition;
     private GlobalMap globalMap;
     private MapPoint chosenPoint;
     private List<int> shuttlesListIds = new List<int>();
@@ -93,7 +94,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         {
             if (mp is PointOfInterest)
             {
-                if ((mp as PointOfInterest).sentExpedition == null) expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) + ' ' + Expedition.nextID.ToString();
+                if ((mp as PointOfInterest).workingExpeditions == null) expeditionNameField.text = Localization.GetWord(LocalizedWord.Expedition) + ' ' + Expedition.nextID.ToString();
                 PreparePointExpedition();
             }
             else
@@ -108,9 +109,12 @@ public sealed class GlobalMapUI : MonoBehaviour
     public void PreparePointDescription()
     {
         if (chosenPoint != null)
-        {
+        {            
             descriptionMode = true;
-            expeditionTracing = false;
+
+            showExpeditionInfo = false;
+            showingExpedition = null;
+
             pointDescription.text = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex);
             pointDescription.gameObject.SetActive(true);
 
@@ -147,54 +151,79 @@ public sealed class GlobalMapUI : MonoBehaviour
 
                 if (sendPanel.activeSelf) sendPanel.SetActive(false);
                 shuttlesDropdown.gameObject.SetActive(false);
-                if (poi.sentExpedition != null)
-                { // окно действующей экспедиции
-                    expeditionTracing = true;
-                    expeditionNameField.text = poi.sentExpedition.name;
-                    missionDropdown.gameObject.SetActive(false);
-                    Expedition e = poi.sentExpedition;
-                    if (e.hasConnection)
-                    {
-                        switch (e.stage)
-                        {
-                            case Expedition.ExpeditionStage.WayIn:
-                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingToMissionPoint);
-                                break;
-                            case Expedition.ExpeditionStage.OnMission:
-                                expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
-                                    Localization.GetWord(LocalizedWord.Progress) + ": " + ((int)(e.progress * 100)).ToString() + "%\n" +
-                                    e.currentStep.ToString() + " / " + e.mission.stepsCount.ToString()
-                                    ;
-                                break;
-                            case Expedition.ExpeditionStage.WayOut:
-                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingHome);
-                                break;
-                            case Expedition.ExpeditionStage.LeavingMission:
-                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.TryingToLeave);
-                                break;
-                            case Expedition.ExpeditionStage.Dismissed:
-                                expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.Dissmissed);
-                                break;
-                        }
 
-                        startButton.interactable = true;
-                        startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
-                    }
-                    else
+                if (poi.workingExpeditions != null)
+                { // окно действующей экспедиции
+                    showExpeditionInfo = true;
+                    showingExpedition = poi.workingExpeditions[0];
+                    if (showingExpedition != null)
                     {
-                        expStatusText.text = Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
-                        startButton.interactable = false;
-                        startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                        expeditionNameField.text = showingExpedition.name;
+                        missionDropdown.gameObject.SetActive(false);
+                        if (showingExpedition.hasConnection)
+                        {
+                            switch (showingExpedition.stage)
+                            {
+                                case Expedition.ExpeditionStage.WayIn:
+                                    expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingToMissionPoint);
+                                    break;
+                                case Expedition.ExpeditionStage.OnMission:
+                                    expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + showingExpedition.crew.name + '\n' +
+                                        Localization.GetWord(LocalizedWord.Progress) + ": " + ((int)(showingExpedition.progress * 100)).ToString() + "%\n" +
+                                        showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString()
+                                        ;
+                                    break;
+                                case Expedition.ExpeditionStage.WayOut:
+                                    expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.FlyingHome);
+                                    break;
+                                case Expedition.ExpeditionStage.LeavingMission:
+                                    expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.TryingToLeave);
+                                    break;
+                                case Expedition.ExpeditionStage.Dismissed:
+                                    expStatusText.text = Localization.GetActionLabel(LocalizationActionLabels.Dissmissed);
+                                    break;
+                            }
+
+                            startButton.interactable = true;
+                            startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                        }
+                        else
+                        {
+                            expStatusText.text = Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
+                            startButton.interactable = false;
+                            startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                        }
                     }
+                    else PreparePointDescription();
                 }
                 else
                 {
                     //окно подготовки экспедиции       
-                    expeditionTracing = false;
-                    if (poi.exploredPart == 1f && poi.availableMissionsIDs == null)
+                    showExpeditionInfo = false;
+                    showingExpedition = null;
+                    var opts = new List<Dropdown.OptionData>();
+                    if (poi.exploredPart < 1f) opts.Add(new Dropdown.OptionData(Localization.GetMissionName(MissionType.Exploring)));
+                    if (poi.availableMissions != null)
+                    {
+                        foreach (MissionPreset mp in poi.availableMissions)
+                        {
+                            opts.Add(new Dropdown.OptionData(Localization.GetMissionName(mp)));
+                        }
+                    }
+
+                    bool enableStartButton = false;
+                    if (opts.Count == 0)
                     {
                         missionDropdown.options = new List<Dropdown.OptionData>() { new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoMission)) };
+                        missionDropdown.interactable = false;
                     }
+                    else
+                    {
+                        missionDropdown.options = opts;
+                        missionDropdown.interactable = true;
+                        enableStartButton = true;
+                    }
+
                     missionDropdown.gameObject.SetActive(true);
 
                     var shuttlesDropdownList = new List<Dropdown.OptionData>();
@@ -225,7 +254,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                     
                     teamInfoblock.gameObject.SetActive(false);
                     startButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Launch);
-                    startButton.interactable = (shuttlesListIds.Count > 0 & mdrop.Count > 0 & freeCount > 0);
+                    startButton.interactable = (shuttlesListIds.Count > 0 & enableStartButton & freeCount > 0);
                 }
                 startButton.gameObject.SetActive(true);
                 sendPanel.SetActive(true);
@@ -243,9 +272,9 @@ public sealed class GlobalMapUI : MonoBehaviour
         if (chosenPoint != null)
         {
             PointOfInterest poi = chosenPoint as PointOfInterest;
-            if (poi != null && poi.sentExpedition != null)
+            if (poi != null && showingExpedition != null)
             {
-                poi.sentExpedition.name = s;
+                showingExpedition.name = s;
             }
             PreparePointExpedition();
         }
@@ -259,14 +288,23 @@ public sealed class GlobalMapUI : MonoBehaviour
             if (!descriptionMode)
             {
                 var poi = chosenPoint as PointOfInterest;
-                if (poi.sentExpedition == null)
+                if (showingExpedition == null)
                 { //отправить экспедицию
                     Shuttle s = Shuttle.GetShuttle(shuttlesListIds[shuttlesDropdown.value]);
-                    if (s != null) Expedition.CreateNewExpedition(s.crew, poi.GetMission(missionDropdown.value), QuantumTransmitter.GetFreeTransmitter(), poi, expeditionNameField.text);
+                    if (s != null)
+                    {
+                        var q = QuantumTransmitter.GetFreeTransmitter();
+                        if (q != null) {
+                            Mission m = null;
+                            if (missionDropdown.value != 0) m = poi.GetMissionByIndex(missionDropdown.value - 1);
+                            else m = new Mission(MissionPreset.ExploringPreset, poi);
+                            if (m != null) Expedition.CreateNewExpedition(s.crew, m,q, poi, expeditionNameField.text);
+                        }
+                    }
                 }
                 else
                 { //вернуть экспедицию
-                    poi.sentExpedition.EndMission();
+                    showingExpedition.EndMission();
                 }
                 PreparePointExpedition();
             }
@@ -462,23 +500,22 @@ public sealed class GlobalMapUI : MonoBehaviour
                 PointOfInterest poi = chosenPoint as PointOfInterest;
                 if (poi != null)
                 {
-                    Expedition e = poi.sentExpedition;
-                    if (e != null)
+                    if (showingExpedition != null)
                     {
                         if (!descriptionMode)
                         {
-                            if (expeditionTracing)
+                            if (showExpeditionInfo)
                             {
-                                if (e.hasConnection)
+                                if (showingExpedition.hasConnection)
                                 {
-                                    if (e.stage == Expedition.ExpeditionStage.OnMission)
+                                    if (showingExpedition.stage == Expedition.ExpeditionStage.OnMission)
                                     {
-                                        expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + e.crew.name + '\n' +
-                                       Localization.GetWord(LocalizedWord.Progress) + ": " + e.currentStep + '/' + e.mission.stepsCount;
+                                        expStatusText.text = Localization.GetWord(LocalizedWord.Crew) + ": " + showingExpedition.crew.name + '\n' +
+                                       Localization.GetWord(LocalizedWord.Progress) + ": " + showingExpedition.currentStep + '/' + showingExpedition.mission.stepsCount;
                                     }
                                     else
                                     {
-                                        if (e.stage == Expedition.ExpeditionStage.Dismissed)
+                                        if (showingExpedition.stage == Expedition.ExpeditionStage.Dismissed)
                                         {
                                             PreparePointExpedition();
                                         }
@@ -490,7 +527,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                     }
                     else
                     {
-                        if (!descriptionMode & expeditionTracing)  PreparePointExpedition();
+                        if (!descriptionMode & showExpeditionInfo)  PreparePointExpedition();
                     }
                 }
             }

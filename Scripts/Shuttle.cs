@@ -191,8 +191,8 @@ public sealed class Shuttle : MonoBehaviour {
         data.Add(docked ? (byte)1 : (byte)0); // 12
 
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
-        int bytesCount = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(bytesCount)); // количество байтов, не длина строки
+        int bytesCount = nameArray.Length; 
+        data.AddRange(System.BitConverter.GetBytes(bytesCount)); // количество байтов, не длина строки // 13 - 16
         if (bytesCount > 0) data.AddRange(nameArray);
 
         Transform t = transform;

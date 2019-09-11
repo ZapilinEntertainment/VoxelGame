@@ -73,7 +73,7 @@ public int missionsParticipated { get; private set; }
         actionsHash = 0;
 	}
 
-    public static Crew CreateNewCrew(ColonyController home, float recruitsFullfill)
+    public static Crew CreateNewCrew(ColonyController home, int membersCount)
     {
         if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
         Crew c = new GameObject(Localization.NameCrew()).AddComponent<Crew>();
@@ -102,8 +102,7 @@ public int missionsParticipated { get; private set; }
         c.adaptability = lvl_cf * 0.5f;
 
         c.stamina = 0.9f + Random.value * 0.1f;
-        c.membersCount = (int)(MAX_MEMBER_COUNT * (recruitsFullfill * 0.5f + 0.2f * Random.value + 0.3f * home.health_coefficient));
-        if (c.membersCount > MAX_MEMBER_COUNT) c.membersCount = MAX_MEMBER_COUNT;
+        c.membersCount = membersCount;
         crewsList.Add(c);        
         actionsHash++;
         return c;
@@ -445,12 +444,18 @@ public int missionsParticipated { get; private set; }
         data.AddRange(System.BitConverter.GetBytes(techSkills));
         data.AddRange(System.BitConverter.GetBytes(survivalSkills));
         data.AddRange(System.BitConverter.GetBytes(teamWork));
+        //40
+        data.AddRange(System.BitConverter.GetBytes(confidence));
+        data.AddRange(System.BitConverter.GetBytes(unity));
+        data.AddRange(System.BitConverter.GetBytes(adaptability));
+        data.AddRange(System.BitConverter.GetBytes(loyalty));
+
         data.AddRange(System.BitConverter.GetBytes(stamina));
         data.AddRange(System.BitConverter.GetBytes(missionsSuccessed));
         data.AddRange(System.BitConverter.GetBytes(missionsParticipated));
-        // 52
-        data.Add(level); // 53
-        data.Add((byte)status); // 54
+        // 68
+        data.Add(level); 
+        data.Add((byte)status); 
         return data;
     }
 
@@ -486,7 +491,7 @@ public int missionsParticipated { get; private set; }
             name = new string(chars);
         }
 
-        data = new byte[54];
+        data = new byte[70];
         fs.Read(data, 0, data.Length);
         membersCount = System.BitConverter.ToInt32(data, 0);
         experience = System.BitConverter.ToSingle(data, 4);
@@ -498,11 +503,17 @@ public int missionsParticipated { get; private set; }
         techSkills = System.BitConverter.ToSingle(data, 28);
         survivalSkills = System.BitConverter.ToSingle(data, 32);
         teamWork = System.BitConverter.ToSingle(data, 36);
-        stamina = System.BitConverter.ToSingle(data, 40);
-        missionsSuccessed = System.BitConverter.ToInt32(data, 44);
-        missionsParticipated = System.BitConverter.ToInt32(data, 48);
-        level = data[52];
-        status = (CrewStatus)data[53];
+
+        confidence = System.BitConverter.ToSingle(data, 40);
+        unity = System.BitConverter.ToSingle(data, 44);
+        adaptability = System.BitConverter.ToSingle(data, 48);
+        loyalty = System.BitConverter.ToSingle(data, 52);
+
+        stamina = System.BitConverter.ToSingle(data, 56);
+        missionsSuccessed = System.BitConverter.ToInt32(data, 60);
+        missionsParticipated = System.BitConverter.ToInt32(data, 64);
+        level = data[68];
+        status = (CrewStatus)data[69];
     }
 
     #endregion

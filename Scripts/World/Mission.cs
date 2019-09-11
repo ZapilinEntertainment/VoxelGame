@@ -15,14 +15,12 @@ public enum MissionType : byte
 
 //класс-тестировщик на проходение проверок командой
 public sealed class Mission {    
-	public static readonly Mission NoMission;
     private static int nextID;
     private static List<Mission> missions;
 
-    public MissionType type { get; private set; }
-    public readonly int stepsCount, ID;
-    public readonly bool requireShuttle;
-
+    public readonly MissionPreset preset;
+    public Expedition performer { get; private set; }
+    public readonly int stepsCount, ID;   
     private byte nameIdentifierA = 0, nameIdentifierB = 0;
 
     public static bool operator ==(Mission lhs, Mission rhs) { return lhs.Equals(rhs); }
@@ -34,17 +32,13 @@ public sealed class Mission {
             return false;
 
         Mission p = (Mission)obj;
-        return (type == p.type);
+        return (ID == p.ID);
     }
     public override int GetHashCode()
     {
         return ID + stepsCount * 6 + nameIdentifierA * 2 + nameIdentifierB * 2;
     }
 
-    static Mission()
-    {
-        NoMission = new Mission(MissionType.Awaiting);
-    }
     public static Mission GetMissionByID(int s_id)
     {
         if (s_id > 0 && missions != null && missions.Count > 0)
@@ -53,9 +47,9 @@ public sealed class Mission {
             {
                 if (m.ID == s_id) return m;
             }
-            return NoMission;
+            return null;
         }
-        else return NoMission;
+        else return null;
     }
     public static void RemoveMission(int d_id)
     {
@@ -72,19 +66,17 @@ public sealed class Mission {
         }
     }
 
-    public Mission(MissionType i_type)
+    public Mission(MissionPreset mp)
     {
-        type = i_type;
-        requireShuttle = false;
+        preset = mp;
         stepsCount = 1; // awaiting
         ID = nextID++;
         if (missions == null) missions = new List<Mission>();
         missions.Add(this);
     }
-    public Mission (MissionType i_type, PointOfInterest i_point) : this(i_type)
+    public Mission (MissionPreset i_mp, PointOfInterest i_point) : this(i_mp)
     {
-        requireShuttle = true;
-        switch (type)
+        switch (i_mp.type)
         {
             case MissionType.Exploring: stepsCount = 5 + (int)(i_point.difficulty * 6f); break;
             case MissionType.FindingKnowledge: stepsCount = 4 + (int)(Random.Range(0,6) * i_point.difficulty);break;
@@ -95,27 +87,26 @@ public sealed class Mission {
             default: stepsCount = 1 + (int)i_point.difficulty;break;
                 //остальные - по единице
         }
-        ID = nextID++;
+        nameIdentifierA = 0;
+        nameIdentifierB = nameIdentifierA;
+    }
+    /// <summary>
+    /// loading constructor
+    /// </summary>
+    public Mission (MissionPreset i_mp, int i_ID, int i_stepsCount)
+    {
+        preset = i_mp;
+        ID = i_ID;
+        stepsCount = i_stepsCount;                  
         nameIdentifierA = 0;
         nameIdentifierB = nameIdentifierA;
         if (missions == null) missions = new List<Mission>();
         missions.Add(this);
     }
-    /// <summary>
-    /// loading constructor
-    /// </summary>
-    public Mission (int i_ID, int i_stepsCount, bool i_requireShuttle)
-    {
-        ID = i_ID;
-        stepsCount = i_stepsCount;              
-        requireShuttle = i_requireShuttle;
-        missions.Add(this);
-        nameIdentifierA = 0;
-        nameIdentifierB = nameIdentifierA;
-    }
     public string GetName()
     {
-        return Localization.GetMissionName(type, nameIdentifierA, nameIdentifierB);
+        if (!preset.isUnique) return Localization.GetMissionName(preset.type, nameIdentifierA, nameIdentifierB);
+        else return "<unique mission>";
     }
 
     public float CalculateCrewSpeed(Crew c)
@@ -129,7 +120,7 @@ public sealed class Mission {
     }
     public float GetDistanceToTarget()
     {
-        switch (type)
+        switch (preset.type)
         {
             case MissionType.Awaiting: return 0;
             case MissionType.Exploring: return stepsCount + 1;
@@ -145,7 +136,7 @@ public sealed class Mission {
     }
     public bool TestYourMight(Crew c)
     {
-        switch (type)
+        switch (preset.type)
         {
             // зависимость от точки?
             case MissionType.Exploring:
@@ -180,15 +171,14 @@ public sealed class Mission {
         List<byte> savedata = null;
         if (missions != null && missions.Count > 0)
         {
+            savedata = new List<byte>();
             foreach (Mission m in missions)
             {
+                savedata.AddRange(m.preset.Save());
                 savedata.AddRange(System.BitConverter.GetBytes(m.ID)); // 0 -3
                 savedata.AddRange(System.BitConverter.GetBytes(m.stepsCount)); // 4 - 7
-                savedata.Add(m.requireShuttle ? (byte)1 : (byte)0); // 8
-                savedata.Add((byte)m.type); // 9
-                savedata.Add(m.nameIdentifierA);// 10
-                savedata.Add(m.nameIdentifierB);// 11
-
+                savedata.Add(m.nameIdentifierA);// 8
+                savedata.Add(m.nameIdentifierB);//9               
                 count++;
             }
         }
@@ -197,6 +187,7 @@ public sealed class Mission {
             var saveArray = savedata.ToArray();
             fs.Write(saveArray, 0, saveArray.Length);
         }
+        fs.Write(System.BitConverter.GetBytes(nextID),0,4);
     }
     public static void StaticLoad(System.IO.FileStream fs)
     {
@@ -209,21 +200,62 @@ public sealed class Mission {
             Mission m;
             for (int i = 0; i < count; i++)
             {
-                data = new byte[12];
+                var mp = MissionPreset.Load(fs);
+                data = new byte[10];
                 fs.Read(data, 0, data.Length);
                 m = new Mission(
+                    mp, // preset
                     System.BitConverter.ToInt32(data, 0), // id
-                    System.BitConverter.ToInt32(data, 4), //stepsCount
-                    data[8] == 1
+                    System.BitConverter.ToInt32(data, 4) //stepsCount
                     );
-                m.type = (MissionType)data[9];
-                m.nameIdentifierA = data[10];
-                m.nameIdentifierB = data[11];
-            }
-            data = new byte[4];
-            fs.Read(data, 0, 4);
-            nextID = System.BitConverter.ToInt32(data, 0);
+                m.nameIdentifierA = data[8];
+                m.nameIdentifierB = data[9];
+            }            
         }
+        data = new byte[4];
+        fs.Read(data, 0, 4);
+        nextID = System.BitConverter.ToInt32(data, 0);
     }
     #endregion
+}
+
+public struct MissionPreset
+{
+    public readonly MissionType type;
+    public readonly bool requireShuttle, isUnique;
+    public readonly int subIndex;
+
+    public static readonly MissionPreset ExploringPreset;
+
+    static MissionPreset()
+    {
+        ExploringPreset = new MissionPreset(MissionType.Exploring, true, false, 0);
+    }
+    public MissionPreset(MissionType i_type, bool i_reqShuttle, bool i_unique, int i_subIndex)
+    {
+        type = i_type;
+        requireShuttle = i_reqShuttle;
+        isUnique = i_unique;
+        subIndex = i_subIndex;
+    }
+
+    public List<byte> Save()
+    {
+        const byte trueByte = 1, falseByte = 0;
+        var data = new List<byte>
+        {
+            (byte)type,
+            requireShuttle ? trueByte : falseByte,
+            isUnique ? trueByte : falseByte
+        };
+        data.AddRange(System.BitConverter.GetBytes(subIndex));
+        return data;
+    }
+    public static MissionPreset Load(System.IO.FileStream fs) 
+    {
+        var data = new byte[7];
+        fs.Read(data, 0, data.Length);
+        int i_subIndex = System.BitConverter.ToInt32(data, 3);
+        return new MissionPreset((MissionType)data[0], data[1] == 1, data[2] == 1, i_subIndex);
+    }
 }
