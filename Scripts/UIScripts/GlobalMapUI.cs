@@ -10,10 +10,9 @@ public sealed class GlobalMapUI : MonoBehaviour
     [SerializeField] private Button startButton;
     [SerializeField] private Dropdown missionDropdown, shuttlesDropdown;
     [SerializeField] private Image descrButtonImage, expButtonImage;
-    [SerializeField] private InputField expeditionNameField;
     [SerializeField] private RectTransform mapRect;
     [SerializeField] private RawImage pointIcon;
-    [SerializeField] private Text pointLabel, pointDescription, expStatusText;
+    [SerializeField] private Text pointLabel, pointDescription, expStatusText, expeditionNameField;
     [SerializeField] private Texture sectorsTexture;
     [SerializeField] private Transform[] rings;
     [SerializeField] private GameObject exampleMarker, infoPanel, sendPanel, teamInfoblock;
@@ -82,8 +81,11 @@ public sealed class GlobalMapUI : MonoBehaviour
             case MapMarkerType.Shuttle:
                 {
                     var e = (chosenPoint as FlyingExpedition).expedition;
-                    pointLabel.text = e.crew.name;
-                    pointDescription.text = Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.GetName();
+                    pointLabel.text = '"' + e.crew.name + '"';
+                    pointDescription.text =
+                        e.mission != null ? Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.GetName() :
+                        Localization.GetWord(LocalizedWord.Return);
+                        ;
                     break;
                 }
             default: pointLabel.text = Localization.GetMapPointTitle(chosenPoint.type); break;
@@ -115,7 +117,13 @@ public sealed class GlobalMapUI : MonoBehaviour
             showExpeditionInfo = false;
             showingExpedition = null;
 
-            pointDescription.text = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex);
+            if (chosenPoint.type != MapMarkerType.Shuttle) pointDescription.text = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex);
+            else
+            {
+                var e = (chosenPoint as FlyingExpedition).expedition;
+                pointDescription.text = e.mission != null ? Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.GetName() :
+                        Localization.GetWord(LocalizedWord.Return);
+            }
             pointDescription.gameObject.SetActive(true);
 
             descrButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
@@ -158,7 +166,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                     showingExpedition = poi.workingExpeditions[0];
                     if (showingExpedition != null)
                     {
-                        expeditionNameField.text = showingExpedition.name;
+                        expeditionNameField.text = '"' + showingExpedition.crew.name + '"';
                         missionDropdown.gameObject.SetActive(false);
                         if (showingExpedition.hasConnection)
                         {
@@ -267,19 +275,6 @@ public sealed class GlobalMapUI : MonoBehaviour
         }
         else CloseInfopanel();
     }
-    public void RenameExpedition(string s)
-    {
-        if (chosenPoint != null)
-        {
-            PointOfInterest poi = chosenPoint as PointOfInterest;
-            if (poi != null && showingExpedition != null)
-            {
-                showingExpedition.name = s;
-            }
-            PreparePointExpedition();
-        }
-        else  CloseInfopanel();
-    }
 
     public void StartButton()
     {
@@ -304,7 +299,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 }
                 else
                 { //вернуть экспедицию
-                    showingExpedition.EndMission();
+                    if (showingExpedition.mission != null) showingExpedition.EndMission();
                 }
                 PreparePointExpedition();
             }

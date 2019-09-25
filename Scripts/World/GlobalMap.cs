@@ -395,7 +395,7 @@ public sealed class GlobalMap : MonoBehaviour
                     }
                     else
                     {
-                        GameLogUI.MakeAnnouncement(fe.expedition.name + ' ' + Localization.GetPhrase(LocalizedPhrase.CannotReachDestination));
+                        GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotReachDestination, fe.expedition.crew));
                         fe.expedition.EndMission();
                     }
                 }

@@ -62,14 +62,22 @@ public class UIBuildingObserver : UIObserver {
                     showingEnergySurplus = b.energySurplus;
                     if (status_energySupplied)
                     {
-                        if (showingEnergySurplus <= 0)
+                        if (observingBuilding.ID != Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID)
                         {
+                            if (showingEnergySurplus <= 0)
+                            {
                                 energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
                                 energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                            }
+                            else
+                            {
+                                energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                            }
                         }
                         else
                         {
-                            energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                            energyValue.text = string.Format("{0,1:F}", showingEnergySurplus) + " / " + ((int)(GameConstants.ENERGY_IN_CRYSTAL)).ToString();
                             energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
                         }
                     }
@@ -187,15 +195,23 @@ public class UIBuildingObserver : UIObserver {
                     {
                         if (status_energySupplied)
                         {
-                            if (showingEnergySurplus > 0)
+                            if (observingBuilding.ID != Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID)
                             {
-                                energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                                if (showingEnergySurplus <= 0)
+                                {
+                                    energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
+                                    energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                                }
+                                else
+                                {
+                                    energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
+                                    energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                                }
                             }
                             else
                             {
-                                energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                                energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                                energyValue.text = string.Format("{0,1:F}", showingEnergySurplus) + " / " + ((int)(GameConstants.ENERGY_IN_CRYSTAL)).ToString();
+                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
                             }
                         }
                         else

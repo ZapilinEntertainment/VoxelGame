@@ -92,10 +92,10 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         if (observingRCenter == null) SelfShutOff();
         else
         {
-            if (lastCrewActionHash != Crew.actionsHash)
+            if (lastCrewActionHash != Crew.listChangesMarkerValue)
             {
                 PrepareWindow();
-                lastCrewActionHash = Crew.actionsHash;
+                lastCrewActionHash = Crew.listChangesMarkerValue;
             }
             else
             {
@@ -119,7 +119,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             }
         }
         crewsDropdown.options = crewButtons;
-        lastCrewActionHash = Crew.actionsHash;
+        lastCrewActionHash = Crew.listChangesMarkerValue;
 
         if (showingCrew != null)
         {

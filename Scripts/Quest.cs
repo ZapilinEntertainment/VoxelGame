@@ -51,7 +51,7 @@ public class Quest
         {
             return ReferenceEquals(B, null);
         }
-        return ((A.type == B.type) && (A.subIndex == B.subIndex));
+        return A.Equals(B);
     }
     public static bool operator !=(Quest A, Quest B)
     {
@@ -66,11 +66,7 @@ public class Quest
     }
     public override bool Equals(object obj)
     {
-        if (!(obj is Quest))
-        {
-            return false;
-        }
-
+        if (obj == null || GetType() != obj.GetType())   return false;
         var info = (Quest)obj;
         return type == info.type &&
                subIndex == info.subIndex;

@@ -6,13 +6,14 @@ using UnityEngine.UI;
 public sealed class UIExpeditionObserver : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] private RawImage icon, connectionImage, crewPassButtonImage, destinationPointImage;
-    [SerializeField] private InputField nameField;
+    [SerializeField] private RawImage  connectionImage, crewPassButtonImage, destinationPointImage;
     [SerializeField] private Text statusText, crewInfo, placeInfo, missionInfo, currentStepText, progressText;
     [SerializeField] private Image stepProgressBar;
     [SerializeField] private GameObject recallButton;
+    [SerializeField] private Text[] logData;
 #pragma warning restore 0649
     private bool subscribedToUpdate = false;
+    private byte lastChangesMarkerValue = 0;
     private Expedition showingExpedition;
 
     public void SetPosition(Rect r, SpriteAlignment alignment)
@@ -51,9 +52,6 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         if (showingExpedition == null) gameObject.SetActive(false);
         else
         {
-            icon.texture = showingExpedition.icon;
-            nameField.text = showingExpedition.name;
-
             crewInfo.text = showingExpedition.crew.name;
             showingExpedition.crew.DrawCrewIcon(crewPassButtonImage);
 
@@ -114,6 +112,9 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             {
                 if (recallButton.activeSelf) recallButton.SetActive(false);
             }
+
+            showingExpedition.FillLog(logData);
+            lastChangesMarkerValue = showingExpedition.changesMarkerValue;
         }
     }
 

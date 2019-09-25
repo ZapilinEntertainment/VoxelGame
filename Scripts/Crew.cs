@@ -7,45 +7,425 @@ public enum CrewStatus : byte {AtHome, OnMission, Travelling}
 //Localization.GetCrewStatus()
 // Rest()
 
+public struct CrewAttributes
+{
+    public enum ExploringPath : byte { Default,PathOfLife, SecretPath, PathOfMind } // dependency : GetStaminaModifier
+    public byte  persistence, survivalSkills, secretKnowledge, perception, intelligence, techSkills, level;
+    public ushort stamina, maxStamina, proficiencies;
+    public float confidence, unity, loyalty, adaptability;
+    public int experience;
+    public ExploringPath exploringPath;
+
+    private const byte MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
+    private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_REPLENISH_VALUE = 1f, ADAPTABILITY_LOSSES = 0.02f;
+    public CrewAttributes(ColonyController c)
+    {
+        var values = new int[4];
+        values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
+        values[2] = Random.Range(0, 6); values[3] = Random.Range(0, 6);
+        int minValIndex = 0;
+        if (values[1] < values[0]) minValIndex = 1;
+        if (values[2] < values[minValIndex]) minValIndex = 2;
+        if (values[3] < values[minValIndex]) minValIndex = 3;
+        perception = (byte)(values[0] + values[1] + values[2] + values[3] - values[minValIndex]);
+
+        values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
+        values[2] = Random.Range(0, 6); values[3] = Random.Range(0, 6);
+        minValIndex = 0;
+        if (values[1] < values[0]) minValIndex = 1;
+        if (values[2] < values[minValIndex]) minValIndex = 2;
+        if (values[3] < values[minValIndex]) minValIndex = 3;
+        persistence = (byte)(values[0] + values[1] + values[2] + values[3] - values[minValIndex]);
+
+        values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
+        values[2] = Random.Range(0, 6); values[3] = Random.Range(0, 6);
+        minValIndex = 0;
+        if (values[1] < values[0]) minValIndex = 1;
+        if (values[2] < values[minValIndex]) minValIndex = 2;
+        if (values[3] < values[minValIndex]) minValIndex = 3;
+        techSkills = (byte)(values[0] + values[1] + values[2] + values[3] - values[minValIndex]);
+
+        values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
+        values[2] = Random.Range(0, 6); values[3] = Random.Range(0, 6);
+        minValIndex = 0;
+        if (values[1] < values[0]) minValIndex = 1;
+        if (values[2] < values[minValIndex]) minValIndex = 2;
+        if (values[3] < values[minValIndex]) minValIndex = 3;
+        survivalSkills = (byte)(values[0] + values[1] + values[2] + values[3] - values[minValIndex]);
+
+        values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
+        values[2] = Random.Range(0, 6); values[3] = Random.Range(0, 6);
+        minValIndex = 0;
+        if (values[1] < values[0]) minValIndex = 1;
+        if (values[2] < values[minValIndex]) minValIndex = 2;
+        if (values[3] < values[minValIndex]) minValIndex = 3;
+        secretKnowledge = (byte)(values[0] + values[1] + values[2] + values[3] - values[minValIndex]);
+
+        values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
+        values[2] = Random.Range(0, 6); values[3] = Random.Range(0, 6);
+        minValIndex = 0;
+        if (values[1] < values[0]) minValIndex = 1;
+        if (values[2] < values[minValIndex]) minValIndex = 2;
+        if (values[3] < values[minValIndex]) minValIndex = 3;
+        intelligence = (byte)(values[0] + values[1] + values[2] + values[3] - values[minValIndex]);
+
+        confidence = 0.5f;
+        unity = 0.5f;
+        loyalty = c.happiness_coefficient;
+        adaptability = 0.5f;
+
+        level = 1; experience = 0;
+        maxStamina = (ushort)(Random.Range(0,6) + GetModifier(persistence));
+        stamina = maxStamina;
+        exploringPath = ExploringPath.Default;
+        proficiencies = 0;
+    }
+
+    private static float GetModifier(byte x)
+    {
+        return (x - 10f) / 2f;
+    }
+    private static ushort GetStaminaPerLevelBoost(ExploringPath epath, byte persistence)
+    {
+        int x = 1;
+        switch (epath)
+        {
+            case ExploringPath.SecretPath: x = Random.Range(0, 8); break;
+            case ExploringPath.PathOfMind: x = Random.Range(0, 6); break;
+            default: x= Random.Range(0, 10); break;
+        }
+        x += (int)GetModifier(persistence);
+        if (x < 1) x = 1;
+        return (ushort)x;
+    }
+
+    public void RaiseConfidence(float f)
+    {
+        confidence += NEUROPARAMETER_STEP * f;
+        if (confidence > 1f) confidence = 1f;
+    }
+    public void LoseConfidence(float f)
+    {
+        confidence -= NEUROPARAMETER_STEP * f;
+        if (confidence < 0f) confidence = 0f;
+    }
+    public void RaiseUnity(float f)
+    {
+        unity += NEUROPARAMETER_STEP;
+        if (unity > 1f) unity = 1f;
+    }
+    public void LoseUnity(float f)
+    {
+        unity -= NEUROPARAMETER_STEP * f;
+        if (unity < 0f) unity = 0f;
+    }
+    public void RaiseLoyalty(float f)
+    {
+        loyalty += f * NEUROPARAMETER_STEP;
+        if (loyalty > 1f) loyalty = 1f;
+    }
+    public void LoseLoyalty(float f)
+    {
+        loyalty -= f * NEUROPARAMETER_STEP;
+        if (loyalty < 0f) loyalty = 0f;
+    }
+    public void RaiseAdaptability(float f)
+    {
+        adaptability += f * NEUROPARAMETER_STEP;
+        if (adaptability > 1f) adaptability = 1f;
+    }
+    public void LoseAdaptibility(float f)
+    {
+        adaptability -= f * NEUROPARAMETER_STEP;
+        if (adaptability < 0f) adaptability = 0f;
+    }
+    public void Rest(float f)
+    {
+        int r = (int)(STAMINA_REPLENISH_VALUE * (1 + adaptability) * (1 + unity) * level * f);
+        if (maxStamina - stamina < r) stamina = maxStamina;
+        else stamina += (byte)r;
+    }
+    public void Restore()
+    {
+        stamina = maxStamina;
+        adaptability -= ADAPTABILITY_LOSSES;
+        if (adaptability < 0f) adaptability = 0f;
+    }
+
+    public void AddExperience(float x)
+    {
+        if (x < 1f) return;
+        if (level < MAX_LEVEL) {
+            experience += (int)x;
+            int expCap = GetExperienceCap();            
+            if (experience >= expCap) LevelUp();
+        }
+    }
+    public void LevelUp()
+    {
+        level++;
+        ushort proficiency = 2;
+        if (level > 4)
+        {
+            if (level < 13)
+            {
+                if (level < 9) proficiency = 3; else proficiency = 4;
+            }
+            else
+            {
+                if (level > 16) proficiency = 5; else proficiency = 6;
+            }
+        }
+        proficiencies += proficiency;
+        maxStamina += GetStaminaPerLevelBoost(exploringPath, persistence);
+    }
+    public int GetExperienceCap()
+    {
+        switch (level)
+        {
+            case 1: return 300;
+            case 2: return 900;
+            case 3: return 2700;
+            case 4: return 6500;
+            case 5: return 14000;
+            case 6: return 23000;
+            case 7: return 34000;
+            case 8: return 48000;
+            case 9: return 64000;
+            case 10: return 85000;
+            case 11: return 100000;
+            case 12: return 12000;
+            case 13: return 140000;
+            case 14: return 165000;
+            case 15: return 195000;
+            case 16: return 225000;
+            case 17: return 265000;
+            case 18: return 305000;
+            default: return 355000;
+        }
+    }
+    public void ImprovePerception()
+    {
+        if (proficiencies > 0 & perception < MAX_ATTRIBUTE_VALUE)
+        {
+            perception++;
+            proficiencies--;
+        }
+    }
+    public void ImprovePersistence()
+    {
+        if (proficiencies > 0 & persistence < MAX_ATTRIBUTE_VALUE)
+        {
+            persistence++;
+            proficiencies--;
+        }
+    }
+    public void ImproveTechSkill()
+    {
+        if (proficiencies > 0 & techSkills < MAX_ATTRIBUTE_VALUE)
+        {
+            techSkills++;
+            proficiencies--;
+        }
+    }
+    public void ImproveSurvivalSkill()
+    {
+        if (proficiencies > 0 & survivalSkills < MAX_ATTRIBUTE_VALUE)
+        {
+            survivalSkills++;
+            proficiencies--;
+        }
+    }
+    public void ImproveEnlightment()
+    {
+        if (proficiencies > 0 & secretKnowledge < MAX_ATTRIBUTE_VALUE)
+        {
+            secretKnowledge++;
+            proficiencies--;
+        }
+    }
+    public void ImproveIntelligence()
+    {
+        if (proficiencies > 0 & intelligence < MAX_ATTRIBUTE_VALUE)
+        {
+            intelligence++;
+            proficiencies--;
+        }
+    }
+
+    public float PersistenceRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(persistence); // no neuro
+    }
+    public float SurvivalSkillsRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(survivalSkills) * (0.9f + 0.15f * adaptability + 0.05f * unity);
+    }
+
+    public float PerceptionRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(perception) * (0.9f + 0.2f * adaptability);
+    }    
+    public float SecretKnowledgeRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(secretKnowledge); // no neuro mod
+    }
+
+    public float IntelligenceRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(intelligence) * (0.9f + 0.15f * adaptability + 0.05f * unity);
+    }
+    public float TechSkillsRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(techSkills); // no neuro
+    }
+
+
+
+    public float HardTestRoll()
+    {
+        float val = Random.Range(0,20);
+        switch (exploringPath)
+        {
+            case ExploringPath.PathOfLife:
+                val += (GetModifier(survivalSkills) * (0.9f + 0.6f * confidence)) * 0.7f + (GetModifier(persistence) * (0.9f + 0.6f * adaptability)) * 0.3f;
+                break;
+            case ExploringPath.SecretPath:
+                val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.8f + (GetModifier(secretKnowledge) * (0.9f + 0.2f * adaptability)) * 0.2f;
+                break;
+            case ExploringPath.PathOfMind:
+                val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.7f + (GetModifier(intelligence) * (0.9f + 0.1f * adaptability))* 0.3f;
+                break;
+            default:
+                val += GetModifier(survivalSkills) * (1f + 0.5f * adaptability);
+            break;
+        }
+        return val;
+    }
+    public float SoftCheckRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.3f * loyalty + 0.3f * confidence);        
+    }
+    public float LoyaltyRoll()
+    {
+        return Random.Range(0, 20) + GetModifier((byte)(loyalty * MAX_ATTRIBUTE_VALUE));
+    }
+    public float AdaptabilityRoll()
+    {
+        return Random.Range(0, 20) + GetModifier((byte)(adaptability * MAX_ATTRIBUTE_VALUE));
+    }
+    public float ConfidenceRoll()
+    {
+        return Random.Range(0, 20) + GetModifier((byte)(confidence * MAX_ATTRIBUTE_VALUE));
+    }
+    public float UnityRoll()
+    {
+        return Random.Range(0, 20) + GetModifier((byte)(unity * MAX_ATTRIBUTE_VALUE));
+    }
+    public float RejectionRoll()
+    {
+        return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.5f * confidence + 0.3f * loyalty) + 0.1f * unity;
+    }
+
+    public float MakeStep(float difficulty)
+    {
+        if (stamina <= 0)
+        {
+            if (20f * difficulty > RejectionRoll()) return -1f;
+            else return 0f;
+        }
+        else
+        {
+            float step = GameConstants.EXPLORE_SPEED * (0.5f + 0.3f * unity + 0.5f * adaptability - 0.5f * difficulty);
+            if (step < 0f) return 0f; else return step;
+        }
+    }
+    public bool TestYourMight(float difficultyEndValue, bool? advantage)
+    {
+        switch (exploringPath)
+        {
+            case ExploringPath.PathOfLife:
+                {
+                    if (advantage == null)
+                    {
+                        return (PersistenceRoll() >= difficultyEndValue);
+                    }
+                    else
+                    {
+                        float a = PersistenceRoll(), b = SurvivalSkillsRoll();
+                        if (advantage == true)
+                        {
+                            if (b > a) a = b;                            
+                        }
+                        else
+                        {
+                            if (b < a) a = b;
+                        }
+                        return (a >= difficultyEndValue);
+                    }
+                }
+            case ExploringPath.SecretPath:
+                {
+                    if (advantage == null)
+                    {
+                        return (SecretKnowledgeRoll() >= difficultyEndValue);
+                    }
+                    else
+                    {
+                        float a = SecretKnowledgeRoll(), b = PerceptionRoll();
+                        if (advantage == true)
+                        {
+                            if (b > a) a = b;
+                        }
+                        else
+                        {
+                            if (b < a) a = b;
+                        }
+                        return (a >= difficultyEndValue);
+                    }
+                }
+            case ExploringPath.PathOfMind:
+                {
+                    if (advantage == null) return (IntelligenceRoll() >= difficultyEndValue);
+                    else
+                    {
+                        float a = IntelligenceRoll(), b = TechSkillsRoll();
+                        if (advantage == true)
+                        {
+                            if (b > a) a = b;
+                        }
+                        else
+                        {
+                            if (b < a) a = b;
+                        }
+                        return (a >= difficultyEndValue);
+                    }
+                }
+            default: return (UnityRoll() >= difficultyEndValue);
+        }
+    }
+}
 public sealed class Crew : MonoBehaviour {
 	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
-    public const int CREW_INFO_STRINGS_COUNT = 14;
-    public const float LOW_STAMINA_VALUE = 0.2f, HIGH_STAMINA_VALUE = 0.85f, CHANGING_SHUTTLE_STAMINA_CONSUMPTION = 0.1f;
-    private const float NEUROPARAMETER_STEP = 0.01f, NATIVE_CHAR_IMPROVEMENT_STEP = 0.02f, STAMINA_REFRESH_SPEED = 0.02f;
 
 	public static int nextID {get;private set;}	
-    public static int actionsHash { get; private set; }
+    public static byte listChangesMarkerValue { get; private set; }
     public static List<Crew> crewsList { get; private set; }
     private static GameObject crewsContainer;
     public static UICrewObserver crewObserver { get; private set; }
 
 	public int membersCount {get;private set;}
-	public float experience{get; private set;}
-	public float nextExperienceLimit {get;private set;}
-	public byte level {get; private set;}
 	public int ID{get;private set;}
+    public byte changesMarkerValue { get; private set; }
     public Artifact artifact { get; private set; }
     public Expedition currentExpedition { get; private set; }
 	public Shuttle shuttle{get;private set;}
 	public CrewStatus status { get; private set; }
 
-	public float perception { get; private set; }// тесты на нахождение и внимательность
-    public float persistence { get; private set; }
-	public float luck { get; private set; }
-	public float bravery { get; private set; }
-	public float techSkills { get; private set; }
-	public float survivalSkills { get; private set; }
-	public float teamWork { get; private set; }
+    public CrewAttributes attributes { get; private set; }
     //при внесении изменений отредактировать Localization.GetCrewInfo
 
-        //neuroparameters:
-    public float confidence { get; private set; }
-    public float unity { get; private set; }
-    public float loyalty { get; private set; }
-    public float adaptability { get; private set; }
-    public float stamina { get; private set; } // процент готовности, падает по мере проведения операции, восстанавливается дома
-
-public int missionsParticipated { get; private set; }
+    public int missionsParticipated { get; private set; }
     public int missionsSuccessed{get;private set;}    
 
     static Crew()
@@ -70,7 +450,7 @@ public int missionsParticipated { get; private set; }
 	public static void Reset() {
 		crewsList = new List<Crew>();
 		nextID = 0;
-        actionsHash = 0;
+        listChangesMarkerValue = 0;
 	}
 
     public static Crew CreateNewCrew(ColonyController home, int membersCount)
@@ -80,31 +460,14 @@ public int missionsParticipated { get; private set; }
         if (crewsContainer == null) crewsContainer = new GameObject("crewsContainer");
         c.transform.parent = crewsContainer.transform;
 
-        c.level = 0;
         c.ID = nextID; nextID++;
         c.status = CrewStatus.AtHome;
 
         //normal parameters
-        c.perception =  0.3f + Random.value * 0.5f;
-        c.persistence = 0.3f + Random.value * 0.5f;
-        c.luck = Random.value;
-        c.bravery = 0.3f + Random.value * 0.6f;
-        float lvl_cf = home.hq.level / GameConstants.HQ_MAX_LEVEL;
-        c.techSkills = 0.1f * Random.value + lvl_cf * 0.45f + home.gears_coefficient / GameConstants.GEARS_UP_LIMIT * 0.45f; // сделать зависимость от количества общих видов построенных зданий
-        float hcf = home.hospitals_coefficient;
-        if (hcf > 1) hcf = 1;
-        c.survivalSkills = 0.3f * Random.value + 0.3f * home.health_coefficient + 0.4f * hcf ; // еще пара зависимостей от зданий
-        c.teamWork = 0.7f * home.happiness_coefficient + 0.1f * Random.value;
-        //neuroparameters:
-        c.confidence = home.happiness_coefficient;
-        c.unity = 0.5f + (c.teamWork - 0.5f) * 0.75f;
-        c.loyalty = home.happiness_coefficient;
-        c.adaptability = lvl_cf * 0.5f;
-
-        c.stamina = 0.9f + Random.value * 0.1f;
+        c.attributes = new CrewAttributes(home);
         c.membersCount = membersCount;
         crewsList.Add(c);        
-        actionsHash++;
+        listChangesMarkerValue++;
         return c;
     }
     public static Crew GetCrewByID(int s_id)
@@ -150,17 +513,18 @@ public int missionsParticipated { get; private set; }
                 s.SetCrew(this);
                 shuttle = s;
             }
-            stamina -= CHANGING_SHUTTLE_STAMINA_CONSUMPTION;
-            actionsHash++;
+            changesMarkerValue++;
         }               
 	}
     public void SetStatus(CrewStatus cs)
     {
         status = cs;
+        changesMarkerValue++;
     }
     public void Rename(string s)
     {
         name = s;
+        changesMarkerValue++;
     }
     /// <summary>
     /// for loading only
@@ -168,22 +532,15 @@ public int missionsParticipated { get; private set; }
     public void SetCurrentExpedition(Expedition e)
     {
         currentExpedition = e;
+        changesMarkerValue++;
     }
-
-    public void AddExperience(float f)
-    {
-        experience += f * (0.75f +  0.5f * adaptability);
-    }
-	static float CalculateExperienceLimit(byte f_level) {
-        return f_level < 3 ? 2 * f_level : f_level * f_level;
-	}
     public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
     {
         ri.texture = UIController.current.iconsTexture;
-        ri.uvRect = UIController.GetTextureUV((stamina < 0.5f) ? Icons.CrewBadIcon : ((stamina > 0.85f) ? Icons.CrewGoodIcon : Icons.CrewNormalIcon));
+        ri.uvRect = UIController.GetTextureUV(attributes.stamina == attributes.maxStamina ? Icons.CrewGoodIcon : Icons.CrewNormalIcon);
     }
 
-    public bool HardTest(float hardness) // INDEV
+    public bool HardTest(float hardness, float situationValue) // INDEV
     {
         if (artifact != null)
         {
@@ -193,17 +550,17 @@ public int missionsParticipated { get; private set; }
             {
                 if (protection == true)
                 {
-                    confidence += NEUROPARAMETER_STEP;
+                    attributes.RaiseConfidence(1f);
                     return true;
                 }
             }
         }
         //нет артефакта или защита не сработала
-        bool success = true;
+        bool success = hardness * GameConstants.HARD_TEST_MAX_VALUE + situationValue < attributes.HardTestRoll();
         if (success)
         {
-            unity += NEUROPARAMETER_STEP;
-            adaptability += NEUROPARAMETER_STEP;
+            attributes.RaiseUnity(1f);
+            attributes.RaiseAdaptability(1f);
             return true;
         }
         else return false;
@@ -214,108 +571,38 @@ public int missionsParticipated { get; private set; }
     /// </summary>
     /// <param name="friendliness"></param>
     /// <returns></returns>
-    public bool SoftCheck( float friendliness) // INDEV
+    public bool SoftCheck( float friendliness, float situationValue) // INDEV
     {
-        bool success = true;
+        bool success = GameConstants.SOFT_TEST_MAX_VALUE * friendliness + situationValue < attributes.SoftCheckRoll();
         if (success)
         {
-            unity += NEUROPARAMETER_STEP;
-            adaptability += NEUROPARAMETER_STEP;
+            attributes.RaiseUnity(1f);
+            attributes.RaiseConfidence(0.75f);
         }
         return success;
-    }
-    public bool ConsumeStamina(float f)
-    {
-        stamina -= f;
-        if (stamina <= 0)
-        {
-            stamina = 0;
-            return false;
-        }
-        else return true;
     }
     public void Rest(PointOfInterest place)
     {
         if (place != null)
         {
-            stamina +=  place.GetRestValue();
-            unity += NEUROPARAMETER_STEP;
+            attributes.Rest(place.GetRestValue());
+            attributes.RaiseUnity(0.5f);
         }
-        else
+        else // at home
         {
-            if (status == CrewStatus.AtHome)
-            {
-                stamina += STAMINA_REFRESH_SPEED;
-                adaptability -= NEUROPARAMETER_STEP / 4f;
-            }
-            else
-            {
-                stamina += STAMINA_REFRESH_SPEED / 2f;
-                adaptability -= NEUROPARAMETER_STEP / 8f;
-            }
-        }
-    }
-
-    /// <summary>
-    /// improves persistence, perception, bravery or teamwork
-    /// </summary>
-    public void ImproveNativeParameters()
-    {
-        float f = Random.value;
-        if (f < 0.5f)
-        {
-            if (f < 0.25f)
-            {
-                persistence += NATIVE_CHAR_IMPROVEMENT_STEP;
-                confidence += NEUROPARAMETER_STEP;
-            }
-            else
-            {
-                perception += NATIVE_CHAR_IMPROVEMENT_STEP;
-                adaptability += NEUROPARAMETER_STEP;
-            }
-        }
-        else
-        {
-            if (f > 0.75f)
-            {
-                bravery += NATIVE_CHAR_IMPROVEMENT_STEP;
-
-            }
-        }
-    }
-
-    public void DismissMember() { // INDEV
-        // перерасчет характеристик
-        if (membersCount < MAX_MEMBER_COUNT / 2)
-        {
-            unity += NEUROPARAMETER_STEP;
-            confidence -= NEUROPARAMETER_STEP;
+            attributes.Restore();
         }
     }
     public void LoseMember() // INDEV
     {
         membersCount--;        
         if (membersCount <= 0) Disappear();
-        else
-        {
-            // перерасчет характеристик
-        }
-        confidence -= 4 * NEUROPARAMETER_STEP;
-        unity += NEUROPARAMETER_STEP;
+        attributes.LoseConfidence(10f);
     }
 	public void AddMember() { // INDEX
         membersCount++;
-        // перерасчет характеристик
-        if (membersCount >= 5) unity -= NEUROPARAMETER_STEP / 2f;
-        else unity -= NEUROPARAMETER_STEP;
+        attributes.LoseUnity(1f);
     }
-
-    public void LoseConfidence() { confidence -= NEUROPARAMETER_STEP * (1 - unity) * (1 - loyalty);  }
-    public void IncreaseConfidence() { confidence += NEUROPARAMETER_STEP * (1 + unity / 2f);  }
-    public void LoseLoyalty() { loyalty -= NEUROPARAMETER_STEP * (1 - unity) * (1 - confidence); }
-    public void IncreaseLoyalty() { loyalty += NEUROPARAMETER_STEP * (1 - adaptability); }
-    public void IncreaseAdaptability() { adaptability += NEUROPARAMETER_STEP; }
 
     public void SetArtifact(Artifact a)
     {
@@ -331,8 +618,8 @@ public int missionsParticipated { get; private set; }
             //
             artifact = a;
             artifact.SetOwner(this);
-            loyalty += NEUROPARAMETER_STEP;
-            confidence += NEUROPARAMETER_STEP;
+            attributes.RaiseConfidence(2f);
+            attributes.RaiseLoyalty(1f);
         }
     }
     public void DropArtifact()
@@ -341,9 +628,8 @@ public int missionsParticipated { get; private set; }
         {
             artifact.SetOwner(null);
             artifact = null;
-            confidence -= NEUROPARAMETER_STEP;
-            unity -= NEUROPARAMETER_STEP;
-            actionsHash++;
+            attributes.LoseConfidence(0.5f);
+            listChangesMarkerValue++;
         }
     }
     //system
@@ -357,13 +643,13 @@ public int missionsParticipated { get; private set; }
         membersCount = 0;
         if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
         crewsList.Remove(this);
-        actionsHash++;
+        listChangesMarkerValue++;
         Destroy(this);
     }
     public void Disappear()
     {
         crewsList.Remove(this);
-        actionsHash++;
+        listChangesMarkerValue++;
         Destroy(this);
     }
 
@@ -435,26 +721,13 @@ public int missionsParticipated { get; private set; }
 
         //0
         data.AddRange(System.BitConverter.GetBytes(membersCount)); 
-        data.AddRange(System.BitConverter.GetBytes(experience)); 
-        data.AddRange(System.BitConverter.GetBytes(nextExperienceLimit));  
-        data.AddRange(System.BitConverter.GetBytes(perception)); 
-        data.AddRange(System.BitConverter.GetBytes(persistence)); 
-        data.AddRange(System.BitConverter.GetBytes(luck)); 
-        data.AddRange(System.BitConverter.GetBytes(bravery));
-        data.AddRange(System.BitConverter.GetBytes(techSkills));
-        data.AddRange(System.BitConverter.GetBytes(survivalSkills));
-        data.AddRange(System.BitConverter.GetBytes(teamWork));
-        //40
-        data.AddRange(System.BitConverter.GetBytes(confidence));
-        data.AddRange(System.BitConverter.GetBytes(unity));
-        data.AddRange(System.BitConverter.GetBytes(adaptability));
-        data.AddRange(System.BitConverter.GetBytes(loyalty));
 
-        data.AddRange(System.BitConverter.GetBytes(stamina));
+        //40
+        
         data.AddRange(System.BitConverter.GetBytes(missionsSuccessed));
         data.AddRange(System.BitConverter.GetBytes(missionsParticipated));
         // 68
-        data.Add(level); 
+
         data.Add((byte)status); 
         return data;
     }
@@ -494,25 +767,12 @@ public int missionsParticipated { get; private set; }
         data = new byte[70];
         fs.Read(data, 0, data.Length);
         membersCount = System.BitConverter.ToInt32(data, 0);
-        experience = System.BitConverter.ToSingle(data, 4);
-        nextExperienceLimit = System.BitConverter.ToSingle(data, 8);
-        perception = System.BitConverter.ToSingle(data, 12);
-        persistence = System.BitConverter.ToSingle(data, 16);
-        luck = System.BitConverter.ToSingle(data, 20);
-        bravery = System.BitConverter.ToSingle(data, 24);
-        techSkills = System.BitConverter.ToSingle(data, 28);
-        survivalSkills = System.BitConverter.ToSingle(data, 32);
-        teamWork = System.BitConverter.ToSingle(data, 36);
 
-        confidence = System.BitConverter.ToSingle(data, 40);
-        unity = System.BitConverter.ToSingle(data, 44);
-        adaptability = System.BitConverter.ToSingle(data, 48);
-        loyalty = System.BitConverter.ToSingle(data, 52);
 
-        stamina = System.BitConverter.ToSingle(data, 56);
+        
         missionsSuccessed = System.BitConverter.ToInt32(data, 60);
         missionsParticipated = System.BitConverter.ToInt32(data, 64);
-        level = data[68];
+
         status = (CrewStatus)data[69];
     }
 

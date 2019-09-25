@@ -11,16 +11,15 @@
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
-        }
-        isActive = true;    
+        }   
         if (current != null)
         {
             current.Annihilate(true, true, false);
         }
         current = this;
         colony = GameMaster.realMaster.colonyController;
-        colony.accumulateEnergy = false;
-        connectedToPowerGrid = true;
+        connectedToPowerGrid = true; isEnergySupplied = true;
+        SetActivationStatus(false, true);
     }
 
     public void LabourUpdate()
@@ -43,8 +42,14 @@
     override public void SetActivationStatus(bool x, bool recalculateAfter)
     {
         isActive = x;
+        isEnergySupplied = true;
+        connectedToPowerGrid = true;
         colony.accumulateEnergy = !x;
         ChangeRenderersView(x);
+    }
+    override public void SetEnergySupply(bool x, bool recalculateAfter)
+    {
+        isEnergySupplied = true;
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
@@ -63,5 +68,12 @@
             subscribedToUpdate = false;
         }
         Destroy(gameObject);
+    }
+
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
+        LoadStructureData(fs, sblock);
+        LoadBuildingData(fs);
+        charge = energySurplus; 
     }
 }

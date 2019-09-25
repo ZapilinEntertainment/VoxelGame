@@ -302,12 +302,12 @@ MonoBehaviour:
   shuttlesDropdown: {fileID: 114929752651762318}
   descrButtonImage: {fileID: 114333344288458140}
   expButtonImage: {fileID: 114373358646529244}
-  expeditionNameField: {fileID: 114881120628146046}
   mapRect: {fileID: 224695577913560228}
   pointIcon: {fileID: 114261679894807490}
   pointLabel: {fileID: 114344490760201496}
   pointDescription: {fileID: 114259460123305948}
   expStatusText: {fileID: 114968613250287290}
+  expeditionNameField: {fileID: 114227217569108346}
   sectorsTexture: {fileID: 2800000, guid: 4108f0ae24cd75d48a0636455bc33259, type: 3}
   rings:
   - {fileID: 224784457761931990}
@@ -1868,7 +1868,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0.55662066}
-  m_AnchoredPosition: {x: 0.25006104, y: 0.8462219}
+  m_AnchoredPosition: {x: 0.25006104, y: 0.8461914}
   m_SizeDelta: {x: -0.5, y: 1.7025146}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1378133576019782
@@ -2516,7 +2516,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -15.079956, y: -14.596649}
+  m_AnchoredPosition: {x: -15.079956, y: -14.59668}
   m_SizeDelta: {x: 30.16, y: 29.22}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222769310180326170
@@ -2717,8 +2717,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.8300171, y: 0.31000042}
-  m_SizeDelta: {x: -10.05, y: -6.42}
+  m_AnchoredPosition: {x: 0.8300171, y: -0.000011444092}
+  m_SizeDelta: {x: -10.05, y: 0.000022888}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222131293657785886
 CanvasRenderer:
@@ -2741,7 +2741,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -2755,7 +2755,7 @@ MonoBehaviour:
     m_BestFit: 1
     m_MinSize: 6
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 1
     m_AlignByGeometry: 0
     m_RichText: 0
     m_HorizontalOverflow: 1
@@ -3455,7 +3455,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.060000002, y: 0.78456485}
   m_AnchorMax: {x: 0.9405714, y: 0.78456485}
-  m_AnchoredPosition: {x: 0.83288574, y: -14.779003}
+  m_AnchoredPosition: {x: 0.83288574, y: -14.778992}
   m_SizeDelta: {x: -1.3399963, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222761776354640392
@@ -3585,7 +3585,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.97375876}
   m_AnchorMax: {x: 1, y: 0.97375876}
-  m_AnchoredPosition: {x: 0.4899292, y: -17.180008}
+  m_AnchoredPosition: {x: 0.4899292, y: -17.180054}
   m_SizeDelta: {x: -22, y: 25.23}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222569565500643702
@@ -3906,7 +3906,6 @@ GameObject:
   - component: {fileID: 224650067200104688}
   - component: {fileID: 222816476382978756}
   - component: {fileID: 114809235599501980}
-  - component: {fileID: 114881120628146046}
   m_Layer: 5
   m_Name: expeditionNameField
   m_TagString: Untagged
@@ -3931,7 +3930,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.060000002, y: 1}
   m_AnchorMax: {x: 0.9405714, y: 1}
-  m_AnchoredPosition: {x: 0.539978, y: -9.970001}
+  m_AnchoredPosition: {x: 0.539978, y: -9.969971}
   m_SizeDelta: {x: -0.9, y: 21.13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222816476382978756
@@ -3955,7 +3954,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.32837266, g: 0.6443164, b: 0.66300005, a: 0.14509805}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -3971,81 +3970,6 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
---- !u!114 &114881120628146046
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1920017518770124}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 575553740, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Navigation:
-    m_Mode: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
-  m_Transition: 0
-  m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
-  m_SpriteState:
-    m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 0}
-    m_DisabledSprite: {fileID: 0}
-  m_AnimationTriggers:
-    m_NormalTrigger: Normal
-    m_HighlightedTrigger: Highlighted
-    m_PressedTrigger: Pressed
-    m_DisabledTrigger: Disabled
-  m_Interactable: 1
-  m_TargetGraphic: {fileID: 114809235599501980}
-  m_TextComponent: {fileID: 114227217569108346}
-  m_Placeholder: {fileID: 0}
-  m_ContentType: 0
-  m_InputType: 0
-  m_AsteriskChar: 42
-  m_KeyboardType: 0
-  m_LineType: 0
-  m_HideMobileInput: 0
-  m_CharacterValidation: 0
-  m_CharacterLimit: 50
-  m_OnEndEdit:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 114074905906262044}
-        m_MethodName: RenameExpedition
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_TypeName: UnityEngine.UI.InputField+SubmitEvent, UnityEngine.UI, Version=1.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  m_OnValueChanged:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.UI.InputField+OnChangeEvent, UnityEngine.UI, Version=1.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
-  m_CustomCaretColor: 0
-  m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: expedition name
-  m_CaretBlinkRate: 0.85
-  m_CaretWidth: 1
-  m_ReadOnly: 0
 --- !u!1 &1966867629722804
 GameObject:
   m_ObjectHideFlags: 0

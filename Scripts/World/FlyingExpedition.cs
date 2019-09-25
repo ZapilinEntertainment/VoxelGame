@@ -15,7 +15,9 @@ public sealed class FlyingExpedition : MapPoint {
     /// <summary>
     /// Loading constructor
     /// </summary>
-    public FlyingExpedition(int i_id, Expedition e) : base(i_id) { }
+    public FlyingExpedition(int i_id, Expedition e) : base(i_id) {
+        expedition = e;
+    }
     
     public void ChangeDestination(MapPoint mp)
     {
@@ -35,7 +37,7 @@ public sealed class FlyingExpedition : MapPoint {
         data.AddRange(System.BitConverter.GetBytes(speed));
         return data;
     }
-    public static void LoadExpeditionMarker(System.IO.FileStream fs, Expedition e)
+    public static FlyingExpedition LoadExpeditionMarker(System.IO.FileStream fs, Expedition e)
     {
         int LENGTH = 22; // 18 + 4, changed
         var data = new byte[LENGTH];
@@ -50,6 +52,7 @@ public sealed class FlyingExpedition : MapPoint {
         fe.speed = System.BitConverter.ToSingle(data, 18);       
         fe.destination = e.destination;
         GameMaster.realMaster.globalMap.AddPoint(fe, true);
+        return fe;
     }
     #endregion
 }

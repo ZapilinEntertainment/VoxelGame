@@ -23,8 +23,14 @@ public sealed class Mission {
     public readonly int stepsCount, ID;   
     private byte nameIdentifierA = 0, nameIdentifierB = 0;
 
-    public static bool operator ==(Mission lhs, Mission rhs) { return lhs.Equals(rhs); }
-    public static bool operator !=(Mission lhs, Mission rhs) { return !(lhs.Equals(rhs)); }
+    public static bool operator ==(Mission A, Mission B) {
+        if (ReferenceEquals(A, null))
+        {
+            return ReferenceEquals(B, null);
+        }
+        return A.Equals(B);
+    }
+    public static bool operator !=(Mission lhs, Mission rhs) { return !(rhs==lhs); }
     public override bool Equals(object obj)
     {
         // Check for null values and compare run-time types.
@@ -41,7 +47,7 @@ public sealed class Mission {
 
     public static Mission GetMissionByID(int s_id)
     {
-        if (s_id > 0 && missions != null && missions.Count > 0)
+        if (missions != null && missions.Count > 0)
         {
             foreach (Mission m in missions)
             {
@@ -108,16 +114,6 @@ public sealed class Mission {
         if (!preset.isUnique) return Localization.GetMissionName(preset.type, nameIdentifierA, nameIdentifierB);
         else return "<unique mission>";
     }
-
-    public float CalculateCrewSpeed(Crew c)
-    {
-        if (c == null) return 0;
-        else
-        {
-            // вообще должно зависеть от самой миссии
-            return c.teamWork * c.unity + c.persistence * c.confidence + 0.1f * c.loyalty + c.adaptability;
-        }
-    }
     public float GetDistanceToTarget()
     {
         switch (preset.type)
@@ -132,30 +128,6 @@ public sealed class Mission {
             case MissionType.FindingEntrance: return stepsCount * (0.25f + Random.value * 0.3f);
             case MissionType.FindingExit: return stepsCount * (0.35f + Random.value * 0.2f);
             default: return stepsCount / 2f;
-        }
-    }
-    public bool TestYourMight(Crew c)
-    {
-        switch (preset.type)
-        {
-            // зависимость от точки?
-            case MissionType.Exploring:
-                return c.perception * 0.7f + 0.2f * c.persistence + 0.1f * c.luck > 0.3f * Random.value + 0.2f;
-            case MissionType.FindingKnowledge:
-                return c.perception * 0.6f + 0.1f *c.persistence + 0.3f * c.luck > 0.5f * Random.value + 0.3f ;
-            case MissionType.FindingItem:
-                return c.perception * 0.5f * c.persistence + 0.1f * c.luck + 0.4f > 0.5f * Random.value + 0.2f;
-            case MissionType.FindingPerson:
-                return c.perception * 0.7f + c.luck * 0.1f + c.teamWork * 0.2f > 0.5f * Random.value + 0.4f;
-            case MissionType.FindingPlace:
-                return c.persistence * 0.5f + c.perception * 0.15f + c.teamWork * 0.3f + c.luck * 0.05f > 0.7f * Random.value + 0.3f; 
-            case MissionType.FindingResources:
-                return c.perception * 0.2f + c.persistence * 0.3f + c.luck * 0.1f + 0.2f * c.teamWork + 0.2f * c.techSkills > 0.2f + 0.3f * Random.value;
-            case MissionType.FindingEntrance:
-                return c.perception * 0.3f + c.luck * 0.1f + c.teamWork * c.unity * 0.6f > 0.5f + Random.value * 0.5f;
-            case MissionType.FindingExit:
-                return c.perception * 0.4f * c.adaptability + c.luck * 0.4f + c.teamWork * 0.2f > 0.5f + 0.5f * Random.value;
-            default: return true;
         }
     }
     public bool TryToLeave() // INDEV

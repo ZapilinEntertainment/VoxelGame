@@ -42,7 +42,8 @@ public class Building : Structure
                 //blist.Add(GetStructureByID(HOUSE_2_ID) as Building);
                 blist.Add(GetStructureByID(FARM_2_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_2_ID) as Building);
-                blist.Add(GetStructureByID(SMELTERY_2_ID) as Building);                
+                blist.Add(GetStructureByID(SMELTERY_2_ID) as Building);
+                blist.Add(GetStructureByID(ENERGY_CAPACITOR_2_ID) as Building);
                 blist.Add(GetStructureByID(ORE_ENRICHER_2_ID) as Building);
                 blist.Add(GetStructureByID(BIOGENERATOR_2_ID) as Building);
                 blist.Add(GetStructureByID(MINERAL_POWERPLANT_2_ID) as Building);
@@ -836,6 +837,7 @@ public class Building : Structure
         LoadBuildingData(fs);
         // changed in Settlement.Load()
         // copy to PsychokineticGenerator.Load()        
+        //copy to QuantumEnergyTransmitter
     }
     protected void LoadBuildingData(System.IO.FileStream fs)
     {

@@ -739,6 +739,7 @@ MonoBehaviour:
   repairButton: {fileID: 1355917958284166484}
   hangarButton: {fileID: 1835572416980839462}
   closeButton: {fileID: 5144671557566922508}
+  dissassembleButton: {fileID: 5228757041502535056}
   ownerInfo: {fileID: 6932109474131310352}
 --- !u!1 &5144671557566922508
 GameObject:

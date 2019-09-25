@@ -3,15 +3,14 @@
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
 public enum LocalizedWord : ushort
 {
-     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Progress, Repair, Sell,Stability, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
+     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Progress, Repair, Sell,Stability, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return
 };
 
 public enum LocalizedPhrase : ushort
 {
-    AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch,
-    CannotReachDestination, ClearSlot, ConnectionLost, ConvertToBlock, CrewFoundArtifact, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather, UnoccupiedTransmitters, RequiredSurface,
+    AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot, ConnectionLost, ConvertToBlock, CrewFoundArtifact, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather, UnoccupiedTransmitters, RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
     ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -30,7 +29,7 @@ public enum GameAnnouncements : ushort
 public enum LocalizedTutorialHint : byte { Landing }
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
 public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight }
-public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted }
+public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted, CannotReachDestination }
 
 public static class Localization
 {
@@ -674,22 +673,24 @@ public static class Localization
 
     public static string GetCrewInfo(Crew c)
     {
+        if (c == null) return string.Empty;
+        var a = c.attributes;
         // CREW_INFO_STRINS_COUNT = 14
         switch (currentLanguage)
         {
             case Language.Russian:
-                {
+                {                    
                     string s = "Участников: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
         + '\n'
-        + "Опыта до следующего уровня: " + string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n"
-        + "Готовность: " + ((int)(c.stamina * 100f)).ToString() + "%\n" +
+        + "Опыт: " + a.experience.ToString() + " / " + a.GetExperienceCap().ToString()  + "\n"
+        //+ "Готовность: " + ((int)(c.stamina * 100f)).ToString() + "%\n" +
         +'\n'
-        + "Восприятие: " + string.Format("{0:0.##}", c.perception) + "\n"
-        + "Настойчивость: " + string.Format("{0:0.##}", c.persistence) + "\n"
-        + "Храбрость: " + string.Format("{0:0.##}", c.bravery) + "\n"
-        + "Технические навыки: " + string.Format("{0:0.##}", c.techSkills) + "\n"
-        + "Навыки выживания: " + string.Format("{0:0.##}", c.survivalSkills) + "\n"
-        + "Эффективность командной работы: " + string.Format("{0:0.##}", c.teamWork) + "\n"
+        + "Настойчивость: " + a.persistence.ToString() + "\n"
+        + "Навыки выживания: " + a.survivalSkills.ToString() + "\n"
+        + "Восприятие: " + a.perception.ToString() + "\n"
+        + "Тайное знание: " + a.secretKnowledge + "\n"
+        + "Сообразительность: " + a.intelligence.ToString() + "\n"
+        + "Технические навыки: " + a.techSkills.ToString() + "\n"
         + "\n"
         + "Участие в миссиях: " + c.missionsParticipated.ToString() + "\n"
         + "Успешные миссии: " + c.missionsSuccessed.ToString();
@@ -700,15 +701,15 @@ public static class Localization
                 {
                     string s = "Members: " + c.membersCount.ToString() + " / " + Crew.MAX_MEMBER_COUNT.ToString() + "\n"
         + '\n'
-        + "Stamina: " + ((int)(c.stamina * 100f)).ToString() + "%\n"
-        + "Experience need for next level: " + string.Format("{0:0.##}", c.nextExperienceLimit - c.experience) + "\n"
+       // + "Stamina: " + ((int)(c.stamina * 100f)).ToString() + "%\n"
+        + "Experience: "  +a.experience.ToString() + " / " + a.GetExperienceCap().ToString() + "\n"
         + '\n'
-        + "Perception: " + string.Format("{0:0.##}", c.perception) + "\n"
-        + "Persistence: " + string.Format("{0:0.##}", c.persistence) + "\n"
-        + "Bravery: " + string.Format("{0:0.##}", c.bravery) + "\n"
-        + "Technical skills: " + string.Format("{0:0.##}", c.techSkills) + "\n"
-        + "Survival skills: " + string.Format("{0:0.##}", c.survivalSkills) + "\n"
-        + "Team work efficientcy: " + string.Format("{0:0.##}", c.teamWork) + "\n"
+        + "Persistence: " + a.persistence.ToString() + "\n"
+        + "Survival skills: " + a.survivalSkills.ToString() + "\n"
+        + "Perception: " + a.perception.ToString() + "\n"
+        + "Secret knowledge: " + a.secretKnowledge.ToString() + "\n"
+        + "Intelligence: " + a.intelligence.ToString() + "\n"
+        + "Tech skills " + a.techSkills.ToString() + "\n"
         + "\n"
         + "Missions participated: " + c.missionsParticipated.ToString() + "\n"
         + "Missions successed: " + c.missionsSuccessed.ToString();
@@ -754,6 +755,7 @@ public static class Localization
                         case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" cannot complete mission and therefore return.";
                         case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" leave us.";
                         case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" completed their task";
+                        case LocalizedCrewAction.CannotReachDestination: return "Crew " + '"' + c.name + "\" cannot reach destination and therefore returning.";
                         default: return '"' + c.name + "\" is da best.";
                     }
                 }
@@ -763,9 +765,10 @@ public static class Localization
                     case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" не могут завершить миссию и возвращаются.";
                     case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" покинули нас.";
                     case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" завершили миссию";
+                    case LocalizedCrewAction.CannotReachDestination: return "Команда " + '"' + c.name + "\" не может достичь цели и возвращается.";
                     default: return '"' + c.name + "\" просто топчег.";
                 }
-            default: return '"' + c.name + "\"! 0)0))).";
+            default: return '"' + c.name + "\"!111 0)0))).";
         }
     }
     public static string GetArtifactStatus(Artifact.ArtifactStatus status)
@@ -794,6 +797,93 @@ public static class Localization
                         case Artifact.ArtifactStatus.UsingInMonument: return "Using in monument";
                         case Artifact.ArtifactStatus.OnConservation: return "On conservation";
                         case Artifact.ArtifactStatus.Exists:
+                        default: return string.Empty;
+                    }
+                }
+        }
+    }
+    public static string GetExpeditionLogMessage(Expedition e, ushort[] msg)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                {
+                    switch ((Expedition.ExpeditionLogMessage)msg[0])
+                    {
+                        case Expedition.ExpeditionLogMessage.ContinueMission: return "Продолжаем миссию!";
+                        case Expedition.ExpeditionLogMessage.TestPassed: return "Ей, мы смогли!";
+                        case Expedition.ExpeditionLogMessage.TestFailed: return "У нас не получилось(";
+                        case Expedition.ExpeditionLogMessage.WrongPath: return "Кажется, мы свернули не туда...";
+                        case Expedition.ExpeditionLogMessage.FastPath: return "Мы нашли как срезать путь!";
+                        case Expedition.ExpeditionLogMessage.LoseConfidence: return "А нам точно нужно это делать?";
+                        case Expedition.ExpeditionLogMessage.HardtestPassed: return "Это было сложно, но мы справились";
+                        case Expedition.ExpeditionLogMessage.MemberLost: return "Мы потеряли одного из наших товарищей.";                        
+                        case Expedition.ExpeditionLogMessage.TreasureFound: return "Ого, что мы нашли!";
+                        case Expedition.ExpeditionLogMessage.GlobalMapChanged: return "Кажется, что-то изменилось в округе.";
+                        case Expedition.ExpeditionLogMessage.ArtifactLost: return "К сожалению, мы утратили наш артефакт.";
+                        
+                        case Expedition.ExpeditionLogMessage.ConnectionRestored: return "<Связь с экспедицией восстановлена>";
+                        case Expedition.ExpeditionLogMessage.TaskCompleted: return "Задача выполнена!";
+                        case Expedition.ExpeditionLogMessage.Disapproval: return "Какого черта нас вообще сюда отправили?";
+                        case Expedition.ExpeditionLogMessage.NoStamina: return "Мы совсем выбились из сил.";
+                        case Expedition.ExpeditionLogMessage.RestOnMission: return "Разбили временный лагерь.";
+                        case Expedition.ExpeditionLogMessage.MissionStart: return "Приступаем к заданию.";
+                        case Expedition.ExpeditionLogMessage.MissionChanged: return "Наша задача изменилась";
+                        case Expedition.ExpeditionLogMessage.MissionLeaveFail: return "Нам не удаётся выбраться отсюда!";
+                        case Expedition.ExpeditionLogMessage.StopMission: return "Прекращаем выполнение миссии.";
+                        case Expedition.ExpeditionLogMessage.ReturningHome: return "Возвращаемся домой.";
+                        case Expedition.ExpeditionLogMessage.CrystalsFound: return "Мы нашли немного кристаллов.";
+                        case Expedition.ExpeditionLogMessage.Approval: return "Обожаю свою работу!";
+                        case Expedition.ExpeditionLogMessage.Dismissing: return "<Экспедиция распущена>";
+
+                        case Expedition.ExpeditionLogMessage.SoftDisappear:
+                            if (Random.value < 0.15f) return "<Наша команда решила остаться там навсегда. Связь потеряна.>";
+                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
+                        case Expedition.ExpeditionLogMessage.HardDisappear:
+                            if (Random.value < 0.15f) return "<Сектор поглотил всю команду. Связь потеряна.>";
+                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
+                        case Expedition.ExpeditionLogMessage.ConnectionLost: return "<Экспедиция перестала выходить на связь>";
+                        default: return string.Empty;
+                    }
+                }
+            case Language.English:
+            default:
+                {
+                    switch ((Expedition.ExpeditionLogMessage)msg[0])
+                    {
+                        case Expedition.ExpeditionLogMessage.ContinueMission: return "We continue the mission";
+                        case Expedition.ExpeditionLogMessage.TestPassed: return "Yes, we did it.";
+                        case Expedition.ExpeditionLogMessage.TestFailed: return "Oh no, we failed it(";
+                        case Expedition.ExpeditionLogMessage.WrongPath: return "It is a wrong way, obviously.";
+                        case Expedition.ExpeditionLogMessage.FastPath: return "We found a short way.";
+                        case Expedition.ExpeditionLogMessage.LoseConfidence: return "I doubt it was a good idea to send us here.";
+                        case Expedition.ExpeditionLogMessage.HardtestPassed: return "It had been hard but finally ended successfully.";
+                        case Expedition.ExpeditionLogMessage.MemberLost: return "We lost a member!";                        
+                        case Expedition.ExpeditionLogMessage.TreasureFound: return "We found something interesting.";
+                        case Expedition.ExpeditionLogMessage.GlobalMapChanged: return "Something has just changed.";
+                        case Expedition.ExpeditionLogMessage.ArtifactLost: return "Sorry, we lost our artifact.";
+
+                        case Expedition.ExpeditionLogMessage.SoftDisappear:
+                            if (Random.value < 0.15f) return "<Our team decided to stay there forever. Connection lost.>";
+                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
+                        case Expedition.ExpeditionLogMessage.HardDisappear:
+                            if (Random.value < 0.15f) return "<The Sector consumed our team. Connection lost.>";
+                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
+                        case Expedition.ExpeditionLogMessage.ConnectionLost: return "<Connection lost.>";
+
+                        case Expedition.ExpeditionLogMessage.ConnectionRestored: return "<Connection restored>";
+                        case Expedition.ExpeditionLogMessage.TaskCompleted: return "Our task has been completed!";
+                        case Expedition.ExpeditionLogMessage.Disapproval: return "We don't agree with our mission.";
+                        case Expedition.ExpeditionLogMessage.NoStamina: return "We are out of powers.";
+                        case Expedition.ExpeditionLogMessage.RestOnMission: return "Time for a rest.";
+                        case Expedition.ExpeditionLogMessage.MissionStart: return "Proceed to the task.";
+                        case Expedition.ExpeditionLogMessage.MissionChanged: return "Our mission has been changed.";
+                        case Expedition.ExpeditionLogMessage.MissionLeaveFail: return "We cannot leave his place!";
+                        case Expedition.ExpeditionLogMessage.StopMission:return "We dropping our mission.";
+                        case Expedition.ExpeditionLogMessage.ReturningHome: return "Returning home.";
+                        case Expedition.ExpeditionLogMessage.CrystalsFound: return "Found some crystals.";
+                        case Expedition.ExpeditionLogMessage.Approval: return "Hey, it is cool here." ;
+                        case Expedition.ExpeditionLogMessage.Dismissing: return "<Dismissed>";
                         default: return string.Empty;
                     }
                 }
@@ -2254,7 +2344,8 @@ public static class Localization
                         case LocalizedWord.Launch: return "Запустить";
                         case LocalizedWord.Level: return "уровень"; // building technology level
                         case LocalizedWord.Mission: return "Миссия";
-                        case LocalizedWord.Offline: return "Не подключено"; // out of power		 
+                        case LocalizedWord.Offline: return "Не подключено"; // out of power		
+                        case LocalizedWord.Owner: return "Владелец";
                         case LocalizedWord.Progress: return "Прогресс";
                         case LocalizedWord.Repair: return "Починить"; // shuttle
                         case LocalizedWord.Sell: return "Продавать";
@@ -2331,6 +2422,7 @@ public static class Localization
                         case LocalizedWord.Level: return "level"; // building technology level
                         case LocalizedWord.Mission: return "Mission";
                         case LocalizedWord.Offline: return "offline"; // out of power	
+                        case LocalizedWord.Owner: return "Owner"; // shuttle owner
                         case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Repair: return "Repair"; // shuttle
                         case LocalizedWord.Sell: return "Sell";
@@ -2406,7 +2498,6 @@ public static class Localization
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Тип воздействия не совпадает";
                         case LocalizedPhrase.ArtifactNotResearched: return "Артефакт не изучен";
                         case LocalizedPhrase.AscensionLevel: return "Уровень Возвышения";
-                        case LocalizedPhrase.CannotReachDestination: return "не может достичь цели";
                         case LocalizedPhrase.ClearSlot: return "< Очистить слот >";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.ConvertToBlock: return "Перестроить в блок"; // settlement
@@ -2486,7 +2577,6 @@ public static class Localization
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Affection type not match"; // artifact aff type
                         case LocalizedPhrase.ArtifactNotResearched: return "Artifact not researched";
                         case LocalizedPhrase.AscensionLevel: return "Ascension level";
-                        case LocalizedPhrase.CannotReachDestination: return "cannot reach destination";
                         case LocalizedPhrase.ClearSlot: return "< Clear slot >";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.ConvertToBlock: return "Convert to block"; // settlement

@@ -8,7 +8,7 @@ public sealed class UIShuttleObserver : MonoBehaviour
 #pragma warning disable 0649
     [SerializeField] private InputField nameField;
     [SerializeField] private Image hpbar;
-    [SerializeField] private GameObject repairButton, hangarButton, closeButton;
+    [SerializeField] private GameObject repairButton, hangarButton, closeButton, dissassembleButton;
     [SerializeField] private Text ownerInfo;
 #pragma warning restore 0649
     private bool subscribedToUpdate = false;
@@ -60,18 +60,24 @@ public sealed class UIShuttleObserver : MonoBehaviour
             nameField.text = showingShuttle.name;
             showingCondition = showingShuttle.condition;
             hpbar.fillAmount = showingCondition;
-            if (showingCondition != 1)
+            if (showingShuttle.docked)
             {
-                repairButton.SetActive(true);
-                repairButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Repair) + ": " + showingShuttle.GetRepairCost().ToString();
+                if (showingCondition != 1)
+                {
+                    repairButton.SetActive(true);
+                    repairButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Repair) + ": " + showingShuttle.GetRepairCost().ToString();
+                }
+                else repairButton.SetActive(false);
+                dissassembleButton.SetActive(true);
             }
             else
             {
+                dissassembleButton.SetActive(false);
                 repairButton.SetActive(false);
             }           
 
 
-            if (showingShuttle.crew != null) ownerInfo.text = showingShuttle.crew.name;
+            if (showingShuttle.crew != null) ownerInfo.text = Localization.GetWord(LocalizedWord.Owner) + ":\"" + showingShuttle.crew.name + '"';
             else ownerInfo.text = Localization.GetPhrase(LocalizedPhrase.NoCrew);
             lastDrawnShuttleHash = Shuttle.actionsHash;
         }
@@ -86,9 +92,13 @@ public sealed class UIShuttleObserver : MonoBehaviour
         }
         if (Shuttle.actionsHash != lastDrawnShuttleHash)
         {
-            if (showingShuttle.crew != null) ownerInfo.text = showingShuttle.crew.name;
+            if (showingShuttle.crew != null) ownerInfo.text = Localization.GetWord(LocalizedWord.Owner) + ":\"" + showingShuttle.crew.name + '"';
             else ownerInfo.text = Localization.GetPhrase(LocalizedPhrase.NoCrew);
             lastDrawnShuttleHash = Shuttle.actionsHash;
+        }
+        if (showingShuttle.docked != dissassembleButton.activeSelf)
+        {
+            dissassembleButton.SetActive(showingShuttle.docked);
         }
     }
 
@@ -129,8 +139,11 @@ public sealed class UIShuttleObserver : MonoBehaviour
     public void DeconstructButton()
     {
         //подтверждение?
-        if (showingShuttle != null) showingShuttle.Deconstruct();
-        gameObject.SetActive(false);
+        if (showingShuttle != null && showingShuttle.docked == true)
+        {
+            showingShuttle.Deconstruct();
+            gameObject.SetActive(false);
+        }
     }
     //
 

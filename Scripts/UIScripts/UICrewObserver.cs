@@ -61,7 +61,7 @@ public sealed class UICrewObserver : MonoBehaviour
         statsText.text = Localization.GetCrewInfo(showingCrew);
         PrepareShuttlesDropdown();
         PrepareArtifactsDropdown();
-        lastDrawState = Crew.actionsHash;
+        lastDrawState = Crew.listChangesMarkerValue;
     }
 
     public void StatusUpdate()
@@ -70,17 +70,17 @@ public sealed class UICrewObserver : MonoBehaviour
         if (showingCrew == null) gameObject.SetActive(false);
         else
         {
-            if (lastDrawState != Crew.actionsHash)
+            if (lastDrawState != Crew.listChangesMarkerValue)
             {
                 RedrawWindow();
             }
                 //#redraw dynamic crew info
-                levelText.text = showingCrew.level.ToString();
-                levelText.color = Color.Lerp(Color.white, Color.cyan, (float)showingCrew.level / 255f);
-                float e = showingCrew.experience, ne = showingCrew.nextExperienceLimit;
-                experienceText.text = ((int)e).ToString() + " / " + ((int)ne).ToString();
-                experienceBar.fillAmount = e / ne;
-                staminaBar.fillAmount = showingCrew.stamina;
+                levelText.text = showingCrew.attributes.level.ToString();
+                levelText.color = Color.Lerp(Color.white, Color.cyan, (float)showingCrew.attributes.level / 255f);
+                int e = showingCrew.attributes.experience, ne = showingCrew.attributes.GetExperienceCap();
+                experienceText.text = e.ToString() + " / " + ne.ToString();
+                experienceBar.fillAmount = e / (float)ne;
+                staminaBar.fillAmount = showingCrew.attributes.stamina / (float)showingCrew.attributes.maxStamina;
 
                 int m_count = showingCrew.membersCount;
                 membersButtonText.text = m_count.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
@@ -264,7 +264,7 @@ public sealed class UICrewObserver : MonoBehaviour
     {
         if (showingCrew == null) gameObject.SetActive(false);
         else
-        {
+        {            
             var opts = new List<Dropdown.OptionData>();
             var shuttles = Shuttle.shuttlesList;
             shuttlesListIDs = new List<int>();
@@ -303,6 +303,7 @@ public sealed class UICrewObserver : MonoBehaviour
             shuttlesDropdown.value = 0;
             shuttlesDropdown.options = opts;
             lastShuttlesState = Shuttle.actionsHash;
+            shuttlesDropdown.interactable = (showingCrew.status == CrewStatus.AtHome);
         }
     }
     private void PrepareArtifactsDropdown()
@@ -348,6 +349,7 @@ public sealed class UICrewObserver : MonoBehaviour
             artifactsDropdown.value = 0;
             artifactsDropdown.options = opts;
             lastArtifactsState = Artifact.actionsHash;
+            artifactsDropdown.interactable = (showingCrew.status == CrewStatus.AtHome);
         }
     }
 

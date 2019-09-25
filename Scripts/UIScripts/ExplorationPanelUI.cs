@@ -222,7 +222,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
-        lastDrawnActionHash = Crew.actionsHash;
+        lastDrawnActionHash = Crew.listChangesMarkerValue;
     }
     private void PrepareArtifactsList()
     {
@@ -414,7 +414,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 int sindex = GetListStartIndex();
                 for (int i = 0; i < items.Length; i++)
                 {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + exps[i + sindex].name + '"';
+                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + exps[i + sindex].crew.name + '"';
                     listIDs.Add(exps[i + sindex].ID);
                     items[i].SetActive(true);
                 }
@@ -437,7 +437,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 int i = 0;
                 for (; i < exps.Count; i++)
                 {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + exps[i].name + '"';
+                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + exps[i].crew.name + '"';
                     listIDs.Add(exps[i].ID);
                     items[i].SetActive(true);
                 }
@@ -477,7 +477,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
-        lastDrawnActionHash = Expedition.actionsHash;
+        lastDrawnActionHash = Expedition.listChangesMarker;
     }
 
     private void ChangeMode(InfoMode nmode)
@@ -530,7 +530,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                             emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoCrews);
                             emptyPanel.SetActive(true);
                         }
-                        lastDrawnActionHash = Crew.actionsHash;
+                        lastDrawnActionHash = Crew.listChangesMarkerValue;
                         break;
                     }
                 case InfoMode.Artifacts:
@@ -601,7 +601,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                             emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoExpeditions);
                             emptyPanel.SetActive(true);
                         }
-                        lastDrawnActionHash = Expedition.actionsHash;
+                        lastDrawnActionHash = Expedition.listChangesMarker;
                         break;
                     }
                 case InfoMode.Inactive:
@@ -623,7 +623,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         switch (mode)
         {
             case InfoMode.Crews:
-                if (lastDrawnActionHash != Crew.actionsHash) PrepareCrewsList();
+                if (lastDrawnActionHash != Crew.listChangesMarkerValue) PrepareCrewsList();
                 break;
             case InfoMode.Artifacts:
                 if (lastDrawnActionHash != Artifact.actionsHash) PrepareArtifactsList();
@@ -632,7 +632,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 if (lastDrawnActionHash != Shuttle.actionsHash) PrepareShuttlesList();
                 break;
             case InfoMode.Expeditions:
-                if (lastDrawnActionHash != Expedition.actionsHash) PrepareExpeditionsList();
+                if (lastDrawnActionHash != Expedition.listChangesMarker) PrepareExpeditionsList();
                 break;
         }
     }    
