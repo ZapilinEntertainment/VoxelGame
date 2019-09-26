@@ -22,7 +22,7 @@ public sealed class Artifact {
 
     private static readonly Sprite[] affectionRings;
     public static readonly Texture emptyArtifactFrame_tx;
-    public static int actionsHash = 0, nextID = 0;    
+    public static int listChangesMarkerValue = 0, nextID = 0;    
     public static List<Artifact> artifactsList;
     public static UIArtifactPanel observer { get; private set; }
 
@@ -85,7 +85,7 @@ public sealed class Artifact {
         ID = nextID++;
         artifactsList.Add(this);        
 
-        actionsHash++;
+        listChangesMarkerValue++;
     }
 
     public bool? StabilityTest(float hardness)
@@ -434,13 +434,13 @@ public sealed class Artifact {
             owner.ClearArtifactField(this);
             owner = null;
         }
-        actionsHash++;
+        listChangesMarkerValue++;
     }
     public void UseInMonument()
     {
         owner = null;
         status = ArtifactStatus.UsingInMonument;
-        actionsHash++;
+        listChangesMarkerValue++;
     }
     public void SetResearchStatus(bool x) { researched = x; }
 
@@ -458,7 +458,7 @@ public sealed class Artifact {
     {
         destructed = true;
         if (artifactsList.Contains(this)) artifactsList.Remove(this);
-        actionsHash++;
+        listChangesMarkerValue++;
     }
 
     #region save-load system

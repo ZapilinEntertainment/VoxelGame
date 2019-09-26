@@ -19,7 +19,7 @@ public sealed class Shuttle : MonoBehaviour {
     public static UIShuttleObserver observer { get; private set; }
 	public static List<Shuttle> shuttlesList;
 	public static int lastIndex{get;private set;}
-    public static int actionsHash { get; private set; }
+    public static int listChangesMarkerValue { get; private set; }
 
     static Shuttle()
     {
@@ -29,7 +29,7 @@ public sealed class Shuttle : MonoBehaviour {
 	public static void Reset() {
 		shuttlesList = new List<Shuttle>();
 		lastIndex = 0;
-        actionsHash = 0;
+        listChangesMarkerValue = 0;
 	}
     public static void PrepareList()
     {
@@ -56,7 +56,7 @@ public sealed class Shuttle : MonoBehaviour {
 
 	public void SetCrew(Crew c) {
         crew = c;
-        actionsHash++;
+        listChangesMarkerValue++;
 	}
     public void SetVisibility(bool x)
     {
@@ -125,7 +125,7 @@ public sealed class Shuttle : MonoBehaviour {
         {
             shuttlesList.Remove(this);
         }
-        actionsHash++;
+        listChangesMarkerValue++;
     }
 
     public void ShowOnGUI(bool useHangarButton, Rect r, SpriteAlignment alignment, bool useCloseButton)

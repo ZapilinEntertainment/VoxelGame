@@ -12,14 +12,15 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
 
-    private bool prepared = false, sunMarkerEnabled = true;
-    private int vegetationShaderWindPropertyID;
+    private bool prepared = false, showCelestialBodies = true;
+    private int vegetationShaderWindPropertyID, lastDrawnMapActionHash;
     private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10;
     private Environment currentEnvironment;
     private GlobalMap gmap;
-    private MapPoint cityPoint, sunPoint;
+    private MapPoint cityPoint;
     private Material skyboxMaterial;
     private List<Transform> decorations;
+    private Dictionary<MapPoint, Transform> celestialBodies;
     
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6;
     private const int SKY_SPHERE_RADIUS = 9, CLOUD_LAYER_INDEX = 9;
@@ -35,11 +36,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sun = FindObjectOfType<Light>();
         gmap = GameMaster.realMaster.globalMap;
         cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
-        sunPoint = gmap.mapPoints[GlobalMap.SUN_POINT_INDEX];
         decorations = new List<Transform>();
 
         skyboxMaterial = RenderSettings.skybox;
         ChangeEnvironment(gmap.GetCurrentEnvironment());
+        RecalculateCelestialDecorations();
     }
     public void PrepareIslandBasis(ChunkGenerationMode cmode)
     { // его придётся сохранять!
@@ -74,7 +75,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         {
             sun.transform.forward = e.lightSettings.direction;
         }
-        sunMarkerEnabled = haveSun;
         positionChanged = true;
         environmentEventTimer = currentEnvironment.GetInnerEventTime();
     }
@@ -89,6 +89,54 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         
         decorations.Add(dec.transform);
         lastSpawnDistance += size;
+    }
+    public void RecalculateCelestialDecorations()
+    {
+        var gm = GameMaster.realMaster.globalMap;
+        var pts = gm.mapPoints;
+        if (celestialBodies != null)
+        {
+            //проверка существующих спрайтов звезд
+            foreach (var cb in celestialBodies)
+            {
+                if (!pts.Contains(cb.Key))
+                {
+                    Destroy(cb.Value.gameObject);
+                    celestialBodies.Remove(cb.Key);
+                }
+            }
+            // ищем добавившиеся точки
+            foreach (var pt in pts)
+            {
+                if (pt.type == MapMarkerType.Star && !celestialBodies.ContainsKey(pt)) AddVisibleStar(pt as SunPoint);
+            }
+        }
+        else
+        {
+            celestialBodies = new Dictionary<MapPoint, Transform>();
+            foreach (var pt in pts)
+            {
+                if (pt.type == MapMarkerType.Star) AddVisibleStar(pt as SunPoint);
+            }
+        }
+        lastDrawnMapActionHash = gm.actionsHash;
+    }
+    private void AddVisibleStar(SunPoint sp)
+    {
+        var g = new GameObject("star");
+        g.layer = GameConstants.CELESTIAL_LAYER;
+        var sr = g.AddComponent<SpriteRenderer>();
+        sr.sprite = PoolMaster.GetStarSprite(false);
+        sr.sharedMaterial = PoolMaster.billboardMaterial;
+        sr.color = sp.color;
+        celestialBodies.Add(sp, g.transform);
+        if (!showCelestialBodies) g.SetActive(false);
+        Vector3 cpoint = Quaternion.AngleAxis(cityPoint.angle, Vector3.back) * (Vector3.up * cityPoint.height),
+            mpoint = Quaternion.AngleAxis(sp.angle, Vector3.back) * (Vector3.up * sp.height);
+        mpoint -= cpoint;
+        mpoint.z = mpoint.y;
+        mpoint.y = 0.2f;
+        g.transform.position = mpoint * SKY_SPHERE_RADIUS;
     }
 
     private void LateUpdate()
@@ -113,6 +161,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         if (GameMaster.realMaster.gameMode != GameMode.Editor)
         {
+            // меняем краски, если город начинает двигаться внутри сектора
             if (positionChanged)
             {
                 byte ring = cityPoint.ringIndex;
@@ -146,11 +195,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 //print(angleX);
                 float heightY = (cityPoint.height - centerY) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
                 Vector2 lookDist = new Vector2(angleX, heightY);
-                if (sunMarkerEnabled)
-                {
-                    sun.transform.position = new Vector3(lookDist.x * SKY_SPHERE_RADIUS, 2, lookDist.y * SKY_SPHERE_RADIUS);
-                    sun.transform.LookAt(Vector3.zero);
-                }
 
                 float d = lookDist.magnitude;
                 if (d > 1) d = 1;
@@ -206,6 +250,23 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 }
             }
             if (lastSpawnDistance > 0) lastSpawnDistance -= dir.magnitude;
+
+            if (showCelestialBodies)
+            {
+                if (celestialBodies != null && celestialBodies.Count > 0)
+                {
+                    Vector3 cpoint = Quaternion.AngleAxis(cityPoint.angle, Vector3.back) * (Vector3.up * cityPoint.height);
+                    Vector3 mpoint;
+                    foreach (var sb in celestialBodies)
+                    {
+                        mpoint = Quaternion.AngleAxis(sb.Key.angle, Vector3.back) * (Vector3.up * sb.Key.height);
+                        mpoint -= cpoint;
+                        mpoint.z = mpoint.y * 10f; mpoint.x *= 10f;
+                        mpoint.y = 1f;
+                        sb.Value.position = mpoint;
+                    }
+                }
+            }
 
             //test lightnings
             if (false)
@@ -265,6 +326,31 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
     }
 
+
+    public void EnableDecorations()
+    {
+        showCelestialBodies = true;
+        if (celestialBodies !=null && celestialBodies.Count > 0)
+        {
+            foreach (var sb in celestialBodies)
+            {
+                sb.Value.gameObject.SetActive(true);
+            }
+        }
+    }
+    public void DisableDecorations()
+    {
+        showCelestialBodies = false;
+        if (celestialBodies != null && celestialBodies.Count > 0)
+        {
+            foreach (var sb in celestialBodies)
+            {
+                sb.Value.gameObject.SetActive(false);
+            }
+        }
+    }
+
+
     public void Save( System.IO.FileStream fs)
     {
         fs.Write(System.BitConverter.GetBytes(newWindVector.x),0,4); // 0 - 3
@@ -290,5 +376,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);
         prepared = true;
         if (WindUpdateEvent != null) WindUpdateEvent(windVector);
+        RecalculateCelestialDecorations();
     }
 }

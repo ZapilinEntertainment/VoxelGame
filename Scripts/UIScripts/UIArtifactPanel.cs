@@ -76,7 +76,7 @@ public class UIArtifactPanel : MonoBehaviour {
                 descriptionOff = false;
             }
         }
-        lastDrawnActionHash = Artifact.actionsHash;
+        lastDrawnActionHash = Artifact.listChangesMarkerValue;
     }
 
     private void Update()

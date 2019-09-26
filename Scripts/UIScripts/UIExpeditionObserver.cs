@@ -46,7 +46,6 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             RedrawWindow();
         }
     }
-
     private void RedrawWindow()
     {
         if (showingExpedition == null) gameObject.SetActive(false);
@@ -74,14 +73,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                     destinationPointImage.transform.parent.gameObject.SetActive(false);
                 }
             }
-            StatusUpdate();
-        }
-    }
 
-    public void StatusUpdate()
-    {
-        if (showingExpedition == null) gameObject.SetActive(false);
-        else {
             bool connect = showingExpedition.hasConnection;
             connectionImage.uvRect = UIController.GetTextureUV(connect ? Icons.TaskCompleted : Icons.TaskFailed);
             statusText.text = connect ? Localization.GetExpeditionStatus(showingExpedition.stage) : Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
@@ -113,8 +105,26 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                 if (recallButton.activeSelf) recallButton.SetActive(false);
             }
 
-            showingExpedition.FillLog(logData);
             lastChangesMarkerValue = showingExpedition.changesMarkerValue;
+        }
+    }
+
+    public void StatusUpdate()
+    {
+        if (showingExpedition == null) gameObject.SetActive(false);
+        else {
+            if (lastChangesMarkerValue != showingExpedition.changesMarkerValue)
+            {              
+                if (showingExpedition.hasConnection && (showingExpedition.stage == Expedition.ExpeditionStage.OnMission | showingExpedition.stage == Expedition.ExpeditionStage.LeavingMission))
+                {
+                    //fill stage text & stage bar
+                    currentStepText.text = Localization.GetWord(LocalizedWord.Step) + ' ' + showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString();
+                    float f = showingExpedition.progress / Expedition.ONE_STEP_WORKFLOW;
+                    stepProgressBar.fillAmount = f;
+                    progressText.text = ((int)(f * 100)).ToString() + '%';
+                }
+                lastChangesMarkerValue = showingExpedition.changesMarkerValue;
+            }
         }
     }
 

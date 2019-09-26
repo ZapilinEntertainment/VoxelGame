@@ -20,7 +20,8 @@ public sealed class Mission {
 
     public readonly MissionPreset preset;
     public Expedition performer { get; private set; }
-    public readonly int stepsCount, ID;   
+    public readonly int stepsCount, ID;
+    public byte difficultyClass = 20;
     private byte nameIdentifierA = 0, nameIdentifierB = 0;
 
     public static bool operator ==(Mission A, Mission B) {

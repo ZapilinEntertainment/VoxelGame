@@ -307,7 +307,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
-        lastDrawnActionHash = Artifact.actionsHash;
+        lastDrawnActionHash = Artifact.listChangesMarkerValue;
     }
     private void PrepareShuttlesList()
     {
@@ -392,7 +392,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             //настройка scrollbar ?
         }
-        lastDrawnActionHash = Shuttle.actionsHash;
+        lastDrawnActionHash = Shuttle.listChangesMarkerValue;
     }
     private void PrepareExpeditionsList()
     {
@@ -554,7 +554,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                             emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoArtifacts);
                             emptyPanel.SetActive(true);
                         }
-                        lastDrawnActionHash = Artifact.actionsHash;
+                        lastDrawnActionHash = Artifact.listChangesMarkerValue;
                         break;
                     }
                 case InfoMode.Shuttles:
@@ -578,7 +578,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                             emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoShuttles);
                             emptyPanel.SetActive(true);
                         }
-                        lastDrawnActionHash = Shuttle.actionsHash;
+                        lastDrawnActionHash = Shuttle.listChangesMarkerValue;
                         break;
                     }
                 case InfoMode.Expeditions:
@@ -626,10 +626,10 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 if (lastDrawnActionHash != Crew.listChangesMarkerValue) PrepareCrewsList();
                 break;
             case InfoMode.Artifacts:
-                if (lastDrawnActionHash != Artifact.actionsHash) PrepareArtifactsList();
+                if (lastDrawnActionHash != Artifact.listChangesMarkerValue) PrepareArtifactsList();
                 break;
             case InfoMode.Shuttles:
-                if (lastDrawnActionHash != Shuttle.actionsHash) PrepareShuttlesList();
+                if (lastDrawnActionHash != Shuttle.listChangesMarkerValue) PrepareShuttlesList();
                 break;
             case InfoMode.Expeditions:
                 if (lastDrawnActionHash != Expedition.listChangesMarker) PrepareExpeditionsList();

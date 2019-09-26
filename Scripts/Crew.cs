@@ -15,10 +15,11 @@ public struct CrewAttributes
     public float confidence, unity, loyalty, adaptability;
     public int experience;
     public ExploringPath exploringPath;
+    private Crew crew;
 
     private const byte MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
     private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_REPLENISH_VALUE = 1f, ADAPTABILITY_LOSSES = 0.02f;
-    public CrewAttributes(ColonyController c)
+    public CrewAttributes(ColonyController c, Crew i_crew)
     {
         var values = new int[4];
         values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
@@ -79,6 +80,7 @@ public struct CrewAttributes
         stamina = maxStamina;
         exploringPath = ExploringPath.Default;
         proficiencies = 0;
+        crew = i_crew;
     }
 
     private static float GetModifier(byte x)
@@ -155,11 +157,14 @@ public struct CrewAttributes
     public void AddExperience(float x)
     {
         if (x < 1f) return;
-        if (level < MAX_LEVEL) {
+        if (level < MAX_LEVEL)
+        {
             experience += (int)x;
-            int expCap = GetExperienceCap();            
+            int expCap = GetExperienceCap();
             if (experience >= expCap) LevelUp();
+            else crew.MarkAsDirty();
         }
+        else experience = GetExperienceCap();
     }
     public void LevelUp()
     {
@@ -178,6 +183,7 @@ public struct CrewAttributes
         }
         proficiencies += proficiency;
         maxStamina += GetStaminaPerLevelBoost(exploringPath, persistence);
+        crew.MarkAsDirty();
     }
     public int GetExperienceCap()
     {
@@ -210,6 +216,7 @@ public struct CrewAttributes
         {
             perception++;
             proficiencies--;
+            crew.MarkAsDirty();
         }
     }
     public void ImprovePersistence()
@@ -218,6 +225,7 @@ public struct CrewAttributes
         {
             persistence++;
             proficiencies--;
+            crew.MarkAsDirty();
         }
     }
     public void ImproveTechSkill()
@@ -226,6 +234,7 @@ public struct CrewAttributes
         {
             techSkills++;
             proficiencies--;
+            crew.MarkAsDirty();
         }
     }
     public void ImproveSurvivalSkill()
@@ -234,6 +243,7 @@ public struct CrewAttributes
         {
             survivalSkills++;
             proficiencies--;
+            crew.MarkAsDirty();
         }
     }
     public void ImproveEnlightment()
@@ -242,6 +252,7 @@ public struct CrewAttributes
         {
             secretKnowledge++;
             proficiencies--;
+            crew.MarkAsDirty();
         }
     }
     public void ImproveIntelligence()
@@ -250,6 +261,7 @@ public struct CrewAttributes
         {
             intelligence++;
             proficiencies--;
+            crew.MarkAsDirty();
         }
     }
 
@@ -279,8 +291,6 @@ public struct CrewAttributes
     {
         return Random.Range(0, 20) + GetModifier(techSkills); // no neuro
     }
-
-
 
     public float HardTestRoll()
     {
@@ -340,7 +350,7 @@ public struct CrewAttributes
             if (step < 0f) return 0f; else return step;
         }
     }
-    public bool TestYourMight(float difficultyEndValue, bool? advantage)
+    public bool TestYourMight(float difficultyClass, bool? advantage)
     {
         switch (exploringPath)
         {
@@ -348,7 +358,7 @@ public struct CrewAttributes
                 {
                     if (advantage == null)
                     {
-                        return (PersistenceRoll() >= difficultyEndValue);
+                        return (PersistenceRoll() >= difficultyClass);
                     }
                     else
                     {
@@ -361,14 +371,14 @@ public struct CrewAttributes
                         {
                             if (b < a) a = b;
                         }
-                        return (a >= difficultyEndValue);
+                        return (a >= difficultyClass);
                     }
                 }
             case ExploringPath.SecretPath:
                 {
                     if (advantage == null)
                     {
-                        return (SecretKnowledgeRoll() >= difficultyEndValue);
+                        return (SecretKnowledgeRoll() >= difficultyClass);
                     }
                     else
                     {
@@ -381,12 +391,12 @@ public struct CrewAttributes
                         {
                             if (b < a) a = b;
                         }
-                        return (a >= difficultyEndValue);
+                        return (a >= difficultyClass);
                     }
                 }
             case ExploringPath.PathOfMind:
                 {
-                    if (advantage == null) return (IntelligenceRoll() >= difficultyEndValue);
+                    if (advantage == null) return (IntelligenceRoll() >= difficultyClass);
                     else
                     {
                         float a = IntelligenceRoll(), b = TechSkillsRoll();
@@ -398,11 +408,64 @@ public struct CrewAttributes
                         {
                             if (b < a) a = b;
                         }
-                        return (a >= difficultyEndValue);
+                        return (a >= difficultyClass);
                     }
                 }
-            default: return (UnityRoll() >= difficultyEndValue);
+            default: return (UnityRoll() >= difficultyClass);
         }
+    }
+
+    public List<byte> Save()
+    {
+        var data = new List<byte>()
+        {
+            persistence, // 0
+            survivalSkills, // 1
+            secretKnowledge, // 2
+            perception, // 3
+            intelligence, // 4
+            techSkills, // 5
+            level, // 6,
+            (byte)exploringPath // 7
+        };
+
+        data.AddRange(System.BitConverter.GetBytes(stamina)); // 8-9
+        data.AddRange(System.BitConverter.GetBytes(maxStamina)); //10-11
+        data.AddRange(System.BitConverter.GetBytes(proficiencies)); //12-13
+
+        data.AddRange(System.BitConverter.GetBytes(confidence)); // 14-17
+        data.AddRange(System.BitConverter.GetBytes(unity)); // 18-21
+        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 22-25
+        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 26-29
+
+        data.AddRange(System.BitConverter.GetBytes(experience)); // 30-33
+        return data;
+    }
+    public static CrewAttributes Load(System.IO.FileStream fs, Crew c)
+    {
+        var data = new byte[34];
+        fs.Read(data, 0, data.Length);
+        CrewAttributes ca;
+        ca.persistence = data[0];
+        ca.survivalSkills = data[1];
+        ca.secretKnowledge = data[2];
+        ca.perception = data[3];
+        ca.intelligence = data[4];
+        ca.techSkills = data[5];
+        ca.level = data[6];
+        ca.exploringPath = (ExploringPath)data[7];
+        ca.stamina = System.BitConverter.ToUInt16(data, 8);
+        ca.maxStamina = System.BitConverter.ToUInt16(data, 10);
+        ca.proficiencies = System.BitConverter.ToUInt16(data, 12);
+
+        ca.confidence = System.BitConverter.ToSingle(data, 14);
+        ca.unity = System.BitConverter.ToSingle(data, 18);
+        ca.loyalty = System.BitConverter.ToSingle(data, 22);
+        ca.adaptability = System.BitConverter.ToSingle(data, 26);
+
+        ca.experience = System.BitConverter.ToInt32(data, 30);
+        ca.crew = c;
+        return ca;
     }
 }
 public sealed class Crew : MonoBehaviour {
@@ -464,7 +527,7 @@ public sealed class Crew : MonoBehaviour {
         c.status = CrewStatus.AtHome;
 
         //normal parameters
-        c.attributes = new CrewAttributes(home);
+        c.attributes = new CrewAttributes(home, c);
         c.membersCount = membersCount;
         crewsList.Add(c);        
         listChangesMarkerValue++;
@@ -637,6 +700,10 @@ public sealed class Crew : MonoBehaviour {
     {
         if (artifact == a) artifact = null;
     }
+    public void MarkAsDirty()
+    {
+        changesMarkerValue++;
+    }
 
 	public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);
@@ -712,29 +779,23 @@ public sealed class Crew : MonoBehaviour {
         int nodata = -1;
         data.AddRange(System.BitConverter.GetBytes(shuttle == null ? nodata : shuttle.ID));//4- 7
         data.AddRange(System.BitConverter.GetBytes(artifact == null ? nodata : artifact.ID)); // 8 - 11
+        data.AddRange(System.BitConverter.GetBytes(membersCount)); // 12 - 15
+        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed)); // 16 - 19
+        data.AddRange(System.BitConverter.GetBytes(missionsParticipated)); // 20 - 23
+        data.Add((byte)status); // 24
 
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
-        // 12 - 15
-        data.AddRange(System.BitConverter.GetBytes(count)); // количество байтов, не длина строки
-        if (count > 0) data.AddRange(nameArray); 
+        data.AddRange(System.BitConverter.GetBytes(count)); // 25 - 28 | количество байтов, не длина строки
+        if (count > 0) data.AddRange(nameArray);
 
-        //0
-        data.AddRange(System.BitConverter.GetBytes(membersCount)); 
-
-        //40
-        
-        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed));
-        data.AddRange(System.BitConverter.GetBytes(missionsParticipated));
-        // 68
-
-        data.Add((byte)status); 
+        data.AddRange(attributes.Save());
         return data;
     }
 
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 16;
+        int LENGTH = 29;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         ID = System.BitConverter.ToInt32(data,0);
@@ -753,7 +814,12 @@ public sealed class Crew : MonoBehaviour {
         }
         else artifact = null;
 
-        int bytesCount = System.BitConverter.ToInt32(data, 12); //выдаст количество байтов, не длину строки        
+        membersCount = System.BitConverter.ToInt32(data, 12);
+        missionsSuccessed = System.BitConverter.ToInt32(data, 16);
+        missionsParticipated = System.BitConverter.ToInt32(data, 20);
+        status = (CrewStatus)data[24];
+
+        int bytesCount = System.BitConverter.ToInt32(data, 25); //выдаст количество байтов, не длину строки        
         if (bytesCount > 0)
         {
             data = new byte[bytesCount];
@@ -763,17 +829,7 @@ public sealed class Crew : MonoBehaviour {
             d.GetChars(data, 0, bytesCount, chars, 0, true);
             name = new string(chars);
         }
-
-        data = new byte[70];
-        fs.Read(data, 0, data.Length);
-        membersCount = System.BitConverter.ToInt32(data, 0);
-
-
-        
-        missionsSuccessed = System.BitConverter.ToInt32(data, 60);
-        missionsParticipated = System.BitConverter.ToInt32(data, 64);
-
-        status = (CrewStatus)data[69];
+        attributes = CrewAttributes.Load(fs, this);
     }
 
     #endregion

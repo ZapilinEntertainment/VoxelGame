@@ -30,7 +30,7 @@ public sealed class Expedition
     private bool subscribedToUpdate;
     private byte lastLogIndex = 0;
     private sbyte advantages = 0;
-    private float crewSpeed, collectedMoney,currentDistanceToTarget, distanceToTarget;
+    private float collectedMoney,currentDistanceToTarget, distanceToTarget;
     private ushort[][] log;
     private FlyingExpedition mapMarker;
     private QuantumTransmitter transmitter;
@@ -114,8 +114,7 @@ public sealed class Expedition
     {
         if (stage != ExpeditionStage.OnMission)
         {
-            stage = ExpeditionStage.OnMission;
-            crewSpeed = mission.CalculateCrewSpeed(crew);            
+            stage = ExpeditionStage.OnMission;       
             if (!subscribedToUpdate)
             {
                 GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
@@ -188,34 +187,43 @@ public sealed class Expedition
 
     public void LabourUpdate()
     {
+        float stepVal = crew.attributes.MakeStep(destination.difficulty);
         switch (stage)
         {
             case ExpeditionStage.OnMission:
-                {
-                    float stepVal = crew.attributes.MakeStep(destination.difficulty);
+                {                    
                     if (stepVal > 0)
                     {
-                        progress += crewSpeed;
+                        progress += stepVal;
                         if (progress >= ONE_STEP_WORKFLOW)
                         {
                             progress = 0;
-                            bool success = false;
+                            bool success = false;                            
                             //
                             int x = Random.Range(0, 8);
                             switch (x)
                             {
                                 //ignore 0 -> default
-                                case 1: // mission test
-                                    if (mission.TestYourMight(crew))
+                                case 1:
                                     {
-                                        success = true;
-                                        if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TestPassed);
+                                        bool? advantage = null;
+                                        if (advantages != 0)
+                                        {
+                                            if (advantages > 0) advantage = true;
+                                            else advantage = false;
+                                            advantages--;
+                                        }
+                                        if (crew.attributes.TestYourMight(mission.difficultyClass, advantage))
+                                        {
+                                            success = true;
+                                            if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TestPassed);
+                                        }
+                                        else
+                                        {
+                                            if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TestFailed);
+                                        }
+                                        break;
                                     }
-                                    else
-                                    {
-                                        if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TestFailed);
-                                    }
-                                    break;
                                 case 2: // jump            
                                     {
                                         if (destination.TryToJump(crew))
@@ -381,7 +389,6 @@ public sealed class Expedition
                                 EndMission();
                                 break;
                             }
-                            else crewSpeed = mission.CalculateCrewSpeed(crew);
                         }
                     }
                     else
@@ -411,7 +418,7 @@ public sealed class Expedition
                 }
             case ExpeditionStage.LeavingMission:
                 {
-                    progress += crewSpeed;
+                    progress += stepVal;
                     if (progress >= ONE_STEP_WORKFLOW)
                     {
                         progress = 0;
@@ -463,7 +470,6 @@ public sealed class Expedition
             mission = m;
             currentStep = 0;
             progress = 0;
-            crewSpeed = 0;
             AddMessageToLog(new ushort[] { (ushort)ExpeditionLogMessage.MissionChanged, (ushort)m.preset.type });
         }
     } 
@@ -655,8 +661,8 @@ public sealed class Expedition
         data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : -1)); // 22 - 25
         data.AddRange(System.BitConverter.GetBytes(crew.ID)); // 26 -29
         data.AddRange(System.BitConverter.GetBytes(transmitter != null ? transmitter.connectionID : -1)); // 30 - 33
-        data.AddRange(System.BitConverter.GetBytes(crewSpeed)); // 34 - 37
-        data.AddRange(System.BitConverter.GetBytes(collectedMoney)); // 38 - 41
+        data.AddRange(System.BitConverter.GetBytes(collectedMoney)); // 34 - 37
+        data.Add((byte)advantages); // 38
         // logs writing
         if (log == null) data.AddRange(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         else
@@ -685,7 +691,7 @@ public sealed class Expedition
     }
     public Expedition Load(System.IO.FileStream fs)
     {
-        int LENGTH = 42;
+        int LENGTH = 39;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         hasConnection = data[0] == 1;
@@ -703,8 +709,8 @@ public sealed class Expedition
         transmitter = QuantumTransmitter.GetTransmitterByConnectionID(System.BitConverter.ToInt32(data, 30));
         if (transmitter != null) transmitter.AssignExpedition(this);
 
-        crewSpeed = System.BitConverter.ToSingle(data, 34);
-        collectedMoney = System.BitConverter.ToSingle(data, 38);
+        collectedMoney = System.BitConverter.ToSingle(data, 34);
+        advantages = (sbyte)data[38];
 
         log = new ushort[LOGS_COUNT][];
         int l = 0, j = 0;

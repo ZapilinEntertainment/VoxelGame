@@ -15,11 +15,10 @@ public sealed class GlobalMap : MonoBehaviour
     private bool prepared = false, mapInterfaceActive = false;
     private int currentSectorIndex = 0;
     public GameObject observer { get; private set; }
-    private Dictionary<SunPoint, Transform> stars;
 
     public const byte RINGS_COUNT = 5;
     private const byte MAX_OBJECTS_COUNT = 50;
-    public const int CITY_POINT_INDEX = 0, SUN_POINT_INDEX = 1;
+    public const int CITY_POINT_INDEX = 0;
     private const float MAX_RINGS_ROTATION_SPEED = 1;
     private float[] rotationSpeed;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
@@ -50,7 +49,6 @@ public sealed class GlobalMap : MonoBehaviour
         }
         mapSectors = new RingSector[sectorsCount];
         ascension = 0f;
-        stars = new Dictionary<SunPoint, Transform>();
         //start sector:
         byte ring = RINGS_COUNT / 2;
         sectorsCount = (int)(360f / sectorsDegrees[ring]);
@@ -75,19 +73,7 @@ public sealed class GlobalMap : MonoBehaviour
              MapMarkerType.MyCity
         );
         mapPoints.Add(cityPoint); // CITY_POINT_INDEX = 0
-        mapPoints.Add(sunPoint); // SUN_POINT_INDEX = 1
-
-        var g = new GameObject("star");
-        g.layer = GameConstants.CLOUDS_LAYER;
-        var sr = g.AddComponent<SpriteRenderer>();
-        sr.sprite = PoolMaster.GetStarSprite(false);
-        sr.sharedMaterial = PoolMaster.billboardMaterial;
-        sr.color = startSector.environment.lightSettings.sunColor;
-        stars.Add(sunPoint, g.transform);
-
-        //TEST:
-
-        //
+        mapPoints.Add(sunPoint);        
         actionsHash = 0;
         prepared = true;
         //зависимость : Load()
@@ -118,20 +104,7 @@ public sealed class GlobalMap : MonoBehaviour
                     if (!placeCleared) return false;
                 }
             }
-            mapPoints.Add(mp);
-            if (mp.type == MapMarkerType.Star)
-            {
-                var sp = mp as SunPoint;
-                if (!stars.ContainsKey(sp)) {
-                    var g = new GameObject("star");
-                    g.layer = GameConstants.CLOUDS_LAYER;
-                    var sr = g.AddComponent<SpriteRenderer>();
-                    sr.sprite = PoolMaster.GetStarSprite(false);
-                    sr.sharedMaterial = PoolMaster.billboardMaterial;
-                    sr.color = sp.color;
-                    stars.Add(sp, g.transform );
-                }
-            }
+            mapPoints.Add(mp);            
             actionsHash++;
             return true;
         }
@@ -143,14 +116,6 @@ public sealed class GlobalMap : MonoBehaviour
         {
             if (mapPoints.Contains(mp))
             {
-                if (mp.type == MapMarkerType.Star)
-                {
-                    var sp = mp as SunPoint;
-                    if (stars.ContainsKey(sp))
-                    {
-                        stars.Remove(sp);
-                    }
-                }
                 mapPoints.Remove(mp);
                 if (!mp.destroyed) mp.MarkAsDestroyed();
                 actionsHash++;
@@ -404,18 +369,7 @@ public sealed class GlobalMap : MonoBehaviour
         }
         cityFlyDirection = new Vector3(cpoint.angle - prevX + rotationSpeed[cpoint.ringIndex], ascensionChange, cpoint.height - prevY);
 
-        var cp = Quaternion.AngleAxis(cpoint.angle, Vector3.back) * (Vector3.up * cpoint.height);
-        if (stars.Count > 0 & !mapInterfaceActive)
-        {
-            foreach (var se in stars)
-            {
-                var p = Quaternion.AngleAxis(se.Key.angle, Vector3.back) * (Vector3.up * se.Key.height);
-                p -= cp;
-                p.z = p.y;
-                p.y = 0.2f;
-                se.Value.position = p * 10;
-            }
-        }
+        
 
         //test
         if (false)
@@ -573,13 +527,7 @@ public sealed class GlobalMap : MonoBehaviour
             observer.GetComponent<GlobalMapUI>().SetGlobalMap(this);
         }
         mapInterfaceActive = true;
-        if (stars.Count > 0)
-        {
-            foreach (var sto in stars)
-            {
-                sto.Value.gameObject.SetActive(false);
-            }
-        }
+        GameMaster.realMaster.environmentMaster.DisableDecorations();
         if (!observer.activeSelf) observer.SetActive(true);
     }
     public void MarkToUpdate()
@@ -589,13 +537,7 @@ public sealed class GlobalMap : MonoBehaviour
     public void MapInterfaceDisabled()
     {
         mapInterfaceActive = false;
-        if (stars.Count > 0)
-        {
-            foreach (var sto in stars)
-            {
-                sto.Value.gameObject.SetActive(true);
-            }
-        }
+        GameMaster.realMaster.environmentMaster.EnableDecorations();
     }
 
     #region save-load system
@@ -606,6 +548,12 @@ public sealed class GlobalMap : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[2]), 0, 4); // 8 - 11
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[3]), 0, 4); // 12 - 15
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[4]), 0, 4); // 16 - 19
+
+        fs.Write(System.BitConverter.GetBytes(ringsRotation[0]), 0, 4); // 20 - 23
+        fs.Write(System.BitConverter.GetBytes(ringsRotation[1]), 0, 4); // 24 - 27
+        fs.Write(System.BitConverter.GetBytes(ringsRotation[2]), 0, 4); // 28 - 31
+        fs.Write(System.BitConverter.GetBytes(ringsRotation[3]), 0, 4); // 32 - 35
+        fs.Write(System.BitConverter.GetBytes(ringsRotation[4]), 0, 4); // 36 - 39
 
         int realCount = 0;
         var savedata = new List<byte>();
@@ -631,7 +579,7 @@ public sealed class GlobalMap : MonoBehaviour
     }
     public void Load(System.IO.FileStream fs)
     {
-        var data = new byte[RINGS_COUNT * 4];
+        var data = new byte[40];
         fs.Read(data, 0, data.Length);
         rotationSpeed = new float[RINGS_COUNT];
         rotationSpeed[0] = System.BitConverter.ToSingle(data, 0);
@@ -639,6 +587,13 @@ public sealed class GlobalMap : MonoBehaviour
         rotationSpeed[2] = System.BitConverter.ToSingle(data, 8);
         rotationSpeed[3] = System.BitConverter.ToSingle(data, 12);
         rotationSpeed[4] = System.BitConverter.ToSingle(data, 16);
+        ringsRotation = new float[RINGS_COUNT];
+        ringsRotation[0] = System.BitConverter.ToSingle(data, 20);
+        ringsRotation[1] = System.BitConverter.ToSingle(data, 24);
+        ringsRotation[2] = System.BitConverter.ToSingle(data, 28);
+        ringsRotation[3] = System.BitConverter.ToSingle(data, 32);
+        ringsRotation[4] = System.BitConverter.ToSingle(data, 36);
+
         if (!prepared)
         {
             transform.position = Vector3.up * 0.1f;

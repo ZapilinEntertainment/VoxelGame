@@ -79,7 +79,7 @@ public sealed class UIShuttleObserver : MonoBehaviour
 
             if (showingShuttle.crew != null) ownerInfo.text = Localization.GetWord(LocalizedWord.Owner) + ":\"" + showingShuttle.crew.name + '"';
             else ownerInfo.text = Localization.GetPhrase(LocalizedPhrase.NoCrew);
-            lastDrawnShuttleHash = Shuttle.actionsHash;
+            lastDrawnShuttleHash = Shuttle.listChangesMarkerValue;
         }
     }
 
@@ -90,11 +90,11 @@ public sealed class UIShuttleObserver : MonoBehaviour
             showingCondition = showingShuttle.condition;
             repairButton.SetActive(showingCondition != 1);
         }
-        if (Shuttle.actionsHash != lastDrawnShuttleHash)
+        if (Shuttle.listChangesMarkerValue != lastDrawnShuttleHash)
         {
             if (showingShuttle.crew != null) ownerInfo.text = Localization.GetWord(LocalizedWord.Owner) + ":\"" + showingShuttle.crew.name + '"';
             else ownerInfo.text = Localization.GetPhrase(LocalizedPhrase.NoCrew);
-            lastDrawnShuttleHash = Shuttle.actionsHash;
+            lastDrawnShuttleHash = Shuttle.listChangesMarkerValue;
         }
         if (showingShuttle.docked != dissassembleButton.activeSelf)
         {

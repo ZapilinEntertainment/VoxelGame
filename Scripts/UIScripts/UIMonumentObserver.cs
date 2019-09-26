@@ -146,7 +146,7 @@ public sealed class UIMonumentObserver : UIObserver
                 t.GetChild(SLOT_IMAGE_CHILD_INDEX).gameObject.SetActive(false);
                 t.GetChild(SLOT_TEXT_CHILD_INDEX).gameObject.SetActive(false);
             }
-            lastDrawnArtifactsHash = Artifact.actionsHash;
+            lastDrawnArtifactsHash = Artifact.listChangesMarkerValue;
         }
     }
 
@@ -188,7 +188,7 @@ public sealed class UIMonumentObserver : UIObserver
 
     override public void StatusUpdate()
     {
-        if (lastDrawnArtifactsHash != Artifact.actionsHash)
+        if (lastDrawnArtifactsHash != Artifact.listChangesMarkerValue)
         {
 
         }

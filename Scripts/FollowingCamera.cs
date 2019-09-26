@@ -25,7 +25,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
     [SerializeField] UnityEngine.UI.Slider xSlider; // fiti
-    [SerializeField] Transform cloudCamera;
+    [SerializeField] Transform celestialCamera;
     [SerializeField] RectTransform controllerBack, controllerStick;
     [SerializeField] GameObject camUpButton, camLowButton;
 #pragma warning restore 0649
@@ -247,7 +247,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             else moveSmoothCoefficient.x = moveSmoothAcceleration * moveSmoothAcceleration;
         }
        
-        cloudCamera.rotation = camTransform.rotation;
+        celestialCamera.rotation = camTransform.rotation;
         //if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
 
         camPos = camTransform.position;
