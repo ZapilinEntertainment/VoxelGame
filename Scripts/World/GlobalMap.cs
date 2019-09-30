@@ -8,17 +8,16 @@ public sealed class GlobalMap : MonoBehaviour
     public float[] ringsRotation { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }
+    public MapPoint cityPoint { get; private set; }
     public Vector3 cityFlyDirection { get; private set; }
     public List<MapPoint> mapPoints { get; private set; }
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
 
     private bool prepared = false, mapInterfaceActive = false;
-    private int currentSectorIndex = 0;
     public GameObject observer { get; private set; }
 
     public const byte RINGS_COUNT = 5;
     private const byte MAX_OBJECTS_COUNT = 50;
-    public const int CITY_POINT_INDEX = 0;
     private const float MAX_RINGS_ROTATION_SPEED = 1;
     private float[] rotationSpeed;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
@@ -57,17 +56,17 @@ public sealed class GlobalMap : MonoBehaviour
         {
             min += (int)(360f / sectorsDegrees[i]);
         }
-        currentSectorIndex = Random.Range(min, min + sectorsCount);
+        int startSectorIndex = Random.Range(min, min + sectorsCount);
 
-        Vector2 startPos = GetSectorPosition(currentSectorIndex);
-        var ls = Environment.defaultEnvironment.lightSettings;
+        Vector2 startPos = GetSectorPosition(startSectorIndex);
+        var ls = Environment.LightSettings.GetPresetLightSettings(Environment.EnvironmentPreset.Default);
         var sunPoint = new SunPoint(startPos.x, startPos.y,  ls.sunColor);        
-        RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPreset.Default, new Environment.LightSettings(sunPoint, 1f, ls.bottomColor, ls.horizonColor) ));
+        RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPreset.Default, ls ));
         startSector.SetFertility(false);
-        mapSectors[currentSectorIndex] = startSector;
+        mapSectors[startSectorIndex] = startSector;
         Vector2 dir = Quaternion.AngleAxis(Random.value * 360, Vector3.forward) * Vector2.up;
         float xpos = startPos.x + dir.x * 0.25f * sectorsDegrees[ring], ypos = startPos.y + dir.y * 0.25f * (ringsBorders[ring] - ringsBorders[ring + 1]);
-        MapPoint cityPoint = MapPoint.CreatePointOfType(
+        cityPoint = MapPoint.CreatePointOfType(
             xpos, //angle
             ypos,
              MapMarkerType.MyCity
@@ -79,7 +78,6 @@ public sealed class GlobalMap : MonoBehaviour
         //зависимость : Load()
     }
 
-    public MapPoint GetCityPoint() { return mapPoints[CITY_POINT_INDEX]; }
     public bool AddPoint(MapPoint mp, bool forced)
     {
         if (mapPoints.Contains(mp)) return false;
@@ -122,12 +120,18 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
     }
-    public void RemovePoint(int index, bool forced)
+    public void RemovePoint(int s_id, bool forced)
     {
-        var mp = mapPoints[index];
-        if (mp != null)
+        if (mapPoints.Count > 0)
         {
-            RemovePoint(mp, forced);
+            for (int i = 0;i < mapPoints.Count; i++)
+            {
+                if (mapPoints[i].ID == s_id)
+                {
+                    RemovePoint(mapPoints[i], forced);
+                    return;
+                }
+            }
         }
     }
     public MapPoint GetMapPointByID(int s_id)
@@ -196,28 +200,28 @@ public sealed class GlobalMap : MonoBehaviour
             mapSectors[index] = rs;
         }
     }
-    private void RemoveSector(byte index)
+    private void RemoveSector(byte arrayIndex)
     {
-        RingSector rs = mapSectors[index];
+        RingSector rs = mapSectors[arrayIndex];
         if (rs != null)
         {
             if (rs.centralPoint != null)
             {
                 RemovePoint(rs.centralPoint, true);
             }
-            if (rs.points.Count > 0)
+            if (rs.innerPointsIDs.Count > 0)
             {
                 MapPoint p = null;
-                foreach (var mp in rs.points)
+                foreach (var mp in rs.innerPointsIDs)
                 {
-                    p = mp.Value;
-                    if (p.DestructionTest()) RemovePoint(mp.Value, false);
+                    p = GetMapPointByID(mp.Value);
+                    if (p.DestructionTest()) RemovePoint(p, false);
                 }
-                rs.points.Clear();
+                rs.innerPointsIDs.Clear();
             }            
             if (mapPoints.Count > 0)
             {
-                int x = index, i = 0;
+                int x = arrayIndex, i = 0;
                 MapPoint mp = null ;
                 while (i < mapPoints.Count)
                 {
@@ -230,7 +234,7 @@ public sealed class GlobalMap : MonoBehaviour
                     else
                     {
                         x = DefineSectorIndex(mp.angle, mp.ringIndex);
-                        if (x == index)
+                        if (x == arrayIndex)
                         {
                             if (mp.DestructionTest()) RemovePoint(mp, true);
                         }
@@ -239,7 +243,7 @@ public sealed class GlobalMap : MonoBehaviour
                 }
                 
             }
-            mapSectors[index] = null;
+            mapSectors[arrayIndex] = null;
             actionsHash++;
         }
     }
@@ -257,6 +261,12 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// returns true if something has changed
+    /// </summary>
+    /// <param name="i"></param>
+    /// <returns></returns>
     public bool UpdateSector(int i)
     {
         var rs = mapSectors[i];
@@ -267,16 +277,19 @@ public sealed class GlobalMap : MonoBehaviour
         else
         {
             byte x2 = (byte)Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
-            if (rs.points.ContainsKey(x2)) // в этой позиции уже есть точка
+            if (rs.innerPointsIDs.ContainsKey(x2)) // в этой позиции уже есть точка
             {
                 MapPoint mp = null;
-                if (rs.points.TryGetValue(x2, out mp))
+                int id = -1;
+                if (rs.innerPointsIDs.TryGetValue(x2, out id))
                 {
-                    return mp.Update();
+                    mp = GetMapPointByID(id);
+                    if (mp != null) return mp.Update();
+                    else return false;
                 }
                 else
                 {
-                    rs.points.Remove(x2);
+                    rs.innerPointsIDs.Remove(x2);
                     return false;
                 }
             }
@@ -309,8 +322,7 @@ public sealed class GlobalMap : MonoBehaviour
         }
 
         float ascensionChange = 0;
-        var cpoint = GetCityPoint();
-        float prevX = cpoint.angle, prevY = cpoint.height;
+        float prevX = cityPoint.angle, prevY = cityPoint.height;
         if (mapPoints.Count > 0)
         {
             if (GameMaster.realMaster.colonyController != null)
@@ -337,7 +349,6 @@ public sealed class GlobalMap : MonoBehaviour
                         if (mp.height != d.height)
                         {
                             mp.height = Mathf.MoveTowards(mp.height, d.height, fe.speed * t * 0.01f);
-                            mp.ringIndex = DefineRing(mp.height);
                         }
                         else
                         {
@@ -367,7 +378,7 @@ public sealed class GlobalMap : MonoBehaviour
                 i++;
             }
         }
-        cityFlyDirection = new Vector3(cpoint.angle - prevX + rotationSpeed[cpoint.ringIndex], ascensionChange, cpoint.height - prevY);
+        cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);
 
         
 
@@ -375,7 +386,7 @@ public sealed class GlobalMap : MonoBehaviour
         if (false)
         {
             bool motion = false;
-            float angle = cpoint.angle;
+            float angle = cityPoint.angle;
             if (Input.GetKey("l"))
             {
                 angle += 4 * Time.deltaTime;
@@ -393,7 +404,7 @@ public sealed class GlobalMap : MonoBehaviour
                     motion = true;
                 }
             }
-            float height = cpoint.height;
+            float height = cityPoint.height;
             if (Input.GetKey("i"))
             {
                 height += 0.03f * Time.deltaTime;
@@ -414,19 +425,20 @@ public sealed class GlobalMap : MonoBehaviour
 
             if (motion)
             {
-                cpoint.SetCoords(angle, height);
+                cityPoint.angle = angle;
+                cityPoint.height = height;
                 GameMaster.realMaster.environmentMaster.positionChanged = true;
-                var sIndex = DefineSectorIndex(angle, cpoint.ringIndex);
+                var sIndex = DefineSectorIndex(angle, cityPoint.ringIndex);
+                int currentSectorIndex = GetCurrentSectorIndex();
                 if (sIndex != currentSectorIndex)
                 {
-                    currentSectorIndex = sIndex;
                     if (mapSectors[currentSectorIndex] != null)
                     {
-                        GameMaster.realMaster.environmentMaster.ChangeEnvironment(mapSectors[currentSectorIndex].environment);
+                        GameMaster.realMaster.environmentMaster.RefreshEnvironment();
                     }
                     else
                     {
-                        GameMaster.realMaster.environmentMaster.ChangeEnvironment(Environment.defaultEnvironment);
+                        GameMaster.realMaster.environmentMaster.SetEnvironment(Environment.defaultEnvironment);
                     }
                 }
             }
@@ -468,6 +480,10 @@ public sealed class GlobalMap : MonoBehaviour
         index += (byte)(angle / sectorsDegrees[ring]);
         return index;
     }
+    public byte DefineSectorIndex(MapPoint mp)
+    {
+        return DefineSectorIndex(mp.angle, mp.ringIndex);
+    }
     public byte DefineLocalSectorIndex(byte index) // положение внутри кольца
     {
         for (int i = 0; i < RINGS_COUNT; i++)
@@ -478,6 +494,16 @@ public sealed class GlobalMap : MonoBehaviour
         }
         return index;
     }
+
+    public RingSector GetCurrentSector()
+    {
+        return mapSectors[GetCurrentSectorIndex()];
+    }
+    public int GetCurrentSectorIndex()
+    {
+        if (cityPoint != null) return DefineSectorIndex(cityPoint);
+        else return 0; 
+    }    
     public Vector2 GetSectorPosition(int index)
     {
         byte i = 0;
@@ -496,15 +522,13 @@ public sealed class GlobalMap : MonoBehaviour
     }
     public Vector2 GetCurrentSectorCenter()
     {
-        return GetSectorPosition(currentSectorIndex);
+        return GetSectorPosition(GetCurrentSectorIndex());
     }
-
     public Environment GetCurrentEnvironment()
     {
-        MapPoint cityPoint = mapPoints[CITY_POINT_INDEX];
-        byte si = DefineSectorIndex(cityPoint.angle, cityPoint.ringIndex);
-        if (mapSectors[si] == null) return Environment.defaultEnvironment;
-        else return mapSectors[si].environment;
+        int i = GetCurrentSectorIndex();
+        if (mapSectors[i] == null) return Environment.defaultEnvironment;
+        else return mapSectors[i].environment;
     }
 
     public bool Search()
@@ -574,8 +598,10 @@ public sealed class GlobalMap : MonoBehaviour
             var saveArray = savedata.ToArray();
             fs.Write(saveArray, 0, saveArray.Length);
         }
-        fs.Write(System.BitConverter.GetBytes(MapPoint.nextID), 0, 4);
-        //зависимость : mapPoint.LoadPoints()
+        fs.Write(System.BitConverter.GetBytes(MapPoint.nextID), 0, 4);    //зависимость : mapPoint.LoadPoints()
+        fs.Write(System.BitConverter.GetBytes(ascension), 0, 4);
+
+        RingSector.StaticSave(fs, mapSectors);
     }
     public void Load(System.IO.FileStream fs)
     {
@@ -593,16 +619,30 @@ public sealed class GlobalMap : MonoBehaviour
         ringsRotation[2] = System.BitConverter.ToSingle(data, 28);
         ringsRotation[3] = System.BitConverter.ToSingle(data, 32);
         ringsRotation[4] = System.BitConverter.ToSingle(data, 36);
-
         if (!prepared)
         {
             transform.position = Vector3.up * 0.1f;
-            actionsHash = 1;
-            prepared = true;
+            actionsHash = 1;            
         }
         if (mapPoints == null) mapPoints = new List<MapPoint>();
         else mapPoints.Clear();
         mapPoints = MapPoint.LoadPoints(fs);
+        foreach (var p in mapPoints)
+        {
+            if (p.type == MapMarkerType.MyCity)
+            {
+                cityPoint = p;
+                break;
+            }
+        }
+
+        data = new byte[4];
+        fs.Read(data, 0, 4);
+        ascension = System.BitConverter.ToSingle(data, 0);
+
+        mapSectors = RingSector.StaticLoad(fs);
+
+        prepared = true;
     }
     #endregion
 }

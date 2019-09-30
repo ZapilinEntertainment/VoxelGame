@@ -82,6 +82,10 @@ public sealed class Expedition
         Expedition e = (Expedition)obj;
         return (ID == e.ID);
     }
+    public override int GetHashCode()
+    {
+        return ID;
+    }
 
     /// ===============================
     private Expedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_qt, PointOfInterest i_destination)
@@ -95,7 +99,7 @@ public sealed class Expedition
         destination = i_destination; destination.ListAnExpedition(this);
         hasConnection = true;
         GlobalMap gmap = GameMaster.realMaster.globalMap;
-        mapMarker = new FlyingExpedition(this, gmap.GetCityPoint(), destination, Shuttle.SPEED);
+        mapMarker = new FlyingExpedition(this, gmap.cityPoint, destination, Shuttle.SPEED);
         gmap.AddPoint(mapMarker, true);
         expeditionsList.Add(this);
         listChangesMarker++;
@@ -139,7 +143,7 @@ public sealed class Expedition
                     currentStep = 0;
                     stage = ExpeditionStage.WayOut;
                     //
-                    mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.GetCityPoint());
+                    mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.cityPoint);
                     if (hasConnection) { AddMessageToLog(new ExpeditionLogMessage[] { ExpeditionLogMessage.StopMission, ExpeditionLogMessage.ReturningHome }); }
                     break;
                 }
@@ -169,7 +173,7 @@ public sealed class Expedition
         stage = ExpeditionStage.WayOut;
         //
         GlobalMap gmap = GameMaster.realMaster.globalMap;
-        mapMarker = new FlyingExpedition(this, destination, gmap.GetCityPoint(), Shuttle.SPEED);
+        mapMarker = new FlyingExpedition(this, destination, gmap.cityPoint, Shuttle.SPEED);
         gmap.AddPoint(mapMarker, true);
         SetConnection(true);
         AddMessageToLog(ExpeditionLogMessage.ReturningHome);

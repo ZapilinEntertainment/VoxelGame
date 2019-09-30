@@ -195,13 +195,13 @@ public sealed class GameMaster : MonoBehaviour
             PoolMaster pm = gameObject.AddComponent<PoolMaster>();
             pm.Load();
         }
-        if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();        
-        if (gameMode != GameMode.Editor )
+        if (gameMode != GameMode.Editor)
         {
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
-            globalMap.Prepare();
-            environmentMaster.Prepare();
+            globalMap.Prepare();            
         }
+        if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();
+        environmentMaster.Prepare();
         if (audiomaster == null)
         {
             audiomaster = gameObject.AddComponent<Audiomaster>();
@@ -1067,6 +1067,8 @@ public sealed class GameMaster : MonoBehaviour
             loading = false;
             savename = fullname;
             SetPause(false);
+
+            Debug.Log(globalMap.GetCurrentSectorIndex());
             return true;
         }
         else

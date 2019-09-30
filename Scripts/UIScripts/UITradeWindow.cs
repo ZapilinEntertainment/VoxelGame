@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UITradeWindow : UIObserver {
+public sealed class UITradeWindow : UIObserver {
 #pragma warning disable 0649
     [SerializeField] GameObject[] resourcesButtons;
     [SerializeField] GameObject resourceInfoPanel;
@@ -261,15 +261,25 @@ public class UITradeWindow : UIObserver {
         }
     }
 
-    void OnEnable()
+    new private void OnEnable()
     {
         transform.SetAsLastSibling();
         UpdateResourceButtons();
         UIController.current.ChangeActiveWindow(ActiveWindowMode.TradePanel);
+        if (!subscribedToUpdate)
+        {
+            UIController.current.statusUpdateEvent += StatusUpdate;
+            subscribedToUpdate = true;
+        }
     }
-    private void OnDisable()
+    new private void OnDisable()
     {
         if (UIController.current.currentActiveWindowMode == ActiveWindowMode.TradePanel) UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
+        if (subscribedToUpdate)
+        {
+            UIController.current.statusUpdateEvent -= StatusUpdate;
+            subscribedToUpdate = false;
+        }
     }
 
     public override void SelfShutOff() {

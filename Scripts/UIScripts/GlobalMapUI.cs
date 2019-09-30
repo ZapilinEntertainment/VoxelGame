@@ -448,8 +448,9 @@ public sealed class GlobalMapUI : MonoBehaviour
             {
                 if (sectorsData[i] != null)
                 {
-                    if (sectorsData[i].centralPoint.type != MapMarkerType.Star) sectorsImages[i].color = sectorsData[i].environment.lightSettings.sunColor;
-                    else sectorsImages[i].color = (sectorsData[i].centralPoint as SunPoint).color;
+                    var mp = sectorsData[i].centralPoint;
+                    if (mp.type != MapMarkerType.Star) sectorsImages[i].color = sectorsData[i].environment.lightSettings.sunColor;
+                    else sectorsImages[i].color = (mp as SunPoint).color;
                 }
                 else
                 {

@@ -17,7 +17,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10;
     private Environment currentEnvironment;
     private GlobalMap gmap;
-    private MapPoint cityPoint;
     private Material skyboxMaterial;
     private List<Transform> decorations;
     private Dictionary<MapPoint, Transform> celestialBodies;
@@ -34,13 +33,20 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
         sun = FindObjectOfType<Light>();
-        gmap = GameMaster.realMaster.globalMap;
-        cityPoint = gmap.mapPoints[GlobalMap.CITY_POINT_INDEX];
         decorations = new List<Transform>();
 
         skyboxMaterial = RenderSettings.skybox;
-        ChangeEnvironment(gmap.GetCurrentEnvironment());
-        RecalculateCelestialDecorations();
+        var rm = GameMaster.realMaster;
+        gmap = rm.globalMap;
+        if (rm.gameMode != GameMode.Editor)
+        {
+            RefreshEnvironment();
+            RecalculateCelestialDecorations();
+        }
+        else
+        {
+            SetEnvironment(Environment.defaultEnvironment);
+        }
     }
     public void PrepareIslandBasis(ChunkGenerationMode cmode)
     { // его придётся сохранять!
@@ -57,25 +63,28 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     }
 
 
-    public void ChangeEnvironment(Environment e)
+    public void SetEnvironment(Environment e)
     {
-        GlobalMap gmap = GameMaster.realMaster.globalMap;
         currentEnvironment = e;       
-        prevSkyboxSaturation = skyboxMaterial.GetFloat("_Saturation");
-        //skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
+        prevSkyboxSaturation = 1f;
+        //# setting environment
         environmentalConditions = currentEnvironment.conditions;
 
-        sun.color = currentEnvironment.lightSettings.sunColor;
-        var haveSun = e.lightSettings.sunIsMapPoint;
-        if (haveSun)
-        {
-            
-        }
-        else
-        {
-            sun.transform.forward = e.lightSettings.direction;
-        }
-        positionChanged = true;
+        var ls = currentEnvironment.lightSettings;
+        sun.color = ls.sunColor;
+        sun.transform.forward = ls.sunDirection;
+        float s = 0.75f;
+        sun.intensity = ls.maxIntensity * s;
+
+        var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
+        var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
+        var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
+        RenderSettings.ambientGroundColor = bottomColor;
+        RenderSettings.ambientEquatorColor = horColor;
+        RenderSettings.ambientGroundColor = bottomColor;
+        skyboxMaterial.SetColor("_BottomColor", bottomColor);
+        skyboxMaterial.SetColor("_HorizonColor", horColor);
+        //
         environmentEventTimer = currentEnvironment.GetInnerEventTime();
     }
 
@@ -97,12 +106,20 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         if (celestialBodies != null)
         {
             //проверка существующих спрайтов звезд
+            var destroyList = new List<MapPoint>();
             foreach (var cb in celestialBodies)
             {
                 if (!pts.Contains(cb.Key))
                 {
-                    Destroy(cb.Value.gameObject);
-                    celestialBodies.Remove(cb.Key);
+                    destroyList.Add(cb.Key);
+                }
+            }
+            if (destroyList.Count > 0) {
+                foreach (var d in destroyList)
+                {
+                    Transform t = celestialBodies[d];
+                    Destroy(t.gameObject);
+                    celestialBodies.Remove(d);
                 }
             }
             // ищем добавившиеся точки
@@ -131,12 +148,36 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sr.color = sp.color;
         celestialBodies.Add(sp, g.transform);
         if (!showCelestialBodies) g.SetActive(false);
-        Vector3 cpoint = Quaternion.AngleAxis(cityPoint.angle, Vector3.back) * (Vector3.up * cityPoint.height),
+        Vector3 cpoint = Quaternion.AngleAxis(gmap.cityPoint.angle, Vector3.back) * (Vector3.up * gmap.cityPoint.height),
             mpoint = Quaternion.AngleAxis(sp.angle, Vector3.back) * (Vector3.up * sp.height);
         mpoint -= cpoint;
         mpoint.z = mpoint.y;
         mpoint.y = 0.2f;
         g.transform.position = mpoint * SKY_SPHERE_RADIUS;
+    }
+    public void RefreshEnvironment()
+    {
+        var rs = gmap.GetCurrentSector();
+        currentEnvironment = rs.environment;
+        //# setting environment
+        environmentalConditions = currentEnvironment.conditions;
+
+        var ls = currentEnvironment.lightSettings;
+        sun.color = ls.sunColor;
+        sun.transform.forward = ls.sunDirection;
+        float s = rs.GetVisualSaturationValue();
+        sun.intensity = ls.maxIntensity * s;
+        
+        var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
+        var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
+        var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
+        RenderSettings.ambientGroundColor = bottomColor;
+        RenderSettings.ambientEquatorColor = horColor;
+        RenderSettings.ambientGroundColor = bottomColor;
+        skyboxMaterial.SetColor("_BottomColor", bottomColor);
+        skyboxMaterial.SetColor("_HorizonColor", horColor);
+        //
+        prevSkyboxSaturation = s;
     }
 
     private void LateUpdate()
@@ -159,60 +200,12 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             if (WindUpdateEvent != null) WindUpdateEvent(windVector);
         }
 
-        if (GameMaster.realMaster.gameMode != GameMode.Editor)
+        if (GameMaster.realMaster.gameMode != GameMode.Editor & !GameMaster.loading)
         {
             // меняем краски, если город начинает двигаться внутри сектора
             if (positionChanged)
             {
-                byte ring = cityPoint.ringIndex;
-                float centerX = 0, centerY = 0;
-                var ls = currentEnvironment.lightSettings;
-                if (ls.sunIsMapPoint)
-                {
-                    centerX = ls.sun.angle;
-                    centerY = ls.sun.height;
-                }
-                else
-                {
-                    var c = gmap.GetCurrentSectorCenter();
-                    centerX = c.x;
-                    centerY = c.y;
-
-                }
-                float angleDelta = cityPoint.angle - centerX;
-                if (Mathf.Abs(angleDelta) > 180f)
-                {
-                    if (centerX > cityPoint.angle)
-                    {
-                        angleDelta = (360f - centerX) + cityPoint.angle;
-                    }
-                    else
-                    {
-                        angleDelta = (360f - cityPoint.angle) + centerX;
-                    }
-                }
-                float angleX = angleDelta / (gmap.sectorsDegrees[ring] / 2f);
-                //print(angleX);
-                float heightY = (cityPoint.height - centerY) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
-                Vector2 lookDist = new Vector2(angleX, heightY);
-
-                float d = lookDist.magnitude;
-                if (d > 1) d = 1;
-                float s = Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
-                sun.intensity = s * ls.maxIntensity;
-                if (s != prevSkyboxSaturation)
-                {
-                    prevSkyboxSaturation = s;
-                    //skyboxMaterial.SetFloat("_Saturation", prevSkyboxSaturation);
-                    var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
-                    var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
-                    var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
-                    RenderSettings.ambientGroundColor = bottomColor;
-                    RenderSettings.ambientEquatorColor = horColor;
-                    RenderSettings.ambientGroundColor = bottomColor;
-                    skyboxMaterial.SetColor("_BottomColor", bottomColor);
-                    skyboxMaterial.SetColor("_HorizonColor", horColor);
-                }
+                RefreshEnvironment();
                 positionChanged = false;
             }
 
@@ -255,7 +248,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             {
                 if (celestialBodies != null && celestialBodies.Count > 0)
                 {
-                    Vector3 cpoint = Quaternion.AngleAxis(cityPoint.angle, Vector3.back) * (Vector3.up * cityPoint.height);
+                    Vector3 cpoint = Quaternion.AngleAxis(gmap.cityPoint.angle, Vector3.back) * (Vector3.up * gmap.cityPoint.height);
                     Vector3 mpoint;
                     foreach (var sb in celestialBodies)
                     {
@@ -326,7 +319,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
     }
 
-
     public void EnableDecorations()
     {
         showCelestialBodies = true;
@@ -368,14 +360,20 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         fs.Read(data, 0, data.Length);
         newWindVector = new Vector2(System.BitConverter.ToSingle(data, 0), System.BitConverter.ToSingle(data, 4));
         windVector = new Vector2(System.BitConverter.ToSingle(data, 8), System.BitConverter.ToSingle(data, 12));
-        environmentalConditions = System.BitConverter.ToSingle(data, 16);
+        
         windTimer = System.BitConverter.ToSingle(data, 20);
 
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
         float windPower = windVector.magnitude;
-        Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);
-        prepared = true;
+        Shader.SetGlobalFloat(vegetationShaderWindPropertyID, windPower);        
         if (WindUpdateEvent != null) WindUpdateEvent(windVector);
+
+        skyboxMaterial = RenderSettings.skybox;
+        gmap = GameMaster.realMaster.globalMap;
+        SetEnvironment(gmap.GetCurrentEnvironment());
+        environmentalConditions = System.BitConverter.ToSingle(data, 16);
         RecalculateCelestialDecorations();
+
+        prepared = true;
     }
 }

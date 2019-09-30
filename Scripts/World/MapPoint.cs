@@ -20,9 +20,16 @@ public class MapPoint
     public MapMarkerType type { get; protected set; }
     public bool destroyed { get; protected set; }
     public byte subIndex { get; protected set; }
-    public byte ringIndex;    
+    public byte ringIndex { get; private set; }
     public float angle;
-    public float height;
+    public float height {
+        get { return _height; }
+        set {
+            _height = value;
+            ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
+        }
+    }
+    private float _height;
 
     public float stability { get; protected set; }
     
@@ -40,7 +47,10 @@ public class MapPoint
         MapPoint mp = (MapPoint)obj;
         return (ID == mp.ID);
     }
-
+    public override int GetHashCode()
+    {
+        return ID;
+    }
 
     public static List<MapMarkerType> GetAvailablePointsType(float ascension)
     {
@@ -151,19 +161,11 @@ public class MapPoint
         destroyed = false;
     } 
 
-    public void SetCoords(float i_angle, float i_height)
-    {
-        if (destroyed) return;
-        angle = i_angle;
-        height = i_height;
-        ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
-    }
     public void SetCoords(Vector2 pos)
     {
         if (destroyed) return;
         angle = pos.x;
         height = pos.y;
-        ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
     }
     public void SetStability(float s)
     {
