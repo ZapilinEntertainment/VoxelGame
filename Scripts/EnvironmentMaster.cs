@@ -144,7 +144,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         g.layer = GameConstants.CELESTIAL_LAYER;
         var sr = g.AddComponent<SpriteRenderer>();
         sr.sprite = PoolMaster.GetStarSprite(false);
-        sr.sharedMaterial = PoolMaster.billboardMaterial;
+        sr.sharedMaterial = PoolMaster.celestialBillboardMaterial;
         sr.color = sp.color;
         celestialBodies.Add(sp, g.transform);
         if (!showCelestialBodies) g.SetActive(false);
@@ -166,8 +166,12 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sun.color = ls.sunColor;
         sun.transform.forward = ls.sunDirection;
         float s = rs.GetVisualSaturationValue();
-        sun.intensity = ls.maxIntensity * s;
-        
+        float li = ls.maxIntensity * s;
+        sun.intensity = li;
+        Color scolor = sun.color * li * 1.1f;
+        PoolMaster.billboardMaterial.SetColor("_MainColor", scolor);
+        PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
+
         var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
         var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
         var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);

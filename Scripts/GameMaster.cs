@@ -1068,7 +1068,6 @@ public sealed class GameMaster : MonoBehaviour
             savename = fullname;
             SetPause(false);
 
-            Debug.Log(globalMap.GetCurrentSectorIndex());
             return true;
         }
         else

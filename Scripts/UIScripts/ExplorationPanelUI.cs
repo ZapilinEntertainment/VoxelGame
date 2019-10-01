@@ -98,6 +98,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 }
                 break;
         }
+        if (activeObserver != null) activeObserver.transform.SetAsLastSibling();
     }
 
     public void Show(Crew c)
@@ -135,6 +136,11 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             if (mode != InfoMode.Expeditions) ChangeMode(InfoMode.Expeditions);
             else StatusUpdate();
         }
+    }
+
+    public void ShuttleNameChanged()
+    {
+        if (mode == InfoMode.Shuttles) PrepareShuttlesList();
     }
 
     private void PrepareCrewsList()

@@ -111,6 +111,14 @@ public sealed class UIShuttleObserver : MonoBehaviour
             showingShuttle.Rename(nameField.text);
             var ho = Hangar.hangarObserver;
             if (ho != null && ho.isActiveAndEnabled) ho.PrepareHangarWindow();
+            else
+            {
+                var ep = ExplorationPanelUI.current;
+                if (ep != null && ep.isActiveAndEnabled )
+                {
+                    ep.ShuttleNameChanged();
+                }
+            }
         }
     }
     public void RepairButton()

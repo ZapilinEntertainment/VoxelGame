@@ -77,7 +77,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             bool connect = showingExpedition.hasConnection;
             connectionImage.uvRect = UIController.GetTextureUV(connect ? Icons.TaskCompleted : Icons.TaskFailed);
             statusText.text = connect ? Localization.GetExpeditionStatus(showingExpedition.stage) : Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
-            if (connect & (showingExpedition.stage == Expedition.ExpeditionStage.OnMission | showingExpedition.stage == Expedition.ExpeditionStage.LeavingMission))
+            if (connect)
             {
                 //fill stage text & stage bar
                 currentStepText.text = Localization.GetWord(LocalizedWord.Step) + ' ' + showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString();
@@ -89,7 +89,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                 {
                     currentStepText.enabled = true;
                     stepProgressBar.transform.parent.parent.gameObject.SetActive(true);
-                }
+                }                
             }
             else
             {
@@ -104,6 +104,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             {
                 if (recallButton.activeSelf) recallButton.SetActive(false);
             }
+            showingExpedition.FillLog(logData);
 
             lastChangesMarkerValue = showingExpedition.changesMarkerValue;
         }
@@ -113,8 +114,9 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         if (showingExpedition == null) gameObject.SetActive(false);
         else {
-            if (lastChangesMarkerValue != showingExpedition.changesMarkerValue)
-            {              
+            if (lastChangesMarkerValue != showingExpedition.changesMarkerValue) RedrawWindow();
+            else
+            {
                 if (showingExpedition.hasConnection && (showingExpedition.stage == Expedition.ExpeditionStage.OnMission | showingExpedition.stage == Expedition.ExpeditionStage.LeavingMission))
                 {
                     //fill stage text & stage bar
@@ -123,7 +125,6 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                     stepProgressBar.fillAmount = f;
                     progressText.text = ((int)(f * 100)).ToString() + '%';
                 }
-                lastChangesMarkerValue = showingExpedition.changesMarkerValue;
             }
         }
     }

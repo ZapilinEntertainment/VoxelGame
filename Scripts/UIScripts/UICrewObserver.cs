@@ -269,6 +269,7 @@ public sealed class UICrewObserver : MonoBehaviour
         {            
             var opts = new List<Dropdown.OptionData>();
             var shuttles = Shuttle.shuttlesList;
+            char c = '"';
             shuttlesListIDs = new List<int>();
             opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoShuttle)));
             shuttlesListIDs.Add(-1);
@@ -280,7 +281,7 @@ public sealed class UICrewObserver : MonoBehaviour
                     {
                         if (s.crew == null)
                         {
-                            opts.Add(new Dropdown.OptionData(s.name));
+                            opts.Add(new Dropdown.OptionData(c + s.name + c));
                             shuttlesListIDs.Add(s.ID);
                         }
                     }
@@ -288,7 +289,7 @@ public sealed class UICrewObserver : MonoBehaviour
             }
             else
             {
-                opts.Insert(0, new Dropdown.OptionData(showingCrew.shuttle.name));
+                opts.Insert(0, new Dropdown.OptionData(c + showingCrew.shuttle.name + c));
                 shuttlesListIDs.Insert(0, showingCrew.shuttle.ID);
                 if (shuttles.Count > 0)
                 {
@@ -296,7 +297,7 @@ public sealed class UICrewObserver : MonoBehaviour
                     {
                         if (s != showingCrew.shuttle & s.crew == null)
                         {
-                            opts.Add(new Dropdown.OptionData(s.name));
+                            opts.Add(new Dropdown.OptionData(c + s.name + c));
                             shuttlesListIDs.Add(s.ID);
                         }
                     }

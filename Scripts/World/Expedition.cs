@@ -474,7 +474,7 @@ public sealed class Expedition
             mission = m;
             currentStep = 0;
             progress = 0;
-            AddMessageToLog(new ushort[] { (ushort)ExpeditionLogMessage.MissionChanged, (ushort)m.preset.type });
+            if (hasConnection) AddMessageToLog(new ushort[] { (ushort)ExpeditionLogMessage.MissionChanged, (ushort)m.preset.type });
         }
     } 
     public void SetConnection(bool connected)
@@ -533,62 +533,67 @@ public sealed class Expedition
     public void AddMessageToLog(ExpeditionLogMessage[] msg)
     {
         if (GameMaster.loading) return;
-        if (log == null) log = new ushort[LOGS_COUNT][];
+        if (log == null)
+        {
+            log = new ushort[LOGS_COUNT][];
+            lastLogIndex = 0;
+        }
+        if (lastLogIndex == LOGS_COUNT)
+        {
+            log[0] = log[1];
+            log[1] = log[2];
+            log[2] = log[3];
+            log[3] = log[4];
+            log[4] = log[5];
+            log[5] = log[6];
+            log[6] = log[7];
+            log[7] = log[8];
+            log[8] = log[9];
+            var msgArray = new ushort[msg.Length];
+            for (int i = 0; i < msg.Length; i++)
+            {
+                msgArray[i] = (ushort)msg[i];
+            }
+            log[9] = msgArray;
+        }
         else
         {
-            if (lastLogIndex == LOGS_COUNT)
+            var lg2 = new ushort[msg.Length];
+            for (int i = 0; i < msg.Length; i++)
             {
-                log[0] = log[1];
-                log[1] = log[2];
-                log[2] = log[3];
-                log[3] = log[4];
-                log[4] = log[5];
-                log[5] = log[6];
-                log[6] = log[7];
-                log[7] = log[8];
-                log[8] = log[9];
-                var msgArray = new ushort[msg.Length];
-                for (int i = 0; i < msg.Length; i++)
-                {
-                    msgArray[i] = (ushort)msg[i];
-                }
-                log[9] = msgArray;
+                lg2[i] = (ushort)msg[i];
             }
-            else
-            {
-                var lg2 = new ushort[msg.Length];
-                for (int i = 0; i < msg.Length; i++)
-                {
-                    lg2[i]= (ushort)msg[i];
-                }
-                log[lastLogIndex++] = lg2;
-            }
+            log[lastLogIndex++] = lg2;
         }
+        changesMarkerValue++;
     }
     public void AddMessageToLog(ushort[] msg)
     {
         if (GameMaster.loading) return;
-        if (log == null) log = new ushort[LOGS_COUNT][];
+        if (log == null)
+        {
+            log = new ushort[LOGS_COUNT][];
+            lastLogIndex = 0;
+        }
+
+        if (lastLogIndex == LOGS_COUNT)
+        {
+            log[0] = log[1];
+            log[1] = log[2];
+            log[2] = log[3];
+            log[3] = log[4];
+            log[4] = log[5];
+            log[5] = log[6];
+            log[6] = log[7];
+            log[7] = log[8];
+            log[8] = log[9];
+            log[9] = msg;
+        }
         else
         {
-            if (lastLogIndex == LOGS_COUNT)
-            {
-                log[0] = log[1];
-                log[1] = log[2];
-                log[2] = log[3];
-                log[3] = log[4];
-                log[4] = log[5];
-                log[5] = log[6];
-                log[6] = log[7];
-                log[7] = log[8];
-                log[8] = log[9];                
-                log[9] = msg;
-            }
-            else
-            {
-                log[lastLogIndex++] = msg;
-            }
+            log[lastLogIndex++] = msg;
         }
+        changesMarkerValue++;
     }
     public void AddMessageToLog(ExpeditionLogMessage msg)
     {
@@ -629,6 +634,7 @@ public sealed class Expedition
             stage = ExpeditionStage.Dismissed;
             AddMessageToLog(new ExpeditionLogMessage[] { ExpeditionLogMessage.Dismissing, crew.attributes.loyalty > 0.5 ? ExpeditionLogMessage.Approval : ExpeditionLogMessage.Disapproval});
         }
+        changesMarkerValue++;
     }
     public void Disappear() // INDEV
         // экспедиция исчезает
@@ -647,6 +653,7 @@ public sealed class Expedition
             if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
             stage = ExpeditionStage.Dismissed;
         }
+        changesMarkerValue++;
     }
 
     #region save-load system
@@ -673,13 +680,17 @@ public sealed class Expedition
         {
             for (int i = 0; i < LOGS_COUNT; i++)
             {
-                var l = (byte)log[i].Length;
-                data.Add(l);
-                if (l != 0)
+                if (log[i] == null) { data.Add(0); continue; }
+                else
                 {
-                    foreach (ushort x in log[i])
+                    var l = (byte)log[i].Length;
+                    data.Add(l);
+                    if (l != 0)
                     {
-                        data.AddRange(System.BitConverter.GetBytes(x));
+                        foreach (ushort x in log[i])
+                        {
+                            data.AddRange(System.BitConverter.GetBytes(x));
+                        }
                     }
                 }
             }

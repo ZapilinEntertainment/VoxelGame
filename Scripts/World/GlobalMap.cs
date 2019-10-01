@@ -102,7 +102,8 @@ public sealed class GlobalMap : MonoBehaviour
                     if (!placeCleared) return false;
                 }
             }
-            mapPoints.Add(mp);            
+            mapPoints.Add(mp);
+            if (mp.type == MapMarkerType.Star) GameMaster.realMaster.environmentMaster.RecalculateCelestialDecorations();
             actionsHash++;
             return true;
         }

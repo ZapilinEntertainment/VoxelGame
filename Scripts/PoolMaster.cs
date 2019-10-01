@@ -29,6 +29,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static Material glassMaterial_disabled { get; private set; }
     public static Material darkness_material{ get; private set; }
     public static Material billboardMaterial { get; private set; }
+    public static Material celestialBillboardMaterial { get; private set; }
     public static Material billboardShadedMaterial { get; private set; }
     public static Material verticalBillboardMaterial { get; private set; }
     public static Material verticalWavingBillboardMaterial { get; private set; }
@@ -95,7 +96,9 @@ public sealed class PoolMaster : MonoBehaviour {
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
 
         billboardShadedMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
-        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");           
+        billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
+        celestialBillboardMaterial = new Material(Shader.Find("Custom/CelestialBillboard"));
+        celestialBillboardMaterial.SetColor("_MainColor", Color.white);
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
 
         mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");

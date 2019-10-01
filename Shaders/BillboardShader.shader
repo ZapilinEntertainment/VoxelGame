@@ -1,6 +1,4 @@
-﻿//based on https://alastaira.wordpress.com/2014/12/30/adding-shadows-to-a-unity-vertexfragment-shader-in-7-easy-steps/
-
-Shader "Custom/Billboard"
+﻿Shader "Custom/Billboard"
 {
 	Properties
 	{

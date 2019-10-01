@@ -49,7 +49,7 @@ public sealed class UIHangarObserver : UIObserver
         bool haveShuttle = (shuttle != null);
 
         shuttleNameTextField.gameObject.SetActive(haveShuttle);
-        disassembleButton.gameObject.SetActive(haveShuttle);
+        disassembleButton.gameObject.SetActive(haveShuttle && shuttle.docked);
 
         if (haveShuttle)
         {
