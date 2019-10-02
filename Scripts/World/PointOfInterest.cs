@@ -56,7 +56,7 @@ public class PointOfInterest : MapPoint
     }  
     public bool TreasureFinding(Crew c)
     {
-        if (c.attributes.PerceptionRoll() > 20f * (0.9f + difficulty * 0.3f - friendliness * 0.3f))
+        if (c.PerceptionRoll() > 20f * (0.9f + difficulty * 0.3f - friendliness * 0.3f))
         {
             TakeTreasure(c);
             return true;
@@ -83,7 +83,7 @@ public class PointOfInterest : MapPoint
         {
             case MapMarkerType.Station:
                 typesList = new List<ResourceType>() { ResourceType.metal_K, ResourceType.metal_M, ResourceType.Plastics, ResourceType.Fuel };
-                if (Random.value < 0.4f) c.attributes.AddExperience(Expedition.ONE_STEP_XP * difficulty);
+                if (Random.value < 0.4f) c.AddExperience(Expedition.ONE_STEP_XP * difficulty);
                 break;
             case MapMarkerType.Wreck:
                 typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.metal_M, ResourceType.Graphonium };
@@ -93,7 +93,7 @@ public class PointOfInterest : MapPoint
                 break;
             case MapMarkerType.SOS:
                 typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.Supplies };
-                if (Random.value < 0.3f) c.attributes.AddExperience(Expedition.ONE_STEP_XP * difficulty);
+                if (Random.value < 0.3f) c.AddExperience(Expedition.ONE_STEP_XP * difficulty);
                 break;
             case MapMarkerType.Portal:
                 typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.metal_N_ore, ResourceType.Graphonium };
@@ -105,12 +105,12 @@ public class PointOfInterest : MapPoint
                 typesList = new List<ResourceType>() { ResourceType.Food, ResourceType.Supplies, ResourceType.metal_K };
                 break;
             case MapMarkerType.Wiseman:
-                c.attributes.AddExperience(Expedition.ONE_STEP_XP * 20f * difficulty);
-                c.attributes.RaiseAdaptability(1f);
+                c.AddExperience(Expedition.ONE_STEP_XP * 20f * difficulty);
+                c.RaiseAdaptability(1f);
                 break;
             case MapMarkerType.Wonder:
                 if (Random.value > 0.5f) typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.Graphonium };
-                else c.attributes.AddExperience(Expedition.ONE_STEP_XP * 5f);
+                else c.AddExperience(Expedition.ONE_STEP_XP * 5f);
                 break;
             case MapMarkerType.Resources: // or changing!
                 typesList = new List<ResourceType>()
@@ -122,17 +122,17 @@ public class PointOfInterest : MapPoint
         }
         if (typesList != null && typesList.Count > 0)
         {
-            GameMaster.realMaster.colonyController.storage.AddResource(typesList[Random.Range(0,typesList.Count - 1)], 5f * c.membersCount / (float)Crew.MAX_MEMBER_COUNT * c.attributes.persistence);
+            GameMaster.realMaster.colonyController.storage.AddResource(typesList[Random.Range(0,typesList.Count - 1)], 5f * c.membersCount / (float)Crew.MAX_MEMBER_COUNT * c.persistence);
         }
     }
     public bool TryToJump(Crew c)
     {
-        return (c.attributes.PerceptionRoll() < 10f * difficulty * (1f - 0.3f * friendliness));
+        return (c.PerceptionRoll() < 10f * difficulty * (1f - 0.3f * friendliness));
     }
     public bool TryAdditionalJump(Crew c)
     {
-        float a = c.attributes.PerceptionRoll();
-        float b = c.attributes.PerceptionRoll();
+        float a = c.PerceptionRoll();
+        float b = c.PerceptionRoll();
         if (b < a) a = b;
         return a > 20f * difficulty * (1f - 0.2f * friendliness);
     }
@@ -142,23 +142,23 @@ public class PointOfInterest : MapPoint
     }
     public bool HardTest(Crew c)
     {
-        return c.attributes.HardTestRoll() >= danger * (20f + 10f * difficulty);
+        return c.HardTestRoll() >= danger * (20f + 10f * difficulty);
     }
     public bool SoftTest(Crew c)
     {
-        return c.attributes.SoftCheckRoll() >= friendliness * (10f + 10f * difficulty);
+        return c.SoftCheckRoll() >= friendliness * (10f + 10f * difficulty);
     }
     public bool LoyaltyTest(Crew c)
     {
-        return c.attributes.LoyaltyRoll() >= danger * 20f * (1f - friendliness) ;
+        return c.LoyaltyRoll() >= danger * 20f * (1f - friendliness) ;
     }
     public bool AdaptabilityTest(Crew c)
     {
-        return c.attributes.AdaptabilityRoll() >= mysteria * 20f;
+        return c.AdaptabilityRoll() >= mysteria * 20f;
     }
     public bool TrueWayTest(Crew c)
     {
-        return 20f * difficulty * (1f - friendliness) < c.attributes.IntelligenceRoll();
+        return 20f * difficulty * (1f - friendliness) < c.IntelligenceRoll();
     }
     public bool IsSomethingChanged()
     {

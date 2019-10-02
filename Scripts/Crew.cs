@@ -2,24 +2,276 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrewStatus : byte {AtHome, OnMission, Travelling}
-// dependencies
-//Localization.GetCrewStatus()
-// Rest()
 
-public struct CrewAttributes
-{
-    public enum ExploringPath : byte { Default,PathOfLife, SecretPath, PathOfMind } // dependency : GetStaminaModifier
-    public byte  persistence, survivalSkills, secretKnowledge, perception, intelligence, techSkills, level;
-    public ushort stamina, maxStamina, proficiencies;
-    public float confidence, unity, loyalty, adaptability;
-    public int experience;
-    public ExploringPath exploringPath;
-    private Crew crew;
-
+public sealed class Crew : MonoBehaviour {
+    public enum ExploringPath : byte { Default, PathOfLife, SecretPath, PathOfMind } // dependency : GetStaminaModifier
+    public enum CrewStatus : byte { AtHome, OnMission, Travelling }
+    // dependencies
+    //Localization.GetCrewStatus()
+    // Rest()
+    public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
     private const byte MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
-    private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_REPLENISH_VALUE = 1f, ADAPTABILITY_LOSSES = 0.02f;
-    public CrewAttributes(ColonyController c, Crew i_crew)
+    private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_CONSUMPTION = 0.00003f, STAMINA_REPLENISH_SPEED = 0.05f, ADAPTABILITY_LOSSES = 0.02f;
+
+    public static int nextID {get;private set;}	
+    public static byte listChangesMarkerValue { get; private set; }
+    public static List<Crew> crewsList { get; private set; }
+    private static GameObject crewsContainer;
+    public static UICrewObserver crewObserver { get; private set; }
+
+	public int membersCount {get;private set;}
+	public int ID{get;private set;}
+    public byte changesMarkerValue { get; private set; }
+    public Artifact artifact { get; private set; }
+    public Expedition currentExpedition { get; private set; }
+	public Shuttle shuttle{get;private set;}
+	public CrewStatus status { get; private set; }
+
+    
+    public byte persistence { get; private set; }
+    public byte survivalSkills { get; private set; }
+    public byte secretKnowledge { get; private set; }
+    public byte perception { get; private set; }
+    public byte intelligence { get; private set; }
+    public byte techSkills { get; private set; }
+    public byte level { get; private set; }
+    public float stamina { get; private set; }
+    public ushort proficiencies { get; private set; }
+    public float confidence { get; private set; }
+    public float unity { get; private set; }
+    public float loyalty { get; private set; }
+    public float adaptability { get; private set; }
+    public int experience { get; private set; }
+    public ExploringPath exploringPath{ get; private set; }
+//при внесении изменений отредактировать Localization.GetCrewInfo
+
+public int missionsParticipated { get; private set; }
+    public int missionsSuccessed{get;private set;}    
+
+    static Crew()
+    {
+        crewsList = new List<Crew>();
+        GameMaster.realMaster.lifepowerUpdateEvent += CrewsUpdateEvent;
+    }
+    private Crew() { }
+    public static void CrewsUpdateEvent()
+    {
+        if (crewsList != null && crewsList.Count > 0)
+        {
+            foreach (Crew c in crewsList)
+            {
+                if (c.status == CrewStatus.AtHome)
+                {
+                    c.Rest(null);
+                }
+            }
+        }
+    }
+
+	public static void Reset() {
+		crewsList = new List<Crew>();
+		nextID = 0;
+        listChangesMarkerValue = 0;
+	}
+
+    public static Crew CreateNewCrew(ColonyController home, int membersCount)
+    {
+        if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
+        Crew c = new GameObject(Localization.NameCrew()).AddComponent<Crew>();
+        if (crewsContainer == null) crewsContainer = new GameObject("crewsContainer");
+        c.transform.parent = crewsContainer.transform;
+
+        c.ID = nextID; nextID++;
+        c.status = CrewStatus.AtHome;
+
+        //normal parameters        
+        c.membersCount = membersCount;
+        //attributes
+        c.SetAttributes(home);
+        //
+        crewsList.Add(c);        
+        listChangesMarkerValue++;
+        return c;
+    }
+    public static Crew GetCrewByID(int s_id)
+    {
+        if (s_id < 0 || crewsList.Count == 0) return null;
+        else
+        {
+            foreach (Crew c in crewsList)
+            {
+                if (c != null && c.ID == s_id) return c;
+            }
+            return null;
+        }
+    }
+    public static void DisableObserver()
+    {
+        if (crewObserver != null && crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(false);
+    }
+
+    public void ShowOnGUI(Rect rect, SpriteAlignment alignment, bool useCloseButton) 
+    {
+        if (crewObserver == null)
+        {
+           crewObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();
+            crewObserver.LocalizeTitles();
+        }
+        if (!crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(true);
+        crewObserver.SetPosition(rect, alignment);
+        crewObserver.ShowCrew(this, useCloseButton);
+    }
+
+	public void SetShuttle(Shuttle s) {
+        if (s == shuttle) return;
+        else {
+            if (s == null)
+            {
+                if (shuttle != null) shuttle.SetCrew(null);
+                shuttle = null;
+            }
+            else
+            {
+                if (shuttle != null & s != shuttle) shuttle.SetCrew(null);
+                s.SetCrew(this);
+                shuttle = s;
+            }
+            changesMarkerValue++;
+        }               
+	}
+    public void SetStatus(CrewStatus cs)
+    {
+        status = cs;
+        if (shuttle != null)
+        {
+            if (status == CrewStatus.AtHome) shuttle.SetDockingStatus(true);
+            else shuttle.SetDockingStatus(false);
+        }
+        changesMarkerValue++;
+    }
+    public void Rename(string s)
+    {
+        name = s;
+        changesMarkerValue++;
+    }
+    /// <summary>
+    /// for loading only
+    /// </summary>
+    public void SetCurrentExpedition(Expedition e)
+    {
+        currentExpedition = e;
+        changesMarkerValue++;
+    }
+    public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
+    {
+        ri.texture = UIController.current.iconsTexture;
+        ri.uvRect = UIController.GetTextureUV(stamina > 0.8f ? Icons.CrewGoodIcon : (stamina < 0.25f ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
+    }
+
+    public bool HardTest(float hardness, float situationValue) // INDEV
+    {
+        if (artifact != null)
+        {
+            bool? protection = artifact.StabilityTest(hardness);
+            if (protection == null) DropArtifact();
+            else
+            {
+                if (protection == true)
+                {
+                    RaiseConfidence(1f);
+                    return true;
+                }
+            }
+        }
+        //нет артефакта или защита не сработала
+        bool success = hardness * GameConstants.HARD_TEST_MAX_VALUE + situationValue < HardTestRoll();
+        if (success)
+        {
+            RaiseUnity(1f);
+            RaiseAdaptability(1f);
+            return true;
+        }
+        else return false;
+    }
+
+    /// <summary>
+    /// returns true if successfully completed
+    /// </summary>
+    /// <param name="friendliness"></param>
+    /// <returns></returns>
+    public bool SoftCheck( float friendliness, float situationValue) // INDEV
+    {
+        bool success = GameConstants.SOFT_TEST_MAX_VALUE * friendliness + situationValue < SoftCheckRoll();
+        if (success)
+        {
+            RaiseUnity(1f);
+            RaiseConfidence(0.75f);
+        }
+        return success;
+    }
+    public void Rest(PointOfInterest place)
+    {
+        if (place != null)
+        {
+            Rest(place.GetRestValue());
+            RaiseUnity(0.5f);
+        }
+        else // at home
+        {
+            Restore();
+        }
+    }
+    public void LoseMember() // INDEV
+    {
+        membersCount--;        
+        if (membersCount <= 0) Disappear();
+        LoseConfidence(10f);
+    }
+	public void AddMember() { // INDEX
+        membersCount++;
+        LoseUnity(1f);
+    }
+
+    public void SetArtifact(Artifact a)
+    {
+        if (a == null) return;
+        else
+        {
+            //если уже есть артефакт
+            if (artifact != null)
+            {
+                if (status == CrewStatus.AtHome) artifact.Conservate();
+                else artifact.Destroy();
+            }
+            //
+            artifact = a;
+            artifact.SetOwner(this);
+            RaiseConfidence(2f);
+            RaiseLoyalty(1f);
+        }
+    }
+    public void DropArtifact()
+    {
+        if (artifact != null)
+        {
+            artifact.SetOwner(null);
+            artifact = null;
+            LoseConfidence(0.5f);
+            listChangesMarkerValue++;
+        }
+    }
+    //system
+    public void ClearArtifactField(Artifact a)
+    {
+        if (artifact == a) artifact = null;
+    }
+    public void MarkAsDirty()
+    {
+        changesMarkerValue++;
+    }
+
+    #region attributes  
+    private void SetAttributes(ColonyController c)
     {
         var values = new int[4];
         values[0] = Random.Range(0, 6); values[1] = Random.Range(0, 6);
@@ -76,29 +328,14 @@ public struct CrewAttributes
         adaptability = 0.5f;
 
         level = 1; experience = 0;
-        maxStamina = (ushort)(Random.Range(0,6) + GetModifier(persistence));
-        stamina = maxStamina;
+        stamina = 1f;
         exploringPath = ExploringPath.Default;
         proficiencies = 0;
-        crew = i_crew;
     }
 
     private static float GetModifier(byte x)
     {
         return (x - 10f) / 2f;
-    }
-    private static ushort GetStaminaPerLevelBoost(ExploringPath epath, byte persistence)
-    {
-        int x = 1;
-        switch (epath)
-        {
-            case ExploringPath.SecretPath: x = Random.Range(0, 8); break;
-            case ExploringPath.PathOfMind: x = Random.Range(0, 6); break;
-            default: x= Random.Range(0, 10); break;
-        }
-        x += (int)GetModifier(persistence);
-        if (x < 1) x = 1;
-        return (ushort)x;
     }
 
     public void RaiseConfidence(float f)
@@ -142,16 +379,16 @@ public struct CrewAttributes
         if (adaptability < 0f) adaptability = 0f;
     }
     public void Rest(float f)
-    {
-        int r = (int)(STAMINA_REPLENISH_VALUE * (1 + adaptability) * (1 + unity) * level * f);
-        if (maxStamina - stamina < r) stamina = maxStamina;
-        else stamina += (byte)r;
+    {        
+        stamina += (int)(STAMINA_REPLENISH_SPEED * (1 + adaptability) * (1 + unity) * level * f);
+        if (stamina > 1f) stamina = 1f;
     }
     public void Restore()
     {
-        stamina = maxStamina;
+        stamina = 1f;
         adaptability -= ADAPTABILITY_LOSSES;
         if (adaptability < 0f) adaptability = 0f;
+        if (loyalty < GameMaster.realMaster.colonyController.happiness_coefficient) loyalty += NEUROPARAMETER_STEP;
     }
 
     public void AddExperience(float x)
@@ -162,7 +399,6 @@ public struct CrewAttributes
             experience += (int)x;
             int expCap = GetExperienceCap();
             if (experience >= expCap) LevelUp();
-            else crew.MarkAsDirty();
         }
         else experience = GetExperienceCap();
     }
@@ -182,8 +418,6 @@ public struct CrewAttributes
             }
         }
         proficiencies += proficiency;
-        maxStamina += GetStaminaPerLevelBoost(exploringPath, persistence);
-        crew.MarkAsDirty();
     }
     public int GetExperienceCap()
     {
@@ -216,7 +450,6 @@ public struct CrewAttributes
         {
             perception++;
             proficiencies--;
-            crew.MarkAsDirty();
         }
     }
     public void ImprovePersistence()
@@ -225,7 +458,6 @@ public struct CrewAttributes
         {
             persistence++;
             proficiencies--;
-            crew.MarkAsDirty();
         }
     }
     public void ImproveTechSkill()
@@ -234,7 +466,6 @@ public struct CrewAttributes
         {
             techSkills++;
             proficiencies--;
-            crew.MarkAsDirty();
         }
     }
     public void ImproveSurvivalSkill()
@@ -243,7 +474,6 @@ public struct CrewAttributes
         {
             survivalSkills++;
             proficiencies--;
-            crew.MarkAsDirty();
         }
     }
     public void ImproveEnlightment()
@@ -252,7 +482,6 @@ public struct CrewAttributes
         {
             secretKnowledge++;
             proficiencies--;
-            crew.MarkAsDirty();
         }
     }
     public void ImproveIntelligence()
@@ -261,7 +490,6 @@ public struct CrewAttributes
         {
             intelligence++;
             proficiencies--;
-            crew.MarkAsDirty();
         }
     }
 
@@ -277,7 +505,7 @@ public struct CrewAttributes
     public float PerceptionRoll()
     {
         return Random.Range(0, 20) + GetModifier(perception) * (0.9f + 0.2f * adaptability);
-    }    
+    }
     public float SecretKnowledgeRoll()
     {
         return Random.Range(0, 20) + GetModifier(secretKnowledge); // no neuro mod
@@ -294,7 +522,7 @@ public struct CrewAttributes
 
     public float HardTestRoll()
     {
-        float val = Random.Range(0,20);
+        float val = Random.Range(0, 20);
         switch (exploringPath)
         {
             case ExploringPath.PathOfLife:
@@ -304,17 +532,17 @@ public struct CrewAttributes
                 val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.8f + (GetModifier(secretKnowledge) * (0.9f + 0.2f * adaptability)) * 0.2f;
                 break;
             case ExploringPath.PathOfMind:
-                val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.7f + (GetModifier(intelligence) * (0.9f + 0.1f * adaptability))* 0.3f;
+                val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.7f + (GetModifier(intelligence) * (0.9f + 0.1f * adaptability)) * 0.3f;
                 break;
             default:
                 val += GetModifier(survivalSkills) * (1f + 0.5f * adaptability);
-            break;
+                break;
         }
         return val;
     }
     public float SoftCheckRoll()
     {
-        return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.3f * loyalty + 0.3f * confidence);        
+        return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.3f * loyalty + 0.3f * confidence);
     }
     public float LoyaltyRoll()
     {
@@ -338,15 +566,16 @@ public struct CrewAttributes
     }
 
     public float MakeStep(float difficulty)
-    {
+    {        
         if (stamina <= 0)
         {
-            if (20f * difficulty > RejectionRoll()) return -1f;
+            if (loyalty < 0.33f && 10f * difficulty > RejectionRoll()) return -1f;
             else return 0f;
         }
         else
         {
             float step = GameConstants.EXPLORE_SPEED * (0.5f + 0.3f * unity + 0.5f * adaptability - 0.5f * difficulty);
+            stamina-= STAMINA_CONSUMPTION * difficulty * (1f - 0.5f * level / (float)MAX_LEVEL);
             if (step < 0f) return 0f; else return step;
         }
     }
@@ -365,7 +594,7 @@ public struct CrewAttributes
                         float a = PersistenceRoll(), b = SurvivalSkillsRoll();
                         if (advantage == true)
                         {
-                            if (b > a) a = b;                            
+                            if (b > a) a = b;
                         }
                         else
                         {
@@ -414,298 +643,9 @@ public struct CrewAttributes
             default: return (UnityRoll() >= difficultyClass);
         }
     }
+    #endregion
 
-    public List<byte> Save()
-    {
-        var data = new List<byte>()
-        {
-            persistence, // 0
-            survivalSkills, // 1
-            secretKnowledge, // 2
-            perception, // 3
-            intelligence, // 4
-            techSkills, // 5
-            level, // 6,
-            (byte)exploringPath // 7
-        };
-
-        data.AddRange(System.BitConverter.GetBytes(stamina)); // 8-9
-        data.AddRange(System.BitConverter.GetBytes(maxStamina)); //10-11
-        data.AddRange(System.BitConverter.GetBytes(proficiencies)); //12-13
-
-        data.AddRange(System.BitConverter.GetBytes(confidence)); // 14-17
-        data.AddRange(System.BitConverter.GetBytes(unity)); // 18-21
-        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 22-25
-        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 26-29
-
-        data.AddRange(System.BitConverter.GetBytes(experience)); // 30-33
-        return data;
-    }
-    public static CrewAttributes Load(System.IO.FileStream fs, Crew c)
-    {
-        var data = new byte[34];
-        fs.Read(data, 0, data.Length);
-        CrewAttributes ca;
-        ca.persistence = data[0];
-        ca.survivalSkills = data[1];
-        ca.secretKnowledge = data[2];
-        ca.perception = data[3];
-        ca.intelligence = data[4];
-        ca.techSkills = data[5];
-        ca.level = data[6];
-        ca.exploringPath = (ExploringPath)data[7];
-        ca.stamina = System.BitConverter.ToUInt16(data, 8);
-        ca.maxStamina = System.BitConverter.ToUInt16(data, 10);
-        ca.proficiencies = System.BitConverter.ToUInt16(data, 12);
-
-        ca.confidence = System.BitConverter.ToSingle(data, 14);
-        ca.unity = System.BitConverter.ToSingle(data, 18);
-        ca.loyalty = System.BitConverter.ToSingle(data, 22);
-        ca.adaptability = System.BitConverter.ToSingle(data, 26);
-
-        ca.experience = System.BitConverter.ToInt32(data, 30);
-        ca.crew = c;
-        return ca;
-    }
-}
-public sealed class Crew : MonoBehaviour {
-	public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
-
-	public static int nextID {get;private set;}	
-    public static byte listChangesMarkerValue { get; private set; }
-    public static List<Crew> crewsList { get; private set; }
-    private static GameObject crewsContainer;
-    public static UICrewObserver crewObserver { get; private set; }
-
-	public int membersCount {get;private set;}
-	public int ID{get;private set;}
-    public byte changesMarkerValue { get; private set; }
-    public Artifact artifact { get; private set; }
-    public Expedition currentExpedition { get; private set; }
-	public Shuttle shuttle{get;private set;}
-	public CrewStatus status { get; private set; }
-
-    public CrewAttributes attributes { get; private set; }
-    //при внесении изменений отредактировать Localization.GetCrewInfo
-
-    public int missionsParticipated { get; private set; }
-    public int missionsSuccessed{get;private set;}    
-
-    static Crew()
-    {
-        crewsList = new List<Crew>();
-        GameMaster.realMaster.lifepowerUpdateEvent += CrewsUpdateEvent;
-    }
-    public static void CrewsUpdateEvent()
-    {
-        if (crewsList != null && crewsList.Count > 0)
-        {
-            foreach (Crew c in crewsList)
-            {
-                if (c.status != CrewStatus.OnMission)
-                {
-                    c.Rest(null);
-                }
-            }
-        }
-    }
-
-	public static void Reset() {
-		crewsList = new List<Crew>();
-		nextID = 0;
-        listChangesMarkerValue = 0;
-	}
-
-    public static Crew CreateNewCrew(ColonyController home, int membersCount)
-    {
-        if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
-        Crew c = new GameObject(Localization.NameCrew()).AddComponent<Crew>();
-        if (crewsContainer == null) crewsContainer = new GameObject("crewsContainer");
-        c.transform.parent = crewsContainer.transform;
-
-        c.ID = nextID; nextID++;
-        c.status = CrewStatus.AtHome;
-
-        //normal parameters
-        c.attributes = new CrewAttributes(home, c);
-        c.membersCount = membersCount;
-        crewsList.Add(c);        
-        listChangesMarkerValue++;
-        return c;
-    }
-    public static Crew GetCrewByID(int s_id)
-    {
-        if (s_id < 0 || crewsList.Count == 0) return null;
-        else
-        {
-            foreach (Crew c in crewsList)
-            {
-                if (c != null && c.ID == s_id) return c;
-            }
-            return null;
-        }
-    }
-    public static void DisableObserver()
-    {
-        if (crewObserver != null && crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(false);
-    }
-
-    public void ShowOnGUI(Rect rect, SpriteAlignment alignment, bool useCloseButton) 
-    {
-        if (crewObserver == null)
-        {
-           crewObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();
-            crewObserver.LocalizeTitles();
-        }
-        if (!crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(true);
-        crewObserver.SetPosition(rect, alignment);
-        crewObserver.ShowCrew(this, useCloseButton);
-    }
-
-	public void SetShuttle(Shuttle s) {
-        if (s == shuttle) return;
-        else {
-            if (s == null)
-            {
-                if (shuttle != null) shuttle.SetCrew(null);
-                shuttle = null;
-            }
-            else
-            {
-                if (shuttle != null & s != shuttle) shuttle.SetCrew(null);
-                s.SetCrew(this);
-                shuttle = s;
-            }
-            changesMarkerValue++;
-        }               
-	}
-    public void SetStatus(CrewStatus cs)
-    {
-        status = cs;
-        changesMarkerValue++;
-    }
-    public void Rename(string s)
-    {
-        name = s;
-        changesMarkerValue++;
-    }
-    /// <summary>
-    /// for loading only
-    /// </summary>
-    public void SetCurrentExpedition(Expedition e)
-    {
-        currentExpedition = e;
-        changesMarkerValue++;
-    }
-    public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
-    {
-        ri.texture = UIController.current.iconsTexture;
-        ri.uvRect = UIController.GetTextureUV(attributes.stamina == attributes.maxStamina ? Icons.CrewGoodIcon : Icons.CrewNormalIcon);
-    }
-
-    public bool HardTest(float hardness, float situationValue) // INDEV
-    {
-        if (artifact != null)
-        {
-            bool? protection = artifact.StabilityTest(hardness);
-            if (protection == null) DropArtifact();
-            else
-            {
-                if (protection == true)
-                {
-                    attributes.RaiseConfidence(1f);
-                    return true;
-                }
-            }
-        }
-        //нет артефакта или защита не сработала
-        bool success = hardness * GameConstants.HARD_TEST_MAX_VALUE + situationValue < attributes.HardTestRoll();
-        if (success)
-        {
-            attributes.RaiseUnity(1f);
-            attributes.RaiseAdaptability(1f);
-            return true;
-        }
-        else return false;
-    }
-
-    /// <summary>
-    /// returns true if successfully completed
-    /// </summary>
-    /// <param name="friendliness"></param>
-    /// <returns></returns>
-    public bool SoftCheck( float friendliness, float situationValue) // INDEV
-    {
-        bool success = GameConstants.SOFT_TEST_MAX_VALUE * friendliness + situationValue < attributes.SoftCheckRoll();
-        if (success)
-        {
-            attributes.RaiseUnity(1f);
-            attributes.RaiseConfidence(0.75f);
-        }
-        return success;
-    }
-    public void Rest(PointOfInterest place)
-    {
-        if (place != null)
-        {
-            attributes.Rest(place.GetRestValue());
-            attributes.RaiseUnity(0.5f);
-        }
-        else // at home
-        {
-            attributes.Restore();
-        }
-    }
-    public void LoseMember() // INDEV
-    {
-        membersCount--;        
-        if (membersCount <= 0) Disappear();
-        attributes.LoseConfidence(10f);
-    }
-	public void AddMember() { // INDEX
-        membersCount++;
-        attributes.LoseUnity(1f);
-    }
-
-    public void SetArtifact(Artifact a)
-    {
-        if (a == null) return;
-        else
-        {
-            //если уже есть артефакт
-            if (artifact != null)
-            {
-                if (status == CrewStatus.AtHome) artifact.Conservate();
-                else artifact.Destroy();
-            }
-            //
-            artifact = a;
-            artifact.SetOwner(this);
-            attributes.RaiseConfidence(2f);
-            attributes.RaiseLoyalty(1f);
-        }
-    }
-    public void DropArtifact()
-    {
-        if (artifact != null)
-        {
-            artifact.SetOwner(null);
-            artifact = null;
-            attributes.LoseConfidence(0.5f);
-            listChangesMarkerValue++;
-        }
-    }
-    //system
-    public void ClearArtifactField(Artifact a)
-    {
-        if (artifact == a) artifact = null;
-    }
-    public void MarkAsDirty()
-    {
-        changesMarkerValue++;
-    }
-
-	public void Dismiss() {
+    public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);
         membersCount = 0;
         if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
@@ -782,20 +722,39 @@ public sealed class Crew : MonoBehaviour {
         data.AddRange(System.BitConverter.GetBytes(membersCount)); // 12 - 15
         data.AddRange(System.BitConverter.GetBytes(missionsSuccessed)); // 16 - 19
         data.AddRange(System.BitConverter.GetBytes(missionsParticipated)); // 20 - 23
-        data.Add((byte)status); // 24
+        data.AddRange(new byte[]
+        {
+            (byte)status, // 24
+            persistence, // 25
+            survivalSkills, // 26
+            secretKnowledge, // 27
+            perception, // 28
+            intelligence, // 29
+            techSkills, // 30
+            level, // 31
+            (byte)exploringPath // 32
+        });
 
+        data.AddRange(System.BitConverter.GetBytes(stamina)); // 33-36
+        data.AddRange(System.BitConverter.GetBytes(proficiencies)); //37-38
+
+        data.AddRange(System.BitConverter.GetBytes(confidence)); // 39-42
+        data.AddRange(System.BitConverter.GetBytes(unity)); // 43-46
+        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 47-50
+        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 51-54
+
+        data.AddRange(System.BitConverter.GetBytes(experience)); // 55-58
+        //
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(count)); // 25 - 28 | количество байтов, не длина строки
+        data.AddRange(System.BitConverter.GetBytes(count)); // 59-62 | количество байтов, не длина строки
         if (count > 0) data.AddRange(nameArray);
-
-        data.AddRange(attributes.Save());
+        
         return data;
     }
-
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 29;
+        int LENGTH = 63;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         ID = System.BitConverter.ToInt32(data,0);
@@ -817,9 +776,28 @@ public sealed class Crew : MonoBehaviour {
         membersCount = System.BitConverter.ToInt32(data, 12);
         missionsSuccessed = System.BitConverter.ToInt32(data, 16);
         missionsParticipated = System.BitConverter.ToInt32(data, 20);
-        status = (CrewStatus)data[24];
 
-        int bytesCount = System.BitConverter.ToInt32(data, 25); //выдаст количество байтов, не длину строки        
+        status = (CrewStatus)data[24];
+        persistence = data[25];
+        survivalSkills = data[26];
+        secretKnowledge = data[27];
+        perception = data[28];
+        intelligence = data[29];
+        techSkills = data[30];
+        level = data[31];
+        exploringPath = (ExploringPath)data[32];
+
+        stamina = System.BitConverter.ToSingle(data,33);
+        proficiencies = System.BitConverter.ToUInt16(data, 37);
+
+        confidence = System.BitConverter.ToSingle(data, 39);
+        unity = System.BitConverter.ToSingle(data, 43);
+        loyalty = System.BitConverter.ToSingle(data, 47);
+        adaptability = System.BitConverter.ToSingle(data, 51);
+
+        experience = System.BitConverter.ToInt32(data, 55);
+
+        int bytesCount = System.BitConverter.ToInt32(data, 59); //выдаст количество байтов, не длину строки        
         if (bytesCount > 0)
         {
             data = new byte[bytesCount];
@@ -828,8 +806,7 @@ public sealed class Crew : MonoBehaviour {
             var chars = new char[d.GetCharCount(data, 0, bytesCount)];
             d.GetChars(data, 0, bytesCount, chars, 0, true);
             name = new string(chars);
-        }
-        attributes = CrewAttributes.Load(fs, this);
+        }        
     }
 
     #endregion

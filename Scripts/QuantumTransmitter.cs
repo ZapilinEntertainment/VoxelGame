@@ -7,7 +7,7 @@ public sealed class QuantumTransmitter : Building {
 	public static List<QuantumTransmitter> transmittersList{get;private set;}
     public static int lastUsedID { get; private set; }
 
-    public int connectionID { get; private set; }
+    public int transmitterID { get; private set; }
     public int expeditionID { get; private set; }
     // STATIC METHODS
 
@@ -25,7 +25,7 @@ public sealed class QuantumTransmitter : Building {
         {
             foreach (QuantumTransmitter qt in transmittersList)
             {
-                if (qt != null && qt.connectionID == s_id)
+                if (qt != null && qt.transmitterID == s_id)
                 {
                     return qt;
                 }
@@ -56,7 +56,7 @@ public sealed class QuantumTransmitter : Building {
         SetBuildingData(b, pos);
         if (!transmittersList.Contains(this))
         {
-            connectionID = lastUsedID++;
+            transmitterID = lastUsedID++;
             transmittersList.Add(this);
         }
         expeditionID = -1;
@@ -64,7 +64,6 @@ public sealed class QuantumTransmitter : Building {
     }
 
     override public void SetActivationStatus(bool x, bool recalculateAfter) {
-		if ( x == true & isActive == false) return; // невозможно включить вхолостую
 		isActive = x;
 		if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
 		transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works",x);
@@ -75,13 +74,7 @@ public sealed class QuantumTransmitter : Building {
     {
         if (e == null) return;
         expeditionID = e.ID;
-        if (!isActive)
-        {
-            isActive = true;
-            GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-            transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works", true);
-            ChangeRenderersView(true);
-        }
+        SetActivationStatus(true, true);
     }
     public void DropExpeditionConnection()
     {
@@ -99,6 +92,12 @@ public sealed class QuantumTransmitter : Building {
         if (!clearFromSurface) { UnsetBasement(); }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (transmittersList.Contains(this)) transmittersList.Remove(this);
+        if (expeditionID != -1)
+        {
+            var e = Expedition.GetExpeditionByID(expeditionID);
+            if (e != null && e.stage != Expedition.ExpeditionStage.Dismissed) e.DropTransmitter(this);
+            expeditionID = -1;
+        }
         Destroy(gameObject);
     }
 
@@ -106,7 +105,7 @@ public sealed class QuantumTransmitter : Building {
     override public List<byte> Save()
     {
         var data = base.Save();
-        data.AddRange(System.BitConverter.GetBytes(connectionID));
+        data.AddRange(System.BitConverter.GetBytes(transmitterID));
         return data;
     }
 
@@ -115,7 +114,7 @@ public sealed class QuantumTransmitter : Building {
         base.Load(fs, sblock);
         var data = new byte[4];
         fs.Read(data, 0, 4);
-        connectionID = System.BitConverter.ToInt32(data,0);
+        transmitterID = System.BitConverter.ToInt32(data,0);
     }
     #endregion
 }

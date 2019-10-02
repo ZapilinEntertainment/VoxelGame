@@ -53,6 +53,7 @@ public sealed class Shuttle : MonoBehaviour {
     {
         hangar = h;
     }
+    public void SetDockingStatus(bool x) { docked = x; }
 
 	public void SetCrew(Crew c) {
         crew = c;

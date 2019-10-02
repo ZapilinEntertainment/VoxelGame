@@ -115,7 +115,7 @@ sealed public class UIController : MonoBehaviour
         statusUpdateTimer -= tm;
         if (statusUpdateTimer <= 0)
         {
-            if (statusUpdateEvent != null) statusUpdateEvent();
+            statusUpdateEvent?.Invoke();
             statusUpdateTimer = STATUS_UPDATE_TIME;
 
             if (rpanel_textfield_userStructureID != -1)
@@ -829,6 +829,8 @@ sealed public class UIController : MonoBehaviour
                     else landingButton.SetActive(false);
                 }
                 GameLogUI.ChangeVisibility(false);
+                var ep = ExplorationPanelUI.current;
+                if (ep != null && ep.isActiveAndEnabled) ep.gameObject.SetActive(false);
 
                 menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
                 menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);

@@ -62,16 +62,16 @@ public sealed class UICrewObserver : MonoBehaviour
         nameField.text = showingCrew.name;
         statsText.text = Localization.GetCrewInfo(showingCrew);
 
-        levelText.text = showingCrew.attributes.level.ToString();
-        levelText.color = Color.Lerp(Color.white, Color.cyan, (float)showingCrew.attributes.level / 255f);
-        int e = showingCrew.attributes.experience, ne = showingCrew.attributes.GetExperienceCap();
+        levelText.text = showingCrew.level.ToString();
+        levelText.color = Color.Lerp(Color.white, Color.cyan, (float)showingCrew.level / 255f);
+        int e = showingCrew.experience, ne = showingCrew.GetExperienceCap();
         experienceText.text = e.ToString() + " / " + ne.ToString();
         experienceBar.fillAmount = e / (float)ne;
 
 
         int m_count = showingCrew.membersCount;
         membersButtonText.text = m_count.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
-        membersButton.enabled = (m_count != Crew.MAX_MEMBER_COUNT) & showingCrew.status == CrewStatus.AtHome;
+        membersButton.enabled = (m_count != Crew.MAX_MEMBER_COUNT) & showingCrew.status == Crew.CrewStatus.AtHome;
 
         shuttleButton.enabled = Shuttle.shuttlesList.Count > 0;
         var ri = shuttleButton.transform.GetChild(0).GetComponent<RawImage>();
@@ -99,10 +99,10 @@ public sealed class UICrewObserver : MonoBehaviour
         }
 
         statusText.text = Localization.GetCrewStatus(showingCrew.status);
-        dismissButton.SetActive(showingCrew.status == CrewStatus.AtHome);
+        dismissButton.SetActive(showingCrew.status == Crew.CrewStatus.AtHome);
 
-        travelButton.SetActive(showingCrew.shuttle != null & showingCrew.status == CrewStatus.AtHome);
-        staminaBar.fillAmount = showingCrew.attributes.stamina / (float)showingCrew.attributes.maxStamina;
+        travelButton.SetActive(showingCrew.shuttle != null & showingCrew.status == Crew.CrewStatus.AtHome);
+        staminaBar.fillAmount = showingCrew.stamina;
 
         lastDrawState = showingCrew.changesMarkerValue ;
     }
@@ -117,11 +117,10 @@ public sealed class UICrewObserver : MonoBehaviour
             {
                 RedrawWindow();
             }
-            staminaBar.fillAmount = showingCrew.attributes.stamina / (float)showingCrew.attributes.maxStamina;
+            staminaBar.fillAmount = showingCrew.stamina;
 
             if (lastShuttlesState != Shuttle.listChangesMarkerValue) PrepareShuttlesDropdown();
             if (lastArtifactsState != Artifact.listChangesMarkerValue) PrepareArtifactsDropdown();
-
         }
     }
 
@@ -189,7 +188,7 @@ public sealed class UICrewObserver : MonoBehaviour
         if (showingCrew == null) gameObject.SetActive(false);
         else
         {
-            if (showingCrew.status == CrewStatus.AtHome)
+            if (showingCrew.status == Crew.CrewStatus.AtHome)
             {
                 //
             }
@@ -306,7 +305,7 @@ public sealed class UICrewObserver : MonoBehaviour
             shuttlesDropdown.value = 0;
             shuttlesDropdown.options = opts;
             lastShuttlesState = Shuttle.listChangesMarkerValue;
-            shuttlesDropdown.interactable = (showingCrew.status == CrewStatus.AtHome);
+            shuttlesDropdown.interactable = (showingCrew.status == Crew.CrewStatus.AtHome);
         }
     }
     private void PrepareArtifactsDropdown()
@@ -352,7 +351,7 @@ public sealed class UICrewObserver : MonoBehaviour
             artifactsDropdown.value = 0;
             artifactsDropdown.options = opts;
             lastArtifactsState = Artifact.listChangesMarkerValue;
-            artifactsDropdown.interactable = (showingCrew.status == CrewStatus.AtHome);
+            artifactsDropdown.interactable = (showingCrew.status == Crew.CrewStatus.AtHome);
         }
     }
 

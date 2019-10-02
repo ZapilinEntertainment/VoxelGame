@@ -674,7 +674,7 @@ public static class Localization
     public static string GetCrewInfo(Crew c)
     {
         if (c == null) return string.Empty;
-        var a = c.attributes;
+        var a = c;
         // CREW_INFO_STRINS_COUNT = 14
         switch (currentLanguage)
         {
@@ -717,7 +717,7 @@ public static class Localization
                 }
         }
     }
-    public static string GetCrewStatus(CrewStatus cs)
+    public static string GetCrewStatus(Crew.CrewStatus cs)
     {
         switch (currentLanguage)
         {
@@ -725,9 +725,9 @@ public static class Localization
                 {
                     switch (cs)
                     {
-                        case CrewStatus.AtHome: return "На базе";
-                        case CrewStatus.OnMission: return "На миссии";
-                        case CrewStatus.Travelling: return "Путешествуют";
+                        case Crew.CrewStatus.AtHome: return "На базе";
+                        case Crew.CrewStatus.OnMission: return "На миссии";
+                        case Crew.CrewStatus.Travelling: return "Путешествуют";
                         default: return "<статус>";
                     }
                 }
@@ -736,9 +736,9 @@ public static class Localization
                 {
                     switch (cs)
                     {
-                        case CrewStatus.AtHome: return "At home";
-                        case CrewStatus.OnMission: return "On mission";
-                        case CrewStatus.Travelling: return "Travelling";
+                        case Crew.CrewStatus.AtHome: return "At home";
+                        case Crew.CrewStatus.OnMission: return "On mission";
+                        case Crew.CrewStatus.Travelling: return "Travelling";
                         default: return "<crew status>";
                     }
                 }
@@ -835,6 +835,9 @@ public static class Localization
                         case Expedition.ExpeditionLogMessage.CrystalsFound: return "Мы нашли немного кристаллов.";
                         case Expedition.ExpeditionLogMessage.Approval: return "Обожаю свою работу!";
                         case Expedition.ExpeditionLogMessage.Dismissing: return "<Экспедиция распущена>";
+                        case Expedition.ExpeditionLogMessage.TransmitterSignalLost: return "<Сбой передатчика, связь потеряна.>";
+                        case Expedition.ExpeditionLogMessage.TaskFailure: return "Не удалось выполнить задачу.";
+                        case Expedition.ExpeditionLogMessage.ExplorationCompleted: return "Разведка завершена.";
 
                         case Expedition.ExpeditionLogMessage.SoftDisappear:
                             if (Random.value < 0.15f) return "<Наша команда решила остаться там навсегда. Связь потеряна.>";
@@ -884,6 +887,9 @@ public static class Localization
                         case Expedition.ExpeditionLogMessage.CrystalsFound: return "Found some crystals.";
                         case Expedition.ExpeditionLogMessage.Approval: return "Hey, it is cool here." ;
                         case Expedition.ExpeditionLogMessage.Dismissing: return "<Dismissed>";
+                        case Expedition.ExpeditionLogMessage.TransmitterSignalLost: return "<Transmitter malfunction, connection lost.>";
+                        case Expedition.ExpeditionLogMessage.TaskFailure: return "Task failure.";
+                        case Expedition.ExpeditionLogMessage.ExplorationCompleted: return "Exploration completed.";
                         default: return string.Empty;
                     }
                 }

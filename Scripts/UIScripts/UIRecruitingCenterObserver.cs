@@ -77,7 +77,8 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             infoButton.SetActive(true);
 
             replenishButton.transform.GetChild(1).GetComponent<Text>().text = RecruitingCenter.REPLENISH_COST.ToString();
-            replenishButton.SetActive(showingCrew.membersCount != Crew.MAX_MEMBER_COUNT);
+            replenishButton.SetActive(
+                (showingCrew.membersCount != Crew.MAX_MEMBER_COUNT) & (showingCrew.status == Crew.CrewStatus.AtHome) );
 
             membersText.text = Localization.GetPhrase(LocalizedPhrase.MembersCount) + ": " + showingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
             membersText.enabled = true;

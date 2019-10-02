@@ -21,7 +21,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         var rt = GetComponent<RectTransform>();
         rt.position = r.position;
         rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.y);
         Vector2 correctionVector = Vector2.zero;
         switch (alignment)
         {
@@ -80,16 +80,29 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             if (connect)
             {
                 //fill stage text & stage bar
-                currentStepText.text = Localization.GetWord(LocalizedWord.Step) + ' ' + showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString();
+                var m = showingExpedition.mission;
+                if (m != null) {
+                    missionInfo.text =  m.GetName();
+                    currentStepText.text = Localization.GetWord(LocalizedWord.Step) + ' ' + showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString();
+                    if (!currentStepText.enabled)
+                    {
+                        currentStepText.enabled = true;
+                        stepProgressBar.transform.parent.parent.gameObject.SetActive(true);
+                    }
+                }
+                else
+                {
+                    missionInfo.text = Localization.GetPhrase(LocalizedPhrase.NoMission);
+                    currentStepText.text = string.Empty;
+                    if (currentStepText.enabled)
+                    {
+                        currentStepText.enabled = false;
+                        stepProgressBar.transform.parent.parent.gameObject.SetActive(false);
+                    }
+                }
                 float f = showingExpedition.progress / Expedition.ONE_STEP_WORKFLOW;
                 stepProgressBar.fillAmount = f;
-                progressText.text = ((int)(f * 100)).ToString() + '%';
-
-                if (!currentStepText.enabled)
-                {
-                    currentStepText.enabled = true;
-                    stepProgressBar.transform.parent.parent.gameObject.SetActive(true);
-                }                
+                progressText.text = ((int)(f * 100)).ToString() + '%';                             
             }
             else
             {

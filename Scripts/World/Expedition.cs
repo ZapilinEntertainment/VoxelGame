@@ -5,9 +5,12 @@ using UnityEngine;
 public sealed class Expedition
 {
     public enum ExpeditionStage : byte { WayIn, WayOut, OnMission, LeavingMission, Dismissed }
-    public enum ExpeditionLogMessage : ushort { Empty, ContinueMission, TestPassed, TestFailed, WrongPath, FastPath, LoseConfidence, HardtestPassed, MemberLost,
-    HardDisappear, TreasureFound, GlobalMapChanged, ArtifactLost, SoftDisappear, ConnectionLost, ConnectionRestored, TaskCompleted, Disapproval, NoStamina, RestOnMission,
-    MissionStart, MissionChanged, MissionLeaveFail, StopMission, ReturningHome, CrystalsFound, Approval, Dismissing}
+    public enum ExpeditionLogMessage : ushort
+    {
+        Empty, ContinueMission, TestPassed, TestFailed, WrongPath, FastPath, LoseConfidence, HardtestPassed, MemberLost,
+        HardDisappear, TreasureFound, GlobalMapChanged, ArtifactLost, SoftDisappear, ConnectionLost, ConnectionRestored, TaskCompleted, Disapproval, NoStamina, RestOnMission,
+        MissionStart, MissionChanged, MissionLeaveFail, StopMission, ReturningHome, CrystalsFound, Approval, Dismissing, TransmitterSignalLost, TaskFailure, ExplorationCompleted
+    }
     //dependence : Localization.GetExpeditionLogMessage
 
     public static List<Expedition> expeditionsList { get; private set; }
@@ -16,7 +19,7 @@ public sealed class Expedition
     public static UIExpeditionObserver observer { get; private set; }
     public static int nextID { get; private set; } // в сохранение
 
-    public readonly int ID;    
+    public readonly int ID;
 
     public bool hasConnection { get; private set; } // есть ли связь с центром
     public float progress { get; private set; } // прогресс текущего шага
@@ -30,12 +33,12 @@ public sealed class Expedition
     private bool subscribedToUpdate;
     private byte lastLogIndex = 0;
     private sbyte advantages = 0;
-    private float collectedMoney,currentDistanceToTarget, distanceToTarget;
+    private float collectedMoney, currentDistanceToTarget, distanceToTarget;
     private ushort[][] log;
     private FlyingExpedition mapMarker;
     private QuantumTransmitter transmitter;
 
-    public const float ONE_STEP_WORKFLOW = 100, ONE_STEP_XP = 5f;
+    public const float ONE_STEP_WORKFLOW = 10, ONE_STEP_XP = 5f;
     private const float ONE_STEP_TO_TARGET = 0.1f;
     private const byte LOGS_COUNT = 10;
     // STATIC & equals
@@ -66,7 +69,7 @@ public sealed class Expedition
         if (i_crew == null | i_mission == null | i_transmitter == null | i_destination == null) return null;
         else
         {
-            if (i_crew.status != CrewStatus.AtHome | i_crew.shuttle == null | i_transmitter.expeditionID != -1) return null;
+            if (i_crew.status != Crew.CrewStatus.AtHome | i_crew.shuttle == null | i_transmitter.expeditionID != -1) return null;
             else
             {
                 return new Expedition(i_crew, i_mission, i_transmitter, i_destination);
@@ -93,7 +96,7 @@ public sealed class Expedition
         ID = nextID;
         nextID++;
         stage = ExpeditionStage.WayIn;
-        crew = i_crew; crew.SetStatus(CrewStatus.OnMission);
+        crew = i_crew; crew.SetStatus(Crew.CrewStatus.OnMission);
         mission = i_mission;
         transmitter = i_qt; transmitter.AssignExpedition(this);
         destination = i_destination; destination.ListAnExpedition(this);
@@ -118,7 +121,7 @@ public sealed class Expedition
     {
         if (stage != ExpeditionStage.OnMission)
         {
-            stage = ExpeditionStage.OnMission;       
+            stage = ExpeditionStage.OnMission;
             if (!subscribedToUpdate)
             {
                 GameMaster.realMaster.labourUpdateEvent += this.LabourUpdate;
@@ -191,18 +194,20 @@ public sealed class Expedition
 
     public void LabourUpdate()
     {
-        float stepVal = crew.attributes.MakeStep(destination.difficulty);
+        float stepVal = crew.MakeStep(destination.difficulty);
         switch (stage)
         {
             case ExpeditionStage.OnMission:
-                {                    
+                {
                     if (stepVal > 0)
                     {
                         progress += stepVal;
                         if (progress >= ONE_STEP_WORKFLOW)
                         {
                             progress = 0;
-                            bool success = false;                            
+                            currentStep++;
+
+                            bool success = false;
                             //
                             int x = Random.Range(0, 8);
                             switch (x)
@@ -217,7 +222,7 @@ public sealed class Expedition
                                             else advantage = false;
                                             advantages--;
                                         }
-                                        if (crew.attributes.TestYourMight(mission.difficultyClass, advantage))
+                                        if (crew.TestYourMight(mission.difficultyClass, advantage))
                                         {
                                             success = true;
                                             if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TestPassed);
@@ -230,35 +235,43 @@ public sealed class Expedition
                                     }
                                 case 2: // jump            
                                     {
-                                        if (destination.TryToJump(crew))
+                                        if (mission.preset.type == MissionType.Exploring)
                                         {
                                             success = true;
-                                            currentDistanceToTarget -= ONE_STEP_TO_TARGET; // дополнительно
-                                            if (destination.TryAdditionalJump(crew))
-                                            {
-                                                currentDistanceToTarget -= ONE_STEP_TO_TARGET;
-                                                if (crew.attributes.PersistenceRoll() > destination.difficulty * 25f) currentDistanceToTarget -= ONE_STEP_TO_TARGET;
-                                            }
-                                            if (hasConnection) AddMessageToLog(ExpeditionLogMessage.FastPath);
+                                            break;
                                         }
                                         else
                                         {
-                                            if (destination.TrueWayTest(crew)) success = true;
+                                            if (destination.TryToJump(crew))
+                                            {
+                                                success = true;
+                                                currentDistanceToTarget -= ONE_STEP_TO_TARGET; // дополнительно
+                                                if (destination.TryAdditionalJump(crew))
+                                                {
+                                                    currentDistanceToTarget -= ONE_STEP_TO_TARGET;
+                                                    if (crew.PersistenceRoll() > destination.difficulty * 25f) currentDistanceToTarget -= ONE_STEP_TO_TARGET;
+                                                }
+                                                if (hasConnection) AddMessageToLog(ExpeditionLogMessage.FastPath);
+                                            }
                                             else
                                             {
-                                                currentDistanceToTarget += 2 * ONE_STEP_TO_TARGET;
-                                                if (destination.difficulty * 15f > crew.attributes.UnityRoll())
-                                                {
-                                                    crew.attributes.LoseConfidence(1f);
-                                                    if (hasConnection) AddMessageToLog(new ExpeditionLogMessage[] { ExpeditionLogMessage.WrongPath, ExpeditionLogMessage.LoseConfidence });
-                                                }
+                                                if (destination.TrueWayTest(crew)) success = true;
                                                 else
                                                 {
-                                                    if (hasConnection) AddMessageToLog(ExpeditionLogMessage.WrongPath);
+                                                    currentDistanceToTarget += 2 * ONE_STEP_TO_TARGET;
+                                                    if (destination.difficulty * 15f > crew.UnityRoll())
+                                                    {
+                                                        crew.LoseConfidence(1f);
+                                                        if (hasConnection) AddMessageToLog(new ExpeditionLogMessage[] { ExpeditionLogMessage.WrongPath, ExpeditionLogMessage.LoseConfidence });
+                                                    }
+                                                    else
+                                                    {
+                                                        if (hasConnection) AddMessageToLog(ExpeditionLogMessage.WrongPath);
+                                                    }
                                                 }
                                             }
+                                            break;
                                         }
-                                        break;
                                     }
                                 case 3: //suffer
                                     if (destination.HardTest(crew))
@@ -272,7 +285,7 @@ public sealed class Expedition
                                         if (crew == null)
                                         {
                                             if (hasConnection) AddMessageToLog(ExpeditionLogMessage.HardDisappear);
-                                            Disappear();                                            
+                                            Disappear();
                                             return;
                                         }
                                         else
@@ -288,7 +301,7 @@ public sealed class Expedition
                                         destination.TakeTreasure(crew);
                                         if (hasConnection) AddMessageToLog(ExpeditionLogMessage.TreasureFound);
                                     }
-                                    else if (hasConnection) AddMessageToLog(ExpeditionLogMessage.ContinueMission);                                    
+                                    else if (hasConnection) AddMessageToLog(ExpeditionLogMessage.ContinueMission);
                                     break;
                                 case 5: //event
                                     success = true;
@@ -320,12 +333,12 @@ public sealed class Expedition
                                     if (!destination.SoftTest(crew))
                                     {
                                         if (hasConnection) AddMessageToLog(ExpeditionLogMessage.SoftDisappear);
-                                        Disappear();                                        
+                                        Disappear();
                                         return;
                                     }
                                     if (hasConnection) AddMessageToLog(ExpeditionLogMessage.ContinueMission);
                                     break;
-                                case 7: 
+                                case 7:
                                     // silence - nothing happens
                                     break;
                                 case 8: // connection
@@ -339,7 +352,6 @@ public sealed class Expedition
 
                             if (success)
                             {
-                                currentStep++;
                                 if (destination.exploredPart < 1f)
                                 {
                                     destination.Explore(mission.preset.type == MissionType.Exploring ? 2f : 1f);
@@ -347,16 +359,16 @@ public sealed class Expedition
                                 else
                                 {
                                     if (mission.preset.type == MissionType.Exploring)
-                                    {                                       
+                                    {
                                         EndMission();
                                         break;
                                     }
                                 }
-                                crew.attributes.AddExperience((0.5f + destination.difficulty) * ONE_STEP_XP);
+                                crew.AddExperience((0.5f + destination.difficulty) * ONE_STEP_XP);
                                 distanceToTarget -= ONE_STEP_TO_TARGET;
                                 if (distanceToTarget <= 0f)
                                 {
-                                    crew.attributes.AddExperience(ONE_STEP_XP * 5f);
+                                    crew.AddExperience(ONE_STEP_XP * 5f);
                                     if (Result())
                                     {
                                         if (hasConnection)
@@ -378,18 +390,29 @@ public sealed class Expedition
                             {
                                 if (!destination.LoyaltyTest(crew))
                                 {
-                                    crew.attributes.LoseLoyalty(0.25f);
-                                    if (hasConnection &&  Random.value < crew.attributes.loyalty) AddMessageToLog(ExpeditionLogMessage.Disapproval);
+                                    crew.LoseLoyalty(0.25f);
+                                    if (hasConnection && Random.value < crew.loyalty) AddMessageToLog(ExpeditionLogMessage.Disapproval);
                                 }
                                 if (!destination.AdaptabilityTest(crew))
                                 {
-                                    crew.attributes.LoseConfidence(0.25f);
-                                    if (hasConnection && Random.value < crew.attributes.loyalty) AddMessageToLog(ExpeditionLogMessage.LoseConfidence);
+                                    crew.LoseConfidence(0.25f);
+                                    if (hasConnection && Random.value < crew.loyalty) AddMessageToLog(ExpeditionLogMessage.LoseConfidence);
                                 }
                             }
                             //                        
                             if (currentStep >= mission.stepsCount)
                             {
+                                if (mission.preset.type == MissionType.Exploring)
+                                {
+                                    if (hasConnection) AddMessageToLog(ExpeditionLogMessage.ExplorationCompleted);
+                                    crew.AddExperience(3f);
+                                    crew.RaiseAdaptability(0.5f);
+                                }
+                                else
+                                {
+                                    AddMessageToLog(ExpeditionLogMessage.TaskFailure);
+                                    crew.LoseConfidence(0.5f);
+                                }
                                 EndMission();
                                 break;
                             }
@@ -401,11 +424,8 @@ public sealed class Expedition
                         {
                             if (hasConnection)
                             {
-                                if (hasConnection)
-                                {
-                                    GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotCompleteMission, crew));
-                                    AddMessageToLog(ExpeditionLogMessage.NoStamina);
-                                }
+                                GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotCompleteMission, crew));
+                                AddMessageToLog(ExpeditionLogMessage.NoStamina);
                             }
                             EndMission();
                         }
@@ -451,7 +471,7 @@ public sealed class Expedition
         switch (mission.preset.type)
         {
             case MissionType.Exploring: adapt += 1f; end = true; break;
-            case MissionType.FindingKnowledge: adapt += 2f; exp *= 4f; end = true;  break;
+            case MissionType.FindingKnowledge: adapt += 2f; exp *= 4f; end = true; break;
             case MissionType.FindingItem:
             case MissionType.FindingPerson: end = true; break;
             case MissionType.FindingPlace: exp += Random.value * ONE_STEP_XP * 5f; end = true; break;
@@ -476,32 +496,58 @@ public sealed class Expedition
             progress = 0;
             if (hasConnection) AddMessageToLog(new ushort[] { (ushort)ExpeditionLogMessage.MissionChanged, (ushort)m.preset.type });
         }
-    } 
-    public void SetConnection(bool connected)
+    }
+
+    public void DropTransmitter(QuantumTransmitter qt)
     {
-        if (hasConnection != connected)
+        if (qt != null && qt == transmitter)
         {
-            hasConnection = connected;
-            if (!hasConnection) crew.attributes.LoseConfidence(1f);
-            else crew.attributes.RaiseConfidence(1f);
-            GameMaster.realMaster.globalMap.MarkToUpdate();
-            if (hasConnection) AddMessageToLog(ExpeditionLogMessage.ConnectionRestored);
-            else AddMessageToLog(ExpeditionLogMessage.ConnectionLost);
+            transmitter = null;
+            AddMessageToLog(ExpeditionLogMessage.TransmitterSignalLost);
+            // #connection losing            
+            hasConnection = false;
+            crew.LoseConfidence(2f);
+            if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
         }
     }
-    public void CollectMoney(float f) {
+    public void SetConnection(bool connect)
+    {
+        if (connect == false)
+        {
+            if (hasConnection)
+            {
+                //#connection losing
+                hasConnection = false;
+                crew.LoseConfidence(1f);
+                if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
+            }
+        }
+        else
+        {
+            if (transmitter != null & !hasConnection)
+            {
+                hasConnection = true;
+                crew.RaiseConfidence(1f);
+                if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
+                AddMessageToLog(ExpeditionLogMessage.ConnectionRestored);
+            }
+        }
+    }
+    public void CollectMoney(float f)
+    {
         collectedMoney += f;
-        crew.attributes.RaiseLoyalty(1f);
-        if (hasConnection) {
+        crew.RaiseLoyalty(1f);
+        if (hasConnection)
+        {
             AddMessageToLog(ExpeditionLogMessage.CrystalsFound);
-            if (Random.value < crew.attributes.loyalty) AddMessageToLog(ExpeditionLogMessage.Approval);
+            if (Random.value < crew.loyalty) AddMessageToLog(ExpeditionLogMessage.Approval);
         }
     }
     public void FillLog(UnityEngine.UI.Text[] fields)
     {
         var s = string.Empty;
         if (log == null || log.Length == 0)
-        {            
+        {
             fields[0].text = s;
             fields[1].text = s;
             fields[2].text = s;
@@ -516,19 +562,19 @@ public sealed class Expedition
         else
         {
             int i = 0;
-            for (; i< lastLogIndex; i++)
+            for (; i < lastLogIndex; i++)
             {
-                fields[i].text = log[i][0] == 0 ? s : Localization.GetExpeditionLogMessage(this, log[i]);
+                fields[i].text = log[i][0] == 0 ? s : "> " + Localization.GetExpeditionLogMessage(this, log[i]);
             }
-            if (i< LOGS_COUNT)
+            if (i < LOGS_COUNT)
             {
-                for (; i< LOGS_COUNT; i++)
+                for (; i < LOGS_COUNT; i++)
                 {
                     fields[i].text = s;
                 }
             }
         }
-    } 
+    }
 
     public void AddMessageToLog(ExpeditionLogMessage[] msg)
     {
@@ -612,12 +658,12 @@ public sealed class Expedition
     }
 
     public void Dismiss() // экспедиция вернулась домой и распускается
-    {        
+    {
         //зависимость : Disappear()
         if (stage == ExpeditionStage.Dismissed) return;
         else
         {
-            if (crew != null) crew.SetStatus(CrewStatus.AtHome);
+            if (crew != null) crew.SetStatus(Crew.CrewStatus.AtHome);
             if (transmitter != null) transmitter.DropExpeditionConnection();
             if (destination != null) destination.ExcludeExpeditionFromList(this);
             if (subscribedToUpdate & !GameMaster.sceneClearing)
@@ -632,12 +678,12 @@ public sealed class Expedition
                 collectedMoney = 0;
             }
             stage = ExpeditionStage.Dismissed;
-            AddMessageToLog(new ExpeditionLogMessage[] { ExpeditionLogMessage.Dismissing, crew.attributes.loyalty > 0.5 ? ExpeditionLogMessage.Approval : ExpeditionLogMessage.Disapproval});
+            AddMessageToLog(new ExpeditionLogMessage[] { ExpeditionLogMessage.Dismissing, crew.loyalty > 0.5 ? ExpeditionLogMessage.Approval : ExpeditionLogMessage.Disapproval });
         }
         changesMarkerValue++;
     }
     public void Disappear() // INDEV
-        // экспедиция исчезает
+                            // экспедиция исчезает
     {
         if (stage == ExpeditionStage.Dismissed) return;
         else
@@ -668,10 +714,10 @@ public sealed class Expedition
         data.AddRange(System.BitConverter.GetBytes(currentStep)); // 6 - 9
         data.AddRange(System.BitConverter.GetBytes(currentDistanceToTarget)); // 10 - 13
         data.AddRange(System.BitConverter.GetBytes(distanceToTarget)); // 14 - 17
-        data.AddRange(System.BitConverter.GetBytes(mission.ID)); // 18 - 21
+        data.AddRange(System.BitConverter.GetBytes(mission != null ? mission.ID : -1)); // 18 - 21
         data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : -1)); // 22 - 25
         data.AddRange(System.BitConverter.GetBytes(crew.ID)); // 26 -29
-        data.AddRange(System.BitConverter.GetBytes(transmitter != null ? transmitter.connectionID : -1)); // 30 - 33
+        data.AddRange(System.BitConverter.GetBytes(transmitter != null ? transmitter.transmitterID : -1)); // 30 - 33
         data.AddRange(System.BitConverter.GetBytes(collectedMoney)); // 34 - 37
         data.Add((byte)advantages); // 38
         // logs writing
@@ -696,8 +742,8 @@ public sealed class Expedition
             }
         }
         // map marker data
-        if (mapMarker != null)
-        { 
+        if (mapMarker != null & (stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut))
+        {
             data.Add(1);
             data.AddRange(mapMarker.Save());
         }
@@ -716,11 +762,11 @@ public sealed class Expedition
         currentDistanceToTarget = System.BitConverter.ToSingle(data, 10);
         distanceToTarget = System.BitConverter.ToSingle(data, 14);
 
-        mission = Mission.GetMissionByID(System.BitConverter.ToInt32(data, 18));        
+        mission = Mission.GetMissionByID(System.BitConverter.ToInt32(data, 18));
         destination = GameMaster.realMaster.globalMap.GetMapPointByID(System.BitConverter.ToInt32(data, 22)) as PointOfInterest;
         if (destination != null) destination.ListAnExpedition(this);
         crew = Crew.GetCrewByID(System.BitConverter.ToInt32(data, 26));
-        if (crew != null) crew.SetCurrentExpedition(this); else Debug.Log("expedition load error - no crew");
+        if (crew != null) crew.SetCurrentExpedition(this); else Debug.Log("Expedition.cs: expedition load error - no crew");
         transmitter = QuantumTransmitter.GetTransmitterByConnectionID(System.BitConverter.ToInt32(data, 30));
         if (transmitter != null) transmitter.AssignExpedition(this);
 
@@ -730,7 +776,7 @@ public sealed class Expedition
         log = new ushort[LOGS_COUNT][];
         int l = 0, j = 0;
         lastLogIndex = 10;
-        for (byte i = 0; i< LOGS_COUNT;i++)
+        for (byte i = 0; i < LOGS_COUNT; i++)
         {
             l = fs.ReadByte();
             log[i] = new ushort[l];
@@ -738,7 +784,7 @@ public sealed class Expedition
             {
                 data = new byte[l * 2];
                 fs.Read(data, 0, data.Length);
-                for (j = 0; j< l;j++)
+                for (j = 0; j < l; j++)
                 {
                     log[i][j] = System.BitConverter.ToUInt16(data, j * 2);
                 }
@@ -751,13 +797,15 @@ public sealed class Expedition
 
         if (fs.ReadByte() == 1)
         {
-            mapMarker =  FlyingExpedition.LoadExpeditionMarker(fs, this);
+            mapMarker = FlyingExpedition.LoadExpeditionMarker(fs, this);
         }
+
+        if (!subscribedToUpdate) GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
         return this;
     }
 
     public static void SaveStaticData(System.IO.FileStream fs)
-    {     
+    {
         int realCount = 0;
         var savedata = new List<byte>();
         if (expeditionsList.Count > 0)
@@ -769,7 +817,7 @@ public sealed class Expedition
                     savedata.AddRange(e.Save());
                     realCount++;
                 }
-            }            
+            }
         }
 
         fs.Write(System.BitConverter.GetBytes(realCount), 0, 4);
@@ -795,7 +843,7 @@ public sealed class Expedition
                 int r_id = System.BitConverter.ToInt32(data, 0);
                 Expedition e = new Expedition(r_id);
                 e.Load(fs);
-                
+
             }
         }
         data = new byte[8];
