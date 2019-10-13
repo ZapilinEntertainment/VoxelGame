@@ -22,9 +22,11 @@ public sealed class Expedition
     public readonly int ID;
 
     public bool hasConnection { get; private set; } // есть ли связь с центром
-    public float progress { get; private set; } // прогресс текущего шага
+    public float progress { get; private set; } // прогресс текущего шага    
     public int currentStep { get; private set; }
     public byte changesMarkerValue { get; private set; }
+    public byte collectedMoney { get; private set; }
+    public byte suppliesCount { get; private set; }
     public ExpeditionStage stage { get; private set; }
     public Mission mission { get; private set; }
     public PointOfInterest destination { get; private set; }
@@ -33,7 +35,7 @@ public sealed class Expedition
     private bool subscribedToUpdate;
     private byte lastLogIndex = 0;
     private sbyte advantages = 0;
-    private float collectedMoney, currentDistanceToTarget, distanceToTarget;
+    private float currentDistanceToTarget, distanceToTarget;
     private ushort[][] log;
     private FlyingExpedition mapMarker;
     private QuantumTransmitter transmitter;
@@ -64,15 +66,15 @@ public sealed class Expedition
             return null;
         }
     }
-    public static Expedition CreateNewExpedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_transmitter, PointOfInterest i_destination, string i_name)
+    public static Expedition CreateNewExpedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_transmitter, PointOfInterest i_destination, int i_suppliesCount)
     {
-        if (i_crew == null | i_mission == null | i_transmitter == null | i_destination == null) return null;
+        if (i_crew == null | i_mission == null | i_transmitter == null | i_destination == null | i_suppliesCount == 0) return null;
         else
         {
             if (i_crew.status != Crew.CrewStatus.AtHome | i_crew.shuttle == null | i_transmitter.expeditionID != -1) return null;
             else
             {
-                return new Expedition(i_crew, i_mission, i_transmitter, i_destination);
+                return new Expedition(i_crew, i_mission, i_transmitter, i_destination, i_suppliesCount);
             }
         }
     }
@@ -91,7 +93,7 @@ public sealed class Expedition
     }
 
     /// ===============================
-    private Expedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_qt, PointOfInterest i_destination)
+    private Expedition(Crew i_crew, Mission i_mission, QuantumTransmitter i_qt, PointOfInterest i_destination, int i_suppliesCount)
     {
         ID = nextID;
         nextID++;
@@ -100,6 +102,10 @@ public sealed class Expedition
         mission = i_mission;
         transmitter = i_qt; transmitter.AssignExpedition(this);
         destination = i_destination; destination.ListAnExpedition(this);
+        if (i_suppliesCount < 255 && i_suppliesCount > 0) suppliesCount = (byte)i_suppliesCount; else
+        {
+            if (i_suppliesCount > 0) suppliesCount = 255; else suppliesCount = 0;
+        }
         hasConnection = true;
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, gmap.cityPoint, destination, Shuttle.SPEED);
@@ -533,9 +539,9 @@ public sealed class Expedition
             }
         }
     }
-    public void CollectMoney(float f)
+    public void AddCoin()
     {
-        collectedMoney += f;
+        if (collectedMoney < 255) collectedMoney++;
         crew.RaiseLoyalty(1f);
         if (hasConnection)
         {
@@ -666,12 +672,13 @@ public sealed class Expedition
             if (crew != null) crew.SetStatus(Crew.CrewStatus.AtHome);
             if (transmitter != null) transmitter.DropExpeditionConnection();
             if (destination != null) destination.ExcludeExpeditionFromList(this);
+            if (suppliesCount > 0) GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Supplies, suppliesCount);
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
                 subscribedToUpdate = false;
             }
-            if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
             if (collectedMoney > 0)
             {
                 GameMaster.realMaster.colonyController.AddEnergyCrystals(collectedMoney);
@@ -696,7 +703,7 @@ public sealed class Expedition
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
                 subscribedToUpdate = false;
             }
-            if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
             stage = ExpeditionStage.Dismissed;
         }
         changesMarkerValue++;
@@ -718,8 +725,9 @@ public sealed class Expedition
         data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : -1)); // 22 - 25
         data.AddRange(System.BitConverter.GetBytes(crew.ID)); // 26 -29
         data.AddRange(System.BitConverter.GetBytes(transmitter != null ? transmitter.transmitterID : -1)); // 30 - 33
-        data.AddRange(System.BitConverter.GetBytes(collectedMoney)); // 34 - 37
-        data.Add((byte)advantages); // 38
+        data.Add(collectedMoney); // 34
+        data.Add(suppliesCount); // 35
+        data.Add((byte)advantages); // 36
         // logs writing
         if (log == null) data.AddRange(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         else
@@ -752,7 +760,7 @@ public sealed class Expedition
     }
     public Expedition Load(System.IO.FileStream fs)
     {
-        int LENGTH = 39;
+        int LENGTH = 37;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         hasConnection = data[0] == 1;
@@ -769,9 +777,9 @@ public sealed class Expedition
         if (crew != null) crew.SetCurrentExpedition(this); else Debug.Log("Expedition.cs: expedition load error - no crew");
         transmitter = QuantumTransmitter.GetTransmitterByConnectionID(System.BitConverter.ToInt32(data, 30));
         if (transmitter != null) transmitter.AssignExpedition(this);
-
-        collectedMoney = System.BitConverter.ToSingle(data, 34);
-        advantages = (sbyte)data[38];
+        collectedMoney = data[34];
+        suppliesCount = data[35];
+        advantages = (sbyte)data[36];
 
         log = new ushort[LOGS_COUNT][];
         int l = 0, j = 0;

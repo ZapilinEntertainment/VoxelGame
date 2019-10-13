@@ -56,7 +56,7 @@ public class UIArtifactPanel : MonoBehaviour {
                         break;
                     case Artifact.ArtifactStatus.UsingByCrew:                        
                         ri.texture = UIController.current.iconsTexture;
-                        ri.uvRect = UIController.GetTextureUV(Icons.CrewGoodIcon);
+                        ri.uvRect = UIController.GetIconUVRect(Icons.CrewGoodIcon);
                         break;
                     case Artifact.ArtifactStatus.UsingInMonument:
                         ri.texture = UIController.current.buildingsIcons;

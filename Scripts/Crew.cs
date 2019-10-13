@@ -165,7 +165,7 @@ public int missionsParticipated { get; private set; }
     public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
     {
         ri.texture = UIController.current.iconsTexture;
-        ri.uvRect = UIController.GetTextureUV(stamina > 0.8f ? Icons.CrewGoodIcon : (stamina < 0.25f ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
+        ri.uvRect = UIController.GetIconUVRect(stamina > 0.8f ? Icons.CrewGoodIcon : (stamina < 0.25f ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
     }
 
     public bool HardTest(float hardness, float situationValue) // INDEV
@@ -324,7 +324,7 @@ public int missionsParticipated { get; private set; }
 
         confidence = 0.5f;
         unity = 0.5f;
-        loyalty = c.happiness_coefficient;
+        if (c != null) loyalty = c.happiness_coefficient; else loyalty = 0.5f;
         adaptability = 0.5f;
 
         level = 1; experience = 0;

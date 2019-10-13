@@ -121,8 +121,13 @@ public sealed class GlobalMapUI : MonoBehaviour
             else
             {
                 var e = (chosenPoint as FlyingExpedition).expedition;
-                pointDescription.text = e.mission != null ? Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.GetName() :
-                        Localization.GetWord(LocalizedWord.Return);
+                var s = (e.mission != null ? Localization.GetWord(LocalizedWord.Mission) + ": " + e.mission.GetName() :
+                        Localization.GetWord(LocalizedWord.Return));
+                var poe = chosenPoint as PointOfInterest;
+                if (poe != null)
+                {
+                    s += '\n' + Localization.GetWord(LocalizedWord.Difficulty) + ": " + ((int)(poe.difficulty * 100)).ToString() + '%';
+                }
             }
             pointDescription.gameObject.SetActive(true);
 
@@ -293,7 +298,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                             Mission m = null;
                             if (missionDropdown.value != 0) m = poi.GetMissionByIndex(missionDropdown.value - 1);
                             else m = new Mission(MissionPreset.ExploringPreset, poi);
-                            if (m != null) Expedition.CreateNewExpedition(s.crew, m,q, poi, expeditionNameField.text);
+                            if (m != null) Expedition.CreateNewExpedition(s.crew, m,q, poi, 255);
                         }
                     }
                 }
@@ -327,8 +332,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     {
         CloseInfopanel();
         gameObject.SetActive(false);
-        UIController.current.gameObject.SetActive(true);
-        FollowingCamera.main.gameObject.SetActive(true);
+        UIController.SetActivity(true);
     }   
     // ======================== PRIVATE METHODS
     private void Start()
@@ -661,8 +665,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         }
         else
         {
-            UIController.current.gameObject.SetActive(false);
-            FollowingCamera.main.gameObject.SetActive(false);
+            UIController.SetActivity(false);
             if (!prepared) Prepare();
             else
             {

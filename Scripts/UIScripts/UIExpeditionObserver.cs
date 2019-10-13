@@ -75,7 +75,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             }
 
             bool connect = showingExpedition.hasConnection;
-            connectionImage.uvRect = UIController.GetTextureUV(connect ? Icons.TaskCompleted : Icons.TaskFailed);
+            connectionImage.uvRect = UIController.GetIconUVRect(connect ? Icons.TaskCompleted : Icons.TaskFailed);
             statusText.text = connect ? Localization.GetExpeditionStatus(showingExpedition.stage) : Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
             if (connect)
             {

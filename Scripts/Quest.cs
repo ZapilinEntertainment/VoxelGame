@@ -663,7 +663,7 @@ public class Quest
                             break;
                         case ProgressQuestID.Progress_300Population:
                             icon = UIController.current.iconsTexture;
-                            iconRect = UIController.GetTextureUV(Icons.Citizen);
+                            iconRect = UIController.GetIconUVRect(Icons.Citizen);
                             break;
                         case ProgressQuestID.Progress_OreRefiner:
                             icon = UIController.current.buildingsIcons;
@@ -713,7 +713,7 @@ public class Quest
                         case ProgressQuestID.Progress_FirstExpedition:
                             iconRect = new Rect(0, 0, 1, 1);
                             icon = UIController.current.iconsTexture;
-                            iconRect = UIController.GetTextureUV(Icons.GuidingStar);
+                            iconRect = UIController.GetIconUVRect(Icons.GuidingStar);
                             break;
                         case ProgressQuestID.Progress_Tier5:
                             icon = UIController.current.buildingsIcons;

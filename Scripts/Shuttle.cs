@@ -104,7 +104,7 @@ public sealed class Shuttle : MonoBehaviour {
             if (condition < BAD_CONDITION_THRESHOLD) chosenIcon = Icons.ShuttleBadIcon;
             else chosenIcon = Icons.ShuttleNormalIcon;
         }
-        ri.uvRect = UIController.GetTextureUV(chosenIcon);
+        ri.uvRect = UIController.GetIconUVRect(chosenIcon);
     }
 
     /// <summary>

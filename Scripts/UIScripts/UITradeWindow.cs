@@ -106,7 +106,7 @@ public sealed class UITradeWindow : UIObserver {
                 if (saleStatus[index] == null) saleStatusMarker.enabled = false;
                 else
                 {
-                    saleStatusMarker.uvRect = UIController.GetTextureUV((saleStatus[index] == true) ? Icons.RedArrow : Icons.GreenArrow);
+                    saleStatusMarker.uvRect = UIController.GetIconUVRect((saleStatus[index] == true) ? Icons.RedArrow : Icons.GreenArrow);
                 }
             }
             else
@@ -139,7 +139,7 @@ public sealed class UITradeWindow : UIObserver {
             limitInputField.text = showingLimit.ToString();            
             RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
             ri.enabled = true;
-            ri.uvRect = UIController.GetTextureUV(selling ? Icons.RedArrow : Icons.GreenArrow);
+            ri.uvRect = UIController.GetIconUVRect(selling ? Icons.RedArrow : Icons.GreenArrow);
         }
         else
         {
@@ -170,7 +170,7 @@ public sealed class UITradeWindow : UIObserver {
             demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
             RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
             ri.enabled = true;
-            ri.uvRect = UIController.GetTextureUV(selling ? Icons.RedArrow : Icons.GreenArrow);
+            ri.uvRect = UIController.GetIconUVRect(selling ? Icons.RedArrow : Icons.GreenArrow);
         }
         else
         {
@@ -225,7 +225,7 @@ public sealed class UITradeWindow : UIObserver {
                 if (saleStatus[tradableResources[i]] == null) saleStatusMarker.enabled = false;
                 else
                 {
-                    saleStatusMarker.uvRect = UIController.GetTextureUV((saleStatus[tradableResources[i]] == true) ? Icons.RedArrow : Icons.GreenArrow);
+                    saleStatusMarker.uvRect = UIController.GetIconUVRect((saleStatus[tradableResources[i]] == true) ? Icons.RedArrow : Icons.GreenArrow);
                     saleStatusMarker.enabled = true;
                 }
             }

@@ -142,7 +142,7 @@ public sealed class QuestUI : MonoBehaviour
                     btn.GetComponent<Button>().interactable = false;
                     RawImage ri = btn.GetChild(0).GetComponent<RawImage>();
                     ri.texture = UIController.current.iconsTexture;
-                    ri.uvRect = UIController.GetTextureUV(Icons.QuestAwaitingIcon);
+                    ri.uvRect = UIController.GetIconUVRect(Icons.QuestAwaitingIcon);
                     t.text = "...";
                     t.color = Color.grey;
                 }
@@ -153,7 +153,7 @@ public sealed class QuestUI : MonoBehaviour
                 RawImage ri = btn.GetChild(0).GetComponent<RawImage>();
                 t.text = string.Empty;
                 ri.texture = UIController.current.iconsTexture;
-                ri.uvRect = UIController.GetTextureUV(Icons.QuestBlockedIcon);
+                ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
             }
         }
     }
@@ -359,7 +359,7 @@ public sealed class QuestUI : MonoBehaviour
             {
                 so.SetActive(true);
                 so.GetComponent<Text>().text = q.steps[i] + q.stepsAddInfo[i];
-                so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetTextureUV(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
+                so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
             }
             else so.SetActive(false);
         }

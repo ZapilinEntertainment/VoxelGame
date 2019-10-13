@@ -82,7 +82,7 @@ public sealed class UICrewObserver : MonoBehaviour
         else
         {
             ri.texture = UIController.current.iconsTexture;
-            ri.uvRect = UIController.GetTextureUV(Icons.TaskFrame);
+            ri.uvRect = UIController.GetIconUVRect(Icons.TaskFrame);
         }
 
         artifactButton.enabled = Artifact.artifactsList.Count > 0;
@@ -95,7 +95,7 @@ public sealed class UICrewObserver : MonoBehaviour
         else
         {
             ri.texture = UIController.current.iconsTexture;
-            ri.uvRect = UIController.GetTextureUV(Icons.TaskFrame);
+            ri.uvRect = UIController.GetIconUVRect(Icons.TaskFrame);
         }
 
         statusText.text = Localization.GetCrewStatus(showingCrew.status);

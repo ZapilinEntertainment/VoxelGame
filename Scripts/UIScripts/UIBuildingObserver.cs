@@ -67,24 +67,24 @@ public class UIBuildingObserver : UIObserver {
                             if (showingEnergySurplus <= 0)
                             {
                                 energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                                energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                                energyImage.uvRect = UIController.GetIconUVRect(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                             }
                             else
                             {
                                 energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                                energyImage.uvRect = UIController.GetIconUVRect(Icons.PowerPlus);
                             }
                         }
                         else
                         {
                             energyValue.text = string.Format("{0,1:F}", showingEnergySurplus) + " / " + ((int)(GameConstants.ENERGY_IN_CRYSTAL)).ToString();
-                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                            energyImage.uvRect = UIController.GetIconUVRect(Icons.PowerPlus);
                         }
                     }
                     else
                     {
                         energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetTextureUV(Icons.OutOfPowerButton);
+                        energyButton.GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.OutOfPowerButton);
                     }
                     energyValue.enabled = true;
                     chargeButton.SetActive(false);
@@ -102,7 +102,7 @@ public class UIBuildingObserver : UIObserver {
             chargeButton.SetActive(false);
             energyValue.text = Localization.GetPhrase(LocalizedPhrase.PressToTurnOn);
             energyValue.enabled = true;            
-            energyImage.uvRect = UIController.GetTextureUV(Icons.TurnOn);
+            energyImage.uvRect = UIController.GetIconUVRect(Icons.TurnOn);
             energyImage.enabled = true;
         }
         energyButton.interactable = observingBuilding.canBePowerSwitched;
@@ -200,30 +200,30 @@ public class UIBuildingObserver : UIObserver {
                                 if (showingEnergySurplus <= 0)
                                 {
                                     energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                                    energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                                    energyImage.uvRect = UIController.GetIconUVRect(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                                 }
                                 else
                                 {
                                     energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                                    energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                                    energyImage.uvRect = UIController.GetIconUVRect(Icons.PowerPlus);
                                 }
                             }
                             else
                             {
                                 energyValue.text = string.Format("{0,1:F}", showingEnergySurplus) + " / " + ((int)(GameConstants.ENERGY_IN_CRYSTAL)).ToString();
-                                energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                                energyImage.uvRect = UIController.GetIconUVRect(Icons.PowerPlus);
                             }
                         }
                         else
                         {
                             energyValue.text = Localization.GetWord(LocalizedWord.Offline);
-                            energyImage.uvRect = UIController.GetTextureUV(Icons.OutOfPowerButton);
+                            energyImage.uvRect = UIController.GetIconUVRect(Icons.OutOfPowerButton);
                         }
                     }
                     else
                     {
                         energyValue.text = "-//-";
-                        energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
+                        energyImage.uvRect = UIController.GetIconUVRect(Icons.DisabledBuilding);
                     }
                 }
                 else
@@ -231,7 +231,7 @@ public class UIBuildingObserver : UIObserver {
                     chargeButton.SetActive(false);
                     energyValue.text = Localization.GetWord(LocalizedWord.Disabled);
                     energyValue.enabled = true;
-                    energyImage.uvRect = UIController.GetTextureUV(Icons.DisabledBuilding);
+                    energyImage.uvRect = UIController.GetIconUVRect(Icons.DisabledBuilding);
                     energyImage.enabled = true;
                 }
             }
@@ -476,12 +476,12 @@ public class UIBuildingObserver : UIObserver {
                     if (showingEnergySurplus > 0)
                     {
                         energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                        energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                        energyImage.uvRect = UIController.GetIconUVRect(Icons.PowerPlus);
                     }
                     else
                     {
                         energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                        energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                        energyImage.uvRect = UIController.GetIconUVRect(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                     }
                 }
             }
@@ -494,7 +494,7 @@ public class UIBuildingObserver : UIObserver {
                     {
                         status_active = false;
                         energyValue.text = Localization.GetPhrase(LocalizedPhrase.PressToTurnOn);
-                        energyImage.uvRect = UIController.GetTextureUV(Icons.TurnOn);
+                        energyImage.uvRect = UIController.GetIconUVRect(Icons.TurnOn);
                     }
                 }
                 else
@@ -508,12 +508,12 @@ public class UIBuildingObserver : UIObserver {
                         if (showingEnergySurplus > 0)
                         {
                             energyValue.text = '+' + string.Format("{0,1:F}", showingEnergySurplus);
-                            energyImage.uvRect = UIController.GetTextureUV(Icons.PowerPlus);
+                            energyImage.uvRect = UIController.GetIconUVRect(Icons.PowerPlus);
                         }
                         else
                         {
                             energyValue.text = string.Format("{0,1:F}", showingEnergySurplus);
-                            energyImage.uvRect = UIController.GetTextureUV(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
+                            energyImage.uvRect = UIController.GetIconUVRect(observingBuilding.canBePowerSwitched ? Icons.PowerButton : Icons.PowerMinus);
                         }
                     }
                 }

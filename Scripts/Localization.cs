@@ -3,14 +3,14 @@
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
 public enum LocalizedWord : ushort
 {
-     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Progress, Repair, Sell,Stability, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
+     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Progress, Repair, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return
 };
 
 public enum LocalizedPhrase : ushort
 {
-    AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot, ConnectionLost, ConvertToBlock, CrewFoundArtifact, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather, UnoccupiedTransmitters, RequiredSurface,
+    AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot, ConnectionLost, ConvertToBlock, CrewFoundArtifact,CrystalsCollected, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather,SuppliesLeft, UnoccupiedTransmitters, RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
     ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -2356,6 +2356,7 @@ public static class Localization
                         case LocalizedWord.Repair: return "Починить"; // shuttle
                         case LocalizedWord.Sell: return "Продавать";
                         case LocalizedWord.Stability: return "Стабильность";
+                        case LocalizedWord.Stamina: return "Выносливость";
                         case LocalizedWord.Step: return "Шаг";
                         case LocalizedWord.UpgradeCost: return "Стоимость улучшения";
                         case LocalizedWord.Upgrade: return "Улучшить"; // upgrade building
@@ -2454,6 +2455,7 @@ public static class Localization
                         case LocalizedWord.Exit: return "Exit"; // exit game
                         case LocalizedWord.Build: return "Build"; // switch to building mode
                         case LocalizedWord.Shuttles: return "Shuttles";
+                        case LocalizedWord.Stamina: return "Stamina";
                         case LocalizedWord.Crews: return "Crews";
                         case LocalizedWord.Reward: return "Reward"; // reward in coins
                         case LocalizedWord.Delete: return "Delete"; // delete save
@@ -2508,6 +2510,7 @@ public static class Localization
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.ConvertToBlock: return "Перестроить в блок"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";
+                        case LocalizedPhrase.CrystalsCollected: return "Кристаллов найдено";
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
                         case LocalizedPhrase.KnowledgePoints: return "Очки Знания";
                         case LocalizedPhrase.MembersCount: return "Число участников";
@@ -2526,6 +2529,7 @@ public static class Localization
                         case LocalizedPhrase.RecallExpedition: return "Отозвать экспедицию";
                         case LocalizedPhrase.StopDig: return "Остановить добычу";
                         case LocalizedPhrase.StopGather: return "Остановить сбор";
+                        case LocalizedPhrase.SuppliesLeft: return "Припасов осталось";
                         case LocalizedPhrase.UnoccupiedTransmitters: return "Свободно передатчиков: ";
 
 
@@ -2587,6 +2591,7 @@ public static class Localization
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.ConvertToBlock: return "Convert to block"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Our crew has found an artifact!";
+                        case LocalizedPhrase.CrystalsCollected: return "Crystals collected";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
                         case LocalizedPhrase.KnowledgePoints:return "Knowledge points";
                         case LocalizedPhrase.MembersCount: return "Members count";
@@ -2605,6 +2610,7 @@ public static class Localization
                         case LocalizedPhrase.RecallExpedition: return "Recall expedition";
                         case LocalizedPhrase.StopDig: return "Stop digging";
                         case LocalizedPhrase.StopGather: return "Stop gathering";
+                        case LocalizedPhrase.SuppliesLeft: return "Supplies left";
                         case LocalizedPhrase.UnoccupiedTransmitters: return "Unoccupied transmitters: ";
 
                         case LocalizedPhrase.RequiredSurface: return "Required surface";

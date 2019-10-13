@@ -178,7 +178,7 @@ public sealed class UIDockObserver : UIObserver
                 else t = Instantiate(tpanel.GetChild(0).gameObject, tpanel).transform;
                 t.gameObject.SetActive(true);
                 t.transform.localPosition = new Vector3(t.localPosition.x, START_Y + (-1) * i * OPERATION_PANEL_HEIGHT, t.localPosition.z);
-                t.GetChild(SELL_STATUS_ICON_INDEX).GetComponent<RawImage>().uvRect = UIController.GetTextureUV((saleStatus[resID] == true) ? Icons.RedArrow : Icons.GreenArrow);
+                t.GetChild(SELL_STATUS_ICON_INDEX).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect((saleStatus[resID] == true) ? Icons.RedArrow : Icons.GreenArrow);
                 t.GetChild(NAME_INDEX).GetComponent<Text>().text = Localization.GetResourceName(resID);
                 int x = new int();
                 x = resID;

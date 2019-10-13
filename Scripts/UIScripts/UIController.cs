@@ -6,9 +6,11 @@ using UnityEngine.UI;
 public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
 public enum Icons : byte
 {
-    GreenArrow, GuidingStar, OutOfPowerButton, PowerPlus, PowerMinus, PowerButton, Citizen, RedArrow, CrewBadIcon,
+    Unknown,GreenArrow, GuidingStar, OutOfPowerButton, PowerPlus, PowerMinus, PowerButton, Citizen, RedArrow, CrewBadIcon,
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
-    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed, TurnOn
+    DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed, TurnOn, CrewMarker, AscensionIcon,
+    PersistenceIcon, SurvivalSkillsIcon, PerceptionIcon, SecretKnowledgeIcon, TechSkillsIcon, IntelligenceIcon, TreasureIcon,
+    QuestMarkerIcon
 }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter, Settlement }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
@@ -74,6 +76,12 @@ sealed public class UIController : MonoBehaviour
     public static UIController current;
 
     const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 4, RPANEL_TEXTFIELD_INDEX = 8;
+
+    public static void SetActivity(bool x)
+    {
+        if (current != null) current.gameObject.SetActive(x);
+        FollowingCamera.main.gameObject.SetActive(x);
+    }
 
     public void Awake()
     {
@@ -877,12 +885,11 @@ sealed public class UIController : MonoBehaviour
         GameLogUI.ChangeVisibility(true);
     }
 
-    public static Rect GetTextureUV(Icons i)
+    public static Rect GetIconUVRect(Icons i)
     {
         float p = 0.125f;
         switch (i)
-        {
-            default: return Rect.zero;
+        {            
             case Icons.GreenArrow: return new Rect(6 * p, 7 * p, p, p);
             case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
             case Icons.OutOfPowerButton: return new Rect(2 * p, 7 * p, p, p);
@@ -905,6 +912,18 @@ sealed public class UIController : MonoBehaviour
             case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
             case Icons.TaskFailed: return new Rect(5 * p, 3 * p, p, p);
             case Icons.TurnOn: return new Rect(6 * p, 3 * p, p, p);
+            case Icons.CrewMarker: return new Rect(7 * p, 3 * p, p, p);
+            case Icons.AscensionIcon: return new Rect(0f, 2f * p, p, p);
+            case Icons.PersistenceIcon: return new Rect(p, 2f * p, p, p);
+            case Icons.SurvivalSkillsIcon: return new Rect(2f * p, 2f * p, p, p);
+            case Icons.PerceptionIcon: return new Rect(3f * p, 2f * p, p,p);
+            case Icons.SecretKnowledgeIcon: return new Rect(4f * p, 2f * p, p, p);
+            case Icons.TechSkillsIcon: return new Rect(5f * p, 2f * p, p, p);
+            case Icons.IntelligenceIcon: return new Rect(6f * p, 2f * p, p, p);
+            case Icons.TreasureIcon: return new Rect(7f * p, 2f * p, p, p);
+            case Icons.QuestMarkerIcon: return new Rect(0f, p, p, p);
+            case Icons.Unknown:
+            default: return new Rect(0f, 0f,p,p);
         }
     }
 
@@ -1442,7 +1461,7 @@ sealed public class UIController : MonoBehaviour
                         bool haveShuttle = !(sh == null);
                         if (haveShuttle)
                         {
-                            progressPanelIcon.uvRect = GetTextureUV(sh.condition > 0.85 ? Icons.ShuttleGoodIcon : (sh.condition < 0.5 ? Icons.ShuttleBadIcon : Icons.ShuttleNormalIcon));
+                            progressPanelIcon.uvRect = GetIconUVRect(sh.condition > 0.85 ? Icons.ShuttleGoodIcon : (sh.condition < 0.5 ? Icons.ShuttleBadIcon : Icons.ShuttleNormalIcon));
                             if (uho.mode == HangarObserverMode.ShuttleOnMission)
                             {
                                 progressPanelText.text = Localization.GetPhrase(LocalizedPhrase.ShuttleOnMission);
@@ -1458,7 +1477,7 @@ sealed public class UIController : MonoBehaviour
                         }
                         else
                         {
-                            progressPanelIcon.uvRect = GetTextureUV(Icons.TaskFrame);
+                            progressPanelIcon.uvRect = GetIconUVRect(Icons.TaskFrame);
                             if (h.constructing)
                             {
                                 float x = h.workflow / h.workflowToProcess;
@@ -1483,7 +1502,7 @@ sealed public class UIController : MonoBehaviour
                     {
                         progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
                         progressPanelIcon.texture = iconsTexture;
-                        progressPanelIcon.uvRect = GetTextureUV(Icons.TaskFrame);
+                        progressPanelIcon.uvRect = GetIconUVRect(Icons.TaskFrame);
                         float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
                         progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                         progressPanelFullfill.fillAmount = x;
