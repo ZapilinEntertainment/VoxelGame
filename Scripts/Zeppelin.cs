@@ -40,7 +40,7 @@ public sealed class Zeppelin : MonoBehaviour {
 
         if (current != null) Destroy(current);
         current = this;
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(gameObject, true);
+        if (PoolMaster.materialPack != MaterialPack.Default) PoolMaster.ReplaceMaterials(gameObject);
         UIController.current.BindLandButton(this);
     }
 

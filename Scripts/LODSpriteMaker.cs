@@ -38,12 +38,13 @@ public class LODSpriteMaker : MonoBehaviour {
         backgroundColor.a = 0;      
         int savedLayer = model.layer;
         var layerNumber = 8;
-        Renderer[] allObjects = model.transform.GetComponentsInChildren<Renderer>();
+        Renderer[] allObjects = model.transform.GetComponentsInChildren<Renderer>();       
         foreach (Renderer r in allObjects)
         {
             r.gameObject.layer = layerNumber;
         }
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(allObjects, false);
+        if (PoolMaster.shadowCasting) PoolMaster.ReplaceMaterials(allObjects);
+
 
         cam.orthographicSize = shotSize;
         cam.backgroundColor = backgroundColor;
@@ -51,7 +52,6 @@ public class LODSpriteMaker : MonoBehaviour {
         RenderTexture m_RenderTexture = new RenderTexture(resolution, resolution, 8, RenderTextureFormat.ARGB32);
         cam.transform.parent = model.transform;
         cam.transform.localRotation = Quaternion.Euler(Vector3.up * 180);
-
         cam.enabled = true;
         Texture2D atlas;        
         switch (i_lpackType)
@@ -184,8 +184,10 @@ public class LODSpriteMaker : MonoBehaviour {
         {
             r.gameObject.layer = savedLayer;
         }
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(allObjects, true);
-         return lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
+        if (PoolMaster.shadowCasting) PoolMaster.ReplaceMaterials(allObjects, PoolMaster.materialPack);
+
+
+        return lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
     }
 
 }

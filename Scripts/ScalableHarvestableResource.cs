@@ -100,8 +100,8 @@ public sealed class ScalableHarvestableResource : Structure {
             model.transform.localPosition = Vector3.zero;
             mf = model.AddComponent<MeshFilter>();
             mr = model.AddComponent<MeshRenderer>();
-            mr.receiveShadows = PoolMaster.useAdvancedMaterials;
-            mr.shadowCastingMode = PoolMaster.useAdvancedMaterials ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.receiveShadows = PoolMaster.shadowCasting;
+            mr.shadowCastingMode = PoolMaster.shadowCasting? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
             mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
         }
