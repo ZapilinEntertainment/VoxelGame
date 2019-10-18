@@ -2852,6 +2852,53 @@ public static class Localization
             default: return "<no affection>";
         }
     }
+    public static string GetChallengeLabel(ExploringMinigameUI.ChallengeType ctype)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                switch (ctype)
+                {
+                    case ExploringMinigameUI.ChallengeType.Impassable: return "Непроходимое место";
+                    case ExploringMinigameUI.ChallengeType.Random: return "Случайное событие!";
+                    case ExploringMinigameUI.ChallengeType.PersistenceTest: return "Проверка Настойчивости";
+                    case ExploringMinigameUI.ChallengeType.SurvivalSkillsText: return "Проверка Навыков Выживания";
+                    case ExploringMinigameUI.ChallengeType.PerceptionTest: return "Проверка на Восприятие";
+                    case ExploringMinigameUI.ChallengeType.SecretKnowledgeTest: return "Проверка на Тайное Знание";
+                    case ExploringMinigameUI.ChallengeType.IntelligenceTest: return "Проверка на Интеллект";
+                    case ExploringMinigameUI.ChallengeType.TechSkillsTest: return "Проверка на Технические Навыки";
+                    case ExploringMinigameUI.ChallengeType.Treasure: return "Сокровища!";
+                    case ExploringMinigameUI.ChallengeType.QuestTest: return "Сюжетное испытание!";
+                    case ExploringMinigameUI.ChallengeType.CrystalFee: return "Заплати, чтобы пройти!";
+                    case ExploringMinigameUI.ChallengeType.AscensionTest: return "Проверка на уровень Возвышения";
+                    case ExploringMinigameUI.ChallengeType.NoChallenge:
+                    default:
+                        return "No challenge";
+                }
+            case Language.English:
+            default:
+                {
+                    switch (ctype)
+                    {
+                        case ExploringMinigameUI.ChallengeType.Impassable: return "Impassable place";
+                        case ExploringMinigameUI.ChallengeType.Random: return "Random event!";
+                        case ExploringMinigameUI.ChallengeType.PersistenceTest: return "Persistence test";
+                        case ExploringMinigameUI.ChallengeType.SurvivalSkillsText: return "Survival skills test";
+                        case ExploringMinigameUI.ChallengeType.PerceptionTest: return "Perception test";
+                        case ExploringMinigameUI.ChallengeType.SecretKnowledgeTest: return "Secret Knowledge test";
+                        case ExploringMinigameUI.ChallengeType.IntelligenceTest: return "Intelligence test";
+                        case ExploringMinigameUI.ChallengeType.TechSkillsTest: return "Technical skills test";
+                        case ExploringMinigameUI.ChallengeType.Treasure: return "Treasures!";
+                        case ExploringMinigameUI.ChallengeType.QuestTest: return "Quest test!";
+                        case ExploringMinigameUI.ChallengeType.CrystalFee: return "Pay to pass!";
+                        case ExploringMinigameUI.ChallengeType.AscensionTest: return "Ascension level test";
+                        case ExploringMinigameUI.ChallengeType.NoChallenge:
+                        default:
+                            return "No challenge";
+                    }
+                }
+        }
+    }
 
     public static string LevelReachedString(byte lvl)
     {
