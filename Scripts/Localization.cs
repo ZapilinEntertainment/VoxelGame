@@ -3,7 +3,7 @@
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
 public enum LocalizedWord : ushort
 {
-     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Progress, Repair, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
+     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return
 };
@@ -2352,8 +2352,10 @@ public static class Localization
                         case LocalizedWord.Mission: return "Миссия";
                         case LocalizedWord.Offline: return "Не подключено"; // out of power		
                         case LocalizedWord.Owner: return "Владелец";
+                        case LocalizedWord.Pass: return "Пройти";
                         case LocalizedWord.Progress: return "Прогресс";
                         case LocalizedWord.Repair: return "Починить"; // shuttle
+                        case LocalizedWord.Roll: return "БРОСОК";
                         case LocalizedWord.Sell: return "Продавать";
                         case LocalizedWord.Stability: return "Стабильность";
                         case LocalizedWord.Stamina: return "Выносливость";
@@ -2430,8 +2432,10 @@ public static class Localization
                         case LocalizedWord.Mission: return "Mission";
                         case LocalizedWord.Offline: return "offline"; // out of power	
                         case LocalizedWord.Owner: return "Owner"; // shuttle owner
+                        case LocalizedWord.Pass: return "Pass";
                         case LocalizedWord.Progress: return "Progress";
                         case LocalizedWord.Repair: return "Repair"; // shuttle
+                        case LocalizedWord.Roll: return "ROLL";
                         case LocalizedWord.Sell: return "Sell";
                         case LocalizedWord.Stability: return "Stability";
                         case LocalizedWord.Step: return "Step";

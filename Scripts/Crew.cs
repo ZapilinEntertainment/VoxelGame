@@ -9,8 +9,7 @@ public sealed class Crew : MonoBehaviour {
     // dependencies
     //Localization.GetCrewStatus()
     // Rest()
-    public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9;
-    private const byte MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
+    public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9, MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
     private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_CONSUMPTION = 0.00003f, STAMINA_REPLENISH_SPEED = 0.05f, ADAPTABILITY_LOSSES = 0.02f;
 
     public static int nextID {get;private set;}	

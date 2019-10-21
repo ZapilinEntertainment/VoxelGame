@@ -1825,6 +1825,7 @@ MonoBehaviour:
   challengeDifficultyLabel: {fileID: 4805921067341509896}
   playerResultLabel: {fileID: 5329799994868733404}
   challengeLabel: {fileID: 252942825795951434}
+  rollText: {fileID: 4934510729763149349}
   crewMarker: {fileID: 8190940363505421343}
   innerRollRing: {fileID: 7189693179395250302}
   outerRollRing: {fileID: 8461592305940586340}

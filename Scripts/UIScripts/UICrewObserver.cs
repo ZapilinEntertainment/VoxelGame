@@ -373,6 +373,7 @@ public sealed class UICrewObserver : MonoBehaviour
             }
             subscribedToUpdate = false;
         }
+        ExploringMinigameUI.ActivateIfEnabled();
     }
     private void OnDestroy()
     {
