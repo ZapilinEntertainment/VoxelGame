@@ -647,7 +647,6 @@ public static class Localization
                 return count.ToString() + " crystals";
         }
     }
-
     public static string AnnounceQuestCompleted(string name)
     {
         switch (currentLanguage)
@@ -659,7 +658,6 @@ public static class Localization
                 return "Quest \"" + name + "\" completed!";
         }
     }
-
     public static string AnnounceCrewReady(string name)
     {
         switch (currentLanguage)
@@ -668,6 +666,59 @@ public static class Localization
                 return "команда \" " + name + "\" готова";
             case Language.English:
             default: return "crew \" " + name + "\" ready";
+        }
+    }
+    public static string GetExpeditionName(Expedition e)
+    {
+        if (e == null) return string.Empty;
+        else
+        {
+            switch (currentLanguage)
+            {
+                case Language.Russian:
+                    {
+                        if (e.destination != null) return "Экспедиция к " + e.destination.GetName();
+                        else
+                        {
+                            switch (e.crew.exploringPath)
+                            {
+                                case Path.LifePath: return "К новым горизонтам!";
+                                case Path.SecretPath: return "Путешествие в неизведанное!";
+                                case Path.TechPath: return "За пределы пространства!";
+                                default: return "Expedition to nowhere";
+                            }
+                        }
+                    }
+                case Language.English:
+                default:
+                    {
+                        if (e.destination != null) return "Expedition to " + e.destination.GetName();
+                        else
+                        {
+                            switch (e.crew.exploringPath)
+                            {
+                                case Path.LifePath: return "To new horizons!";
+                                case Path.SecretPath: return "Journey to the unknown!";
+                                case Path.TechPath: return "Out of the bounds!";
+                                default: return "Expedition to nowhere";
+                            }
+                        }                        
+                    }
+            }
+        }
+    }
+    public static string GetExpeditionName(PointOfInterest poi)
+    {
+        if (poi == null) return string.Empty;
+        else
+        {
+            switch (currentLanguage)
+            {
+                case Language.Russian: return "Экспедиция к " + poi.GetName();
+                case Language.English:
+                default:
+                    return "Expedition to " + poi.GetName();
+            }
         }
     }
 
@@ -714,33 +765,6 @@ public static class Localization
         + "Missions participated: " + c.missionsParticipated.ToString() + "\n"
         + "Missions successed: " + c.missionsSuccessed.ToString();
                     return s;
-                }
-        }
-    }
-    public static string GetCrewStatus(Crew.CrewStatus cs)
-    {
-        switch (currentLanguage)
-        {
-            case Language.Russian:
-                {
-                    switch (cs)
-                    {
-                        case Crew.CrewStatus.AtHome: return "На базе";
-                        case Crew.CrewStatus.OnMission: return "На миссии";
-                        case Crew.CrewStatus.Travelling: return "Путешествуют";
-                        default: return "<статус>";
-                    }
-                }
-            case Language.English:
-            default:
-                {
-                    switch (cs)
-                    {
-                        case Crew.CrewStatus.AtHome: return "At home";
-                        case Crew.CrewStatus.OnMission: return "On mission";
-                        case Crew.CrewStatus.Travelling: return "Travelling";
-                        default: return "<crew status>";
-                    }
                 }
         }
     }
@@ -797,99 +821,6 @@ public static class Localization
                         case Artifact.ArtifactStatus.UsingInMonument: return "Using in monument";
                         case Artifact.ArtifactStatus.OnConservation: return "On conservation";
                         case Artifact.ArtifactStatus.Exists:
-                        default: return string.Empty;
-                    }
-                }
-        }
-    }
-    public static string GetExpeditionLogMessage(Expedition e, ushort[] msg)
-    {
-        switch (currentLanguage)
-        {
-            case Language.Russian:
-                {
-                    switch ((Expedition.ExpeditionLogMessage)msg[0])
-                    {
-                        case Expedition.ExpeditionLogMessage.ContinueMission: return "Продолжаем миссию!";
-                        case Expedition.ExpeditionLogMessage.TestPassed: return "Ей, мы смогли!";
-                        case Expedition.ExpeditionLogMessage.TestFailed: return "У нас не получилось(";
-                        case Expedition.ExpeditionLogMessage.WrongPath: return "Кажется, мы свернули не туда...";
-                        case Expedition.ExpeditionLogMessage.FastPath: return "Мы нашли как срезать путь!";
-                        case Expedition.ExpeditionLogMessage.LoseConfidence: return "А нам точно нужно это делать?";
-                        case Expedition.ExpeditionLogMessage.HardtestPassed: return "Это было сложно, но мы справились";
-                        case Expedition.ExpeditionLogMessage.MemberLost: return "Мы потеряли одного из наших товарищей.";                        
-                        case Expedition.ExpeditionLogMessage.TreasureFound: return "Ого, что мы нашли!";
-                        case Expedition.ExpeditionLogMessage.GlobalMapChanged: return "Кажется, что-то изменилось в округе.";
-                        case Expedition.ExpeditionLogMessage.ArtifactLost: return "К сожалению, мы утратили наш артефакт.";
-                        
-                        case Expedition.ExpeditionLogMessage.ConnectionRestored: return "<Связь с экспедицией восстановлена>";
-                        case Expedition.ExpeditionLogMessage.TaskCompleted: return "Задача выполнена!";
-                        case Expedition.ExpeditionLogMessage.Disapproval: return "Какого черта нас вообще сюда отправили?";
-                        case Expedition.ExpeditionLogMessage.NoStamina: return "Мы совсем выбились из сил.";
-                        case Expedition.ExpeditionLogMessage.RestOnMission: return "Разбили временный лагерь.";
-                        case Expedition.ExpeditionLogMessage.MissionStart: return "Приступаем к заданию.";
-                        case Expedition.ExpeditionLogMessage.MissionChanged: return "Наша задача изменилась";
-                        case Expedition.ExpeditionLogMessage.MissionLeaveFail: return "Нам не удаётся выбраться отсюда!";
-                        case Expedition.ExpeditionLogMessage.StopMission: return "Прекращаем выполнение миссии.";
-                        case Expedition.ExpeditionLogMessage.ReturningHome: return "Возвращаемся домой.";
-                        case Expedition.ExpeditionLogMessage.CrystalsFound: return "Мы нашли немного кристаллов.";
-                        case Expedition.ExpeditionLogMessage.Approval: return "Обожаю свою работу!";
-                        case Expedition.ExpeditionLogMessage.Dismissing: return "<Экспедиция распущена>";
-                        case Expedition.ExpeditionLogMessage.TransmitterSignalLost: return "<Сбой передатчика, связь потеряна.>";
-                        case Expedition.ExpeditionLogMessage.TaskFailure: return "Не удалось выполнить задачу.";
-                        case Expedition.ExpeditionLogMessage.ExplorationCompleted: return "Разведка завершена.";
-
-                        case Expedition.ExpeditionLogMessage.SoftDisappear:
-                            if (Random.value < 0.15f) return "<Наша команда решила остаться там навсегда. Связь потеряна.>";
-                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
-                        case Expedition.ExpeditionLogMessage.HardDisappear:
-                            if (Random.value < 0.15f) return "<Сектор поглотил всю команду. Связь потеряна.>";
-                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
-                        case Expedition.ExpeditionLogMessage.ConnectionLost: return "<Экспедиция перестала выходить на связь>";
-                        default: return string.Empty;
-                    }
-                }
-            case Language.English:
-            default:
-                {
-                    switch ((Expedition.ExpeditionLogMessage)msg[0])
-                    {
-                        case Expedition.ExpeditionLogMessage.ContinueMission: return "We continue the mission";
-                        case Expedition.ExpeditionLogMessage.TestPassed: return "Yes, we did it.";
-                        case Expedition.ExpeditionLogMessage.TestFailed: return "Oh no, we failed it(";
-                        case Expedition.ExpeditionLogMessage.WrongPath: return "It is a wrong way, obviously.";
-                        case Expedition.ExpeditionLogMessage.FastPath: return "We found a short way.";
-                        case Expedition.ExpeditionLogMessage.LoseConfidence: return "I doubt it was a good idea to send us here.";
-                        case Expedition.ExpeditionLogMessage.HardtestPassed: return "It had been hard but finally ended successfully.";
-                        case Expedition.ExpeditionLogMessage.MemberLost: return "We lost a member!";                        
-                        case Expedition.ExpeditionLogMessage.TreasureFound: return "We found something interesting.";
-                        case Expedition.ExpeditionLogMessage.GlobalMapChanged: return "Something has just changed.";
-                        case Expedition.ExpeditionLogMessage.ArtifactLost: return "Sorry, we lost our artifact.";
-
-                        case Expedition.ExpeditionLogMessage.SoftDisappear:
-                            if (Random.value < 0.15f) return "<Our team decided to stay there forever. Connection lost.>";
-                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
-                        case Expedition.ExpeditionLogMessage.HardDisappear:
-                            if (Random.value < 0.15f) return "<The Sector consumed our team. Connection lost.>";
-                            else goto case Expedition.ExpeditionLogMessage.ConnectionLost;
-                        case Expedition.ExpeditionLogMessage.ConnectionLost: return "<Connection lost.>";
-
-                        case Expedition.ExpeditionLogMessage.ConnectionRestored: return "<Connection restored>";
-                        case Expedition.ExpeditionLogMessage.TaskCompleted: return "Our task has been completed!";
-                        case Expedition.ExpeditionLogMessage.Disapproval: return "We don't agree with our mission.";
-                        case Expedition.ExpeditionLogMessage.NoStamina: return "We are out of powers.";
-                        case Expedition.ExpeditionLogMessage.RestOnMission: return "Time for a rest.";
-                        case Expedition.ExpeditionLogMessage.MissionStart: return "Proceed to the task.";
-                        case Expedition.ExpeditionLogMessage.MissionChanged: return "Our mission has been changed.";
-                        case Expedition.ExpeditionLogMessage.MissionLeaveFail: return "We cannot leave his place!";
-                        case Expedition.ExpeditionLogMessage.StopMission:return "We dropping our mission.";
-                        case Expedition.ExpeditionLogMessage.ReturningHome: return "Returning home.";
-                        case Expedition.ExpeditionLogMessage.CrystalsFound: return "Found some crystals.";
-                        case Expedition.ExpeditionLogMessage.Approval: return "Hey, it is cool here." ;
-                        case Expedition.ExpeditionLogMessage.Dismissing: return "<Dismissed>";
-                        case Expedition.ExpeditionLogMessage.TransmitterSignalLost: return "<Transmitter malfunction, connection lost.>";
-                        case Expedition.ExpeditionLogMessage.TaskFailure: return "Task failure.";
-                        case Expedition.ExpeditionLogMessage.ExplorationCompleted: return "Exploration completed.";
                         default: return string.Empty;
                     }
                 }

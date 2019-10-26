@@ -30,9 +30,9 @@ public class MapPoint
         }
     }
     private float _height;
+    protected byte name, surname, specname;
 
-    public float stability { get; protected set; }
-    
+    public float stability { get; protected set; }    
 
     public readonly int ID;
     public static int nextID { get; private set; }
@@ -259,6 +259,12 @@ public class MapPoint
     public void MarkAsDestroyed()
     {
         destroyed = true;
+    }
+
+    virtual public string GetName()
+    {
+        //name, surname, specname
+        return Localization.GetMapPointTitle(type);
     }
 
     #region save-load

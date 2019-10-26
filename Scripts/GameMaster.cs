@@ -180,8 +180,8 @@ public sealed class GameMaster : MonoBehaviour
     private void Awake()
     {
         //testzone
-        gameStartSettings.generationMode = ChunkGenerationMode.GameLoading;
-        savename = "test";
+        //gameStartSettings.generationMode = ChunkGenerationMode.GameLoading;
+        //savename = "test";
         //
 
         if (realMaster != null & realMaster != this)

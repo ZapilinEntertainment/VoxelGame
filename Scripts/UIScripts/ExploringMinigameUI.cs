@@ -3,15 +3,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class ExploringMinigameUI : MonoBehaviour
+public enum ChallengeType : byte
 {
-    public enum ChallengeType : byte
-    {
-        NoChallenge = 0, Impassable = 1, Random = 2, PersistenceTest, SurvivalSkillsText, PerceptionTest, SecretKnowledgeTest,
-        IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest
-    }
-    //dependency : DeckField.ChangeChallengeType, FieldAction, Localization.GetChallengeLabel, Pass()
+    NoChallenge = 0, Impassable = 1, Random = 2, PersistenceTest, SurvivalSkillsText, PerceptionTest, SecretKnowledgeTest,
+    IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest
+}
+//dependency : DeckField.ChangeChallengeType, Localization.GetChallengeLabel
+//ExploringMinigameUI : FieldAction(), Pass()
+public struct Plan
+{
+    public ChallengeType challengeType;
+    public byte difficultyClass;
+    public bool isHidden, isPassed;
 
+    public static Plan emptyField, impassableField;
+    public const byte MAX_DIFFICULTY = 25;
+
+    static Plan()
+    {
+        emptyField = new Plan(ChallengeType.NoChallenge, 0);
+        impassableField = new Plan(ChallengeType.Impassable, MAX_DIFFICULTY);
+    }
+
+    public Plan(ChallengeType i_type, byte i_difficulty)
+    {
+        challengeType = i_type;
+        difficultyClass = i_difficulty;
+        isHidden = true;
+        isPassed = false;
+    }
+
+    public void ChangeChallengeType(ChallengeType chtype, byte newDifficulty)
+    {
+        challengeType = chtype;
+        difficultyClass = newDifficulty;
+    }
+    public void ChangeHiddenStatus(bool x)
+    {
+        isHidden = x;
+    }
+    public void MarkAsPassed() { isPassed = true; }
+}
+
+public sealed class ExploringMinigameUI : MonoBehaviour
+{   
     private sealed class DeckField
     {
         public bool isHidden { get; private set; }
@@ -137,11 +172,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
 
     private const float MARKER_MOVE_SPEED = 5f, CHALLENGE_PANEL_CLOSING_TIME = 3f, ROLL_RINGS_OUTER_SPEED = 6f, ROLL_RINGS_INNER_SPEED = 2f, ROLL_RINGS_DISAPPEAR_SPEED = 5f,
         MONEY_PER_STEP = 10f, EXPERIENCE_PER_STEP = 10f, STAMINA_PER_STEP = 0.01f;
-    private const byte MAX_DIFFICULTY = 20;
+    private const byte MAX_DIFFICULTY = 25;
 
     public static void ShowExpedition(Expedition e)
     {
-        if (e == null || e.stage == Expedition.ExpeditionStage.Dismissed) return;
+        if (e == null) return;
         else
         {
             if (current == null)

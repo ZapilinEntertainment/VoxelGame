@@ -5,10 +5,11 @@ using System.Collections.Generic;
 public class PointOfInterest : MapPoint
 {
     protected float richness, danger, mysteria, friendliness;
+    protected Plan[,] plan;
+
     public readonly float difficulty;
     public float exploredPart { get; protected set; }
-    public List<MissionPreset> availableMissions { get; private set; }
-    public List<Expedition> workingExpeditions { get; private set; }
+    public Expedition workingExpedition { get; protected set; }
 
     public PointOfInterest(int i_id) : base(i_id) {
         difficulty = RecalculateDifficulty();
@@ -19,7 +20,7 @@ public class PointOfInterest : MapPoint
         exploredPart = 0f;
     }
 
-    public void ListAnExpedition(Expedition e)
+    public void AssignExpedition(Expedition e)
     {
         if (workingExpeditions == null)
         {
@@ -31,7 +32,7 @@ public class PointOfInterest : MapPoint
             if (!workingExpeditions.Contains(e)) workingExpeditions.Add(e);
         }
     }
-    public void ExcludeExpeditionFromList(Expedition e)
+    public void DeassignExpedition(Expedition e)
     {
         if (workingExpeditions != null)
         {
@@ -39,107 +40,24 @@ public class PointOfInterest : MapPoint
             if (workingExpeditions.Count == 0) workingExpeditions = null;
         }
     }
-    public Mission GetMissionByIndex(int i)
+
+    public ref Plan[,] GetPlanReference()
     {
-        if (availableMissions != null && availableMissions.Count > i)
+        if (plan == null)
         {
-            return new Mission(availableMissions[i]);
+            int size = 4 + Random.Range(0, (int)(3f * mysteria + 3f * richness));
+            plan = new Plan[size, size];
+
+            // generating plan:
+            plan[0, 0] = Plan.emptyField;
+            //up:
+
+
         }
-        else return null;
+        return ref plan;
     }
 
-    public void Explore(float k)
-    {
-        exploredPart += k;
-        if (exploredPart >= 1f) exploredPart = 1f;
-        GameMaster.realMaster.researchStar.PointExplored(this);
-    }  
-    public bool TreasureFinding(Crew c)
-    {
-        if (c.PerceptionRoll() > 20f * (0.9f + difficulty * 0.3f - friendliness * 0.3f))
-        {
-            TakeTreasure(c);
-            return true;
-        }
-        else return false;
-    }
-    public void TakeTreasure(Crew c)
-    {
-        if (c.artifact == null)
-        {
-            if (Random.value < GameConstants.ARTIFACT_FOUND_CHANCE)
-            {
-                c.SetArtifact(GetArtifact());
-                GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.CrewFoundArtifact));
-                return;
-            }
-        }
-        GainResources(c);
-    }    
-    public void GainResources(Crew c)
-    {
-        List<ResourceType> typesList = null;
-        switch (type)
-        {
-            case MapMarkerType.Station:
-                typesList = new List<ResourceType>() { ResourceType.metal_K, ResourceType.metal_M, ResourceType.Plastics, ResourceType.Fuel };
-                if (Random.value < 0.4f) c.AddExperience(Expedition.ONE_STEP_XP * difficulty);
-                break;
-            case MapMarkerType.Wreck:
-                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.metal_M, ResourceType.Graphonium };
-                break;
-            case MapMarkerType.Island:
-                typesList = new List<ResourceType>() { ResourceType.metal_M_ore, ResourceType.metal_E_ore, ResourceType.metal_N_ore, ResourceType.metal_P_ore };
-                break;
-            case MapMarkerType.SOS:
-                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.Supplies };
-                if (Random.value < 0.3f) c.AddExperience(Expedition.ONE_STEP_XP * difficulty);
-                break;
-            case MapMarkerType.Portal:
-                typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.metal_N_ore, ResourceType.Graphonium };
-                break;
-            case MapMarkerType.QuestMark:
-                // ?
-                break;
-            case MapMarkerType.Colony:
-                typesList = new List<ResourceType>() { ResourceType.Food, ResourceType.Supplies, ResourceType.metal_K };
-                break;
-            case MapMarkerType.Wiseman:
-                c.AddExperience(Expedition.ONE_STEP_XP * 20f * difficulty);
-                c.RaiseAdaptability(1f);
-                break;
-            case MapMarkerType.Wonder:
-                if (Random.value > 0.5f) typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.Graphonium };
-                else c.AddExperience(Expedition.ONE_STEP_XP * 5f);
-                break;
-            case MapMarkerType.Resources: // or changing!
-                typesList = new List<ResourceType>()
-                {
-                    ResourceType.metal_K_ore, ResourceType.metal_M_ore, ResourceType.metal_N_ore, ResourceType.metal_E_ore, ResourceType.metal_P_ore,
-                    ResourceType.metal_S_ore, ResourceType.mineral_F, ResourceType.mineral_L
-                };
-                break;
-        }
-        if (typesList != null && typesList.Count > 0)
-        {
-            GameMaster.realMaster.colonyController.storage.AddResource(typesList[Random.Range(0,typesList.Count - 1)], 5f * c.membersCount / (float)Crew.MAX_MEMBER_COUNT * c.persistence);
-        }
-    }
-    public bool TryToJump(Crew c)
-    {
-        return (c.PerceptionRoll() < 10f * difficulty * (1f - 0.3f * friendliness));
-    }
-    public bool TryAdditionalJump(Crew c)
-    {
-        float a = c.PerceptionRoll();
-        float b = c.PerceptionRoll();
-        if (b < a) a = b;
-        return a > 20f * difficulty * (1f - 0.2f * friendliness);
-    }
-    public float GetRestValue()
-    {
-        return (0.4f + danger * 0.3f + difficulty * 0.3f + friendliness * 0.2f) * 0.5f;
-    }
+
     public bool HardTest(Crew c)
     {
         return c.HardTestRoll() >= danger * (20f + 10f * difficulty);
@@ -334,24 +252,11 @@ public class PointOfInterest : MapPoint
         data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
         data.AddRange(System.BitConverter.GetBytes(exploredPart)); // 16 - 19
-
-        byte missionsCount = 0;
-        var missionsData = new List<byte>();
-        if (availableMissions != null)
-        {
-            foreach (MissionPreset mp in availableMissions)
-            {
-                missionsData.AddRange(mp.Save());
-                missionsCount++;
-            }
-        }
-        data.Add(missionsCount); // 24
-        if (missionsCount != 0) data.AddRange(missionsData);
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 21;
+        int LENGTH = 20;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         richness = System.BitConverter.ToSingle(data, 0);
@@ -359,15 +264,6 @@ public class PointOfInterest : MapPoint
         mysteria = System.BitConverter.ToSingle(data, 8);
         friendliness = System.BitConverter.ToSingle(data, 12);
         exploredPart = System.BitConverter.ToSingle(data, 16);        
-        byte n = data[20];
-        if (n > 0)
-        {
-            availableMissions = new List<MissionPreset>();
-            for (int i = 0; i < n; i++)
-            {
-                availableMissions.Add(MissionPreset.Load(fs));
-            }
-        }
     } 
     #endregion
 }
