@@ -180,8 +180,8 @@ public sealed class GameMaster : MonoBehaviour
     private void Awake()
     {
         //testzone
-        gameStartSettings.generationMode = ChunkGenerationMode.GameLoading;
-        savename = "test";
+        //gameStartSettings.generationMode = ChunkGenerationMode.GameLoading;
+        //savename = "test";
         //
 
         if (realMaster != null & realMaster != this)
@@ -262,8 +262,8 @@ public sealed class GameMaster : MonoBehaviour
                         int zpos = sb.pos.z;
 
                         //testzone
-                        Structure s = HeadQuarters.GetHQ(1);
-                        // weNeedNoResources = true;
+                        Structure s = HeadQuarters.GetHQ(4);
+                         weNeedNoResources = true;
 
                         //eo testzone                    
                         SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
@@ -433,14 +433,15 @@ public sealed class GameMaster : MonoBehaviour
 
         //testzone
         // if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
-        if (false)
+        //if (false)
         {
-            if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
+            //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
 
             if (Input.GetKeyDown("o"))
             {
-                bool makeBuildings = false;
+                bool makeBuildings = true;
                 var sx = mainChunk.GetRandomSurfaceBlock();
+                
                 if (makeBuildings)
                 {
                     if (sx != null)
@@ -475,47 +476,32 @@ public sealed class GameMaster : MonoBehaviour
                     }
                 }
 
-                //
-                int l = Random.Range(10, 100);
-                Artifact a;
-                Artifact.AffectionType atype = Artifact.AffectionType.NoAffection;
-                float f;
-                for (int i = 0; i < l; i++)
-                {
-                    f = Random.value;
-                    if (f < 0.25f) atype = Artifact.AffectionType.LifepowerAffection;
-                    else
-                    {
-                        if (f > 0.5f)
-                        {
-                            if (f > 0.75f) atype = Artifact.AffectionType.SpaceAffection;
-                            else atype = Artifact.AffectionType.StabilityAffection;
-                        }
-                    }
-                    a = new Artifact(Random.value, Random.value, Random.value, atype);
-                    a.SetResearchStatus(true);
-                    a.Conservate();
-                }
-                //           
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                    // UIController.current.Select(s);
-                }
+                /*         
+              sx = mainChunk.GetRandomSurfaceBlock();
+              if (sx != null)
+              {
+                  Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
+                  s.SetBasement(sx, PixelPosByte.zero);
+                  // UIController.current.Select(s);
+              }
 
-                sx = mainChunk.GetRandomSurfaceBlock();
-                if (sx != null)
-                {
-                    Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
-                    s.SetBasement(sx, PixelPosByte.zero);
-                }
-                sx = mainChunk.GetRandomSurfaceBlock();
+              sx = mainChunk.GetRandomSurfaceBlock();
+              if (sx != null)
+              {
+                  Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
+                  s.SetBasement(sx, PixelPosByte.zero);
+              }
+              sx = mainChunk.GetRandomSurfaceBlock();
+              */
 
                 if (makeBuildings)
                 {
                     Vector3Int ecpos = Vector3Int.zero;
+                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+                    {
+                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+                    }
                     if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
                     {
                         Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
@@ -525,18 +511,14 @@ public sealed class GameMaster : MonoBehaviour
                     {
                         Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
                         s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-                    }
+                    }                    
 
                     Crew c = Crew.CreateNewCrew(colonyController, Crew.MAX_MEMBER_COUNT);
-                    sx = mainChunk.GetRandomSurfaceBlock();
-                    if (sx != null)
+
+                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
                     {
-                        Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
-                        s.SetBasement(sx, PixelPosByte.zero);
-                        Shuttle sh = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
-                        sh.FirstSet(s as Hangar);
-                        (s as Hangar).AssignShuttle(sh);
-                        c.SetShuttle(sh);
+                        Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
+                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
                     }
                 }
 
@@ -859,10 +841,8 @@ public sealed class GameMaster : MonoBehaviour
         //74 (+4) end
         #endregion
 
-        Mission.StaticSave(fs);
         globalMap.Save(fs);
         environmentMaster.Save(fs);
-        Shuttle.SaveStaticData(fs);
         Artifact.SaveStaticData(fs);
         Crew.SaveStaticData(fs);
         mainChunk.SaveChunkData(fs);
@@ -901,7 +881,7 @@ public sealed class GameMaster : MonoBehaviour
             }
             if (mainChunk != null) mainChunk.ClearChunk();
             // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
-            Crew.Reset(); Shuttle.Reset();
+            Crew.Reset(); 
             Grassland.ScriptReset();
             Expedition.GameReset();
             Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
@@ -973,7 +953,6 @@ public sealed class GameMaster : MonoBehaviour
             else realSpaceConsuming = null;
             #endregion
 
-            Mission.StaticLoad(fs);
             globalMap.Load(fs);            
             if (loadingFailed)
             {
@@ -985,13 +964,6 @@ public sealed class GameMaster : MonoBehaviour
             if (loadingFailed)
             {
                 errorReason = "environment error";
-                goto FAIL;
-            }
-            //return false;
-            Shuttle.LoadStaticData(fs); // because of hangars
-            if (loadingFailed)
-            {
-                errorReason = "shuttles load failure";
                 goto FAIL;
             }
 

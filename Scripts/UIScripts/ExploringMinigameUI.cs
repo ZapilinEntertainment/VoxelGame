@@ -3,15 +3,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class ExploringMinigameUI : MonoBehaviour
+public enum ChallengeType : byte
 {
-    public enum ChallengeType : byte
-    {
-        NoChallenge = 0, Impassable = 1, Random = 2, PersistenceTest, SurvivalSkillsText, PerceptionTest, SecretKnowledgeTest,
-        IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest
-    }
-    //dependency : DeckField.ChangeChallengeType, FieldAction, Localization.GetChallengeLabel, Pass()
+    NoChallenge = 0, Impassable = 1, Random = 2, PersistenceTest, SurvivalSkillsTest, PerceptionTest, SecretKnowledgeTest,
+    IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest
+}
+//dependency : DeckField.ChangeChallengeType, Localization.GetChallengeLabel
+//ExploringMinigameUI : FieldAction(), Pass()
+public struct Plan
+{
+    public ChallengeType challengeType;
+    public byte difficultyClass;
+    public bool isHidden, isPassed;
 
+    public static Plan emptyField, impassableField;
+    public const byte MAX_DIFFICULTY = 25, TREASURE_EXP_CODE = 0, TREASURE_MONEY_CODE =1, TREASURE_RESOURCES_CODE = 2, TREASURE_ARTIFACT_CODE = 3;
+
+    static Plan()
+    {
+        emptyField = new Plan(ChallengeType.NoChallenge, 0);
+        impassableField = new Plan(ChallengeType.Impassable, MAX_DIFFICULTY);
+    }
+
+    public Plan(ChallengeType i_type, byte i_difficulty)
+    {
+        challengeType = i_type;
+        difficultyClass = i_difficulty;
+        isHidden = true;
+        isPassed = false;
+    }
+
+    public void ChangeChallengeType(ChallengeType chtype, byte newDifficulty)
+    {
+        challengeType = chtype;
+        difficultyClass = newDifficulty;
+    }
+    public void ChangeHiddenStatus(bool x)
+    {
+        isHidden = x;
+    }
+    public void MarkAsPassed() { isPassed = true; }
+}
+
+public sealed class ExploringMinigameUI : MonoBehaviour
+{   
     private sealed class DeckField
     {
         public bool isHidden { get; private set; }
@@ -52,7 +87,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 switch (challengeType)
                 {
                     case ChallengeType.PersistenceTest: img.uvRect = UIController.GetIconUVRect(Icons.PersistenceIcon); break;
-                    case ChallengeType.SurvivalSkillsText: img.uvRect = UIController.GetIconUVRect(Icons.SurvivalSkillsIcon); break;
+                    case ChallengeType.SurvivalSkillsTest: img.uvRect = UIController.GetIconUVRect(Icons.SurvivalSkillsIcon); break;
                     case ChallengeType.PerceptionTest: img.uvRect = UIController.GetIconUVRect(Icons.PerceptionIcon); break;
                     case ChallengeType.SecretKnowledgeTest: img.uvRect = UIController.GetIconUVRect(Icons.SecretKnowledgeIcon); break;
                     case ChallengeType.IntelligenceTest: img.uvRect = UIController.GetIconUVRect(Icons.IntelligenceIcon); break;
@@ -88,7 +123,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 switch (challengeType)
                 {
                     case ChallengeType.PersistenceTest: img.uvRect = UIController.GetIconUVRect(Icons.PersistenceIcon); break;
-                    case ChallengeType.SurvivalSkillsText: img.uvRect = UIController.GetIconUVRect(Icons.SurvivalSkillsIcon); break;
+                    case ChallengeType.SurvivalSkillsTest: img.uvRect = UIController.GetIconUVRect(Icons.SurvivalSkillsIcon); break;
                     case ChallengeType.PerceptionTest: img.uvRect = UIController.GetIconUVRect(Icons.PerceptionIcon); break;
                     case ChallengeType.SecretKnowledgeTest: img.uvRect = UIController.GetIconUVRect(Icons.SecretKnowledgeIcon); break;
                     case ChallengeType.IntelligenceTest: img.uvRect = UIController.GetIconUVRect(Icons.IntelligenceIcon); break;
@@ -137,11 +172,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
 
     private const float MARKER_MOVE_SPEED = 5f, CHALLENGE_PANEL_CLOSING_TIME = 3f, ROLL_RINGS_OUTER_SPEED = 6f, ROLL_RINGS_INNER_SPEED = 2f, ROLL_RINGS_DISAPPEAR_SPEED = 5f,
         MONEY_PER_STEP = 10f, EXPERIENCE_PER_STEP = 10f, STAMINA_PER_STEP = 0.01f;
-    private const byte MAX_DIFFICULTY = 20;
+    private const byte MAX_DIFFICULTY = 25;
 
     public static void ShowExpedition(Expedition e)
     {
-        if (e == null || e.stage == Expedition.ExpeditionStage.Dismissed) return;
+        if (e == null) return;
         else
         {
             if (current == null)
@@ -438,7 +473,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         if (Random.value > pointDifficulty) chArray[i] = ChallengeType.PersistenceTest;
                         else
                         {
-                            if (Random.value > missionDifficulty) chArray[i] = ChallengeType.SurvivalSkillsText;
+                            if (Random.value > missionDifficulty) chArray[i] = ChallengeType.SurvivalSkillsTest;
                             else chArray[i] = ChallengeType.Random;
                         }
                     }
@@ -521,7 +556,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                                 newtype = ChallengeType.PersistenceTest;
                                 break;
                             case 1:
-                                newtype = ChallengeType.SurvivalSkillsText;
+                                newtype = ChallengeType.SurvivalSkillsTest;
                                 break;
                             case 2:
                                 newtype = ChallengeType.PerceptionTest;
@@ -554,9 +589,9 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.PersistenceTest);
                         useRollSystem = true;
                         break;
-                    case ChallengeType.SurvivalSkillsText:
+                    case ChallengeType.SurvivalSkillsTest:
                         useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.SurvivalSkillsText);
+                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.SurvivalSkillsTest);
                         useRollSystem = true;
                         break;
                     case ChallengeType.PerceptionTest:
@@ -735,7 +770,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         result = crew.PersistenceRoll();
                         break;
                     }
-                case ChallengeType.SurvivalSkillsText:
+                case ChallengeType.SurvivalSkillsTest:
                     {
                         result = crew.SurvivalSkillsRoll();
                         break;

@@ -6,15 +6,37 @@ using UnityEngine.UI;
 public sealed class UIExpeditionObserver : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] private RawImage  connectionImage, crewPassButtonImage, destinationPointImage;
-    [SerializeField] private Text statusText, crewInfo, placeInfo, missionInfo, currentStepText, progressText;
-    [SerializeField] private Image stepProgressBar;
-    [SerializeField] private GameObject recallButton;
-    [SerializeField] private Text[] logData;
+    [SerializeField] private Dropdown crewDropdown;
+    [SerializeField] private GameObject crewButton;
+    [SerializeField] private Slider suppliesSlider, crystalsSlider;
+    [SerializeField] private Transform transmitterLine, shuttleLine, fuelLine;
+    [SerializeField] private Button launchButton;
 #pragma warning restore 0649
+    private RawImage transmitterMarker { get { return transmitterLine.GetChild(1).GetComponent<RawImage>(); } }
+    private Text transmitterLabel { get { return transmitterLine.GetChild(0).GetComponent<Text>(); } }
+    private RawImage shuttleMarker { get { return shuttleLine.GetChild(1).GetComponent<RawImage>(); } }
+    private Text shuttleLabel { get { return shuttleLine.GetChild(0).GetComponent<Text>(); } }
+    private RawImage fuelMarker { get { return fuelLine.GetChild(1).GetComponent<RawImage>(); } }
+    private Text fuelLabel { get { return fuelLine.GetChild(0).GetComponent<Text>(); } }
+    private Text launchButtonLabel { get { return launchButton.transform.GetChild(0).GetComponent<Text>(); } }
+
+    private Transform expNameField { get { return transform.GetChild(0); } }
+    private Text expLabel { get { return expNameField.GetChild(0).GetComponent<Text>(); } }
+    private GameObject expDestinationButton { get { return expNameField.GetChild(1).gameObject; } }
+
     private bool subscribedToUpdate = false;
     private byte lastChangesMarkerValue = 0;
+    private float statedSuppliesCount = 0f, statedCrystalsCount = 0f;
+    private int lastCrewListMarker = 0;
     private Expedition showingExpedition;
+
+    private PointOfInterest selectedDestination;
+    private Crew selectedCrew;
+    private List<int> crewsIDs;
+
+    private readonly Color lightcyan = new Color(0.5f, 1f, 0.95f);
+    private const int FUEL_NEEDED = 200;
+
 
     public void SetPosition(Rect r, SpriteAlignment alignment)
     {
@@ -46,137 +68,169 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             RedrawWindow();
         }
     }
-    private void RedrawWindow()
+    public void Show(PointOfInterest poe)
     {
-        if (showingExpedition == null) gameObject.SetActive(false);
+        if (poe == null) gameObject.SetActive(false);
         else
         {
-            crewInfo.text = showingExpedition.crew.name;
-            showingExpedition.crew.DrawCrewIcon(crewPassButtonImage);
-
-            var d = showingExpedition.destination;
-            if (d != null)
+            if (poe.workingExpedition != null)
             {
-                placeInfo.text = Localization.GetMapPointTitle(d.type);
-                destinationPointImage.uvRect = GlobalMapUI.GetMarkerRect(d.type);
-                if (!destinationPointImage.isActiveAndEnabled)
-                {
-                    placeInfo.enabled = true;
-                    destinationPointImage.transform.parent.gameObject.SetActive(true);
-                }
+                Show(poe.workingExpedition);
+                return;
             }
             else
             {
-                if (destinationPointImage.isActiveAndEnabled)
-                {
-                    placeInfo.enabled = false;
-                    destinationPointImage.transform.parent.gameObject.SetActive(false);
-                }
+                showingExpedition = null;
+                selectedCrew = null;
+                selectedDestination = poe;
+                statedSuppliesCount = 0;
+                statedCrystalsCount = 0;
             }
-
-            bool connect = showingExpedition.hasConnection;
-            connectionImage.uvRect = UIController.GetIconUVRect(connect ? Icons.TaskCompleted : Icons.TaskFailed);
-            statusText.text = connect ? Localization.GetExpeditionStatus(showingExpedition.stage) : Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
-            if (connect)
-            {
-                //fill stage text & stage bar
-                var m = showingExpedition.mission;
-                if (m != null) {
-                    missionInfo.text =  m.GetName();
-                    currentStepText.text = Localization.GetWord(LocalizedWord.Step) + ' ' + showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString();
-                    if (!currentStepText.enabled)
-                    {
-                        currentStepText.enabled = true;
-                        stepProgressBar.transform.parent.parent.gameObject.SetActive(true);
-                    }
-                }
-                else
-                {
-                    missionInfo.text = Localization.GetPhrase(LocalizedPhrase.NoMission);
-                    currentStepText.text = string.Empty;
-                    if (currentStepText.enabled)
-                    {
-                        currentStepText.enabled = false;
-                        stepProgressBar.transform.parent.parent.gameObject.SetActive(false);
-                    }
-                }
-                float f = showingExpedition.progress / Expedition.ONE_STEP_WORKFLOW;
-                stepProgressBar.fillAmount = f;
-                progressText.text = ((int)(f * 100)).ToString() + '%';                             
-            }
-            else
-            {
-                currentStepText.enabled = false;
-                stepProgressBar.transform.parent.parent.gameObject.SetActive(false);
-            }
-            if (showingExpedition.stage == Expedition.ExpeditionStage.OnMission | showingExpedition.stage == Expedition.ExpeditionStage.WayIn)
-            {
-                if (!recallButton.activeSelf) recallButton.SetActive(true);
-            }
-            else
-            {
-                if (recallButton.activeSelf) recallButton.SetActive(false);
-            }
-            showingExpedition.FillLog(logData);
-
-            lastChangesMarkerValue = showingExpedition.changesMarkerValue;
+            RedrawWindow();
         }
+    }
+
+    private void RedrawWindow()
+    {
+        if (showingExpedition == null)
+        {
+            //подготовка новой экспедиции
+            expLabel.text = Localization.GetExpeditionName(selectedDestination);
+            bool readyToStart = selectedCrew != null;
+            if (readyToStart) readyToStart = selectedCrew.atHome;
+            //transmitters:
+            int c = QuantumTransmitter.GetFreeTransmittersCount();
+            if (c > 0)
+            {
+                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+                transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeTransmitters) + c.ToString();
+            }
+            else
+            {
+                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+                transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.NoTransmitters);
+                readyToStart = false;
+            }
+            //shuttles:
+            c = Hangar.GetFreeShuttlesCount();
+            if (c > 0)
+            {
+                shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+                shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeShuttles) + c.ToString();
+            }
+            else
+            {
+                shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+                shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.NoShuttles);
+                readyToStart = false;
+            }
+            //fuel:
+            fuelLabel.text = Localization.GetPhrase(LocalizedPhrase.FuelNeeded) + FUEL_NEEDED.ToString();
+            c = (int)GameMaster.realMaster.colonyController.storage.standartResources[ResourceType.FUEL_ID];
+            if (c > FUEL_NEEDED)
+            {
+                fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);                
+                fuelLabel.color = Color.white;
+            }
+            else
+            {
+                fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+                fuelLabel.color = Color.red;
+                readyToStart = false;
+            }
+            //launch button
+            launchButtonLabel.text = Localization.GetWord(LocalizedWord.Launch);
+            launchButton.interactable = readyToStart;
+            launchButton.GetComponent<Image>().color = readyToStart ? lightcyan : Color.grey;
+        }
+        else
+        {
+             // отрисовка существующей
+            expLabel.text = Localization.GetExpeditionName(showingExpedition);
+            statedCrystalsCount = showingExpedition.crystalsCollected;
+            statedSuppliesCount = showingExpedition.suppliesCount;
+            lastChangesMarkerValue = showingExpedition.changesMarkerValue;            
+        }
+        suppliesSlider.value = statedSuppliesCount;
+        crystalsSlider.value = statedCrystalsCount;
+
+        var edb = expDestinationButton;
+        if (selectedDestination != null)
+        {
+            edb.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(selectedDestination.type);
+            if (!edb.activeSelf) edb.SetActive(true);
+        }
+        else
+        {
+            if (edb.activeSelf) edb.SetActive(false);
+        }
+        PrepareCrewDropdown();
+
+    }
+    private void PrepareCrewDropdown()
+    {
+        const char quotes = '"';
+        var opts = new List<Dropdown.OptionData>() { };
+        if (showingExpedition != null)
+        {
+            selectedCrew = showingExpedition.crew;
+            opts.Add(new Dropdown.OptionData(quotes + selectedCrew.name + quotes));
+            crewsIDs.Add(selectedCrew.ID);
+
+            crewDropdown.value = crewsIDs.Count;
+            crewDropdown.interactable = false;
+        }
+        else
+        {
+            opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
+            crewsIDs = new List<int>() { -1 };
+            var clist = Crew.crewsList;
+            if (clist != null && clist.Count > 0)
+            {
+                foreach (Crew c in Crew.crewsList)
+                {
+                    if (c.atHome)
+                    {
+                        opts.Add(new Dropdown.OptionData(quotes + c.name + quotes));
+                        crewsIDs.Add(c.ID);
+                    }
+                }
+            }
+            if (crewsIDs.Count > 1)
+            {
+                crewDropdown.value = 1;
+                crewDropdown.interactable = true;
+            }
+            else
+            {
+                crewDropdown.value = 0;
+                crewDropdown.interactable = false;
+            }
+        }              
     }
 
     public void StatusUpdate()
     {
-        if (showingExpedition == null) gameObject.SetActive(false);
-        else {
-            if (lastChangesMarkerValue != showingExpedition.changesMarkerValue) RedrawWindow();
-            else
-            {
-                if (showingExpedition.hasConnection && (showingExpedition.stage == Expedition.ExpeditionStage.OnMission | showingExpedition.stage == Expedition.ExpeditionStage.LeavingMission))
-                {
-                    //fill stage text & stage bar
-                    currentStepText.text = Localization.GetWord(LocalizedWord.Step) + ' ' + showingExpedition.currentStep.ToString() + " / " + showingExpedition.mission.stepsCount.ToString();
-                    float f = showingExpedition.progress / Expedition.ONE_STEP_WORKFLOW;
-                    stepProgressBar.fillAmount = f;
-                    progressText.text = ((int)(f * 100)).ToString() + '%';
-                }
-            }
-        }
+        
     }
 
-    public void CrewButton()
+    public void OnCrewValueChanged(int i)
     {
-        if (showingExpedition == null || showingExpedition.stage == Expedition.ExpeditionStage.Dismissed) gameObject.SetActive(false);
+        if (i == 0)
+        {
+            selectedCrew = null;
+            if (crewButton.activeSelf) crewButton.SetActive(false);
+        }
         else
         {
-            if (ExplorationPanelUI.current.isActiveAndEnabled)
-            {
-                ExplorationPanelUI.current.Show(showingExpedition.crew);
-            }
-            else
-            {
-                showingExpedition.crew.ShowOnGUI(new Rect(transform.position, GetComponent<RectTransform>().rect.size), SpriteAlignment.BottomLeft, true);
-                gameObject.SetActive(false);
-            }
+            selectedCrew = Crew.crewsList[i - 1];
+            selectedCrew.DrawCrewIcon(crewButton.transform.GetChild(0).GetComponent<RawImage>());
+            if (!crewButton.activeSelf) crewButton.SetActive(true);
         }
     }
-    public void DestinationButton()
+    public void OnSuppliesSliderChanged(float f)
     {
-        if (showingExpedition == null || showingExpedition.stage == Expedition.ExpeditionStage.Dismissed) gameObject.SetActive(false);
-        else
-        {
-            var g = GameMaster.realMaster.globalMap;
-            g.ShowOnGUI();
-            g.observer.GetComponent<GlobalMapUI>().SelectPoint(showingExpedition.destination);
-            gameObject.SetActive(false);
-        }
-    }
-    public void RecallButton()
-    {
-        if (showingExpedition == null || showingExpedition.stage == Expedition.ExpeditionStage.Dismissed) gameObject.SetActive(false);
-        else
-        {
-            showingExpedition.EndMission();
-            StatusUpdate();
-        }
+        suppliesSlider.transform.GetChild(3).GetComponent<Text>().text = ((int)f * Expedition.MAX_SUPPLIES_COUNT).ToString();
     }
 
     private void OnEnable()

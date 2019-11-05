@@ -133,6 +133,15 @@ public sealed class RecruitingCenter : WorkBuilding {
             }
         }
     }
+    public void StopHiring()
+    {
+        if (finding)
+        {
+            colony.AddEnergyCrystals(hireCost * (1f - workflow / workflowToProcess));
+            finding = false;
+            workflow = 0f;
+        }
+    }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

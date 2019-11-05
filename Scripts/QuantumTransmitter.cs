@@ -44,6 +44,19 @@ public sealed class QuantumTransmitter : Building {
         }
         return null;
     }
+    public static int GetFreeTransmittersCount()
+    {
+        if (transmittersList.Count == 0) return 0;
+        else
+        {
+            int c = 0;
+            foreach (var qt in transmittersList)
+            {
+                if (qt.expeditionID == -1) c++;
+            }
+            return c;
+        }
+    }
     //  PUBLIC
     public static void SetLastUsedID(int id)
     {
@@ -95,7 +108,7 @@ public sealed class QuantumTransmitter : Building {
         if (expeditionID != -1)
         {
             var e = Expedition.GetExpeditionByID(expeditionID);
-            if (e != null && e.stage != Expedition.ExpeditionStage.Dismissed) e.DropTransmitter(this);
+            if (e != null) e.DropTransmitter(this);
             expeditionID = -1;
         }
         Destroy(gameObject);

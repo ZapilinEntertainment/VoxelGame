@@ -341,7 +341,7 @@ public sealed class GlobalMap : MonoBehaviour
             {
                 MapPoint mp = mapPoints[i];
                 mp.angle += rotationSpeed[mp.ringIndex] * t;
-                if (mp.type == MapMarkerType.Shuttle)
+                if (mp.type == MapMarkerType.FlyingExpedition)
                 {
                     FlyingExpedition fe = (mp as FlyingExpedition);
                     MapPoint d = fe.destination;
@@ -586,7 +586,7 @@ public sealed class GlobalMap : MonoBehaviour
         {             
             foreach (MapPoint mp in mapPoints)
             {
-                if (mp.type != MapMarkerType.Shuttle)
+                if (mp.type != MapMarkerType.FlyingExpedition)
                 {
                     savedata.AddRange(mp.Save());
                     realCount++;

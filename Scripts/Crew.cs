@@ -2,15 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum Path : byte { NoPath,LifePath, SecretPath, TechPath}
+//dependency Localization.GetExpeditionName, TestYourMight
 
 public sealed class Crew : MonoBehaviour {
-    public enum ExploringPath : byte { Default, PathOfLife, SecretPath, PathOfMind } // dependency : GetStaminaModifier
-    public enum CrewStatus : byte { AtHome, OnMission, Travelling }
-    // dependencies
-    //Localization.GetCrewStatus()
-    // Rest()
     public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9, MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
-    private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_CONSUMPTION = 0.00003f, STAMINA_REPLENISH_SPEED = 0.05f, ADAPTABILITY_LOSSES = 0.02f;
+    private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_CONSUMPTION = 0.00003f, ADAPTABILITY_LOSSES = 0.02f;
 
     public static int nextID {get;private set;}	
     public static byte listChangesMarkerValue { get; private set; }
@@ -18,34 +15,35 @@ public sealed class Crew : MonoBehaviour {
     private static GameObject crewsContainer;
     public static UICrewObserver crewObserver { get; private set; }
 
+    public bool atHome { get; private set; }
 	public int membersCount {get;private set;}
 	public int ID{get;private set;}
     public byte changesMarkerValue { get; private set; }
-    public Artifact artifact { get; private set; }
-    public Expedition currentExpedition { get; private set; }
-	public Shuttle shuttle{get;private set;}
-	public CrewStatus status { get; private set; }
-
+    public Expedition expedition { get; private set; }
     
+    public bool? chanceMod { get; private set; }
     public byte persistence { get; private set; }
     public byte survivalSkills { get; private set; }
     public byte secretKnowledge { get; private set; }
     public byte perception { get; private set; }
     public byte intelligence { get; private set; }
     public byte techSkills { get; private set; }
+    public byte freePoints { get; private set; }
+
     public byte level { get; private set; }
     public float stamina { get; private set; }
-    public ushort proficiencies { get; private set; }
     public float confidence { get; private set; }
     public float unity { get; private set; }
     public float loyalty { get; private set; }
     public float adaptability { get; private set; }
     public int experience { get; private set; }
-    public ExploringPath exploringPath{ get; private set; }
+    public Path exploringPath{ get; private set; }
 //при внесении изменений отредактировать Localization.GetCrewInfo
 
-public int missionsParticipated { get; private set; }
-    public int missionsSuccessed{get;private set;}    
+    public int missionsParticipated { get; private set; }
+    public int missionsSuccessed{get;private set;}
+
+    private const float SOFT_TEST_MAX_VALUE = 25f;
 
     static Crew()
     {
@@ -59,9 +57,9 @@ public int missionsParticipated { get; private set; }
         {
             foreach (Crew c in crewsList)
             {
-                if (c.status == CrewStatus.AtHome)
+                if (c.atHome)
                 {
-                    c.Rest(null);
+                    c.Restore();
                 }
             }
         }
@@ -81,7 +79,7 @@ public int missionsParticipated { get; private set; }
         c.transform.parent = crewsContainer.transform;
 
         c.ID = nextID; nextID++;
-        c.status = CrewStatus.AtHome;
+        c.atHome = true;
 
         //normal parameters        
         c.membersCount = membersCount;
@@ -121,33 +119,6 @@ public int missionsParticipated { get; private set; }
         crewObserver.ShowCrew(this, useCloseButton);
     }
 
-	public void SetShuttle(Shuttle s) {
-        if (s == shuttle) return;
-        else {
-            if (s == null)
-            {
-                if (shuttle != null) shuttle.SetCrew(null);
-                shuttle = null;
-            }
-            else
-            {
-                if (shuttle != null & s != shuttle) shuttle.SetCrew(null);
-                s.SetCrew(this);
-                shuttle = s;
-            }
-            changesMarkerValue++;
-        }               
-	}
-    public void SetStatus(CrewStatus cs)
-    {
-        status = cs;
-        if (shuttle != null)
-        {
-            if (status == CrewStatus.AtHome) shuttle.SetDockingStatus(true);
-            else shuttle.SetDockingStatus(false);
-        }
-        changesMarkerValue++;
-    }
     public void Rename(string s)
     {
         name = s;
@@ -158,39 +129,22 @@ public int missionsParticipated { get; private set; }
     /// </summary>
     public void SetCurrentExpedition(Expedition e)
     {
-        currentExpedition = e;
+        if (e != null)
+        {
+            expedition = e;
+            atHome = false;            
+        }
+        else
+        {
+            expedition = null;
+            atHome = true;
+        }
         changesMarkerValue++;
     }
     public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
     {
         ri.texture = UIController.current.iconsTexture;
         ri.uvRect = UIController.GetIconUVRect(stamina > 0.8f ? Icons.CrewGoodIcon : (stamina < 0.25f ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
-    }
-
-    public bool HardTest(float hardness, float situationValue) // INDEV
-    {
-        if (artifact != null)
-        {
-            bool? protection = artifact.StabilityTest(hardness);
-            if (protection == null) DropArtifact();
-            else
-            {
-                if (protection == true)
-                {
-                    RaiseConfidence(1f);
-                    return true;
-                }
-            }
-        }
-        //нет артефакта или защита не сработала
-        bool success = hardness * GameConstants.HARD_TEST_MAX_VALUE + situationValue < HardTestRoll();
-        if (success)
-        {
-            RaiseUnity(1f);
-            RaiseAdaptability(1f);
-            return true;
-        }
-        else return false;
     }
 
     /// <summary>
@@ -200,25 +154,13 @@ public int missionsParticipated { get; private set; }
     /// <returns></returns>
     public bool SoftCheck( float friendliness, float situationValue) // INDEV
     {
-        bool success = GameConstants.SOFT_TEST_MAX_VALUE * friendliness + situationValue < SoftCheckRoll();
+        bool success = SOFT_TEST_MAX_VALUE * friendliness + situationValue < SoftCheckRoll();
         if (success)
         {
             RaiseUnity(1f);
             RaiseConfidence(0.75f);
         }
         return success;
-    }
-    public void Rest(PointOfInterest place)
-    {
-        if (place != null)
-        {
-            Rest(place.GetRestValue());
-            RaiseUnity(0.5f);
-        }
-        else // at home
-        {
-            Restore();
-        }
     }
     public void LoseMember() // INDEV
     {
@@ -231,39 +173,7 @@ public int missionsParticipated { get; private set; }
         LoseUnity(1f);
     }
 
-    public void SetArtifact(Artifact a)
-    {
-        if (a == null) return;
-        else
-        {
-            //если уже есть артефакт
-            if (artifact != null)
-            {
-                if (status == CrewStatus.AtHome) artifact.Conservate();
-                else artifact.Destroy();
-            }
-            //
-            artifact = a;
-            artifact.SetOwner(this);
-            RaiseConfidence(2f);
-            RaiseLoyalty(1f);
-        }
-    }
-    public void DropArtifact()
-    {
-        if (artifact != null)
-        {
-            artifact.SetOwner(null);
-            artifact = null;
-            LoseConfidence(0.5f);
-            listChangesMarkerValue++;
-        }
-    }
     //system
-    public void ClearArtifactField(Artifact a)
-    {
-        if (artifact == a) artifact = null;
-    }
     public void MarkAsDirty()
     {
         changesMarkerValue++;
@@ -323,13 +233,20 @@ public int missionsParticipated { get; private set; }
 
         confidence = 0.5f;
         unity = 0.5f;
-        if (c != null) loyalty = c.happiness_coefficient; else loyalty = 0.5f;
+        var happiness = c.happiness_coefficient;
+        if (c != null) loyalty = happiness; else loyalty = 0.5f;
         adaptability = 0.5f;
 
         level = 1; experience = 0;
         stamina = 1f;
-        exploringPath = ExploringPath.Default;
-        proficiencies = 0;
+        RecalculatePath();
+
+        if (happiness > GameConstants.HIGH_HAPPINESS) chanceMod = true;
+        else
+        {
+            if (happiness < GameConstants.LOW_HAPPINESS) chanceMod = false;
+            else chanceMod = null;
+        }
     }
 
     private static float GetModifier(byte x)
@@ -379,7 +296,7 @@ public int missionsParticipated { get; private set; }
     }
     public void Rest(float f)
     {        
-        stamina += (int)(STAMINA_REPLENISH_SPEED * (1 + adaptability) * (1 + unity) * level * f);
+        stamina += f;
         if (stamina > 1f) stamina = 1f;
     }
     public void Restore()
@@ -390,6 +307,11 @@ public int missionsParticipated { get; private set; }
         if (loyalty < GameMaster.realMaster.colonyController.happiness_coefficient) loyalty += NEUROPARAMETER_STEP;
     }
 
+    public void SetChanceMod(bool? x)
+    {
+        chanceMod = x;
+        changesMarkerValue++;
+    }
     public void AddExperience(float x)
     {
         if (x < 1f) return;
@@ -404,19 +326,21 @@ public int missionsParticipated { get; private set; }
     public void LevelUp()
     {
         level++;
-        ushort proficiency = 2;
+        int newPts = 2;
         if (level > 4)
         {
             if (level < 13)
             {
-                if (level < 9) proficiency = 3; else proficiency = 4;
+                if (level < 9) newPts = 3; else newPts = 4;
             }
             else
             {
-                if (level > 16) proficiency = 5; else proficiency = 6;
+                if (level > 16) newPts = 5; else newPts = 6;
             }
         }
-        proficiencies += proficiency;
+        if (freePoints + newPts < 255) freePoints += (byte)newPts;
+        else freePoints = 255;
+        SetChanceMod(true);
     }
     public int GetExperienceCap()
     {
@@ -445,50 +369,56 @@ public int missionsParticipated { get; private set; }
     }
     public void ImprovePerception()
     {
-        if (proficiencies > 0 & perception < MAX_ATTRIBUTE_VALUE)
+        if (freePoints > 0 & perception < MAX_ATTRIBUTE_VALUE)
         {
             perception++;
-            proficiencies--;
+            freePoints--;
+            RecalculatePath();
         }
     }
     public void ImprovePersistence()
     {
-        if (proficiencies > 0 & persistence < MAX_ATTRIBUTE_VALUE)
+        if (freePoints > 0 & persistence < MAX_ATTRIBUTE_VALUE)
         {
             persistence++;
-            proficiencies--;
+            freePoints--;
+            RecalculatePath();
         }
     }
     public void ImproveTechSkill()
     {
-        if (proficiencies > 0 & techSkills < MAX_ATTRIBUTE_VALUE)
+        if (freePoints > 0 & techSkills < MAX_ATTRIBUTE_VALUE)
         {
             techSkills++;
-            proficiencies--;
+            freePoints--;
+            RecalculatePath();
         }
     }
     public void ImproveSurvivalSkill()
     {
-        if (proficiencies > 0 & survivalSkills < MAX_ATTRIBUTE_VALUE)
+        if (freePoints > 0 & survivalSkills < MAX_ATTRIBUTE_VALUE)
         {
             survivalSkills++;
-            proficiencies--;
+            freePoints--;
+            RecalculatePath();
         }
     }
-    public void ImproveEnlightment()
+    public void ImproveSecretKnowledge()
     {
-        if (proficiencies > 0 & secretKnowledge < MAX_ATTRIBUTE_VALUE)
+        if (freePoints > 0 & secretKnowledge < MAX_ATTRIBUTE_VALUE)
         {
             secretKnowledge++;
-            proficiencies--;
+            freePoints--;
+            RecalculatePath();
         }
     }
     public void ImproveIntelligence()
     {
-        if (proficiencies > 0 & intelligence < MAX_ATTRIBUTE_VALUE)
+        if (freePoints > 0 & intelligence < MAX_ATTRIBUTE_VALUE)
         {
             intelligence++;
-            proficiencies--;
+            freePoints--;
+            RecalculatePath();
         }
     }
 
@@ -500,7 +430,6 @@ public int missionsParticipated { get; private set; }
     {
         return Random.Range(0, 20) + GetModifier(survivalSkills) * (0.9f + 0.15f * adaptability + 0.05f * unity);
     }
-
     public float PerceptionRoll()
     {
         return Random.Range(0, 20) + GetModifier(perception) * (0.9f + 0.2f * adaptability);
@@ -509,7 +438,6 @@ public int missionsParticipated { get; private set; }
     {
         return Random.Range(0, 20) + GetModifier(secretKnowledge); // no neuro mod
     }
-
     public float IntelligenceRoll()
     {
         return Random.Range(0, 20) + GetModifier(intelligence) * (0.9f + 0.15f * adaptability + 0.05f * unity);
@@ -524,13 +452,13 @@ public int missionsParticipated { get; private set; }
         float val = Random.Range(0, 20);
         switch (exploringPath)
         {
-            case ExploringPath.PathOfLife:
+            case Path.LifePath:
                 val += (GetModifier(survivalSkills) * (0.9f + 0.6f * confidence)) * 0.7f + (GetModifier(persistence) * (0.9f + 0.6f * adaptability)) * 0.3f;
                 break;
-            case ExploringPath.SecretPath:
+            case Path.SecretPath:
                 val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.8f + (GetModifier(secretKnowledge) * (0.9f + 0.2f * adaptability)) * 0.2f;
                 break;
-            case ExploringPath.PathOfMind:
+            case Path.TechPath:
                 val += (GetModifier(survivalSkills) * (0.9f + 0.2f * unity)) * 0.7f + (GetModifier(intelligence) * (0.9f + 0.1f * adaptability)) * 0.3f;
                 break;
             default:
@@ -563,26 +491,11 @@ public int missionsParticipated { get; private set; }
     {
         return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.5f * confidence + 0.3f * loyalty) + 0.1f * unity;
     }
-
-    public float MakeStep(float difficulty)
-    {        
-        if (stamina <= 0)
-        {
-            if (loyalty < 0.33f && 10f * difficulty > RejectionRoll()) return -1f;
-            else return 0f;
-        }
-        else
-        {
-            float step = GameConstants.EXPLORE_SPEED * (0.5f + 0.3f * unity + 0.5f * adaptability - 0.5f * difficulty);
-            stamina-= STAMINA_CONSUMPTION * difficulty * (1f - 0.5f * level / (float)MAX_LEVEL);
-            if (step < 0f) return 0f; else return step;
-        }
-    }
     public bool TestYourMight(float difficultyClass, bool? advantage)
     {
         switch (exploringPath)
         {
-            case ExploringPath.PathOfLife:
+            case Path.LifePath:
                 {
                     if (advantage == null)
                     {
@@ -602,7 +515,7 @@ public int missionsParticipated { get; private set; }
                         return (a >= difficultyClass);
                     }
                 }
-            case ExploringPath.SecretPath:
+            case Path.SecretPath:
                 {
                     if (advantage == null)
                     {
@@ -622,7 +535,7 @@ public int missionsParticipated { get; private set; }
                         return (a >= difficultyClass);
                     }
                 }
-            case ExploringPath.PathOfMind:
+            case Path.TechPath:
                 {
                     if (advantage == null) return (IntelligenceRoll() >= difficultyClass);
                     else
@@ -647,7 +560,6 @@ public int missionsParticipated { get; private set; }
     public void Dismiss() {
         GameMaster.realMaster.colonyController.AddWorkers(membersCount);
         membersCount = 0;
-        if (shuttle != null && shuttle.crew == this) shuttle.SetCrew(null);
         crewsList.Remove(this);
         listChangesMarkerValue++;
         Destroy(this);
@@ -659,6 +571,20 @@ public int missionsParticipated { get; private set; }
         Destroy(this);
     }
 
+    private void RecalculatePath()
+    {
+        int a = persistence + survivalSkills, b = perception + secretKnowledge, d = intelligence + techSkills;
+        if (a >= b)
+        {
+            if (a >= d) exploringPath = Path.LifePath;
+            else exploringPath = Path.TechPath;
+        }
+        else
+        {
+            if (b >= d) exploringPath = Path.SecretPath;
+            else exploringPath = Path.TechPath;
+        }
+    }
     private void OnDestroy()
     {
         if (crewsList.Count == 0 & crewObserver != null) Destroy(crewObserver);
@@ -715,88 +641,73 @@ public int missionsParticipated { get; private set; }
     {
         var data = new List<byte>();
         data.AddRange(System.BitConverter.GetBytes(ID)); // 0 - 3
-        int nodata = -1;
-        data.AddRange(System.BitConverter.GetBytes(shuttle == null ? nodata : shuttle.ID));//4- 7
-        data.AddRange(System.BitConverter.GetBytes(artifact == null ? nodata : artifact.ID)); // 8 - 11
-        data.AddRange(System.BitConverter.GetBytes(membersCount)); // 12 - 15
-        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed)); // 16 - 19
-        data.AddRange(System.BitConverter.GetBytes(missionsParticipated)); // 20 - 23
+        data.AddRange(System.BitConverter.GetBytes(membersCount)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed)); // 8-11
+        data.AddRange(System.BitConverter.GetBytes(missionsParticipated)); // 12-15
         data.AddRange(new byte[]
         {
-            (byte)status, // 24
-            persistence, // 25
-            survivalSkills, // 26
-            secretKnowledge, // 27
-            perception, // 28
-            intelligence, // 29
-            techSkills, // 30
-            level, // 31
-            (byte)exploringPath // 32
+            atHome ? (byte)1 : (byte)0, // 16
+            persistence, // 17
+            survivalSkills, // 18
+            secretKnowledge, // 19
+            perception, // 20
+            intelligence, // 21
+            techSkills, // 22
+            level, // 23
+            (byte)exploringPath // 24
         });
 
-        data.AddRange(System.BitConverter.GetBytes(stamina)); // 33-36
-        data.AddRange(System.BitConverter.GetBytes(proficiencies)); //37-38
+        data.AddRange(System.BitConverter.GetBytes(stamina)); // 25 - 28
 
-        data.AddRange(System.BitConverter.GetBytes(confidence)); // 39-42
-        data.AddRange(System.BitConverter.GetBytes(unity)); // 43-46
-        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 47-50
-        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 51-54
+        //data.AddRange(System.BitConverter.GetBytes(proficiencies)); //29-30
 
-        data.AddRange(System.BitConverter.GetBytes(experience)); // 55-58
+        data.AddRange(System.BitConverter.GetBytes(confidence)); // 31-34
+        data.AddRange(System.BitConverter.GetBytes(unity)); // 35-38
+        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 39-42
+        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 44-47
+
+        data.AddRange(System.BitConverter.GetBytes(experience)); // 48-51
         //
         var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(count)); // 59-62 | количество байтов, не длина строки
+        data.AddRange(System.BitConverter.GetBytes(count)); // 52-55 | количество байтов, не длина строки
         if (count > 0) data.AddRange(nameArray);
         
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 63;
+        int LENGTH = 56;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         ID = System.BitConverter.ToInt32(data,0);
-        int shuttleID = System.BitConverter.ToInt32(data, 4);
-        if (shuttleID != -1)
-        {
-            shuttle = Shuttle.GetShuttle(shuttleID);
-            if (shuttle != null) shuttle.SetCrew(this);
-        }
-        else shuttle = null;
-        int artifactID = System.BitConverter.ToInt32(data, 8);
-        if (artifactID != -1)
-        {
-            artifact = Artifact.GetArtifactByID(artifactID);
-            if (artifact != null) artifact.SetOwner(this);
-        }
-        else artifact = null;
 
-        membersCount = System.BitConverter.ToInt32(data, 12);
-        missionsSuccessed = System.BitConverter.ToInt32(data, 16);
-        missionsParticipated = System.BitConverter.ToInt32(data, 20);
+        membersCount = System.BitConverter.ToInt32(data, 4);
+        missionsSuccessed = System.BitConverter.ToInt32(data, 8);
+        missionsParticipated = System.BitConverter.ToInt32(data, 12);
 
-        status = (CrewStatus)data[24];
-        persistence = data[25];
-        survivalSkills = data[26];
-        secretKnowledge = data[27];
-        perception = data[28];
-        intelligence = data[29];
-        techSkills = data[30];
-        level = data[31];
-        exploringPath = (ExploringPath)data[32];
+        atHome = data[16] == 1;
+        persistence = data[17];
+        survivalSkills = data[18];
+        secretKnowledge = data[19];
+        perception = data[20];
+        intelligence = data[21];
+        techSkills = data[22];
+        level = data[23];
+        //exploringPath = (Path)data[28]; 
+        RecalculatePath();
 
-        stamina = System.BitConverter.ToSingle(data,33);
-        proficiencies = System.BitConverter.ToUInt16(data, 37);
+        stamina = System.BitConverter.ToSingle(data,29);
+        //proficiencies = System.BitConverter.ToUInt16(data, 33);
 
-        confidence = System.BitConverter.ToSingle(data, 39);
-        unity = System.BitConverter.ToSingle(data, 43);
-        loyalty = System.BitConverter.ToSingle(data, 47);
-        adaptability = System.BitConverter.ToSingle(data, 51);
+        confidence = System.BitConverter.ToSingle(data, 35);
+        unity = System.BitConverter.ToSingle(data, 39);
+        loyalty = System.BitConverter.ToSingle(data, 43);
+        adaptability = System.BitConverter.ToSingle(data, 47);
 
-        experience = System.BitConverter.ToInt32(data, 55);
+        experience = System.BitConverter.ToInt32(data, 51);
 
-        int bytesCount = System.BitConverter.ToInt32(data, 59); //выдаст количество байтов, не длину строки        
+        int bytesCount = System.BitConverter.ToInt32(data, 55); //выдаст количество байтов, не длину строки        
         if (bytesCount > 0)
         {
             data = new byte[bytesCount];

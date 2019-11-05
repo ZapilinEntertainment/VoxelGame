@@ -5,7 +5,7 @@ public sealed class FlyingExpedition : MapPoint {
     public MapPoint destination { get; private set; }
     public float speed { get; private set; }
 
-    public FlyingExpedition(Expedition e, MapPoint startPoint, MapPoint i_destination, float i_speed) : base(startPoint.angle, startPoint.height, MapMarkerType.Shuttle)
+    public FlyingExpedition(Expedition e, MapPoint startPoint, MapPoint i_destination, float i_speed) : base(startPoint.angle, startPoint.height, MapMarkerType.FlyingExpedition)
     {
         expedition = e;
         destination = i_destination;
@@ -43,7 +43,7 @@ public sealed class FlyingExpedition : MapPoint {
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         var fe = new FlyingExpedition(System.BitConverter.ToInt32(data, 0), e);
-        fe.type = MapMarkerType.Shuttle;
+        fe.type = MapMarkerType.FlyingExpedition;
         fe.subIndex = data[5];
         fe.angle = System.BitConverter.ToSingle(data, 6);
         fe.height = System.BitConverter.ToSingle(data, 10);

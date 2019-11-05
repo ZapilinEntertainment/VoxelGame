@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public sealed class Monument : Building
 {
     public Artifact[] artifacts { get; private set; }
-    public Artifact.AffectionType affectionType { get; private set; }
+    public Path affectionPath { get; private set; }
     public float affectionValue { get; private set; }
     private bool ringEnabled = false, subscribedToRestoreBlockersEvent = false;
     private int stabilityArrayIndex = -1;
@@ -69,7 +69,7 @@ public sealed class Monument : Building
                 return;
             }
             else {
-                if (affectionType != Artifact.AffectionType.NoAffection & a.affectionType != affectionType)
+                if (affectionPath != Path.TechPath)
                 {
                     GameMaster.audiomaster.Notify(NotificationSound.Disagree);
                     GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.AffectionTypeNotMatch));
@@ -82,11 +82,11 @@ public sealed class Monument : Building
                     {
                         if (artifacts[slotIndex] != null)
                         {
-                            artifacts[slotIndex].Conservate();
+                            artifacts[slotIndex].ChangeStatus(Artifact.ArtifactStatus.OnConservation);
                         }
                     }
                     artifacts[slotIndex] = a;                    
-                    a.UseInMonument();
+                    a.ChangeStatus(Artifact.ArtifactStatus.UsingInMonument);
                     RecalculateAffection();
                 }
             }
@@ -96,7 +96,7 @@ public sealed class Monument : Building
     {
         if (artifacts != null && artifacts[index] != null)
         {
-            artifacts[index].Conservate();
+            artifacts[index].ChangeStatus(Artifact.ArtifactStatus.OnConservation);
             artifacts[index] = null;
             RecalculateAffection();
         }
@@ -114,14 +114,14 @@ public sealed class Monument : Building
                 if (a != null)
                 {
                     af += a.GetAffectionValue();
-                    affectionType = a.affectionType;
+                    affectionPath = a.affectionPath;
                     count++;
                 }
             }
             if (count != 0)
             {
                 affectionValue = af / count;
-                ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionType);
+                ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionPath);
                 ringEnabled = true;
                 if (stabilityArrayIndex == -1)
                 {
@@ -135,7 +135,6 @@ public sealed class Monument : Building
             else
             {
                 affectionValue = 0;
-                affectionType = Artifact.AffectionType.NoAffection;
                 ringSprite.GetComponent<SpriteRenderer>().sprite = null;
                 ringEnabled = false;
                 if (stabilityArrayIndex != -1)

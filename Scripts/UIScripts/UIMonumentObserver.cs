@@ -52,7 +52,7 @@ public sealed class UIMonumentObserver : UIObserver
             if (bo == null) bo = UIBuildingObserver.InitializeBuildingObserverScript();
             bo.SetObservingBuilding(m);
 
-            var at = observingMonument.affectionType;
+            var at = observingMonument.affectionPath;
             affectionIcon.uvRect = Artifact.GetAffectionIconRect(at);
             affectionText.text = Localization.GetAffectionTitle(at);
             if (observingMonument.artifacts != null)
@@ -221,9 +221,9 @@ public sealed class UIMonumentObserver : UIObserver
             {
                 if (a.researched)
                 {
-                    if (a.affectionType != Artifact.AffectionType.NoAffection 
+                    if (a.affectionPath != Path.NoPath 
                         & 
-                        (observingMonument.affectionType == Artifact.AffectionType.NoAffection | (a.affectionType == observingMonument.affectionType))
+                        (observingMonument.affectionPath == Path.NoPath | (a.affectionPath == observingMonument.affectionPath))
                         )
                     {
                         if (a.status == Artifact.ArtifactStatus.OnConservation | (slotWithArtifact && selectedArtifact.ID == a.ID))
@@ -427,7 +427,7 @@ public sealed class UIMonumentObserver : UIObserver
                 else
                 {
                     var a = Artifact.GetArtifactByID(ids[i]);
-                    if (a != null && (!a.destructed & a.affectionType != Artifact.AffectionType.NoAffection))
+                    if (a != null && (!a.destructed & a.affectionPath != Path.NoPath))
                     {
                         observingMonument.AddArtifact(a, selectedSlotIndex);
                         SetObservingMonument(observingMonument);

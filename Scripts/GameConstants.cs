@@ -7,8 +7,9 @@
     public const int LIFEPOWER_PER_BLOCK = 130; // 200
     public const int LIFEPOWER_SPREAD_SPEED = 10 ;
     public const int CELESTIAL_LAYER = 9;
-    public const float START_HAPPINESS = 0.5f,
-        HAPPINESS_CHANGE_SPEED = 0.001f, HEALTH_CHANGE_SPEED = 0.001f,
+    public const float START_HAPPINESS = 0.5f, LOW_HAPPINESS = 0.2f, HIGH_HAPPINESS = 0.9f,
+        HAPPINESS_CHANGE_SPEED = 0.001f, 
+        HEALTH_CHANGE_SPEED = 0.001f,
         LIFE_DECAY_SPEED = 0.1f,
         CAM_LOOK_SPEED = 10,
         START_BIRTHRATE_COEFFICIENT = 0.001f,
@@ -26,8 +27,6 @@
 
         RUINS_COEFFICIENT = 0.25f,
         GRAPHONIUM_CRITICAL_MASS = 10000f,
-        HARD_TEST_MAX_VALUE = 30f, // crews hard check
-        SOFT_TEST_MAX_VALUE = 20f,
         ARTIFACT_FOUND_CHANCE = 0.05f
         ;
 
@@ -42,9 +41,9 @@
     // int key - 32 values
     // 0 - lang
     // 1 - (0 -> first launch, 1 - not first)
-    public const uint SAVE_SYSTEM_VERSION = 2;
+    public const uint SAVE_SYSTEM_VERSION = 3;
     // 1 - 9.3.1 public alpha
-   
+    // 3 - 13
 
     public static float GetShipArrivingTimer()
     {

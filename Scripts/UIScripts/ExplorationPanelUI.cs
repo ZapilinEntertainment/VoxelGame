@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public sealed class ExplorationPanelUI : MonoBehaviour
 {
-    private enum InfoMode { Inactive,Expeditions, Crews, Shuttles, Artifacts};
+    private enum InfoMode { Inactive,Expeditions, Crews, Artifacts};
 #pragma warning disable 0649
     [SerializeField] private GameObject emptyPanel, listHolder;
     [SerializeField] private GameObject[] items;
@@ -21,7 +21,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     private Crew showingCrew;
     private GameObject activeObserver;
     private Expedition showingExpedition;
-    private Shuttle showingShuttle;
     private InfoMode mode;
     private List<int> listIDs;
 
@@ -73,18 +72,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     }
                     break;
                 }
-            case InfoMode.Shuttles:
-                if (realIndex >= Shuttle.shuttlesList.Count) PrepareShuttlesList();
-                else
-                {
-                    var e = Shuttle.shuttlesList[realIndex];
-                    var ert = emptyPanel.GetComponent<RectTransform>();
-                    var r = new Rect(ert.position, ert.rect.size);
-                    e.ShowOnGUI(true,r, SpriteAlignment.TopLeft, false);
-                    activeObserver = Shuttle.observer.gameObject;
-                    if (emptyPanel.activeSelf) emptyPanel.SetActive(false);
-                }
-                break;
             case InfoMode.Artifacts:
                 if (realIndex >= Artifact.artifactsList.Count) PrepareArtifactsList();
                 else
@@ -119,28 +106,14 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             else StatusUpdate();
         }
     }
-    public void Show(Shuttle s)
-    {
-        if (s != null )
-        {
-            showingShuttle = s;
-            if (mode != InfoMode.Artifacts) ChangeMode(InfoMode.Shuttles);
-            else StatusUpdate();
-        }
-    }
     public void Show(Expedition e)
     {
-        if (e != null && e.stage != Expedition.ExpeditionStage.Dismissed)
+        if (e != null)
         {
             showingExpedition = e;
             if (mode != InfoMode.Expeditions) ChangeMode(InfoMode.Expeditions);
             else StatusUpdate();
         }
-    }
-
-    public void ShuttleNameChanged()
-    {
-        if (mode == InfoMode.Shuttles) PrepareShuttlesList();
     }
 
     private void PrepareCrewsList()
@@ -315,91 +288,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         }
         lastDrawnActionHash = Artifact.listChangesMarkerValue;
     }
-    private void PrepareShuttlesList()
-    {
-        var shuttles = Shuttle.shuttlesList;
-        if (shuttles.Count == 0)
-        {
-            if (listEnabled)
-            {
-                listHolder.SetActive(false);
-                listEnabled = false;
-            }
-        }
-        else
-        {
-            listIDs = new List<int>();
-            int currentSelectedItem = -1;
-            if (shuttles.Count > items.Length)
-            {
-                int sindex = GetListStartIndex();
-                for (int i = 0; i < items.Length; i++)
-                {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + shuttles[i + sindex].name + '"';
-                    listIDs.Add(shuttles[i + sindex].ID);
-                    items[i].SetActive(true);
-                }
-
-
-                if (showingShuttle != null)
-                {
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        if (listIDs[i] == showingShuttle.ID)
-                        {
-                            currentSelectedItem = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                int i = 0;
-                for (; i < shuttles.Count; i++)
-                {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + shuttles[i].name + '"';
-                    listIDs.Add(shuttles[i].ID);
-                    items[i].SetActive(true);
-                }
-                if (i < items.Length)
-                {
-                    for (; i < items.Length; i++)
-                    {
-                        items[i].SetActive(false);
-                    }
-                }
-                if (showingShuttle != null)
-                {
-                    for (i = 0; i < listIDs.Count; i++)
-                    {
-                        if (listIDs[i] == showingShuttle.ID)
-                        {
-                            currentSelectedItem = i;
-                        }
-                    }
-                }
-            }
-
-            if (currentSelectedItem != selectedItem)
-            {
-                if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                if (currentSelectedItem != -1)
-                {
-                    items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                    selectedItem = currentSelectedItem;
-                }
-            }
-
-            if (!listEnabled)
-            {
-                listHolder.SetActive(true);
-                listEnabled = true;
-            }
-            //настройка scrollbar ?
-        }
-        lastDrawnActionHash = Shuttle.listChangesMarkerValue;
-    }
     private void PrepareExpeditionsList()
     {
         var exps = Expedition.expeditionsList;
@@ -430,7 +318,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 {
                     for (int i = 0; i < items.Length; i++)
                     {
-                        if (listIDs[i] == showingShuttle.ID)
+                        if (listIDs[i] == showingExpedition.ID)
                         {
                             currentSelectedItem = i;
                             break;
@@ -501,10 +389,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     showingCrew = null;
                     crewButtonImage.overrideSprite = null;
                     break;
-                case InfoMode.Shuttles:
-                    showingShuttle = null;
-                    shuttleButtonImage.overrideSprite = null;
-                    break;
                 case InfoMode.Artifacts:
                     showingArtifact = null;
                     artifactButtonImage.overrideSprite = null;
@@ -563,30 +447,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         lastDrawnActionHash = Artifact.listChangesMarkerValue;
                         break;
                     }
-                case InfoMode.Shuttles:
-                    {
-                        PrepareShuttlesList();
-                        shuttleButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
-
-                        if (Shuttle.shuttlesList.Count != 0)
-                        {
-                            var ert = emptyPanel.GetComponent<RectTransform>();
-                            var r = new Rect(ert.position, ert.rect.size);
-                            SelectItem(0);
-                        }
-                        else
-                        {
-                            if (activeObserver != null)
-                            {
-                                activeObserver.SetActive(false);
-                                activeObserver = null;
-                            }
-                            emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoShuttles);
-                            emptyPanel.SetActive(true);
-                        }
-                        lastDrawnActionHash = Shuttle.listChangesMarkerValue;
-                        break;
-                    }
                 case InfoMode.Expeditions:
                     {
                         PrepareExpeditionsList();
@@ -619,7 +479,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
     public void ExpeditionsButton() { ChangeMode(InfoMode.Expeditions); }
     public void CrewsButton() { ChangeMode(InfoMode.Crews); }
-    public void ShuttlesButton() { ChangeMode(InfoMode.Shuttles); }
     public void ArtifactsButton() { ChangeMode(InfoMode.Artifacts); }
     public void CloseButton() { gameObject.SetActive(false); }
 
@@ -634,9 +493,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             case InfoMode.Artifacts:
                 if (lastDrawnActionHash != Artifact.listChangesMarkerValue) PrepareArtifactsList();
                 break;
-            case InfoMode.Shuttles:
-                if (lastDrawnActionHash != Shuttle.listChangesMarkerValue) PrepareShuttlesList();
-                break;
             case InfoMode.Expeditions:
                 if (lastDrawnActionHash != Expedition.listChangesMarker) PrepareExpeditionsList();
                 break;
@@ -649,7 +505,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         switch (mode)
         {
             case InfoMode.Crews: totalListCount = Crew.crewsList.Count; break;
-            case InfoMode.Shuttles: totalListCount = Shuttle.shuttlesList.Count;break;
             case InfoMode.Expeditions: totalListCount = Expedition.expeditionsList.Count; break;
             case InfoMode.Artifacts: totalListCount = Artifact.artifactsList.Count; break;
         }

@@ -9,7 +9,7 @@ public class UIArtifactPanel : MonoBehaviour {
     [SerializeField] private RawImage mainIcon;
     [SerializeField] private InputField nameField;
     [SerializeField] private Text status, description;
-    [SerializeField] private GameObject conservateButton, passButton, closeButton;
+    [SerializeField] private GameObject passButton, closeButton;
     private bool noArtifacts = false, descriptionOff = false, subscribedToUpdate = false;
     private int lastDrawnActionHash = 0;
     private Artifact chosenArtifact;
@@ -23,7 +23,6 @@ public class UIArtifactPanel : MonoBehaviour {
                 affectionIcon.transform.parent.gameObject.SetActive(false);
                 nameField.gameObject.SetActive(false);
                 status.enabled = false;
-                conservateButton.SetActive(false);
                 passButton.SetActive(false);
                 description.text = noArtifacts ? Localization.GetPhrase(LocalizedPhrase.NoArtifacts) : string.Empty;
                 descriptionOff = true;
@@ -35,7 +34,7 @@ public class UIArtifactPanel : MonoBehaviour {
             status.text = Localization.GetArtifactStatus(chosenArtifact.status);
             if (chosenArtifact.researched)
             {
-                affectionIcon.sprite = Artifact.GetAffectionSprite(chosenArtifact.affectionType);                
+                affectionIcon.sprite = Artifact.GetAffectionSprite(chosenArtifact.affectionPath);                
                 affectionIcon.enabled = true;
                 // localization - write artifact info 
             }
@@ -45,7 +44,6 @@ public class UIArtifactPanel : MonoBehaviour {
                 affectionIcon.enabled = false;
             }
             mainIcon.texture = chosenArtifact.GetTexture();
-            conservateButton.SetActive(chosenArtifact.status == Artifact.ArtifactStatus.UsingByCrew);
             if (chosenArtifact.status != Artifact.ArtifactStatus.Exists)
             {
                 var ri = passButton.transform.GetChild(0).GetComponent<RawImage>();
@@ -53,10 +51,6 @@ public class UIArtifactPanel : MonoBehaviour {
                 {
                     case Artifact.ArtifactStatus.Researching:
                         // установка иконки иссл лаб
-                        break;
-                    case Artifact.ArtifactStatus.UsingByCrew:                        
-                        ri.texture = UIController.current.iconsTexture;
-                        ri.uvRect = UIController.GetIconUVRect(Icons.CrewGoodIcon);
                         break;
                     case Artifact.ArtifactStatus.UsingInMonument:
                         ri.texture = UIController.current.buildingsIcons;
@@ -83,7 +77,7 @@ public class UIArtifactPanel : MonoBehaviour {
     {
         if (chosenArtifact != null)
         {
-            if (chosenArtifact.status == Artifact.ArtifactStatus.UsingInMonument | chosenArtifact.status == Artifact.ArtifactStatus.UsingByCrew)
+            if (chosenArtifact.status == Artifact.ArtifactStatus.UsingInMonument)
             {
                 affectionIcon.transform.Rotate(Vector3.forward, chosenArtifact.frequency * 10f * Time.deltaTime);
             }
@@ -123,46 +117,6 @@ public class UIArtifactPanel : MonoBehaviour {
         if (chosenArtifact != null)
         {
             chosenArtifact.ChangeName(nameField.text);
-        }
-        else RedrawWindow();
-    }
-    public void ConservateButton()
-    {
-        if (chosenArtifact != null)
-        {
-            if (chosenArtifact.owner != null)
-            {
-                chosenArtifact.owner.DropArtifact();
-                // добавить в хранилище
-                return;
-            }
-        }
-        RedrawWindow();
-    }
-    public void PassButton()
-    {
-        if (chosenArtifact != null)
-        {
-            switch (chosenArtifact.status)
-            {
-                case Artifact.ArtifactStatus.Exists: RedrawWindow();break;
-                case Artifact.ArtifactStatus.Researching:
-                    //goto research center
-                    break;
-                case Artifact.ArtifactStatus.UsingByCrew:
-                    if (chosenArtifact.owner != null)
-                    {
-                        var rt = GetComponent<RectTransform>();
-                        var r = new Rect(rt.position + Vector3.right * rt.rect.width / 2f, new Vector2(rt.rect.height, rt.rect.height));
-                        chosenArtifact.owner.ShowOnGUI(r, SpriteAlignment.LeftCenter, true);
-                        gameObject.SetActive(false);
-                    }
-                    else RedrawWindow();
-                    break;
-                case Artifact.ArtifactStatus.UsingInMonument:
-                    // goto monument
-                    break;
-            }
         }
         else RedrawWindow();
     }

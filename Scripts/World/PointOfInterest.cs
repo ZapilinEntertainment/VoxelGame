@@ -5,10 +5,11 @@ using System.Collections.Generic;
 public class PointOfInterest : MapPoint
 {
     protected float richness, danger, mysteria, friendliness;
+    protected Plan[,] plan;
+
     public readonly float difficulty;
     public float exploredPart { get; protected set; }
-    public List<MissionPreset> availableMissions { get; private set; }
-    public List<Expedition> workingExpeditions { get; private set; }
+    public Expedition workingExpedition { get; protected set; }
 
     public PointOfInterest(int i_id) : base(i_id) {
         difficulty = RecalculateDifficulty();
@@ -19,127 +20,256 @@ public class PointOfInterest : MapPoint
         exploredPart = 0f;
     }
 
-    public void ListAnExpedition(Expedition e)
+    public void AssignExpedition(Expedition e)
     {
-        if (workingExpeditions == null)
-        {
-            workingExpeditions = new List<Expedition>();
-            workingExpeditions.Add(e);
-        }
-        else
-        {
-            if (!workingExpeditions.Contains(e)) workingExpeditions.Add(e);
-        }
+        workingExpedition = e;
     }
-    public void ExcludeExpeditionFromList(Expedition e)
+    public void DeassignExpedition(Expedition e)
     {
-        if (workingExpeditions != null)
-        {
-            workingExpeditions.Remove(e);
-            if (workingExpeditions.Count == 0) workingExpeditions = null;
-        }
-    }
-    public Mission GetMissionByIndex(int i)
-    {
-        if (availableMissions != null && availableMissions.Count > i)
-        {
-            return new Mission(availableMissions[i]);
-        }
-        else return null;
+        if (workingExpedition == e) workingExpedition = null;
     }
 
-    public void Explore(float k)
+    public ref Plan[,] GetPlanReference()
     {
-        exploredPart += k;
-        if (exploredPart >= 1f) exploredPart = 1f;
-        GameMaster.realMaster.researchStar.PointExplored(this);
-    }  
-    public bool TreasureFinding(Crew c)
-    {
-        if (c.PerceptionRoll() > 20f * (0.9f + difficulty * 0.3f - friendliness * 0.3f))
+        if (plan == null)
         {
-            TakeTreasure(c);
-            return true;
-        }
-        else return false;
-    }
-    public void TakeTreasure(Crew c)
-    {
-        if (c.artifact == null)
-        {
-            if (Random.value < GameConstants.ARTIFACT_FOUND_CHANCE)
+            int size = 4 + Random.Range(0, (int)(3f * mysteria + 3f * richness));
+            plan = new Plan[size, size];
+
+            // generating plan:
+            int sqr = size * size;
+            float totalVariety = danger + mysteria + friendliness;
+            float abilityTestChance = danger / totalVariety, realityChangerChance = mysteria / totalVariety,
+                giftChance = friendliness / totalVariety;
+            float maxDifficulty = Plan.MAX_DIFFICULTY * difficulty;
+            float v = Random.value, df;
+
+            var path = DeterminePath();
+            var atests = new ChallengeType[6];
+            switch (path)
             {
-                c.SetArtifact(GetArtifact());
-                GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.CrewFoundArtifact));
-                return;
+                case Path.TechPath:
+                    {
+                        if (v > 0.5f)
+                        {
+                            atests[0] = ChallengeType.IntelligenceTest;
+                            atests[1] = ChallengeType.TechSkillsTest;
+                        }
+                        else
+                        {
+                            atests[1] = ChallengeType.IntelligenceTest;
+                            atests[0] = ChallengeType.TechSkillsTest;
+                        }
+                        v = Random.value;
+                        if (v < 0.5f)
+                        {
+                            atests[2] = ChallengeType.PerceptionTest;
+                            atests[3] = ChallengeType.PersistenceTest;
+                            if (v < 0.25f)
+                            {
+                                atests[4] = ChallengeType.SurvivalSkillsTest;
+                                atests[5] = ChallengeType.SecretKnowledgeTest;
+                            }
+                            else
+                            {
+                                atests[5] = ChallengeType.SurvivalSkillsTest;
+                                atests[4] = ChallengeType.SecretKnowledgeTest;
+                            }
+                        }
+                        else
+                        {
+                            atests[3] = ChallengeType.PersistenceTest;
+                            atests[2] = ChallengeType.PerceptionTest;
+                            if (v < 0.75f)
+                            {
+                                atests[4] = ChallengeType.SurvivalSkillsTest;
+                                atests[5] = ChallengeType.SecretKnowledgeTest;
+                            }
+                            else
+                            {
+                                atests[5] = ChallengeType.SurvivalSkillsTest;
+                                atests[4] = ChallengeType.SecretKnowledgeTest;
+                            }
+                        }
+                        break;
+                    }
+                case Path.SecretPath:
+                    {
+                        if (v > 0.5f)
+                        {
+                            atests[0] = ChallengeType.PerceptionTest;
+                            atests[1] = ChallengeType.SecretKnowledgeTest;
+                        }
+                        else
+                        {
+                            atests[1] = ChallengeType.PerceptionTest;
+                            atests[0] = ChallengeType.SecretKnowledgeTest;
+                        }
+                        v = Random.value;
+                        if (v < 0.5f)
+                        {
+                            atests[2] = ChallengeType.PersistenceTest;
+                            atests[3] = ChallengeType.IntelligenceTest;
+                            if (v < 0.25f)
+                            {
+                                atests[4] = ChallengeType.SurvivalSkillsTest;
+                                atests[5] = ChallengeType.TechSkillsTest;
+                            }
+                            else
+                            {
+                                atests[5] = ChallengeType.SurvivalSkillsTest;
+                                atests[4] = ChallengeType.TechSkillsTest;
+                            }
+                        }
+                        else
+                        {
+                            atests[3] = ChallengeType.PersistenceTest;
+                            atests[2] = ChallengeType.IntelligenceTest;
+                            if (v < 0.75f)
+                            {
+                                atests[4] = ChallengeType.SurvivalSkillsTest;
+                                atests[5] = ChallengeType.TechSkillsTest;
+                            }
+                            else
+                            {
+                                atests[5] = ChallengeType.SurvivalSkillsTest;
+                                atests[4] = ChallengeType.TechSkillsTest;
+                            }
+                        }
+                        break;
+                    }
+                case Path.LifePath:
+                default:
+                    {
+                        if (v > 0.5f)
+                        {
+                            atests[0] = ChallengeType.PersistenceTest;
+                            atests[1] = ChallengeType.SurvivalSkillsTest;
+                        }
+                        else
+                        {
+                            atests[1] = ChallengeType.PersistenceTest;
+                            atests[0] = ChallengeType.SurvivalSkillsTest;
+                        }
+                        v = Random.value;
+                        if (v < 0.5f)
+                        {
+                            atests[2] = ChallengeType.PerceptionTest;
+                            atests[3] = ChallengeType.IntelligenceTest;
+                            if (v < 0.25f)
+                            {
+                                atests[4] = ChallengeType.SecretKnowledgeTest;
+                                atests[5] = ChallengeType.TechSkillsTest;
+                            }
+                            else
+                            {
+                                atests[5] = ChallengeType.SecretKnowledgeTest;
+                                atests[4] = ChallengeType.TechSkillsTest;
+                            }
+                        }
+                        else
+                        {
+                            atests[3] = ChallengeType.PerceptionTest;
+                            atests[2] = ChallengeType.IntelligenceTest;
+                            if (v < 0.75f)
+                            {
+                                atests[4] = ChallengeType.SecretKnowledgeTest;
+                                atests[5] = ChallengeType.TechSkillsTest;
+                            }
+                            else
+                            {
+                                atests[5] = ChallengeType.SecretKnowledgeTest;
+                                atests[4] = ChallengeType.TechSkillsTest;
+                            }
+                        }
+                        break;
+                    }
+            }
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    if (Random.value < richness)
+                    {                        
+                        df = (0.7f - 0.1f * friendliness + 0.3f * Random.value);
+                        v = Random.value;
+                        if (Random.value < 0.8f)
+                        {
+                            if (v < abilityTestChance)
+                            { // abilities tests
+                               v = Random.value;
+                               if (v < 0.55f)
+                                {
+                                    if (v < 0.3f) plan[x, y] = new Plan(atests[0], (byte)(maxDifficulty * df));
+                                    else plan[x, y] = new Plan(atests[1], (byte)(maxDifficulty * df));
+                                }
+                               else
+                                {
+                                    if (v < 0.9f)
+                                    {
+                                        if (v < 0.75f) plan[x, y] = new Plan(atests[2], (byte)(maxDifficulty * df));
+                                        else plan[x, y] = new Plan(atests[3], (byte)(maxDifficulty * df));
+                                    }
+                                    else
+                                    {
+                                        if (v < 0.97f) plan[x, y] = new Plan(atests[5], (byte)(maxDifficulty * df));
+                                        else plan[x, y] = new Plan(atests[6], (byte)(maxDifficulty * df));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (v > abilityTestChance + giftChance)
+                                { // reality changer
+                                    if (danger > 0.9f && mysteria > 0.5f && Random.value > 0.5f)
+                                    { // global changer
+
+                                    }
+                                    else
+                                    { // local changer
+
+                                    }
+                                }
+                                else
+                                { // gift
+                                    v = Random.value;
+                                    if (v < 0.7f)
+                                    {
+                                        if (v < 0.5f) plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_EXP_CODE);
+                                        else plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_MONEY_CODE);
+                                    }
+                                    else
+                                    {
+                                        if ( v > 0.9f) plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_ARTIFACT_CODE);
+                                        else plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_RESOURCES_CODE);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {                            
+                            if (v < mysteria) plan[x, y] = new Plan(ChallengeType.Random, (byte)(maxDifficulty * df));
+                            else
+                            {
+                                v = Random.value;
+                                if (v < 0.66f)
+                                {
+                                    if (v < 0.33f) plan[x, y] = new Plan(ChallengeType.CrystalFee, (byte)(255 * df));
+                                    else plan[x, y] = new Plan(ChallengeType.AscensionTest, (byte)(100 * df));
+                                }
+                                else plan[x, y] = Plan.impassableField;
+                            }
+                        }
+                    }
+                    else plan[x, y] = Plan.emptyField;
+                }
             }
         }
-        GainResources(c);
-    }    
-    public void GainResources(Crew c)
-    {
-        List<ResourceType> typesList = null;
-        switch (type)
-        {
-            case MapMarkerType.Station:
-                typesList = new List<ResourceType>() { ResourceType.metal_K, ResourceType.metal_M, ResourceType.Plastics, ResourceType.Fuel };
-                if (Random.value < 0.4f) c.AddExperience(Expedition.ONE_STEP_XP * difficulty);
-                break;
-            case MapMarkerType.Wreck:
-                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.metal_M, ResourceType.Graphonium };
-                break;
-            case MapMarkerType.Island:
-                typesList = new List<ResourceType>() { ResourceType.metal_M_ore, ResourceType.metal_E_ore, ResourceType.metal_N_ore, ResourceType.metal_P_ore };
-                break;
-            case MapMarkerType.SOS:
-                typesList = new List<ResourceType>() { ResourceType.metal_S, ResourceType.Fuel, ResourceType.Supplies };
-                if (Random.value < 0.3f) c.AddExperience(Expedition.ONE_STEP_XP * difficulty);
-                break;
-            case MapMarkerType.Portal:
-                typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.metal_N_ore, ResourceType.Graphonium };
-                break;
-            case MapMarkerType.QuestMark:
-                // ?
-                break;
-            case MapMarkerType.Colony:
-                typesList = new List<ResourceType>() { ResourceType.Food, ResourceType.Supplies, ResourceType.metal_K };
-                break;
-            case MapMarkerType.Wiseman:
-                c.AddExperience(Expedition.ONE_STEP_XP * 20f * difficulty);
-                c.RaiseAdaptability(1f);
-                break;
-            case MapMarkerType.Wonder:
-                if (Random.value > 0.5f) typesList = new List<ResourceType>() { ResourceType.metal_N, ResourceType.Graphonium };
-                else c.AddExperience(Expedition.ONE_STEP_XP * 5f);
-                break;
-            case MapMarkerType.Resources: // or changing!
-                typesList = new List<ResourceType>()
-                {
-                    ResourceType.metal_K_ore, ResourceType.metal_M_ore, ResourceType.metal_N_ore, ResourceType.metal_E_ore, ResourceType.metal_P_ore,
-                    ResourceType.metal_S_ore, ResourceType.mineral_F, ResourceType.mineral_L
-                };
-                break;
-        }
-        if (typesList != null && typesList.Count > 0)
-        {
-            GameMaster.realMaster.colonyController.storage.AddResource(typesList[Random.Range(0,typesList.Count - 1)], 5f * c.membersCount / (float)Crew.MAX_MEMBER_COUNT * c.persistence);
-        }
+        return ref plan;
     }
-    public bool TryToJump(Crew c)
-    {
-        return (c.PerceptionRoll() < 10f * difficulty * (1f - 0.3f * friendliness));
-    }
-    public bool TryAdditionalJump(Crew c)
-    {
-        float a = c.PerceptionRoll();
-        float b = c.PerceptionRoll();
-        if (b < a) a = b;
-        return a > 20f * difficulty * (1f - 0.2f * friendliness);
-    }
-    public float GetRestValue()
-    {
-        return (0.4f + danger * 0.3f + difficulty * 0.3f + friendliness * 0.2f) * 0.5f;
-    }
+
+
     public bool HardTest(Crew c)
     {
         return c.HardTestRoll() >= danger * (20f + 10f * difficulty);
@@ -206,7 +336,7 @@ public class PointOfInterest : MapPoint
                 friendliness = Random.value * 0.8f;
                 locationDifficulty = 0.7f + Random.value * 0.2f;
                 break;
-            case MapMarkerType.Shuttle:
+            case MapMarkerType.FlyingExpedition:
                 richness = 0f;
                 danger = 0f;
                 mysteria = 0f;
@@ -274,55 +404,14 @@ public class PointOfInterest : MapPoint
     protected Artifact GetArtifact()
     {
         float a = mysteria * friendliness * 0.8f + 0.2f * Random.value;
-        var atype = Artifact.AffectionType.NoAffection;
-        bool researched = false;
-        switch (type)
-        {
-            case MapMarkerType.Unknown:
-                atype = Artifact.AffectionType.SpaceAffection;
-                break;
-            case MapMarkerType.Station:
-                if (Random.value > 0.5f) researched = true;
-                atype = Random.value > 0.5f ? Artifact.AffectionType.LifepowerAffection : Artifact.AffectionType.StabilityAffection;
-                break;
-            case MapMarkerType.Wreck:
-                if (Random.value < 0.1f) researched = true;
-                break;
-            case MapMarkerType.Island:
-                atype = Random.value > 0.4f ? Artifact.AffectionType.StabilityAffection : Artifact.AffectionType.LifepowerAffection;
-                break;
-            case MapMarkerType.Portal:
-                if (Random.value > 0.5f) atype = Artifact.AffectionType.StabilityAffection;
-                break;
-            case MapMarkerType.Colony:
-                if (Random.value > 0.6f) atype = Artifact.AffectionType.LifepowerAffection; else atype = Artifact.AffectionType.StabilityAffection;
-                if (Random.value > 0.3f) researched = true;
-                break;
-            case MapMarkerType.Wiseman:
-                {
-                    float f = Random.value;
-                    if (f <= 0.33f) atype = Artifact.AffectionType.SpaceAffection;
-                    else
-                    {
-                        if (f >= 0.66f) atype = Artifact.AffectionType.StabilityAffection;
-                        else atype = Artifact.AffectionType.LifepowerAffection;
-                    }
-                    researched = true;
-                    break;
-                }
-            case MapMarkerType.Wonder:
-                atype = Artifact.AffectionType.StabilityAffection;
-                break;
-        }
+        var path = DeterminePath();     
 
-        var art = new Artifact(
-            (friendliness * 0.5f + richness * 0.5f) * 0.6f * Random.value + 0.4f,
-            (richness * 0.7f + 0.3f * Random.value) * 0.6f + 0.4f * Random.value,
-            (danger * richness * 0.55f + 0.45f * Random.value) * 0.5f + 0.5f * Random.value,
-           atype
+        return new Artifact(
+            stability * (0.9f + 0.2f * Random.value), 
+            richness * (0.9f + 0.2f * Random.value),
+            danger * (0.9f + 0.2f * Random.value),
+            path
             );
-        art.SetResearchStatus(researched);
-        return art;
     }
 
     #region save-load
@@ -334,24 +423,11 @@ public class PointOfInterest : MapPoint
         data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
         data.AddRange(System.BitConverter.GetBytes(exploredPart)); // 16 - 19
-
-        byte missionsCount = 0;
-        var missionsData = new List<byte>();
-        if (availableMissions != null)
-        {
-            foreach (MissionPreset mp in availableMissions)
-            {
-                missionsData.AddRange(mp.Save());
-                missionsCount++;
-            }
-        }
-        data.Add(missionsCount); // 24
-        if (missionsCount != 0) data.AddRange(missionsData);
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 21;
+        int LENGTH = 20;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         richness = System.BitConverter.ToSingle(data, 0);
@@ -359,15 +435,6 @@ public class PointOfInterest : MapPoint
         mysteria = System.BitConverter.ToSingle(data, 8);
         friendliness = System.BitConverter.ToSingle(data, 12);
         exploredPart = System.BitConverter.ToSingle(data, 16);        
-        byte n = data[20];
-        if (n > 0)
-        {
-            availableMissions = new List<MissionPreset>();
-            for (int i = 0; i < n; i++)
-            {
-                availableMissions.Add(MissionPreset.Load(fs));
-            }
-        }
     } 
     #endregion
 }

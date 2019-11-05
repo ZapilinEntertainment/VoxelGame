@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Island, SOS, Portal, QuestMark, Colony, Star, Wiseman, Wonder, Resources }
+public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedition, Island, SOS, Portal, QuestMark, Colony, Star, Wiseman, Wonder, Resources }
 
 // ЗАВИСИМОСТИ :
 // конструктор MapPoint
@@ -9,6 +9,7 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, Shuttle, Isl
 //  Localization.GetMapPointLabel()
 // константы максимального количества подвидов
 //  функция загрузки LoadPoints()
+// DeterminePath
 // GlobalMap.CreateNewSector
 // Environment.GetSuitablePointType
 // PointOfInterest.TakeTreasure
@@ -30,9 +31,9 @@ public class MapPoint
         }
     }
     private float _height;
+    protected byte name, surname, specname;
 
-    public float stability { get; protected set; }
-    
+    public float stability { get; protected set; }    
 
     public readonly int ID;
     public static int nextID { get; private set; }
@@ -41,7 +42,7 @@ public class MapPoint
     public override bool Equals(object obj)
     {
         // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
+        if (obj == null ||  !(obj is MapPoint))
             return false;
 
         MapPoint mp = (MapPoint)obj;
@@ -72,7 +73,7 @@ public class MapPoint
         switch (mtype)
         {
             case MapMarkerType.MyCity:           
-            case MapMarkerType.Shuttle:
+            case MapMarkerType.FlyingExpedition:
                 return new MapPoint(i_angle, i_height, mtype);
 
             case MapMarkerType.Star:
@@ -130,7 +131,7 @@ public class MapPoint
                 stability = 0.1f + 0.23f * Random.value;
                 subIndex = (byte)(Random.Range(0, WRECKS_TYPE_COUNT));
                 break;
-            case MapMarkerType.Shuttle:
+            case MapMarkerType.FlyingExpedition:
                 stability = 1f;
                 break; // flyingExpedition.expedition.sectorCollapsingTest
             case MapMarkerType.Island:
@@ -192,7 +193,7 @@ public class MapPoint
                 break;
             case MapMarkerType.Wreck:
                 break;
-            case MapMarkerType.Shuttle:
+            case MapMarkerType.FlyingExpedition:
                 break;
             case MapMarkerType.Island:
                 break;
@@ -240,7 +241,7 @@ public class MapPoint
                     case MapMarkerType.Station:
                         return (Random.value > 0.5f);
                     case MapMarkerType.Wreck: return Random.value > 0.33f;
-                    case MapMarkerType.Shuttle: return true; // flyingExpedition.expedition.sectorCollapsingTest
+                    case MapMarkerType.FlyingExpedition: return true; // flyingExpedition.expedition.sectorCollapsingTest
                     case MapMarkerType.Island: return Random.value > 0.5f;
                     case MapMarkerType.SOS: return Random.value > 0.05f;
                     case MapMarkerType.Portal:
@@ -259,6 +260,37 @@ public class MapPoint
     public void MarkAsDestroyed()
     {
         destroyed = true;
+    }
+
+    virtual public string GetName()
+    {
+        //name, surname, specname
+        return Localization.GetMapPointTitle(type);
+    }
+    virtual public Path DeterminePath()
+    {
+        switch (type) {
+            case MapMarkerType.Wonder:
+            case MapMarkerType.Wiseman:
+            case MapMarkerType.Star:
+            case MapMarkerType.QuestMark:
+            case MapMarkerType.Portal: return Path.SecretPath;
+
+            case MapMarkerType.Resources:
+            case MapMarkerType.FlyingExpedition:
+            case MapMarkerType.Wreck: 
+            case MapMarkerType.Station: return Path.TechPath;
+
+            case MapMarkerType.MyCity:
+                 return GameMaster.realMaster.colonyController.DeterminePath();
+
+            case MapMarkerType.SOS:
+            case MapMarkerType.Island:
+            case MapMarkerType.Unknown:
+            case MapMarkerType.Colony:
+            default:
+                return Path.LifePath;
+            }
     }
 
     #region save-load

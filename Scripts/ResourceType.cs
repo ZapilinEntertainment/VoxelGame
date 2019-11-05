@@ -179,7 +179,7 @@ public class ResourceType
 public struct ResourceContainer
 {
     public readonly ResourceType type;
-    public float volume { get; private set; }
+    public readonly float volume;
     public static readonly ResourceContainer Empty;
 
     public ResourceContainer(ResourceType f_type, float f_volume)
@@ -193,6 +193,12 @@ public struct ResourceContainer
         type = ResourceType.GetResourceTypeById(i_id);
         if (i_volume < 0) i_volume = 0;
         volume = i_volume;
+    }
+
+    public ResourceContainer ChangeVolumeToPercent(float pc)
+    {
+        if (pc <= 0f) return Empty;
+        else return new ResourceContainer(type, volume * pc);
     }
 
     static ResourceContainer()

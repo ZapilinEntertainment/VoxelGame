@@ -170,7 +170,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         if (workbuildingMode)
         {
             Building.buildingObserver.SelfShutOff();
-            if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel();
+            if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
         }
         gameObject.SetActive(false);
     }
@@ -187,7 +187,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         {
             Building.buildingObserver.ShutOff();
             observingWorkbuilding = null;
-            if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel();
+            if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
         }
         else observingWorksite = null;
         gameObject.SetActive(false);

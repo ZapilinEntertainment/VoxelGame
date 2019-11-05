@@ -703,6 +703,11 @@ public sealed class ColonyController : MonoBehaviour
         return v;
     }
 
+    public Path DeterminePath()
+    {
+        return Path.LifePath;
+    }
+
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {

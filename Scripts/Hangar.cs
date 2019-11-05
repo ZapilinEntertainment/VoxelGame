@@ -3,12 +3,11 @@ using System.Collections.Generic;
 
 public sealed class Hangar : WorkBuilding
 {
-    public static List<Hangar> hangarsList;
+    public enum HangarStatus : byte { NoShuttle, ConstructingShuttle, ShuttleInside, ShuttleOnMission}
+    public static List<Hangar> hangarsList { get; private set; }    
 
-    public Shuttle shuttle { get; private set; }
-    const float CREW_HIRE_BASE_COST = 100;
-    public bool constructing { get; private set; }
     public bool correctLocation { get; private set; }
+    public HangarStatus status { get; private set; }
     public static UIHangarObserver hangarObserver;
     private bool subscribedToRestoreBlockersEvent = false;
     private List<Block> dependentBlocksList;
@@ -23,6 +22,19 @@ public sealed class Hangar : WorkBuilding
     public static void ResetStaticData()
     {
         hangarsList = new List<Hangar>();
+    }
+    public static int GetFreeShuttlesCount()
+    {
+        if (hangarsList.Count == 0) return 0;
+        else
+        {
+            int c = 0;
+            foreach (var h in hangarsList)
+            {
+                if (h.status == HangarStatus.ShuttleInside) c++;
+            }
+            return c;
+        }
     }
 
     override public void SetModelRotation(int r)
@@ -97,9 +109,9 @@ public sealed class Hangar : WorkBuilding
 
     public void StartConstruction()
     {
-        if (!constructing)
+        if (status == HangarStatus.NoShuttle)
         {
-            constructing = true;
+            status = HangarStatus.ConstructingShuttle;
             if (!subscribedToUpdate)
             {
                 GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
@@ -109,9 +121,17 @@ public sealed class Hangar : WorkBuilding
     }
     public void StopConstruction()
     {
-        if (constructing)
+        if (status == HangarStatus.ConstructingShuttle)
         {
-            constructing = false;
+            status = HangarStatus.NoShuttle;
+            var cost = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
+            float pc = workflow / workflowToProcess;
+            for (int i= 0; i< cost.Length; i++)
+            {
+                cost[i] = cost[i].ChangeVolumeToPercent(1f - pc);
+            }
+            colony.storage.AddResources(cost);
+            workflow = 0f;
             if (subscribedToUpdate)
             {
                 GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
@@ -139,6 +159,7 @@ public sealed class Hangar : WorkBuilding
                     }
                 }
             }
+            status = HangarStatus.NoShuttle;
         }       
         SetWorkbuildingData(b, pos);
         if (!GameMaster.loading) CheckPositionCorrectness();
@@ -150,7 +171,7 @@ public sealed class Hangar : WorkBuilding
                 subscribedToRestoreBlockersEvent = true;
             }
         }
-        if (!hangarsList.Contains(this)) hangarsList.Add(this);
+        if (!hangarsList.Contains(this)) hangarsList.Add(this);        
     }
     public void RestoreBlockers()
     {
@@ -256,7 +277,7 @@ public sealed class Hangar : WorkBuilding
     {
         if (isActive & isEnergySupplied)
         {
-            if (constructing)
+            if (status == HangarStatus.ConstructingShuttle)
             {
                 workflow += workSpeed;
                 colony.gears_coefficient -= gearsDamage;
@@ -265,23 +286,14 @@ public sealed class Hangar : WorkBuilding
                     LabourResult();
                 }
             }
-            else
-            {
-                if (shuttle != null && (shuttle.docked & shuttle.condition < 1))
-                {
-                    shuttle.condition += workSpeed / 4f;
-                    if (shuttle.condition > 1) shuttle.condition = 1;
-                }
-            }
         }
     }
 
     override protected void LabourResult()
     {
-        shuttle = Instantiate(Resources.Load<GameObject>("Prefs/shuttle"), transform).GetComponent<Shuttle>();
-        shuttle.FirstSet(this);
-        constructing = false;
-        workflow -= workflowToProcess;
+        status = HangarStatus.ShuttleInside;
+        if (workersCount > 0) FreeWorkers();
+        workflow = 0f;
         if (showOnGUI)
         {
             hangarObserver.PrepareHangarWindow();
@@ -354,34 +366,6 @@ public sealed class Hangar : WorkBuilding
         }
     }
 
-    /// <summary>
-    /// TEST USE ONLY
-    /// </summary>
-    /// <param name="s"></param>
-    public void AssignShuttle(Shuttle s)
-    {
-        shuttle = s;
-        constructing = false;
-    }
-    public void DeconstructShuttle()
-    {
-        if (shuttle == null) return;
-        else
-        {
-            shuttle.Deconstruct();
-            DropShuttle();
-        }
-    }
-    private void DropShuttle()
-    {
-        shuttle = null;
-        hangarObserver.PrepareHangarWindow();
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
-            subscribedToUpdate = false;
-        }
-    }  
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
@@ -396,7 +380,6 @@ public sealed class Hangar : WorkBuilding
         if (!clearFromSurface) { UnsetBasement(); }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (hangarsList.Contains(this)) hangarsList.Remove(this);
-        if (shuttle != null) shuttle.Deconstruct();
 
         if (hangarsList.Count == 0 & hangarObserver != null) Destroy(hangarObserver);
         if (subscribedToRestoreBlockersEvent)
@@ -416,12 +399,7 @@ public sealed class Hangar : WorkBuilding
     }
     private List<byte> SaveHangarDara()
     {
-        int shuttleIndex = -1;
-        if (shuttle != null) shuttleIndex = shuttle.ID;
-        byte truebyte = 1, falsebyte = 0;
-        var data =  new List<byte>() {   constructing ? truebyte : falsebyte, correctLocation ? truebyte : falsebyte}; // 0 , 1
-        data.AddRange(System.BitConverter.GetBytes(shuttleIndex)); // 2 - 5
-        return data;
+        return new List<byte>() {correctLocation ? (byte)1 : (byte)0, (byte)status};
     }
 
     override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
@@ -430,28 +408,14 @@ public sealed class Hangar : WorkBuilding
         fs.Read(data, 0, data.Length);
         LoadStructureData(data, sblock);
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
-        constructing = fs.ReadByte() == 1;
         correctLocation = fs.ReadByte() == 1;
-        if (constructing & !subscribedToUpdate)
+        status = (HangarStatus)fs.ReadByte();
+        if (status == HangarStatus.ConstructingShuttle & !subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
         LoadWorkBuildingData(data,STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
-        data = new byte[4];
-        fs.Read(data, 0, 4);
-        int shuttleID = System.BitConverter.ToInt32(data, 0);
-        if (shuttleID != -1)
-        {
-            shuttle = Shuttle.GetShuttle(shuttleID);
-            shuttle.AssignToHangar(this);
-            if (shuttle.docked)
-            {
-                shuttle.transform.parent = transform;
-                shuttle.SetVisibility(false);
-            }
-        }
-        else shuttle = null;
     }  
     #endregion
 }

@@ -6,19 +6,18 @@ using UnityEngine.UI;
 public sealed class UICrewObserver : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] private Dropdown shuttlesDropdown, artifactsDropdown;
     [SerializeField] private InputField nameField;
-    [SerializeField] private Text levelText, membersButtonText, experienceText, statsText, statusText;
+    [SerializeField] private Text levelText, membersButtonText, experienceText;
+    [SerializeField] private Transform statsPanel;
     [SerializeField] private Image experienceBar, staminaBar;
-    [SerializeField] private Button membersButton, shuttleButton, artifactButton;
-    [SerializeField] private GameObject dismissButton, travelButton, closeButton;
+    [SerializeField] private Button membersButton;
+    [SerializeField] private GameObject dismissButton, closeButton;
     [SerializeField] private RawImage icon;
 #pragma warning restore 0649
 
     private bool subscribedToUpdate = false;
-    private int lastDrawState = 0, lastShuttlesState = 0, lastArtifactsState = 0;
-    private List<int> shuttlesListIDs, artifactsIDs;
-    private Crew showingCrew;
+    private int lastDrawState = 0;
+    private Crew observingCrew;
 
 
     public void SetPosition(Rect r, SpriteAlignment alignment)
@@ -50,309 +49,133 @@ public sealed class UICrewObserver : MonoBehaviour
         }
         else
         {
-            showingCrew = c;
-            PrepareShuttlesDropdown();
-            PrepareArtifactsDropdown();
+            observingCrew = c;
             RedrawWindow();
             closeButton.SetActive(useCloseButton);
         }
     }
     public void RedrawWindow()
     {
-        nameField.text = showingCrew.name;
-        statsText.text = Localization.GetCrewInfo(showingCrew);
+        nameField.text = observingCrew.name;
 
-        levelText.text = showingCrew.level.ToString();
-        levelText.color = Color.Lerp(Color.white, Color.cyan, (float)showingCrew.level / 255f);
-        int e = showingCrew.experience, ne = showingCrew.GetExperienceCap();
+        levelText.text = observingCrew.level.ToString();
+        levelText.color = Color.Lerp(Color.white, Color.cyan, (float)observingCrew.level / 255f);
+        int e = observingCrew.experience, ne = observingCrew.GetExperienceCap();
         experienceText.text = e.ToString() + " / " + ne.ToString();
         experienceBar.fillAmount = e / (float)ne;
 
-
-        int m_count = showingCrew.membersCount;
+        int m_count = observingCrew.membersCount;
         membersButtonText.text = m_count.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
-        membersButton.enabled = (m_count != Crew.MAX_MEMBER_COUNT) & showingCrew.status == Crew.CrewStatus.AtHome;
+        
+        staminaBar.fillAmount = observingCrew.stamina;
+        //stats
+        var t = statsPanel.GetChild(0);
+        bool hasFreePoints = observingCrew.freePoints > 0;
+        var b = t.GetChild(2);
+        b.GetComponent<Button>().enabled = hasFreePoints;
+        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetChild(0).GetComponent<Text>().text = observingCrew.persistence.ToString();
 
-        shuttleButton.enabled = Shuttle.shuttlesList.Count > 0;
-        var ri = shuttleButton.transform.GetChild(0).GetComponent<RawImage>();
-        if (showingCrew.shuttle != null)
+        t = statsPanel.GetChild(1);
+        b = t.GetChild(2);
+        b.GetComponent<Button>().enabled = hasFreePoints;
+        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetChild(0).GetComponent<Text>().text = observingCrew.survivalSkills.ToString();
+
+        t = statsPanel.GetChild(2);
+        b = t.GetChild(2);
+        b.GetComponent<Button>().enabled = hasFreePoints;
+        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetChild(0).GetComponent<Text>().text = observingCrew.perception.ToString();
+
+        t = statsPanel.GetChild(3);
+        b = t.GetChild(2);
+        b.GetComponent<Button>().enabled = hasFreePoints;
+        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetChild(0).GetComponent<Text>().text = observingCrew.secretKnowledge.ToString();
+
+        t = statsPanel.GetChild(4);
+        b = t.GetChild(2);
+        b.GetComponent<Button>().enabled = hasFreePoints;
+        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetChild(0).GetComponent<Text>().text = observingCrew.intelligence.ToString();
+
+        t = statsPanel.GetChild(5);
+        b = t.GetChild(2);
+        b.GetComponent<Button>().enabled = hasFreePoints;
+        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetChild(0).GetComponent<Text>().text = observingCrew.techSkills.ToString();
+
+        statsPanel.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.FreeAttributePoints) + observingCrew.freePoints.ToString();
+
+        t = statsPanel.GetChild(7);
+        t.GetComponent<Text>().text = Localization.GetCrewInfo(observingCrew);
+        //
+        if (observingCrew.atHome)
         {
-            showingCrew.shuttle.DrawShuttleIcon(ri);
+            if (!dismissButton.activeSelf) dismissButton.SetActive(true);
         }
         else
         {
-            ri.texture = UIController.current.iconsTexture;
-            ri.uvRect = UIController.GetIconUVRect(Icons.TaskFrame);
+            if (dismissButton.activeSelf) dismissButton.SetActive(false);
         }
-
-        artifactButton.enabled = Artifact.artifactsList.Count > 0;
-        ri = artifactButton.transform.GetChild(0).GetComponent<RawImage>();
-        if (showingCrew.artifact != null)
-        {
-            ri.texture = showingCrew.artifact.GetTexture();
-            ri.uvRect = new Rect(0f, 0f, 1f, 1f);
-        }
-        else
-        {
-            ri.texture = UIController.current.iconsTexture;
-            ri.uvRect = UIController.GetIconUVRect(Icons.TaskFrame);
-        }
-
-        statusText.text = Localization.GetCrewStatus(showingCrew.status);
-        dismissButton.SetActive(showingCrew.status == Crew.CrewStatus.AtHome);
-
-        travelButton.SetActive(showingCrew.shuttle != null & showingCrew.status == Crew.CrewStatus.AtHome);
-        staminaBar.fillAmount = showingCrew.stamina;
-
-        lastDrawState = showingCrew.changesMarkerValue ;
+        lastDrawState = observingCrew.changesMarkerValue ;
     }
 
     public void StatusUpdate()
     {
 
-        if (showingCrew == null) gameObject.SetActive(false);
+        if (observingCrew == null) gameObject.SetActive(false);
         else
         {
-            if (lastDrawState != showingCrew.changesMarkerValue)
+            if (lastDrawState != observingCrew.changesMarkerValue)
             {
                 RedrawWindow();
             }
-            staminaBar.fillAmount = showingCrew.stamina;
-
-            if (lastShuttlesState != Shuttle.listChangesMarkerValue) PrepareShuttlesDropdown();
-            if (lastArtifactsState != Artifact.listChangesMarkerValue) PrepareArtifactsDropdown();
+            staminaBar.fillAmount = observingCrew.stamina;
         }
     }
 
     //buttons
     public void NameChanged()
     {
-        if (showingCrew == null) gameObject.SetActive(false);
+        if (observingCrew == null) gameObject.SetActive(false);
         else
         {
-            showingCrew.Rename(nameField.text);
+            observingCrew.Rename(nameField.text);
             if (RecruitingCenter.rcenterObserver != null && RecruitingCenter.rcenterObserver.isActiveAndEnabled)
                 RecruitingCenter.rcenterObserver.PrepareWindow();
         }
     }
     public void MembersButton()
     {
-        if (showingCrew == null) gameObject.SetActive(false);
+        if (observingCrew == null) gameObject.SetActive(false);
         else
         {
             if (RecruitingCenter.SelectAny()) gameObject.SetActive(false);
         }
     }
-    public void ShuttleButton()
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else
-        {
-            if (showingCrew.shuttle == null) RedrawWindow();
-            else
-            {
-                if (UIController.current.currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
-                {
-                    ExplorationPanelUI.current.Show(showingCrew.shuttle);
-                }
-                else
-                {
-                    var rt = statsText.GetComponent<RectTransform>();
-                    showingCrew.shuttle.ShowOnGUI(true, new Rect(rt.position, rt.rect.size), SpriteAlignment.Center, true);
-                }
-            }
-        }
-    }
-    public void ArtifactButton()
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else
-        {
-            if (showingCrew.artifact != null)
-            {
-                if (UIController.current.currentActiveWindowMode == ActiveWindowMode.ExpeditionPanel)
-                {
-                    ExplorationPanelUI.current.Show(showingCrew.artifact);
-                }
-                else
-                {
-                    var rt = statsText.GetComponent<RectTransform>();
-                    showingCrew.artifact.ShowOnGUI(new Rect(rt.position, rt.rect.size), SpriteAlignment.Center, true);
-                }
-            }
-            else RedrawWindow();
-        }
-    }
-    public void TravelButton() //  NOT COMPLETED
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else
-        {
-            if (showingCrew.status == Crew.CrewStatus.AtHome)
-            {
-                //
-            }
-            else
-            {
-                RedrawWindow();
-            }
-        }
-    }
     public void DismissButton() // сделать подтверждение
     {
-        if (showingCrew != null)
+        if (observingCrew != null)
         {
-            showingCrew.Dismiss();
-            showingCrew = null;
+            observingCrew.Dismiss();
+            observingCrew = null;
             gameObject.SetActive(false);
         }
     }
 
-    public void SelectShuttle(int i)
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else {
-            if (shuttlesListIDs[i] == -1)
-            {
-                showingCrew.SetShuttle(null);
-                PrepareShuttlesDropdown();
-            }
-            else
-            {
-                var s = Shuttle.GetShuttle(shuttlesListIDs[i]);
-                if (s != null)
-                {
-                    if (showingCrew.shuttle == null || showingCrew.shuttle != s)
-                    {
-                        showingCrew.SetShuttle(s);
-                        PrepareShuttlesDropdown();
-                    }
-                }
-                else PrepareShuttlesDropdown();
-            }
-        }
-    }
-    public void SelectArtifact(int i)
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else
-        {
-            if (artifactsIDs[i] == -1)
-            {
-                showingCrew.DropArtifact();
-                PrepareArtifactsDropdown();
-            }
-            else
-            {
-                var s = Artifact.GetArtifactByID(artifactsIDs[i]);
-                if (showingCrew.artifact == null || showingCrew.artifact != s)
-                {
-                    showingCrew.SetArtifact(s);
-                    PrepareArtifactsDropdown();
-                }
-            }
-        }
-    }
     //
 
     public void LocalizeTitles()
     {
-        dismissButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);
-        travelButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GoOnATrip);
-    }
-
-    private void PrepareShuttlesDropdown()
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else
-        {            
-            var opts = new List<Dropdown.OptionData>();
-            var shuttles = Shuttle.shuttlesList;
-            char c = '"';
-            shuttlesListIDs = new List<int>();
-            opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoShuttle)));
-            shuttlesListIDs.Add(-1);
-            if (showingCrew.shuttle == null)
-            { // без проверок на собственный шаттл                
-                if (shuttles.Count > 0 )
-                {
-                    foreach (var s in shuttles)
-                    {
-                        if (s.crew == null)
-                        {
-                            opts.Add(new Dropdown.OptionData(c + s.name + c));
-                            shuttlesListIDs.Add(s.ID);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                opts.Insert(0, new Dropdown.OptionData(c + showingCrew.shuttle.name + c));
-                shuttlesListIDs.Insert(0, showingCrew.shuttle.ID);
-                if (shuttles.Count > 0)
-                {
-                    foreach (var s in shuttles)
-                    {
-                        if (s != showingCrew.shuttle & s.crew == null)
-                        {
-                            opts.Add(new Dropdown.OptionData(c + s.name + c));
-                            shuttlesListIDs.Add(s.ID);
-                        }
-                    }
-                }
-            }
-            shuttlesDropdown.value = 0;
-            shuttlesDropdown.options = opts;
-            lastShuttlesState = Shuttle.listChangesMarkerValue;
-            shuttlesDropdown.interactable = (showingCrew.status == Crew.CrewStatus.AtHome);
-        }
-    }
-    private void PrepareArtifactsDropdown()
-    {
-        if (showingCrew == null) gameObject.SetActive(false);
-        else
-        {
-            var opts = new List<Dropdown.OptionData>();
-            var artifacts = Artifact.artifactsList;
-            artifactsIDs = new List<int>();
-            opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoArtifact)));
-            artifactsIDs.Add(-1);
-            if (showingCrew.artifact == null)
-            { // без проверок на собственный артефакт             
-                if (artifacts.Count > 0)
-                {
-                    foreach (var s in artifacts)
-                    {
-                        if (s.status == Artifact.ArtifactStatus.OnConservation)
-                        {
-                            opts.Add(new Dropdown.OptionData(s.name));
-                            artifactsIDs.Add(s.ID);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                opts.Insert(0, new Dropdown.OptionData(showingCrew.artifact.name));
-                shuttlesListIDs.Insert(0, showingCrew.artifact.ID);
-                if (artifactsIDs.Count > 0)
-                {
-                    foreach (var s in artifacts)
-                    {
-                        if (s.status == Artifact.ArtifactStatus.OnConservation)
-                        {
-                            opts.Add(new Dropdown.OptionData(s.name));
-                            artifactsIDs.Add(s.ID);
-                        }
-                    }
-                }
-            }
-            artifactsDropdown.value = 0;
-            artifactsDropdown.options = opts;
-            lastArtifactsState = Artifact.listChangesMarkerValue;
-            artifactsDropdown.interactable = (showingCrew.status == Crew.CrewStatus.AtHome);
-        }
+        statsPanel.GetChild(0).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Persistence);
+        statsPanel.GetChild(1).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.SurvivalSkills);
+        statsPanel.GetChild(2).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Perception);
+        statsPanel.GetChild(3).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.SecretKnowledge);
+        statsPanel.GetChild(4).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Intelligence);
+        statsPanel.GetChild(5).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.TechSkills);
+        dismissButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);        
     }
 
     private void OnEnable()

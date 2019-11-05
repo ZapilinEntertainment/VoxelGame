@@ -10,7 +10,7 @@ public enum Icons : byte
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
     DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed, TurnOn, CrewMarker, AscensionIcon,
     PersistenceIcon, SurvivalSkillsIcon, PerceptionIcon, SecretKnowledgeIcon, TechSkillsIcon, IntelligenceIcon, TreasureIcon,
-    QuestMarkerIcon
+    QuestMarkerIcon, StabilityIcon, SpaceAffectionIcon, LifepowerAffectionIcon
 }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter, Settlement }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
@@ -205,7 +205,7 @@ sealed public class UIController : MonoBehaviour
                                 UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
                                 if (uwb == null || (!uwb.gameObject.activeSelf))
                                 {
-                                    DeactivateProgressPanel();
+                                    DeactivateProgressPanel(progressPanelMode);
                                     return;
                                 }
                                 else
@@ -222,33 +222,16 @@ sealed public class UIController : MonoBehaviour
                         case ProgressPanelMode.Hangar:
                             {
                                 UIHangarObserver uho = Hangar.hangarObserver;
-                                if (uho == null)
+                                if (uho == null || uho.showingStatus != Hangar.HangarStatus.ConstructingShuttle)
                                 {
-                                    DeactivateProgressPanel();
+                                    DeactivateProgressPanel(progressPanelMode);
                                     return;
                                 }
                                 else
                                 {
-                                    switch (uho.mode)
-                                    {
-                                        case HangarObserverMode.BuildingShuttle:
-                                            {
-                                                float x = uho.observingHangar.workflow / uho.observingHangar.workflowToProcess;
-                                                progressPanelFullfill.fillAmount = x;
-                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
-                                                break;
-                                            }
-                                        case HangarObserverMode.ShuttleInside:
-                                            {
-                                                float x = uho.observingHangar.shuttle.condition;
-                                                progressPanelFullfill.fillAmount = x;
-                                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
-                                                break;
-                                            }
-                                        case HangarObserverMode.NoShuttle:
-                                            DeactivateProgressPanel();
-                                            break;
-                                    }
+                                    float x = uho.observingHangar.workflow / uho.observingHangar.workflowToProcess;
+                                    progressPanelFullfill.fillAmount = x;
+                                    progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                                 }
                                 break;
                             }
@@ -883,49 +866,7 @@ sealed public class UIController : MonoBehaviour
         upPanel.SetActive(true);
         colonyRenameButton.SetActive(true);
         GameLogUI.ChangeVisibility(true);
-    }
-
-    public static Rect GetIconUVRect(Icons i)
-    {
-        float p = 0.125f;
-        switch (i)
-        {            
-            case Icons.GreenArrow: return new Rect(6 * p, 7 * p, p, p);
-            case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
-            case Icons.OutOfPowerButton: return new Rect(2 * p, 7 * p, p, p);
-            case Icons.PowerPlus: return new Rect(3 * p, 7 * p, p, p);
-            case Icons.PowerMinus: return new Rect(4 * p, 7 * p, p, p);
-            case Icons.Citizen: return new Rect(p, 6 * p, p, p);
-            case Icons.RedArrow: return new Rect(2 * p, 6 * p, p, p);
-            case Icons.CrewBadIcon: return new Rect(p, 5 * p, p, p);
-            case Icons.CrewNormalIcon: return new Rect(2 * p, 5 * p, p, p);
-            case Icons.CrewGoodIcon: return new Rect(3 * p, 5 * p, p, p);
-            case Icons.ShuttleBadIcon: return new Rect(4 * p, 5 * p, p, p);
-            case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
-            case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);            
-            case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
-            case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
-            case Icons.DisabledBuilding: return new Rect(p, 3 * p, p, p);
-            case Icons.PowerButton: return new Rect(p, 3 * p, p, p);
-            case Icons.QuestAwaitingIcon: return new Rect(2 * p, 3 * p, p, p);
-            case Icons.QuestBlockedIcon: return new Rect(3 * p, 3 * p, p, p);
-            case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
-            case Icons.TaskFailed: return new Rect(5 * p, 3 * p, p, p);
-            case Icons.TurnOn: return new Rect(6 * p, 3 * p, p, p);
-            case Icons.CrewMarker: return new Rect(7 * p, 3 * p, p, p);
-            case Icons.AscensionIcon: return new Rect(0f, 2f * p, p, p);
-            case Icons.PersistenceIcon: return new Rect(p, 2f * p, p, p);
-            case Icons.SurvivalSkillsIcon: return new Rect(2f * p, 2f * p, p, p);
-            case Icons.PerceptionIcon: return new Rect(3f * p, 2f * p, p,p);
-            case Icons.SecretKnowledgeIcon: return new Rect(4f * p, 2f * p, p, p);
-            case Icons.TechSkillsIcon: return new Rect(5f * p, 2f * p, p, p);
-            case Icons.IntelligenceIcon: return new Rect(6f * p, 2f * p, p, p);
-            case Icons.TreasureIcon: return new Rect(7f * p, 2f * p, p, p);
-            case Icons.QuestMarkerIcon: return new Rect(0f, p, p, p);
-            case Icons.Unknown:
-            default: return new Rect(0f, 0f,p,p);
-        }
-    }
+    }    
 
     public void MoneyChanging(float f)
     {
@@ -1426,7 +1367,7 @@ sealed public class UIController : MonoBehaviour
                     UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
                     if (uwb == null || !uwb.isObserving)
                     {
-                        DeactivateProgressPanel();
+                        DeactivateProgressPanel(progressPanelMode);
                         return;
                     }
                     else
@@ -1451,58 +1392,30 @@ sealed public class UIController : MonoBehaviour
             case ProgressPanelMode.Hangar:
                 {
                     UIHangarObserver uho = Hangar.hangarObserver;
-                    if (uho == null || !uho.isObserving) { DeactivateProgressPanel(); return; }
+                    if (uho == null || !uho.isObserving || uho.showingStatus != Hangar.HangarStatus.ConstructingShuttle) { DeactivateProgressPanel(progressPanelMode); return; }
                     else
                     {
                         progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
                         progressPanelIcon.texture = iconsTexture;
-                        Hangar h = uho.observingHangar;
-                        Shuttle sh = h.shuttle;
-                        bool haveShuttle = !(sh == null);
-                        if (haveShuttle)
-                        {
-                            progressPanelIcon.uvRect = GetIconUVRect(sh.condition > 0.85 ? Icons.ShuttleGoodIcon : (sh.condition < 0.5 ? Icons.ShuttleBadIcon : Icons.ShuttleNormalIcon));
-                            if (uho.mode == HangarObserverMode.ShuttleOnMission)
-                            {
-                                progressPanelText.text = Localization.GetPhrase(LocalizedPhrase.ShuttleOnMission);
-                                progressPanelFullfill.fillAmount = 1;
-                                progressPanelFullfill.color = Color.white;
-                            }
-                            else
-                            {
-                                progressPanelText.text = ((int)(sh.condition * 100)).ToString() + '%';
-                                progressPanelFullfill.fillAmount = sh.condition;
-                                progressPanelFullfill.color = Color.green;
-                            }
-                        }
-                        else
-                        {
-                            progressPanelIcon.uvRect = GetIconUVRect(Icons.TaskFrame);
-                            if (h.constructing)
-                            {
-                                float x = h.workflow / h.workflowToProcess;
-                                progressPanelText.text = ((int)(x * 100)).ToString() + '%';
-                                progressPanelFullfill.fillAmount = x;
-                                progressPanelFullfill.color = PoolMaster.gameOrangeColor;
-                            }
-                            else
-                            {
-                                DeactivateProgressPanel();
-                                return;
-                            }
-                        }
+
+                        progressPanelIcon.uvRect = GetIconUVRect(Icons.TaskFailed);
+                        float x = uho.observingHangar.workflow / uho.observingHangar.workflowToProcess;
+                        progressPanelText.text = ((int)(x * 100)).ToString() + '%';
+                        progressPanelFullfill.fillAmount = x;
+                        progressPanelFullfill.color = PoolMaster.gameOrangeColor;
+
                     }
                     break;
                 }
             case ProgressPanelMode.RecruitingCenter:
                 {
                     UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
-                    if (urc == null || ( !urc.isObserving  | !urc.hiremode)) { DeactivateProgressPanel(); return; }
+                    if (urc == null || ( !urc.isObserving  | !urc.hiremode)) { DeactivateProgressPanel(progressPanelMode); return; }
                     else
                     {
                         progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
                         progressPanelIcon.texture = iconsTexture;
-                        progressPanelIcon.uvRect = GetIconUVRect(Icons.TaskFrame);
+                        progressPanelIcon.uvRect = GetIconUVRect(Icons.TaskFailed);
                         float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
                         progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                         progressPanelFullfill.fillAmount = x;
@@ -1514,10 +1427,29 @@ sealed public class UIController : MonoBehaviour
         progressPanel.SetActive(true);
         progressPanelMode = mode;
     }
-    public void DeactivateProgressPanel()
+    public void DeactivateProgressPanel(ProgressPanelMode mode)
     {
-        progressPanel.SetActive(false);
-        progressPanelMode = ProgressPanelMode.Offline;
+        if (mode == progressPanelMode)
+        {
+            progressPanel.SetActive(false);
+            progressPanelMode = ProgressPanelMode.Offline;
+        }
+    }
+    public void ProgressPanelStopButton()
+    {
+        if (progressPanelMode == ProgressPanelMode.RecruitingCenter)
+        {
+            UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
+            if (urc != null && urc.isObserving && urc.hiremode) urc.observingRCenter.StopHiring();
+        }
+        else
+        {
+            if (progressPanelMode == ProgressPanelMode.Hangar)
+            {
+                var uho = Hangar.hangarObserver;
+                if (uho != null && uho.isObserving) uho.observingHangar.StopConstruction();
+            }
+        }
     }
 
     public void ActivateWorkshopPanel()
@@ -1683,5 +1615,48 @@ sealed public class UIController : MonoBehaviour
         landingButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Land_verb);
     }
 
-
+    public static Rect GetIconUVRect(Icons i)
+    {
+        float p = 0.125f;
+        switch (i)
+        {
+            case Icons.GreenArrow: return new Rect(6 * p, 7 * p, p, p);
+            case Icons.GuidingStar: return new Rect(7 * p, 7 * p, p, p);
+            case Icons.OutOfPowerButton: return new Rect(2 * p, 7 * p, p, p);
+            case Icons.PowerPlus: return new Rect(3 * p, 7 * p, p, p);
+            case Icons.PowerMinus: return new Rect(4 * p, 7 * p, p, p);
+            case Icons.Citizen: return new Rect(p, 6 * p, p, p);
+            case Icons.RedArrow: return new Rect(2 * p, 6 * p, p, p);
+            case Icons.CrewBadIcon: return new Rect(p, 5 * p, p, p);
+            case Icons.CrewNormalIcon: return new Rect(2 * p, 5 * p, p, p);
+            case Icons.CrewGoodIcon: return new Rect(3 * p, 5 * p, p, p);
+            case Icons.ShuttleBadIcon: return new Rect(4 * p, 5 * p, p, p);
+            case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
+            case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
+            case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
+            case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
+            case Icons.DisabledBuilding: return new Rect(p, 3 * p, p, p);
+            case Icons.PowerButton: return new Rect(p, 3 * p, p, p);
+            case Icons.QuestAwaitingIcon: return new Rect(2 * p, 3 * p, p, p);
+            case Icons.QuestBlockedIcon: return new Rect(3 * p, 3 * p, p, p);
+            case Icons.LogPanelButton: return new Rect(4 * p, 3 * p, p, p);
+            case Icons.TaskFailed: return new Rect(5 * p, 3 * p, p, p);
+            case Icons.TurnOn: return new Rect(6 * p, 3 * p, p, p);
+            case Icons.CrewMarker: return new Rect(7 * p, 3 * p, p, p);
+            case Icons.AscensionIcon: return new Rect(0f, 2f * p, p, p);
+            case Icons.PersistenceIcon: return new Rect(p, 2f * p, p, p);
+            case Icons.SurvivalSkillsIcon: return new Rect(2f * p, 2f * p, p, p);
+            case Icons.PerceptionIcon: return new Rect(3f * p, 2f * p, p, p);
+            case Icons.SecretKnowledgeIcon: return new Rect(4f * p, 2f * p, p, p);
+            case Icons.TechSkillsIcon: return new Rect(5f * p, 2f * p, p, p);
+            case Icons.IntelligenceIcon: return new Rect(6f * p, 2f * p, p, p);
+            case Icons.TreasureIcon: return new Rect(7f * p, 2f * p, p, p);
+            case Icons.QuestMarkerIcon: return new Rect(0f, p, p, p);
+            case Icons.StabilityIcon: return new Rect(p, p, p, p);
+            case Icons.SpaceAffectionIcon: return new Rect(2f * p, p, p, p);
+            case Icons.LifepowerAffectionIcon: return new Rect(3f * p, p, p, p);
+            case Icons.Unknown:
+            default: return new Rect(0f, 0f, p, p);
+        }
+    }
 }

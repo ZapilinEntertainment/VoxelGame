@@ -60,7 +60,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             else
             {
                 hireButton.gameObject.SetActive(true);
-                UIController.current.DeactivateProgressPanel();
+                UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
                 crewsDropdown.gameObject.SetActive(true);
             }            
             infoButton.SetActive(false);
@@ -72,13 +72,13 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         {
             crewsDropdown.gameObject.SetActive(true);
             hiremode = false;
-            UIController.current.DeactivateProgressPanel();
+            UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
             hireButton.gameObject.SetActive(false);
             infoButton.SetActive(true);
 
             replenishButton.transform.GetChild(1).GetComponent<Text>().text = RecruitingCenter.REPLENISH_COST.ToString();
             replenishButton.SetActive(
-                (showingCrew.membersCount != Crew.MAX_MEMBER_COUNT) & (showingCrew.status == Crew.CrewStatus.AtHome) );
+                (showingCrew.membersCount != Crew.MAX_MEMBER_COUNT) & (showingCrew.atHome) );
 
             membersText.text = Localization.GetPhrase(LocalizedPhrase.MembersCount) + ": " + showingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
             membersText.enabled = true;
@@ -210,7 +210,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
-        if (hiremode) UIController.current.DeactivateProgressPanel();
+        if (hiremode) UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
         gameObject.SetActive(false);
     }
 
@@ -219,7 +219,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         isObserving = false;
         observingRCenter = null;
         WorkBuilding.workbuildingObserver.ShutOff();
-        if (hiremode) UIController.current.DeactivateProgressPanel();
+        if (hiremode) UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
         gameObject.SetActive(false);
     }
 }
