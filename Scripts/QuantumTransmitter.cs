@@ -5,11 +5,9 @@ using UnityEngine;
 
 public sealed class QuantumTransmitter : Building {
 	public static List<QuantumTransmitter> transmittersList{get;private set;}
-    public static int lastUsedID { get; private set; }
 
-    public int transmitterID { get; private set; }
-    public int expeditionID { get; private set; }
-    // STATIC METHODS
+    private int transmissionID = NO_TRANSMISSION_VALUE;
+    public const int NO_TRANSMISSION_VALUE = -1;
 
     static QuantumTransmitter()
     {
@@ -19,31 +17,6 @@ public sealed class QuantumTransmitter : Building {
 	public static void ResetStaticData() {
 		transmittersList = new List<QuantumTransmitter>();
 	}
-    public static QuantumTransmitter GetTransmitterByConnectionID(int s_id)
-    {
-        if (s_id > 0 && transmittersList.Count > 0)
-        {
-            foreach (QuantumTransmitter qt in transmittersList)
-            {
-                if (qt != null && qt.transmitterID == s_id)
-                {
-                    return qt;
-                }
-            }
-        }
-        return null;
-    }
-    public static QuantumTransmitter GetFreeTransmitter()
-    {
-        if (transmittersList.Count > 0)
-        {
-            foreach (QuantumTransmitter qt in transmittersList)
-            {
-                if (qt != null && qt.expeditionID == -1) return qt;
-            }
-        }
-        return null;
-    }
     public static int GetFreeTransmittersCount()
     {
         if (transmittersList.Count == 0) return 0;
@@ -52,16 +25,53 @@ public sealed class QuantumTransmitter : Building {
             int c = 0;
             foreach (var qt in transmittersList)
             {
-                if (qt.expeditionID == -1) c++;
+                if (qt.transmissionID == NO_TRANSMISSION_VALUE) c++;
             }
             return c;
         }
     }
-    //  PUBLIC
-    public static void SetLastUsedID(int id)
+    public static QuantumTransmitter GetFreeTransmitter()
     {
-        lastUsedID = id;
+        if (transmittersList.Count == 0) return null;
+        else
+        {
+            foreach (var t in transmittersList)
+            {
+                if (t.transmissionID == NO_TRANSMISSION_VALUE) return t;
+            }
+            return null;
+        }
     }
+    private static int GenerateTransmissionID()
+    {
+        if (transmittersList.Count == 0) return 1;
+        else
+        {
+            int x = 1;
+            foreach (var t in transmittersList)
+            {
+                if (t.transmissionID != NO_TRANSMISSION_VALUE && t.transmissionID > x) x = t.transmissionID; 
+            }
+            return x + 1;
+        }
+    }
+    public static void StopTransmission(int x)
+    {
+        if (x == NO_TRANSMISSION_VALUE) return;
+        if (transmittersList.Count > 0)
+        {
+            foreach (var t in transmittersList)
+            {
+                if (t.transmissionID == x)
+                {
+                     t.transmissionID = NO_TRANSMISSION_VALUE;
+                     t.SetActivationStatus(false, true);
+                    return;
+                }
+            }
+        }
+    }
+
 
     override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
     {
@@ -69,10 +79,9 @@ public sealed class QuantumTransmitter : Building {
         SetBuildingData(b, pos);
         if (!transmittersList.Contains(this))
         {
-            transmitterID = lastUsedID++;
+            transmissionID = NO_TRANSMISSION_VALUE;
             transmittersList.Add(this);
-        }
-        expeditionID = -1;
+        }        
         SetActivationStatus(false, true);
     }
 
@@ -83,20 +92,11 @@ public sealed class QuantumTransmitter : Building {
 		ChangeRenderersView(x);
 	}	
 
-    public void AssignExpedition(Expedition e)
+    public int StartTransmission()
     {
-        if (e == null) return;
-        expeditionID = e.ID;
-        SetActivationStatus(true, true);
-    }
-    public void DropExpeditionConnection()
-    {
-        if (expeditionID >= 0)
-        {
-            expeditionID = -1;
-            SetActivationStatus(false, true);
-        } 
-    }
+        transmissionID = GenerateTransmissionID();
+        return transmissionID;
+    } 
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
@@ -105,12 +105,7 @@ public sealed class QuantumTransmitter : Building {
         if (!clearFromSurface) { UnsetBasement(); }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (transmittersList.Contains(this)) transmittersList.Remove(this);
-        if (expeditionID != -1)
-        {
-            var e = Expedition.GetExpeditionByID(expeditionID);
-            if (e != null) e.DropTransmitter(this);
-            expeditionID = -1;
-        }
+        if (transmissionID != NO_TRANSMISSION_VALUE) Expedition.ChangeTransmissionStatus(transmissionID, null);
         Destroy(gameObject);
     }
 
@@ -118,7 +113,7 @@ public sealed class QuantumTransmitter : Building {
     override public List<byte> Save()
     {
         var data = base.Save();
-        data.AddRange(System.BitConverter.GetBytes(transmitterID));
+        data.AddRange(System.BitConverter.GetBytes(transmissionID));
         return data;
     }
 
@@ -127,7 +122,7 @@ public sealed class QuantumTransmitter : Building {
         base.Load(fs, sblock);
         var data = new byte[4];
         fs.Read(data, 0, 4);
-        transmitterID = System.BitConverter.ToInt32(data,0);
+        transmissionID = System.BitConverter.ToInt32(data,0);
     }
     #endregion
 }

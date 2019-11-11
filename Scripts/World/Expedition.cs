@@ -9,7 +9,7 @@ public sealed class Expedition
     public static List<Expedition> expeditionsList { get; private set; }
     public static byte listChangesMarker { get; private set; }
     public static int expeditionsSucceed;
-    public static UIExpeditionObserver observer { get; private set; }
+    private static UIExpeditionObserver _observer;
     public static int nextID { get; private set; } // в сохранение
 
     public readonly int ID;
@@ -25,10 +25,10 @@ public sealed class Expedition
 
     private bool subscribedToUpdate = false;
     private FlyingExpedition mapMarker;
-    private QuantumTransmitter transmitter;
+    private int shuttleID = Hangar.NO_SHUTTLE_VALUE, transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
 
     private const float FLY_SPEED = 5f;
-    public const float MAX_SUPPLIES_COUNT = 200f, MAX_START_CRYSTALS = 200f;
+    public const int MIN_SUPPLIES_COUNT = 20, MAX_SUPPLIES_COUNT = 200, MAX_START_CRYSTALS = 200;
 
     // STATIC & equals
     static Expedition()
@@ -53,6 +53,29 @@ public sealed class Expedition
             return null;
         }
     }
+    public static void ChangeTransmissionStatus(int t_id, bool? status)
+    {
+        if (expeditionsList.Count > 0)
+        {
+            foreach (Expedition e in expeditionsList)
+            {
+                if (e.transmissionID == t_id)
+                {
+                    e.ChangeTransmissionStatus(status);
+                    return;
+                }
+            }
+        }
+    }
+    public static UIExpeditionObserver GetObserver()
+    {
+        if (_observer == null)
+        {
+            _observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), 
+                UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
+        }
+        return _observer;
+    }
 
     public override bool Equals(object obj)
     {
@@ -69,18 +92,32 @@ public sealed class Expedition
     }
 
     /// ===============================
-    public Expedition(PointOfInterest i_destination, Crew c)
+    public Expedition(PointOfInterest i_destination, Crew c, int i_shuttleID, QuantumTransmitter transmitter)
     {
         ID = nextID++;
         stage = ExpeditionStage.WayIn;
-
+        
         destination = i_destination; destination.AssignExpedition(this);
         crew = c; c.SetCurrentExpedition(this);
 
-        hasConnection = false;
+        shuttleID = i_shuttleID;
+        if (transmitter != null)
+        {
+            transmissionID = transmitter.StartTransmission();
+            hasConnection = true;
+        }
+        else
+        {
+            transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
+            hasConnection = false;
+        }
+
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, gmap.cityPoint, destination, FLY_SPEED);
-        changesMarkerValue = 0;
+        gmap.AddPoint(mapMarker, true);        
+
+        expeditionsList.Add(this);
+        listChangesMarker++;
     }
     private Expedition(int i_id) // for loading only
     {
@@ -90,16 +127,20 @@ public sealed class Expedition
         changesMarkerValue = 0;
     }
 
-    public void MissionStart()
-    {
-
-    }
-
     public void LabourUpdate()
     {
 
     }
 
+    public void StartMission()
+    {
+        stage = ExpeditionStage.OnMission;
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
+            subscribedToUpdate = false;
+        }
+    }
     public void EndMission()
     {
 
@@ -114,52 +155,50 @@ public sealed class Expedition
         return false;
     }
 
-    public void DropTransmitter(QuantumTransmitter qt)
+    public void ChangeTransmissionStatus(bool? x)
     {
-        if (qt != null && qt == transmitter)
+        if (x == null)
         {
-            transmitter = null;
-            // #connection losing            
+            transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
             hasConnection = false;
             crew.LoseConfidence(2f);
             changesMarkerValue++;
             if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
         }
-    }
-    public void SetConnection(bool connect)
-    {
-        if (connect == false)
-        {
-            if (hasConnection)
-            {
-                //#connection losing
-                hasConnection = false;
-                crew.LoseConfidence(1f);
-                changesMarkerValue++;
-                if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
-            }
-        }
         else
         {
-            if (transmitter != null & !hasConnection)
+            if (transmissionID != QuantumTransmitter.NO_TRANSMISSION_VALUE)
             {
-                hasConnection = true;
-                crew.RaiseConfidence(1f);
-                changesMarkerValue++;
-                if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
+                if (x == true)
+                {
+                    if (!hasConnection)
+                    {
+                        hasConnection = true;
+                        crew.RaiseConfidence(1f);
+                        changesMarkerValue++;
+                        if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
+                    }
+                }
+                else
+                {
+                    if (hasConnection)
+                    {
+                        hasConnection = false;
+                        crew.LoseConfidence(1f);
+                        changesMarkerValue++;
+                        if (mapMarker != null) GameMaster.realMaster.globalMap.MarkToUpdate();
+                    }
+                }
             }
         }
     }
 
-    public void ShowOnGUI(Rect r, SpriteAlignment alignment)
+    public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool onMainCanvas)
     {
-        if (observer == null)
-        {
-            observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
-        }
-        if (!observer.isActiveAndEnabled) observer.gameObject.SetActive(true);
-        observer.SetPosition(r, alignment);
-        observer.Show(this);
+        var ob = GetObserver();
+        if (!ob.isActiveAndEnabled) ob.gameObject.SetActive(true);
+        ob.SetPosition(r, alignment, onMainCanvas);
+        ob.Show(this);
     }
 
     public void Dismiss() // экспедиция вернулась домой и распускается
@@ -169,7 +208,8 @@ public sealed class Expedition
         else
         {
             if (crew != null) crew.SetCurrentExpedition(null);
-            if (transmitter != null) transmitter.DropExpeditionConnection();
+            QuantumTransmitter.StopTransmission(transmissionID);
+            Hangar.ReturnShuttle(shuttleID);
             if (destination != null) destination.DeassignExpedition(this);
             if (suppliesCount > 0) GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Supplies, suppliesCount);
             //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
@@ -189,7 +229,8 @@ public sealed class Expedition
         else
         {
             if (crew != null) crew.Disappear();
-            if (transmitter != null) transmitter.DropExpeditionConnection();
+            QuantumTransmitter.StopTransmission(transmissionID);
+            Hangar.ReturnShuttle(shuttleID);
             if (destination != null) destination.DeassignExpedition(this);
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {

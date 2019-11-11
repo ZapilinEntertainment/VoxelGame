@@ -5,14 +5,17 @@ public sealed class Hangar : WorkBuilding
 {
     public enum HangarStatus : byte { NoShuttle, ConstructingShuttle, ShuttleInside, ShuttleOnMission}
     public static List<Hangar> hangarsList { get; private set; }    
+    public static int listChangesMarkerValue { get; private set; }
 
     public bool correctLocation { get; private set; }
     public HangarStatus status { get; private set; }
     public static UIHangarObserver hangarObserver;
     private bool subscribedToRestoreBlockersEvent = false;
+    private int shuttleID = NO_SHUTTLE_VALUE;
     private List<Block> dependentBlocksList;
 
     public const float BUILD_SHUTTLE_WORKFLOW = 12000;
+    public const int NO_SHUTTLE_VALUE = -1;
 
     static Hangar()
     {
@@ -34,6 +37,46 @@ public sealed class Hangar : WorkBuilding
                 if (h.status == HangarStatus.ShuttleInside) c++;
             }
             return c;
+        }
+    }
+    public static int GetFreeShuttleID()
+    {
+        if (hangarsList.Count == 0) return NO_SHUTTLE_VALUE;
+        else
+        {
+            foreach (var h in hangarsList)
+            {
+                if (h.shuttleID != -1) return h.shuttleID;
+            }
+            return -NO_SHUTTLE_VALUE;
+        }
+    }
+    private static int GenerateShuttleID()
+    {
+        if (hangarsList.Count == 0) return 1;
+        else
+        {
+            int x = 1;
+            foreach (var h in hangarsList)
+            {
+                if (h.status == HangarStatus.ShuttleInside && h.shuttleID > x) x = h.shuttleID + 1;
+            }
+            return x;
+        }
+    }
+    public static void ReturnShuttle(int s_id)
+    {
+        if (s_id == NO_SHUTTLE_VALUE) return;
+        if (hangarsList.Count > 0)
+        {
+            foreach (var h in hangarsList)
+            {
+                if (h.ID == s_id)
+                {
+                    h.status = HangarStatus.ShuttleInside;
+                    return;
+                }
+            }
         }
     }
 
@@ -159,8 +202,17 @@ public sealed class Hangar : WorkBuilding
                     }
                 }
             }
-            status = HangarStatus.NoShuttle;
-        }       
+            if (!hangarsList.Contains(this))
+            {
+                status = HangarStatus.NoShuttle;
+                shuttleID = NO_SHUTTLE_VALUE;
+                hangarsList.Add(this);
+            }
+        }
+        else
+        {
+            if (!hangarsList.Contains(this)) hangarsList.Add(this);
+        }
         SetWorkbuildingData(b, pos);
         if (!GameMaster.loading) CheckPositionCorrectness();
         else
@@ -170,8 +222,7 @@ public sealed class Hangar : WorkBuilding
                 GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
                 subscribedToRestoreBlockersEvent = true;
             }
-        }
-        if (!hangarsList.Contains(this)) hangarsList.Add(this);        
+        }               
     }
     public void RestoreBlockers()
     {
@@ -291,9 +342,11 @@ public sealed class Hangar : WorkBuilding
 
     override protected void LabourResult()
     {
+        shuttleID = GenerateShuttleID();
         status = HangarStatus.ShuttleInside;
         if (workersCount > 0) FreeWorkers();
         workflow = 0f;
+        listChangesMarkerValue++;
         if (showOnGUI)
         {
             hangarObserver.PrepareHangarWindow();
@@ -366,7 +419,6 @@ public sealed class Hangar : WorkBuilding
         }
     }
 
-
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
@@ -387,7 +439,13 @@ public sealed class Hangar : WorkBuilding
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersEvent = false;
         }
+        listChangesMarkerValue++;
         Destroy(gameObject);
+    }
+
+    public void FORCED_MakeShuttle()
+    {
+        if (status == HangarStatus.NoShuttle) LabourResult();
     }
 
     #region save-load system
@@ -399,7 +457,9 @@ public sealed class Hangar : WorkBuilding
     }
     private List<byte> SaveHangarDara()
     {
-        return new List<byte>() {correctLocation ? (byte)1 : (byte)0, (byte)status};
+        var data =  new List<byte>() {correctLocation ? (byte)1 : (byte)0, (byte)status};
+        data.AddRange(System.BitConverter.GetBytes(shuttleID));
+        return data;
     }
 
     override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
@@ -408,13 +468,23 @@ public sealed class Hangar : WorkBuilding
         fs.Read(data, 0, data.Length);
         LoadStructureData(data, sblock);
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
-        correctLocation = fs.ReadByte() == 1;
-        status = (HangarStatus)fs.ReadByte();
+
+        var hdata = new byte[6];
+        fs.Read(hdata, 0, hdata.Length);
+        correctLocation = hdata[0] == 1;
+        status = (HangarStatus)hdata[1];
+        if (status == HangarStatus.ShuttleInside || status == HangarStatus.ShuttleOnMission)
+        {
+            shuttleID = System.BitConverter.ToInt32(hdata, 2);
+        }
+        else shuttleID = NO_SHUTTLE_VALUE;
+
         if (status == HangarStatus.ConstructingShuttle & !subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
+
         LoadWorkBuildingData(data,STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
     }  
     #endregion

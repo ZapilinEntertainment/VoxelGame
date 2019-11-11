@@ -669,6 +669,7 @@ public static class Localization
             default: return "crew \" " + name + "\" ready";
         }
     }
+
     public static string GetExpeditionName(Expedition e)
     {
         if (e == null) return string.Empty;
@@ -721,6 +722,45 @@ public static class Localization
                     return "Expedition to " + poi.GetName();
             }
         }
+    }
+    public static string GetExpeditionDescription(Expedition e)
+    {
+        string s;
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                {
+                    s = "Участников: " + e.crew.membersCount.ToString() +
+                        "\nУсталость: " + ((int)((1f - e.crew.stamina) * 100f)).ToString() +
+                        "%\nСтатус: ";
+                    switch (e.stage)
+                    {
+                        case Expedition.ExpeditionStage.LeavingMission: s += "Завершают миссию"; break;
+                        case Expedition.ExpeditionStage.OnMission: s += "На задании"; break;
+                        case Expedition.ExpeditionStage.WayIn: s += "В пути"; break;
+                        case Expedition.ExpeditionStage.WayOut: s += "Возвращаются"; break;
+                        default: s += "Отдыхают"; break;
+                    }
+                    break;
+                }
+            case Language.English:
+            default:
+                {
+                    s = "Members: " + e.crew.membersCount.ToString() +
+                        "\nWeariness: " + ((int)((1f - e.crew.stamina) * 100f)).ToString() +
+                        "%\nStatus: ";
+                    switch (e.stage)
+                    {
+                        case Expedition.ExpeditionStage.LeavingMission: s += "Leaving mission"; break;
+                        case Expedition.ExpeditionStage.OnMission: s += "On mission"; break;
+                        case Expedition.ExpeditionStage.WayIn: s += "Advancing"; break;
+                        case Expedition.ExpeditionStage.WayOut: s += "Returning"; break;
+                        default: s += "Resting"; break;
+                    }
+                    break;
+                }
+        }
+        return s;
     }
 
     public static string GetCrewInfo(Crew c)
@@ -2518,7 +2558,7 @@ public static class Localization
                         case LocalizedPhrase.CrystalsCollected: return "Crystals collected";
                         case LocalizedPhrase.FreeShuttles: return "Shuttles free: ";
                         case LocalizedPhrase.FreeTransmitters: return "Transmitters free: ";
-                        case LocalizedPhrase.FuelNeeded: return "Fuel needed";
+                        case LocalizedPhrase.FuelNeeded: return "Fuel needed: ";
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
                         case LocalizedPhrase.KnowledgePoints:return "Knowledge points";
                         case LocalizedPhrase.MembersCount: return "Members count";
@@ -2690,45 +2730,7 @@ public static class Localization
                 }
         }
     }
-    public static string GetExpeditionDescription(Expedition e)
-    {
-        string s;
-        switch (currentLanguage)
-        {
-            case Language.Russian:
-                {
-                    s = "Участников: " + e.crew.membersCount.ToString() + 
-                        "\nУсталость: " + ((int)((1f - e.crew.stamina) * 100f)).ToString() + 
-                        "%\nСтатус: ";
-                    switch (e.stage)
-                    {
-                        case Expedition.ExpeditionStage.LeavingMission: s += "Завершают миссию"; break;
-                        case Expedition.ExpeditionStage.OnMission: s += "На задании"; break;
-                        case Expedition.ExpeditionStage.WayIn: s += "В пути"; break;
-                        case Expedition.ExpeditionStage.WayOut: s += "Возвращаются"; break;
-                        default: s += "Отдыхают"; break;
-                    }
-                    break;
-                }
-            case Language.English:
-            default:
-                {
-                    s = "Memvers: " + e.crew.membersCount.ToString() +
-                        "\n:Weariness " + ((int)((1f - e.crew.stamina) * 100f)).ToString() +
-                        "%\nStatus: ";
-                    switch (e.stage)
-                    {
-                        case Expedition.ExpeditionStage.LeavingMission: s += "Leaving mission"; break;
-                        case Expedition.ExpeditionStage.OnMission: s += "On mission"; break;
-                        case Expedition.ExpeditionStage.WayIn: s += "Advancing"; break;
-                        case Expedition.ExpeditionStage.WayOut: s += "Returning"; break;
-                        default: s += "Resting"; break;
-                    }
-                    break;
-                }
-        }
-        return s;
-    }
+
     public static string GetEndingTitle(GameEndingType endType)
     {
         switch (currentLanguage)
@@ -3241,7 +3243,38 @@ public static class Localization
         switch (currentLanguage)
         {
             case Language.Russian:
-                return string.Empty;
+                {
+                    switch (mmtype)
+                    {
+                        case MapMarkerType.MyCity: return "Наш маленький кусочек реального мира.";
+                        case MapMarkerType.Station: return "Одинокая станция, имеющая сообщение с внешним миром.";
+                        case MapMarkerType.Wreck:
+                            {
+                                switch (subIndex)
+                                {
+                                    case 3: return "Обломки корабля беженцев. Нет признаков жизни.";
+                                    case 2: return "Металлические остатки чего-то крупного разбросаны там повсюду.";
+                                    case 1: return "Что-то окрашенное болью и сожалением. Это разрушенный корабль из внешнего космоса.";
+                                    case 0:
+                                    default:
+                                        return "Нечто, разбитое вдребезги.";
+                                }
+                            }
+                        case MapMarkerType.FlyingExpedition: return "Челнок из нашей колонии."; // заменить
+                        case MapMarkerType.Island: return "Необитаемый остров.";
+                        case MapMarkerType.SOS: return "Может, нам стоит кого-то туда отправить?";
+                        case MapMarkerType.Portal: return "Временный проход в какой-то другой мир.";
+                        case MapMarkerType.QuestMark: return "Место, обозначенное заданием."; //заменить
+                        case MapMarkerType.Colony: return "Мы здесь не одни!";
+                        case MapMarkerType.Star: return "Сияет.";
+                        case MapMarkerType.Wiseman: return "Наши исследователи могут обрести здесь мудрость.";
+                        case MapMarkerType.Wonder: return "Величественное сооружение, возведённое в неясных целях.";
+                        case MapMarkerType.Resources: return "То, что мы можем подобрать и использовать.";
+                        case MapMarkerType.Unknown:
+                        default:
+                            return "Это не описать словами.";
+                    }
+                }
             case Language.English:
             default:
                 {
@@ -3254,7 +3287,7 @@ public static class Localization
                                 switch (subIndex)
                                 {
                                     case 3: return "Broken refugee's ship. No visible signs of life.";
-                                    case 2: return "Parts of something big and made from metal dropped everywhere there";
+                                    case 2: return "Parts of something big and made from metal dropped everywhere there.";
                                     case 1: return "It painted with pain and sorrow. Broken ship from outside.";
                                     case 0:
                                     default:

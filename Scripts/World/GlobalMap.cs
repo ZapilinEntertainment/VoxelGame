@@ -358,7 +358,7 @@ public sealed class GlobalMap : MonoBehaviour
                             {
                                 if (fe.expedition.stage == Expedition.ExpeditionStage.WayIn)
                                 {
-                                    fe.expedition.MissionStart();
+                                    fe.expedition.StartMission();
                                 }
                                 else
                                 {
@@ -563,6 +563,24 @@ public sealed class GlobalMap : MonoBehaviour
     {
         mapInterfaceActive = false;
         GameMaster.realMaster.environmentMaster.EnableDecorations();
+    }
+
+    public void FORCED_CreatePointOfInterest()
+    {
+        for (int i =0; i < mapSectors.Length; i++)
+        {
+            if (mapSectors[i] == null) {
+                var pos = GetSectorPosition(i);
+                var centralPoint = MapPoint.CreatePointOfType(
+                pos.x,
+                pos.y,
+                MapMarkerType.Island
+                );
+                mapSectors[i] = new RingSector(centralPoint, Environment.GetSuitableEnvironment(ascension));
+                AddPoint(centralPoint, true);
+                return;
+            }
+        }
     }
 
     #region save-load system

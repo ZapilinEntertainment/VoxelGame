@@ -437,92 +437,7 @@ public sealed class GameMaster : MonoBehaviour
         {
             //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
 
-            if (Input.GetKeyDown("o"))
-            {
-                bool makeBuildings = true;
-                var sx = mainChunk.GetRandomSurfaceBlock();
-                
-                if (makeBuildings)
-                {
-                    if (sx != null)
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
-                        s.SetBasement(sx, PixelPosByte.zero);
-                        (s as WorkBuilding).AddWorkers(50);
-                    }
-                    sx = mainChunk.GetRandomSurfaceBlock();
-                    if (sx != null)
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                        s.SetBasement(sx, PixelPosByte.zero);
-                    }
-                    sx = mainChunk.GetRandomSurfaceBlock();
-                    if (sx != null)
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                        s.SetBasement(sx, PixelPosByte.zero);
-                    }
-                    sx = mainChunk.GetRandomSurfaceBlock();
-                    if (sx != null)
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                        s.SetBasement(sx, PixelPosByte.zero);
-                    }
-                    sx = mainChunk.GetRandomSurfaceBlock();
-                    if (sx != null)
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
-                        s.SetBasement(sx, PixelPosByte.zero);
-                    }
-                }
-
-                /*         
-              sx = mainChunk.GetRandomSurfaceBlock();
-              if (sx != null)
-              {
-                  Structure s = Structure.GetStructureByID(Structure.MONUMENT_ID);
-                  s.SetBasement(sx, PixelPosByte.zero);
-                  // UIController.current.Select(s);
-              }
-
-              sx = mainChunk.GetRandomSurfaceBlock();
-              if (sx != null)
-              {
-                  Structure s = Structure.GetStructureByID(Structure.ARTIFACTS_REPOSITORY_ID);
-                  s.SetBasement(sx, PixelPosByte.zero);
-              }
-              sx = mainChunk.GetRandomSurfaceBlock();
-              */
-
-                if (makeBuildings)
-                {
-                    Vector3Int ecpos = Vector3Int.zero;
-                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-                    }
-                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
-                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-                    }
-                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
-                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-                    }                    
-
-                    Crew c = Crew.CreateNewCrew(colonyController, Crew.MAX_MEMBER_COUNT);
-
-                    if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-                    {
-                        Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
-                        s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-                    }
-                }
-
-            }
+            if (Input.GetKeyDown("o")) TestMethod();
         }
 
         if (Input.GetKeyDown("m"))
@@ -846,7 +761,6 @@ public sealed class GameMaster : MonoBehaviour
         Artifact.SaveStaticData(fs);
         Crew.SaveStaticData(fs);
         mainChunk.SaveChunkData(fs);
-        fs.Write(System.BitConverter.GetBytes(QuantumTransmitter.lastUsedID), 0, 4);
         colonyController.Save(fs); // <------- COLONY CONTROLLER
         Dock.SaveStaticDockData(fs);
 
@@ -1006,7 +920,6 @@ public sealed class GameMaster : MonoBehaviour
             }
 
             fs.Read(data, 0, 4);
-            QuantumTransmitter.SetLastUsedID(System.BitConverter.ToInt32(data, 0));
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             if (loadingFailed)
@@ -1106,5 +1019,62 @@ public sealed class GameMaster : MonoBehaviour
     }
     #endregion
 
+    private void TestMethod()
+    {
+        Vector3Int ecpos = Vector3Int.zero;
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            (s as WorkBuilding).AddWorkers(50);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+
+
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            (s as Hangar).FORCED_MakeShuttle();
+        }
+
+        Crew c = Crew.CreateNewCrew(colonyController, Crew.MAX_MEMBER_COUNT);
+        colonyController.storage.AddResources(new ResourceContainer[] {
+            new ResourceContainer(ResourceType.Fuel, 500f),
+            new ResourceContainer(ResourceType.Supplies, 500f)
+        });
+        colonyController.AddEnergyCrystals(1000f);
+
+        globalMap.FORCED_CreatePointOfInterest();
+    }
 }
   

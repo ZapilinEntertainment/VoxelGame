@@ -52,8 +52,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     {
                         var e = Expedition.expeditionsList[realIndex];
                         var ert = emptyPanel.GetComponent<RectTransform>();
-                        e.ShowOnGUI(new Rect(ert.position, ert.rect.size), SpriteAlignment.TopLeft);
-                        activeObserver = Expedition.observer.gameObject;
+                        e.ShowOnGUI(new Rect(ert.position, ert.rect.size), SpriteAlignment.TopLeft, true);
+                        activeObserver = Expedition.GetObserver().gameObject;
                         if (emptyPanel.activeSelf) emptyPanel.SetActive(false);
                     }
                     break;

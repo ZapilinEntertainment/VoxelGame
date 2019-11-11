@@ -7,7 +7,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] private Dropdown crewDropdown;
-    [SerializeField] private GameObject crewButton;
+    [SerializeField] private GameObject crewButton, closeButton;
     [SerializeField] private Slider suppliesSlider, crystalsSlider;
     [SerializeField] private Transform transmitterLine, shuttleLine, fuelLine;
     [SerializeField] private Button launchButton;
@@ -24,12 +24,11 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     private Text expLabel { get { return expNameField.GetChild(0).GetComponent<Text>(); } }
     private GameObject expDestinationButton { get { return expNameField.GetChild(1).gameObject; } }
 
-    private bool subscribedToUpdate = false;
+    private bool subscribedToUpdate = false, workOnMainCanvas = true;
     private byte lastChangesMarkerValue = 0;
-    private float statedSuppliesCount = 0f, statedCrystalsCount = 0f;
-    private int lastCrewListMarker = 0;
+    private int lastCrewListMarker = 0, lastShuttlesListMarker = 0;
+    private ColonyController colony;
     private Expedition showingExpedition;
-
     private PointOfInterest selectedDestination;
     private Crew selectedCrew;
     private List<int> crewsIDs;
@@ -37,13 +36,25 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     private readonly Color lightcyan = new Color(0.5f, 1f, 0.95f);
     private const int FUEL_NEEDED = 200;
 
-
-    public void SetPosition(Rect r, SpriteAlignment alignment)
+    private void Awake()
+    {
+        colony = GameMaster.realMaster.colonyController;
+        suppliesSlider.minValue = Expedition.MIN_SUPPLIES_COUNT;
+        suppliesSlider.maxValue = Expedition.MAX_SUPPLIES_COUNT;
+        crystalsSlider.maxValue = Expedition.MAX_START_CRYSTALS;
+    }
+    public void SetPosition(Rect r, SpriteAlignment alignment, bool drawOnMainCanvas)
     {
         var rt = GetComponent<RectTransform>();
+        if (workOnMainCanvas != drawOnMainCanvas)
+        {
+            rt.transform.parent = drawOnMainCanvas ? UIController.current.mainCanvas : GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapUI>().GetMapCanvas();
+            workOnMainCanvas = drawOnMainCanvas;
+            closeButton.SetActive(!workOnMainCanvas);
+        }
         rt.position = r.position;
         rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.y);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
         Vector2 correctionVector = Vector2.zero;
         switch (alignment)
         {
@@ -68,23 +79,21 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             RedrawWindow();
         }
     }
-    public void Show(PointOfInterest poe)
+    public void Show(PointOfInterest poi)
     {
-        if (poe == null) gameObject.SetActive(false);
+        if (poi == null) gameObject.SetActive(false);
         else
         {
-            if (poe.workingExpedition != null)
+            if (poi.workingExpedition != null)
             {
-                Show(poe.workingExpedition);
+                Show(poi.workingExpedition);
                 return;
             }
             else
             {
                 showingExpedition = null;
                 selectedCrew = null;
-                selectedDestination = poe;
-                statedSuppliesCount = 0;
-                statedCrystalsCount = 0;
+                selectedDestination = poi;
             }
             RedrawWindow();
         }
@@ -92,23 +101,38 @@ public sealed class UIExpeditionObserver : MonoBehaviour
 
     private void RedrawWindow()
     {
+        int statedCrystalsCount = 0, statedSuppliesCount = Expedition.MIN_SUPPLIES_COUNT;
         if (showingExpedition == null)
         {
             //подготовка новой экспедиции
-            expLabel.text = Localization.GetExpeditionName(selectedDestination);
-            bool readyToStart = selectedCrew != null;
-            if (readyToStart) readyToStart = selectedCrew.atHome;
+            expLabel.text = Localization.GetExpeditionName(selectedDestination);         
+            bool readyToStart = true;
+
+            PrepareCrewDropdown();
+            if (selectedCrew != null)
+            {
+                readyToStart = selectedCrew.atHome;
+                crewButton.SetActive(true);
+            }
+            else
+            {
+                readyToStart = false;
+                crewButton.SetActive(false);
+            }
+            Color redcolor = Color.red, whitecolor = Color.white;
             //transmitters:
             int c = QuantumTransmitter.GetFreeTransmittersCount();
             if (c > 0)
             {
                 transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeTransmitters) + c.ToString();
+                transmitterLabel.color = whitecolor;
             }
             else
             {
                 transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.NoTransmitters);
+                transmitterLabel.color = redcolor;
                 readyToStart = false;
             }
             //shuttles:
@@ -117,31 +141,35 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             {
                 shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
                 shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeShuttles) + c.ToString();
+                shuttleLabel.color = whitecolor;
             }
             else
             {
                 shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
                 shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.NoShuttles);
+                shuttleLabel.color = redcolor;
                 readyToStart = false;
             }
+            lastShuttlesListMarker = Hangar.listChangesMarkerValue;
             //fuel:
             fuelLabel.text = Localization.GetPhrase(LocalizedPhrase.FuelNeeded) + FUEL_NEEDED.ToString();
-            c = (int)GameMaster.realMaster.colonyController.storage.standartResources[ResourceType.FUEL_ID];
+            c = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
             if (c > FUEL_NEEDED)
             {
                 fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);                
-                fuelLabel.color = Color.white;
+                fuelLabel.color = whitecolor;
             }
             else
             {
                 fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
-                fuelLabel.color = Color.red;
+                fuelLabel.color = redcolor;
                 readyToStart = false;
             }
             //launch button
             launchButtonLabel.text = Localization.GetWord(LocalizedWord.Launch);
             launchButton.interactable = readyToStart;
             launchButton.GetComponent<Image>().color = readyToStart ? lightcyan : Color.grey;
+            //
         }
         else
         {
@@ -152,38 +180,29 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             lastChangesMarkerValue = showingExpedition.changesMarkerValue;            
         }
         suppliesSlider.value = statedSuppliesCount;
+        OnSuppliesSliderChanged(statedSuppliesCount);
         crystalsSlider.value = statedCrystalsCount;
+        OnCrystalsSliderChanged(statedCrystalsCount);
 
         var edb = expDestinationButton;
         if (selectedDestination != null)
         {
             edb.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(selectedDestination.type);
-            if (!edb.activeSelf) edb.SetActive(true);
+            edb.SetActive(workOnMainCanvas);
         }
         else
         {
             if (edb.activeSelf) edb.SetActive(false);
-        }
-        PrepareCrewDropdown();
-
+        }        
     }
     private void PrepareCrewDropdown()
     {
         const char quotes = '"';
         var opts = new List<Dropdown.OptionData>() { };
-        if (showingExpedition != null)
+        if (showingExpedition == null)
         {
-            selectedCrew = showingExpedition.crew;
-            opts.Add(new Dropdown.OptionData(quotes + selectedCrew.name + quotes));
-            crewsIDs.Add(selectedCrew.ID);
-
-            crewDropdown.value = crewsIDs.Count;
-            crewDropdown.interactable = false;
-        }
-        else
-        {
-            opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
             crewsIDs = new List<int>() { -1 };
+            opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
             var clist = Crew.crewsList;
             if (clist != null && clist.Count > 0)
             {
@@ -196,22 +215,50 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                     }
                 }
             }
+            crewDropdown.options = opts;
             if (crewsIDs.Count > 1)
             {
                 crewDropdown.value = 1;
+                if (selectedCrew != null)
+                {
+                    for (int i = 1; i < crewsIDs.Count; i++)
+                    {
+                        if (crewsIDs[i] == selectedCrew.ID)
+                        {
+                            crewDropdown.value = i;
+                        }
+                    }
+                }
+                else selectedCrew = clist[0];
                 crewDropdown.interactable = true;
             }
             else
             {
                 crewDropdown.value = 0;
                 crewDropdown.interactable = false;
+                selectedCrew = null;
             }
-        }              
+        }
+        else
+        {
+            selectedCrew = showingExpedition.crew;
+            opts.Add(new Dropdown.OptionData(quotes + selectedCrew.name + quotes));
+            crewsIDs = new List<int>(selectedCrew.ID);
+            crewDropdown.options = opts;
+            crewDropdown.value = 0;
+            crewDropdown.interactable = false;
+        }        
+        lastCrewListMarker = Crew.listChangesMarkerValue;
     }
 
     public void StatusUpdate()
     {
-        
+        bool redrawRequest = false;
+        if (lastCrewListMarker != Crew.listChangesMarkerValue) redrawRequest = true;
+        else {
+            if (lastShuttlesListMarker != Hangar.listChangesMarkerValue) redrawRequest = true;
+        }
+        if (redrawRequest) RedrawWindow();
     }
 
     public void OnCrewValueChanged(int i)
@@ -230,7 +277,52 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     }
     public void OnSuppliesSliderChanged(float f)
     {
-        suppliesSlider.transform.GetChild(3).GetComponent<Text>().text = ((int)f * Expedition.MAX_SUPPLIES_COUNT).ToString();
+        int x = (int)f;
+        var t = suppliesSlider.transform.GetChild(3).GetComponent<Text>();
+        t.text = x.ToString();
+        if (x > colony.storage.standartResources[ResourceType.SUPPLIES_ID]) t.color = Color.red; else t.color = Color.white;
+    }
+    public void OnCrystalsSliderChanged(float f)
+    {
+        int x = (int)f;
+        var t = crystalsSlider.transform.GetChild(3).GetComponent<Text>();
+        t.text = x.ToString();
+        if (x > colony.energyCrystalsCount) t.color = Color.red; else t.color = Color.white;
+    }
+
+    public void LaunchButton()
+    {
+        if (showingExpedition == null)
+        {
+            if (selectedCrew != null && selectedCrew.atHome)
+            {
+                var res = colony.storage.standartResources;
+                if (suppliesSlider.value <= res[ResourceType.SUPPLIES_ID] &&
+                    crystalsSlider.value <= colony.energyCrystalsCount &&
+                    res[ResourceType.FUEL_ID] >= FUEL_NEEDED)
+                {
+                    int shID = Hangar.GetFreeShuttleID();
+                    if (shID != Hangar.NO_SHUTTLE_VALUE)
+                    {
+                        var t = QuantumTransmitter.GetFreeTransmitter();
+                        if (t != null)
+                        {
+                            var e = new Expedition(selectedDestination, selectedCrew, shID, t);
+                            if (workOnMainCanvas)
+                            {
+                                showingExpedition = e;
+                                RedrawWindow();
+                                return;
+                            }
+                            else
+                            {
+                                gameObject.SetActive(false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void OnEnable()

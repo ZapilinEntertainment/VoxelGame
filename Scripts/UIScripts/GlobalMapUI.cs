@@ -17,7 +17,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 #pragma warning restore 0649
 
     private bool prepared = false, showExpeditionInfo = false;
-    private float infoPanelWidth = Screen.width;
+    private float infoPanelWidth = 0f;
     private float[] ringsRotation;
     private int lastDrawnStateHash = 0;
     private GlobalMap globalMap;
@@ -31,6 +31,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     private const int SECTORS_TEXTURE_RESOLUTION = 8000;
 
     //========================== PUBLIC METHODS
+    public Transform GetMapCanvas() { return mapCanvas.transform; }
 
     public void SetGlobalMap(GlobalMap gm)
     {
@@ -70,7 +71,7 @@ public sealed class GlobalMapUI : MonoBehaviour
             }
         }        
         PreparePointDescription();
-        infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
+        infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
     }
 
     public void PreparePointDescription()
@@ -143,15 +144,36 @@ public sealed class GlobalMapUI : MonoBehaviour
     {
         if (chosenPoint != null)
         {
-                var poi = chosenPoint as PointOfInterest;
-                
+            var poi = chosenPoint as PointOfInterest;
+            if (poi != null)
+            {
+                if (poi.workingExpedition == null)
+                { // send expedition
+                    var ob = Expedition.GetObserver();
+                    infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
+                    float pw = (Screen.width - infoPanelWidth) * 0.95f,
+                    ph = Screen.height * 0.75f, sz = ph;
+                    if (pw < ph) sz = pw;
+                    if (!ob.gameObject.activeSelf) ob.gameObject.SetActive(true);
+                    ob.SetPosition(new Rect(pw, Screen.height / 2f, sz, sz), SpriteAlignment.RightCenter,false);
+                    ob.Show(poi);
+                }
+                else
+                { // cancel expedition
+
+                }
+            }
+            else
+            {
+                sendExpeditionButton.SetActive(false);
+            }
         }
         else CloseInfopanel();
     }
     public void CloseInfopanel()
     {
         if (infoPanel.activeSelf) infoPanel.SetActive(false);    
-        infoPanelWidth = 0;
+        infoPanelWidth = 0f;
         if (chosenPoint != null & mapMarkers.Count > 0)
         for (int i = 0; i < mapMarkers.Count; i++)
         {
@@ -209,9 +231,7 @@ public sealed class GlobalMapUI : MonoBehaviour
         prepared = true;
         mapMarkers = new List<RectTransform>();
         RedrawMap();
-        if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
-        else infoPanelWidth = 0;
-        infoPanel.SetActive(false);
+        infoPanel.SetActive(false); infoPanelWidth = 0f;
         LocalizeTitles();
     }
     private void RedrawMap()
@@ -470,13 +490,15 @@ public sealed class GlobalMapUI : MonoBehaviour
             {
                 if (lastDrawnStateHash != globalMap.actionsHash) RedrawMap();
                 if (infoPanel.activeSelf) infoPanelWidth = infoPanel.GetComponent<RectTransform>().rect.width;
-                else infoPanelWidth = 0;
+                else infoPanelWidth = 0f;
             }
         }
     }
     private void OnDisable()
     {
         if (globalMap != null) globalMap.MapInterfaceDisabled();
+        var g = Expedition.GetObserver().gameObject;
+        if (g.activeSelf) g.SetActive(false);
     }
     // =====================  AUXILIARY METHODS
     public static Rect GetMarkerRect(MapMarkerType mtype)

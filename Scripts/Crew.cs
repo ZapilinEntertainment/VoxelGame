@@ -50,7 +50,6 @@ public sealed class Crew : MonoBehaviour {
         crewsList = new List<Crew>();
         GameMaster.realMaster.lifepowerUpdateEvent += CrewsUpdateEvent;
     }
-    private Crew() { }
     public static void CrewsUpdateEvent()
     {
         if (crewsList != null && crewsList.Count > 0)

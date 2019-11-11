@@ -66,7 +66,7 @@ public sealed class UICrewObserver : MonoBehaviour
 
         int m_count = observingCrew.membersCount;
         membersButtonText.text = m_count.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
-        
+
         staminaBar.fillAmount = observingCrew.stamina;
         //stats
         var t = statsPanel.GetChild(0);
@@ -106,8 +106,16 @@ public sealed class UICrewObserver : MonoBehaviour
         b.GetComponent<Image>().enabled = hasFreePoints;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.techSkills.ToString();
 
-        statsPanel.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.FreeAttributePoints) + observingCrew.freePoints.ToString();
-
+        var fpp = statsPanel.GetChild(6);
+        if (hasFreePoints)
+        {
+            fpp.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.FreeAttributePoints) + observingCrew.freePoints.ToString();
+            fpp.gameObject.SetActive(true);
+        }
+        else
+        {
+            fpp.gameObject.SetActive(false);
+        }
         t = statsPanel.GetChild(7);
         t.GetComponent<Text>().text = Localization.GetCrewInfo(observingCrew);
         //
