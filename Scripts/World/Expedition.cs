@@ -16,19 +16,20 @@ public sealed class Expedition
 
     public bool hasConnection { get; private set; } // есть ли связь с центром
     public byte changesMarkerValue { get; private set; }
-    public byte crystalsCollected { get; private set; }
-    public byte suppliesCount { get; private set; }
+    public ushort crystalsCollected { get; private set; }
+    public byte suppliesCount { get; private set; }    
     public ExpeditionStage stage { get; private set; }
     public PointOfInterest destination { get; private set; }
     public Crew crew { get; private set; }
     public Artifact artifact { get; private set; }
 
-    private bool subscribedToUpdate = false;
-    private FlyingExpedition mapMarker;
+    private bool subscribedToUpdate = false;    
     private int shuttleID = Hangar.NO_SHUTTLE_VALUE, transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
+    private FlyingExpedition mapMarker;
+    private Vector2Int planPos;
 
     private const float FLY_SPEED = 5f;
-    public const int MIN_SUPPLIES_COUNT = 20, MAX_SUPPLIES_COUNT = 200, MAX_START_CRYSTALS = 200;
+    public const int MIN_SUPPLIES_COUNT = 20, MAX_SUPPLIES_COUNT = 200, MAX_START_CRYSTALS = 200, MAX_CRYSTALS_COLLECTED = 60000;
 
     // STATIC & equals
     static Expedition()
@@ -143,7 +144,21 @@ public sealed class Expedition
     }
     public void EndMission()
     {
+        if (stage == ExpeditionStage.WayIn)
+        {
+            stage = ExpeditionStage.WayOut;
+            mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.cityPoint);
+            changesMarkerValue++;
+        }
+    }
 
+    public Vector2Int GetPlanPos()
+    {
+        return planPos;
+    }
+    public void SetPlanPos(Vector2Int pos)
+    {
+        planPos = pos;
     }
 
     /// <summary>
@@ -191,6 +206,22 @@ public sealed class Expedition
                 }
             }
         }
+    }
+    public void PayFee(byte cost)
+    {
+        if (crystalsCollected <= cost) crystalsCollected = 0;
+        else
+        {
+            crystalsCollected -= cost;            
+        }
+        changesMarkerValue++;
+    }
+    public void AddCrystals(int cost)
+    {
+        int x = crystalsCollected + cost;
+        if (x <= MAX_CRYSTALS_COLLECTED) crystalsCollected += (ushort)cost;
+        else crystalsCollected = MAX_CRYSTALS_COLLECTED;
+        changesMarkerValue++;
     }
 
     public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool onMainCanvas)

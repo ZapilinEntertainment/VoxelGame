@@ -5,11 +5,12 @@ using System.Collections.Generic;
 public class PointOfInterest : MapPoint
 {
     protected float richness, danger, mysteria, friendliness;
-    protected Plan[,] plan;
+    protected ChallengeField[,] challengeArray;
 
     public readonly float difficulty;
     public float exploredPart { get; protected set; }
     public Expedition workingExpedition { get; protected set; }
+    private const float ONE_STEP_CRYSTALS = 10f, ONE_STEP_XP = 10f;
 
     public PointOfInterest(int i_id) : base(i_id) {
         difficulty = RecalculateDifficulty();
@@ -29,246 +30,286 @@ public class PointOfInterest : MapPoint
         if (workingExpedition == e) workingExpedition = null;
     }
 
-    public ref Plan[,] GetPlanReference()
+    public ChallengeField[,] GetChallengesArray()
     {
-        if (plan == null)
+        if (challengeArray == null) GenerateChallengesArray();
+        return challengeArray;
+    }
+
+    private void GenerateChallengesArray()
+    {
+        int size = 4 + Random.Range(0, (int)(3f * mysteria + 3f * richness));
+        challengeArray = new ChallengeField[size, size];
+
+        // generating:
+        int sqr = size * size;
+        float totalVariety = danger + mysteria + friendliness;
+        float abilityTestChance = danger / totalVariety, realityChangerChance = mysteria / totalVariety,
+            giftChance = friendliness / totalVariety;
+        float maxDifficulty = ChallengeField.MAX_DIFFICULTY * difficulty;
+        float v = Random.value, df;
+
+        var path = DeterminePath();
+        var atests = new ChallengeType[6];
+        switch (path)
         {
-            int size = 4 + Random.Range(0, (int)(3f * mysteria + 3f * richness));
-            plan = new Plan[size, size];
-
-            // generating plan:
-            int sqr = size * size;
-            float totalVariety = danger + mysteria + friendliness;
-            float abilityTestChance = danger / totalVariety, realityChangerChance = mysteria / totalVariety,
-                giftChance = friendliness / totalVariety;
-            float maxDifficulty = Plan.MAX_DIFFICULTY * difficulty;
-            float v = Random.value, df;
-
-            var path = DeterminePath();
-            var atests = new ChallengeType[6];
-            switch (path)
-            {
-                case Path.TechPath:
-                    {
-                        if (v > 0.5f)
-                        {
-                            atests[0] = ChallengeType.IntelligenceTest;
-                            atests[1] = ChallengeType.TechSkillsTest;
-                        }
-                        else
-                        {
-                            atests[1] = ChallengeType.IntelligenceTest;
-                            atests[0] = ChallengeType.TechSkillsTest;
-                        }
-                        v = Random.value;
-                        if (v < 0.5f)
-                        {
-                            atests[2] = ChallengeType.PerceptionTest;
-                            atests[3] = ChallengeType.PersistenceTest;
-                            if (v < 0.25f)
-                            {
-                                atests[4] = ChallengeType.SurvivalSkillsTest;
-                                atests[5] = ChallengeType.SecretKnowledgeTest;
-                            }
-                            else
-                            {
-                                atests[5] = ChallengeType.SurvivalSkillsTest;
-                                atests[4] = ChallengeType.SecretKnowledgeTest;
-                            }
-                        }
-                        else
-                        {
-                            atests[3] = ChallengeType.PersistenceTest;
-                            atests[2] = ChallengeType.PerceptionTest;
-                            if (v < 0.75f)
-                            {
-                                atests[4] = ChallengeType.SurvivalSkillsTest;
-                                atests[5] = ChallengeType.SecretKnowledgeTest;
-                            }
-                            else
-                            {
-                                atests[5] = ChallengeType.SurvivalSkillsTest;
-                                atests[4] = ChallengeType.SecretKnowledgeTest;
-                            }
-                        }
-                        break;
-                    }
-                case Path.SecretPath:
-                    {
-                        if (v > 0.5f)
-                        {
-                            atests[0] = ChallengeType.PerceptionTest;
-                            atests[1] = ChallengeType.SecretKnowledgeTest;
-                        }
-                        else
-                        {
-                            atests[1] = ChallengeType.PerceptionTest;
-                            atests[0] = ChallengeType.SecretKnowledgeTest;
-                        }
-                        v = Random.value;
-                        if (v < 0.5f)
-                        {
-                            atests[2] = ChallengeType.PersistenceTest;
-                            atests[3] = ChallengeType.IntelligenceTest;
-                            if (v < 0.25f)
-                            {
-                                atests[4] = ChallengeType.SurvivalSkillsTest;
-                                atests[5] = ChallengeType.TechSkillsTest;
-                            }
-                            else
-                            {
-                                atests[5] = ChallengeType.SurvivalSkillsTest;
-                                atests[4] = ChallengeType.TechSkillsTest;
-                            }
-                        }
-                        else
-                        {
-                            atests[3] = ChallengeType.PersistenceTest;
-                            atests[2] = ChallengeType.IntelligenceTest;
-                            if (v < 0.75f)
-                            {
-                                atests[4] = ChallengeType.SurvivalSkillsTest;
-                                atests[5] = ChallengeType.TechSkillsTest;
-                            }
-                            else
-                            {
-                                atests[5] = ChallengeType.SurvivalSkillsTest;
-                                atests[4] = ChallengeType.TechSkillsTest;
-                            }
-                        }
-                        break;
-                    }
-                case Path.LifePath:
-                default:
-                    {
-                        if (v > 0.5f)
-                        {
-                            atests[0] = ChallengeType.PersistenceTest;
-                            atests[1] = ChallengeType.SurvivalSkillsTest;
-                        }
-                        else
-                        {
-                            atests[1] = ChallengeType.PersistenceTest;
-                            atests[0] = ChallengeType.SurvivalSkillsTest;
-                        }
-                        v = Random.value;
-                        if (v < 0.5f)
-                        {
-                            atests[2] = ChallengeType.PerceptionTest;
-                            atests[3] = ChallengeType.IntelligenceTest;
-                            if (v < 0.25f)
-                            {
-                                atests[4] = ChallengeType.SecretKnowledgeTest;
-                                atests[5] = ChallengeType.TechSkillsTest;
-                            }
-                            else
-                            {
-                                atests[5] = ChallengeType.SecretKnowledgeTest;
-                                atests[4] = ChallengeType.TechSkillsTest;
-                            }
-                        }
-                        else
-                        {
-                            atests[3] = ChallengeType.PerceptionTest;
-                            atests[2] = ChallengeType.IntelligenceTest;
-                            if (v < 0.75f)
-                            {
-                                atests[4] = ChallengeType.SecretKnowledgeTest;
-                                atests[5] = ChallengeType.TechSkillsTest;
-                            }
-                            else
-                            {
-                                atests[5] = ChallengeType.SecretKnowledgeTest;
-                                atests[4] = ChallengeType.TechSkillsTest;
-                            }
-                        }
-                        break;
-                    }
-            }
-
-            for (int x = 0; x < size; x++)
-            {
-                for (int y = 0; y < size; y++)
+            case Path.TechPath:
                 {
-                    if (Random.value < richness)
-                    {                        
-                        df = (0.7f - 0.1f * friendliness + 0.3f * Random.value);
-                        v = Random.value;
-                        if (Random.value < 0.8f)
+                    if (v > 0.5f)
+                    {
+                        atests[0] = ChallengeType.IntelligenceTest;
+                        atests[1] = ChallengeType.TechSkillsTest;
+                    }
+                    else
+                    {
+                        atests[1] = ChallengeType.IntelligenceTest;
+                        atests[0] = ChallengeType.TechSkillsTest;
+                    }
+                    v = Random.value;
+                    if (v < 0.5f)
+                    {
+                        atests[2] = ChallengeType.PerceptionTest;
+                        atests[3] = ChallengeType.PersistenceTest;
+                        if (v < 0.25f)
                         {
-                            if (v < abilityTestChance)
-                            { // abilities tests
-                               v = Random.value;
-                               if (v < 0.55f)
-                                {
-                                    if (v < 0.3f) plan[x, y] = new Plan(atests[0], (byte)(maxDifficulty * df));
-                                    else plan[x, y] = new Plan(atests[1], (byte)(maxDifficulty * df));
-                                }
-                               else
-                                {
-                                    if (v < 0.9f)
-                                    {
-                                        if (v < 0.75f) plan[x, y] = new Plan(atests[2], (byte)(maxDifficulty * df));
-                                        else plan[x, y] = new Plan(atests[3], (byte)(maxDifficulty * df));
-                                    }
-                                    else
-                                    {
-                                        if (v < 0.97f) plan[x, y] = new Plan(atests[5], (byte)(maxDifficulty * df));
-                                        else plan[x, y] = new Plan(atests[6], (byte)(maxDifficulty * df));
-                                    }
-                                }
+                            atests[4] = ChallengeType.SurvivalSkillsTest;
+                            atests[5] = ChallengeType.SecretKnowledgeTest;
+                        }
+                        else
+                        {
+                            atests[5] = ChallengeType.SurvivalSkillsTest;
+                            atests[4] = ChallengeType.SecretKnowledgeTest;
+                        }
+                    }
+                    else
+                    {
+                        atests[3] = ChallengeType.PersistenceTest;
+                        atests[2] = ChallengeType.PerceptionTest;
+                        if (v < 0.75f)
+                        {
+                            atests[4] = ChallengeType.SurvivalSkillsTest;
+                            atests[5] = ChallengeType.SecretKnowledgeTest;
+                        }
+                        else
+                        {
+                            atests[5] = ChallengeType.SurvivalSkillsTest;
+                            atests[4] = ChallengeType.SecretKnowledgeTest;
+                        }
+                    }
+                    break;
+                }
+            case Path.SecretPath:
+                {
+                    if (v > 0.5f)
+                    {
+                        atests[0] = ChallengeType.PerceptionTest;
+                        atests[1] = ChallengeType.SecretKnowledgeTest;
+                    }
+                    else
+                    {
+                        atests[1] = ChallengeType.PerceptionTest;
+                        atests[0] = ChallengeType.SecretKnowledgeTest;
+                    }
+                    v = Random.value;
+                    if (v < 0.5f)
+                    {
+                        atests[2] = ChallengeType.PersistenceTest;
+                        atests[3] = ChallengeType.IntelligenceTest;
+                        if (v < 0.25f)
+                        {
+                            atests[4] = ChallengeType.SurvivalSkillsTest;
+                            atests[5] = ChallengeType.TechSkillsTest;
+                        }
+                        else
+                        {
+                            atests[5] = ChallengeType.SurvivalSkillsTest;
+                            atests[4] = ChallengeType.TechSkillsTest;
+                        }
+                    }
+                    else
+                    {
+                        atests[3] = ChallengeType.PersistenceTest;
+                        atests[2] = ChallengeType.IntelligenceTest;
+                        if (v < 0.75f)
+                        {
+                            atests[4] = ChallengeType.SurvivalSkillsTest;
+                            atests[5] = ChallengeType.TechSkillsTest;
+                        }
+                        else
+                        {
+                            atests[5] = ChallengeType.SurvivalSkillsTest;
+                            atests[4] = ChallengeType.TechSkillsTest;
+                        }
+                    }
+                    break;
+                }
+            case Path.LifePath:
+            default:
+                {
+                    if (v > 0.5f)
+                    {
+                        atests[0] = ChallengeType.PersistenceTest;
+                        atests[1] = ChallengeType.SurvivalSkillsTest;
+                    }
+                    else
+                    {
+                        atests[1] = ChallengeType.PersistenceTest;
+                        atests[0] = ChallengeType.SurvivalSkillsTest;
+                    }
+                    v = Random.value;
+                    if (v < 0.5f)
+                    {
+                        atests[2] = ChallengeType.PerceptionTest;
+                        atests[3] = ChallengeType.IntelligenceTest;
+                        if (v < 0.25f)
+                        {
+                            atests[4] = ChallengeType.SecretKnowledgeTest;
+                            atests[5] = ChallengeType.TechSkillsTest;
+                        }
+                        else
+                        {
+                            atests[5] = ChallengeType.SecretKnowledgeTest;
+                            atests[4] = ChallengeType.TechSkillsTest;
+                        }
+                    }
+                    else
+                    {
+                        atests[3] = ChallengeType.PerceptionTest;
+                        atests[2] = ChallengeType.IntelligenceTest;
+                        if (v < 0.75f)
+                        {
+                            atests[4] = ChallengeType.SecretKnowledgeTest;
+                            atests[5] = ChallengeType.TechSkillsTest;
+                        }
+                        else
+                        {
+                            atests[5] = ChallengeType.SecretKnowledgeTest;
+                            atests[4] = ChallengeType.TechSkillsTest;
+                        }
+                    }
+                    break;
+                }
+        }
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                if (Random.value < richness)
+                {
+                    df = (0.7f - 0.1f * friendliness + 0.3f * Random.value);
+                    v = Random.value;
+                    if (Random.value < 0.8f)
+                    {
+                        if (v < abilityTestChance)
+                        { // abilities tests
+                            v = Random.value;
+                            if (v < 0.55f)
+                            {
+                                if (v < 0.3f) challengeArray[x, y] = new ChallengeField(atests[0], (byte)(maxDifficulty * df));
+                                else challengeArray[x, y] = new ChallengeField(atests[1], (byte)(maxDifficulty * df));
                             }
                             else
                             {
-                                if (v > abilityTestChance + giftChance)
-                                { // reality changer
-                                    if (danger > 0.9f && mysteria > 0.5f && Random.value > 0.5f)
-                                    { // global changer
-
-                                    }
-                                    else
-                                    { // local changer
-
-                                    }
+                                if (v < 0.9f)
+                                {
+                                    if (v < 0.75f) challengeArray[x, y] = new ChallengeField(atests[2], (byte)(maxDifficulty * df));
+                                    else challengeArray[x, y] = new ChallengeField(atests[3], (byte)(maxDifficulty * df));
                                 }
                                 else
-                                { // gift
-                                    v = Random.value;
-                                    if (v < 0.7f)
-                                    {
-                                        if (v < 0.5f) plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_EXP_CODE);
-                                        else plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_MONEY_CODE);
-                                    }
-                                    else
-                                    {
-                                        if ( v > 0.9f) plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_ARTIFACT_CODE);
-                                        else plan[x, y] = new Plan(ChallengeType.Treasure, Plan.TREASURE_RESOURCES_CODE);
-                                    }
+                                {
+                                    if (v < 0.97f) challengeArray[x, y] = new ChallengeField(atests[5], (byte)(maxDifficulty * df));
+                                    else challengeArray[x, y] = new ChallengeField(atests[6], (byte)(maxDifficulty * df));
                                 }
                             }
                         }
                         else
-                        {                            
-                            if (v < mysteria) plan[x, y] = new Plan(ChallengeType.Random, (byte)(maxDifficulty * df));
-                            else
-                            {
-                                v = Random.value;
-                                if (v < 0.66f)
-                                {
-                                    if (v < 0.33f) plan[x, y] = new Plan(ChallengeType.CrystalFee, (byte)(255 * df));
-                                    else plan[x, y] = new Plan(ChallengeType.AscensionTest, (byte)(100 * df));
+                        {
+                            if (v > abilityTestChance + giftChance)
+                            { // reality changer
+                                if (danger > 0.9f && mysteria > 0.5f && Random.value > 0.5f)
+                                { // global changer -- INDEV
+                                    challengeArray[x, y] = ChallengeField.emptyField;
                                 }
-                                else plan[x, y] = Plan.impassableField;
+                                else
+                                { // local changer -- INDEV
+                                    challengeArray[x, y] = ChallengeField.emptyField;
+                                }
+                            }
+                            else
+                            { // gift
+                                v = Random.value;
+                                if (v < 0.7f)
+                                {
+                                    if (v < 0.5f) challengeArray[x, y] = new ChallengeField(ChallengeType.Treasure, ChallengeField.TREASURE_EXP_CODE);
+                                    else challengeArray[x, y] = new ChallengeField(ChallengeType.Treasure, ChallengeField.TREASURE_MONEY_CODE);
+                                }
+                                else
+                                {
+                                    if (v > 0.9f) challengeArray[x, y] = new ChallengeField(ChallengeType.Treasure, ChallengeField.TREASURE_ARTIFACT_CODE);
+                                    else challengeArray[x, y] = new ChallengeField(ChallengeType.Treasure, ChallengeField.TREASURE_RESOURCES_CODE);
+                                }
                             }
                         }
                     }
-                    else plan[x, y] = Plan.emptyField;
+                    else
+                    {
+                        if (v < mysteria) challengeArray[x, y] = new ChallengeField(ChallengeType.Random, (byte)(maxDifficulty * df));
+                        else
+                        {
+                            v = Random.value;
+                            if (v < 0.66f)
+                            {
+                                if (v < 0.33f) challengeArray[x, y] = new ChallengeField(ChallengeType.CrystalFee, (byte)(255 * df));
+                                else challengeArray[x, y] = new ChallengeField(ChallengeType.AscensionTest, (byte)(100 * df));
+                            }
+                            else challengeArray[x, y] = ChallengeField.impassableField;
+                        }
+                    }
+                }
+                else challengeArray[x, y] = ChallengeField.emptyField;
+            }
+        }
+
+        //check
+        int sz = size - 1;
+        challengeArray[sz, sz].ChangeChallengeType(ChallengeType.QuestTest, 0);
+        challengeArray[0, 0] = ChallengeField.emptyField;
+        if (challengeArray[sz - 1, sz].IsImpassable() && challengeArray[sz - 1, sz - 1].IsImpassable() && challengeArray[sz, sz - 1].IsImpassable())
+        {
+            challengeArray[sz - 1, sz - 1] = ChallengeField.emptyField;
+        }
+        if (challengeArray[1, 0].IsImpassable() && challengeArray[1, 1].IsImpassable() && challengeArray[0, 1].IsImpassable())
+        {
+            challengeArray[1, 1] = ChallengeField.emptyField;
+        }
+    }
+    public void ConvertToChallengeable(int xpos, int zpos)
+    {
+        if (challengeArray != null)
+        {
+            int sz = challengeArray.GetLength(0);
+            if (xpos < sz && zpos < sz)
+            {
+                var cf = challengeArray[xpos, zpos];
+                if (cf.challengeType == ChallengeType.Impassable | cf.challengeType == ChallengeType.NoChallenge)
+                {
+                    float x = Random.value;
+                    if (x > 0.9f) cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
+                    else
+                    {
+                        if (x < 0.33f) cf.ChangeChallengeType(ChallengeType.PersistenceTest, (byte)(ChallengeField.MAX_DIFFICULTY * 0.85f * (0.5f + 0.5f * difficulty)));
+                        else
+                        {
+                            if (x > 0.6f) cf.ChangeChallengeType(ChallengeType.PerceptionTest, (byte)(ChallengeField.MAX_DIFFICULTY * 0.85f * (0.5f + 0.5f * difficulty)));
+                            else cf.ChangeChallengeType(ChallengeType.IntelligenceTest, (byte)(ChallengeField.MAX_DIFFICULTY * 0.85f * (0.5f + 0.5f * difficulty)));
+                        }
+                    }
+                    cf.ChangeHiddenStatus(false);
                 }
             }
         }
-        return ref plan;
     }
-
 
     public bool HardTest(Crew c)
     {
@@ -412,6 +453,11 @@ public class PointOfInterest : MapPoint
             danger * (0.9f + 0.2f * Random.value),
             path
             );
+    }
+    public void OneStepReward(Expedition e)
+    {
+        e.AddCrystals((int)(ONE_STEP_CRYSTALS * ((0.75f + 0.5f * (0.5f + 0.5f * friendliness) * Random.value) * (1f + difficulty) * (0.25f + 0.75f * richness) )));
+        e.crew.AddExperience(ONE_STEP_XP * (1f + difficulty));
     }
 
     #region save-load

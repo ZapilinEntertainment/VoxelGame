@@ -10,144 +10,12 @@ public enum ChallengeType : byte
 }
 //dependency : DeckField.ChangeChallengeType, Localization.GetChallengeLabel
 //ExploringMinigameUI : FieldAction(), Pass()
-public struct Plan
-{
-    public ChallengeType challengeType;
-    public byte difficultyClass;
-    public bool isHidden, isPassed;
 
-    public static Plan emptyField, impassableField;
-    public const byte MAX_DIFFICULTY = 25, TREASURE_EXP_CODE = 0, TREASURE_MONEY_CODE =1, TREASURE_RESOURCES_CODE = 2, TREASURE_ARTIFACT_CODE = 3;
-
-    static Plan()
-    {
-        emptyField = new Plan(ChallengeType.NoChallenge, 0);
-        impassableField = new Plan(ChallengeType.Impassable, MAX_DIFFICULTY);
-    }
-
-    public Plan(ChallengeType i_type, byte i_difficulty)
-    {
-        challengeType = i_type;
-        difficultyClass = i_difficulty;
-        isHidden = true;
-        isPassed = false;
-    }
-
-    public void ChangeChallengeType(ChallengeType chtype, byte newDifficulty)
-    {
-        challengeType = chtype;
-        difficultyClass = newDifficulty;
-    }
-    public void ChangeHiddenStatus(bool x)
-    {
-        isHidden = x;
-    }
-    public void MarkAsPassed() { isPassed = true; }
-}
 
 public sealed class ExploringMinigameUI : MonoBehaviour
 {   
-    private sealed class DeckField
-    {
-        public bool isHidden { get; private set; }
-        public bool isPassed { get; private set; }
-        public ChallengeType challengeType { get; private set; }
-        public GameObject button { get; private set; }
-        public byte difficultyClass { get; private set; }
-
-
-        public DeckField(GameObject i_button, ChallengeType i_chType, byte i_difficultyClass, bool i_hidden)
-        {
-            button = i_button;
-            isPassed = false;
-            isHidden = i_hidden;
-            ChangeChallengeType(i_chType, i_difficultyClass);            
-        }
-        private DeckField()
-        {
-            isHidden = false;
-            button = null;
-            difficultyClass = 20;
-            challengeType = ChallengeType.Random;
-        }
-
-        public void ChangeChallengeType(ChallengeType chtype, byte newDifficulty)
-        {
-            challengeType = chtype;
-            difficultyClass = newDifficulty;
-            // #change icon
-            var img = button.transform.GetChild(0).GetComponent<RawImage>();
-            if (isHidden && challengeType != ChallengeType.Impassable)
-            {
-                img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
-                img.color = Color.gray;
-            }
-            else
-            {
-                switch (challengeType)
-                {
-                    case ChallengeType.PersistenceTest: img.uvRect = UIController.GetIconUVRect(Icons.PersistenceIcon); break;
-                    case ChallengeType.SurvivalSkillsTest: img.uvRect = UIController.GetIconUVRect(Icons.SurvivalSkillsIcon); break;
-                    case ChallengeType.PerceptionTest: img.uvRect = UIController.GetIconUVRect(Icons.PerceptionIcon); break;
-                    case ChallengeType.SecretKnowledgeTest: img.uvRect = UIController.GetIconUVRect(Icons.SecretKnowledgeIcon); break;
-                    case ChallengeType.IntelligenceTest: img.uvRect = UIController.GetIconUVRect(Icons.IntelligenceIcon); break;
-                    case ChallengeType.TechSkillsTest: img.uvRect = UIController.GetIconUVRect(Icons.TechSkillsIcon); break;
-                    case ChallengeType.Treasure: img.uvRect = UIController.GetIconUVRect(Icons.TreasureIcon); break;
-                    case ChallengeType.QuestTest: img.uvRect = UIController.GetIconUVRect(Icons.QuestMarkerIcon); break;
-                    case ChallengeType.CrystalFee: img.uvRect = UIController.GetIconUVRect(Icons.CrewGoodIcon); break;
-                    case ChallengeType.AscensionTest: img.uvRect = UIController.GetIconUVRect(Icons.AscensionIcon); break;
-                    case ChallengeType.Impassable:
-                    case ChallengeType.NoChallenge:
-                        img.uvRect = Rect.zero; break;
-                    case ChallengeType.Random:
-                    default:
-                        img.uvRect = UIController.GetIconUVRect(Icons.Unknown); break;
-
-                }
-                img.color = Color.white;
-            }
-            //
-        }
-        public void ChangeHiddenStatus(bool x)
-        {
-            if (x == isHidden) return;
-            isHidden = x;
-            // #change icon 
-            var img = button.transform.GetChild(0).GetComponent<RawImage>();
-            if (x) {
-                img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
-                img.color = Color.gray;
-            }
-            else
-            {                              
-                switch (challengeType)
-                {
-                    case ChallengeType.PersistenceTest: img.uvRect = UIController.GetIconUVRect(Icons.PersistenceIcon); break;
-                    case ChallengeType.SurvivalSkillsTest: img.uvRect = UIController.GetIconUVRect(Icons.SurvivalSkillsIcon); break;
-                    case ChallengeType.PerceptionTest: img.uvRect = UIController.GetIconUVRect(Icons.PerceptionIcon); break;
-                    case ChallengeType.SecretKnowledgeTest: img.uvRect = UIController.GetIconUVRect(Icons.SecretKnowledgeIcon); break;
-                    case ChallengeType.IntelligenceTest: img.uvRect = UIController.GetIconUVRect(Icons.IntelligenceIcon); break;
-                    case ChallengeType.TechSkillsTest: img.uvRect = UIController.GetIconUVRect(Icons.TechSkillsIcon); break;
-                    case ChallengeType.Treasure: img.uvRect = UIController.GetIconUVRect(Icons.TreasureIcon); break;
-                    case ChallengeType.QuestTest: img.uvRect = UIController.GetIconUVRect(Icons.QuestMarkerIcon); break;
-                    case ChallengeType.CrystalFee: img.uvRect = UIController.GetIconUVRect(Icons.CrewGoodIcon); break;
-                    case ChallengeType.AscensionTest: img.uvRect = UIController.GetIconUVRect(Icons.AscensionIcon); break;
-                    case ChallengeType.Impassable:
-                    case ChallengeType.NoChallenge:
-                        img.uvRect = Rect.zero; break;
-                    case ChallengeType.Random:
-                    default:
-                        img.uvRect = UIController.GetIconUVRect(Icons.Unknown); break;
-                }
-                img.color = Color.white;
-                //
-            }
-        }
-        public void MarkAsPassed() { isPassed = true; }
-    }
 
     [SerializeField] private GameObject deckHolder;
-    [SerializeField] private DeckField[] fields;
     [SerializeField] private Text expeditionStatusInfo, challengeDifficultyLabel, playerResultLabel, challengeLabel, rollText;
     [SerializeField] private RectTransform crewMarker;
     [SerializeField] private Image innerRollRing, outerRollRing;
@@ -158,20 +26,22 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     private static ExploringMinigameUI current;
 
     private Expedition observingExpedition;
-    //test
     private Crew crew;
-    private Vector2Int crewPos;
+    private PointOfInterest observingPoint;
+    private ChallengeField[,] chfields;
+    //
     private byte size = 8;
     private bool moveMarker = false, rollEffect = false, canPassThrough = true;
     private int selectedField = -1;
-    private float fieldSize = 100f, moneyCollected = 0f, pingpongVal = 0f, stamina = 1f;
-    private float missionDifficulty = 0.25f, pointDifficulty = 0.25f, pointFriendliness = 1f, pointMysteria = 1f;
+    private float fieldSize = 100f, pingpongVal = 0f;
     private string testLabel = string.Empty;
-    private ChallengeType[] chArray;
-    private readonly Color activeFieldColor = Color.white, disabledFieldColor = new Color(1f, 0.7f, 0.7f, 1f);
+    private GameObject[] buttons;
+
+    private readonly Color activeFieldColor = Color.white, disabledFieldColor = new Color(1f, 0.7f, 0.7f, 1f),
+        reachableIconColor = Color.white, unreachableIconColor = Color.gray;
 
     private const float MARKER_MOVE_SPEED = 5f, CHALLENGE_PANEL_CLOSING_TIME = 3f, ROLL_RINGS_OUTER_SPEED = 6f, ROLL_RINGS_INNER_SPEED = 2f, ROLL_RINGS_DISAPPEAR_SPEED = 5f,
-        MONEY_PER_STEP = 10f, EXPERIENCE_PER_STEP = 10f, STAMINA_PER_STEP = 0.01f;
+        STAMINA_PER_STEP = 0.01f;
     private const byte MAX_DIFFICULTY = 25;
 
     public static void ShowExpedition(Expedition e)
@@ -179,10 +49,16 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         if (e == null) return;
         else
         {
-            if (current == null)
+            if (e.stage == Expedition.ExpeditionStage.OnMission)
             {
-                current = Instantiate(Resources.Load<GameObject>("UIPrefs/ExploringMinigameInterface")).GetComponent<ExploringMinigameUI>();
+                if (current == null)
+                {
+                    current = Instantiate(Resources.Load<GameObject>("UIPrefs/ExploringMinigameInterface")).GetComponent<ExploringMinigameUI>();
+                }
+                if (!current.gameObject.activeSelf) current.gameObject.SetActive(true);
+                current.Show(e);
             }
+            else return;
         }
     }
     public static void ActivateIfEnabled()
@@ -192,17 +68,248 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             current.EnableDeckHolder();
         }
     }
-
-    private void Awake()
+    public static void Disable()
     {
-        current = this;
+        if (current != null) current.gameObject.SetActive(false);
     }
-    private void Start()
+
+    private void Show(Expedition e)
     {
-        crew = Crew.CreateNewCrew(null, 9);
-        crew.Rename("test crew");
+        observingExpedition = e;
+        crew = e.crew;
+        observingPoint = observingExpedition.destination;
+        chfields = observingPoint.GetChallengesArray();
+        size = (byte)chfields.GetLength(0);
         PrepareDeck();
-        crewPos = Vector2Int.zero;
+    }
+    private void PrepareDeck()
+    {
+        {
+            if (buttons == null) buttons = new GameObject[0];
+            challengePanel.SetActive(false);
+
+            int sqr = size * size, len = buttons.Length, ypos;
+
+            if (len < sqr)
+            {
+                if (len != 0)
+                {
+                    var b2 = new GameObject[sqr];
+                    for (ypos = 0; ypos < len; ypos++)
+                    {
+                        b2[ypos] = buttons[ypos];
+                    }
+                    buttons = b2;
+                }
+                else
+                {
+                    buttons = new GameObject[sqr];
+                }
+
+                GameObject g;
+                Button b;
+
+                Transform parent = deckHolder.transform;
+
+                for (ypos = 0; ypos < sqr - len; ypos++)
+                {
+                    g = Instantiate(exampleButton);
+                    g.transform.parent = parent;
+                    b = g.GetComponent<Button>();
+                    int v = len + ypos; // must be in separate variable because of lambda expression!
+                    b.onClick.AddListener(delegate { this.FieldAction(v); });
+                    buttons[v] = g;
+                }
+            }
+            else
+            {
+                for (ypos = sqr; ypos < len; ypos++)
+                {
+                    buttons[ypos].SetActive(false);
+                }
+            }
+            float p = 1f / size;
+            RectTransform rt;
+            GameObject gx;
+            ChallengeField cf;
+            bool impassable;
+            RawImage img;
+            for (ypos = 0; ypos < size; ypos++)
+            {
+                for (int xpos = 0; xpos < size; xpos++)
+                {
+                    gx = buttons[ypos * size + xpos];
+                    rt = gx.GetComponent<RectTransform>();
+                    rt.anchorMin = new Vector2(xpos * p, ypos * p);
+                    rt.anchorMax = new Vector2((xpos + 1) * p, (ypos + 1) * p);
+                    rt.offsetMax = Vector2.zero;
+                    rt.offsetMin = Vector2.zero;
+
+                    cf = chfields[xpos, ypos];
+                    impassable = cf.IsImpassable();
+                    if (impassable)
+                    {
+                        gx.GetComponent<Image>().color = Color.gray;
+                        gx.GetComponent<Button>().interactable = false;
+                    }
+                    else
+                    {
+                        gx.GetComponent<Image>().color = disabledFieldColor;
+                        gx.GetComponent<Button>().interactable = true;
+                    }
+                    //#redraw button
+                    img = gx.transform.GetChild(0).GetComponent<RawImage>();
+                    if (cf.isPassed || impassable)
+                    {
+                        img.enabled = false;
+                    }
+                    else
+                    {
+                        if (cf.isHidden)
+                        {
+                            img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
+                            img.color = unreachableIconColor;
+                            img.enabled = true;
+                        }
+                        else
+                        {
+                            if (cf.challengeType != ChallengeType.NoChallenge)
+                            {
+                                img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
+                                img.color = reachableIconColor;
+                                img.enabled = true;
+                            }
+                            else
+                            {
+                                img.enabled = false;
+                            }
+                        }
+                        
+                    }
+                    //
+                    gx.SetActive(true);
+                }
+            }
+
+            fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * p;
+            crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fieldSize);
+            crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, fieldSize);
+            var cpos = observingExpedition.GetPlanPos();
+            int x = cpos.x, y = cpos.y;
+            crewMarker.localPosition = new Vector3((x + 0.5f - size / 2f) * fieldSize, (y + 0.5f - size / 2f) * fieldSize, 0f);
+            int cindex = y * size + x;
+            bool up = y + 1 < size, down = y - 1 >= 0, left = x - 1 >= 0, right = x + 1 < size;
+
+            if (left)
+            {
+                cf = chfields[x - 1, y];
+                if ( !cf.IsImpassable() )
+                {                    
+                    buttons[cindex-1].GetComponent<Image>().color = activeFieldColor;
+                    if (cf.isHidden)
+                    {
+                        cf.ChangeHiddenStatus(false);
+                        RedrawButtonIcon(cindex - 1);
+                    }
+                }
+                if (up)
+                {
+                    cf = chfields[x - 1, y + 1];
+                    if (!cf.IsImpassable())
+                    {
+                        buttons[cindex + size - 1].GetComponent<Image>().color = activeFieldColor;
+                        if (cf.isHidden)
+                        {
+                            cf.ChangeHiddenStatus(false);
+                            RedrawButtonIcon(cindex + size - 1);
+                        }
+                    }
+                }
+                if (down)
+                {
+                    cf = chfields[x - 1, y - 1];
+                    if (!cf.IsImpassable())
+                    {
+                        buttons[cindex - size - 1].GetComponent<Image>().color = activeFieldColor;
+                        if (cf.isHidden)
+                        {
+                            cf.ChangeHiddenStatus(false);
+                            RedrawButtonIcon(cindex - size - 1);
+                        }
+                    }
+                }
+            }
+            if (up)
+            {
+                cf = chfields[x, y + 1];
+                if (!cf.IsImpassable())
+                {
+                    buttons[cindex + size].GetComponent<Image>().color = activeFieldColor;
+                    if (cf.isHidden)
+                    {
+                        cf.ChangeHiddenStatus(false);
+                        RedrawButtonIcon(cindex + size);
+                    }
+                }
+            }
+            if (down)
+            {
+                cf = chfields[x, y - 1];
+                if (!cf.IsImpassable())
+                {
+                    buttons[cindex - size].GetComponent<Image>().color = activeFieldColor;
+                    if (cf.isHidden)
+                    {
+                        cf.ChangeHiddenStatus(false);
+                        RedrawButtonIcon(cindex - size);
+                    }
+                }
+            }
+            if (right)
+            {
+                cf = chfields[x + 1, y];
+                if (!cf.IsImpassable())
+                {
+                    buttons[cindex + 1].GetComponent<Image>().color = activeFieldColor;
+                    if (cf.isHidden)
+                    {
+                        cf.ChangeHiddenStatus(false);
+                        RedrawButtonIcon(cindex + 1);
+                    }
+                }
+                if (up)
+                {
+                    cf = chfields[x + 1, y + 1];
+                    if (!cf.IsImpassable())
+                    {
+                        buttons[cindex + size + 1].GetComponent<Image>().color = activeFieldColor;
+                        if (cf.isHidden)
+                        {
+                            cf.ChangeHiddenStatus(false);
+                            RedrawButtonIcon(cindex + size + 1);
+                        }
+                    }
+                }
+                if (down)
+                {
+                    cf = chfields[x + 1, y - 1];
+                    if (!cf.IsImpassable())
+                    {
+                        buttons[cindex - size + 1].GetComponent<Image>().color = activeFieldColor;
+                        if (cf.isHidden)
+                        {
+                            cf.ChangeHiddenStatus(false);
+                            RedrawButtonIcon(cindex - size + 1);
+                        }
+                    }
+                }
+            }
+            cf = chfields[x, y];
+            buttons[cindex].GetComponent<Image>().color = activeFieldColor;
+            cf.ChangeHiddenStatus(false);
+            cf.MarkAsPassed();
+            RedrawButtonIcon(cindex);
+        }
     }
 
     private void Update()
@@ -210,7 +317,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         float t = Time.deltaTime;
         if (moveMarker)
         {
-            var endpos = new Vector3((crewPos.x + 0.5f - size / 2f) * fieldSize, (crewPos.y + 0.5f - size / 2f) * fieldSize, 0f);
+            var cpos = observingExpedition.GetPlanPos();
+            var endpos = new Vector3((cpos.x + 0.5f - size / 2f) * fieldSize, (cpos.y + 0.5f - size / 2f) * fieldSize, 0f);
             crewMarker.localPosition = Vector3.Lerp(crewMarker.localPosition, endpos, MARKER_MOVE_SPEED * t);
             if (crewMarker.localPosition == endpos)
             {
@@ -240,308 +348,37 @@ public sealed class ExploringMinigameUI : MonoBehaviour
 
     private void RefreshInfo()
     {
-       // if (observingExpedition == null || observingExpedition.stage == Expedition.ExpeditionStage.Dismissed)
-       // {
-       //     observingExpedition = null;
-       //     expeditionStatusInfo.text = string.Empty;
-       //     gameObject.SetActive(false);
-      //  }
-      //  else
+        if (observingExpedition == null | observingExpedition.stage == Expedition.ExpeditionStage.Dismissed)
+        {
+            observingExpedition = null;
+            expeditionStatusInfo.text = string.Empty;
+            gameObject.SetActive(false);
+        }
+       else
         {
             expeditionStatusInfo.text = '"' + crew.name + "\"\n" +
                 //Localization.GetWord(LocalizedWord.Step) + ' ' + observingExpedition.currentStep.ToString() + '/' +
                 //observingExpedition.mission.stepsCount.ToString() + '\n' +
-                Localization.GetWord(LocalizedWord.Stamina) + ": " + ((int)(stamina * 100)).ToString() + "%\n\n" +
-                Localization.GetPhrase(LocalizedPhrase.CrystalsCollected) + ": " + moneyCollected.ToString() + '\n';
+                Localization.GetWord(LocalizedWord.Stamina) + ": " + ((int)(crew.stamina * 100)).ToString() + "%\n\n" +
+                Localization.GetPhrase(LocalizedPhrase.CrystalsCollected) + ": " + observingExpedition.crystalsCollected.ToString() + '\n';
                 //+Localization.GetPhrase(LocalizedPhrase.SuppliesLeft) + ": " + observingExpedition.suppliesCount.ToString();
         }
-    }
-
-    private void PrepareDeck()
-    {
-        // if (observingExpedition == null || observingExpedition.stage == Expedition.ExpeditionStage.Dismissed)
-        //  {
-        //      observingExpedition = null;
-        //      gameObject.SetActive(false);
-        //   }
-        //  else
-        {
-            if (fields == null)
-            {
-                fields = new DeckField[0];
-            }
-            challengePanel.SetActive(false);
-
-            int sqr = size * size, len = fields.Length, i;
-            FillChallengesArray(size);
-
-            if (len < sqr)
-            {
-                var f2 = new DeckField[sqr];
-                for (i = 0; i < len; i++)
-                {
-                    f2[i] = fields[i];
-                }
-                fields = f2;
-
-                GameObject g;
-                Button b;
-
-                Transform parent = deckHolder.transform;
-
-                float difsum = missionDifficulty + pointDifficulty, posdif, sz = size;
-                for (i = 0; i < sqr - len; i++)
-                {
-                    g = Instantiate(exampleButton);
-                    g.transform.parent = parent;
-                    b = g.GetComponent<Button>();
-                    int x = len + i; // must be in separate variable because of lambda expression!
-                    b.onClick.AddListener(delegate { this.FieldAction(x); });
-
-                    posdif = (i / size) / sz * (i % size) / sz;
-                    fields[x] = new DeckField(g, chArray[i], (byte)(MAX_DIFFICULTY * (difsum / 3f + Random.value * (1f - difsum / 3f) * posdif)), true);
-                }
-            }
-            else
-            {
-                for (i = sqr; i < len; i++)
-                {
-                    fields[i].button.SetActive(false);
-                }
-            }
-            float p = 1f / size;
-            RectTransform rt;
-            GameObject gx;
-            for (i = 0; i < size; i++)
-            {
-                for (int j = 0; j < size; j++)
-                {
-                    gx = fields[i * size + j].button;
-                    rt = gx.GetComponent<RectTransform>();
-                    rt.anchorMin = new Vector2(j * p, i * p);
-                    rt.anchorMax = new Vector2((j + 1) * p, (i + 1) * p);
-                    rt.offsetMax = Vector2.zero;
-                    rt.offsetMin = Vector2.zero;
-
-                    if (chArray[i * size + j] == ChallengeType.Impassable)
-                    {
-                        gx.GetComponent<Image>().color = Color.gray;
-                        gx.GetComponent<Button>().interactable = false;
-                    }
-                    else
-                    {
-                        gx.GetComponent<Image>().color = disabledFieldColor;
-                        gx.GetComponent<Button>().interactable = true;
-                    }
-
-                    gx.SetActive(true);
-                }
-            }
-
-            fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * p;
-            crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fieldSize);
-            crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, fieldSize);
-            crewMarker.localPosition = new Vector3((crewPos.x + 0.5f - size / 2f) * fieldSize, (crewPos.y + 0.5f - size / 2f) * fieldSize, 0f);
-            i = crewPos.y * size + crewPos.x;
-            bool up = crewPos.y + 1 < size, down = crewPos.y - 1 >= 0, left = crewPos.x - 1 >= 0, right = crewPos.x + 1 < size;
-            DeckField df;
-            if (left)
-            {
-                df = fields[i - 1];
-                if (df.challengeType != ChallengeType.Impassable)
-                {
-                    df.ChangeHiddenStatus(false);
-                    df.button.GetComponent<Image>().color = activeFieldColor;
-                }
-                if (up)
-                {
-                    df = fields[i + size - 1];
-                    if (df.challengeType != ChallengeType.Impassable)
-                    {
-                        df.ChangeHiddenStatus(false);
-                        df.button.GetComponent<Image>().color = activeFieldColor;
-                    }
-                }
-                if (down)
-                {
-                    df = fields[i - size - 1];
-                    if (df.challengeType != ChallengeType.Impassable)
-                    {
-                        df.ChangeHiddenStatus(false);
-                        df.button.GetComponent<Image>().color = activeFieldColor;
-                    }
-                }
-            }
-            if (up)
-            {
-                df = fields[i + size];
-                if (df.challengeType != ChallengeType.Impassable)
-                {
-                    df.ChangeHiddenStatus(false);
-                    df.button.GetComponent<Image>().color = activeFieldColor;
-                }
-            }
-            if (down)
-            {
-                df = fields[i - size];
-                if (df.challengeType != ChallengeType.Impassable)
-                {
-                    df.ChangeHiddenStatus(false);
-                    df.button.GetComponent<Image>().color = activeFieldColor;
-                }
-            }
-            if (right)
-            {
-                df = fields[i + 1];
-                if (df.challengeType != ChallengeType.Impassable)
-                {
-                    df.ChangeHiddenStatus(false);
-                    df.button.GetComponent<Image>().color = activeFieldColor;
-                }
-                if (up)
-                {
-                    df = fields[i + size + 1];
-                    if (df.challengeType != ChallengeType.Impassable)
-                    {
-                        df.ChangeHiddenStatus(false);
-                        df.button.GetComponent<Image>().color = activeFieldColor;
-                    }
-                }
-                if (down)
-                {
-                    df = fields[i - size + 1];
-                    if (df.challengeType != ChallengeType.Impassable)
-                    {
-                        df.ChangeHiddenStatus(false);
-                        df.button.GetComponent<Image>().color = activeFieldColor;
-                    }
-                }
-            }
-            fields[i].button.GetComponent<Image>().color = activeFieldColor;
-            fields[i].ChangeHiddenStatus(false);
-        }
-    }
-
-
-    private void FillChallengesArray(int size)
-    {
-        int sqr = size * size;
-        chArray = new ChallengeType[sqr];
-        float totalVariety = missionDifficulty + pointDifficulty + pointFriendliness + pointMysteria;
-        float missionTestChance = missionDifficulty / totalVariety, environmentTestChance = pointDifficulty / totalVariety,
-            giftChance = pointFriendliness / totalVariety;
-        float r, s2 = missionTestChance + environmentTestChance, s3 = s2 + giftChance;
-        int i;
-        for (i = 0; i < sqr; i++)
-        {
-            if (Random.value < 0.12f + pointDifficulty * 0.2f)
-            {
-                chArray[i] = ChallengeType.Impassable;
-            }
-            else
-            {
-                r = Random.value;
-                if (r > s2)
-                {
-                    if (r > s3)
-                    { // mysteria
-                        if (Random.value < pointMysteria)
-                        {
-                            if (Random.value > 0.5f) chArray[i] = ChallengeType.SecretKnowledgeTest;
-                            else chArray[i] = ChallengeType.PerceptionTest;
-                        }
-                        else
-                        {
-                            if (Random.value < pointDifficulty) chArray[i] = ChallengeType.SecretKnowledgeTest;
-                            else chArray[i] = ChallengeType.AscensionTest;
-                        }
-                    }
-                    else
-                    { // gift
-                        if (Random.value < pointFriendliness) chArray[i] = ChallengeType.Treasure;
-                        else
-                        {
-                            if (Random.value > pointDifficulty) chArray[i] = ChallengeType.NoChallenge;
-                            else chArray[i] = ChallengeType.Random;
-                        }
-                    }
-                }
-                else
-                {
-                    if (r > missionTestChance)
-                    { // environment
-                        if (Random.value > pointDifficulty) chArray[i] = ChallengeType.PersistenceTest;
-                        else
-                        {
-                            if (Random.value > missionDifficulty) chArray[i] = ChallengeType.SurvivalSkillsTest;
-                            else chArray[i] = ChallengeType.Random;
-                        }
-                    }
-                    else
-                    { // mission
-                        if (Random.value > missionDifficulty)
-                        {
-                            if (Random.value < pointFriendliness) chArray[i] = ChallengeType.Treasure;
-                            else chArray[i] = ChallengeType.IntelligenceTest;
-                        }
-                        else
-                        {
-                            if (Random.value > 0.5f) chArray[i] = ChallengeType.IntelligenceTest;
-                            else chArray[i] = ChallengeType.TechSkillsTest;
-                        }
-                    }
-                }
-            }
-        }
-        chArray[sqr - 1] = ChallengeType.QuestTest;
-        chArray[0] = ChallengeType.NoChallenge;
-
-        //check
-        if (chArray[sqr - 2] == ChallengeType.Impassable && chArray[sqr - size - 2] == ChallengeType.Impassable && chArray[sqr - size - 1] == ChallengeType.Impassable)
-        {
-            chArray[sqr - size - 2] = ChallengeType.NoChallenge;
-        }
-        if (chArray[1] == ChallengeType.Impassable && chArray[size] == ChallengeType.Impassable && chArray[size + 1] == ChallengeType.Impassable)
-        {
-            chArray[size + 1] = ChallengeType.NoChallenge;
-        }
-    }
-    private void CreateNewField(int i )
-    {
-        if (i > 0 && i < fields.Length)
-        {
-            var f = fields[i];
-            if (f.challengeType == ChallengeType.Impassable)
-            {
-                float x = Random.value;
-                if (x > 0.9f) f.ChangeChallengeType(ChallengeType.NoChallenge, 0);
-                else
-                {
-                    if (x < 0.33f) f.ChangeChallengeType(ChallengeType.PersistenceTest, (byte)(MAX_DIFFICULTY * 0.85f));
-                    else
-                    {
-                        if (x > 0.6f) f.ChangeChallengeType(ChallengeType.PerceptionTest, (byte)(MAX_DIFFICULTY * 0.85f));
-                        else f.ChangeChallengeType(ChallengeType.IntelligenceTest, (byte)(MAX_DIFFICULTY * 0.85f));
-                    }
-                }
-                f.ChangeHiddenStatus(false);
-            }
-        }
-    }
+    }   
 
     public void FieldAction(int i)
     {
         int ypos = i / size, xpos = i % size;
-        if (xpos != crewPos.x || ypos != crewPos.y)
+        var cpos = observingExpedition.GetPlanPos();
+        if (xpos != cpos.x || ypos != cpos.y)
         {
-            int xdelta = xpos - crewPos.x, ydelta = ypos - crewPos.y;
+            int xdelta = xpos - cpos.x, ydelta = ypos - cpos.y;
             if (Mathf.Abs(xdelta) < 2 && Mathf.Abs(ydelta) < 2)
             {
                 selectedField = i;
-                var df = fields[i];
+                var cf = chfields[xpos,ypos];
                 TYPE_SWITCH:
                 bool useChallengePanel = false, useRollSystem = false;                
-                switch (df.challengeType)
+                switch (cf.challengeType)
                 {
                     case ChallengeType.NoChallenge:
                         useChallengePanel = false;
@@ -580,8 +417,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                                 newtype = ChallengeType.Treasure;
                                 break;
                         }
-                        df.ChangeChallengeType(newtype, df.difficultyClass);
-                        if (df.challengeType != ChallengeType.Random) goto TYPE_SWITCH;
+                        cf.ChangeChallengeType(newtype); RedrawButtonIcon(i);
+                        if (cf.challengeType != ChallengeType.Random) goto TYPE_SWITCH;
                         break;
 
                     case ChallengeType.PersistenceTest:
@@ -618,7 +455,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                     case ChallengeType.Treasure:
                         useChallengePanel = true;
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.Treasure);
-                        challengeDifficultyLabel.text = df.difficultyClass.ToString();
+                        challengeDifficultyLabel.text = cf.difficultyClass.ToString();
                         playerResultLabel.enabled = false;
                         canPassThrough = true;
                         passText.text = Localization.GetWord(LocalizedWord.Pass);
@@ -631,11 +468,12 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                     case ChallengeType.CrystalFee:
                         useChallengePanel = true;
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.CrystalFee);
-                        challengeDifficultyLabel.text = df.difficultyClass.ToString();
-                        playerResultLabel.text = ((int)moneyCollected).ToString();
+                        challengeDifficultyLabel.text = cf.difficultyClass.ToString();
+                        var crystalsCollected = observingExpedition.crystalsCollected;
+                        playerResultLabel.text = crystalsCollected.ToString();
                         playerResultLabel.enabled = true;
 
-                        if (moneyCollected >= df.difficultyClass)
+                        if (crystalsCollected >= cf.difficultyClass)
                         {
                             passText.text = Localization.GetWord(LocalizedWord.Pass);
                             canPassThrough = true;
@@ -649,7 +487,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                     case ChallengeType.AscensionTest:
                         useChallengePanel = true;
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.AscensionTest);
-                        float a = GameMaster.realMaster.globalMap.ascension , b = df.difficultyClass / 255f;
+                        float a = GameMaster.realMaster.globalMap.ascension , b = cf.difficultyClass / 255f;
                         challengeDifficultyLabel.text = ((int)(b * 100f)).ToString() + '%';
                         playerResultLabel.text = ((int)(a * 100f)).ToString() + '%';
                         playerResultLabel.enabled = true;
@@ -675,7 +513,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 {
                     if (useRollSystem)
                     {
-                        challengeDifficultyLabel.text = df.difficultyClass.ToString();
+                        challengeDifficultyLabel.text = cf.difficultyClass.ToString();
                         playerResultLabel.enabled = false;
                         outerRollRing.fillAmount = 1f;
                         innerRollRing.fillAmount = 1f;
@@ -695,6 +533,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 else
                 {
                     challengePanel.SetActive(false);
+                }
+                if (cf.isHidden)
+                {
+                    cf.ChangeHiddenStatus(false);
+                    RedrawButtonIcon(i);
                 }
             }
         }
@@ -718,33 +561,33 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         {
             MoveCrewToField(selectedField);
 
-            var df = fields[selectedField];
+            var cf = chfields[selectedField % size, selectedField / size];
             bool refreshInfo = false;
-            switch (df.challengeType)
+            switch (cf.challengeType)
             {
                 case ChallengeType.CrystalFee:
-                    moneyCollected -= df.difficultyClass;
+                    observingExpedition.PayFee(cf.difficultyClass);
                     refreshInfo = true;
                     break;
                 case ChallengeType.Treasure:
-                    moneyCollected += df.difficultyClass;
+                    observingExpedition.AddCrystals(cf.difficultyClass);
                     refreshInfo = true;
                     break;
                 default:
-                    if (!df.isPassed)
+                    if (!cf.isPassed)
                     {
-                        moneyCollected += MONEY_PER_STEP * (1f + pointFriendliness * 10f);
-                        crew.AddExperience(EXPERIENCE_PER_STEP * (1f + pointDifficulty * 5f + pointMysteria * 2f));
+                        observingPoint.OneStepReward(observingExpedition);
                         refreshInfo = true;
                     }
                     break;
             }
-            if (df.challengeType != ChallengeType.NoChallenge)
+            if (cf.challengeType != ChallengeType.NoChallenge)
             {
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.SuccessfulRoll);
-                df.ChangeChallengeType(ChallengeType.NoChallenge, 0);
+                cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
             }
-            df.MarkAsPassed();
+            cf.MarkAsPassed();
+            RedrawButtonIcon(selectedField);
             if (refreshInfo) RefreshInfo();            
         }
         else passButton.SetActive(false);
@@ -752,18 +595,18 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     }
     private void AfterRoll()
     {
-        if (selectedField < 0 | selectedField > fields.Length)
+        if (selectedField < 0 | selectedField > buttons.Length)
         {
             challengePanel.SetActive(false);
             return;
         }
         else
         {
-            stamina -= STAMINA_PER_STEP * (1f + pointDifficulty - crew.level / (float)Crew.MAX_LEVEL) * 0.5f;
+            crew.MakeStep(STAMINA_PER_STEP * observingPoint.difficulty);
 
-            var df = fields[selectedField];
+            var cf = chfields[selectedField % size, selectedField / size];
             float result = 0f;
-            switch (df.challengeType)
+            switch (cf.challengeType)
             {
                 case ChallengeType.PersistenceTest:
                     {
@@ -797,10 +640,10 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                     }
             }
             
-            if (result >= df.difficultyClass)
+            if (result >= cf.difficultyClass)
             {
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.SuccessfulRoll);
-                fields[selectedField].ChangeChallengeType(ChallengeType.NoChallenge, 0);
+                cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
                 crew.RaiseAdaptability(0.5f);
                 crew.AddExperience(5f);
                 passText.text = Localization.GetWord(LocalizedWord.Pass);
@@ -826,130 +669,107 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         }
     }
 
-    private void MoveCrewToField(int i)
+    private void RedrawButtonIcon(int index)
+    {
+        //#redraw button
+        var img = buttons[index].transform.GetChild(0).GetComponent<RawImage>();
+        var cf = chfields[index % size, index / size];
+        if (cf.isPassed || cf.IsImpassable())
+        {
+            img.enabled = false; return;
+        }
+        else
+        {
+            if (cf.isHidden)
+            {
+                img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
+                img.color = unreachableIconColor;
+                img.enabled = true;
+            }
+            else
+            {
+                if (cf.challengeType != ChallengeType.NoChallenge)
+                {
+                    img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
+                    img.color = reachableIconColor;
+                    img.enabled = true;
+                }
+                else
+                {
+                    img.enabled = false;
+                }
+            }            
+        }
+        //
+    }    
+
+    private void MoveCrewToField(int newIndex)
     {
         fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * 1f / size;
-        int ypos = i / size, xpos = i % size;
-        if (xpos != crewPos.x || ypos != crewPos.y)
+        int iy = newIndex / size, ix = newIndex % size;
+        var cpos = observingExpedition.GetPlanPos();
+        if (ix != cpos.x || iy != cpos.y)
         {
-            int xdelta = xpos - crewPos.x, ydelta = ypos - crewPos.y;
+            int x = cpos.x, y = cpos.y;
+            int xdelta = ix - x, ydelta = iy - y;
             if (Mathf.Abs(xdelta) < 2 && Mathf.Abs(ydelta) < 2)
             {
-                DeckField df;
-                int cindex = crewPos.y * size + crewPos.x;
+                List<Vector2Int> activateList = new List<Vector2Int>(), deactivateList = new List<Vector2Int>();
+                int cindex = y * size + x;
                 if (xdelta == 0)
                 {
-                    bool right = crewPos.x + 1 < size, left = crewPos.x - 1 >= 0;
+                    bool right = x + 1 < size, left = x- 1 >= 0;
                     if (ydelta > 0) // (0,1)
                     {
-                        if (crewPos.y - 1 >= 0)
+                        if (y - 1 >= 0)
                         {
-                            df = fields[cindex - size];
-                            if (df.challengeType != ChallengeType.Impassable)
-                            {
-                                df.button.GetComponent<Image>().color = disabledFieldColor;
-                                df.ChangeHiddenStatus(false);
-                            }
+                            deactivateList.Add(new Vector2Int(x, y - 1));
                             if (left)
                             {
-                                df = fields[cindex - size - 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = disabledFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                deactivateList.Add(new Vector2Int(x - 1, y - 1));
                             }
                             if (right)
                             {
-                                df = fields[cindex - size + 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = disabledFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                deactivateList.Add(new Vector2Int(x + 1, y - 1));
                             }
                         }
-                        if (crewPos.y + 2 < size)
+                        if (y + 2 < size)
                         {
-                            df = fields[cindex + 2 * size];
-                            if (df.challengeType != ChallengeType.Impassable)
-                            {
-                                df.button.GetComponent<Image>().color = activeFieldColor;
-                                df.ChangeHiddenStatus(false);
-                            }
+                            activateList.Add(new Vector2Int(x , y + 2));
                             if (left)
                             {
-                                df = fields[cindex + 2 * size - 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = activeFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                activateList.Add(new Vector2Int(x - 1, y + 2));
                             }
                             if (right)
                             {
-                                df = fields[cindex + 2 * size + 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = activeFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                activateList.Add(new Vector2Int(x + 1, y + 2));
                             }
                         }
                     }
                     else //(0,-1)
                     {
-                        if (crewPos.y + 1 < size)
+                        if (y + 1 < size)
                         {
-                            df = fields[cindex + size];
-                            if (df.challengeType != ChallengeType.Impassable)
-                            {
-                                df.button.GetComponent<Image>().color = disabledFieldColor;
-                                df.ChangeHiddenStatus(false);
-                            }
+                            deactivateList.Add(new Vector2Int(x, y + 1));
                             if (left)
                             {
-                                df = fields[cindex + size - 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = disabledFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                deactivateList.Add(new Vector2Int(x - 1, y + 1));
                             }
                             if (right)
                             {
-                                df = fields[cindex + size + 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = disabledFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                deactivateList.Add(new Vector2Int(x + 1, y + 1));
                             }
                         }
-                        if (crewPos.y - 2 >= 0)
+                        if (y - 2 >= 0)
                         {
-                            df = fields[cindex - 2 * size];
-                            if (df.challengeType != ChallengeType.Impassable)
-                            {
-                                df.button.GetComponent<Image>().color = activeFieldColor;
-                                df.ChangeHiddenStatus(false);
-                            }
+                            activateList.Add(new Vector2Int(x, y - 2));
                             if (left)
                             {
-                                df = fields[cindex - 2 * size - 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = activeFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                activateList.Add(new Vector2Int(x - 1, y - 2));
                             }
                             if (right)
                             {
-                                df = fields[cindex - 2 * size + 1];
-                                if (df.challengeType != ChallengeType.Impassable) {
-                                    df.button.GetComponent<Image>().color = activeFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                activateList.Add(new Vector2Int(x + 1, y - 2));
                             }
                         }
                     }
@@ -958,221 +778,111 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 {
                     if (ydelta == 0)
                     {
-                        bool up = crewPos.y + 1 < size, down = crewPos.y - 1 >= 0;
+                        bool up = y + 1 < size, down = y - 1 >= 0;
                         if (xdelta > 0) // (1,0)
                         {
-                            if (crewPos.x - 1 >= 0)
+                            if (x - 1 >= 0)
                             {
-                                df = fields[cindex - 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = disabledFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                deactivateList.Add(new Vector2Int(x - 1, y));
                                 if (up)
                                 {
-                                    df = fields[cindex + size - 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x - 1, y + 1));
                                 }
                                 if (down)
                                 {
-                                    df = fields[cindex - 1 - size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x - 1, y - 1));
                                 }
                             }
-                            if (crewPos.x + 2 < size)
+                            if (x + 2 < size)
                             {
-                                df = fields[cindex + 2];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = activeFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                activateList.Add(new Vector2Int(x + 2, y));
                                 if (up)
                                 {
-                                    df = fields[cindex + size + 2];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x + 2, y + 1));
                                 }
                                 if (down)
                                 {
-                                    df = fields[cindex - size + 2];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x + 2, y - 1));
                                 }
                             }
                         }
                         else // (-1,0)
                         {
-                            if (crewPos.x + 1 < size)
+                            if (x + 1 < size)
                             {
-                                df = fields[cindex + 1];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = disabledFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                deactivateList.Add(new Vector2Int(x + 1, y));
                                 if (up)
                                 {
-                                    df = fields[cindex + size + 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x + 1, y + 1));
                                 }
                                 if (down)
                                 {
-                                    df = fields[cindex - size + 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x + 1, y - 1));
                                 }
                             }
-                            if (crewPos.x - 2 >= 0)
+                            if (x - 2 >= 0)
                             {
-                                df = fields[cindex - 2];
-                                if (df.challengeType != ChallengeType.Impassable)
-                                {
-                                    df.button.GetComponent<Image>().color = activeFieldColor;
-                                    df.ChangeHiddenStatus(false);
-                                }
+                                activateList.Add(new Vector2Int(x - 2, y));
                                 if (up)
                                 {
-                                    df = fields[cindex - 2 + size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x - 2, y + 1));
                                 }
                                 if (down)
                                 {
-                                    df = fields[cindex - 2 - size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x - 2, y - 1));
                                 }
                             }
                         }
                     }
                     else
                     {
-                        bool up = crewPos.y + 1 < size, down = crewPos.y - 1 >= 0,
-                            right = crewPos.x + 1 < size, left = crewPos.x - 1 >= 0;
+                        bool up = y + 1 < size, down = y - 1 >= 0,
+                            right = x + 1 < size, left = x - 1 >= 0;
                         if (ydelta > 0)
                         {
-                            bool up2 = crewPos.y + 2 < size;
+                            bool up2 = y + 2 < size;
                             if (xdelta > 0) // (1,1)
                             {
                                 if (left)
                                 {
-                                    df = fields[cindex - 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x - 1, y));
                                     if (up)
                                     {
-                                        df = fields[cindex + size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x - 1, y + 1));
                                     }
                                     if (down)
                                     {
-                                        df = fields[cindex - size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x - 1, y - 1));
                                     }
                                 }
                                 if (down)
                                 {
-                                    df = fields[cindex - size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x, y - 1));
                                     if (right)
                                     {
-                                        df = fields[cindex - size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x + 1, y - 1));
                                     }
                                 }
                                 //
-                                bool right2 = crewPos.x + 2 < size;
+                                bool right2 = x + 2 < size;
                                 if (up2)
                                 {
-                                    df = fields[cindex + 2 * size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x, y + 2));
                                     if (right)
                                     {
-                                        df = fields[cindex + 2 * size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x + 1, y + 2));
                                     }
                                     if (right2)
                                     {
-                                        df = fields[cindex + 2 * size + 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x + 2, y + 2));
                                     }
                                 }
                                 if (right2)
                                 {
-                                    df = fields[cindex + 2];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x + 2, y));
                                     if (up)
                                     {
-                                        df = fields[cindex + size + 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x + 2, y + 1));
                                     }
                                 }
                             }
@@ -1180,191 +890,92 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                             {
                                 if (right)
                                 {
-                                    df = fields[cindex + 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x + 1, y));
                                     if (up)
                                     {
-                                        df = fields[cindex + size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x + 1, y + 1));
                                     }
                                     if (down)
                                     {
-                                        df = fields[cindex - size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x + 1, y - 1));
                                     }
                                 }
                                 if (down)
                                 {
-                                    df = fields[cindex - size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x, y - 1));
                                     if (left)
                                     {
-                                        df = fields[cindex - size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x - 1, y - 1));
                                     }
                                 }
                                 //
-                                bool left2 = crewPos.x - 2 >= 0;
+                                bool left2 =x - 2 >= 0;
                                 if (up2)
                                 {
-                                    df = fields[cindex + 2 * size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x, y + 2));
                                     if (left)
                                     {
-                                        df = fields[cindex + 2 * size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x - 1, y + 2));
                                     }
                                     if (left2)
                                     {
-                                        df = fields[cindex + 2 * size - 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x - 2, y + 2));
                                     }
                                 }
                                 if (left2)
                                 {
-                                    df = fields[cindex - 2];
-                                    if (df.challengeType != ChallengeType.Impassable) {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x - 2, y));
                                     if (up)
                                     {
-                                        df = fields[cindex + size - 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x - 2, y + 1));
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            bool down2 = crewPos.y - 2 >= 0;
+                            bool down2 = y - 2 >= 0;
                             if (xdelta > 0) // (1,-1)
                             {
                                 if (up)
                                 {
-                                    df = fields[cindex + size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x, y + 1));
                                     if (right)
                                     {
-                                        df = fields[cindex + size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x + 1, y + 1));
                                     }
                                     if (left)
                                     {
-                                        df = fields[cindex + size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x - 1, y + 1));
                                     }
                                 }
                                 if (left)
                                 {
-                                    df = fields[cindex - 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x - 1, y));
                                     if (down)
                                     {
-                                        df = fields[cindex - size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x - 1, y - 1));
                                     }
                                 }
                                 //
-                                if (crewPos.x + 2 < size)
+                                if (x + 2 < size)
                                 {
-                                    df = fields[cindex + 2];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x + 2, y));
                                     if (down)
                                     {
-                                        df = fields[cindex - size + 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x + 2, y - 1));
                                     }
                                     if (down2)
                                     {
-                                        df = fields[cindex - 2 * size + 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x + 2, y - 2));
                                     }
                                 }
                                 if (down2)
                                 {
-                                    df = fields[cindex - 2 * size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x, y - 2));
                                     if (right)
                                     {
-                                        df = fields[cindex - 2 * size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x + 1, y - 2));
                                     }
                                 }
                             }
@@ -1372,113 +983,95 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                             {
                                 if (up)
                                 {
-                                    df = fields[cindex + size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x, y + 1));
                                     if (left)
                                     {
-                                        df = fields[cindex + size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x - 1, y + 1));
                                     }
                                     if (right)
                                     {
-                                        df = fields[cindex + size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x + 1, y + 1));
                                     }
                                 }
                                 if (right)
                                 {
-                                    df = fields[cindex + 1];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = disabledFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    deactivateList.Add(new Vector2Int(x + 1, y));
                                     if (down)
                                     {
-                                        df = fields[cindex - size + 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = disabledFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        deactivateList.Add(new Vector2Int(x + 1, y - 1));
                                     }
                                 }
                                 //
-                                if (crewPos.x - 2 >= 0)
+                                if (x - 2 >= 0)
                                 {
-                                    df = fields[cindex - 2];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x - 2, y));
                                     if (down)
                                     {
-                                        df = fields[cindex - size - 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x - 2, y - 1));
                                     }
                                     if (down2)
                                     {
-                                        df = fields[cindex - 2 * size - 2];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x - 2, y - 2));
                                     }
                                 }
                                 if (down2)
                                 {
-                                    df = fields[cindex - 2 * size];
-                                    if (df.challengeType != ChallengeType.Impassable)
-                                    {
-                                        df.button.GetComponent<Image>().color = activeFieldColor;
-                                        df.ChangeHiddenStatus(false);
-                                    }
+                                    activateList.Add(new Vector2Int(x, y - 2));
                                     if (left)
                                     {
-                                        df = fields[cindex - 2 * size - 1];
-                                        if (df.challengeType != ChallengeType.Impassable)
-                                        {
-                                            df.button.GetComponent<Image>().color = activeFieldColor;
-                                            df.ChangeHiddenStatus(false);
-                                        }
+                                        activateList.Add(new Vector2Int(x -1, y - 2));
                                     }
                                 }
                             }
                         }
                     }
                 }
-                crewPos = new Vector2Int(xpos, ypos);
+                ChallengeField cf;
+                if (deactivateList.Count > 0)
+                {                    
+                    foreach (var p in deactivateList)
+                    {
+                        cf = chfields[p.x, p.y];
+                        if (!cf.IsImpassable())
+                        {
+                            buttons[p.x + p.y * size].GetComponent<Image>().color = disabledFieldColor;
+                        }
+                    }
+                }
+                if (activateList.Count > 0)
+                {
+                    foreach (var p in activateList)
+                    {
+                        cf = chfields[p.x, p.y];
+                        if (!cf.IsImpassable())
+                        {
+                            buttons[p.x + p.y * size].GetComponent<Image>().color = activeFieldColor;
+                            if (cf.isHidden)
+                            {
+                                cf.ChangeHiddenStatus(false);
+                                RedrawButtonIcon(p.x + p.y * size);
+                            }
+                        }
+                    }
+                }
+                observingExpedition.SetPlanPos( new Vector2Int(ix, iy));
+                print(ix.ToString() + ' ' + iy.ToString() + " exploringMinigameUI:1058");
                 moveMarker = true;
+                cf = chfields[ix, iy];
+                cf.MarkAsPassed();
+                RedrawButtonIcon(newIndex);
 
                 // next pass availability check:
                 {
                     var variants = new List<int>();
-                    bool right = xpos < size - 1, up = ypos < size - 1, down = ypos > 0;
-                    if (up) variants.Add(i + size);
-                    if (down) variants.Add(i - size);
+                    bool right = ix < size - 1, up = iy < size - 1, down = iy > 0;
+                    if (up) variants.Add(newIndex + size);
+                    if (down) variants.Add(newIndex - size);
                     if (right)
                     {
-                        variants.Add(i + 1);
-                        if (up) variants.Add(i + 1 + size);
-                        if (down) variants.Add(i + 1 - size);
+                        variants.Add(newIndex + 1);
+                        if (up) variants.Add(newIndex + 1 + size);
+                        if (down) variants.Add(newIndex + 1 - size);
                     }
                     if (variants.Count > 0)
                     {
@@ -1487,18 +1080,18 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         ChallengeType ctype;
                         foreach (var v in variants)
                         {
-                            ctype = fields[v].challengeType;
+                            ctype = chfields[v % size, v / size].challengeType;
                             if (ctype == ChallengeType.Impassable) blockedCells.Add(v);
                             else exits++;
                         }
-                        int x = blockedCells.Count;
-                        if (exits == 0 && x > 0)
+                        int bc = blockedCells.Count;
+                        if (exits == 0 && bc > 0)
                         {
-                            if (x == 1) CreateNewField(blockedCells[0]);
+                            if (bc == 1) observingPoint.ConvertToChallengeable(blockedCells[0] % size, blockedCells[0] / size);
                             else
                             {
-                                x = Random.Range(0, x);
-                                CreateNewField(blockedCells[x]);
+                                bc = Random.Range(0, bc);
+                                observingPoint.ConvertToChallengeable(blockedCells[bc] % size, blockedCells[bc] / size);
                             }
                         }
                     }

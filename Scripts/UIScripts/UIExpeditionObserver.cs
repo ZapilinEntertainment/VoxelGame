@@ -316,6 +316,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                             }
                             else
                             {
+                                GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapUI>().PreparePointDescription();
                                 gameObject.SetActive(false);
                             }
                         }

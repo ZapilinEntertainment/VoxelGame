@@ -567,20 +567,15 @@ public sealed class GlobalMap : MonoBehaviour
 
     public void FORCED_CreatePointOfInterest()
     {
-        for (int i =0; i < mapSectors.Length; i++)
-        {
-            if (mapSectors[i] == null) {
-                var pos = GetSectorPosition(i);
-                var centralPoint = MapPoint.CreatePointOfType(
-                pos.x,
-                pos.y,
-                MapMarkerType.Island
-                );
-                mapSectors[i] = new RingSector(centralPoint, Environment.GetSuitableEnvironment(ascension));
-                AddPoint(centralPoint, true);
-                return;
-            }
-        }
+        int x = GetCurrentSectorIndex() + 1;
+        var pos = GetSectorPosition(x);
+        var centralPoint = MapPoint.CreatePointOfType(
+        pos.x,
+        pos.y,
+        MapMarkerType.Island
+        );
+        mapSectors[x] = new RingSector(centralPoint, Environment.GetSuitableEnvironment(ascension));
+        AddPoint(centralPoint, true);
     }
 
     #region save-load system

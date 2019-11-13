@@ -15,6 +15,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     [SerializeField] private GameObject exampleMarker, infoPanel, sendExpeditionButton;
     [SerializeField] private GameObject mapCanvas, mapCamera;
 #pragma warning restore 0649
+    private Text sendButtonLabel { get { return sendExpeditionButton.transform.GetChild(0).GetComponent<Text>(); } }
 
     private bool prepared = false, showExpeditionInfo = false;
     private float infoPanelWidth = 0f;
@@ -59,6 +60,7 @@ public sealed class GlobalMapUI : MonoBehaviour
             else
             {  //повторный выбор точки
                 PreparePointDescription();
+                return;
             }
         }
         chosenPoint = mp;
@@ -97,7 +99,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                         pointDescription.text = Localization.GetExpeditionDescription(e);
                         if (e.stage == Expedition.ExpeditionStage.WayIn)
                         {
-                            sendExpeditionButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                            sendButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
                             if (!sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(true);
                         }
                         else
@@ -113,18 +115,21 @@ public sealed class GlobalMapUI : MonoBehaviour
                         var poi = chosenPoint as PointOfInterest;
                         if (poi != null)
                         {
+                            var s = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex) +
+                                    "\n\n" + Localization.GetWord(LocalizedWord.Difficulty) + ": " + ((int)(poi.difficulty * 100f)).ToString() + '%';
                             if (poi.workingExpedition == null)
                             {
-                                pointDescription.text = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex) +
-                                    "\n\n" + Localization.GetWord(LocalizedWord.Difficulty) + ": " + ((int)(poi.difficulty * 100f)).ToString() + '%';
-                                ;
-                                sendExpeditionButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.SendExpedition);
+                                sendButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.SendExpedition);
+                                if (!sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(true);
                             }
                             else
                             {
-                                
+                                s += '\n' + Localization.GetWord(LocalizedWord.Expedition) + ": " + poi.workingExpedition.crew.name;
+                                sendButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.OpenExpeditionWindow);
+                                if (!sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(true);
                             }
-                            if (!sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(true);
+                            pointDescription.text = s;
+
                         }
                         else
                         {
@@ -144,28 +149,38 @@ public sealed class GlobalMapUI : MonoBehaviour
     {
         if (chosenPoint != null)
         {
-            var poi = chosenPoint as PointOfInterest;
-            if (poi != null)
+            if (chosenPoint.type == MapMarkerType.FlyingExpedition)
             {
-                if (poi.workingExpedition == null)
-                { // send expedition
-                    var ob = Expedition.GetObserver();
-                    infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
-                    float pw = (Screen.width - infoPanelWidth) * 0.95f,
-                    ph = Screen.height * 0.75f, sz = ph;
-                    if (pw < ph) sz = pw;
-                    if (!ob.gameObject.activeSelf) ob.gameObject.SetActive(true);
-                    ob.SetPosition(new Rect(pw, Screen.height / 2f, sz, sz), SpriteAlignment.RightCenter,false);
-                    ob.Show(poi);
-                }
-                else
-                { // cancel expedition
-
-                }
+                var e = (chosenPoint as FlyingExpedition).expedition;
+                if (e.stage == Expedition.ExpeditionStage.WayIn) e.EndMission();
             }
             else
             {
-                sendExpeditionButton.SetActive(false);
+                var poi = chosenPoint as PointOfInterest;
+                if (poi != null)
+                {
+                    if (poi.workingExpedition == null || poi.workingExpedition.stage != Expedition.ExpeditionStage.OnMission)
+                    { // send expedition
+                        var ob = Expedition.GetObserver();
+                        infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
+                        float pw = (Screen.width - infoPanelWidth) * 0.95f,
+                        ph = Screen.height * 0.75f, sz = ph;
+                        if (pw < ph) sz = pw;
+                        if (!ob.gameObject.activeSelf) ob.gameObject.SetActive(true);
+                        ob.SetPosition(new Rect(pw, Screen.height / 2f, sz, sz), SpriteAlignment.RightCenter, false);
+                        ob.Show(poi);
+                    }
+                    else
+                    {
+                        ExploringMinigameUI.ShowExpedition(poi.workingExpedition);
+                        CloseInfopanel();
+                        return;
+                    }
+                }
+                else
+                {
+                    sendExpeditionButton.SetActive(false);
+                }
             }
         }
         else CloseInfopanel();
@@ -188,6 +203,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     public void Close()
     {
         CloseInfopanel();
+        ExploringMinigameUI.Disable();
         gameObject.SetActive(false);
         UIController.SetActivity(true);
     }   
