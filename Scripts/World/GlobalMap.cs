@@ -356,6 +356,8 @@ public sealed class GlobalMap : MonoBehaviour
                             if (mp.angle != d.angle) mp.angle = Mathf.MoveTowardsAngle(mp.angle, d.angle, fe.speed * t);
                             else
                             {
+                                mapPoints.RemoveAt(i);
+                                fe.expedition.DropMapMarker();
                                 if (fe.expedition.stage == Expedition.ExpeditionStage.WayIn)
                                 {
                                     fe.expedition.StartMission();
@@ -363,8 +365,7 @@ public sealed class GlobalMap : MonoBehaviour
                                 else
                                 {
                                     fe.expedition.Dismiss();
-                                }
-                                mapPoints.RemoveAt(i);
+                                }                                
                                 actionsHash++;
                                 continue;
                             }

@@ -1,19 +1,22 @@
-﻿public sealed class ChallengeField
+﻿public class ChallengeField
 {
     public ChallengeType challengeType { get; private set; }
     public byte difficultyClass { get; private set; }
     public bool isHidden { get; private set; }
     public bool isPassed { get; private set; }
 
-    public static ChallengeField emptyField, impassableField;
     public const byte MAX_DIFFICULTY = 25, TREASURE_EXP_CODE = 0, TREASURE_MONEY_CODE = 1, TREASURE_RESOURCES_CODE = 2, TREASURE_ARTIFACT_CODE = 3;
 
-    static ChallengeField()
-    {
-        emptyField = new ChallengeField(ChallengeType.NoChallenge, 0);
-        impassableField = new ChallengeField(ChallengeType.Impassable, MAX_DIFFICULTY);
-    }
+    public static ChallengeField emptyField { get { return new ChallengeField(ChallengeType.NoChallenge, 0); } }
+    public static ChallengeField impassableField { get { return new ChallengeField(ChallengeType.Impassable, 0); } }
 
+    public ChallengeField()
+    {
+        challengeType = ChallengeType.NoChallenge;
+        difficultyClass = 0;
+        isHidden = true;
+        isPassed = false;
+    }
     public ChallengeField(ChallengeType i_type, byte i_difficulty)
     {
         challengeType = i_type;
@@ -53,7 +56,7 @@
             case ChallengeType.TechSkillsTest: return UIController.GetIconUVRect(Icons.TechSkillsIcon);
             case ChallengeType.Treasure: return UIController.GetIconUVRect(Icons.TreasureIcon); ;
             case ChallengeType.QuestTest: return UIController.GetIconUVRect(Icons.QuestMarkerIcon);
-            case ChallengeType.CrystalFee: return UIController.GetIconUVRect(Icons.CrewGoodIcon);
+            case ChallengeType.CrystalFee: return UIController.GetIconUVRect(Icons.EnergyCrystal);
             case ChallengeType.AscensionTest: return UIController.GetIconUVRect(Icons.AscensionIcon);
             case ChallengeType.Impassable:
             case ChallengeType.NoChallenge:
@@ -63,5 +66,28 @@
                 return UIController.GetIconUVRect(Icons.Unknown);
 
         }
+    }
+
+    public static bool operator ==(ChallengeField A, ChallengeField B)
+    {
+        if (ReferenceEquals(A, null))
+        {
+            return ReferenceEquals(B, null);
+        }
+        return A.Equals(B);
+    }
+    public static bool operator !=(ChallengeField A, ChallengeField B)
+    {
+        return !(A == B);
+    }
+    public override int GetHashCode()
+    {
+        return (int)challengeType + difficultyClass + (isHidden ? 1 : 0) + (isPassed ? 1 : 0);
+    }
+    public override bool Equals(object obj)
+    {
+        if (obj == null || GetType() != obj.GetType()) return false;
+        var info = (ChallengeField)obj;
+        return challengeType == info.challengeType & difficultyClass == info.difficultyClass & isHidden == info.isHidden & isPassed == info.isPassed;
     }
 }

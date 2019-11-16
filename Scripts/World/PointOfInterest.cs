@@ -30,15 +30,30 @@ public class PointOfInterest : MapPoint
         if (workingExpedition == e) workingExpedition = null;
     }
 
-    public ChallengeField[,] GetChallengesArray()
+    public ref ChallengeField[,] GetChallengesArrayRef()
     {
         if (challengeArray == null) GenerateChallengesArray();
-        return challengeArray;
+        return ref challengeArray;
+    }
+    public ref ChallengeField GetChallengeField(int x, int y)
+    {
+        if (challengeArray == null) GenerateChallengesArray();
+        return ref challengeArray[x, y];
+    }
+    public ref ChallengeField GetChallengeField(int i)
+    {
+        int size = GetChallengesArraySize();
+        return ref challengeArray[i % size, i / size];
+    }
+    public int GetChallengesArraySize()
+    {
+        if (challengeArray == null) GenerateChallengesArray();
+        return challengeArray.GetLength(0);
     }
 
     private void GenerateChallengesArray()
     {
-        int size = 4 + Random.Range(0, (int)(3f * mysteria + 3f * richness));
+        int size = 5 + Random.Range(0, (int)(3f * mysteria + 3f * richness));
         challengeArray = new ChallengeField[size, size];
 
         // generating:
@@ -218,8 +233,8 @@ public class PointOfInterest : MapPoint
                                 }
                                 else
                                 {
-                                    if (v < 0.97f) challengeArray[x, y] = new ChallengeField(atests[5], (byte)(maxDifficulty * df));
-                                    else challengeArray[x, y] = new ChallengeField(atests[6], (byte)(maxDifficulty * df));
+                                    if (v < 0.97f) challengeArray[x, y] = new ChallengeField(atests[4], (byte)(maxDifficulty * df));
+                                    else challengeArray[x, y] = new ChallengeField(atests[5], (byte)(maxDifficulty * df));
                                 }
                             }
                         }

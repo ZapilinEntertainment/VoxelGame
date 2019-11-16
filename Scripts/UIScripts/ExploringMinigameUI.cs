@@ -16,22 +16,25 @@ public sealed class ExploringMinigameUI : MonoBehaviour
 {   
 
     [SerializeField] private GameObject deckHolder;
-    [SerializeField] private Text expeditionStatusInfo, challengeDifficultyLabel, playerResultLabel, challengeLabel, rollText;
+    [SerializeField] private Text challengeDifficultyLabel, playerResultLabel, challengeLabel, rollText, suppliesLabel, crystalsLabel, staminaPercentage;
+    [SerializeField] private Transform infoPanel;
     [SerializeField] private RectTransform crewMarker;
-    [SerializeField] private Image innerRollRing, outerRollRing;
+    [SerializeField] private Image innerRollRing, outerRollRing, staminaBar;
     [SerializeField] private GameObject exampleButton, challengePanel, passButton;
     [SerializeField] private GameObject rollButton;
     private Text passText { get { return passButton.transform.GetChild(0).GetComponent<Text>(); } }
+    private Transform crewPanel { get { return infoPanel.GetChild(0); } }
+    private Transform membersPanel { get { return crewPanel.GetChild(2); } }
 
     private static ExploringMinigameUI current;
+    public static bool minigameActive { get; private set; }
 
     private Expedition observingExpedition;
-    private Crew crew;
+    private Crew observingCrew;
     private PointOfInterest observingPoint;
-    private ChallengeField[,] chfields;
     //
     private byte size = 8;
-    private bool moveMarker = false, rollEffect = false, canPassThrough = true;
+    private bool moveMarker = false, rollEffect = false, canPassThrough = true, needInfoRefreshing = false;
     private int selectedField = -1;
     private float fieldSize = 100f, pingpongVal = 0f;
     private string testLabel = string.Empty;
@@ -63,7 +66,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     }
     public static void ActivateIfEnabled()
     {
-        if (current != null && current.isActiveAndEnabled)
+        if (minigameActive)
         {
             current.EnableDeckHolder();
         }
@@ -73,243 +76,282 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         if (current != null) current.gameObject.SetActive(false);
     }
 
+    private void Awake()
+    {
+        RectTransform rt = deckHolder.GetComponent<RectTransform>();
+        float height = Screen.height;
+        if (rt.rect.width < height) height = rt.rect.width;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, height);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+        rt.anchoredPosition = new Vector3(-height / 2f, 0f, 0f);
+
+        infoPanel.gameObject.SetActive(false);
+        infoPanel.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopMission);
+        var mempanel = membersPanel;
+        rt = mempanel.GetComponent<RectTransform>();
+        float p = rt.rect.width / (float)Crew.MAX_MEMBER_COUNT;
+        if (p > rt.rect.height) p = rt.rect.height;
+        float ax = p / rt.rect.width, ay = p / rt.rect.height;
+        rt = mempanel.GetChild(0).GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(ax * p, ay);
+        rt.offsetMax = Vector2.zero;
+        rt.offsetMin = Vector2.zero;
+        var g = rt.gameObject;
+        if (Crew.MAX_MEMBER_COUNT > 1)
+        {
+            for (int i = 1; i > Crew.MAX_MEMBER_COUNT; i++)
+            {
+                rt = Instantiate(g, mempanel).GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(ax * i, 0);
+                rt.anchorMax = new Vector2(ax * (i + 1) * p, ay);
+                rt.offsetMax = Vector2.zero;
+                rt.offsetMin = Vector2.zero;
+            }
+        }
+
+        var t = suppliesLabel.transform.parent;
+        t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(ResourceType.SUPPLIES_ID);
+        t.GetChild(2).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.EnergyCrystal);
+        infoPanel.gameObject.SetActive(true);
+    }
     private void Show(Expedition e)
     {
         observingExpedition = e;
-        crew = e.crew;
+        observingCrew = e.crew;
         observingPoint = observingExpedition.destination;
-        chfields = observingPoint.GetChallengesArray();
-        size = (byte)chfields.GetLength(0);
+        size = (byte)observingPoint.GetChallengesArraySize();
         PrepareDeck();
+        RefreshInfo();
+        infoPanel.GetChild(0).GetChild(1).GetComponent<Text>().text = '"' + observingCrew.name + '"';
     }
     private void PrepareDeck()
     {
+        if (buttons == null) buttons = new GameObject[0];
+        challengePanel.SetActive(false);
+
+        int sqr = size * size, len = buttons.Length, ypos;
+
+        if (len < sqr)
         {
-            if (buttons == null) buttons = new GameObject[0];
-            challengePanel.SetActive(false);
-
-            int sqr = size * size, len = buttons.Length, ypos;
-
-            if (len < sqr)
+            if (len != 0)
             {
-                if (len != 0)
+                var b2 = new GameObject[sqr];
+                for (ypos = 0; ypos < len; ypos++)
                 {
-                    var b2 = new GameObject[sqr];
-                    for (ypos = 0; ypos < len; ypos++)
-                    {
-                        b2[ypos] = buttons[ypos];
-                    }
-                    buttons = b2;
+                    b2[ypos] = buttons[ypos];
                 }
-                else
-                {
-                    buttons = new GameObject[sqr];
-                }
-
-                GameObject g;
-                Button b;
-
-                Transform parent = deckHolder.transform;
-
-                for (ypos = 0; ypos < sqr - len; ypos++)
-                {
-                    g = Instantiate(exampleButton);
-                    g.transform.parent = parent;
-                    b = g.GetComponent<Button>();
-                    int v = len + ypos; // must be in separate variable because of lambda expression!
-                    b.onClick.AddListener(delegate { this.FieldAction(v); });
-                    buttons[v] = g;
-                }
+                buttons = b2;
             }
             else
             {
-                for (ypos = sqr; ypos < len; ypos++)
-                {
-                    buttons[ypos].SetActive(false);
-                }
+                buttons = new GameObject[sqr];
             }
-            float p = 1f / size;
-            RectTransform rt;
-            GameObject gx;
-            ChallengeField cf;
-            bool impassable;
-            RawImage img;
-            for (ypos = 0; ypos < size; ypos++)
-            {
-                for (int xpos = 0; xpos < size; xpos++)
-                {
-                    gx = buttons[ypos * size + xpos];
-                    rt = gx.GetComponent<RectTransform>();
-                    rt.anchorMin = new Vector2(xpos * p, ypos * p);
-                    rt.anchorMax = new Vector2((xpos + 1) * p, (ypos + 1) * p);
-                    rt.offsetMax = Vector2.zero;
-                    rt.offsetMin = Vector2.zero;
 
-                    cf = chfields[xpos, ypos];
-                    impassable = cf.IsImpassable();
-                    if (impassable)
+            GameObject g;
+            Button b;
+
+            Transform parent = deckHolder.transform;
+
+            for (ypos = 0; ypos < sqr - len; ypos++)
+            {
+                g = Instantiate(exampleButton);
+                g.transform.parent = parent;
+                b = g.GetComponent<Button>();
+                int v = len + ypos; // must be in separate variable because of lambda expression!
+                b.onClick.AddListener(delegate { this.FieldAction(v); });
+                buttons[v] = g;
+            }
+        }
+        else
+        {
+            for (ypos = sqr; ypos < len; ypos++)
+            {
+                buttons[ypos].SetActive(false);
+            }
+        }
+        float p = 1f / size;
+        RectTransform rt;
+        GameObject gx;
+        ChallengeField cf;
+        bool impassable;
+        RawImage img;
+        var chfields = observingPoint.GetChallengesArrayRef();
+        for (ypos = 0; ypos < size; ypos++)
+        {
+            for (int xpos = 0; xpos < size; xpos++)
+            {
+                gx = buttons[ypos * size + xpos];
+                rt = gx.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(xpos * p, ypos * p);
+                rt.anchorMax = new Vector2((xpos + 1) * p, (ypos + 1) * p);
+                rt.offsetMax = Vector2.zero;
+                rt.offsetMin = Vector2.zero;
+
+                cf = chfields[xpos, ypos];
+                impassable = cf.IsImpassable();
+                if (impassable)
+                {
+                    gx.GetComponent<Image>().color = Color.gray;
+                    gx.GetComponent<Button>().interactable = false;
+                }
+                else
+                {
+                    gx.GetComponent<Image>().color = disabledFieldColor;
+                    gx.GetComponent<Button>().interactable = true;
+                }
+                //#change button icon
+                img = gx.transform.GetChild(0).GetComponent<RawImage>();
+                if (cf.isPassed || impassable)
+                {
+                    img.enabled = false;
+                }
+                else
+                {
+                    if (cf.isHidden)
                     {
-                        gx.GetComponent<Image>().color = Color.gray;
-                        gx.GetComponent<Button>().interactable = false;
+                        img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
+                        img.color = unreachableIconColor;
+                        img.enabled = true;
                     }
                     else
                     {
-                        gx.GetComponent<Image>().color = disabledFieldColor;
-                        gx.GetComponent<Button>().interactable = true;
-                    }
-                    //#redraw button
-                    img = gx.transform.GetChild(0).GetComponent<RawImage>();
-                    if (cf.isPassed || impassable)
-                    {
-                        img.enabled = false;
-                    }
-                    else
-                    {
-                        if (cf.isHidden)
+                        if (cf.challengeType != ChallengeType.NoChallenge)
                         {
-                            img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
-                            img.color = unreachableIconColor;
+                            img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
+                            img.color = reachableIconColor;
                             img.enabled = true;
                         }
                         else
                         {
-                            if (cf.challengeType != ChallengeType.NoChallenge)
-                            {
-                                img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
-                                img.color = reachableIconColor;
-                                img.enabled = true;
-                            }
-                            else
-                            {
-                                img.enabled = false;
-                            }
+                            img.enabled = false;
                         }
-                        
                     }
-                    //
-                    gx.SetActive(true);
+
                 }
+                //
+                gx.SetActive(true);
             }
+        }
 
-            fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * p;
-            crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fieldSize);
-            crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, fieldSize);
-            var cpos = observingExpedition.GetPlanPos();
-            int x = cpos.x, y = cpos.y;
-            crewMarker.localPosition = new Vector3((x + 0.5f - size / 2f) * fieldSize, (y + 0.5f - size / 2f) * fieldSize, 0f);
-            int cindex = y * size + x;
-            bool up = y + 1 < size, down = y - 1 >= 0, left = x - 1 >= 0, right = x + 1 < size;
+        fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * p;
+        crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fieldSize);
+        crewMarker.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, fieldSize);
+        var cpos = observingExpedition.GetPlanPos();
+        int x = cpos.x, y = cpos.y;
+        crewMarker.localPosition = new Vector3((x + 0.5f - size / 2f) * fieldSize, (y + 0.5f - size / 2f) * fieldSize, 0f);
+        int cindex = y * size + x;
+        bool up = y + 1 < size, down = y - 1 >= 0, left = x - 1 >= 0, right = x + 1 < size;
 
-            if (left)
+        if (left)
+        {
+            cf = chfields[x - 1, y];
+            if (!cf.IsImpassable())
             {
-                cf = chfields[x - 1, y];
-                if ( !cf.IsImpassable() )
-                {                    
-                    buttons[cindex-1].GetComponent<Image>().color = activeFieldColor;
-                    if (cf.isHidden)
-                    {
-                        cf.ChangeHiddenStatus(false);
-                        RedrawButtonIcon(cindex - 1);
-                    }
-                }
-                if (up)
+                buttons[cindex - 1].GetComponent<Image>().color = activeFieldColor;
+                if (cf.isHidden)
                 {
-                    cf = chfields[x - 1, y + 1];
-                    if (!cf.IsImpassable())
-                    {
-                        buttons[cindex + size - 1].GetComponent<Image>().color = activeFieldColor;
-                        if (cf.isHidden)
-                        {
-                            cf.ChangeHiddenStatus(false);
-                            RedrawButtonIcon(cindex + size - 1);
-                        }
-                    }
-                }
-                if (down)
-                {
-                    cf = chfields[x - 1, y - 1];
-                    if (!cf.IsImpassable())
-                    {
-                        buttons[cindex - size - 1].GetComponent<Image>().color = activeFieldColor;
-                        if (cf.isHidden)
-                        {
-                            cf.ChangeHiddenStatus(false);
-                            RedrawButtonIcon(cindex - size - 1);
-                        }
-                    }
+                    cf.ChangeHiddenStatus(false);
+                    RedrawButtonIcon(cindex - 1);
                 }
             }
             if (up)
             {
-                cf = chfields[x, y + 1];
+                cf = chfields[x - 1, y + 1];
                 if (!cf.IsImpassable())
                 {
-                    buttons[cindex + size].GetComponent<Image>().color = activeFieldColor;
+                    buttons[cindex + size - 1].GetComponent<Image>().color = activeFieldColor;
                     if (cf.isHidden)
                     {
                         cf.ChangeHiddenStatus(false);
-                        RedrawButtonIcon(cindex + size);
+                        RedrawButtonIcon(cindex + size - 1);
                     }
                 }
             }
             if (down)
             {
-                cf = chfields[x, y - 1];
+                cf = chfields[x - 1, y - 1];
                 if (!cf.IsImpassable())
                 {
-                    buttons[cindex - size].GetComponent<Image>().color = activeFieldColor;
+                    buttons[cindex - size - 1].GetComponent<Image>().color = activeFieldColor;
                     if (cf.isHidden)
                     {
                         cf.ChangeHiddenStatus(false);
-                        RedrawButtonIcon(cindex - size);
+                        RedrawButtonIcon(cindex - size - 1);
                     }
                 }
             }
-            if (right)
-            {
-                cf = chfields[x + 1, y];
-                if (!cf.IsImpassable())
-                {
-                    buttons[cindex + 1].GetComponent<Image>().color = activeFieldColor;
-                    if (cf.isHidden)
-                    {
-                        cf.ChangeHiddenStatus(false);
-                        RedrawButtonIcon(cindex + 1);
-                    }
-                }
-                if (up)
-                {
-                    cf = chfields[x + 1, y + 1];
-                    if (!cf.IsImpassable())
-                    {
-                        buttons[cindex + size + 1].GetComponent<Image>().color = activeFieldColor;
-                        if (cf.isHidden)
-                        {
-                            cf.ChangeHiddenStatus(false);
-                            RedrawButtonIcon(cindex + size + 1);
-                        }
-                    }
-                }
-                if (down)
-                {
-                    cf = chfields[x + 1, y - 1];
-                    if (!cf.IsImpassable())
-                    {
-                        buttons[cindex - size + 1].GetComponent<Image>().color = activeFieldColor;
-                        if (cf.isHidden)
-                        {
-                            cf.ChangeHiddenStatus(false);
-                            RedrawButtonIcon(cindex - size + 1);
-                        }
-                    }
-                }
-            }
-            cf = chfields[x, y];
-            buttons[cindex].GetComponent<Image>().color = activeFieldColor;
-            cf.ChangeHiddenStatus(false);
-            cf.MarkAsPassed();
-            RedrawButtonIcon(cindex);
         }
+        if (up)
+        {
+            cf = chfields[x, y + 1];
+            if (!cf.IsImpassable())
+            {
+                buttons[cindex + size].GetComponent<Image>().color = activeFieldColor;
+                if (cf.isHidden)
+                {
+                    cf.ChangeHiddenStatus(false);
+                    RedrawButtonIcon(cindex + size);
+                }
+            }
+        }
+        if (down)
+        {
+            cf = chfields[x, y - 1];
+            if (!cf.IsImpassable())
+            {
+                buttons[cindex - size].GetComponent<Image>().color = activeFieldColor;
+                if (cf.isHidden)
+                {
+                    cf.ChangeHiddenStatus(false);
+                    RedrawButtonIcon(cindex - size);
+                }
+            }
+        }
+        if (right)
+        {
+            cf = chfields[x + 1, y];
+            if (!cf.IsImpassable())
+            {
+                buttons[cindex + 1].GetComponent<Image>().color = activeFieldColor;
+                if (cf.isHidden)
+                {
+                    cf.ChangeHiddenStatus(false);
+                    RedrawButtonIcon(cindex + 1);
+                }
+            }
+            if (up)
+            {
+                cf = chfields[x + 1, y + 1];
+                if (!cf.IsImpassable())
+                {
+                    buttons[cindex + size + 1].GetComponent<Image>().color = activeFieldColor;
+                    if (cf.isHidden)
+                    {
+                        cf.ChangeHiddenStatus(false);
+                        RedrawButtonIcon(cindex + size + 1);
+                    }
+                }
+            }
+            if (down)
+            {
+                cf = chfields[x + 1, y - 1];
+                if (!cf.IsImpassable())
+                {
+                    buttons[cindex - size + 1].GetComponent<Image>().color = activeFieldColor;
+                    if (cf.isHidden)
+                    {
+                        cf.ChangeHiddenStatus(false);
+                        RedrawButtonIcon(cindex - size + 1);
+                    }
+                }
+            }
+        }
+        cf = chfields[x, y];
+        buttons[cindex].GetComponent<Image>().color = activeFieldColor;
+        cf.ChangeHiddenStatus(false);
+        cf.MarkAsPassed();
+        RedrawButtonIcon(cindex);
     }
 
     private void Update()
@@ -344,6 +386,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             pingpongVal = Mathf.PingPong(pingpongVal, 1f);
             rollText.transform.localScale = Vector3.one * (1f + pingpongVal * 0.5f);
         }
+        if (needInfoRefreshing) RefreshInfo();
     }
 
     private void RefreshInfo()
@@ -351,18 +394,44 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         if (observingExpedition == null | observingExpedition.stage == Expedition.ExpeditionStage.Dismissed)
         {
             observingExpedition = null;
-            expeditionStatusInfo.text = string.Empty;
+
             gameObject.SetActive(false);
         }
        else
         {
-            expeditionStatusInfo.text = '"' + crew.name + "\"\n" +
-                //Localization.GetWord(LocalizedWord.Step) + ' ' + observingExpedition.currentStep.ToString() + '/' +
-                //observingExpedition.mission.stepsCount.ToString() + '\n' +
-                Localization.GetWord(LocalizedWord.Stamina) + ": " + ((int)(crew.stamina * 100)).ToString() + "%\n\n" +
-                Localization.GetPhrase(LocalizedPhrase.CrystalsCollected) + ": " + observingExpedition.crystalsCollected.ToString() + '\n';
-                //+Localization.GetPhrase(LocalizedPhrase.SuppliesLeft) + ": " + observingExpedition.suppliesCount.ToString();
+            var cpanel = crewPanel;
+            cpanel.gameObject.SetActive(false);
+            var m = membersPanel;           
+            int c = m.childCount;
+            if (observingCrew.membersCount == Crew.MAX_MEMBER_COUNT)
+            {
+                for (int i = 0; i < c; i++)
+                {
+                    m.GetChild(i).gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                if (observingCrew.membersCount == 0) return;
+                int i = 0;
+                for (; i < observingCrew.membersCount; i++)
+                {
+                    m.GetChild(i).gameObject.SetActive(true);
+                }
+                for (; i< c; i++)
+                {
+                    m.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+
+            staminaBar.fillAmount = observingCrew.stamina;
+            staminaPercentage.text = ((int)(observingCrew.stamina * 100f)).ToString() + '%';
+            suppliesLabel.text = observingExpedition.suppliesCount.ToString();
+            crystalsLabel.text = observingExpedition.crystalsCollected.ToString();
+
+            cpanel.gameObject.SetActive(true);
         }
+        needInfoRefreshing = false;
     }   
 
     public void FieldAction(int i)
@@ -375,7 +444,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             if (Mathf.Abs(xdelta) < 2 && Mathf.Abs(ydelta) < 2)
             {
                 selectedField = i;
-                var cf = chfields[xpos,ypos];
+                var cf = observingPoint.GetChallengeField(xpos, ypos);
                 TYPE_SWITCH:
                 bool useChallengePanel = false, useRollSystem = false;                
                 switch (cf.challengeType)
@@ -552,7 +621,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             if (GameMaster.soundEnabled)
             {
                 GameMaster.audiomaster.MakeSoundEffect(SoundEffect.DicesRoll);
-            }
+            }            
         }
     }
     public void Pass()
@@ -561,23 +630,22 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         {
             MoveCrewToField(selectedField);
 
-            var cf = chfields[selectedField % size, selectedField / size];
-            bool refreshInfo = false;
+            var cf = observingPoint.GetChallengeField(selectedField);
             switch (cf.challengeType)
             {
                 case ChallengeType.CrystalFee:
                     observingExpedition.PayFee(cf.difficultyClass);
-                    refreshInfo = true;
+                    needInfoRefreshing = true;
                     break;
                 case ChallengeType.Treasure:
                     observingExpedition.AddCrystals(cf.difficultyClass);
-                    refreshInfo = true;
+                    needInfoRefreshing = true;
                     break;
                 default:
                     if (!cf.isPassed)
                     {
                         observingPoint.OneStepReward(observingExpedition);
-                        refreshInfo = true;
+                        needInfoRefreshing = true;
                     }
                     break;
             }
@@ -587,8 +655,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
             }
             cf.MarkAsPassed();
-            RedrawButtonIcon(selectedField);
-            if (refreshInfo) RefreshInfo();            
+            RedrawButtonIcon(selectedField);        
         }
         else passButton.SetActive(false);
         challengePanel.SetActive(false);
@@ -601,41 +668,40 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             return;
         }
         else
-        {
-            crew.MakeStep(STAMINA_PER_STEP * observingPoint.difficulty);
+        {            
 
-            var cf = chfields[selectedField % size, selectedField / size];
+            var cf = observingPoint.GetChallengeField(selectedField);
             float result = 0f;
             switch (cf.challengeType)
             {
                 case ChallengeType.PersistenceTest:
                     {
-                        result = crew.PersistenceRoll();
+                        result = observingCrew.PersistenceRoll();
                         break;
                     }
                 case ChallengeType.SurvivalSkillsTest:
                     {
-                        result = crew.SurvivalSkillsRoll();
+                        result = observingCrew.SurvivalSkillsRoll();
                         break;
                     }
                 case ChallengeType.PerceptionTest:
                     {
-                        result = crew.PerceptionRoll();
+                        result = observingCrew.PerceptionRoll();
                         break;
                     }
                 case ChallengeType.SecretKnowledgeTest:
                     {
-                        result = crew.SecretKnowledgeRoll();
+                        result = observingCrew.SecretKnowledgeRoll();
                         break;
                     }
                 case ChallengeType.IntelligenceTest:
                     {
-                        result = crew.IntelligenceRoll();
+                        result = observingCrew.IntelligenceRoll();
                         break;
                     }
                 case ChallengeType.TechSkillsTest:
                     {
-                        result = crew.TechSkillsRoll();
+                        result = observingCrew.TechSkillsRoll();
                         break;
                     }
             }
@@ -644,8 +710,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             {
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.SuccessfulRoll);
                 cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
-                crew.RaiseAdaptability(0.5f);
-                crew.AddExperience(5f);
+                observingCrew.RaiseAdaptability(0.5f);
+                observingCrew.AddExperience(5f);
                 passText.text = Localization.GetWord(LocalizedWord.Pass);
                 canPassThrough = true;
 
@@ -655,7 +721,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             else
             {
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.RollFail);
-                crew.RaiseAdaptability(0.25f);
+                observingCrew.RaiseAdaptability(0.25f);
                 passText.text = Localization.GetWord(LocalizedWord.Return);
                 canPassThrough = false;
 
@@ -663,51 +729,19 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 innerRollRing.fillAmount = 1f;
                 rollText.text = ((int)result).ToString();
                 rollButton.SetActive(true);
-            }            
+            }
+
+            observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty * cf.difficultyClass / result * 4f);
             passButton.SetActive(true);
-            RefreshInfo();
+            needInfoRefreshing = true;
         }
     }
-
-    private void RedrawButtonIcon(int index)
-    {
-        //#redraw button
-        var img = buttons[index].transform.GetChild(0).GetComponent<RawImage>();
-        var cf = chfields[index % size, index / size];
-        if (cf.isPassed || cf.IsImpassable())
-        {
-            img.enabled = false; return;
-        }
-        else
-        {
-            if (cf.isHidden)
-            {
-                img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
-                img.color = unreachableIconColor;
-                img.enabled = true;
-            }
-            else
-            {
-                if (cf.challengeType != ChallengeType.NoChallenge)
-                {
-                    img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
-                    img.color = reachableIconColor;
-                    img.enabled = true;
-                }
-                else
-                {
-                    img.enabled = false;
-                }
-            }            
-        }
-        //
-    }    
-
     private void MoveCrewToField(int newIndex)
     {
         fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * 1f / size;
         int iy = newIndex / size, ix = newIndex % size;
         var cpos = observingExpedition.GetPlanPos();
+        var chfields = observingPoint.GetChallengesArrayRef();
         if (ix != cpos.x || iy != cpos.y)
         {
             int x = cpos.x, y = cpos.y;
@@ -718,7 +752,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 int cindex = y * size + x;
                 if (xdelta == 0)
                 {
-                    bool right = x + 1 < size, left = x- 1 >= 0;
+                    bool right = x + 1 < size, left = x - 1 >= 0;
                     if (ydelta > 0) // (0,1)
                     {
                         if (y - 1 >= 0)
@@ -735,7 +769,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         }
                         if (y + 2 < size)
                         {
-                            activateList.Add(new Vector2Int(x , y + 2));
+                            activateList.Add(new Vector2Int(x, y + 2));
                             if (left)
                             {
                                 activateList.Add(new Vector2Int(x - 1, y + 2));
@@ -909,7 +943,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                                     }
                                 }
                                 //
-                                bool left2 =x - 2 >= 0;
+                                bool left2 = x - 2 >= 0;
                                 if (up2)
                                 {
                                     activateList.Add(new Vector2Int(x, y + 2));
@@ -1019,7 +1053,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                                     activateList.Add(new Vector2Int(x, y - 2));
                                     if (left)
                                     {
-                                        activateList.Add(new Vector2Int(x -1, y - 2));
+                                        activateList.Add(new Vector2Int(x - 1, y - 2));
                                     }
                                 }
                             }
@@ -1028,7 +1062,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 }
                 ChallengeField cf;
                 if (deactivateList.Count > 0)
-                {                    
+                {
                     foreach (var p in deactivateList)
                     {
                         cf = chfields[p.x, p.y];
@@ -1054,8 +1088,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         }
                     }
                 }
-                observingExpedition.SetPlanPos( new Vector2Int(ix, iy));
-                print(ix.ToString() + ' ' + iy.ToString() + " exploringMinigameUI:1058");
+                observingExpedition.SetPlanPos(new Vector2Int(ix, iy));
+                //print(ix.ToString() + ' ' + iy.ToString() + " exploringMinigameUI:1058");
                 moveMarker = true;
                 cf = chfields[ix, iy];
                 cf.MarkAsPassed();
@@ -1096,13 +1130,51 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         }
                     }
                 }
+
+                observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty);
+                observingExpedition.SpendSupplyCrate();
+                needInfoRefreshing = true;
             }
         }
     }
 
+    private void RedrawButtonIcon(int index)
+    {
+        //#change button icon
+        var img = buttons[index].transform.GetChild(0).GetComponent<RawImage>();
+        var cf = observingPoint.GetChallengeField(index);
+        if (cf.isPassed || cf.IsImpassable())
+        {
+            img.enabled = false; return;
+        }
+        else
+        {
+            if (cf.isHidden)
+            {
+                img.uvRect = UIController.GetIconUVRect(Icons.Unknown);
+                img.color = unreachableIconColor;
+                img.enabled = true;
+            }
+            else
+            {
+                if (cf.challengeType != ChallengeType.NoChallenge)
+                {
+                    img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
+                    img.color = reachableIconColor;
+                    img.enabled = true;
+                }
+                else
+                {
+                    img.enabled = false;
+                }
+            }            
+        }
+        //
+    }    
+        
     public void OpenCrewPanel()
     {
-        if (crew != null)
+        if (observingCrew != null)
         {
             var c = Crew.crewObserver;
             if (c != null && c.isActiveAndEnabled)
@@ -1112,7 +1184,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             else
             {
                 var r = deckHolder.GetComponent<RectTransform>().rect;
-                crew.ShowOnGUI(new Rect(deckHolder.transform.position.x, deckHolder.transform.position.y, r.width, r.height), SpriteAlignment.Center, true);
+                observingCrew.ShowOnGUI(new Rect(deckHolder.transform.position.x, deckHolder.transform.position.y, r.width, r.height), SpriteAlignment.Center, true);
                 deckHolder.SetActive(false);
             }
         }
@@ -1120,6 +1192,27 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     public void EnableDeckHolder()
     {
         deckHolder.SetActive(true);
+    }
+
+    public void StopMissionButton()
+    {
+        if (observingExpedition != null)
+        {
+            observingExpedition.EndMission();
+            observingExpedition = null;
+            observingPoint = null;
+            observingCrew = null;
+        }
+        gameObject.SetActive(false);
+    }
+
+    private void OnEnable()
+    {
+        minigameActive = true;
+    }
+    private void OnDisable()
+    {
+        minigameActive = false;
     }
 }
 

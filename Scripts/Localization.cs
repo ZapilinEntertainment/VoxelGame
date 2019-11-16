@@ -15,7 +15,7 @@ public enum LocalizedPhrase : ushort
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
     ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow
+    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2492,6 +2492,7 @@ public static class Localization
                         case LocalizedPhrase.ShuttleReady: return "Челнок готов";
                         case LocalizedPhrase.StopDig: return "Остановить добычу";
                         case LocalizedPhrase.StopGather: return "Остановить сбор";
+                        case LocalizedPhrase.StopMission: return "Прервать миссию";
                         case LocalizedPhrase.SuppliesLeft: return "Припасов осталось";
                         case LocalizedPhrase.UnoccupiedTransmitters: return "Свободно передатчиков: ";
                         case LocalizedPhrase.YouAreHere: return "Вы находитесь здесь";
@@ -2581,6 +2582,7 @@ public static class Localization
                         case LocalizedPhrase.ShuttleReady: return "Shuttle ready";
                         case LocalizedPhrase.StopDig: return "Stop digging";
                         case LocalizedPhrase.StopGather: return "Stop gathering";
+                        case LocalizedPhrase.StopMission: return "Stop mission";
                         case LocalizedPhrase.SuppliesLeft: return "Supplies left";
                         case LocalizedPhrase.UnoccupiedTransmitters: return "Unoccupied transmitters: ";
                         case LocalizedPhrase.YouAreHere: return "You are here";

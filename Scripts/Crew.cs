@@ -306,11 +306,12 @@ public sealed class Crew : MonoBehaviour {
         if (adaptability < 0f) adaptability = 0f;
         if (loyalty < GameMaster.realMaster.colonyController.happiness_coefficient) loyalty += NEUROPARAMETER_STEP;
     }
-    public void MakeStep(float f)
+    public void StaminaDrain(float f)
     {
         float l = level;
         l /= MAX_LEVEL;
         stamina -= f * (1.2f - l);
+        if (stamina < 0f) stamina = 0f;
     }
 
     public void SetChanceMod(bool? x)

@@ -43,6 +43,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     }
     public void SelectPoint(MapPoint mp)
     {
+        if (ExploringMinigameUI.minigameActive) return;
         if (chosenPoint != null)
         {
             if (mp != chosenPoint)

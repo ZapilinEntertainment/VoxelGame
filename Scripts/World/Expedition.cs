@@ -93,7 +93,7 @@ public sealed class Expedition
     }
 
     /// ===============================
-    public Expedition(PointOfInterest i_destination, Crew c, int i_shuttleID, QuantumTransmitter transmitter)
+    public Expedition(PointOfInterest i_destination, Crew c, int i_shuttleID, QuantumTransmitter transmitter, float i_supplies, float i_crystals)
     {
         ID = nextID++;
         stage = ExpeditionStage.WayIn;
@@ -112,10 +112,14 @@ public sealed class Expedition
             transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
             hasConnection = false;
         }
+        suppliesCount = (byte)i_supplies;
+        crystalsCollected = (ushort)i_crystals;
 
+        //#creating map marker
         GlobalMap gmap = GameMaster.realMaster.globalMap;
         mapMarker = new FlyingExpedition(this, gmap.cityPoint, destination, FLY_SPEED);
-        gmap.AddPoint(mapMarker, true);        
+        gmap.AddPoint(mapMarker, true);
+        //
 
         expeditionsList.Add(this);
         listChangesMarker++;
@@ -144,13 +148,25 @@ public sealed class Expedition
     }
     public void EndMission()
     {
-        if (stage == ExpeditionStage.WayIn)
+        if (stage == ExpeditionStage.WayIn || stage == ExpeditionStage.OnMission)
         {
             stage = ExpeditionStage.WayOut;
-            mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.cityPoint);
+            if (mapMarker == null) {
+                //#creating map marker
+                GlobalMap gmap = GameMaster.realMaster.globalMap;
+                mapMarker = new FlyingExpedition(this, destination , gmap.cityPoint, FLY_SPEED);
+                gmap.AddPoint(mapMarker, true);
+                //
+            }
+            else mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.cityPoint);
             changesMarkerValue++;
         }
     }
+    public void DropMapMarker()
+    {
+        mapMarker = null;
+    }
+    
 
     public Vector2Int GetPlanPos()
     {
@@ -222,6 +238,10 @@ public sealed class Expedition
         if (x <= MAX_CRYSTALS_COLLECTED) crystalsCollected += (ushort)cost;
         else crystalsCollected = MAX_CRYSTALS_COLLECTED;
         changesMarkerValue++;
+    }
+    public void SpendSupplyCrate()
+    {
+        if (suppliesCount > 0) suppliesCount --;
     }
 
     public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool onMainCanvas)

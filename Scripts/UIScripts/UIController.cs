@@ -7,7 +7,7 @@ public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
 public enum Icons : byte
 {
     Unknown,GreenArrow, GuidingStar, OutOfPowerButton, PowerPlus, PowerMinus, PowerButton, Citizen, RedArrow, CrewBadIcon,
-    CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, TaskFrame, TaskCompleted,
+    CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, EnergyCrystal, TaskFrame, TaskCompleted,
     DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed, TurnOn, CrewMarker, AscensionIcon,
     PersistenceIcon, SurvivalSkillsIcon, PerceptionIcon, SecretKnowledgeIcon, TechSkillsIcon, IntelligenceIcon, TreasureIcon,
     QuestMarkerIcon, StabilityIcon, SpaceAffectionIcon, LifepowerAffectionIcon
@@ -1633,6 +1633,7 @@ sealed public class UIController : MonoBehaviour
             case Icons.ShuttleBadIcon: return new Rect(4 * p, 5 * p, p, p);
             case Icons.ShuttleNormalIcon: return new Rect(5 * p, 5 * p, p, p);
             case Icons.ShuttleGoodIcon: return new Rect(6 * p, 5 * p, p, p);
+            case Icons.EnergyCrystal: return new Rect(p, 4f* p, p,p);
             case Icons.TaskFrame: return new Rect(3 * p, 4 * p, p, p);
             case Icons.TaskCompleted: return new Rect(4 * p, 4 * p, p, p);
             case Icons.DisabledBuilding: return new Rect(p, 3 * p, p, p);

@@ -307,7 +307,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                         var t = QuantumTransmitter.GetFreeTransmitter();
                         if (t != null)
                         {
-                            var e = new Expedition(selectedDestination, selectedCrew, shID, t);
+                            var e = new Expedition(selectedDestination, selectedCrew, shID, t,colony.storage.GetResources(ResourceType.Supplies, suppliesSlider.value) , colony.GetEnergyCrystals(crystalsSlider.value));
                             if (workOnMainCanvas)
                             {
                                 showingExpedition = e;

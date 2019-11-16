@@ -68,7 +68,7 @@ public class Quest
     {
         if (obj == null || GetType() != obj.GetType())   return false;
         var info = (Quest)obj;
-        return type == info.type &&
+        return type == info.type &
                subIndex == info.subIndex;
     }
 
