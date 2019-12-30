@@ -267,6 +267,7 @@ public class Structure : MonoBehaviour
             case REACTOR_BLOCK_5_ID: return new Rect(3 * p, 3 * p, p, p);
             case FOUNDATION_BLOCK_5_ID: return new Rect(4 * p, 3 * p, p, p);
             case CONNECT_TOWER_6_ID: return new Rect(5 * p, 3 * p, p, p);
+            case SCIENCE_LAB_ID: return new Rect(6f * p, 3f * p, p, p);
             case HOTEL_BLOCK_6_ID: return new Rect(7 * p, 3 * p, p, p);
             case HOUSING_MAST_6_ID: return new Rect(0, 2 * p, p, p);
             case DOCK_ADDON_1_ID:

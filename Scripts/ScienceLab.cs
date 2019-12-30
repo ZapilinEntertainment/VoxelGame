@@ -38,12 +38,6 @@ public sealed class ScienceLab : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
-        var slabs = Component.FindObjectsOfType<ScienceLab>();
-        if (slabs.Length == 1 && slabs[0] == this)
-        {
-            var rm = GameMaster.realMaster;
-            if (rm.researchStarActivated) rm.researchStar.DestroyVisualizer();
-        }
         Destroy(gameObject);
     }
 }

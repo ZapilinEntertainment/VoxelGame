@@ -67,23 +67,6 @@ public sealed class GameMaster : MonoBehaviour
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
 
-    public ResearchStar researchStar {
-        get {
-            if (_researchStar == null)
-            {
-                _researchStar = new ResearchStar();
-                researchStarActivated = true;
-            }
-            return _researchStar;
-        }
-        set
-        {
-            _researchStar = value;
-        }
-    }
-    private ResearchStar _researchStar;
-    public bool researchStarActivated = false;
-
     public delegate void StructureUpdateHandler();
     public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent, blockersRestoreEvent;
     public GameStart startGameWith = GameStart.Zeppelin;
@@ -432,7 +415,6 @@ public sealed class GameMaster : MonoBehaviour
         if (loading) return;
 
         //testzone
-        // if (Input.GetKeyDown("m") & colonyController != null) colonyController.AddEnergyCrystals(1000);
         //if (false)
         {
             //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
@@ -443,6 +425,11 @@ public sealed class GameMaster : MonoBehaviour
         if (Input.GetKeyDown("m"))
         {
             if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
+        }
+        if (Input.GetKeyDown("s"))
+        {
+            Knowledge.GetCurrent().OpenResearchTab();
+            UIController.current.gameObject.SetActive(false);
         }
         //eo testzone       
         if (gameMode != GameMode.Editor)
@@ -806,7 +793,6 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.Prepare();
             }
             stabilityModifiers = null;
-            if (researchStarActivated) researchStar.Reset();
             //UI.current.Reset();
 
 
@@ -1024,32 +1010,39 @@ public sealed class GameMaster : MonoBehaviour
         Vector3Int ecpos = Vector3Int.zero;
         if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
         {
+            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
+            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+        }
+
+        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        {
             Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
             (s as WorkBuilding).AddWorkers(50);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-        {
-            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-        }
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
-        {
-            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
-        }
+       
         if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
 
-
         if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
         {
-            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
+            Structure s = Structure.GetStructureByID(Structure.SCIENCE_LAB_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
+
         if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);

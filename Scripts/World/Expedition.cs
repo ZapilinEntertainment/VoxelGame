@@ -300,7 +300,18 @@ public sealed class Expedition
         //awaiting
         var data = new List<byte>();
         data.AddRange(System.BitConverter.GetBytes(ID)); // read before load
-        
+
+        data.Add(hasConnection ? (byte)1 : (byte)0); //0
+        data.AddRange(System.BitConverter.GetBytes(crystalsCollected)); // 1 - 2
+        data.Add(suppliesCount);
+        data.Add((byte)stage);
+        data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : -1));
+        data.AddRange(System.BitConverter.GetBytes(crew.ID));
+        data.AddRange(System.BitConverter.GetBytes(artifact.ID));
+        data.AddRange(System.BitConverter.GetBytes(shuttleID));
+        data.AddRange(System.BitConverter.GetBytes(transmissionID));
+        data.AddRange(System.BitConverter.GetBytes(planPos.x));
+        data.AddRange(System.BitConverter.GetBytes(planPos.y));
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)

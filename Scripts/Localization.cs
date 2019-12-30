@@ -15,7 +15,7 @@ public enum LocalizedPhrase : ushort
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
     ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission
+    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2480,6 +2480,7 @@ public static class Localization
                         case LocalizedPhrase.NoExpeditions: return "Нет экспедиций";
                         case LocalizedPhrase.NoShuttles: return "Нет челноков";
                         case LocalizedPhrase.NoSuitableArtifacts: return "Нет подходящих артефактов";
+                        case LocalizedPhrase.NoSuitableParts: return "Нет нужных деталек"; // исследования
                         case LocalizedPhrase.NoSuitableShuttles: return "Нет подходящего челнока";
                         case LocalizedPhrase.NotEnoughEnergySupply: return "Недостаточно мощная энергосеть";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
@@ -2570,6 +2571,7 @@ public static class Localization
                         case LocalizedPhrase.NoExpeditions: return "No expeditions at this moment";
                         case LocalizedPhrase.NoShuttles: return "No shuttles available";
                         case LocalizedPhrase.NoSuitableArtifacts: return "No suitable artifacts";
+                        case LocalizedPhrase.NoSuitableParts: return "No suitable parts";
                         case LocalizedPhrase.NoSuitableShuttles: return "No suitable shuttles";
                         case LocalizedPhrase.NotEnoughEnergySupply: return "Energy supply is low";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
