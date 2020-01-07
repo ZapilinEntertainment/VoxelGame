@@ -12,7 +12,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     private GameObject[] buttons;
     private readonly Rect plainSide = new Rect(0f, 0f, 0.5f, 0.5f), pinSide = new Rect(0f, 0.5f, 0.5f, 0.5f), cutSide = new Rect(0.5f, 0.5f, 0.5f, 0.5f);
     private int lastChMarkerValue;
-    private bool unsufficientMarkering = false;
+    private bool unsufficientMarkering = false, prepared = false;
 
     private Transform ascensionPanel { get { return infoPanel.GetChild(1); } }
     private Transform redpartsPanel { get { return infoPanel.GetChild(2); } }
@@ -90,6 +90,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
 
             Redraw();
         }
+        prepared = true;
     }
 
     public void Redraw()
@@ -118,7 +119,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             }
         }
 
-        var parts = knowledge.coloredPartsCount;
+        var parts = knowledge.puzzlePartsCount;
         ascensionPanel.GetChild(1).GetComponent<Text>().text = ((int)(knowledge.completeness * 100f)).ToString() + '%';
         redpartsPanel.GetChild(1).GetComponent<Text>().text = parts[Knowledge.REDCOLOR_CODE].ToString();
         greenpartsPanel.GetChild(1).GetComponent<Text>().text = parts[Knowledge.GREENCOLOR_CODE].ToString();
@@ -200,14 +201,14 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             {
                 if (
                     code == Knowledge.BLACKCOLOR_CODE & knowledge.allRoutesUnblocked |
-                    code == Knowledge.WHITECOLOR_CODE & knowledge.coloredPartsCount[Knowledge.WHITECOLOR_CODE] > 0
+                    code == Knowledge.WHITECOLOR_CODE & knowledge.puzzlePartsCount[Knowledge.WHITECOLOR_CODE] > 0
                     )
                     ShowUnsufficientParts(code);
             }
         }
     }
 
-    public void ShowUnsufficientParts(byte colorcode)
+    private void ShowUnsufficientParts(byte colorcode)
     {
         switch (colorcode)
         {
@@ -236,5 +237,28 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         unsufficientLabel.color = unsufficientColor;
         unsufficientLabel.gameObject.SetActive(true);
         unsufficientMarkering = true;
+    }
+
+    private void OnEnable()
+    {
+        if (knowledge == null)
+        {            
+            gameObject.SetActive(false);            
+            return;
+        }
+        else
+        {
+            UIController.SetActivity(false);
+            if (!prepared) Prepare(knowledge);
+            else
+            {
+                if (lastChMarkerValue != knowledge.changesMarker) Redraw();
+            }
+        }
+    }
+    private void OnDisable()
+    {
+        GameMaster.realMaster.environmentMaster.EnableDecorations();
+        UIController.SetActivity(true);
     }
 }

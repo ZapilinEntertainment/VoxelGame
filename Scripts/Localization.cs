@@ -2817,6 +2817,15 @@ public static class Localization
                     case  ChallengeType.QuestTest: return "Сюжетное испытание!";
                     case  ChallengeType.CrystalFee: return "Заплати, чтобы пройти!";
                     case  ChallengeType.AscensionTest: return "Проверка на уровень Возвышения";
+                    case ChallengeType.PuzzlePart: return "Кусочек паззла";
+                    case ChallengeType.FoundationPts: return "Еще шаг на пути к Основанию";
+                    case ChallengeType.CloudWhalePts: return "Еще шаг по пути Облачного Кита";
+                    case ChallengeType.EnginePts: return "Еще на шаг ближе к созданию Движителя";
+                    case ChallengeType.PipesPts: return "Еще ближе к технологии Порталов";
+                    case ChallengeType.CrystalPts: return "Еще шаг к Кристаллизации";
+                    case ChallengeType.MonumentPts: return "Еще один шаг к созднаию Монумента";
+                    case ChallengeType.BlossomPts: return "Еще шаг на пути к Цветению";
+                    case ChallengeType.PollenPts: return "Еще на шаг ближе к Распылению";
                     case  ChallengeType.NoChallenge:
                     default:
                         return "No challenge";
@@ -2838,6 +2847,15 @@ public static class Localization
                         case  ChallengeType.QuestTest: return "Quest test!";
                         case  ChallengeType.CrystalFee: return "Pay to pass!";
                         case  ChallengeType.AscensionTest: return "Ascension level test";
+                        case ChallengeType.PuzzlePart: return "Puzzle part";
+                        case ChallengeType.FoundationPts: return "One step closer to Foundation";
+                        case ChallengeType.CloudWhalePts: return "One more step on Cloud Whale way";
+                        case ChallengeType.EnginePts: return "One step closer to Engine creation";
+                        case ChallengeType.PipesPts: return "One step closer to Portals technology";
+                        case ChallengeType.CrystalPts: return "A bit closer to Crystallisation";
+                        case ChallengeType.MonumentPts: return "One step closer to Monument creation";
+                        case ChallengeType.BlossomPts: return "One more step to Blossom start";
+                        case ChallengeType.PollenPts: return "One more step to Pollen event";
                         case  ChallengeType.NoChallenge:
                         default:
                             return "No challenge";

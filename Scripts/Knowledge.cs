@@ -4,14 +4,17 @@ using UnityEngine;
 
 public sealed class Knowledge
 {
-    public enum ResearchRoute : byte { Foundation = 0, CloudWhale, Flight, Pipes, CrystalEnergy, Monument, Lifepower, Forest }
+    public enum ResearchRoute : byte { Foundation = 0, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen }
+    //dependence: 
+    //uiController icons enum
+    // labels in Localization - get challenge label
 
     private static Knowledge current;
 
     public readonly bool[] puzzlePins;
     public bool allRoutesUnblocked { get; private set; }
     public float[] routePoints { get; private set; }
-    public byte[] coloredPartsCount { get; private set; }
+    public byte[] puzzlePartsCount { get; private set; }
     public byte[] colorCodesArray{get; private set;}
     public float completeness { get; private set; }
     public int changesMarker { get; private set; }
@@ -56,29 +59,12 @@ public sealed class Knowledge
         }
         routePoints = new float[ROUTES_COUNT];
         completeness = 0f;
-        coloredPartsCount = new byte[6];
+        puzzlePartsCount = new byte[6];
         colorCodesArray = new byte[64]; //filed with 0 - whitecolor
         foreach (byte b in blockedCells)
         {
             colorCodesArray[b] = BLACKCOLOR_CODE;
-        }
-        //test
-        float maxval = 128f;
-        routePoints[0] = maxval * Random.value;
-        routePoints[1] = maxval * Random.value;
-        routePoints[2] = maxval * Random.value;
-        routePoints[3] = maxval * Random.value;
-        routePoints[4] = maxval * Random.value;
-        routePoints[5] = maxval * Random.value;
-        routePoints[6] = maxval * Random.value;
-        routePoints[7] = maxval * Random.value;
-        coloredPartsCount[REDCOLOR_CODE] = 10;
-        coloredPartsCount[BLUECOLOR_CODE] = 5;
-        coloredPartsCount[GREENCOLOR_CODE] = 3;
-        coloredPartsCount[CYANCOLOR_CODE] = 1;
-        coloredPartsCount[WHITECOLOR_CODE] = 1;
-        coloredPartsCount[BLACKCOLOR_CODE] = 1;
-        //        
+        }     
     }
 
     public byte GenerateCellColor(byte route, byte step)
@@ -102,7 +88,7 @@ public sealed class Knowledge
                     else varieties = new float[] { 0, 2, 6, 4 };
                     break;
                 }
-            case ResearchRoute.Flight:
+            case ResearchRoute.Engine:
                 {
                     if (step < 3) varieties = new float[] { 0, 0, 1, 0 };
                     else varieties = new float[] { 1, 2, 12, 8 };
@@ -118,7 +104,7 @@ public sealed class Knowledge
                     }
                     break;
                 }
-            case ResearchRoute.CrystalEnergy:
+            case ResearchRoute.Crystal:
                 {
                     if (step == 1) varieties = new float[] { 0, 0, 0, 1 };
                     else
@@ -133,12 +119,12 @@ public sealed class Knowledge
                     else varieties = new float[] { 0, 1, 5, 5 };
                     break;
                 }
-            case ResearchRoute.Lifepower:
+            case ResearchRoute.Blossom:
                 {
                     varieties = new float[] { 1, 20, 5, 10 };
                     break;
                 }
-            case ResearchRoute.Forest:
+            case ResearchRoute.Pollen:
                 {
                     if (step == 1) varieties = new float[] { 0, 10, 0, 1 };
                     else
@@ -164,6 +150,10 @@ public sealed class Knowledge
         return col;
     }
 
+    public void AddPuzzlePart(byte colorcode)
+    {
+        if (colorcode < puzzlePartsCount.Length && puzzlePartsCount[colorcode] < 255) puzzlePartsCount[colorcode]++;  
+    }
     public void AddResearchPoints (ResearchRoute route, float pts)
     {
         byte routeIndex = (byte)route;
@@ -200,9 +190,9 @@ public sealed class Knowledge
     {
         var colorcode = colorCodesArray[i];
         if (colorcode == NOCOLOR_CODE) return true;
-        if (coloredPartsCount[colorcode] > 0)
+        if (puzzlePartsCount[colorcode] > 0)
         {
-            coloredPartsCount[colorcode]--;
+            puzzlePartsCount[colorcode]--;
             colorCodesArray[i] = NOCOLOR_CODE;
             changesMarker++;
             return true;
@@ -212,6 +202,7 @@ public sealed class Knowledge
 
     public void OpenResearchTab()
     {
+        GameMaster.realMaster.environmentMaster.DisableDecorations();
         if (observer == null)
         {
             observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/knowledgeTab")).GetComponent<KnowledgeTabUI>();

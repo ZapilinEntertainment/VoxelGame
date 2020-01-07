@@ -10,7 +10,8 @@ public enum Icons : byte
     CrewNormalIcon, CrewGoodIcon, ShuttleBadIcon, ShuttleNormalIcon, ShuttleGoodIcon, EnergyCrystal, TaskFrame, TaskCompleted,
     DisabledBuilding, QuestAwaitingIcon, QuestBlockedIcon, LogPanelButton, TaskFailed, TurnOn, CrewMarker, AscensionIcon,
     PersistenceIcon, SurvivalSkillsIcon, PerceptionIcon, SecretKnowledgeIcon, TechSkillsIcon, IntelligenceIcon, TreasureIcon,
-    QuestMarkerIcon, StabilityIcon, SpaceAffectionIcon, LifepowerAffectionIcon
+    QuestMarkerIcon, StabilityIcon, SpaceAffectionIcon, LifepowerAffectionIcon, FoundationRoute,CloudWhaleRoute, EngineRoute,
+    PipesRoute,PuzzlePart, CrystalRoute, MonumentRoute, BlossomRoute, PollenRoute
 }
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter, Settlement }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
@@ -1656,6 +1657,15 @@ sealed public class UIController : MonoBehaviour
             case Icons.StabilityIcon: return new Rect(p, p, p, p);
             case Icons.SpaceAffectionIcon: return new Rect(2f * p, p, p, p);
             case Icons.LifepowerAffectionIcon: return new Rect(3f * p, p, p, p);
+            case Icons.FoundationRoute: return new Rect(4f * p, p, p, p);
+            case Icons.CloudWhaleRoute: return new Rect(5f * p, p, p, p);
+            case Icons.EngineRoute: return new Rect(6f * p, p, p, p);
+            case Icons.PipesRoute: return new Rect(7f * p, p, p, p);
+            case Icons.PuzzlePart: return new Rect(p, 0f, p, p);
+            case Icons.CrystalRoute: return new Rect(4f * p, 0f, p, p);
+            case Icons.MonumentRoute: return new Rect(5f * p, 0f, p, p);
+            case Icons.BlossomRoute: return new Rect(6f * p, 0f, p, p);
+            case Icons.PollenRoute: return new Rect(7f * p, 0f, p, p);
             case Icons.Unknown:
             default: return new Rect(0f, 0f, p, p);
         }

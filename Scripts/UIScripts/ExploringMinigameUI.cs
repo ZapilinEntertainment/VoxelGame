@@ -6,9 +6,10 @@ using UnityEngine.UI;
 public enum ChallengeType : byte
 {
     NoChallenge = 0, Impassable = 1, Random = 2, PersistenceTest, SurvivalSkillsTest, PerceptionTest, SecretKnowledgeTest,
-    IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest
+    IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest, PuzzlePart, FoundationPts, CloudWhalePts,
+    EnginePts, PipesPts, CrystalPts, MonumentPts, BlossomPts, PollenPts
 }
-//dependency : DeckField.ChangeChallengeType, Localization.GetChallengeLabel
+//dependency : ChallengeField.GetChallengeIconRect, Localization.GetChallengeLabel
 //ExploringMinigameUI : FieldAction(), Pass()
 
 
@@ -219,7 +220,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         if (cf.challengeType != ChallengeType.NoChallenge)
                         {
                             img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
-                            img.color = reachableIconColor;
+                            if (cf.challengeType != ChallengeType.PuzzlePart) img.color = reachableIconColor;
+                            else img.color = Knowledge.colors[cf.difficultyClass];
                             img.enabled = true;
                         }
                         else
@@ -450,8 +452,21 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 switch (cf.challengeType)
                 {
                     case ChallengeType.NoChallenge:
-                        useChallengePanel = false;
                         MoveCrewToField(selectedField);
+                        break;
+                    case ChallengeType.PuzzlePart:
+                    case ChallengeType.FoundationPts:
+                    case ChallengeType.CloudWhalePts:
+                    case ChallengeType.EnginePts:
+                    case ChallengeType.PipesPts:
+                    case ChallengeType.CrystalPts:
+                    case ChallengeType.MonumentPts:
+                    case ChallengeType.BlossomPts:
+                    case ChallengeType.PollenPts:
+                    case ChallengeType.Treasure:
+                        canPassThrough = true;
+                        Pass();
+                        // + эффекты
                         break;
                     case ChallengeType.Random:
                         int x = Random.Range(0, 10);
@@ -520,15 +535,6 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.TechSkillsTest);
                         useRollSystem = true;
                         break;
-
-                    case ChallengeType.Treasure:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.Treasure);
-                        challengeDifficultyLabel.text = cf.difficultyClass.ToString();
-                        playerResultLabel.enabled = false;
-                        canPassThrough = true;
-                        passText.text = Localization.GetWord(LocalizedWord.Pass);
-                        break;
                     case ChallengeType.QuestTest:
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.QuestTest);
                         useChallengePanel = true;
@@ -571,7 +577,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                             passText.text = Localization.GetWord(LocalizedWord.Return);
                             canPassThrough = false;
                         }
-                        break;
+                        break;                    
                     default:
                         useChallengePanel = false;
                         passButton.SetActive(false);
@@ -640,6 +646,33 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 case ChallengeType.Treasure:
                     observingExpedition.AddCrystals(cf.difficultyClass);
                     needInfoRefreshing = true;
+                    break;
+                case ChallengeType.PuzzlePart:
+                    Knowledge.GetCurrent().AddPuzzlePart(cf.difficultyClass);
+                    break;
+                case ChallengeType.FoundationPts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Foundation, cf.difficultyClass);
+                    break;
+                case ChallengeType.CloudWhalePts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.CloudWhale, cf.difficultyClass);
+                    break;
+                case ChallengeType.EnginePts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Engine, cf.difficultyClass);
+                    break;
+                case ChallengeType.PipesPts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Pipes, cf.difficultyClass);
+                    break;
+                case ChallengeType.CrystalPts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Crystal, cf.difficultyClass);
+                    break;
+                case ChallengeType.MonumentPts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Monument, cf.difficultyClass);
+                    break;
+                case ChallengeType.BlossomPts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Blossom, cf.difficultyClass);
+                    break;
+                case ChallengeType.PollenPts:
+                    Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Pollen, cf.difficultyClass);
                     break;
                 default:
                     if (!cf.isPassed)
@@ -1160,7 +1193,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 if (cf.challengeType != ChallengeType.NoChallenge)
                 {
                     img.uvRect = ChallengeField.GetChallengeIconRect(cf.challengeType);
-                    img.color = reachableIconColor;
+                    if (cf.challengeType != ChallengeType.PuzzlePart) img.color = reachableIconColor;
+                    else img.color = Knowledge.colors[cf.difficultyClass];
                     img.enabled = true;
                 }
                 else

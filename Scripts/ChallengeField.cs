@@ -61,6 +61,15 @@
             case ChallengeType.Impassable:
             case ChallengeType.NoChallenge:
                 return UnityEngine.Rect.zero;
+            case ChallengeType.PuzzlePart: return UIController.GetIconUVRect(Icons.PuzzlePart); // colouring?
+            case ChallengeType.FoundationPts: return UIController.GetIconUVRect(Icons.FoundationRoute);
+            case ChallengeType.CloudWhalePts: return UIController.GetIconUVRect(Icons.CloudWhaleRoute);
+            case ChallengeType.EnginePts: return UIController.GetIconUVRect(Icons.EngineRoute);
+            case ChallengeType.PipesPts: return UIController.GetIconUVRect(Icons.PipesRoute);
+            case ChallengeType.CrystalPts: return UIController.GetIconUVRect(Icons.CrystalRoute);
+            case ChallengeType.MonumentPts: return UIController.GetIconUVRect(Icons.MonumentRoute);
+            case ChallengeType.BlossomPts: return UIController.GetIconUVRect(Icons.BlossomRoute);
+            case ChallengeType.PollenPts: return UIController.GetIconUVRect(Icons.PollenRoute);
             case ChallengeType.Random:
             default:
                 return UIController.GetIconUVRect(Icons.Unknown);

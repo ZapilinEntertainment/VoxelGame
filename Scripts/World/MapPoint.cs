@@ -9,11 +9,10 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedi
 //  Localization.GetMapPointLabel()
 // константы максимального количества подвидов
 //  функция загрузки LoadPoints()
-// DeterminePath
+// DeterminePath + overrides
 // GlobalMap.CreateNewSector
 // Environment.GetSuitablePointType
-// PointOfInterest.TakeTreasure
-// PointOfInterest.GetArtifact
+// PointOfInterest.TakeTreasure, GetArtifact, GenerateChallengesArray
 // ScienceLab.PointExplored
 
 public class MapPoint
