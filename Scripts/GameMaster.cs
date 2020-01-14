@@ -426,7 +426,7 @@ public sealed class GameMaster : MonoBehaviour
         {
             if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
         }
-        if (Input.GetKeyDown("s"))
+        if (Input.GetKeyDown("p"))
         {
             Knowledge.GetCurrent().OpenResearchTab();
             UIController.current.gameObject.SetActive(false);
@@ -904,8 +904,6 @@ public sealed class GameMaster : MonoBehaviour
                 errorReason = "settlements load failure";
                 goto FAIL;
             }
-
-            fs.Read(data, 0, 4);
 
             colonyController.Load(fs); // < --- COLONY CONTROLLER
             if (loadingFailed)

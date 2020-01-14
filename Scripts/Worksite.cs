@@ -98,35 +98,7 @@ public abstract class Worksite {
         worksitesList.Remove(this);
     }
 
-    #region save-load system
-    public static void StaticSave(System.IO.FileStream fs)
-    {
-        int count = worksitesList.Count;
-        List<byte> saveList = new List<byte>();
-        if (count > 0)
-        {
-            count = 0;            
-            while (count < worksitesList.Count)
-            {
-                if (worksitesList[count] == null)
-                {
-                    worksitesList.RemoveAt(count);
-                    continue;
-                }
-                else
-                {
-                    saveList.AddRange(worksitesList[count].Save());
-                    count++;
-                }
-            }
-        }
-        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-        if (count > 0)
-        {
-            var dataArray = saveList.ToArray();
-            fs.Write(dataArray, 0, dataArray.Length);
-        }
-    }
+    #region save-load system   
     protected virtual List<byte> Save()
     {
         var data = SerializeWorksite();
@@ -154,15 +126,48 @@ public abstract class Worksite {
         workersCount = System.BitConverter.ToInt32(data, 0);
         workflow = System.BitConverter.ToSingle(data, 4);
         workSpeed = System.BitConverter.ToSingle(data, 8);
-    }    
+    }
 
+    public static void StaticSave(System.IO.FileStream fs)
+    {
+        int count = worksitesList.Count;
+        List<byte> saveList = new List<byte>();
+        if (count > 0)
+        {
+            count = 0;
+            while (count < worksitesList.Count)
+            {
+                if (worksitesList[count] == null)
+                {
+                    worksitesList.RemoveAt(count);
+                    continue;
+                }
+                else
+                {
+                    saveList.AddRange(worksitesList[count].Save());
+                    count++;
+                }
+            }
+        }
+        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        if (count > 0)
+        {
+            var dataArray = saveList.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
+        }
+    }
     public static void StaticLoad(System.IO.FileStream fs)
     {
         worksitesList = new List<Worksite>();
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int count = System.BitConverter.ToInt32(data,0);      
-      
+      if (count < 0 | count > 1000)
+        {
+            Debug.Log("worksites loading error - incorrect count");
+            GameMaster.LoadingFail();
+            return;
+        }
         if (count > 0)
         {
             Worksite w = null;
@@ -182,7 +187,6 @@ public abstract class Worksite {
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
-                            else continue;
                             break;
                         }
                     case WorksiteType.CleanSite:
@@ -194,7 +198,6 @@ public abstract class Worksite {
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
-                            else continue;
                             break;
                         }
                     case WorksiteType.DigSite:
@@ -206,7 +209,6 @@ public abstract class Worksite {
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
-                            else continue;
                             break;
                         }
                     case WorksiteType.GatherSite:
@@ -218,7 +220,6 @@ public abstract class Worksite {
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
-                            else continue;
                             break;
                         }
                     case WorksiteType.TunnelBuildingSite:
@@ -230,7 +231,6 @@ public abstract class Worksite {
                                 worksitesList.Add(w);
                                 w.Load(fs,pos);
                             }
-                            else continue;
                             break;
                         }
                     default: w = null; break;

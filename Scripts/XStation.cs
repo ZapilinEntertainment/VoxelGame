@@ -137,7 +137,7 @@ public sealed class XStation : WorkBuilding {
         //(t as RectTransform).position = Vector2.down * 60f;
         INDICATOR_EDGE_POSITION = (t as RectTransform).rect.width / 2f * 0.99f;
         t.SetAsFirstSibling();
-        cityMarker = t.GetChild(0).GetComponent<RectTransform>();
+        cityMarker = t.GetChild(2).GetComponent<RectTransform>();
         indicatorPrepared = true;
         cityMarker.parent.gameObject.SetActive(false);
         markerEnabled = false;

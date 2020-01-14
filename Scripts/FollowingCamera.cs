@@ -319,7 +319,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     }
     public void ControllerStickActivity(bool enabled)
     {
-        controllerBack.transform.parent.gameObject.SetActive(enabled);
+        if (controllerBack != null) controllerBack.transform.parent.gameObject.SetActive(enabled);
     }
     public void CamControllerDrag()
     {

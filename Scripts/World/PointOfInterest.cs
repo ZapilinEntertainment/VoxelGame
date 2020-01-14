@@ -384,10 +384,10 @@ public class PointOfInterest : MapPoint
         {
             for (int y = 0; y < size; y++)
             {
-                if (Random.value < richness)
+                if (v < richness)
                 {
                     df = (0.7f - 0.1f * friendliness + 0.3f * Random.value);
-                    v = Random.value;
+                    v = v / richness;
                     if (Random.value < 0.8f)
                     {
                         if (v < abilityTestChance)
@@ -495,7 +495,7 @@ public class PointOfInterest : MapPoint
                                                     moreSpecific = friendliness > 0.5f;
                                                     ctypes[0] = ChallengeType.CrystalPts;
                                                     ctypes[1] = ChallengeType.MonumentPts;
-                                                    ctypes[2] = ChallengeType.FoundationPts;                                                   
+                                                    ctypes[2] = ChallengeType.FoundationPts;
                                                     break;
                                                 }
                                             case MapMarkerType.Wreck:
@@ -592,7 +592,8 @@ public class PointOfInterest : MapPoint
                                         else
                                         {
                                             if (v < 0.4f) challengeArray[x, y] = new ChallengeField(ctypes[0], val);
-                                            else {
+                                            else
+                                            {
                                                 if (moreMystic) challengeArray[x, y] = new ChallengeField(ctypes[1], val);
                                                 else challengeArray[x, y] = new ChallengeField(ctypes[2], val);
                                             }
@@ -617,7 +618,12 @@ public class PointOfInterest : MapPoint
                         }
                     }
                 }
-                else challengeArray[x, y] = ChallengeField.emptyField;
+                else
+                {
+                    v = (v - richness) / (1f - richness);
+                    if (v > danger & Random.value < 0.85f) challengeArray[x, y] = ChallengeField.emptyField;
+                    else challengeArray[x, y] = ChallengeField.impassableField;
+                }
             }
         }
 

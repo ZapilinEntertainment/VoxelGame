@@ -10,7 +10,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     [SerializeField] private GameObject emptyPanel, listHolder;
     [SerializeField] private GameObject[] items;
     [SerializeField] private Scrollbar scrollbar;
-    [SerializeField] private Image expeditionButtonImage, crewButtonImage, shuttleButtonImage, artifactButtonImage;
+    [SerializeField] private Image expeditionButtonImage, crewButtonImage, artifactButtonImage;
 #pragma warning restore 0649
 
     public static ExplorationPanelUI current { get; private set; }
@@ -32,6 +32,12 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     public static void Deactivate()
     {
         if (current != null) current.gameObject.SetActive(false);
+    }
+    public static void RestoreSession(Expedition e)
+    {
+        if (current == null) Initialize();
+        else if (!current.gameObject.activeSelf) current.gameObject.SetActive(true);
+        current.Show(e);
     }
 
     public void SelectItem(int i)
@@ -480,7 +486,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     public void ExpeditionsButton() { ChangeMode(InfoMode.Expeditions); }
     public void CrewsButton() { ChangeMode(InfoMode.Crews); }
     public void ArtifactsButton() { ChangeMode(InfoMode.Artifacts); }
-    public void CloseButton() { gameObject.SetActive(false); }
 
     public void StatusUpdate()
     {
@@ -543,7 +548,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             subscribedToUpdate = false;
         }
         ChangeMode(InfoMode.Inactive);
-        UIController.current.DropActiveWindow(ActiveWindowMode.ExpeditionPanel);
+        if (UIController.current != null) UIController.current.DropActiveWindow(ActiveWindowMode.ExpeditionPanel);
     }
     private void OnDestroy()
     {

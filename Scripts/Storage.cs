@@ -179,7 +179,25 @@ public sealed class Storage : MonoBehaviour {
         operationsDone++;
         return gainedCount;
 	}
-
+    public bool TryGetResources(ResourceType rtype, float count)
+    {
+        if (GameMaster.realMaster.weNeedNoResources) return true;
+        else
+        {
+            if (totalVolume == 0) return false;
+            else
+            {
+                if (standartResources[rtype.ID] < count) return false;
+                else
+                {
+                    standartResources[rtype.ID] -= count;
+                    totalVolume -= count;
+                    operationsDone++;
+                    return true;
+                }
+            }
+        }
+    }
     public void GetResources(ResourceContainer[] cost)
     {
         if (cost == null || cost.Length == 0) return;
@@ -202,6 +220,7 @@ public sealed class Storage : MonoBehaviour {
             operationsDone++;
         }
     }
+    
 
 	/// <summary>
 	/// standart resources only
@@ -241,7 +260,7 @@ public sealed class Storage : MonoBehaviour {
 	public void Load(System.IO.FileStream fs) {
         var val = new byte[4];
         if (standartResources == null) standartResources = new float[ResourceType.RTYPES_COUNT];
-        totalVolume = 0;
+        totalVolume = 0f;
         float f;
         for (int i = 0; i <ResourceType.RTYPES_COUNT; i++)
         {

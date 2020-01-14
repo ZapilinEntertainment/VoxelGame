@@ -854,6 +854,12 @@ public class SurfaceBlock : Block
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int structuresCount = System.BitConverter.ToInt32(data, 0);
+        if (structuresCount > INNER_RESOLUTION * INNER_RESOLUTION | structuresCount < 0)
+        {
+            Debug.Log("surface block load error - incorrect structures count");
+            GameMaster.LoadingFail();
+            return;
+        }
         if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, this);
     }
     #endregion

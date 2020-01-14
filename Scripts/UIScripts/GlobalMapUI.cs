@@ -173,7 +173,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                     }
                     else
                     {
-                        ExploringMinigameUI.ShowExpedition(poi.workingExpedition);
+                        ExploringMinigameUI.ShowExpedition(poi.workingExpedition, true);
                         CloseInfopanel();
                         return;
                     }
@@ -299,7 +299,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                     Button b = rt.GetComponent<Button>(); ;
                     b.onClick.RemoveAllListeners();
                     MapPoint mpLink = mp;
-                    b.onClick.AddListener(() => { this.SelectPoint(mpLink); });
+                    b.onClick.AddListener(() => { this.SelectPoint(mpLink); }); // переписываем каждый раз, поскольку массив видимых точек соответствует массиву всех точек по индексам
 
                     rt.localPosition = Quaternion.AngleAxis(mapPoints[i].angle, dir) * (up * mapPoints[i].height);
 

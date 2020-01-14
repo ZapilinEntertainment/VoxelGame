@@ -712,7 +712,7 @@ public sealed class ColonyController : MonoBehaviour
     public void Save(System.IO.FileStream fs)
     {
         storage.Save(fs);
-
+        
         fs.Write(System.BitConverter.GetBytes(gears_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(health_coefficient), 0, 4);
@@ -737,8 +737,8 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (storage == null) storage = gameObject.AddComponent<Storage>();
         storage.Load(fs);
-
-        var data = new byte[24];
+       
+        var data = new byte[24];        
         fs.Read(data, 0, 24);
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
         happiness_coefficient = System.BitConverter.ToSingle(data, 4);
@@ -746,16 +746,15 @@ public sealed class ColonyController : MonoBehaviour
         birthrateCoefficient = System.BitConverter.ToSingle(data, 12);
         energyStored = System.BitConverter.ToSingle(data, 16);
         energyCrystalsCount = System.BitConverter.ToSingle(data, 20);
-
         Worksite.StaticLoad(fs);
 
         data = new byte[25]; // 20 + 1 + 4- name length
-        fs.Read(data, 0, data.Length);
+        fs.Read(data, 0, 25);
         freeWorkers = System.BitConverter.ToInt32(data, 0);
         citizenCount = System.BitConverter.ToInt32(data, 4);
         peopleSurplus = System.BitConverter.ToSingle(data, 8);
         realBirthrate = System.BitConverter.ToSingle(data, 12);
-        birthrateCoefficient = System.BitConverter.ToSingle(data, 16);        
+        birthrateCoefficient = System.BitConverter.ToSingle(data, 16);
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();
@@ -771,10 +770,16 @@ public sealed class ColonyController : MonoBehaviour
         }
 
         int bytesCount = System.BitConverter.ToInt32(data, 21); //выдаст количество байтов, не длину строки
-        data = new byte[bytesCount];
-        fs.Read(data, 0, bytesCount);
+        if (bytesCount < 0 | bytesCount > 1000000)
+        {
+            Debug.Log("colony controller load error - name bytes count incorrect");
+            GameMaster.LoadingFail();
+            return;
+        }        
         if (bytesCount > 0)
         {
+            data = new byte[bytesCount];
+            fs.Read(data, 0, bytesCount);
             System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
             var chars = new char[d.GetCharCount(data, 0, bytesCount)];
             d.GetChars(data, 0, bytesCount, chars, 0, true);

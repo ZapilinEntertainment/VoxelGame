@@ -11,7 +11,7 @@ public enum LocalizedWord : ushort
 
 public enum LocalizedPhrase : ushort
 {
-    AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot, ConnectionLost, ConvertToBlock, CrewFoundArtifact,CrystalsCollected, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather,SuppliesLeft, UnoccupiedTransmitters, RequiredSurface,
+    AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot,ConnectionOK, ConnectionLost, ConvertToBlock, CrewFoundArtifact,CrystalsCollected, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather,SuppliesLeft, UnoccupiedTransmitters, RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
     ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
@@ -25,11 +25,12 @@ public enum LocalizationActionLabels : ushort
 public enum GameAnnouncements : ushort
 {
     NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
-    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound, CrewsLimitReached
 };
 public enum LocalizedTutorialHint : byte { Landing }
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
-public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight }
+public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight}
+public enum ExpeditionComposingErrors : byte { ShuttleUnavailable, CrewUnavailable, NotEnoughFuel}
 public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted, CannotReachDestination }
 
 public static class Localization
@@ -573,6 +574,7 @@ public static class Localization
                         case GameAnnouncements.SetLandingPoint: return "Установите место посадки";
                         case GameAnnouncements.IslandCollapsing: return "Остров рушится!";
                         case GameAnnouncements.NewObjectFound: return "Обсерватория : обнаружен новый объект";
+                        case GameAnnouncements.CrewsLimitReached: return "Достигнут предел количества команд";
                         default: return "<пустое уведомление>";
                     }
                 }
@@ -597,6 +599,7 @@ public static class Localization
                         case GameAnnouncements.SetLandingPoint: return "Set landing point";
                         case GameAnnouncements.IslandCollapsing: return "Island starts collapsing!";
                         case GameAnnouncements.NewObjectFound: return "Observatory: new object found";
+                        case GameAnnouncements.CrewsLimitReached: return "Crews limit reached";
                         default: return "<announcement not found>";
                     }
                 }
@@ -2464,6 +2467,7 @@ public static class Localization
                         case LocalizedPhrase.ArtifactNotResearched: return "Артефакт не изучен";
                         case LocalizedPhrase.AscensionLevel: return "Уровень Возвышения";
                         case LocalizedPhrase.ClearSlot: return "< Очистить слот >";
+                        case LocalizedPhrase.ConnectionOK: return "Есть связь";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.ConvertToBlock: return "Перестроить в блок"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";
@@ -2555,6 +2559,7 @@ public static class Localization
                         case LocalizedPhrase.ArtifactNotResearched: return "Artifact not researched";
                         case LocalizedPhrase.AscensionLevel: return "Ascension level";
                         case LocalizedPhrase.ClearSlot: return "< Clear slot >";
+                        case LocalizedPhrase.ConnectionOK: return "Real-time connection";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
                         case LocalizedPhrase.ConvertToBlock: return "Convert to block"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Our crew has found an artifact!";
@@ -2688,6 +2693,18 @@ public static class Localization
                     }
                 }
         }
+    }
+    public static string GetExpeditionErrorText(ExpeditionComposingErrors ece)
+    {
+        switch (currentLanguage)
+        {
+            case Language.English:
+            default:
+                switch (ece)
+                {
+                    default: return "Expedition composing error";
+                }
+    }
     }
     public static string GetActionLabel(LocalizationActionLabels label)
     {

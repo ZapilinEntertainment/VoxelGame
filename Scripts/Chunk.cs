@@ -180,7 +180,6 @@ public sealed class Chunk : MonoBehaviour
     public static byte CHUNK_SIZE { get; private set; }
     //private bool allGrasslandsCreated = false;
     public byte[,,] lightMap { get; private set; }
-    public int MAX_BLOCKS_COUNT = 100;
     public delegate void ChunkUpdateHandler();
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
@@ -2666,6 +2665,12 @@ public sealed class Chunk : MonoBehaviour
         fs.Read(data, 0, 4);
         surfaceBlocks = new List<SurfaceBlock>();
         int blocksCount = System.BitConverter.ToInt32(data, 0);
+        if (blocksCount > 1000000)
+        {
+            Debug.Log("chunk load error - too much blocks");
+            GameMaster.LoadingFail();
+            return;
+        }
 
         if (blocksCount > 0) {
             var loadedBlocks = new Block[blocksCount];
@@ -2773,6 +2778,12 @@ public sealed class Chunk : MonoBehaviour
             }
         }
         int roofsCount = System.BitConverter.ToInt32(data, 4);
+        if (roofsCount > CHUNK_SIZE * CHUNK_SIZE)
+        {
+            Debug.Log("chunk loading error - too much roofs");
+            GameMaster.LoadingFail();
+            return;
+        }
         if (roofsCount > 0)
         {
             Roof r;

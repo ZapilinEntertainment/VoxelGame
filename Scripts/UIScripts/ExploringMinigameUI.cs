@@ -35,7 +35,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     private PointOfInterest observingPoint;
     //
     private byte size = 8;
-    private bool moveMarker = false, rollEffect = false, canPassThrough = true, needInfoRefreshing = false;
+    private bool moveMarker = false, rollEffect = false, canPassThrough = true, needInfoRefreshing = false, launchedFromMap = false;
     private int selectedField = -1;
     private float fieldSize = 100f, pingpongVal = 0f;
     private string testLabel = string.Empty;
@@ -48,8 +48,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         STAMINA_PER_STEP = 0.01f;
     private const byte MAX_DIFFICULTY = 25;
 
-    public static void ShowExpedition(Expedition e)
-    {
+    public static void ShowExpedition(Expedition e, bool isLaunchedFromMap)
+    {        
         if (e == null) return;
         else
         {
@@ -60,6 +60,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                     current = Instantiate(Resources.Load<GameObject>("UIPrefs/ExploringMinigameInterface")).GetComponent<ExploringMinigameUI>();
                 }
                 if (!current.gameObject.activeSelf) current.gameObject.SetActive(true);
+                current.launchedFromMap = isLaunchedFromMap;
                 current.Show(e);
             }
             else return;
@@ -121,7 +122,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         observingExpedition = e;
         observingCrew = e.crew;
         observingPoint = observingExpedition.destination;
-        size = (byte)observingPoint.GetChallengesArraySize();
+        size = (byte)observingPoint.GetChallengesArraySize();        
         PrepareDeck();
         RefreshInfo();
         infoPanel.GetChild(0).GetChild(1).GetComponent<Text>().text = '"' + observingCrew.name + '"';
@@ -1247,6 +1248,12 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     private void OnDisable()
     {
         minigameActive = false;
+        if (launchedFromMap) { GameMaster.realMaster.globalMap.ShowOnGUI(); }
+        else
+        {
+            UIController.SetActivity(true);
+            ExplorationPanelUI.RestoreSession(observingExpedition);
+        }
     }
 }
 

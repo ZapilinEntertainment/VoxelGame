@@ -8,6 +8,7 @@ public enum Path : byte { NoPath,LifePath, SecretPath, TechPath}
 public sealed class Crew : MonoBehaviour {
     public const byte MIN_MEMBERS_COUNT = 3, MAX_MEMBER_COUNT = 9, MAX_ATTRIBUTE_VALUE = 20, MAX_LEVEL = 20;
     private const float NEUROPARAMETER_STEP = 0.05f, STAMINA_CONSUMPTION = 0.00003f, ADAPTABILITY_LOSSES = 0.02f;
+    public const int MAX_CREWS_COUNT = 100;
 
     public static int nextID {get;private set;}	
     public static byte listChangesMarkerValue { get; private set; }
@@ -16,7 +17,7 @@ public sealed class Crew : MonoBehaviour {
     public static UICrewObserver crewObserver { get; private set; }
 
     public bool atHome { get; private set; }
-	public int membersCount {get;private set;}
+	public byte membersCount {get;private set;}
 	public int ID{get;private set;}
     public byte changesMarkerValue { get; private set; }
     public Expedition expedition { get; private set; }
@@ -40,8 +41,8 @@ public sealed class Crew : MonoBehaviour {
     public Path exploringPath{ get; private set; }
 //при внесении изменений отредактировать Localization.GetCrewInfo
 
-    public int missionsParticipated { get; private set; }
-    public int missionsSuccessed{get;private set;}
+    public ushort missionsParticipated { get; private set; }
+    public ushort missionsSuccessed{get;private set;}
 
     private const float SOFT_TEST_MAX_VALUE = 25f;
 
@@ -73,6 +74,12 @@ public sealed class Crew : MonoBehaviour {
     public static Crew CreateNewCrew(ColonyController home, int membersCount)
     {
         if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
+        if (crewsList.Count > MAX_CREWS_COUNT)
+        {
+            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.CrewsLimitReached));
+            GameMaster.LoadingFail();
+            return null;
+        }
         Crew c = new GameObject(Localization.NameCrew()).AddComponent<Crew>();
         if (crewsContainer == null) crewsContainer = new GameObject("crewsContainer");
         c.transform.parent = crewsContainer.transform;
@@ -81,7 +88,7 @@ public sealed class Crew : MonoBehaviour {
         c.atHome = true;
 
         //normal parameters        
-        c.membersCount = membersCount;
+        c.membersCount = (byte)membersCount;
         //attributes
         c.SetAttributes(home);
         //
@@ -631,12 +638,27 @@ public sealed class Crew : MonoBehaviour {
 
         if (crewsCount > 0)
         {
+            if (crewsCount > MAX_CREWS_COUNT)
+            {
+                Debug.Log("crews loading error - overcount");
+                GameMaster.LoadingFail();
+                return;
+            }
             for (int i = 0; i < crewsCount; i++)
             {
                 Crew c = new GameObject().AddComponent<Crew>();
                 c.transform.parent = crewsContainer.transform;
                 c.Load(fs);
                 crewsList.Add(c);
+            }
+        }
+        else
+        {
+            if (crewsCount < 0)
+            {
+                Debug.Log("crews loading error - negative count");
+                GameMaster.LoadingFail();
+                return;
             }
         }
 
@@ -648,73 +670,76 @@ public sealed class Crew : MonoBehaviour {
     {
         var data = new List<byte>();
         data.AddRange(System.BitConverter.GetBytes(ID)); // 0 - 3
-        data.AddRange(System.BitConverter.GetBytes(membersCount)); // 4 - 7
-        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed)); // 8-11
-        data.AddRange(System.BitConverter.GetBytes(missionsParticipated)); // 12-15
-        data.AddRange(new byte[]
-        {
-            atHome ? (byte)1 : (byte)0, // 16
-            persistence, // 17
-            survivalSkills, // 18
-            secretKnowledge, // 19
-            perception, // 20
-            intelligence, // 21
-            techSkills, // 22
-            level, // 23
-            (byte)exploringPath // 24
-        });
+        byte truebyte = 1, falsebyte = 0, nullbyte = 2;
+        data.AddRange(
+            new byte[] {
+            atHome ? truebyte : falsebyte, // 4
+            membersCount, // 5
+            chanceMod == null ? nullbyte : (chanceMod == true ? truebyte : falsebyte) , // 6
+            persistence, // 7
+            survivalSkills, // 8
+            secretKnowledge, // 9
+            perception, // 10
+            intelligence, // 11
+            techSkills, // 12
+            freePoints, //13
+            level //14
+            });
+        data.AddRange(System.BitConverter.GetBytes(stamina)); // 15 - 18
+        data.AddRange(System.BitConverter.GetBytes(confidence)); // 19 - 22
+        data.AddRange(System.BitConverter.GetBytes(unity)); // 23 - 26
+        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 27 - 30
+        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 31 - 34
+        data.AddRange(System.BitConverter.GetBytes(experience)); // 35 - 38
 
-        data.AddRange(System.BitConverter.GetBytes(stamina)); // 25 - 28
+        data.AddRange(System.BitConverter.GetBytes(missionsParticipated)); // 39 - 40
+        data.AddRange(System.BitConverter.GetBytes(missionsSuccessed)); // 41 - 42
 
-        //data.AddRange(System.BitConverter.GetBytes(proficiencies)); //29-30
-
-        data.AddRange(System.BitConverter.GetBytes(confidence)); // 31-34
-        data.AddRange(System.BitConverter.GetBytes(unity)); // 35-38
-        data.AddRange(System.BitConverter.GetBytes(loyalty)); // 39-42
-        data.AddRange(System.BitConverter.GetBytes(adaptability)); // 44-47
-
-        data.AddRange(System.BitConverter.GetBytes(experience)); // 48-51
-        //
-        var nameArray = System.Text.Encoding.Default.GetBytes(name);
+    //
+    var nameArray = System.Text.Encoding.Default.GetBytes(name);
         int count = nameArray.Length;
-        data.AddRange(System.BitConverter.GetBytes(count)); // 52-55 | количество байтов, не длина строки
+        data.AddRange(System.BitConverter.GetBytes(count)); // 43 - 46 | количество байтов, не длина строки
         if (count > 0) data.AddRange(nameArray);
         
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 56;
+        int LENGTH = 47;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         ID = System.BitConverter.ToInt32(data,0);
 
-        membersCount = System.BitConverter.ToInt32(data, 4);
-        missionsSuccessed = System.BitConverter.ToInt32(data, 8);
-        missionsParticipated = System.BitConverter.ToInt32(data, 12);
-
-        atHome = data[16] == 1;
-        persistence = data[17];
-        survivalSkills = data[18];
-        secretKnowledge = data[19];
-        perception = data[20];
-        intelligence = data[21];
-        techSkills = data[22];
-        level = data[23];
-        //exploringPath = (Path)data[28]; 
+        atHome = data[4] == 1;
+        membersCount = data[5];
+        if (data[6] == 2) chanceMod = null; else chanceMod = data[6] == 1;
+        persistence = data[7];
+        survivalSkills = data[8];
+        secretKnowledge = data[9];
+        perception = data[10];
+        intelligence = data[11];
+        techSkills = data[12];
+        freePoints = data[13];
+        level = data[14];
         RecalculatePath();
 
-        stamina = System.BitConverter.ToSingle(data,29);
-        //proficiencies = System.BitConverter.ToUInt16(data, 33);
+        stamina = System.BitConverter.ToSingle(data,15);
+        confidence = System.BitConverter.ToSingle(data, 19);
+        unity = System.BitConverter.ToSingle(data, 23);
+        loyalty = System.BitConverter.ToSingle(data, 27);
+        adaptability = System.BitConverter.ToSingle(data, 31);
+        experience = System.BitConverter.ToInt32(data, 35);
 
-        confidence = System.BitConverter.ToSingle(data, 35);
-        unity = System.BitConverter.ToSingle(data, 39);
-        loyalty = System.BitConverter.ToSingle(data, 43);
-        adaptability = System.BitConverter.ToSingle(data, 47);
+        missionsParticipated = System.BitConverter.ToUInt16(data,39);
+        missionsSuccessed = System.BitConverter.ToUInt16(data, 41);
 
-        experience = System.BitConverter.ToInt32(data, 51);
-
-        int bytesCount = System.BitConverter.ToInt32(data, 55); //выдаст количество байтов, не длину строки        
+        int bytesCount = System.BitConverter.ToInt32(data, 43); //выдаст количество байтов, не длину строки    
+        if (bytesCount < 0 | bytesCount > 1000000)
+        {
+            Debug.Log("crew load error - name bytes count incorrect");
+            GameMaster.LoadingFail();
+            return;
+        }
         if (bytesCount > 0)
         {
             data = new byte[bytesCount];
@@ -723,7 +748,7 @@ public sealed class Crew : MonoBehaviour {
             var chars = new char[d.GetCharCount(data, 0, bytesCount)];
             d.GetChars(data, 0, bytesCount, chars, 0, true);
             name = new string(chars);
-        }        
+        }
     }
 
     #endregion

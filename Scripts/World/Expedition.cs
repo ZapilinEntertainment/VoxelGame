@@ -23,13 +23,13 @@ public sealed class Expedition
     public Crew crew { get; private set; }
     public Artifact artifact { get; private set; }
 
-    private bool subscribedToUpdate = false;    
+    private bool subscribedToUpdate = false;
     private int shuttleID = Hangar.NO_SHUTTLE_VALUE, transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
     private FlyingExpedition mapMarker;
-    private Vector2Int planPos;
+    private Vector2Int planPos = Vector2Int.zero;
 
     private const float FLY_SPEED = 5f;
-    public const int MIN_SUPPLIES_COUNT = 20, MAX_SUPPLIES_COUNT = 200, MAX_START_CRYSTALS = 200, MAX_CRYSTALS_COLLECTED = 60000;
+    public const int MIN_SUPPLIES_COUNT = 20, MAX_SUPPLIES_COUNT = 200, MAX_START_CRYSTALS = 200, MAX_CRYSTALS_COLLECTED = 60000, NO_VALUE = -1, MAX_EXPEDITIONS_COUNT = 100;
 
     // STATIC & equals
     static Expedition()
@@ -95,13 +95,20 @@ public sealed class Expedition
     /// ===============================
     public Expedition(PointOfInterest i_destination, Crew c, int i_shuttleID, QuantumTransmitter transmitter, float i_supplies, float i_crystals)
     {
+        // СДЕЛАТЬ: проверка компонентов и вывод ошибок
         ID = nextID++;
         stage = ExpeditionStage.WayIn;
         
         destination = i_destination; destination.AssignExpedition(this);
         crew = c; c.SetCurrentExpedition(this);
 
-        shuttleID = i_shuttleID;
+        if (Hangar.OccupyShuttle(i_shuttleID)) shuttleID = i_shuttleID;
+        else
+        {
+            GameLogUI.MakeAnnouncement(Localization.GetExpeditionErrorText(ExpeditionComposingErrors.ShuttleUnavailable));
+            Dismiss();
+        }
+
         if (transmitter != null)
         {
             transmissionID = transmitter.StartTransmission();
@@ -132,34 +139,28 @@ public sealed class Expedition
         changesMarkerValue = 0;
     }
 
-    public void LabourUpdate()
-    {
-
-    }
-
     public void StartMission()
     {
         stage = ExpeditionStage.OnMission;
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
-            subscribedToUpdate = false;
-        }
+        changesMarkerValue++;
     }
     public void EndMission()
     {
-        if (stage == ExpeditionStage.WayIn || stage == ExpeditionStage.OnMission)
+        switch (stage)
         {
-            stage = ExpeditionStage.WayOut;
-            if (mapMarker == null) {
-                //#creating map marker
+            case ExpeditionStage.OnMission:
+                stage = ExpeditionStage.WayOut;
+                // #creating map marker
                 GlobalMap gmap = GameMaster.realMaster.globalMap;
-                mapMarker = new FlyingExpedition(this, destination , gmap.cityPoint, FLY_SPEED);
+                mapMarker = new FlyingExpedition(this, destination, gmap.cityPoint, FLY_SPEED);
                 gmap.AddPoint(mapMarker, true);
                 //
-            }
-            else mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.cityPoint);
-            changesMarkerValue++;
+                changesMarkerValue++;
+                break;
+            case ExpeditionStage.WayIn:
+                mapMarker.ChangeDestination(GameMaster.realMaster.globalMap.cityPoint);
+                changesMarkerValue++;
+                break;
         }
     }
     public void DropMapMarker()
@@ -167,6 +168,10 @@ public sealed class Expedition
         mapMarker = null;
     }
     
+    private void LabourUpdate()
+    {
+        // проверки на восстановление связи?
+    }
 
     public Vector2Int GetPlanPos()
     {
@@ -269,9 +274,16 @@ public sealed class Expedition
                 GameMaster.realMaster.colonyController.AddEnergyCrystals(crystalsCollected);
                 crystalsCollected = 0;
             }
-            stage = ExpeditionStage.Dismissed;           
-        }
-        changesMarkerValue++;
+            stage = ExpeditionStage.Dismissed;
+            expeditionsList.Remove(this);
+
+            if (subscribedToUpdate & !GameMaster.sceneClearing)
+            {
+                GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
+                subscribedToUpdate = false;
+            }
+            changesMarkerValue++;
+        }        
     }
     public void Disappear() // INDEV
                             // экспедиция исчезает
@@ -283,13 +295,15 @@ public sealed class Expedition
             QuantumTransmitter.StopTransmission(transmissionID);
             Hangar.ReturnShuttle(shuttleID);
             if (destination != null) destination.DeassignExpedition(this);
+            //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            stage = ExpeditionStage.Dismissed;
+
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
                 subscribedToUpdate = false;
             }
-            //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
-            stage = ExpeditionStage.Dismissed;
+            changesMarkerValue++;
         }
         changesMarkerValue++;
     }
@@ -301,25 +315,59 @@ public sealed class Expedition
         var data = new List<byte>();
         data.AddRange(System.BitConverter.GetBytes(ID)); // read before load
 
-        data.Add(hasConnection ? (byte)1 : (byte)0); //0
+        byte falsebyte = 0, truebyte = 1;
+        data.Add(hasConnection ? truebyte : falsebyte); //0
         data.AddRange(System.BitConverter.GetBytes(crystalsCollected)); // 1 - 2
-        data.Add(suppliesCount);
-        data.Add((byte)stage);
-        data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : -1));
-        data.AddRange(System.BitConverter.GetBytes(crew.ID));
-        data.AddRange(System.BitConverter.GetBytes(artifact.ID));
-        data.AddRange(System.BitConverter.GetBytes(shuttleID));
-        data.AddRange(System.BitConverter.GetBytes(transmissionID));
-        data.AddRange(System.BitConverter.GetBytes(planPos.x));
-        data.AddRange(System.BitConverter.GetBytes(planPos.y));
+        data.Add(suppliesCount); // 3
+        data.Add((byte)stage); // 4
+        data.AddRange(System.BitConverter.GetBytes(destination != null ? destination.ID : NO_VALUE)); // 5 - 8
+        data.AddRange(System.BitConverter.GetBytes(crew.ID)); // 9 - 12
+        data.AddRange(System.BitConverter.GetBytes(artifact != null ? artifact.ID : NO_VALUE)); // 13 - 16
+        data.AddRange(System.BitConverter.GetBytes(shuttleID)); // 17 - 20
+        data.AddRange(System.BitConverter.GetBytes(transmissionID)); // 21 - 24
+        data.Add((byte)planPos.x); // 25
+        data.Add((byte)planPos.y); // 26
+        if ((stage == ExpeditionStage.WayIn | stage == ExpeditionStage.WayOut) && mapMarker != null)
+        {
+            data.Add(truebyte); //27
+            data.AddRange(System.BitConverter.GetBytes(mapMarker.angle)); // (0-3)
+            data.AddRange(System.BitConverter.GetBytes(mapMarker.height)); // (4-7)
+        }
+        else data.Add(falsebyte); //27
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)
     {
-        int LENGTH = 37; // full length - 4 (id excluded)
+        int LENGTH = 28; // (id excluded)
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
-        
+        hasConnection = data[0] == 1;
+        crystalsCollected = System.BitConverter.ToUInt16(data, 1);
+        suppliesCount = data[3];
+        stage = (ExpeditionStage)data[4];
+        int x = System.BitConverter.ToInt32(data, 5);
+        if (x != NO_VALUE)
+        {
+            destination = GameMaster.realMaster.globalMap.GetMapPointByID(x) as PointOfInterest;
+            destination.AssignExpedition(this);
+        }
+        else destination = null;
+        crew = Crew.GetCrewByID(System.BitConverter.ToInt32(data, 9));
+        if (crew != null) crew.SetCurrentExpedition(this);
+        artifact = Artifact.GetArtifactByID(System.BitConverter.ToInt32(data, 13));
+        shuttleID = System.BitConverter.ToInt32(data, 17);
+        transmissionID = System.BitConverter.ToInt32(data, 21);
+        planPos = new Vector2Int(data[25], data[26]);
+        if (data[27] == 1)
+        {
+            data = new byte[8];
+            fs.Read(data, 0, 8);
+            // #creating map marker
+            GlobalMap gmap = GameMaster.realMaster.globalMap;
+            mapMarker = new FlyingExpedition(this, System.BitConverter.ToSingle(data,0), System.BitConverter.ToSingle(data, 4), gmap.cityPoint, FLY_SPEED);
+            gmap.AddPoint(mapMarker, true);
+            //
+        }
         return this;
     }
 
@@ -353,6 +401,12 @@ public sealed class Expedition
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int count = System.BitConverter.ToInt32(data, 0);
+        if (count > MAX_EXPEDITIONS_COUNT)
+        {
+            Debug.Log("expeditions loading error - wrong count");
+            GameMaster.LoadingFail();
+            return;
+        }
         expeditionsList = new List<Expedition>();
         if (count > 0)
         {

@@ -90,6 +90,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
 
             Redraw();
         }
+        infoPanel.GetChild(infoPanel.transform.childCount - 1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Return);
         prepared = true;
     }
 

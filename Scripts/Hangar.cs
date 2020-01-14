@@ -46,9 +46,12 @@ public sealed class Hangar : WorkBuilding
         {
             foreach (var h in hangarsList)
             {
-                if (h.shuttleID != -1) return h.shuttleID;
+                if (h.shuttleID != NO_SHUTTLE_VALUE && h.status == HangarStatus.ShuttleInside)
+                {
+                    return h.shuttleID;
+                }
             }
-            return -NO_SHUTTLE_VALUE;
+            return NO_SHUTTLE_VALUE;
         }
     }
     private static int GenerateShuttleID()
@@ -64,6 +67,22 @@ public sealed class Hangar : WorkBuilding
             return x;
         }
     }
+    public static bool OccupyShuttle(int s_id)
+    {
+        if (hangarsList.Count > 0)
+        {
+            foreach (var h in hangarsList)
+            {
+                if (h.shuttleID == s_id)
+                {
+                    h.status = HangarStatus.ShuttleOnMission;
+                    listChangesMarkerValue++;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     public static void ReturnShuttle(int s_id)
     {
         if (s_id == NO_SHUTTLE_VALUE) return;
@@ -71,9 +90,10 @@ public sealed class Hangar : WorkBuilding
         {
             foreach (var h in hangarsList)
             {
-                if (h.ID == s_id)
+                if (h.shuttleID == s_id)
                 {
                     h.status = HangarStatus.ShuttleInside;
+                    listChangesMarkerValue++;
                     return;
                 }
             }
@@ -452,10 +472,10 @@ public sealed class Hangar : WorkBuilding
     override public List<byte> Save()
     {
         var data = base.Save();
-        data.AddRange(SaveHangarDara());
+        data.AddRange(SaveHangarData());
         return data;
     }
-    private List<byte> SaveHangarDara()
+    private List<byte> SaveHangarData()
     {
         var data =  new List<byte>() {correctLocation ? (byte)1 : (byte)0, (byte)status};
         data.AddRange(System.BitConverter.GetBytes(shuttleID));
