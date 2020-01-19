@@ -468,19 +468,11 @@ public class PointOfInterest : MapPoint
                                         }
                                         else
                                         {
-                                            if (blackChance == 0 && whiteChance == 0) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
+                                            if (whiteChance == 0) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
                                             else
                                             {
-                                                if (blackChance == 0)
-                                                {
-                                                    if (v > redChance + greenChance + blueChance + whiteChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
-                                                    else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.WHITECOLOR_CODE);
-                                                }
-                                                else
-                                                {
-                                                    if (v > redChance + greenChance + blueChance + blackChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
-                                                    else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.BLACKCOLOR_CODE);
-                                                }
+                                              if (v > redChance + greenChance + blueChance + whiteChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
+                                              else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.WHITECOLOR_CODE);
                                             }
                                         }
                                     }

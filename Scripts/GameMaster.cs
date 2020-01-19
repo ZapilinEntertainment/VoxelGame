@@ -44,6 +44,7 @@ public sealed class GameMaster : MonoBehaviour
 {
     public static GameMaster realMaster;
     public static float gameSpeed { get; private set; }
+    public static bool eventsTracking { get; private set; }
     public static bool sceneClearing { get; private set; }
     public static bool needTutorial = false;
     public static bool loading { get; private set; }
@@ -67,8 +68,8 @@ public sealed class GameMaster : MonoBehaviour
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
 
-    public delegate void StructureUpdateHandler();
-    public event StructureUpdateHandler labourUpdateEvent, lifepowerUpdateEvent, blockersRestoreEvent;
+    public delegate void RegularUpdate();
+    public event RegularUpdate labourUpdateEvent, lifepowerUpdateEvent, blockersRestoreEvent, everydayUpdate;
     public GameStart startGameWith = GameStart.Zeppelin;
 
     public float lifeGrowCoefficient { get; private set; }
@@ -173,6 +174,7 @@ public sealed class GameMaster : MonoBehaviour
             return;
         }
         gameMode = _gameMode;
+        eventsTracking = (gameMode == GameMode.Play);
         realMaster = this;
         sceneClearing = false;
         if (PoolMaster.current == null)
@@ -524,7 +526,7 @@ public sealed class GameMaster : MonoBehaviour
                     if (daysDelta > 0 & colonyController != null)
                     {
                         // счет количества дней в ускорении отменен
-                        colonyController.EverydayUpdate();
+                        everydayUpdate();
                     }
                     uint sum = day + daysDelta;
                     if (sum >= DAYS_IN_MONTH)

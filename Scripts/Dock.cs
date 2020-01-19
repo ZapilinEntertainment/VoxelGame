@@ -427,15 +427,26 @@ public sealed class Dock : WorkBuilding {
         switch (s.type) {
 		case ShipType.Passenger:
                 {
+                    float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
                     if (immigrationPlan > 0)
-                    {
-                        float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
-                        if (vol > immigrationPlan) { colony.AddCitizens(immigrationPlan); immigrationPlan = 0; }
+                    {                        
+                        if (vol > immigrationPlan) {
+                            colony.AddCitizens(immigrationPlan);
+                            immigrationPlan = 0;
+                            vol -= immigrationPlan;
+                        }
                         else {
                             int x = (int)vol;
                             colony.AddCitizens(x); immigrationPlan -= x;
+                            vol = 0;
                         }
                     }
+                    if (vol > 0)
+                    {
+                        vol *= colony.happiness_coefficient;
+                        if (vol > 1f) Hotel.DistributeLodgers((int)vol);
+                    }
+
                     if (isForSale[ResourceType.FOOD_ID] != null)
                     {
                         if (isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Food, s.volume * 0.1f);

@@ -176,7 +176,7 @@ public class Structure : MonoBehaviour
             // case CONTROL_CENTER_6_ID:
             // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
             case HOTEL_BLOCK_6_ID:
-                s = new GameObject("Hotel block").AddComponent<House>(); break; // AWAITING
+                s = new GameObject("Hotel block").AddComponent<Hotel>(); break; // AWAITING
             case HOUSING_MAST_6_ID:
                 s = new GameObject("Housing mast").AddComponent<House>(); break;
             case DOCK_ADDON_1_ID:

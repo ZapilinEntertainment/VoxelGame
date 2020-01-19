@@ -233,6 +233,7 @@ public class Factory : WorkBuilding
         upgraded.AddWorkers(workers);
         if (isActive) upgraded.SetActivationStatus(true, true);
         if (returnToUI) upgraded.ShowOnGUI();
+        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
     }
 
     override public void RecalculateWorkspeed()

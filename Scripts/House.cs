@@ -10,7 +10,6 @@ public class House : Building {
         { // if changing - look at localized description            
             case TENT_ID: return TENT_VOLUME;
             case HOUSE_BLOCK_ID: return 1100; 
-            case HOTEL_BLOCK_6_ID: return 200; // temporary
             case HOUSING_MAST_6_ID: return 2200;
             case SETTLEMENT_CENTER_ID: return 0;
             default: return 1;

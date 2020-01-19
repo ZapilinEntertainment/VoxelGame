@@ -970,6 +970,7 @@ public sealed class Settlement : House
                 if (returnToUI) upgraded.ShowOnGUI();
             }
         }
+        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
     }
     override public ResourceContainer[] GetUpgradeCost()
     {

@@ -155,6 +155,7 @@ override protected void LabourResult() {
             lastWorkObjectPos = b.pos;
             workFinished = false;
             UpgradeMine((byte)(level + 1));
+            if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
         }        
     }
     override public ResourceContainer[] GetUpgradeCost()

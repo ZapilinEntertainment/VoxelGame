@@ -878,6 +878,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 s.SetBasement(observingSurface, new PixelPosByte(x, z));
                 if (s.ID != Structure.DOCK_ID & s.ID != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
+                if (GameMaster.eventsTracking) EventChecker.BuildingConstructed(s);
                 if (observingSurface.noEmptySpace != false)
                 {
                     if (constructionPlane.activeSelf)

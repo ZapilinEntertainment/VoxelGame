@@ -28,7 +28,15 @@ public sealed class ColonyController : MonoBehaviour
     public float energyStored { get; private set; }
     public float energySurplus { get; private set; }
     public float totalEnergyCapacity { get; private set; }
-    public float energyCrystalsCount { get; private set; }
+    public float energyCrystalsCount {
+        get { return _energyCrystalCount; }
+        private set
+        {
+            _energyCrystalCount = value;
+            if (GameMaster.eventsTracking) EventChecker.MoneyChanged(_energyCrystalCount);
+        }
+    }
+    private float _energyCrystalCount;
     public List<Building> powerGrid { get; private set; }
     public List<Dock> docks { get; private set; }
     public List<House> houses { get; private set; }
@@ -48,6 +56,7 @@ public sealed class ColonyController : MonoBehaviour
     public int totalLivespace { get; private set; }
 
     private Dictionary<int, float> happinessModifiers; private int nextHModifierID;
+    private List<(float volume, float timer)> happinessAffects;
     private List<Hospital> hospitals;
     private bool starvation = false;
     private sbyte recalculationTick = 0;
@@ -98,8 +107,10 @@ public sealed class ColonyController : MonoBehaviour
     public void Prepare()
     { // call from game master
         if (storage == null) storage = gameObject.AddComponent<Storage>();
-        GameMaster.realMaster.SetColonyController(this);
+        var gm = GameMaster.realMaster;
+        gm.SetColonyController(this);
         UIController.current.Prepare();
+        gm.everydayUpdate += EverydayUpdate;
     }
 
     #region updating
@@ -241,6 +252,29 @@ public sealed class ColonyController : MonoBehaviour
             }
             // HAPPINESS CALCULATION
             targetHappiness = 1;
+            if (happinessModifiers != null)
+            {
+                foreach (var key in happinessModifiers)
+                {
+                    targetHappiness += key.Value;
+                }
+            }
+            if (happinessAffects != null )
+            {
+                int i = happinessAffects.Count;
+                while (i > 0)
+                {
+                    var ha = happinessAffects[i];
+                    targetHappiness += ha.volume;
+                    if (ha.timer > TICK_TIME)
+                    {
+                        happinessAffects[i] = (ha.volume, ha.timer - TICK_TIME);
+                        i--;
+                    }
+                    else happinessAffects.RemoveAt(i);                    
+                }
+                if (happinessAffects.Count == 0) happinessAffects = null;
+            }
             if (targetHappiness > foodSupplyHappiness) targetHappiness = foodSupplyHappiness;
             if (targetHappiness > healthcareHappiness) targetHappiness = healthcareHappiness;
             if (targetHappiness > housingHappiness) targetHappiness = housingHappiness;
@@ -662,6 +696,15 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (happinessModifiers != null) happinessModifiers.Remove(id);
     }
+
+    public void AddHappinessAffect(float val, float time)
+    {
+        if (happinessAffects == null) happinessAffects = new List<(float volume, float timer)>() { (val, time) };
+        else
+        {
+            if (happinessAffects.Count < 255)   happinessAffects.Add((val, time));
+        }
+    }
     #endregion
 
     public void RenameColony(string nm)
@@ -728,6 +771,18 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4); // 5 x 4
         fs.WriteByte((byte)Hospital.birthrateMode); // + 1
 
+        if (happinessAffects != null && happinessAffects.Count > 0) // + 1
+        {
+            fs.WriteByte(1);
+            fs.WriteByte((byte)happinessAffects.Count);
+            foreach (var ff in happinessAffects)
+            {
+                fs.Write(System.BitConverter.GetBytes(ff.volume), 0, 4);
+                fs.Write(System.BitConverter.GetBytes(ff.timer), 0, 4);
+            }
+        }
+        else fs.WriteByte(0);
+
         var nameArray = System.Text.Encoding.Default.GetBytes(cityName);
         int count = nameArray.Length;
         fs.Write(System.BitConverter.GetBytes(count), 0, 4); // количество байтов, не длина строки
@@ -748,7 +803,7 @@ public sealed class ColonyController : MonoBehaviour
         energyCrystalsCount = System.BitConverter.ToSingle(data, 20);
         Worksite.StaticLoad(fs);
 
-        data = new byte[25]; // 20 + 1 + 4- name length
+        data = new byte[22]; // 20 + 1 + 1- name length
         fs.Read(data, 0, 25);
         freeWorkers = System.BitConverter.ToInt32(data, 0);
         citizenCount = System.BitConverter.ToInt32(data, 4);
@@ -769,7 +824,21 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
 
-        int bytesCount = System.BitConverter.ToInt32(data, 21); //выдаст количество байтов, не длину строки
+        if (data[21] == 1)
+        {
+            int count = fs.ReadByte();
+            data = new byte[8];
+            happinessAffects = new List<(float volume, float timer)>();
+            for (int i = 0; i < count; i++)
+            {
+                fs.Read(data, 0, 8);
+                happinessAffects.Add( (System.BitConverter.ToSingle(data,0), System.BitConverter.ToSingle(data,4)) );
+            }
+        }
+
+        data = new byte[4];
+        fs.Read(data, 0, 4);
+        int bytesCount = System.BitConverter.ToInt32(data,0); //выдаст количество байтов, не длину строки
         if (bytesCount < 0 | bytesCount > 1000000)
         {
             Debug.Log("colony controller load error - name bytes count incorrect");

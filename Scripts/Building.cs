@@ -94,7 +94,7 @@ public class Building : Structure
                         blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
                 }
                 //blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
-                //blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
+                blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
                 //blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
@@ -232,8 +232,7 @@ public class Building : Structure
             case FUEL_FACILITY_ID: return -20f;
 
             case OBSERVATORY_ID: return -50f;
-            case CONNECT_TOWER_6_ID: return -64f;
-            case HOTEL_BLOCK_6_ID:
+            case CONNECT_TOWER_6_ID: return -64f;            
             case GRPH_ENRICHER_3_ID: return -70f;
 
 
@@ -242,7 +241,9 @@ public class Building : Structure
             case WIND_GENERATOR_1_ID:
                 return 10f;
             case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
-            case MINI_GRPH_REACTOR_3_ID: return 100f;
+            case MINI_GRPH_REACTOR_3_ID:
+            case HOTEL_BLOCK_6_ID:
+                return 100f;
             case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
             case REACTOR_BLOCK_5_ID: return Powerplant.REACTOR_BLOCK_5_OUTPUT;
 
@@ -786,6 +787,7 @@ public class Building : Structure
         }
         else upgraded.modelRotation = modelRotation;
         upgraded.SetBasement(basement, setPos);
+        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
         if (returnToUI) upgraded.ShowOnGUI();
     }
     public virtual ResourceContainer[] GetUpgradeCost()

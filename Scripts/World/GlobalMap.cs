@@ -358,6 +358,7 @@ public sealed class GlobalMap : MonoBehaviour
                             {
                                 mapPoints.RemoveAt(i);
                                 fe.expedition.DropMapMarker();
+                                if (GameMaster.eventsTracking) EventChecker.PointReached(d);
                                 if (fe.expedition.stage == Expedition.ExpeditionStage.WayIn)
                                 {
                                     fe.expedition.StartMission();
@@ -381,8 +382,7 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
         cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);
-
-        
+                
 
         //test
         if (false)
