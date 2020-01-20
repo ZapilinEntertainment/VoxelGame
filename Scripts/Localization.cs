@@ -275,7 +275,7 @@ public static class Localization
                     case Structure.FOUNDATION_BLOCK_5_ID: return "Содержит инфраструктуру для обеспечения высокоуровневых зданий";
                     case Structure.DOCK_ADDON_1_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 3.";
-                    case Structure.HOTEL_BLOCK_6_ID:
+                    case Structure.HOTEL_BLOCK_6_ID: return "Принимает гостей колонии и приносит прибыль раз в день";
                     case Structure.CONNECT_TOWER_6_ID: return "<В разработке>";
                     case Structure.XSTATION_3_ID: return "Собирает информацию об окружающей среде, измеряет уровень Стабильности, предсказывает надвигающиеся угрозы.";
                     case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена на максимальной высоте. В радиусе одного блока не должно быть других блоков и поверхностей. Может быть построена только одна обсерватория.";
@@ -357,7 +357,7 @@ public static class Localization
                     case Structure.FOUNDATION_BLOCK_5_ID: return "Infrastructure for support high-level structures.";
                     case Structure.DOCK_ADDON_1_ID: return "Build it next to dock to up it to level 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Build it next to dock to up it to level 3.";
-                    case Structure.HOTEL_BLOCK_6_ID:
+                    case Structure.HOTEL_BLOCK_6_ID: return "Houses guests and pays earnings everyday.";
                     case Structure.CONNECT_TOWER_6_ID: return "<In development>";
                     case Structure.XSTATION_3_ID: return "Gathering environmental intelligence, measures Stability level, predicting threats.";
                     case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. Only one observatory can be built.";

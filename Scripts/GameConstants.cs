@@ -43,7 +43,7 @@
     // 1 - (0 -> first launch, 1 - not first)
     public const uint SAVE_SYSTEM_VERSION = 3;
     // 1 - 9.3.1 public alpha
-    // 3 - 13
+    // 3 - 13    
 
     public static float GetShipArrivingTimer()
     {

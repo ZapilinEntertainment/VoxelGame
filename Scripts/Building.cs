@@ -821,8 +821,7 @@ public class Building : Structure
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
         return data;
-        // copied to Settlement.Save()
-        // copy to PsychokineticGenerator.Save()
+        // dependence: Settlement PsychokineticGenerator Hotel
     }
 
     protected List<byte> SaveBuildingData()
@@ -837,9 +836,7 @@ public class Building : Structure
     {        
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
-        // changed in Settlement.Load()
-        // copy to PsychokineticGenerator.Load()        
-        //copy to QuantumEnergyTransmitter
+        // dependence in Settlement PsychokineticGenerator  QuantumEnergyTransmitter Hotel
     }
     protected void LoadBuildingData(System.IO.FileStream fs)
     {

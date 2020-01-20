@@ -5,18 +5,19 @@ using UnityEngine.UI;
 
 public sealed class UITradeWindow : UIObserver {
 #pragma warning disable 0649
-    [SerializeField] GameObject[] resourcesButtons;
-    [SerializeField] GameObject resourceInfoPanel;
-    [SerializeField] Text resourceName, buyButtonText, sellButtonText, limitText, priceText, demandText, descriptionText;
-    [SerializeField] InputField limitInputField;
-    [SerializeField] Sprite overridingButtonSprite;
-    [SerializeField] RawImage resourcePicture;
+    [SerializeField] private GameObject[] resourcesButtons;
+    [SerializeField] private GameObject resourceInfoPanel;
+    [SerializeField] private Text resourceName, buyButtonText, sellButtonText, limitText, priceText, demandText, descriptionText;
+    [SerializeField] private InputField limitInputField;
+    [SerializeField] private Sprite overridingButtonSprite;
+    [SerializeField] private RawImage resourcePicture;
 #pragma warning restore 0649
 
-    int chosenResourceID = -1, chosenButtonIndex = -1, showingLimit;
-    float showingPrice = 0, showingDemand = 0;
-    List<int> tradableResources;
-    bool? resourceIsForSale = null;
+    private int chosenResourceID = -1, chosenButtonIndex = -1, showingLimit;
+    private float showingPrice = 0, showingDemand = 0;    
+    private bool? resourceIsForSale = null;
+    private List<int> tradableResources;
+    private DockSystem dockSystem;
 
     private void Awake()
     {
@@ -49,9 +50,9 @@ public sealed class UITradeWindow : UIObserver {
                 return;
             }
             UpdateSaleMarkers();
-            if (resourceIsForSale != Dock.isForSale[chosenResourceID])
+            if (resourceIsForSale != dockSystem.isForSale[chosenResourceID])
             {
-                ChangeSellStatus(Dock.isForSale[chosenResourceID]);
+                ChangeSellStatus(dockSystem.isForSale[chosenResourceID]);
             }
             if (resourceIsForSale != null)
             {
@@ -71,9 +72,9 @@ public sealed class UITradeWindow : UIObserver {
                         priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
                     }
                 }
-                if (showingLimit != Dock.minValueForTrading[chosenResourceID])
+                if (showingLimit != dockSystem.minValueForTrading[chosenResourceID])
                 {
-                    showingLimit = Dock.minValueForTrading[chosenResourceID];
+                    showingLimit = dockSystem.minValueForTrading[chosenResourceID];
                     limitInputField.text = showingLimit.ToString();
                 }                
             }       
@@ -96,7 +97,7 @@ public sealed class UITradeWindow : UIObserver {
 
     void UpdateSaleMarkers()
     {
-        bool?[] saleStatus = Dock.isForSale;
+        bool?[] saleStatus = dockSystem.isForSale;
         for (int i = 0; i < resourcesButtons.Length; i++)
         {
             if (i < tradableResources.Count)
@@ -127,15 +128,15 @@ public sealed class UITradeWindow : UIObserver {
         resourceName.text = Localization.GetResourceName(chosenResourceID);
         descriptionText.text = Localization.GetResourcesDescription(chosenResourceID);
         resourcePicture.uvRect = ResourceType.GetResourceIconRect(chosenResourceID);
-        ChangeSellStatus(Dock.isForSale[chosenResourceID]);
+        ChangeSellStatus(dockSystem.isForSale[chosenResourceID]);
 
-        resourceIsForSale = Dock.isForSale[resourceID];
+        resourceIsForSale = dockSystem.isForSale[resourceID];
         if (resourceIsForSale != null)
         {
             bool selling = (resourceIsForSale == true);                 
             limitText.transform.parent.gameObject.SetActive(true);
             showingPrice = selling ? ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient : ResourceType.prices[chosenResourceID];
-            showingLimit = Dock.minValueForTrading[chosenResourceID];
+            showingLimit = dockSystem.minValueForTrading[chosenResourceID];
             limitInputField.text = showingLimit.ToString();            
             RawImage ri = resourcesButtons[chosenButtonIndex].transform.GetChild(2).GetComponent<RawImage>();
             ri.enabled = true;
@@ -164,7 +165,7 @@ public sealed class UITradeWindow : UIObserver {
             showingPrice = selling ? ResourceType.prices[chosenResourceID] * GameMaster.sellPriceCoefficient : ResourceType.prices[chosenResourceID];
             priceText.text = Localization.GetWord(LocalizedWord.Price) + " : " + string.Format("{0:0.###}", showingPrice);
             limitInputField.transform.parent.gameObject.SetActive(true);
-            showingLimit = Dock.minValueForTrading[chosenResourceID];
+            showingLimit = dockSystem.minValueForTrading[chosenResourceID];
             limitInputField.text = showingLimit.ToString();
             showingDemand = ResourceType.demand[chosenResourceID];
             demandText.text = Localization.GetWord(LocalizedWord.Demand) + " : " + string.Format("{0:0.###}", showingDemand);
@@ -187,10 +188,10 @@ public sealed class UITradeWindow : UIObserver {
     public void ChangeLimit(int val)
     {
         if (chosenResourceID == -1) return;
-        int x = Dock.minValueForTrading[chosenResourceID];
+        int x = dockSystem.minValueForTrading[chosenResourceID];
         x += val;
         if (x < 0) x = 0;
-        Dock.ChangeMinValue(chosenResourceID, x);
+        dockSystem.ChangeMinValue(chosenResourceID, x);
         showingLimit = x;
         limitInputField.text = showingLimit.ToString();
         showingLimit = x;
@@ -201,14 +202,14 @@ public sealed class UITradeWindow : UIObserver {
         if (int.TryParse(limitInputField.text, out x))
         {
             if (x < 0) x = 0;
-            Dock.ChangeMinValue(chosenResourceID, x);
+            dockSystem.ChangeMinValue(chosenResourceID, x);
             limitInputField.text = x.ToString();
             showingLimit = x;
         }
     }
     public void UpdateResourceButtons()
     {
-        bool?[] saleStatus = Dock.isForSale;
+        bool?[] saleStatus = dockSystem.isForSale;
         for (int i = 0; i < resourcesButtons.Length; i++)
         {
             if (i < tradableResources.Count) {
@@ -237,13 +238,13 @@ public sealed class UITradeWindow : UIObserver {
     }
     public void BuyButton() {
         if (resourceIsForSale != false)
-        { 
-            Dock.ChangeSaleStatus(chosenResourceID, false);
+        {
+            dockSystem.ChangeSaleStatus(chosenResourceID, false);
             ChangeSellStatus(false);
         }
         else
         {
-            Dock.ChangeSaleStatus(chosenResourceID, null);
+            dockSystem.ChangeSaleStatus(chosenResourceID, null);
             ChangeSellStatus(null);
         }
     }
@@ -252,17 +253,18 @@ public sealed class UITradeWindow : UIObserver {
         if (resourceIsForSale == true)
         {
             ChangeSellStatus(null);
-            Dock.ChangeSaleStatus(chosenResourceID, null);
+            dockSystem.ChangeSaleStatus(chosenResourceID, null);
         }
         else
         {
             ChangeSellStatus(true);
-            Dock.ChangeSaleStatus(chosenResourceID, true);
+            dockSystem.ChangeSaleStatus(chosenResourceID, true);
         }
     }
 
     new private void OnEnable()
     {
+        if (dockSystem == null) dockSystem = DockSystem.GetCurrent();
         transform.SetAsLastSibling();
         UpdateResourceButtons();
         UIController.current.ChangeActiveWindow(ActiveWindowMode.TradePanel);

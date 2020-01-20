@@ -18,10 +18,13 @@ public sealed class Knowledge
     public byte[] colorCodesArray{get; private set;}
     public float completeness { get; private set; }
     public int changesMarker { get; private set; }
+
+    private byte[] routeBonusesMask = new byte[ROUTES_COUNT]; // учет полученных бонусов
     private KnowledgeTabUI observer;
 
     public const byte ROUTES_COUNT = 8, STEPS_COUNT = 7,
        WHITECOLOR_CODE = 0, REDCOLOR_CODE = 1, GREENCOLOR_CODE = 2, BLUECOLOR_CODE = 3, CYANCOLOR_CODE = 4, BLACKCOLOR_CODE = 5, NOCOLOR_CODE = 6;
+
     public static readonly Color[] colors = new Color[6]
     {
         Color.white, // 0 - white
@@ -31,7 +34,8 @@ public sealed class Knowledge
         new Color(0.1f, 0.92f, 0.9f, 1f), // 4 - cyan
         new Color(0.2f, 0.17f, 0.17f, 1f), // 5 - black      
     };
-    public static readonly float[] STEPVALUES = new float[7] { 1f, 10f, 25f, 50f, 75f, 100f, 128f };
+    public static readonly float[] STEPVALUES = new float[7] { 10f, 15f, 25f, 50f, 75f, 100f, 125f }; // 400 total
+    public const float MAX_RESEARCH_PTS = 400f;
     public readonly byte[,] routeButtonsIndexes = new byte[8, 7] {
         {36, 44, 43,51,52,60,59},
         {45, 53,46,54,62,55,63},
@@ -42,7 +46,85 @@ public sealed class Knowledge
         {35,34,26,25,33,32,24 },
         {42,50,41,49,57,48,56 }
     };
-    private readonly byte[] blockedCells = new byte[8]{ 2, 5, 16, 23, 40, 47, 58, 61 };
+    private readonly byte[] blockedCells = new byte[8] { 2, 5, 16, 23, 40, 47, 58, 61 };
+    
+    #region routes conditions
+    //foundation:
+    public const int R_F_POPULATION_COND_0 = 1000, R_F_POPULATION_COND_1 = 2500, R_F_POPULATION_COND_2 = 5000, R_F_IMMIGRANTS_CONDITION = 1000;
+    public enum FoundationRouteBoosters : byte { PopulationSize0, PopulationSize1, PopulationSize2, HotelBuilded, HousingMastBuilded, SettlementToCubeUpgrade, ThousandImmigrants, AnotherColonyFound}
+    #endregion
+
+    private void Prepare()
+    {
+        byte mask = routeBonusesMask[(int)ResearchRoute.Foundation];
+        if ( 
+            (mask & (byte)FoundationRouteBoosters.PopulationSize0) == 0 |
+            (mask & (byte)FoundationRouteBoosters.PopulationSize1) == 0 |
+            (mask & (byte)FoundationRouteBoosters.PopulationSize2) == 0 
+            )   GameMaster.realMaster.colonyController.populationChangingEvent += PopulationCheck;
+
+    }
+
+    public void ImmigrantsCheck(int newTotalCount)
+    {
+        if (newTotalCount > R_F_IMMIGRANTS_CONDITION) CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.ThousandImmigrants);
+    }
+    private void PopulationCheck(int x)
+    {
+        if (x < R_F_POPULATION_COND_0) return;
+        byte mask = routeBonusesMask[(int)ResearchRoute.Foundation];
+        if (x >= R_F_POPULATION_COND_2)
+        {
+            CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PopulationSize0);
+            CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PopulationSize1);
+            CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PopulationSize2);
+            GameMaster.realMaster.colonyController.populationChangingEvent -= PopulationCheck;
+        }
+        else
+        {
+            if (x >= R_F_POPULATION_COND_1)
+            {
+                CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PopulationSize0);
+                CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PopulationSize1);
+            }
+            else CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PopulationSize0);
+        }
+    }
+    public void CountRouteBonus(ResearchRoute rr, byte boosterIndex)
+    {
+        byte mask = GetPowTwo(boosterIndex), routeIndex = (byte)rr;
+        if ( (routeBonusesMask[routeIndex] & mask) == 0)
+        {
+            routeBonusesMask[routeIndex] += mask;
+            mask = routeBonusesMask[routeIndex];
+            byte bonusIndex = 0;
+            if ((mask & 1) != 0) bonusIndex++;
+            if ( (mask & 2) != 0) bonusIndex++;
+            if ((mask & 4) != 0) bonusIndex++;
+            if ((mask & 8) != 0) bonusIndex++;
+            if ((mask & 16) != 0) bonusIndex++;
+            if ((mask & 32) != 0) bonusIndex++;
+            if ((mask & 64) != 0) bonusIndex++;
+            if ((mask & 128) != 0) bonusIndex++;
+            if (bonusIndex < 4) AddResearchPoints(rr, STEPVALUES[bonusIndex]);
+            else AddResearchPoints(rr, STEPVALUES[bonusIndex] / 2f);
+        }
+    }
+    private byte GetPowTwo(byte x)
+    {
+        switch (x)
+        {
+            case 7: return 128;
+            case 6: return 64;
+            case 5: return 32;
+            case 4: return 16;
+            case 3: return 8;
+            case 2: return 4;
+            case 1: return 2;
+            case 0: return 1;
+            default: return (byte)Mathf.Pow(2, x);
+        }
+    }
 
     public static Knowledge GetCurrent()
     {

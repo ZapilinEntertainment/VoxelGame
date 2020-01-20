@@ -251,7 +251,7 @@ public sealed class Storage : MonoBehaviour {
 	}
 	#region save-load system
 	public void Save( System.IO.FileStream fs) {
-        if (standartResources == null) standartResources = new float[ResourceType.RTYPES_COUNT];
+        if (standartResources == null) standartResources = new float[ResourceType.TYPES_COUNT];
         foreach (float f in standartResources)
         {
             fs.Write(System.BitConverter.GetBytes(f), 0, 4);
@@ -259,10 +259,10 @@ public sealed class Storage : MonoBehaviour {
 	}
 	public void Load(System.IO.FileStream fs) {
         var val = new byte[4];
-        if (standartResources == null) standartResources = new float[ResourceType.RTYPES_COUNT];
+        if (standartResources == null) standartResources = new float[ResourceType.TYPES_COUNT];
         totalVolume = 0f;
         float f;
-        for (int i = 0; i <ResourceType.RTYPES_COUNT; i++)
+        for (int i = 0; i <ResourceType.TYPES_COUNT; i++)
         {
             fs.Read(val, 0, 4);
             f = System.BitConverter.ToSingle(val,0);

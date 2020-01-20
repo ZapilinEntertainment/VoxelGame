@@ -6,16 +6,17 @@ using UnityEngine.UI;
 public sealed class UIDockObserver : UIObserver
 {
     #pragma warning disable 0649
-    [SerializeField] Text tradingButtonText, immigrationButtonText, immigrationLimitText, nextShipTimer;
-    [SerializeField] GameObject tradingListPanel, immigrationPanel, tradingPanelContent;
-    [SerializeField] Image immigrationToggleButtonImage;
-    [SerializeField] InputField immigrationLimitInputField;
-    [SerializeField] Sprite overridingSprite;
+    [SerializeField] private Text tradingButtonText, immigrationButtonText, immigrationLimitText, nextShipTimer;
+    [SerializeField] private GameObject tradingListPanel, immigrationPanel, tradingPanelContent;
+    [SerializeField] private Image immigrationToggleButtonImage;
+    [SerializeField] private InputField immigrationLimitInputField;
+    [SerializeField] private Sprite overridingSprite;
     #pragma warning restore 0649
     private Dock observingDock;
     private const float START_Y = -16, OPERATION_PANEL_HEIGHT = 32;
     private const int MIN_VALUE_CHANGING_STEP = 5, SELL_STATUS_ICON_INDEX = 0, NAME_INDEX = 1, MINUS_BUTTON_INDEX = 2, LIMIT_VALUE_INDEX = 3, PLUS_BUTTON_INDEX = 4, DELETE_BUTTON_INDEX = 5;
     private int showingImmigrationLimit = 0;
+    private DockSystem dockSystem;
 
     public static UIDockObserver InitializeDockObserverScript()
     {
@@ -34,6 +35,7 @@ public sealed class UIDockObserver : UIObserver
         }
         else
         {
+            if (dockSystem == null) dockSystem = DockSystem.GetCurrent();
             observingDock = d; isObserving = true;
             UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
             if (uwb == null) uwb = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
@@ -76,13 +78,13 @@ public sealed class UIDockObserver : UIObserver
             tradingListPanel.SetActive(false);
             tradingButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         }        
-        if (Dock.immigrationEnabled) {
+        if (dockSystem.immigrationEnabled) {
             immigrationToggleButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ColonizationEnabled);
             immigrationToggleButtonImage.overrideSprite = overridingSprite;
-            immigrationLimitInputField.text = Dock.immigrationPlan.ToString();
+            immigrationLimitInputField.text = dockSystem.immigrationPlan.ToString();
             immigrationLimitInputField.transform.parent.gameObject.SetActive(true);
             immigrationLimitText.enabled = true;
-            immigrationLimitText.text = Localization.GetPhrase(LocalizedPhrase.TicketsLeft) + " : " + Dock.immigrationPlan.ToString();
+            immigrationLimitText.text = Localization.GetPhrase(LocalizedPhrase.TicketsLeft) + " : " + dockSystem.immigrationPlan.ToString();
         }
         else
         {
@@ -108,11 +110,11 @@ public sealed class UIDockObserver : UIObserver
             }
             else
             {
-                if ((immigrationToggleButtonImage.overrideSprite == null) != Dock.immigrationEnabled)
+                if ((immigrationToggleButtonImage.overrideSprite == null) != dockSystem.immigrationEnabled)
                 {
-                    if (showingImmigrationLimit != Dock.immigrationPlan)
+                    if (showingImmigrationLimit != dockSystem.immigrationPlan)
                     {
-                        showingImmigrationLimit = Dock.immigrationPlan;
+                        showingImmigrationLimit = dockSystem.immigrationPlan;
                         immigrationLimitText.text = Localization.GetPhrase(LocalizedPhrase.TicketsLeft) + " : " + showingImmigrationLimit.ToString();
                     }
                 }
@@ -127,22 +129,22 @@ public sealed class UIDockObserver : UIObserver
 
     public void ImmigrationToggleButton()
     {
-        Dock.SetImmigrationStatus((!Dock.immigrationEnabled), 0);
+        dockSystem.SetImmigrationStatus((!dockSystem.immigrationEnabled), 0);
         PrepareImmigrationPanel();
     }
     public void ChangeImmigrationLimitButton(int x)
     {
-        showingImmigrationLimit = Dock.immigrationPlan + x;
+        showingImmigrationLimit = dockSystem.immigrationPlan + x;
         if (showingImmigrationLimit < 0) showingImmigrationLimit = 0;
-        Dock.SetImmigrationStatus(true, showingImmigrationLimit);
-        immigrationLimitText.text = Localization.GetPhrase(LocalizedPhrase.TicketsLeft) + " : " + Dock.immigrationPlan.ToString();
+        dockSystem.SetImmigrationStatus(true, showingImmigrationLimit);
+        immigrationLimitText.text = Localization.GetPhrase(LocalizedPhrase.TicketsLeft) + " : " + dockSystem.immigrationPlan.ToString();
         immigrationLimitInputField.text = showingImmigrationLimit.ToString();
     }
     public void ImmigrationLimitChanged()
     {
         if (int.TryParse(immigrationLimitInputField.text, out showingImmigrationLimit)) {
             if (showingImmigrationLimit < 0) showingImmigrationLimit = 0;
-            Dock.SetImmigrationStatus(true, showingImmigrationLimit);
+            dockSystem.SetImmigrationStatus(true, showingImmigrationLimit);
         }
     }
 
@@ -150,20 +152,20 @@ public sealed class UIDockObserver : UIObserver
     #region trade operations list    
     public void LimitChangeButton(int resourceID, bool plus)
     {
-        int x = Dock.minValueForTrading[resourceID];
+        int x = dockSystem.minValueForTrading[resourceID];
         x += MIN_VALUE_CHANGING_STEP * (plus ? 1 : -1);
         if (x < 0) x = 0;
-        Dock.ChangeMinValue(resourceID, x);
+        dockSystem.ChangeMinValue(resourceID, x);
         RefreshTradeOperationsList();
     }
 
     void RefreshTradeOperationsList()
     {
         Transform tpanel = tradingPanelContent.transform;
-        bool?[] saleStatus = Dock.isForSale;
+        bool?[] saleStatus = dockSystem.isForSale;
         int buttonsCount = tpanel.childCount;
         List<int> realOperations = new List<int>();
-        for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
+        for (int i = 0; i < ResourceType.TYPES_COUNT; i++)
         {
             if (saleStatus[i] != null) realOperations.Add(i);
         }
@@ -186,7 +188,7 @@ public sealed class UIDockObserver : UIObserver
                 t.GetChild(MINUS_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
                     this.LimitChangeButton(x, false);
                 });
-                t.GetChild(LIMIT_VALUE_INDEX).GetComponent<Text>().text = Dock.minValueForTrading[resID].ToString();
+                t.GetChild(LIMIT_VALUE_INDEX).GetComponent<Text>().text = dockSystem.minValueForTrading[resID].ToString();
                 t.GetChild(PLUS_BUTTON_INDEX).GetComponent<Button>().onClick.RemoveAllListeners();
                 t.GetChild(PLUS_BUTTON_INDEX).GetComponent<Button>().onClick.AddListener(() => {
                     this.LimitChangeButton(x, true);
@@ -215,7 +217,7 @@ public sealed class UIDockObserver : UIObserver
 
     public void RemoveTradeOperation(int resourceID)
     {
-        Dock.ChangeSaleStatus(resourceID, null);
+        dockSystem.ChangeSaleStatus(resourceID, null);
         RefreshTradeOperationsList();
     }
     #endregion

@@ -745,13 +745,13 @@ public sealed class GameMaster : MonoBehaviour
         //74 (+4) end
         #endregion
 
+        DockSystem.SaveDockSystem(fs);
         globalMap.Save(fs);
         environmentMaster.Save(fs);
         Artifact.SaveStaticData(fs);
         Crew.SaveStaticData(fs);
         mainChunk.SaveChunkData(fs);
         colonyController.Save(fs); // <------- COLONY CONTROLLER
-        Dock.SaveStaticDockData(fs);
 
         QuestUI.current.Save(fs);        
         Expedition.SaveStaticData(fs);
@@ -855,6 +855,7 @@ public sealed class GameMaster : MonoBehaviour
             else realSpaceConsuming = null;
             #endregion
 
+            DockSystem.LoadDockSystem(fs);
             globalMap.Load(fs);            
             if (loadingFailed)
             {
@@ -914,7 +915,6 @@ public sealed class GameMaster : MonoBehaviour
                 goto FAIL;
             }
 
-            Dock.LoadStaticData(fs);
             if (loadingFailed)
             {
                 errorReason = "dock load failure";

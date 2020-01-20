@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public sealed class Dock : WorkBuilding {
-	
-	public static bool?[] isForSale{get; private set;}
-	public static int[] minValueForTrading{get; private set;}	
-	public static int immigrationPlan {get; private set;} 
-	public static bool immigrationEnabled{get; private set;}
     public static UIDockObserver dockObserver;
     private static bool announceNewShips = false;
+    private static DockSystem dockSystem;
 
 	public bool maintainingShip{get; private set;}
     public bool correctLocation { get; private set; }
@@ -28,16 +24,10 @@ public sealed class Dock : WorkBuilding {
     {
         AddToResetList(typeof(Dock));
     }
-	public static void ResetStaticData() {
-		isForSale = new bool?[ResourceType.RTYPES_COUNT];
-		minValueForTrading= new int[ResourceType.RTYPES_COUNT];
-		immigrationEnabled = true;
-		immigrationPlan = 0;
-	}
 
 	override public void Prepare() {
-        if (isForSale == null) ResetStaticData();
 		PrepareWorkbuilding();
+        if (dockSystem == null) dockSystem = DockSystem.GetCurrent();
 	}
 
     override public void SetModelRotation(int r)
@@ -127,13 +117,13 @@ public sealed class Dock : WorkBuilding {
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
-					if ( immigrationEnabled  ) {
-                        if (immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value < colony.happiness_coefficient / 2f)
+					if ( dockSystem.immigrationEnabled  ) {
+                        if (dockSystem.immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value < colony.happiness_coefficient / 2f)
 						sendImmigrants = true;
 					}
 					int transitionsCount = 0;
-					for (int x = 0; x < isForSale.Length; x++) {
-						if (isForSale[x] != null) transitionsCount++;
+					for (int x = 0; x < dockSystem.isForSale.Length; x++) {
+						if (dockSystem.isForSale[x] != null) transitionsCount++;
 					}
 					if (transitionsCount > 0) sendGoods = true;
 
@@ -415,164 +405,44 @@ public sealed class Dock : WorkBuilding {
         else return false;
     }
 
-    public void ShipLoading(Ship s) {
-		if (loadingShip == null) {
-			loadingTimer = LOADING_TIME;
-			loadingShip = s;
+    public void ShipLoading(Ship s)
+    {
+        if (loadingShip == null)
+        {
+            loadingTimer = LOADING_TIME;
+            loadingShip = s;
             if (announceNewShips) GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
             return;
-		}
-		int peopleBefore = immigrationPlan;
-        float tradeVolume = s.volume * (0.01f + 0.99f * ((float)workersCount / (float)maxWorkers));
-        switch (s.type) {
-		case ShipType.Passenger:
-                {
-                    float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
-                    if (immigrationPlan > 0)
-                    {                        
-                        if (vol > immigrationPlan) {
-                            colony.AddCitizens(immigrationPlan);
-                            immigrationPlan = 0;
-                            vol -= immigrationPlan;
-                        }
-                        else {
-                            int x = (int)vol;
-                            colony.AddCitizens(x); immigrationPlan -= x;
-                            vol = 0;
-                        }
-                    }
-                    if (vol > 0)
-                    {
-                        vol *= colony.happiness_coefficient;
-                        if (vol > 1f) Hotel.DistributeLodgers((int)vol);
-                    }
+        }
+        DockSystem.GetCurrent().HandleShip(this, s, colony);
+        loadingShip = null;
+        maintainingShip = false;
+        s.Undock();
 
-                    if (isForSale[ResourceType.FOOD_ID] != null)
-                    {
-                        if (isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Food, s.volume * 0.1f);
-                        else BuyResource(ResourceType.Food, s.volume * 0.1f);
-                    }
-                    break;
-                }
-		case ShipType.Cargo:
-                {
-                    float buyPrioritiesPool = 0, sellPrioritiesPool = 0;
-                    List<int> buyPositions = new List<int>(), sellPositions = new List<int>();
-                    var storage = colony.storage.standartResources;
-                    float[] demands = ResourceType.demand;
-                    for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
-                    {
-                        if (isForSale[i] == null) continue;
-                        if (isForSale[i] == true) // продаваемый островом ресурс
-                        {                            
-                            if (storage[i] > minValueForTrading[i])
-                            {
-                                sellPositions.Add(i);
-                                sellPrioritiesPool += demands[i];
-                            }
-                        }
-                        else // покупаемый островом ресурс
-                        {
-                            if (storage[i] <= minValueForTrading[i])
-                            {
-                                buyPositions.Add(i);
-                                buyPrioritiesPool += demands[i];
-                            }
-                        }
-                    }
-                    
-                    if (buyPositions.Count > 0)
-                    {
-                        float boughtVolume = 0;
-                        foreach (int id in buyPositions)
-                        {
-                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
-                            if (storage[id] + v > minValueForTrading[id]) v = minValueForTrading[id] - storage[id];
-                            if (v != 0)  boughtVolume += BuyResource(ResourceType.GetResourceTypeById(id), v);
-                        }
-                        tradeVolume += boughtVolume;
-                    }
-                    
-                    if (sellPositions.Count > 0)
-                    {
-                        foreach (int id in sellPositions)
-                        {
-                            double v = demands[id] / buyPrioritiesPool * tradeVolume;
-                            if (storage[id] - v < minValueForTrading[id]) v = storage[id] - minValueForTrading[id];
-                            float v2 = (float)(demands[id] / sellPrioritiesPool * tradeVolume);
-                            if (v2 != 0)  SellResource(ResourceType.GetResourceTypeById(id), v2);
-                        }
-                    }
-                    break;
-                }
-		case ShipType.Military:
-                {
-                    if (GameMaster.realMaster.warProximity < 0.5f && Random.value < 0.1f && immigrationPlan > 0)
-                    {
-                        int veterans = (int)(s.volume * 0.02f);
-                        if (veterans > immigrationPlan) veterans = immigrationPlan;
-                        colony.AddCitizens(veterans);
-                    }
-                    if (isForSale[ResourceType.FUEL_ID] == true) {
-                        float tv = (float)(tradeVolume * 0.5f * (Random.value * 0.5f + 0.5f));
-                        if (tv != 0) SellResource(ResourceType.Fuel, tv);
-                            };
-                    if (GameMaster.realMaster.warProximity > 0.5f)
-                    {
-                        if (isForSale[ResourceType.METAL_S_ID] == true) SellResource(ResourceType.metal_S, s.volume * 0.1f);
-                        if (isForSale[ResourceType.METAL_K_ID] == true) SellResource(ResourceType.metal_K, s.volume * 0.05f);
-                        if (isForSale[ResourceType.METAL_M_ID] == true) SellResource(ResourceType.metal_M, s.volume * 0.1f);
-                    }
-                    break;
-                }
-		case ShipType.Private:
-			if ( isForSale[ResourceType.FUEL_ID] == true) SellResource(ResourceType.Fuel, (float)(tradeVolume * 0.8f));
-			if ( isForSale[ResourceType.FOOD_ID] == true) SellResource(ResourceType.Fuel, (float)(tradeVolume * 0.15f));
-			break;
-		}
-		loadingShip = null;
-		maintainingShip = false;
-		s.Undock();
-
-		shipArrivingTimer = GameConstants.GetShipArrivingTimer();
-
-		int newPeople = peopleBefore - immigrationPlan;
-		if (newPeople > 0) GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
-	}
-
-	private void SellResource(ResourceType rt, float volume) {
-		float vol = colony.storage.GetResources(rt, volume);
-		colony.AddEnergyCrystals(vol * ResourceType.prices[rt.ID] * GameMaster.sellPriceCoefficient);
+        shipArrivingTimer = GameConstants.GetShipArrivingTimer();     
+    }
+    public void SellResource(ResourceType rt, float volume)
+    {
+        var colony = GameMaster.realMaster.colonyController;
+        float vol = colony.storage.GetResources(rt, volume);
+        colony.AddEnergyCrystals(vol * ResourceType.prices[rt.ID] * GameMaster.sellPriceCoefficient);
         colony.gears_coefficient -= gearsDamage * vol;
     }
-	private float BuyResource(ResourceType rt, float volume) {
+    public float BuyResource(ResourceType rt, float volume)
+    {
+        var colony = GameMaster.realMaster.colonyController;
         float p = ResourceType.prices[rt.ID];
         if (p != 0)
         {
             volume = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]) / ResourceType.prices[rt.ID];
             if (volume == 0) return 0;
         }
-		colony.storage.AddResource(rt, volume);
+        colony.storage.AddResource(rt, volume);
         colony.gears_coefficient -= gearsDamage * volume;
         return volume;
-	}
-
-	public static void SetImmigrationStatus ( bool x, int count) {
-		immigrationEnabled = x;
-		immigrationPlan = count;
-	}
-    public static void ChangeMinValue(int index, int val)
-    {
-        minValueForTrading[index] = val;
     }
-    public static void ChangeSaleStatus(int index, bool? val)
-    {
-        if (isForSale[index] == val) return;
-        else
-        {
-            isForSale[index] = val;
-        }
-    }    
+
+   
 
     override public void RecalculateWorkspeed()
     {
@@ -668,65 +538,14 @@ public sealed class Dock : WorkBuilding {
     }
 
     #region save-load system
-    public static void SaveStaticDockData(System.IO.FileStream fs)
-    {
-        byte trueByte = 1, falseByte = 0, nullByte = 2;
-        if (isForSale == null) ResetStaticData();
-        for (int i = 0; i < ResourceType.RTYPES_COUNT; i++)
-        {
-            if (isForSale[i] == null) fs.WriteByte(nullByte);
-            else
-            {
-                if (isForSale[i] == true) fs.WriteByte(trueByte);
-                else fs.WriteByte(falseByte);
-            }
-            fs.Write(System.BitConverter.GetBytes(minValueForTrading[i]),0,4);
-            fs.Write(System.BitConverter.GetBytes(ResourceType.prices[i]), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(ResourceType.demand[i]), 0, 4);
-        }
-        fs.Write(System.BitConverter.GetBytes(immigrationPlan), 0, 4);
-        fs.WriteByte(immigrationEnabled ? trueByte : falseByte);
-    }
-
-    public static void LoadStaticData(System.IO.FileStream fs)
-    {
-        var data = new byte[13];
-        int count = ResourceType.RTYPES_COUNT;
-        isForSale = new bool?[count];
-        minValueForTrading = new int[count];
-        ResourceType.prices = new float[count];
-        ResourceType.demand = new float[count];
-        for (int i = 0; i < count; i++)
-        {
-            fs.Read(data, 0, 13);
-            if (data[0] == 2) isForSale[i] = null;
-            else
-            {
-                if (data[0] == 1) isForSale[i] = true;
-                else isForSale[i] = false;
-            }
-            minValueForTrading[i] = System.BitConverter.ToInt32(data, 1);
-            ResourceType.prices[i] = System.BitConverter.ToSingle(data, 5);
-            ResourceType.demand[i] = System.BitConverter.ToSingle(data, 9);
-        }
-        data = new byte[5];
-        fs.Read(data, 0, 5);
-        immigrationPlan = System.BitConverter.ToInt32(data, 0);
-        immigrationEnabled = data[4] == 1;
-    }
-
     public override List<byte> Save()
     {
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
         data.AddRange(SaveWorkbuildingData());
-        data.AddRange(SaveDockData());
-        return data;
-    }
-    private List<byte> SaveDockData()
-    {
+        //dock data
         byte zero = 0, one = 1;
-        var data = new List<byte>() { correctLocation ? one : zero };
+        data.Add(correctLocation ? one : zero);
 
         if (maintainingShip & loadingShip != null)
         {

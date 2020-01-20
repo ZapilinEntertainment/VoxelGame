@@ -960,6 +960,7 @@ public sealed class Settlement : House
             {
                buildingObserver.StatusUpdate();
             }
+            if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
         }
         else
         {
@@ -968,9 +969,10 @@ public sealed class Settlement : House
                 Building upgraded = GetStructureByID(HOUSE_BLOCK_ID) as Building;
                 upgraded.SetBasement(basement, PixelPosByte.zero);
                 if (returnToUI) upgraded.ShowOnGUI();
+                Knowledge.GetCurrent()?.CountRouteBonus(Knowledge.ResearchRoute.Foundation, (byte)Knowledge.FoundationRouteBoosters.SettlementToCubeUpgrade);
             }
         }
-        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
+        
     }
     override public ResourceContainer[] GetUpgradeCost()
     {

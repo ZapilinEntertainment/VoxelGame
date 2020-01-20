@@ -571,7 +571,7 @@ public class PointOfInterest : MapPoint
                                                     break;
                                                 }
                                         }
-                                        byte val = (byte)(1f + richness * difficulty * 3f);
+                                        byte val = (byte)(1f + richness / 0.25f + difficulty / 0.25f);
                                         if (moreMystic & moreSpecific)
                                         {
                                             if (v < 0.4f) challengeArray[x, y] = new ChallengeField(ctypes[0], val);

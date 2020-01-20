@@ -128,4 +128,19 @@ public sealed class Hotel : Building
         if (lodgersCount > 0) DistributeLodgers(lodgersCount);
         Destroy(gameObject);
     }
+
+    #region save-load system
+    override public List<byte> Save()
+    {
+        var data = base.Save();
+        data.Add(lodgersCount);
+        return data;
+    }
+
+    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    {
+        base.Load(fs, sblock);
+        lodgersCount = (byte)fs.ReadByte();
+    }
+    #endregion
 }

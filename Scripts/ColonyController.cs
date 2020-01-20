@@ -5,7 +5,6 @@ using UnityEngine;
 
 public sealed class ColonyController : MonoBehaviour
 {
-
     public string cityName { get; private set; }
     public Storage storage { get; private set; }
     public HeadQuarters hq { get; private set; }
@@ -24,6 +23,8 @@ public sealed class ColonyController : MonoBehaviour
     public float happiness_coefficient { get; private set; }
     public float health_coefficient { get; private set; }
     public bool accumulateEnergy = true, buildingsWaitForReconnection = false;
+    public delegate void PopulationDelegate(int x);
+    public event PopulationDelegate populationChangingEvent;
 
     public float energyStored { get; private set; }
     public float energySurplus { get; private set; }
@@ -51,7 +52,14 @@ public sealed class ColonyController : MonoBehaviour
     }
 
     public int freeWorkers { get; private set; }
-    public int citizenCount { get; private set; }
+    public int citizenCount {
+        get { return _citizenCount; }
+        private set {
+            _citizenCount = value;
+            populationChangingEvent?.Invoke(_citizenCount);
+        }
+    }
+    private int _citizenCount;
     public float realBirthrate { get; private set; }
     public int totalLivespace { get; private set; }
 
@@ -74,6 +82,7 @@ public sealed class ColonyController : MonoBehaviour
         FOOD_SUPPLY_MIN_HAPPINESS = 0.2f,
         HOUSING_MIN_HAPPINESS = 0.15f,
         HEALTHCARE_MIN_HAPPINESS = 0.14f;
+
 
     void Awake()
     {

@@ -17,7 +17,7 @@ public class ResourceType
     METAL_S_ORE_ID = 21, FERTILE_SOIL_ID = 22, FUEL_ID = 23, GRAPHONIUM_ID = 24, SUPPLIES_ID = 25, SNOW_ID = 26;
     public static readonly ResourceType[] resourceTypesArray, materialsForCovering, blockMaterials;
     public static float[] prices, demand;
-    public const int RTYPES_COUNT = 27;
+    public const byte TYPES_COUNT = 27;
 
     //проверь при добавлении
     //- ID
@@ -35,8 +35,8 @@ public class ResourceType
 
     static ResourceType()
     {
-        resourceTypesArray = new ResourceType[RTYPES_COUNT];
-        prices = new float[RTYPES_COUNT]; demand = new float[RTYPES_COUNT];
+        resourceTypesArray = new ResourceType[TYPES_COUNT];
+        prices = new float[TYPES_COUNT]; demand = new float[TYPES_COUNT];
         Nothing = new ResourceType(0, 0, 0);
         float p = 0.01f;
 
