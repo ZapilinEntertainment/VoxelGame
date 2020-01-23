@@ -34,7 +34,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(LUMBERMILL_1_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_1_ID) as Building);
                 blist.Add(GetStructureByID(ENERGY_CAPACITOR_1_ID) as Building);
-                blist.Add(GetStructureByID(MINE_ID) as Building);
+                //blist.Add(GetStructureByID(MINE_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ID) as Building);
                 break;
             case 2:

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum MaterialType : byte { Basic, Metal, Energy, Green }
-public enum MeshType: byte { NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeil, CutPlane, CutEdge012, CutEdge032}
+//dependency
 
 public sealed class PoolMaster : MonoBehaviour {
     private struct LightPoolInfo
@@ -40,10 +40,8 @@ public sealed class PoolMaster : MonoBehaviour {
     public static readonly Color gameOrangeColor = new Color(0.933f, 0.5686f, 0.27f);
 
     private static Transform zoneCube;
-    private static bool useTextureRotation = false;
     private static Dictionary<LightPoolInfo, Material> lightPoolMaterials;
     private static Material metal_material, green_material, default_material, lr_red_material, lr_green_material, basic_material;
-    private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge012, cutEdge032, caveCeil;   
 
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
@@ -53,7 +51,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static byte MAX_MATERIAL_LIGHT_DIVISIONS { get; private set; }
     public const int NO_MATERIAL_ID = -1, MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
         MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
-        MATERIAL_WHITEWALL_ID = -11;
+        MATERIAL_WHITEWALL_ID = -11, MATERIAL_MULTIMATERIAL_ID = -12, MATERIAL_COMBINED_BASIC_ID = -13;
     // зависимость - ResourceType.GetResourceByID
     private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2;
 
@@ -72,17 +70,7 @@ public sealed class PoolMaster : MonoBehaviour {
             lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
         }
 
-        inactiveShips = new List<Ship>();
-
-        quadMesh = new Mesh();
-        quadMesh.vertices = new Vector3[4] { new Vector3 (0.5f, -0.5f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0) };
-        quadMesh.triangles = new int[6] {0,1,2, 1,3,2 };
-        quadMesh.normals = new Vector3[4] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
-        quadMesh.uv = new Vector2[4] { new Vector2(0,0) , new Vector2(0,1), new Vector2(1,0), new Vector2(1,1) };
-
-        plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
-		plane_excavated_05 = Resources.Load<Mesh>("Meshes/Plane_excavated_05");
-		plane_excavated_075 = Resources.Load<Mesh>("Meshes/Plane_excavated_075");
+        inactiveShips = new List<Ship>();       
 
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
@@ -212,68 +200,6 @@ public sealed class PoolMaster : MonoBehaviour {
 			}
 		}       
 	}
-
-    public static Mesh GetMesh(MeshType mtype)
-    {
-        switch (mtype)
-        {
-            default:
-            case MeshType.Quad: return quadMesh;
-            case MeshType.ExcavatedPlane025: return plane_excavated_025;
-            case MeshType.ExcavatedPlane05: return plane_excavated_05;
-            case MeshType.ExcavatedPlane075: return plane_excavated_075;
-            case MeshType.CutPlane:
-                {
-                    if (cutPlane == null)
-                    {
-                        cutPlane = new Mesh();
-                        cutPlane.vertices = new Vector3[4] { new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0.5f, 0.5f, -0.5f), new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(-0.5f, 0.5f, -0.5f) };
-                        cutPlane.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
-                        cutPlane.uv = new Vector2[4] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1) };
-                    }
-                    return cutPlane;
-                }
-            case MeshType.CutEdge012:
-                {
-                    if (cutEdge012 == null)
-                    {
-                        cutEdge012 = new Mesh();
-                        cutEdge012.vertices = new Vector3[3] { new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, -0.5f, 0)};
-                        cutEdge012.triangles = new int[3] { 0, 1, 2};
-                        cutEdge012.uv = new Vector2[3] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f) };
-                    }
-                    return cutEdge012;
-                }
-            case MeshType.CutEdge032:
-                {
-                    if (cutEdge032 == null)
-                    {
-                        cutEdge032 = new Mesh();
-                        cutEdge032.vertices = new Vector3[3] { new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(-0.5f, -0.5f, 0) };
-                        cutEdge032.triangles = new int[3] { 0, 1, 2 };
-                        cutEdge032.uv = new Vector2[3] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f) };
-                    }
-                    return cutEdge032;
-                }
-            case MeshType.CaveCeil:
-                {
-                    if (caveCeil == null)
-                    {
-                        caveCeil= new Mesh();
-                        caveCeil.vertices = new Vector3[4] { new Vector3(0.5f, 0.4f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, 0.4f, 0), new Vector3(-0.5f, 0.5f, 0) };
-                        caveCeil.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };                      
-                        caveCeil.uv = new Vector2[4] { new Vector2(0, 0.9f), new Vector2(0, 1), new Vector2(1, 0.9f), new Vector2(1, 1) };
-                    }
-                    return caveCeil;
-                }
-        }
-    }
-    public static Mesh GetMesh(MeshType mtype, int materialID)
-    {
-        Mesh m = Instantiate(GetMesh(mtype));
-        SetMeshUVs(ref m, materialID);
-        return m;
-    }
 
     public static Sprite GetStarSprite(bool random)
     {
@@ -417,189 +343,15 @@ public sealed class PoolMaster : MonoBehaviour {
 		if (shipsClearTimer == 0) shipsClearTimer = clearTime;
 	}
 
-    public static GameObject GetRooftop(bool peak, bool artificial)
-    {
-        if (artificial) return GetRooftop(peak, artificial, 0);
-        else {
-            if (peak) {
-                float f = Random.value;
-                byte n = 0;
-                if (f >= 0.77f) n = 2;
-                else if (f <= 0.33f) n = 0; else n = 1;
-                return GetRooftop(true, false, n);
-            }
-            else { if (Random.value > 0.5f) return GetRooftop(false, false, 0); else return GetRooftop(false, false, 1); }
-        }
-    }
-    public static GameObject GetRooftop(bool peak, bool artificial, byte number) {
-        GameObject g = Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/" + (artificial ? "artificial" : "natural") + (peak ? "Peak" : "Rooftop") + number.ToString() ) );
-        g.name = (artificial ? "a" : "n") + (peak ? "p" : "r") + number.ToString();
-        if (useAdvancedMaterials) ReplaceMaterials(g, true);
-        return g;
-	}
-    public static GameObject GetFlyingPlatform()
-    {
-        return Instantiate(Resources.Load<GameObject>("Prefs/flyingPlatform_small"));
-    }
-
     public static Mesh SetMaterialByID(ref MeshFilter mf, ref MeshRenderer mr, int materialID, byte i_illumination)
     {
         var m = mf.mesh;
-        SetMeshUVs(ref m, materialID);
+        MeshMaster.SetMeshUVs(ref m, materialID);
         mf.sharedMesh = m;
         if (useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);
         else mr.sharedMaterial = GetMaterial(materialID);
         return m;
-    }
-    public static void SetMeshUVs(ref Mesh m, int materialID)
-    {
-        Vector2[] borders ;
-        float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
-        switch (materialID)
-        {
-            case ResourceType.STONE_ID:
-                borders = new Vector2[] { new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(4 * piece, 3 * piece), new Vector2(4 * piece, 2 * piece) };
-                break;
-            case ResourceType.DIRT_ID:
-                borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
-                break;
-            case ResourceType.LUMBER_ID:
-                borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
-                break;
-            case ResourceType.METAL_K_ORE_ID:
-            case ResourceType.METAL_K_ID:
-                borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
-                break;
-            case ResourceType.METAL_M_ORE_ID:
-            case ResourceType.METAL_M_ID:
-                borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
-                break;
-            case ResourceType.METAL_E_ORE_ID:
-            case ResourceType.METAL_E_ID:
-                borders = new Vector2[] { new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
-                break;
-            case ResourceType.METAL_N_ORE_ID:
-            case ResourceType.METAL_N_ID:
-                borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
-                break;
-            case ResourceType.METAL_P_ORE_ID:
-            case ResourceType.METAL_P_ID:
-                borders = new Vector2[] { new Vector2(0, 2 * piece), new Vector2(0, 3 * piece), new Vector2(piece, 3 * piece), new Vector2(piece, 2 * piece) };
-                break;
-            case ResourceType.METAL_S_ORE_ID:
-            case ResourceType.METAL_S_ID:
-                borders = new Vector2[] { new Vector2(piece, 2 * piece), new Vector2(piece, 3 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 2 * piece) };
-                break;
-            case ResourceType.MINERAL_F_ID:
-                borders = new Vector2[] { new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(4 * piece, 4 * piece), new Vector2(4 * piece, 3 * piece) };
-                break;
-            case ResourceType.MINERAL_L_ID:
-                borders = new Vector2[] { new Vector2(0, piece), new Vector2(0, 2 * piece), new Vector2(piece, 2 * piece), new Vector2(piece, piece) };
-                break;
-            case ResourceType.PLASTICS_ID:
-                borders = new Vector2[] { new Vector2(piece, 3 * piece), new Vector2(piece, 4 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(2 * piece, 3 * piece) };
-                break;
-            case ResourceType.CONCRETE_ID:
-                borders = new Vector2[] { new Vector2(0, 3 * piece), new Vector2(0, 4 * piece), new Vector2(piece, 4 * piece), new Vector2(piece, 3 * piece) };
-                break;
-            case ResourceType.SNOW_ID:
-                borders = new Vector2[] { new Vector2(piece, piece), new Vector2(piece, 2 * piece), new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, piece) };
-                break;
-            case ResourceType.FERTILE_SOIL_ID:
-                borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
-                break;
-            case MATERIAL_ADVANCED_COVERING_ID:
-                borders = new Vector2[] { new Vector2(3 * piece, piece), new Vector2(3 * piece, 2 * piece), new Vector2(4 * piece, 2 * piece), new Vector2(4 * piece, piece) };
-                break;
-            case MATERIAL_GRASS_100_ID:
-                borders = new Vector2[] { new Vector2(piece, 0), new Vector2(piece, piece), new Vector2(2 * piece, piece), new Vector2(2 * piece, 0) };
-                break;
-            case MATERIAL_GRASS_80_ID:
-                borders = new Vector2[] { new Vector2(2 * piece + add, 0), new Vector2(2 * piece + add, piece), new Vector2(3 * piece + add, piece), new Vector2(3 * piece + add, 0) };
-                break;
-            case MATERIAL_GRASS_60_ID:
-                borders = new Vector2[] { new Vector2(2 * piece + add, piece), new Vector2(2 * piece + add, 2 * piece), new Vector2(3 * piece + add, 2 * piece), new Vector2(3 * piece + add, piece) };
-                break;
-            case MATERIAL_GRASS_40_ID:
-                borders = new Vector2[] { new Vector2(2 * piece + add, 2 * piece), new Vector2(2 * piece + add, 3 * piece), new Vector2(3 * piece + add, 3 * piece), new Vector2(3 * piece + add, 2 * piece) };
-                break;
-            case MATERIAL_GRASS_20_ID:
-                borders = new Vector2[] { new Vector2(2 * piece + add, 3 * piece), new Vector2(2 * piece + add, 4 * piece), new Vector2(3 * piece + add, 4 * piece), new Vector2(3 * piece + add, 3 * piece) };
-                break;
-            case MATERIAL_LEAVES_ID:
-                borders = new Vector2[] { Vector2.zero, Vector2.up * piece, Vector2.one * piece, Vector2.right * piece };
-                break;
-            case MATERIAL_WHITE_METAL_ID:
-                borders = new Vector2[] { new Vector2(2 * piece, 2 * piece), new Vector2(2 * piece, 3 * piece), new Vector2(3 * piece, 3 * piece), new Vector2(3 * piece, 2 * piece) };
-                break;
-            case MATERIAL_DEAD_LUMBER_ID:
-                borders = new Vector2[] { new Vector2(2 * piece, 3 * piece), new Vector2(2 * piece, 4 * piece), new Vector2(3 * piece, 4 * piece), new Vector2(3 * piece, 3 * piece) };
-                break;
-            case MATERIAL_WHITEWALL_ID:
-                borders = new Vector2[] { new Vector2(2 * piece, piece), new Vector2(2 * piece, 2 * piece), new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, piece) };
-                break;
-            default: borders = new Vector2[] { Vector2.zero, Vector2.one, Vector2.right, Vector2.up }; break;
-        }
-
-        borders = new Vector2[4] { borders[0], borders[2], borders[1], borders[3] };
-
-        // крутим развертку, если это квад, иначе просто перетаскиваем 
-        bool isQuad = (m.uv.Length == 4);
-        Vector2[] uvEdited = m.uv;
-        if (isQuad)
-        {
-            borders[0].x += 0.01f; // (0,0)
-            borders[0].y += 0.01f;
-
-            borders[1].x -= 0.01f; //(0,1)
-            borders[1].y -= 0.01f;
-
-            borders[2].x += 0.01f; // (1,1)
-            borders[2].y -= 0.01f;
-
-            borders[3].x -= 0.01f; // (1,0)
-            borders[3].y += 0.01f;
-            if (useTextureRotation)
-            {
-                float seed = Random.value;
-                if (seed > 0.5f)
-                {
-                    if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else uvEdited = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
-                }
-                else
-                {
-                    if (seed > 0.25f) uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else uvEdited = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
-                }
-            }
-            else
-            {
-                // Vector2[] uvs = new Vector2[] { new Vector2(0.0f,0.0f), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 1)};
-                uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-            }
-        }
-        else
-        {
-            float minY = 1, maxY = 0, minX = 1, maxX = 0;
-            foreach (var v in uvEdited)
-            {
-                if (v.x > maxX) maxX = v.x;
-                if (v.x < minX) minX = v.x;
-                if (v.y > maxY) maxY = v.y;
-                if (v.y < minY) minY = v.y;
-            }
-            float xl = maxX - minX, yl = maxY - minY, k = 1;
-            if (xl > yl)   k = piece / xl;
-            else  k = piece / yl;
-            float x0 = borders[0].x, y0 = borders[0].y;
-            for (int i = 0; i< uvEdited.Length; i++)
-            {
-                uvEdited[i] = new Vector2(x0 + (uvEdited[i].x - minX) * k, y0 + (uvEdited[i].y - minY) * k );
-            }
-        }
-        m.uv = uvEdited;
-    }
+    }  
 
     public static MaterialType GetMaterialType(int materialID)
     {

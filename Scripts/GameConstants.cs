@@ -3,6 +3,7 @@
 
     public const byte HQ_LEVEL_TO_CREATE_BLOCK = 4, HQ_MAX_LEVEL = 6;
 
+    public static readonly byte[] powersOfTwo = new byte[] { 1, 2, 4, 8, 16, 32, 64, 128 };
 
     public const int LIFEPOWER_PER_BLOCK = 130; // 200
     public const int LIFEPOWER_SPREAD_SPEED = 10 ;

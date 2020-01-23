@@ -1,121 +1,34 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-
-[System.Serializable]
-public struct SurfaceRect
+public sealed class PlaneExtension
 {
-    public byte x, z, size;
-    public SurfaceRect(byte f_x, byte f_z, byte f_size)
-    {
-        if (f_x < 0) f_x = 0; if (f_x >= SurfaceBlock.INNER_RESOLUTION) f_x = SurfaceBlock.INNER_RESOLUTION - 1;
-        if (f_z < 0) f_z = 0; if (f_z >= SurfaceBlock.INNER_RESOLUTION) f_z = SurfaceBlock.INNER_RESOLUTION - 1;
-        if (f_size < 1) f_size = 1; if (f_size > SurfaceBlock.INNER_RESOLUTION) f_size = SurfaceBlock.INNER_RESOLUTION;
-        x = f_x;
-        z = f_z;
-        size = f_size;
-    }
-
-    static SurfaceRect()
-    {
-        one = new SurfaceRect(0, 0, 1);
-        full = new SurfaceRect(0, 0, SurfaceBlock.INNER_RESOLUTION);
-    }
-
-    public bool Intersect(SurfaceRect sr)
-    {
-        int leftX = -1, rightX = -1;
-        if (x > sr.x) leftX = x; else leftX = sr.x;
-        if (x + size > sr.x + sr.size) rightX = sr.x + sr.size; else rightX = x + size;
-        if (leftX < rightX)
-        {
-            int topZ = -1, downZ = -1;
-            if (z > sr.z) downZ = z; else downZ = sr.z;
-            if (z + size > sr.z + sr.size) topZ = sr.z + sr.size; else topZ = z + size;
-            return topZ > downZ;
-        }
-        else return false;
-    }
-    public bool Intersect(int xpos, int zpos, int xsize, int zsize)
-    {
-        int leftX = -1, rightX = -1;
-        if (x > xpos) leftX = x; else leftX = xpos;
-        if (x + size > xpos + xsize) rightX = xpos + xsize; else rightX = x + size;
-        if (leftX < rightX)
-        {
-            int topZ = -1, downZ = -1;
-            if (z > zpos) downZ = z; else downZ = zpos;
-            if (z + size > zpos + zsize) topZ = zpos + zsize; else topZ = z + size;
-            return topZ > downZ;
-        }
-        else return false;
-    }
-
-    public static bool operator ==(SurfaceRect lhs, SurfaceRect rhs) { return lhs.Equals(rhs); }
-    public static bool operator !=(SurfaceRect lhs, SurfaceRect rhs) { return !(lhs.Equals(rhs)); }
-    public override bool Equals(object obj)
-    {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
-
-        SurfaceRect p = (SurfaceRect)obj;
-        return (x == p.x) & (z == p.z) & (size == p.size);
-    }
-    public override int GetHashCode()
-    {
-        return x + z + size;
-    }
-    public static readonly SurfaceRect one;
-    public static readonly SurfaceRect full;
-    public override string ToString()
-    {
-        return '(' + x.ToString() + ' ' + z.ToString() +") size:" + size.ToString();
-    }
-}
-
-public class SurfaceBlock : Block
-{
+    private readonly Plane myPlane;
+    private List<Structure> structures;
+    public bool? noEmptySpace { get; private set; }// true - full, false - empty, null - not either
+    public int artificialStructures { get; private set; }
+    private BitArray map;
     public const byte INNER_RESOLUTION = 16;
-    public Grassland grassland { get; protected set; }
-    public List<Structure> structures { get; protected set; }
-    public bool? noEmptySpace { get; protected set; }// true - full, false - empty, null - not either
-    public int artificialStructures { get; protected set; }
-    public bool[,] map { get; protected set; }
-    public BlockRendererController structureBlockRenderer { get; protected set; }
-    public bool haveSupportingStructure { get; protected set; }
 
     public static UISurfacePanelController surfaceObserver;
 
-    public SurfaceBlock (Chunk f_chunk, ChunkPos f_chunkPos, int f_material_id) : base (f_chunk, f_chunkPos)
+    public PlaneExtension(Plane i_myPlane, Structure i_mainStructure)
     {
-        type = BlockType.Surface;
-        material_id = f_material_id;
-
-        noEmptySpace = false; map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-        for (int i = 0; i < map.GetLength(0); i++)
-        {
-            for (int j = 0; j < map.GetLength(1); j++) map[i, j] = false;
-        }
-        structures = new List<Structure>();
+        noEmptySpace = false;
+        ResetMap();
         artificialStructures = 0;
+        myPlane = i_myPlane;
+        if (i_mainStructure != null) AddStructure(i_mainStructure);
+    }
+    private void ResetMap()
+    {
+        map = new BitArray(INNER_RESOLUTION * INNER_RESOLUTION);
+        map.SetAll(false);
     }
 
-    public void SetGrassland(Grassland g) { grassland = g; }
-
-
-    public bool[,] RecalculateSurface()
+    public void RecalculateSurface()
     {
-        map = new bool[INNER_RESOLUTION, INNER_RESOLUTION];
-        for (int i = 0; i < INNER_RESOLUTION; i++)
-        {
-            for (int j = 0; j < INNER_RESOLUTION; j++)
-            {
-                map[i, j] = false;
-            }
-        }
-
-        haveSupportingStructure = false;
-        mainStructure = null;
+        ResetMap();
         artificialStructures = 0;
         noEmptySpace = null;
 
@@ -133,11 +46,6 @@ public class SurfaceBlock : Block
                 }
                 else allCellsEmpty = false;
                 if (s.isArtificial) artificialStructures++;
-                if (s.isBasement)
-                {
-                    haveSupportingStructure = true;
-                    mainStructure = s;
-                }
                 SurfaceRect sr = s.surfaceRect;
                 if (sr.size != INNER_RESOLUTION)
                 {
@@ -146,7 +54,7 @@ public class SurfaceBlock : Block
                     {
                         while (i < sr.size & sr.z + j < INNER_RESOLUTION)
                         {
-                            map[sr.x + i, sr.z + j] = true;
+                            map.Set((sr.x + i) * INNER_RESOLUTION + sr.z + j, true);
                             i++;
                         }
                         i = 0; // обнуляй переменные !
@@ -155,7 +63,7 @@ public class SurfaceBlock : Block
                 }
                 else
                 {
-                    for (int i = 0; i < map.Length; i++) map[i / INNER_RESOLUTION, i % INNER_RESOLUTION] = true;
+                    map.SetAll(true);
                     noEmptySpace = true;
                 }
                 a++;
@@ -188,7 +96,6 @@ public class SurfaceBlock : Block
                 }
             }
         }
-        return map;
     }
     public Texture2D GetMapTexture()
     {
@@ -279,7 +186,7 @@ public class SurfaceBlock : Block
         planeTex.LoadRawTextureData(buildmap);
         planeTex.Apply();
         return planeTex;
-    }    
+    }
     /// <summary>
     /// Do not use directly, use "Set Basement" instead
     /// </summary>
@@ -293,7 +200,7 @@ public class SurfaceBlock : Block
         }
         if (s.surfaceRect.size == 1 && s.surfaceRect.size == 1)
         {
-            AddCellStructure(s, new PixelPosByte(s.surfaceRect.x, s.surfaceRect.z));
+            AddCellStructure(s);
             return;
         }
         Structure savedBasementForNow = null;
@@ -303,7 +210,7 @@ public class SurfaceBlock : Block
             int i = 0;
             if (sr == SurfaceRect.full)
             {// destroy everything there
-                ClearSurface(false, true); // false так как не нужна лишняя проверка
+                ClearSurface(false, true, false); // false так как не нужна лишняя проверка
             }
             else
             {
@@ -313,57 +220,35 @@ public class SurfaceBlock : Block
                     {
                         if (structures[i].surfaceRect.Intersect(sr))
                         {
-                            if (structures[i].isBasement) savedBasementForNow = structures[i];
-                            else structures[i].Annihilate(false, true, false);
+                            structures[i].Annihilate(false, true, false);
                         }
                     }
                     i++;
                 }
             }
         }
-        structures.Add(s);
-        s.transform.parent = myChunk.transform;
-        s.transform.position = GetLocalPosition(s.surfaceRect);
-        if (myChunk.GetVisibilityMask(pos) == 0) s.SetVisibility(false); else s.SetVisibility(true);
-        s.transform.localRotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
+        SetStructureTransform(s);
         if (savedBasementForNow != null)
         {
             savedBasementForNow.Annihilate(false, true, false);
         }
         RecalculateSurface();
     }
-
-    /// <summary>
-    /// collider check - enables surface collider, if inactive
-    /// </summary>
-    /// <param name="colliderCheck"></param>
-	public void ClearSurface(bool check, bool returnResources)
-    {
-        if (structures.Count > 0)
-        {
-            for (int i = 0; i < structures.Count; i++)
-            {
-                structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
-            }
-            structures.Clear();
-        }
-        if (check) RecalculateSurface();
-    }
-
     /// <summary>
     /// Do not use directly, use "Set Basement" instead
     /// </summary>
-    public void AddCellStructure(Structure s, PixelPosByte ppos)
+    public void AddCellStructure(Structure s)
     {
         if (s == null) return;
-        if (map[ppos.x, ppos.y] == true)
+        byte x = s.surfaceRect.x, z = s.surfaceRect.z;
+        if (map[x * INNER_RESOLUTION + z] == true)
         {
             int i = 0;
             while (i < structures.Count)
             {
                 if (structures[i] == null) { structures.RemoveAt(i); continue; }
                 SurfaceRect sr = structures[i].surfaceRect;
-                if (sr.x <= ppos.x & sr.z <= ppos.y & sr.x + sr.size > ppos.x & sr.z + sr.size > ppos.y)
+                if (sr.x <= x & sr.z <= z & sr.x + sr.size > x & sr.z + sr.size > z)
                 {
                     if (structures[i].indestructible)
                     {
@@ -380,37 +265,52 @@ public class SurfaceBlock : Block
             }
         }
         structures.Add(s);
-        s.transform.position = GetLocalPosition(new SurfaceRect(ppos.x, ppos.y, 1));
-        s.transform.rotation = Quaternion.Euler(0, s.modelRotation * 45, 0);
-        if (myChunk.GetVisibilityMask(pos) == 0) s.SetVisibility(false); else s.SetVisibility(true);
+        SetStructureTransform(s);
         RecalculateSurface();
-    }   
-
-    public override void ReplaceMaterial(int newId)
-    {
-        material_id = newId;
-        if (grassland != null) grassland.Annihilation(false, false);
-        myChunk.ChangeBlockVisualData(this, 6);
     }
-    public void ReplaceGrassTexture(int id)
+    private void SetStructureTransform(Structure s)
     {
-        if (grassland != null)
+        var t = s.transform;
+        t.parent = myPlane.myBlockExtension.myBlock.myChunk.transform;
+        t.position = GetLocalPosition(s.surfaceRect);
+        s.SetVisibility(myPlane.visible);
+        switch (myPlane.faceIndex)
         {
-            material_id = id;
-            myChunk.ChangeBlockVisualData(this, 6);
+            case Block.FWD_FACE_INDEX:
+
+                break;
+            case Block.RIGHT_FACE_INDEX: t.localRotation = Quaternion.Euler(-90f, s.modelRotation * 45f, 0f); break;
+            case Block.BACK_FACE_INDEX: t.localRotation = Quaternion.Euler(0f, s.modelRotation * 45f, -90f); break;
+            case Block.LEFT_FACE_INDEX: t.localRotation = Quaternion.Euler(90f, s.modelRotation * 45f, 0f); break;
+            case Block.DOWN_FACE_INDEX:
+            case Block.CEILING_FACE_INDEX:
+                t.localRotation = Quaternion.Euler(0f, s.modelRotation * 45f, 90f); break;
+            case Block.UP_FACE_INDEX:
+            case Block.SURFACE_FACE_INDEX:
+            default:
+                t.localRotation = Quaternion.Euler(0f, s.modelRotation * 45f, 0f); break;
         }
+        structures.Add(s);
     }
 
-    public void SetStructureBlock(BlockRendererController brc)
+    /// <summary>
+    /// collider check - enables surface collider, if inactive
+    /// </summary>
+    /// <param name="colliderCheck"></param>
+	public void ClearSurface(bool check, bool returnResources, bool deleteExtensionLink)
     {
-        structureBlockRenderer = brc;
-        brc.SetVisibilityMask(myChunk.GetVisibilityMask(pos));
-    }
-    public void ClearStructureBlock(BlockRendererController brc)
-    {
-        if (structureBlockRenderer == brc)
+        if (structures.Count > 0)
         {
-            structureBlockRenderer = null;
+            for (int i = 0; i < structures.Count; i++)
+            {
+                structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
+            }
+            structures.Clear();
+        }
+        if (check) RecalculateSurface();
+        else
+        {
+            if (deleteExtensionLink) myPlane.NullifyExtesionLink(this);
         }
     }
     /// <summary>
@@ -430,59 +330,90 @@ public class SurfaceBlock : Block
         }
         RecalculateSurface();
     }
-    public void TransferStructures(SurfaceBlock receiver)
+
+    #region giving info
+    public Vector3 GetLocalPosition(float x, float z)
     {
-        if (noEmptySpace == false) return;
-        else
+        Vector3 leftBottomCorner = myPlane.myBlockExtension.myBlock.pos.ToWorldSpace(), xdir, zdir;
+        float q = Block.QUAD_SIZE;
+        switch (myPlane.faceIndex)
         {
-            foreach (Structure s in structures)
-            {
-                if (s == null) return;
-                else
-                {
-                    s.ChangeBasement(receiver);
-                }
-            }
-            structures.Clear();
-            map = RecalculateSurface();
+            case Block.FWD_FACE_INDEX:
+                leftBottomCorner += new Vector3(0.5f, -0.5f, 0.5f) * q;
+                xdir = Vector3.left * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.RIGHT_FACE_INDEX:
+                leftBottomCorner += new Vector3(0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.forward * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.BACK_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.LEFT_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, 0.5f) * q;
+                xdir = Vector3.back * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.DOWN_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.back * q;
+                break;
+            case Block.CEILING_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.back * q;
+                break;
+            case Block.UP_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                xdir = Vector3.forward * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.SURFACE_FACE_INDEX:
+            default:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.forward * q;
+                zdir = Vector3.up * q;
+                break;
         }
+        float ir = INNER_RESOLUTION;
+        return leftBottomCorner + xdir * x / ir + zdir * z / ir;
     }
-
-    override public List<BlockpartVisualizeInfo> GetVisualDataList(byte visibilityMask)
-    {
-        if ((visibilityMask & 64) != 0) return new List<BlockpartVisualizeInfo>() { GetFaceVisualData(6) };
-        else return null;
-    }
-    override public BlockpartVisualizeInfo GetFaceVisualData(byte face)
-    {
-        if (face == 6) return new BlockpartVisualizeInfo(
-            pos,
-            new MeshVisualizeInfo(6, PoolMaster.GetMaterialType(material_id), myChunk.GetLightValue(pos)),
-            MeshType.Quad,
-            material_id
-            );
-        else return null;
-    }
-
     public Vector3 GetLocalPosition(SurfaceRect sr)
     {
-        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, -0.5f, -0.5f) * QUAD_SIZE;
-        float res = INNER_RESOLUTION;
-        float xpos = sr.x + sr.size / 2f;
-        float zpos = sr.z + sr.size / 2f;
-        return (leftBottomCorner + new Vector3((xpos / res) * QUAD_SIZE, 0f, (1 - zpos / res) * QUAD_SIZE));
+        return GetLocalPosition(sr.x + sr.size / 2f, sr.z + sr.size / 2f);
     }
-    public Vector3 GetLocalPosition(byte x, byte z)
+    /// <summary>
+    /// returns in 0 - 1 
+    /// </summary>
+    public Vector2 WorldToMapPosition(Vector3 point)
     {
-        Vector3 leftBottomCorner = pos.ToWorldSpace() + new Vector3(-0.5f, -0.5f, -0.5f) * QUAD_SIZE;
-        float ir = INNER_RESOLUTION, half = 1f / ir / 2f;
-        return leftBottomCorner + new Vector3(x / ir + half, 0f, z / ir + half);
+        Vector3 dir = point - GetLocalPosition(0, 0);
+        switch (myPlane.faceIndex)
+        {
+            case Block.FWD_FACE_INDEX: return new Vector2(dir.x, dir.y);
+            case Block.RIGHT_FACE_INDEX: return new Vector2(dir.z, dir.y);
+            case Block.BACK_FACE_INDEX: return new Vector2(dir.x, dir.y);
+            case Block.LEFT_FACE_INDEX: return new Vector2(dir.z, dir.y);
+            case Block.DOWN_FACE_INDEX:
+            case Block.CEILING_FACE_INDEX:
+                return new Vector2(dir.x, dir.z);
+            case Block.SURFACE_FACE_INDEX:
+            case Block.UP_FACE_INDEX:
+            default:
+                return new Vector2(dir.x, dir.z);
+        }
     }
-    public Vector2 WorldToMapCoordinates(Vector3 point)
+    public int GetStructuresCount()
     {
-        Vector3 leftDownCorner = GetLocalPosition(0, 0) - new Vector3(0.5f, 0, 0.5f) * QUAD_SIZE / (float)INNER_RESOLUTION;
-        return new Vector2(point.x - leftDownCorner.x, QUAD_SIZE - (point.z - leftDownCorner.z)) / QUAD_SIZE;
+        if (structures == null) return 0;
+        else return structures.Count;
     }
+    #endregion
 
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
     {
@@ -496,7 +427,7 @@ public class SurfaceBlock : Block
             }
             else
             {
-                Vector2 inpos = WorldToMapCoordinates(hitpoint);
+                Vector2 inpos = WorldToMapPosition(hitpoint);
                 byte xpos = (byte)(inpos.x * INNER_RESOLUTION),
                     ypos = (byte)(inpos.y * INNER_RESOLUTION);
                 if (radius > 1)
@@ -586,7 +517,7 @@ public class SurfaceBlock : Block
             int width = 0;
             for (int zpos = 0; zpos <= INNER_RESOLUTION - size; zpos++)
             {
-                if (map[xpos, zpos] == true) width = 0; else width++;
+                if (map[xpos * INNER_RESOLUTION + zpos] == true) width = 0; else width++;
                 if (width >= size)
                 {
                     bool appliable = true;
@@ -594,7 +525,7 @@ public class SurfaceBlock : Block
                     {
                         for (int zdelta = 0; zdelta < size; zdelta++)
                         {
-                            if (map[xpos + xdelta, zpos + zdelta] == true) { appliable = false; break; }
+                            if (map[(xpos + xdelta) * INNER_RESOLUTION + zpos + zdelta] == true) { appliable = false; break; }
                         }
                         if (appliable == false) break;
                     }
@@ -605,7 +536,7 @@ public class SurfaceBlock : Block
                         {
                             for (int zdelta = 0; zdelta < size; zdelta++)
                             {
-                                map[xpos + xdelta, zpos + zdelta] = true;
+                                map[(xpos + xdelta) * INNER_RESOLUTION + zpos + zdelta] = true;
                             }
                         }
                     }
@@ -626,7 +557,7 @@ public class SurfaceBlock : Block
             int width = 0;
             for (int zpos = 0; zpos <= INNER_RESOLUTION - zsize; zpos++)
             {
-                if (map[xpos, zpos] == true) width = 0; else width++;
+                if (map[xpos * INNER_RESOLUTION + zpos] == true) width = 0; else width++;
                 if (width >= zsize)
                 {
                     bool appliable = true;
@@ -634,7 +565,7 @@ public class SurfaceBlock : Block
                     {
                         for (int zdelta = 0; zdelta < zsize; zdelta++)
                         {
-                            if (map[xpos + xdelta, zpos + zdelta] == true) { appliable = false; break; }
+                            if (map[(xpos + xdelta) * INNER_RESOLUTION + zpos + zdelta] == true) { appliable = false; break; }
                         }
                         if (appliable == false) break;
                     }
@@ -645,7 +576,7 @@ public class SurfaceBlock : Block
                         {
                             for (int zdelta = 0; zdelta < zsize; zdelta++)
                             {
-                                map[xpos + xdelta, zpos + zdelta] = true;
+                                map[(xpos + xdelta) * INNER_RESOLUTION + zpos + zdelta] = true;
                             }
                         }
                     }
@@ -667,7 +598,7 @@ public class SurfaceBlock : Block
         {
             for (byte j = 0; j < INNER_RESOLUTION; j++)
             {
-                if (map[i, j] == false) { acceptableVariants.Add(new PixelPosByte(i, j)); }
+                if (map[i * INNER_RESOLUTION + j] == false) { acceptableVariants.Add(new PixelPosByte(i, j)); }
             }
         }
         if (acceptableVariants.Count == 0)
@@ -711,12 +642,12 @@ public class SurfaceBlock : Block
         if (noEmptySpace == false) return null;
         else
         {
-            var p = WorldToMapCoordinates(point);
+            var p = WorldToMapPosition(point);
             if (p.x < 0 | p.x > 1 | p.y < 0 | p.y < 1) return null;
             else
             {
                 byte xpos = (byte)(p.x * INNER_RESOLUTION), zpos = (byte)(p.y * INNER_RESOLUTION);
-                if (map[xpos, zpos] == false) return null;
+                if (map[xpos * INNER_RESOLUTION + zpos] == false) return null;
                 else
                 {
                     SurfaceRect sr;
@@ -766,7 +697,8 @@ public class SurfaceBlock : Block
                         if (val > limitVal) val = limitVal;
                     }
 
-                    if (!map[x0, z0] & !map[x0 + 1, z0] & !map[x0, z0 + 1] & !map[x0 + 1, z0 + 1])
+                    if (!map[x0 * INNER_RESOLUTION + z0] & !map[ (x0 + 1) * INNER_RESOLUTION + z0] & 
+                        !map[x0 * INNER_RESOLUTION + z0 + 1] & !map[(x0 + 1) * INNER_RESOLUTION + z0 + 1])
                     {
                         if (val < volume)
                         {
@@ -780,7 +712,7 @@ public class SurfaceBlock : Block
                         }
                     }
                 }
-            }            
+            }
         }
         ENDCYCLE:
         return volume;
@@ -801,17 +733,8 @@ public class SurfaceBlock : Block
     #region save-load system
     override public void Save(System.IO.FileStream fs)
     {
-        SaveBlockData(fs);
-        SaveSurfaceBlockData(fs);
-    }
-    protected void SaveSurfaceBlockData(System.IO.FileStream fs)
-    {
-        if (grassland != null)
-        {
-            fs.WriteByte(1);
-            fs.Write(grassland.Save().ToArray(), 0, Grassland.SERIALIZER_LENGTH);
-        }
-        else fs.WriteByte(0);
+        base.Save(fs);
+
 
         int structuresCount = structures.Count;
         var data = new List<byte>();
@@ -842,14 +765,9 @@ public class SurfaceBlock : Block
         }
     }
 
-    public void LoadSurfaceBlockData(System.IO.FileStream fs)
+    public void Load(System.IO.FileStream fs)
     {
-        if (fs.ReadByte() == 1)
-        {
-            grassland = Grassland.CreateOn(this);
-            grassland.Load(fs);
-        }
-        else grassland = null;
+
 
         var data = new byte[4];
         fs.Read(data, 0, 4);
@@ -864,14 +782,13 @@ public class SurfaceBlock : Block
     }
     #endregion
 
-    override public void Annihilate()
-    {
-        base.Annihilate();
+    public void Annihilate()
+    {        
         if (noEmptySpace != false)
         {
             ClearSurface(false, false);
         }
-        if (grassland != null) grassland.Annihilation(true, false);
-        myChunk.RemoveFromSurfacesList(this);
+        myPlane.Annihilate();
     }
 }
+

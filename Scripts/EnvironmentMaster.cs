@@ -304,7 +304,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                                         }
                                         else
                                         {
-                                            if (b.mainStructure != null) b.mainStructure.ApplyDamage(damage);
+                                            if (b.blockingStructure != null) b.blockingStructure.ApplyDamage(damage);
                                         }
                                     }
                                 }

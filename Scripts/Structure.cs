@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 public class Structure : MonoBehaviour
 {
-    public SurfaceBlock basement { get; protected set; }
+    public Plane basement { get; protected set; }
     public SurfaceRect surfaceRect { get; protected set; }
     public bool isArtificial { get; protected set; } // fixed in ID - используется при проверках на снос
-    public bool isBasement { get; private set; } // fixed in ID
     public bool placeInCenter { get; private set; } // fixed in ID 
     public bool indestructible { get; protected set; }  // fixed in ID
     public float hp { get; protected set; }
@@ -382,6 +381,7 @@ public class Structure : MonoBehaviour
         hp = t;
         if (hp == 0) Annihilate(true, false, true);
     }
+    public bool IsDestroyed() { return destroyed; }
 
    
 
@@ -405,7 +405,6 @@ public class Structure : MonoBehaviour
                     maxHp = 1;
                     surfaceRect = SurfaceRect.one;
                     isArtificial = false;
-                    isBasement = false;
                     placeInCenter = false;
                     rotate90only = false;
                 }
@@ -415,17 +414,15 @@ public class Structure : MonoBehaviour
                     maxHp = 1;
                     surfaceRect = SurfaceRect.one;
                     isArtificial = false;
-                    isBasement = false;
                     placeInCenter = false;
                     rotate90only = false;
                 }
                 break;
             case RESOURCE_STICK_ID:
                 {
-                    maxHp = SurfaceBlock.INNER_RESOLUTION;
+                    maxHp = PlaneExtension.INNER_RESOLUTION;
                     surfaceRect = new SurfaceRect(0, 0, ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE);
                     isArtificial = false;
-                    isBasement = false;
                     placeInCenter = false;
                     rotate90only = true;
                 }
@@ -435,7 +432,6 @@ public class Structure : MonoBehaviour
                     maxHp = 1000;
                     surfaceRect = SurfaceRect.full;
                     isArtificial = true;
-                    isBasement = false;
                     placeInCenter = true;
                     rotate90only = true;
                     indestructible = true;
@@ -446,7 +442,6 @@ public class Structure : MonoBehaviour
                     maxHp = 1000;
                     surfaceRect = new SurfaceRect(0, 0, 4);
                     isArtificial = true;
-                    isBasement = false;
                     placeInCenter = true;
                     rotate90only = false;
                     indestructible = false;
@@ -457,7 +452,6 @@ public class Structure : MonoBehaviour
                     maxHp = LifeSource.MAX_HP;
                     surfaceRect = SurfaceRect.full;
                     isArtificial = false;
-                    isBasement = false;
                     placeInCenter = true;
                     rotate90only = false;
                     indestructible = true;
@@ -468,7 +462,6 @@ public class Structure : MonoBehaviour
                     maxHp = 750;
                     surfaceRect = SurfaceRect.full;
                     isArtificial = true;
-                    isBasement = false;
                     placeInCenter = true;
                     rotate90only = true;
                     indestructible = true;
@@ -479,7 +472,6 @@ public class Structure : MonoBehaviour
                     maxHp = 4000;
                     surfaceRect = SurfaceRect.full;
                     isArtificial = true;
-                    isBasement = false;
                     placeInCenter = true;
                     rotate90only = true;
                 }
@@ -488,8 +480,7 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 6000;
                     surfaceRect = SurfaceRect.full;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                     placeInCenter = true;
                     rotate90only = true;
                 }
@@ -501,7 +492,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = true;
+                    
                 }
                 break;
             case CONTAINER_ID:
@@ -511,7 +502,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = false;
                     rotate90only = false;
                     isArtificial = false;
-                    isBasement = false;
+                    
                 }
                 break;
             case MINE_ELEVATOR_ID:
@@ -521,7 +512,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                 }
                 break;
             case LIFESTONE_ID:
@@ -531,7 +522,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = false;
-                    isBasement = false;
+                    
                     indestructible = true;
                 }
                 break;
@@ -541,8 +532,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.one;
                     placeInCenter = false;
                     rotate90only = false;
-                    isArtificial = false;
-                    isBasement = false;
+                    isArtificial = false;                    
                 }
                 break;   
             case HOUSE_BLOCK_ID:
@@ -551,8 +541,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case DOCK_ID:
@@ -561,8 +550,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case ENERGY_CAPACITOR_1_ID:
@@ -571,8 +559,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case ENERGY_CAPACITOR_2_ID:
@@ -581,8 +568,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case FARM_1_ID:
@@ -591,8 +577,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case FARM_2_ID:
@@ -601,8 +586,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case FARM_3_ID:
@@ -611,8 +595,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 8);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case FARM_4_ID:
@@ -621,8 +604,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case FARM_5_ID:
@@ -631,8 +613,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case LUMBERMILL_1_ID:
@@ -641,8 +622,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case LUMBERMILL_2_ID:
@@ -651,8 +631,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case LUMBERMILL_3_ID:
@@ -661,8 +640,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case LUMBERMILL_4_ID:
@@ -671,8 +649,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case LUMBERMILL_5_ID:
@@ -681,8 +658,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case MINE_ID:
@@ -691,8 +667,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SMELTERY_1_ID:
@@ -701,8 +676,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SMELTERY_2_ID:
@@ -711,8 +685,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SMELTERY_3_ID:
@@ -721,8 +694,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SMELTERY_5_ID:
@@ -731,8 +703,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case WIND_GENERATOR_1_ID:
@@ -741,8 +712,7 @@ public class Structure : MonoBehaviour
                     surfaceRect =  new SurfaceRect(0,0,8);
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case BIOGENERATOR_2_ID:
@@ -751,8 +721,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 10);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case HOSPITAL_2_ID:
@@ -761,8 +730,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 10);
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case MINERAL_POWERPLANT_2_ID:
@@ -771,8 +739,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case ORE_ENRICHER_2_ID:
@@ -781,8 +748,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case WORKSHOP_ID:
@@ -791,8 +757,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case MINI_GRPH_REACTOR_3_ID:
@@ -801,8 +766,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0,0,8);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case FUEL_FACILITY_ID:
@@ -811,8 +775,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case GRPH_REACTOR_4_ID:
@@ -821,8 +784,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case PLASTICS_FACTORY_3_ID:
@@ -831,8 +793,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SUPPLIES_FACTORY_4_ID:
@@ -841,8 +802,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SUPPLIES_FACTORY_5_ID:
@@ -851,8 +811,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case GRPH_ENRICHER_3_ID:
@@ -861,8 +820,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case XSTATION_3_ID:
@@ -871,8 +829,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
@@ -881,8 +838,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case COLUMN_ID:
@@ -891,8 +847,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 2);
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case SWITCH_TOWER_ID:
@@ -901,8 +856,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case SHUTTLE_HANGAR_4_ID:
@@ -911,8 +865,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case RECRUITING_CENTER_4_ID:
@@ -921,8 +874,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case EXPEDITION_CORPUS_4_ID:
@@ -931,8 +883,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case QUANTUM_TRANSMITTER_4_ID:
@@ -941,8 +892,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
@@ -951,8 +901,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case FOUNDATION_BLOCK_5_ID:
@@ -961,8 +910,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case CONNECT_TOWER_6_ID:
@@ -971,8 +919,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case HOTEL_BLOCK_6_ID:
@@ -981,8 +928,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = true;
+                    isArtificial = true;                    
                 }
                 break;
             case HOUSING_MAST_6_ID:
@@ -991,8 +937,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case DOCK_ADDON_1_ID:
@@ -1001,8 +946,7 @@ public class Structure : MonoBehaviour
                     surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
-                    isArtificial = true;
-                    isBasement = false;
+                    isArtificial = true;                    
                 }
                 break;
             case DOCK_ADDON_2_ID:
@@ -1012,7 +956,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                 }
                 break;
             case DOCK_2_ID:
@@ -1022,7 +966,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                 }
                 break;
             case DOCK_3_ID:
@@ -1032,7 +976,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                 }
                 break;
             case OBSERVATORY_ID:
@@ -1042,7 +986,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                 }
                 break;
             case ARTIFACTS_REPOSITORY_ID:
@@ -1052,7 +996,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                 }
                 break;
             case MONUMENT_ID:
@@ -1062,7 +1006,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                     break;
                 }
             case SETTLEMENT_STRUCTURE_ID:
@@ -1072,7 +1016,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
-                    isBasement = false;
+                    
                     break;
                 }
             case PSYCHOKINECTIC_GEN_ID:
@@ -1082,7 +1026,7 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;
-                    isBasement = false;
+                    
                     break;
                 }
             case SCIENCE_LAB_ID:
@@ -1092,85 +1036,38 @@ public class Structure : MonoBehaviour
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;
-                    isBasement = false;
+                    
                     break;
                 }
         }
         hp = maxHp;
     }   
 
-    virtual public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    virtual public void SetBasement(Plane p, PixelPosByte pos)
     {
-        if (b == null) return;
-        SetStructureData(b, pos);
+        if (p == null) return;
+        SetStructureData(p, pos);
+    }
+    protected void SetStructureData(Plane p, PixelPosByte pos)
+    {
+        // dependency - SettlementStructure.setBasement()
+        if (!placeInCenter) surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
+        else surfaceRect = new SurfaceRect((byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
+        if (transform.childCount == 0) SetModel();
+        basement = p;
+        basement.AddStructure(this);
     }
 
     /// <summary>
     /// do not use directly, use basement.TransferStructures() instead
     /// </summary>
     /// <param name="sb"></param>
-    public void ChangeBasement(SurfaceBlock sb)
+    public void ChangeBasement(Plane p)
     {
-        basement = sb;
+        basement = p;
         if (transform.childCount == 0) SetModel();
         basement.AddStructure(this);
-        if (isBasement)
-        {
-            BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
-            if (brc != null)
-            {
-                brc.SetStructure(this);
-                basement.SetStructureBlock(brc);
-            }
-        }
-    }
-    // в финальном виде копипастить в потомков
-    protected void SetStructureData(SurfaceBlock b, PixelPosByte pos)
-    {
-        // dependency - SettlementStructure.setBasement()
-        //#setStructureData
-        if (b.type == BlockType.Cave & isBasement)
-        {
-            basement = b.myChunk.ReplaceBlock(b.pos, BlockType.Surface, b.material_id, false) as SurfaceBlock;
-        }
-        else basement = b;
-        if (!placeInCenter) surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
-        else surfaceRect = new SurfaceRect((byte)(SurfaceBlock.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(SurfaceBlock.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
-        if (transform.childCount == 0) SetModel();
-        basement.AddStructure(this);
-        if (isBasement)
-        {
-            if (!subscribedToChunkUpdate)
-            {
-                basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
-                subscribedToChunkUpdate = true;
-            }
-            if (!GameMaster.loading)
-            {
-                if (basement.pos.y + 1 < Chunk.CHUNK_SIZE)
-                {
-                    ChunkPos npos = new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-                    Block upperBlock = basement.myChunk.GetBlock(npos);
-                    if (upperBlock == null)
-                    {
-                        int replacingMaterialID = PoolMaster.MATERIAL_ADVANCED_COVERING_ID;
-                        if (ID == COLUMN_ID) replacingMaterialID = ResourceType.CONCRETE_ID;
-                        basement.myChunk.AddBlock(npos, BlockType.Surface, replacingMaterialID, false);
-                    }
-                }
-                else
-                {
-                    basement.myChunk.SetRoof(basement.pos.x, basement.pos.z, isArtificial);
-                }
-            }
-            BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
-            if (brc != null)
-            {
-                brc.SetStructure(this);
-                basement.SetStructureBlock(brc);
-            }
-        }
-    }
+    }  
 
     virtual public void ApplyDamage(float d)
     {
@@ -1182,11 +1079,7 @@ public class Structure : MonoBehaviour
     virtual public void ChunkUpdated()
     {
         if (basement == null) return;
-        Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-        if (upperBlock == null)
-        {
-            basement.myChunk.AddBlock(new ChunkPos(basement.pos.x, basement.pos.y + 1, basement.pos.z), BlockType.Surface, ResourceType.CONCRETE_ID, false);
-        }
+        
     }
 
     virtual public void SetVisibility(bool x)
@@ -1217,26 +1110,6 @@ public class Structure : MonoBehaviour
         else surfaceRect = sr;
     }
 
-    public void UnsetBasement()
-    {
-        if (basement != null)
-        {
-            if (subscribedToChunkUpdate)
-            {
-                basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
-                subscribedToChunkUpdate = false;
-                BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
-                if (brc != null) basement.ClearStructureBlock(brc);
-            }
-            if (isBasement)
-            {
-                if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
-            }
-        }
-        basement = null;
-        surfaceRect = new SurfaceRect(0, 0, surfaceRect.size);
-    }
-
     virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
 
     // в финальном виде копипастить в потомков
@@ -1260,48 +1133,18 @@ public class Structure : MonoBehaviour
             {
                 if (subscribedToChunkUpdate)
                 {
-                    basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+                    basement.myBlockExtension.myChunk.ChunkUpdateEvent -= ChunkUpdated;
                     subscribedToChunkUpdate = false;
                 }
-                basement.RemoveStructure(this);
-                SurfaceBlock lastBasement = basement;
-                if (isBasement)
-                {
-                    BlockRendererController brc = transform.GetChild(0).GetComponent<BlockRendererController>();
-                    if (brc != null) basement.ClearStructureBlock(brc);
-                    Block upperBlock = lastBasement.myChunk.GetBlock(lastBasement.pos.x, lastBasement.pos.y + 1, lastBasement.pos.z);
-                    if (upperBlock != null)
-                    {
-                        if (upperBlock is SurfaceBlock)
-                        {
-                            if (upperBlock.type == BlockType.Surface)
-                            {
-                                if (lastBasement.myChunk.CalculateSupportPoints(lastBasement.pos.x, lastBasement.pos.y, lastBasement.pos.z) >= Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING)
-                                {
-                                    lastBasement.myChunk.ReplaceBlock(lastBasement.pos, BlockType.Cave, lastBasement.material_id, upperBlock.material_id, false);
-                                }
-                                else lastBasement.myChunk.DeleteBlock(upperBlock.pos);
-                            }
-                            else // cave
-                            {
-                                (upperBlock as CaveBlock).DestroySurface();
-                            }
-                        }
-                        lastBasement.myChunk.DeleteBlock(upperBlock.pos);
-                    }
-                    else
-                    {
-                        if (basement.pos.y == Chunk.CHUNK_SIZE - 1) basement.myChunk.DeleteRoof(basement.pos.x, basement.pos.z);
-                    }
-                }
+                basement.extension?.RemoveStructure(this);
 
-                if (leaveRuins)
+                if (leaveRuins && !GameMaster.sceneClearing)
                 {
-                    basement.ScatterResources(surfaceRect, ResourceType.mineral_F, CalculateRuinsVolume());
+                    basement.GetExtension().ScatterResources(surfaceRect, ResourceType.mineral_F, CalculateRuinsVolume());
                 }
             }
         }
-        else UnsetBasement();
+        basement = null;
     }
 
     protected int CalculateRuinsVolume()
@@ -1335,7 +1178,7 @@ public class Structure : MonoBehaviour
     }
 
     #region save-load system
-    public static void LoadStructures(int count, System.IO.FileStream fs, SurfaceBlock sblock)
+    public static void LoadStructures(int count, System.IO.FileStream fs, Plane p)
     {
         var data = new byte[4];
         for (int i = 0; i < count; i++)
@@ -1350,7 +1193,7 @@ public class Structure : MonoBehaviour
                     var s = GetStructureByID(id);
                     if (s != null)
                     {
-                        s.Load(fs, sblock);
+                        s.Load(fs, p);
                         debug_prevID = id;
                     }
                     else
@@ -1362,13 +1205,13 @@ public class Structure : MonoBehaviour
                 }
                 else
                 {
-                    HarvestableResource.LoadContainer(fs, sblock);
+                    HarvestableResource.LoadContainer(fs, p);
                     debug_prevID = CONTAINER_ID;
                 }
             }
             else
             {
-                Plant.LoadPlant(fs, sblock);
+                Plant.LoadPlant(fs, p);
                 debug_prevID = PLANT_ID;
             }
         }
@@ -1379,26 +1222,26 @@ public class Structure : MonoBehaviour
         return SaveStructureData();
     }
 
-    public virtual void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    public virtual void Load(System.IO.FileStream fs, Plane p)
     {
-        LoadStructureData(fs, sblock);
+        LoadStructureData(fs, p);
     }
     // в финальном виде копипастить в потомков
-    protected void LoadStructureData(System.IO.FileStream fs, SurfaceBlock sblock)
+    protected void LoadStructureData(System.IO.FileStream fs, Plane p)
     {
         //copy in harvestable resource.load - changed
         Prepare();
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
-        LoadStructureData(data, sblock);
+        LoadStructureData(data, p);
     }
-    protected void LoadStructureData(byte[] data, SurfaceBlock sblock)
+    protected void LoadStructureData(byte[] data, Plane p)
     {        
         Prepare();
         modelRotation = data[2];
         indestructible = (data[3] == 1);
         skinIndex = System.BitConverter.ToUInt32(data, 4);
-        SetBasement(sblock, new PixelPosByte(data[0], data[1]));
+        SetBasement(p, new PixelPosByte(data[0], data[1]));
         hp = System.BitConverter.ToSingle(data, 8);
         maxHp = System.BitConverter.ToSingle(data, 12);
         //copy to harvestable resource.load - changed
