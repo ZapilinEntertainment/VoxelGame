@@ -153,7 +153,7 @@ public abstract class Plant : Structure {
         return data;
     }
 
-    public static void LoadPlant(System.IO.FileStream fs, SurfaceBlock sblock)
+    public static void LoadPlant(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + PLANT_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

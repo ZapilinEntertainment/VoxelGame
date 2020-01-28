@@ -247,7 +247,7 @@ public abstract class WorkBuilding : Building
         colony = GameMaster.realMaster.colonyController;
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetWorkbuildingData(b, pos);
@@ -262,7 +262,7 @@ public abstract class WorkBuilding : Building
         // changed in PsychokineticGenerator
     }
 
-    protected void SetWorkbuildingData(SurfaceBlock sb, PixelPosByte pos)
+    protected void SetWorkbuildingData(Plane sb, PixelPosByte pos)
     {
         SetBuildingData(sb, pos);
         // copy to PsychokineticGenerator.SetBasement()
@@ -414,7 +414,7 @@ public abstract class WorkBuilding : Building
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         LoadWorkBuildingData(fs);

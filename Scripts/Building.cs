@@ -626,13 +626,13 @@ public class Building : Structure
         }
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
     }
 
-    protected void SetBuildingData(SurfaceBlock b, PixelPosByte pos)
+    protected void SetBuildingData(Plane b, PixelPosByte pos)
     {
         SetStructureData(b, pos);
         isActive = true;
@@ -832,7 +832,7 @@ public class Building : Structure
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {        
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);

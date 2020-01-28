@@ -45,7 +45,7 @@ public sealed class SettlementStructure : Structure
         model.transform.localPosition = Vector3.zero;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         basement = b;
@@ -193,7 +193,7 @@ public sealed class SettlementStructure : Structure
         data.Add((byte)type);
         return data;
     }
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
         fs.Read(data, 0, data.Length);

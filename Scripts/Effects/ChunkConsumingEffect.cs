@@ -113,7 +113,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
             b = bd.Value;
             if (b.type == BlockType.Cube)
             {
-                SurfaceBlock sb = chunk.GetBlock(b.pos.x , b.pos.y + 1, b.pos.z) as SurfaceBlock;
+                Plane sb = chunk.GetBlock(b.pos.x , b.pos.y + 1, b.pos.z) as Plane;
                 if (sb != null && sb.artificialStructures != 0) continue;
                 chunk.DeleteBlock(b.pos);
                 SpawnEffectCube(b.pos.ToWorldSpace(), true);

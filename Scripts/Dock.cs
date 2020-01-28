@@ -47,7 +47,7 @@ public sealed class Dock : WorkBuilding {
         }
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+    override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;
         if (!GameMaster.loading)
         {
@@ -315,13 +315,13 @@ public sealed class Dock : WorkBuilding {
             }
         }
     }
-    public bool CheckAddons(SurfaceBlock sb)
+    public bool CheckAddons(Plane sb)
     {
         Chunk c = sb.myChunk;
         int x = sb.pos.x, y = sb.pos.y, z = sb.pos.z;
 
         Block nearblock = c.GetBlock(x, y, z + 1);
-        SurfaceBlock nearSurfaceBlock = nearblock as SurfaceBlock;
+        Plane nearSurfaceBlock = nearblock as Plane;
         DockAddon da;
         bool haveAddon1 = false, haveAddon2 = false;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
@@ -334,7 +334,7 @@ public sealed class Dock : WorkBuilding {
         }
 
         nearblock = c.GetBlock(x + 1, y, z);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             da = nearSurfaceBlock.structures[0] as DockAddon;
@@ -345,7 +345,7 @@ public sealed class Dock : WorkBuilding {
         }
 
         nearblock = c.GetBlock(x, y, z - 1);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             da = nearSurfaceBlock.structures[0] as DockAddon;
@@ -356,7 +356,7 @@ public sealed class Dock : WorkBuilding {
         }
 
         nearblock = c.GetBlock(x - 1, y, z);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             da = nearSurfaceBlock.structures[0] as DockAddon;
@@ -558,7 +558,7 @@ public sealed class Dock : WorkBuilding {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH + WORKBUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

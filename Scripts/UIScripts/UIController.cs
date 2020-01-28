@@ -41,7 +41,7 @@ sealed public class UIController : MonoBehaviour
     public Texture resourcesIcons { get; private set; }
     public Texture buildingsIcons { get; private set; }
     public Transform mainCanvas { get; private set; }
-    public SurfaceBlock chosenSurface { get; private set; }
+    public Plane chosenSurface { get; private set; }
     public QuestUI questUI { get; private set; }
 
     Vector3 flyingMoneyOriginalPoint = Vector3.zero;
@@ -65,7 +65,6 @@ sealed public class UIController : MonoBehaviour
         localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
     public List<int> activeFastButtons { get; private set; }
 
-    private CubeBlock chosenCube;
     private ColonyController colony;
     private Structure chosenStructure;
     private Storage storage;
@@ -465,7 +464,6 @@ sealed public class UIController : MonoBehaviour
                             {
                                 chosenStructure = s;
                                 chosenSurface = s.basement;
-                                chosenCube = null;
                                 chosenWorksite = null;
                                 ChangeChosenObject(ChosenObjectType.Structure);
                                 faceIndex = Chunk.NO_FACE_VALUE;
@@ -482,43 +480,7 @@ sealed public class UIController : MonoBehaviour
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
                         else
                         {
-                            switch (b.type)
-                            {
-                                case BlockType.Cave:
-                                    {
-                                        CaveBlock sb = b as CaveBlock;
-                                        if (faceIndex == Block.SURFACE_FACE_INDEX & sb.haveSurface)
-                                        {
-                                            chosenSurface = sb;
-                                            chosenStructure = null;
-                                            chosenCube = null;
-                                            chosenWorksite = sb.worksite;
-                                            ChangeChosenObject(ChosenObjectType.Surface);                                            
-                                        }
-                                        break;
-                                    }
-                                case BlockType.Surface:                                    
-                                    {
-                                        SurfaceBlock sb = b as SurfaceBlock;
-                                        chosenSurface = sb;
-                                        chosenStructure = null;
-                                        chosenCube = null;
-                                        chosenWorksite = sb.worksite;
-                                        ChangeChosenObject(ChosenObjectType.Surface);
-                                        break;
-                                    }                                    
-                                case BlockType.Cube:
-                                    {
-                                        CubeBlock cb = b as CubeBlock;
-                                        chosenCube = cb;
-                                        chosenSurface = null;
-                                        chosenStructure = null;
-                                        chosenWorksite = cb.worksite;
-                                        if (faceIndex < 6) ChangeChosenObject(ChosenObjectType.Cube);
-                                        else ChangeChosenObject(ChosenObjectType.None);
-                                        break;
-                                    }
-                            }
+                            
                         }
                         break;
                     }
@@ -530,7 +492,6 @@ sealed public class UIController : MonoBehaviour
                             if (ws.worksite == chosenWorksite) return;
                             else
                             {
-                                chosenCube = null;
                                 chosenSurface = null;
                                 chosenStructure = null;
                                 chosenWorksite = ws.worksite;
@@ -561,7 +522,6 @@ sealed public class UIController : MonoBehaviour
             {
                 chosenStructure = s;
                 chosenSurface = s.basement;
-                chosenCube = null;
                 chosenWorksite = null;
                 faceIndex = Chunk.NO_FACE_VALUE;
                 ChangeChosenObject(ChosenObjectType.Structure);
@@ -593,7 +553,6 @@ sealed public class UIController : MonoBehaviour
             chosenObjectType = ChosenObjectType.None;
             chosenWorksite = null;
             chosenStructure = null;
-            chosenCube = null;
             chosenSurface = null;
             faceIndex = Chunk.NO_FACE_VALUE;
             changeFrameColor = false;
@@ -602,7 +561,6 @@ sealed public class UIController : MonoBehaviour
         {
             switch (newChosenType)
             {
-                case ChosenObjectType.Cube: if (chosenCube == null) return; else break;
                 case ChosenObjectType.Structure: if (chosenStructure == null) return; else break;
                 case ChosenObjectType.Surface: if (chosenSurface == null) return; else break;
                 case ChosenObjectType.Worksite: if (chosenWorksite == null) return; else break;
@@ -627,14 +585,15 @@ sealed public class UIController : MonoBehaviour
                     Vector3 pos = chosenSurface.pos.ToWorldSpace();
                     selectionFrame.position = pos + Vector3.down * Block.QUAD_SIZE / 2f;
                     selectionFrame.rotation = Quaternion.identity;
-                    selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
+                    selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
-                    workingObserver = chosenSurface.ShowOnGUI();
+                    //workingObserver = chosenSurface.ShowOnGUI();
                     FollowingCamera.main.SetLookPoint(pos);
                 }
                 break;
 
+                /*
             case ChosenObjectType.Cube:
                 {
                     bool activatePlatformCreatingButton = false;
@@ -697,7 +656,7 @@ sealed public class UIController : MonoBehaviour
                             selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0);
                             break;
                     }
-                    selectionFrame.localScale = new Vector3(SurfaceBlock.INNER_RESOLUTION, 1, SurfaceBlock.INNER_RESOLUTION);
+                    selectionFrame.localScale = new Vector3(Plane.INNER_RESOLUTION, 1, Plane.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 0.9f);
 
 
@@ -711,6 +670,7 @@ sealed public class UIController : MonoBehaviour
                     disableCubeMenuButtons = false;
                 }
                 break;
+                */
 
             case ChosenObjectType.Structure:
                 faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
@@ -743,12 +703,6 @@ sealed public class UIController : MonoBehaviour
             selectionFrameMaterial.SetColor("_TintColor", Color.HSVToRGB(sframeColor.x, sframeColor.y, sframeColor.z));
             selectionFrame.gameObject.SetActive(true);
         }
-    }
-    public void ChangeChosenObject(CubeBlock cb)
-    {
-        chosenCube = cb;
-        faceIndex = 4;
-        ChangeChosenObject(ChosenObjectType.Cube);
     }
     public void ShowWorksite(Worksite ws)
     {
@@ -813,7 +767,7 @@ sealed public class UIController : MonoBehaviour
                 if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
                 if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
                 if (leftPanel.activeSelf) leftPanel.SetActive(false);                
-                if (SurfaceBlock.surfaceObserver != null) SurfaceBlock.surfaceObserver.ShutOff();
+                //if (Plane.surfaceObserver != null) Plane.surfaceObserver.ShutOff();
                 if (showColonyInfo) ColonyButton();
                 if (landingButton.activeSelf)
                 {
@@ -1081,12 +1035,13 @@ sealed public class UIController : MonoBehaviour
 
     public void DigCube()
     {
+        /*
         if (chosenCube == null) return;
         else
         {
             if (faceIndex == 4)
             {
-                SurfaceBlock sb = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z) as SurfaceBlock;
+                Plane sb = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z) as Plane;
                 if (sb == null)
                 {
                     DigSite ds = new DigSite();
@@ -1111,9 +1066,11 @@ sealed public class UIController : MonoBehaviour
                 }
             }
         }
+        */
     }
     public void PourInCube()
     {
+        /*
         if (chosenCube == null || chosenCube.excavatingStatus == 0) return;
         else
         {
@@ -1121,13 +1078,15 @@ sealed public class UIController : MonoBehaviour
             ds.Set(chosenCube, false);
             ds.ShowOnGUI();
         }
+        */
     }
     public void MakeSurfaceOnCube()
     {
+        /*
         Block b = chosenCube.myChunk.AddBlock(new ChunkPos(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z), BlockType.Surface, chosenCube.material_id, false);
         if (b != null)
         {
-            chosenSurface = b as SurfaceBlock;
+            chosenSurface = b as Plane;
             ChangeChosenObject(ChosenObjectType.Surface);
         }
         else
@@ -1135,9 +1094,11 @@ sealed public class UIController : MonoBehaviour
             GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ActionError));
             if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
         }
+        */
     }
     public void CreateHangPlatform()
     {
+        /*
         if (chosenCube != null | faceIndex > 3)
         {
             int x = chosenCube.pos.x, y = chosenCube.pos.y, z = chosenCube.pos.z;
@@ -1201,6 +1162,7 @@ sealed public class UIController : MonoBehaviour
         }
         END:
         ChangeChosenObject(ChosenObjectType.Cube);
+        */
     }
 
     public void EnableTextfield(int id)

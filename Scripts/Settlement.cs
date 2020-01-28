@@ -129,7 +129,7 @@ public sealed class Settlement : House
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         //#set house data
@@ -219,7 +219,7 @@ public sealed class Settlement : House
         energySurplus = GetEnergySurplus(ID);
         float onePartEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
 
-        int x = SurfaceBlock.INNER_RESOLUTION / SettlementStructure.CELLSIZE, xpos, zpos;
+        int x = Plane.INNER_RESOLUTION / SettlementStructure.CELLSIZE, xpos, zpos;
         var map = new SettlementStructureType[x, x];
         int centerPos = x / 2 - 1;
         map[centerPos, centerPos] = SettlementStructureType.SystemBlocked;
@@ -1034,7 +1034,7 @@ public sealed class Settlement : House
         data.Add(level);
         return data;
     }
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
         fs.Read(data, 0, data.Length);

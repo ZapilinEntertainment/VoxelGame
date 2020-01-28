@@ -9,7 +9,7 @@ enum BuildingCreateInfoMode : byte {Acceptable, Unacceptable_SideBlock, Unaccept
 
 public sealed class UISurfacePanelController : UIObserver {
 	public Button buildButton, gatherButton, digButton, blockCreateButton, columnCreateButton, changeMaterialButton;
-    SurfaceBlock observingSurface;
+    Plane observingSurface;
     bool status_digOrdered = false, firstSet = true;
     bool? status_gather = null;
 	byte savedHqLevel = 0;
@@ -75,7 +75,7 @@ public sealed class UISurfacePanelController : UIObserver {
        LocalizeButtonTitles();
     }
 
-    public void SetObservingSurface(SurfaceBlock sb) {
+    public void SetObservingSurface(Plane sb) {
 		if (sb == null) {
 			SelfShutOff();
 			return;
@@ -440,7 +440,7 @@ public sealed class UISurfacePanelController : UIObserver {
         costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = costPanel.transform.GetChild(2);// build button
         t.gameObject.SetActive(true);
-        t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION : CubeBlock.MAX_VOLUME ) + ')';
+        t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? Plane.INNER_RESOLUTION * Plane.INNER_RESOLUTION : CubeBlock.MAX_VOLUME ) + ')';
     }
     public void CostPanel_Build()
     {        
@@ -448,7 +448,7 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             case CostPanelMode.SurfaceMaterialChanging:
                     ResourceType rt = ResourceType.GetResourceTypeById(costPanel_selectedButton.y);
-                if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION) }))
+                if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, Plane.INNER_RESOLUTION * Plane.INNER_RESOLUTION) }))
                 {
                     observingSurface.ReplaceMaterial(rt.ID);
                     costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
@@ -823,13 +823,13 @@ public sealed class UISurfacePanelController : UIObserver {
 	public void CreateSelectedBuilding () {
         if (chosenStructure.placeInCenter )
         {
-            CreateSelectedBuilding( (byte)(SurfaceBlock.INNER_RESOLUTION /2 - chosenStructure.surfaceRect.size/2), (byte)(SurfaceBlock.INNER_RESOLUTION/ 2 - chosenStructure.surfaceRect.size/2), true );
+            CreateSelectedBuilding( (byte)(Plane.INNER_RESOLUTION /2 - chosenStructure.surfaceRect.size/2), (byte)(Plane.INNER_RESOLUTION/ 2 - chosenStructure.surfaceRect.size/2), true );
         }
         else
         {
             if (chosenStructure is Farm)
             {
-                int size = SurfaceBlock.INNER_RESOLUTION;
+                int size = Plane.INNER_RESOLUTION;
                 SurfaceRect sr = chosenStructure.surfaceRect;
                 CreateSelectedBuilding((byte)(size/ 2 - sr.size/2), (byte)(size / 2 - sr.size/2), true);
             }
@@ -848,7 +848,7 @@ public sealed class UISurfacePanelController : UIObserver {
         else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
         if (colony.storage.CheckSpendPossibility(cost))
         {
-            byte strSize = chosenStructure.surfaceRect.size,  res = SurfaceBlock.INNER_RESOLUTION;
+            byte strSize = chosenStructure.surfaceRect.size,  res = Plane.INNER_RESOLUTION;
             if (x + strSize > res) x = (byte)(res - strSize);
             if (z + strSize > res) z = (byte)(res - strSize);
             if (checkForIntersections && observingSurface.IsAnyBuildingInArea(new SurfaceRect(x, z, strSize)))
@@ -906,7 +906,7 @@ public sealed class UISurfacePanelController : UIObserver {
     {
         if (buildIntersectionSubmit.activeSelf | chosenStructure == null | observingSurface == null) return;
         Vector2 mappos = observingSurface.WorldToMapCoordinates(pos);
-        CreateSelectedBuilding((byte)(mappos.x * SurfaceBlock.INNER_RESOLUTION), (byte)(mappos.y * SurfaceBlock.INNER_RESOLUTION), true);
+        CreateSelectedBuilding((byte)(mappos.x * Plane.INNER_RESOLUTION), (byte)(mappos.y * Plane.INNER_RESOLUTION), true);
     }
 	
 

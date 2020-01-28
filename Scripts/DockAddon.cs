@@ -1,6 +1,6 @@
 ﻿public class DockAddon : Building {
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
@@ -9,7 +9,7 @@
         int x = basement.pos.x, y = basement.pos.y, z = basement.pos.z;
 
         Block nearblock = c.GetBlock(x, y, z + 1);
-        SurfaceBlock nearSurfaceBlock = nearblock as SurfaceBlock;
+        Plane nearSurfaceBlock = nearblock as Plane;
         Dock d;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
@@ -21,7 +21,7 @@
         }
 
         nearblock = c.GetBlock(x + 1, y, z );
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             d = nearSurfaceBlock.structures[0] as Dock;
@@ -33,7 +33,7 @@
 
 
         nearblock = c.GetBlock(x, y, z - 1);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             d = nearSurfaceBlock.structures[0] as Dock;
@@ -44,7 +44,7 @@
         }
 
         nearblock = c.GetBlock(x - 1, y, z);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             d = nearSurfaceBlock.structures[0] as Dock;
@@ -64,7 +64,7 @@
         PrepareBuildingForDestruction(clearFromSurface,returnResources,leaveRuins);        
 
         Block nearblock = c.GetBlock(x, y, z + 1);
-        SurfaceBlock nearSurfaceBlock = nearblock as SurfaceBlock;
+        Plane nearSurfaceBlock = nearblock as Plane;
         Dock d;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
@@ -73,7 +73,7 @@
         }
 
         nearblock = c.GetBlock(x + 1, y, z);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             d = nearSurfaceBlock.structures[0] as Dock;
@@ -81,7 +81,7 @@
         }
 
         nearblock = c.GetBlock(x, y, z - 1);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             d = nearSurfaceBlock.structures[0] as Dock;
@@ -89,7 +89,7 @@
         }
 
         nearblock = c.GetBlock(x - 1, y, z);
-        nearSurfaceBlock = nearblock as SurfaceBlock;
+        nearSurfaceBlock = nearblock as Plane;
         if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
         {
             d = nearSurfaceBlock.structures[0] as Dock;

@@ -4,7 +4,7 @@ using UnityEngine;
 public class GatherSite : Worksite
 {
     float destructionTimer;
-    SurfaceBlock workObject;
+    Plane workObject;
     const int START_WORKERS_COUNT = 5;
     // public const int MAX_WORKERS = 32
 
@@ -74,7 +74,7 @@ public class GatherSite : Worksite
         workSpeed = colony.labourCoefficient * workersCount * GameConstants.GATHERING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
-    public void Set(SurfaceBlock block)
+    public void Set(Plane block)
     {
         workObject = block;
         workObject.SetWorksite(this);
@@ -140,7 +140,7 @@ public class GatherSite : Worksite
     }
     override protected void Load(System.IO.FileStream fs, ChunkPos pos)
     {
-        Set(GameMaster.realMaster.mainChunk.GetBlock(pos) as SurfaceBlock);
+        Set(GameMaster.realMaster.mainChunk.GetBlock(pos) as Plane);
         var data = new byte[4];
         fs.Read(data, 0, 4);
         destructionTimer = System.BitConverter.ToSingle(data, 0);

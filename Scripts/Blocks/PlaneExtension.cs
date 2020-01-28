@@ -6,17 +6,31 @@ public sealed class PlaneExtension
     private readonly Plane myPlane;
     private List<Structure> structures;
     public bool? noEmptySpace { get; private set; }// true - full, false - empty, null - not either
-    public int artificialStructures { get; private set; }
+    public int artificialStructuresCount { get; private set; }
     private BitArray map;
     public const byte INNER_RESOLUTION = 16;
 
     public static UISurfacePanelController surfaceObserver;
 
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        PlaneExtension pe = (PlaneExtension)obj;
+        return pe.myPlane == myPlane && map == pe.map;
+    }
+    public override int GetHashCode()
+    {
+        return myPlane.GetHashCode() + map.GetHashCode() + artificialStructuresCount;
+    }
+
     public PlaneExtension(Plane i_myPlane, Structure i_mainStructure)
     {
         noEmptySpace = false;
         ResetMap();
-        artificialStructures = 0;
+        artificialStructuresCount = 0;
         myPlane = i_myPlane;
         if (i_mainStructure != null) AddStructure(i_mainStructure);
     }
@@ -29,11 +43,11 @@ public sealed class PlaneExtension
     public void RecalculateSurface()
     {
         ResetMap();
-        artificialStructures = 0;
+        artificialStructuresCount = 0;
         noEmptySpace = null;
 
         bool allCellsEmpty = true;
-        if (structures.Count != 0)
+        if (structures != null)
         {
             int a = 0;
             while (a < structures.Count)
@@ -45,7 +59,7 @@ public sealed class PlaneExtension
                     continue;
                 }
                 else allCellsEmpty = false;
-                if (s.isArtificial) artificialStructures++;
+                if (s.isArtificial) artificialStructuresCount++;
                 SurfaceRect sr = s.surfaceRect;
                 if (sr.size != INNER_RESOLUTION)
                 {
@@ -68,6 +82,7 @@ public sealed class PlaneExtension
                 }
                 a++;
             }
+            if (structures.Count == 0) structures = null;
         }
         if (noEmptySpace == null)
         {
@@ -413,6 +428,10 @@ public sealed class PlaneExtension
         if (structures == null) return 0;
         else return structures.Count;
     }
+    public List<Structure> GetStructuresList()
+    {
+        return structures;
+    }
     #endregion
 
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
@@ -702,12 +721,12 @@ public sealed class PlaneExtension
                     {
                         if (val < volume)
                         {
-                            scr = ScalableHarvestableResource.Create(rtype, val, this, new PixelPosByte(x0, z0));
+                            scr = ScalableHarvestableResource.Create(rtype, val, myPlane, new PixelPosByte(x0, z0));
                             volume -= val;
                         }
                         else
                         {
-                            scr = ScalableHarvestableResource.Create(rtype, (byte)volume, this, new PixelPosByte(x0, z0));
+                            scr = ScalableHarvestableResource.Create(rtype, (byte)volume, myPlane, new PixelPosByte(x0, z0));
                             volume = 0;
                         }
                     }
@@ -726,14 +745,25 @@ public sealed class PlaneExtension
             surfaceObserver = UISurfacePanelController.InitializeSurfaceObserverScript();
         }
         else surfaceObserver.gameObject.SetActive(true);
-        surfaceObserver.SetObservingSurface(this);
+        //surfaceObserver.SetObservingSurface(this);
         return surfaceObserver;
     }
 
-    #region save-load system
-    override public void Save(System.IO.FileStream fs)
+    public void Annihilate(bool compensateStructures)
     {
-        base.Save(fs);
+        if (noEmptySpace != false)
+        {
+            foreach (var s in structures)
+            {
+                s.Annihilate(false, compensateStructures, false);
+            }
+        }
+    }
+
+    #region save-load system
+    public void Save(System.IO.FileStream fs)
+    {
+        //base.Save(fs);
 
 
         int structuresCount = structures.Count;
@@ -767,8 +797,6 @@ public sealed class PlaneExtension
 
     public void Load(System.IO.FileStream fs)
     {
-
-
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int structuresCount = System.BitConverter.ToInt32(data, 0);
@@ -778,17 +806,8 @@ public sealed class PlaneExtension
             GameMaster.LoadingFail();
             return;
         }
-        if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, this);
+        if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, myPlane);
     }
     #endregion
-
-    public void Annihilate()
-    {        
-        if (noEmptySpace != false)
-        {
-            ClearSurface(false, false);
-        }
-        myPlane.Annihilate();
-    }
 }
 

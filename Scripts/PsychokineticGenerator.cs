@@ -4,7 +4,7 @@ public sealed class PsychokineticGenerator : WorkBuilding
     public const float ENERGY_MULTIPLIER = 1f, HAPPINESS_MODIFIER = -0.05f;
     private int hmodifier_id = -1;
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
@@ -34,7 +34,7 @@ public sealed class PsychokineticGenerator : WorkBuilding
         data.AddRange(System.BitConverter.GetBytes(workersCount));
         return data;
     }
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);

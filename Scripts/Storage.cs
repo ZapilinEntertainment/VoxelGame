@@ -124,7 +124,7 @@ public sealed class Storage : MonoBehaviour {
             bool secondTry = false;            
             if (warehouses.Count > 0) cpos = warehouses[Random.Range(0, warehouses.Count - 1)].basement.pos;
             else cpos = GameMaster.realMaster.colonyController.hq.basement.pos;
-            var sblock = chunk.GetNearestUnoccupiedSurfaceBlock(cpos);
+            var sblock = chunk.GetNearestUnoccupiedSurface(cpos);
             SECOND_TRY:
             if (sblock != null && sblock.noEmptySpace != true)
             {
@@ -155,7 +155,7 @@ public sealed class Storage : MonoBehaviour {
                     if (!secondTry)
                     {
                         secondTry = true;
-                        sblock = chunk.GetRandomSurfaceBlock();
+                        sblock = chunk.GetRandomSurface();
                         goto SECOND_TRY;
                     }
                 }

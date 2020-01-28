@@ -6,7 +6,7 @@ public sealed class ScalableHarvestableResource : Structure {
 	public ResourceType mainResource {get;private set;}
 	public byte resourceCount { get; private set; }
     public const byte RESOURCE_STICK_RECT_SIZE = 2; // dependency : SurfaceRect.ScatterResources;
-    public static readonly byte MAX_STICK_VOLUME = (byte)(CubeBlock.MAX_VOLUME / (SurfaceBlock.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE * SurfaceBlock.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE)),
+    public static readonly byte MAX_STICK_VOLUME = (byte)(BlockExtension.MAX_VOLUME / (PlaneExtension.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE * PlaneExtension.INNER_RESOLUTION / RESOURCE_STICK_RECT_SIZE)),
         RESOURCES_PER_LEVEL = RESOURCE_STICK_RECT_SIZE * RESOURCE_STICK_RECT_SIZE;
 
     private static Dictionary<byte, Mesh> meshes = new Dictionary<byte, Mesh>();
@@ -15,7 +15,7 @@ public sealed class ScalableHarvestableResource : Structure {
     private static int prevModelMaterialID = -1;
     private static Mesh prevModelMesh = null;
 
-    public static ScalableHarvestableResource Create(ResourceType i_resource, byte count, SurfaceBlock surface, PixelPosByte pos)
+    public static ScalableHarvestableResource Create(ResourceType i_resource, byte count, Plane surface, PixelPosByte pos)
     {
         GameObject g = new GameObject("ScalableHarvestableResource");
         var shr = g.AddComponent<ScalableHarvestableResource>();
@@ -54,7 +54,7 @@ public sealed class ScalableHarvestableResource : Structure {
             else
             {
                 m = new Mesh();
-                float p = Block.QUAD_SIZE * RESOURCE_STICK_RECT_SIZE / (float)SurfaceBlock.INNER_RESOLUTION, x = p / 2f;
+                float p = Block.QUAD_SIZE * RESOURCE_STICK_RECT_SIZE / (float)PlaneExtension.INNER_RESOLUTION, x = p / 2f;
                 float h = level * 1f / (MAX_STICK_VOLUME / RESOURCES_PER_LEVEL) ;
                 var vertices = new Vector3[12]
                 {
@@ -175,7 +175,7 @@ public sealed class ScalableHarvestableResource : Structure {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 5];
         fs.Read(data, 0, data.Length);

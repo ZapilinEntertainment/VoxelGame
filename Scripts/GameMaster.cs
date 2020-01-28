@@ -241,8 +241,8 @@ public sealed class GameMaster : MonoBehaviour
                         break;
 
                     case GameStart.Headquarters:
-                        List<SurfaceBlock> sblocks = mainChunk.surfaceBlocks;
-                        SurfaceBlock sb = sblocks[Random.Range(0, sblocks.Count)];
+                        List<Plane> sblocks = mainChunk.surfaceBlocks;
+                        Plane sb = sblocks[Random.Range(0, sblocks.Count)];
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 
@@ -251,32 +251,32 @@ public sealed class GameMaster : MonoBehaviour
                          weNeedNoResources = true;
 
                         //eo testzone                    
-                        SurfaceBlock b = mainChunk.GetSurfaceBlock(xpos, zpos);
+                        Plane b = mainChunk.GetHighestSurfacePlane(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
 
 
-                        sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos + 1);
+                        sb = mainChunk.GetHighestSurfacePlane(xpos - 1, zpos + 1);
                         if (sb == null)
                         {
-                            sb = mainChunk.GetSurfaceBlock(xpos, zpos + 1);
+                            sb = mainChunk.GetHighestSurfacePlane(xpos, zpos + 1);
                             if (sb == null)
                             {
-                                sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos + 1);
+                                sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos + 1);
                                 if (sb == null)
                                 {
-                                    sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos);
+                                    sb = mainChunk.GetHighestSurfacePlane(xpos - 1, zpos);
                                     if (sb == null)
                                     {
-                                        sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos);
+                                        sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos);
                                         if (sb == null)
                                         {
-                                            sb = mainChunk.GetSurfaceBlock(xpos - 1, zpos - 1);
+                                            sb = mainChunk.GetHighestSurfacePlane(xpos - 1, zpos - 1);
                                             if (sb == null)
                                             {
-                                                sb = mainChunk.GetSurfaceBlock(xpos, zpos - 1);
+                                                sb = mainChunk.GetHighestSurfacePlane(xpos, zpos - 1);
                                                 if (sb == null)
                                                 {
-                                                    sb = mainChunk.GetSurfaceBlock(xpos + 1, zpos - 1);
+                                                    sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos - 1);
                                                     if (sb == null)
                                                     {
                                                         print("bad generation, do something!");
@@ -1008,52 +1008,52 @@ public sealed class GameMaster : MonoBehaviour
     private void TestMethod()
     {
         Vector3Int ecpos = Vector3Int.zero;
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
 
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
             (s as WorkBuilding).AddWorkers(50);
         }
        
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
 
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.SCIENCE_LAB_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
 
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, SurfaceBlock.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
         {
             Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
             s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);

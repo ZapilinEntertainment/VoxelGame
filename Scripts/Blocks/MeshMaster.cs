@@ -7,7 +7,7 @@ public enum MeshType : byte
     NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeilSide, CutPlane, CutEdge012, CutEdge032,
     NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0,
 }
-//dependency: GetMesh, IsMeshTransparent
+//dependency: GetMesh, IsMeshTransparent, excavated meshes: Plane.VolumeChanges
 public static class MeshMaster
 {
     private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge012, cutEdge032, caveCeil,

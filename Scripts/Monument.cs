@@ -18,7 +18,7 @@ public sealed class Monument : Building
         monumentObserver = mo;
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {         
         base.SetBasement(b, pos);
         if (ringSprite == null)
@@ -254,7 +254,7 @@ public sealed class Monument : Building
         data.AddRange(System.BitConverter.GetBytes(artifacts[3] == null ? -1 : artifacts[3].ID));
         return data;
     }
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         artifacts = new Artifact[ARTIFACTS_COUNT];

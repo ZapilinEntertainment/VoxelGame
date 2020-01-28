@@ -1133,7 +1133,7 @@ public class Structure : MonoBehaviour
             {
                 if (subscribedToChunkUpdate)
                 {
-                    basement.myBlockExtension.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+                    basement.myBlockExtension.myBlock.myChunk.ChunkUpdateEvent -= ChunkUpdated;
                     subscribedToChunkUpdate = false;
                 }
                 basement.extension?.RemoveStructure(this);

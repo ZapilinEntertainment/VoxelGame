@@ -297,7 +297,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                                     if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
                                     else
                                     {
-                                        var sb = b as SurfaceBlock;
+                                        var sb = b as Plane;
                                         if (sb != null)
                                         {
                                             sb.EnvironmentalStrike(rh.point, 2, damage);

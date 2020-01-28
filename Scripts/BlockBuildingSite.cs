@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class BlockBuildingSite : Worksite
 {
-    SurfaceBlock workObject;
+    Plane workObject;
     ResourceType rtype;
     const int START_WORKERS_COUNT = 20;
 
@@ -33,7 +33,7 @@ public class BlockBuildingSite : Worksite
     void LabourResult()
     {
         actionLabel = "";        
-        int length = SurfaceBlock.INNER_RESOLUTION / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE;
+        int length = PlaneExtension.INNER_RESOLUTION / ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE;
         bool?[,] pillarsMap = new bool?[length, length]; // true - full pillar, false - unfinished, null - no pillar
         for (int a = 0; a < length; a++)
         {
@@ -49,6 +49,7 @@ public class BlockBuildingSite : Worksite
         var unfinishedPillarsList = new List<ScalableHarvestableResource>();
         ScalableHarvestableResource shr = null;
 
+        /*
         if (workObject.noEmptySpace != false) { // на поверхности есть какие-то структуры
             byte maxVolume = ScalableHarvestableResource.MAX_STICK_VOLUME;
             int i = 0;
@@ -157,6 +158,7 @@ public class BlockBuildingSite : Worksite
             }
         }
         actionLabel = string.Format("{0:0.##}", totalResourcesCount / (float)CubeBlock.MAX_VOLUME * 100f) + '%';
+        */
     }
 
     protected override void RecalculateWorkspeed()
@@ -164,10 +166,10 @@ public class BlockBuildingSite : Worksite
         workSpeed = colony.labourCoefficient * workersCount * GameConstants.BLOCK_BUILDING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
-    public void Set(SurfaceBlock block, ResourceType type)
+    public void Set(Plane block, ResourceType type)
     {
         workObject = block;
-        workObject.SetWorksite(this);
+        //workObject.SetWorksite(this);
         rtype = type;
         actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
         colony.SendWorkers(START_WORKERS_COUNT, this);
@@ -205,7 +207,7 @@ public class BlockBuildingSite : Worksite
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
             subscribedToUpdate = false;
         }
-        if (workObject != null & workObject.worksite == this) workObject.ResetWorksite();
+        //if (workObject != null & workObject.worksite == this) workObject.ResetWorksite();
         if (showOnGUI)
         {
             observer.SelfShutOff();
@@ -236,10 +238,12 @@ public class BlockBuildingSite : Worksite
     {
         byte[] data = new byte[4];
         fs.Read(data, 0, 4);
+        /*
         Set(
-            GameMaster.realMaster.mainChunk.GetBlock(cpos) as SurfaceBlock, 
+            GameMaster.realMaster.mainChunk.GetBlock(cpos) as Plane, 
             ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, 0))
             );
+            */
         LoadWorksiteData(fs);
     }
     #endregion

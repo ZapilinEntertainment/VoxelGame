@@ -8,7 +8,7 @@ public sealed class LifeSource : Structure {
     public const float MAX_HP = 25000;
     private List<Block> dependentBlocks;
 
-    override public void SetBasement(SurfaceBlock sb, PixelPosByte pos) {
+    override public void SetBasement(Plane sb, PixelPosByte pos) {
 		if (sb == null) return;
 		SetStructureData(sb,pos);        
         if (!subscribedToUpdate)

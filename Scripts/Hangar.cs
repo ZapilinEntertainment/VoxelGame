@@ -203,7 +203,7 @@ public sealed class Hangar : WorkBuilding
         }
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         if (!GameMaster.loading)
@@ -482,7 +482,7 @@ public sealed class Hangar : WorkBuilding
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH + WORKBUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

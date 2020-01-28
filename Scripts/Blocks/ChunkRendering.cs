@@ -1,6 +1,130 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+
 //RENDERING PART
+public struct MeshVisualizeInfo
+{
+    public readonly byte faceIndex;
+    public readonly byte illumination;
+    public readonly MaterialType materialType;
+
+    public MeshVisualizeInfo(byte i_face, MaterialType mtype, byte i_illumination)
+    {
+        faceIndex = i_face;
+        illumination = i_illumination;
+        materialType = mtype;
+    }
+
+    public static bool operator ==(MeshVisualizeInfo lhs, MeshVisualizeInfo rhs) { return lhs.Equals(rhs); }
+    public static bool operator !=(MeshVisualizeInfo lhs, MeshVisualizeInfo rhs) { return !(lhs.Equals(rhs)); }
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        MeshVisualizeInfo p = (MeshVisualizeInfo)obj;
+        return (faceIndex == p.faceIndex) & (illumination == p.illumination) & (materialType == p.materialType);
+    }
+    public override int GetHashCode()
+    {
+        return faceIndex + illumination + (byte)materialType;
+    }
+
+    public override string ToString()
+    {
+        return (materialType.ToString() + " f:" + faceIndex.ToString() + " i:" + illumination.ToString());
+    }
+}
+public sealed class BlockpartVisualizeInfo
+{
+    public readonly ChunkPos pos;
+    public MeshVisualizeInfo rinfo;
+    public MeshType meshType;
+    public int materialID;
+
+    public BlockpartVisualizeInfo(ChunkPos i_pos, MeshVisualizeInfo i_meshVI, MeshType i_meshType, int i_materialID)
+    {
+        pos = i_pos;
+        rinfo = i_meshVI;
+        meshType = i_meshType;
+        materialID = i_materialID;
+    }
+
+    public Matrix4x4 GetPositionMatrix()
+    {
+        var faceVector = Vector3.zero;
+        var rotation = Quaternion.identity;
+        float step = Block.QUAD_SIZE * 0.5f;
+        switch (rinfo.faceIndex)
+        {
+            case Block.FWD_FACE_INDEX:
+                faceVector = Vector3.forward * step;
+                break;
+            case Block.RIGHT_FACE_INDEX:
+                faceVector = Vector3.right * step;
+                rotation = Quaternion.Euler(0, 90, 0);
+                break;
+            case Block.BACK_FACE_INDEX:
+                faceVector = Vector3.back * step;
+                rotation = Quaternion.Euler(0, 180, 0);
+                break;
+            case Block.LEFT_FACE_INDEX:
+                faceVector = Vector3.left * step;
+                rotation = Quaternion.Euler(0, 270, 0);
+                break;
+            case Block.UP_FACE_INDEX:
+                faceVector = Vector3.up * step;
+                rotation = Quaternion.Euler(-90, 0, 0);
+                break;
+            case Block.DOWN_FACE_INDEX:
+                faceVector = Vector3.down * step;
+                rotation = Quaternion.Euler(90, 0, 0);
+                break;
+            case Block.SURFACE_FACE_INDEX:
+                faceVector = Vector3.down * step;
+                rotation = Quaternion.Euler(-90, 0, 0);
+                break;
+            case Block.CEILING_FACE_INDEX:
+                faceVector = Vector3.up * (0.5f - Block.CEILING_THICKNESS) * Block.QUAD_SIZE;
+                rotation = Quaternion.Euler(90, 0, 0);
+                break;
+        }
+        return Matrix4x4.TRS(
+            pos.ToWorldSpace() + faceVector,
+            rotation,
+            Vector3.one * Block.QUAD_SIZE
+            );
+    }
+
+    public static bool operator ==(BlockpartVisualizeInfo lhs, BlockpartVisualizeInfo rhs)
+    {
+        if (ReferenceEquals(lhs, null))
+        {
+            return ReferenceEquals(rhs, null);
+        }
+        else return lhs.Equals(rhs);
+    }
+    public static bool operator !=(BlockpartVisualizeInfo lhs, BlockpartVisualizeInfo rhs)
+    {
+        return !(lhs == rhs);
+    }
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        BlockpartVisualizeInfo p = (BlockpartVisualizeInfo)obj;
+        return (p.pos == pos) && (p.rinfo == rinfo) && (meshType == p.meshType) && (materialID == p.materialID);
+    }
+    public override int GetHashCode()
+    {
+        return pos.GetHashCode() + 1000 * rinfo.faceIndex;
+    }
+}
+
+
 public sealed partial class Chunk : MonoBehaviour {
     public byte[,,] lightMap { get; private set; }
 
@@ -64,76 +188,91 @@ public sealed partial class Chunk : MonoBehaviour {
         else
         {
             byte vmask = 255;
-            var powersOfTwo = GameConstants.powersOfTwo;
             Block bx = GetBlock(x, y, z + 1);
+            byte fwd = 1 << Block.FWD_FACE_INDEX, right = 1 << Block.RIGHT_FACE_INDEX,
+                back = 1 << Block.BACK_FACE_INDEX, left = 1 << Block.LEFT_FACE_INDEX,
+                up = 1 << Block.UP_FACE_INDEX, down = 1 << Block.DOWN_FACE_INDEX,
+                surf = 1 << Block.SURFACE_FACE_INDEX, ceil = 1 << Block.CEILING_FACE_INDEX;
             //sides:
             if (bx != null && !bx.IsFaceTransparent(Block.BACK_FACE_INDEX))
             {
-                vmask -= powersOfTwo[Block.FWD_FACE_INDEX];
+                vmask -= fwd;
             }
             bx = GetBlock(x + 1, y, z);
             if (bx != null && !bx.IsFaceTransparent(Block.LEFT_FACE_INDEX))
             {
-                vmask -= powersOfTwo[Block.RIGHT_FACE_INDEX];
+                vmask -= right;
             }
             bx = GetBlock(x, y, z - 1);
             if (bx != null && !bx.IsFaceTransparent(Block.FWD_FACE_INDEX))
             {
-                vmask -= powersOfTwo[Block.BACK_FACE_INDEX];
+                vmask -= back;
             }
             bx = GetBlock(x - 1, y, z);
             if (bx != null && !bx.IsFaceTransparent(Block.RIGHT_FACE_INDEX))
             {
-                vmask -= powersOfTwo[Block.LEFT_FACE_INDEX];
+                vmask -= left;
             }
             // up and down
             bx = GetBlock(x, y + 1, z);
             if (bx != null && !bx.IsFaceTransparent(Block.DOWN_FACE_INDEX))
             {
-                vmask -= powersOfTwo[Block.UP_FACE_INDEX];
+                vmask -= up;
             }
             bx = GetBlock(x, y - 1, z);
             if (bx != null && !bx.IsFaceTransparent(Block.UP_FACE_INDEX))
             {
-                vmask -= powersOfTwo[Block.DOWN_FACE_INDEX];
+                vmask -= down;
             }
-            byte sidesMask = (byte)(powersOfTwo[Block.FWD_FACE_INDEX] + powersOfTwo[Block.RIGHT_FACE_INDEX] + powersOfTwo[Block.BACK_FACE_INDEX] + powersOfTwo[Block.LEFT_FACE_INDEX]);
+            byte sidesMask = (byte)(fwd + right + back + left);
             if ((vmask & sidesMask) == 0) //ни одна боковая сторона не рисуется
             {
-                if ((vmask & powersOfTwo[Block.UP_FACE_INDEX]) == 0) vmask -= powersOfTwo[Block.SURFACE_FACE_INDEX];
-                if ((vmask & powersOfTwo[Block.DOWN_FACE_INDEX]) == 0) vmask -= powersOfTwo[Block.CEILING_FACE_INDEX];
+                if ((vmask & up) == 0) vmask -= surf;
+                if ((vmask & down) == 0) vmask -= ceil;
             }
             return vmask;
         }
     }
-
-    #region light
-    public byte GetLightValue(int x, int y, int z)
+    public void RecalculateVisibilityAtPoint(int x, int y, int z)
     {
-        if (!PoolMaster.useIlluminationSystem) return UP_LIGHT;
-        else
+        byte affectionMask = 0;
+        Block b = GetBlock(x, y, z);
+        if (b != null) affectionMask = b.GetVisualAffectionMask();
+        b = GetBlock(x, y, z + 1); if (b != null)
         {
-            if (y < 0) return BOTTOM_LIGHT;
-            else
-            {
-                byte sz = CHUNK_SIZE;
-                sz--;
-                if (x < 0 || z < 0 || x > sz || y > sz || z > sz) return UP_LIGHT;
-                else return lightMap[x, y, z];
-            }
+            if ((affectionMask & (1 << Block.FWD_FACE_INDEX)) != 0) b.InitializePlane(Block.BACK_FACE_INDEX);
+            else b.DeactivatePlane(Block.BACK_FACE_INDEX);
         }
-    }
-    public byte GetLightValue(ChunkPos cpos) { return GetLightValue(cpos.x, cpos.y, cpos.z); }
-
-  
-    public void ApplyVisibleInfluenceMask(int x, int y, int z, byte mask)
-    {
-        Block b = GetBlock(x, y, z + 1); if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x + 1, y, z); if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x, y, z - 1); if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x - 1, y, z); if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x, y + 1, z); if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x, y - 1, z); if (b != null) RefreshBlockVisualising(b);
+        b = GetBlock(x + 1, y, z);
+        if (b != null)
+        {
+            if ((affectionMask & (1 << Block.RIGHT_FACE_INDEX)) != 0) b.InitializePlane(Block.LEFT_FACE_INDEX);
+            else b.DeactivatePlane(Block.LEFT_FACE_INDEX);
+        }
+        b = GetBlock(x, y, z - 1);
+        if (b != null)
+        {
+            if ((affectionMask & (1 << Block.BACK_FACE_INDEX)) != 0) b.InitializePlane(Block.FWD_FACE_INDEX);
+            else b.DeactivatePlane(Block.FWD_FACE_INDEX);
+        }
+        b = GetBlock(x - 1, y, z);
+        if (b != null)
+        {
+            if ((affectionMask & (1 << Block.LEFT_FACE_INDEX)) != 0) b.InitializePlane(Block.RIGHT_FACE_INDEX);
+            else b.DeactivatePlane(Block.RIGHT_FACE_INDEX);
+        }
+        b = GetBlock(x, y + 1, z);
+        if (b != null)
+        {
+            if ((affectionMask & (1 << Block.UP_FACE_INDEX)) != 0) b.InitializePlane(Block.DOWN_FACE_INDEX);
+            else b.DeactivatePlane(Block.DOWN_FACE_INDEX);
+        }
+        b = GetBlock(x, y - 1, z);
+        if (b != null)
+        {
+            if ((affectionMask & (1 << Block.DOWN_FACE_INDEX)) != 0) b.InitializePlane(Block.UP_FACE_INDEX);
+            else b.DeactivatePlane(Block.UP_FACE_INDEX);
+        }
     }
 
     public void ChangeBlockVisualData(Block b, byte face)
@@ -153,7 +292,7 @@ public sealed partial class Chunk : MonoBehaviour {
             }
         }
 
-        if ((visibilityMask & GameConstants.powersOfTwo[face]) != 0) // должен быть видимым
+        if ((visibilityMask & (1 << face)) != 0) // должен быть видимым
         {
             if (currentBlockInfo == null)
             {
@@ -201,11 +340,10 @@ public sealed partial class Chunk : MonoBehaviour {
         }
         BlockpartVisualizeInfo currentBlockInfo, correctBlockInfo;
 
-        var pot = GameConstants.powersOfTwo;
         for (byte k = 0; k < 8; k++)
         {
             currentBlockInfo = blockParts[k];
-            if ((visibilityMask & pot[k]) != 0) // должен быть видимым
+            if ((visibilityMask & (1 << k)) != 0) // должен быть видимым
             {
                 correctBlockInfo = b.GetFaceVisualData(k);
                 if (currentBlockInfo != null) // данные о блоке есть..
@@ -282,6 +420,30 @@ public sealed partial class Chunk : MonoBehaviour {
                 else i++;
             }
             chunkRenderUpdateRequired = true;
+        }
+    }
+    public void RewriteFaceVisualData(ChunkPos pos, byte faceIndex )
+    {
+        if (blockVisualizersList == null)
+        {
+            RenderDataFullRecalculation();
+            return;
+        }
+        else
+        {
+            foreach (var bvi in blockVisualizersList)
+            {
+                if (bvi.pos == pos)
+                {
+                    if (bvi.rinfo.faceIndex == faceIndex)
+                    {
+                        var mvi = bvi.rinfo;
+                        if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi);
+                        chunkDataUpdateRequired = true;
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -375,6 +537,221 @@ public sealed partial class Chunk : MonoBehaviour {
         }
         else CreateBlockpartsRenderer(mvi);
     }
+    private void RemakeRenderersHolders()
+    {
+        if (renderersHolders != null)
+        {
+            Destroy(renderersHolders[0]);
+            Destroy(renderersHolders[1]);
+            Destroy(renderersHolders[2]);
+            Destroy(renderersHolders[3]);
+            Destroy(renderersHolders[4]);
+            Destroy(renderersHolders[5]);
+            Destroy(renderersHolders[6]);
+        }
+        renderersHolders = new GameObject[8];
+        GameObject g = new GameObject("renderersHolder_face0");
+        Transform t = g.transform;
+        Vector3 vzero = Vector3.zero;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[0] = g;
+        g = new GameObject("renderersHolder_face1");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[1] = g;
+        g = new GameObject("renderersHolder_face2");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[2] = g;
+        g = new GameObject("renderersHolder_face3");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[3] = g;
+        g = new GameObject("renderersHolder_face4");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[4] = g;
+        g = new GameObject("renderersHolder_face5");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[5] = g;
+        g = new GameObject("renderersHolder_face6");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[6] = g;
+        g = new GameObject("renderersHolder_face7");
+        t = g.transform;
+        t.parent = transform;
+        t.localPosition = vzero;
+        renderersHolders[7] = g;
+    }
+
+    public void DrawBorder()
+    {
+        LineRenderer lr = gameObject.GetComponent<LineRenderer>();
+        if (lr == null)
+        {
+            lr = gameObject.AddComponent<LineRenderer>();
+            lr.sharedMaterial = Resources.Load<Material>("Materials/borderMaterial");
+            lr.receiveShadows = false;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.positionCount = 4;
+            lr.loop = true;
+
+        }
+        else lr.enabled = true;
+        float qh = Block.QUAD_SIZE / 2f;
+        float s = CHUNK_SIZE * Block.QUAD_SIZE - qh;
+        float h = CHUNK_SIZE / 2f * Block.QUAD_SIZE - qh;
+        gameObject.GetComponent<LineRenderer>().SetPositions(new Vector3[4] {
+            new Vector3( -qh, h, -qh),
+            new Vector3( -qh, h, s),
+            new Vector3(s, h, s),
+            new Vector3(s, h, -qh)
+        });
+        borderDrawn = true;
+    }
+    public void HideBorderLine()
+    {
+        LineRenderer lr = gameObject.GetComponent<LineRenderer>();
+        if (lr != null) lr.enabled = false;
+    }
+
+    public void LayersCut()
+    {
+        int layerCutHeight = GameMaster.layerCutHeight;
+        RenderDataFullRecalculation();
+    }
+    public void SetShadowCastingMode(bool x)
+    {
+        if (x)
+        {
+            if (combinedShadowCaster == null)
+            {
+                combinedShadowCaster = new GameObject("combinedShadowCaster");
+                combinedShadowCaster.AddComponent<MeshFilter>();
+                var mr = combinedShadowCaster.AddComponent<MeshRenderer>();
+                mr.sharedMaterial = Resources.Load<Material>("Materials/ShadowsOnly");
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                mr.receiveShadows = false;
+                mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+                mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                combinedShadowCaster.SetActive(false);
+            }
+            shadowsUpdateRequired = true;
+        }
+        else
+        {
+            if (combinedShadowCaster != null) Destroy(combinedShadowCaster);
+        }
+    }
+
+    private void ShadowsUpdate()
+    {
+        var count = renderers.Count;
+        if (count > 0)
+        {
+            CombineInstance[] ci = new CombineInstance[count];
+            Quaternion or = Quaternion.identity;
+            Vector3 scale = Vector3.one;
+            GameObject g;
+            int i = 0;
+            foreach (var r in renderers)
+            {
+                g = r.Value;
+                ci[i].mesh = g.GetComponent<MeshFilter>().sharedMesh;
+                ci[i].transform = Matrix4x4.TRS(g.transform.position, or, scale);
+                i++;
+            }
+            MeshFilter m = combinedShadowCaster.GetComponent<MeshFilter>();
+            m.mesh = new Mesh();
+            m.mesh.CombineMeshes(ci);
+            combinedShadowCaster.SetActive(true);
+        }
+        else
+        {
+            combinedShadowCaster.SetActive(false);
+        }
+        shadowsUpdateRequired = false;
+    }
+    public void CullingUpdate()
+    {
+        Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
+        Vector3 v = Vector3.one * (-1);
+        float size = CHUNK_SIZE * Block.QUAD_SIZE;
+        if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
+        if (cpos.y > 0) { if (cpos.y > size) v.y = 1; else v.y = 0; }
+        if (cpos.z > 0) { if (cpos.z > size) v.z = 1; else v.z = 0; }
+        byte renderBitmask = 63;
+        if (v != Vector3.zero)
+        {
+            //easy-culling	            
+            if (v.x == 1) renderBitmask &= 55; else if (v.x == -1) renderBitmask &= 61;
+            if (v.y == 1) renderBitmask &= 31; else if (v.y == -1) renderBitmask &= 47;
+            if (v.z == 1) renderBitmask &= 59; else if (v.z == -1) renderBitmask &= 62;
+        }
+        if ((renderBitmask & 16) != 0) renderBitmask += 64;
+        if ((renderBitmask & 32) != 0) renderBitmask += 128;
+        if (renderBitmask != prevBitmask)
+        {
+            if (renderers.Count > 0)
+            {
+                bool visible;
+                GameObject g;
+                foreach (var r in renderers)
+                {
+                    visible = ((renderBitmask & (1 << r.Key.faceIndex)) != 0);
+                    g = r.Value;
+                    if (g.activeSelf != visible) g.SetActive(visible);
+                }
+            }
+            prevBitmask = renderBitmask;
+        }
+    }
+    public void RenderStatusUpdate()
+    {
+        if (redrawRequiredTypes.Count > 0)
+        {
+            foreach (MeshVisualizeInfo mvi in redrawRequiredTypes)
+            {
+                if (renderers.ContainsKey(mvi))
+                {
+                    RedrawRenderer(mvi);
+                }
+                else
+                {
+                    CreateBlockpartsRenderer(mvi);
+                }
+            }
+            redrawRequiredTypes.Clear();
+        }
+        chunkRenderUpdateRequired = false;
+    }
+
+    #region light
+    public byte GetLightValue(int x, int y, int z)
+    {
+        if (!PoolMaster.useIlluminationSystem) return UP_LIGHT;
+        else
+        {
+            if (y < 0) return BOTTOM_LIGHT;
+            else
+            {
+                byte sz = CHUNK_SIZE;
+                sz--;
+                if (x < 0 || z < 0 || x > sz || y > sz || z > sz) return UP_LIGHT;
+                else return lightMap[x, y, z];
+            }
+        }
+    }
+    public byte GetLightValue(ChunkPos cpos) { return GetLightValue(cpos.x, cpos.y, cpos.z); }  
 
     public void ChunkLightmapFullRecalculation()
     {
@@ -530,90 +907,6 @@ public sealed partial class Chunk : MonoBehaviour {
     public void RecalculateIlluminationAtPoint(ChunkPos pos)
     {
         ChunkLightmapFullRecalculation(); // в разработке
-    }
-
-    private void RemakeRenderersHolders()
-    {
-        if (renderersHolders != null)
-        {
-            Destroy(renderersHolders[0]);
-            Destroy(renderersHolders[1]);
-            Destroy(renderersHolders[2]);
-            Destroy(renderersHolders[3]);
-            Destroy(renderersHolders[4]);
-            Destroy(renderersHolders[5]);
-            Destroy(renderersHolders[6]);
-        }
-        renderersHolders = new GameObject[8];
-        GameObject g = new GameObject("renderersHolder_face0");
-        Transform t = g.transform;
-        Vector3 vzero = Vector3.zero;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[0] = g;
-        g = new GameObject("renderersHolder_face1");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[1] = g;
-        g = new GameObject("renderersHolder_face2");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[2] = g;
-        g = new GameObject("renderersHolder_face3");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[3] = g;
-        g = new GameObject("renderersHolder_face4");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[4] = g;
-        g = new GameObject("renderersHolder_face5");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[5] = g;
-        g = new GameObject("renderersHolder_face6");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[6] = g;
-        g = new GameObject("renderersHolder_face7");
-        t = g.transform;
-        t.parent = transform;
-        t.localPosition = vzero;
-        renderersHolders[7] = g;
-    }
-    public void LayersCut()
-    {
-        int layerCutHeight = GameMaster.layerCutHeight;
-        RenderDataFullRecalculation();
-    }
-    public void SetShadowCastingMode(bool x)
-    {
-        if (x)
-        {
-            if (combinedShadowCaster == null)
-            {
-                combinedShadowCaster = new GameObject("combinedShadowCaster");
-                combinedShadowCaster.AddComponent<MeshFilter>();
-                var mr = combinedShadowCaster.AddComponent<MeshRenderer>();
-                mr.sharedMaterial = Resources.Load<Material>("Materials/ShadowsOnly");
-                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-                mr.receiveShadows = false;
-                mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-                mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-                combinedShadowCaster.SetActive(false);
-            }
-            shadowsUpdateRequired = true;
-        }
-        else
-        {
-            if (combinedShadowCaster != null) Destroy(combinedShadowCaster);
-        }
     }
     #endregion 
 }

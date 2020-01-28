@@ -384,7 +384,7 @@ public class Quest
                     case ProgressQuestID.Progress_SecondFloor:
                         {
                             List<ChunkPos> checkForBuildings = new List<ChunkPos>();
-                            foreach (SurfaceBlock sb in GameMaster.realMaster.mainChunk.surfaceBlocks)
+                            foreach (Plane sb in GameMaster.realMaster.mainChunk.surfaceBlocks)
                             {
                                 if (sb == null || sb.noEmptySpace == false) continue;
                                 else
@@ -408,7 +408,7 @@ public class Quest
                                     if (b == null) continue;
                                     else
                                     {
-                                        SurfaceBlock sb = b as SurfaceBlock;
+                                        Plane sb = b as Plane;
                                         if (sb == null) continue;
                                         else
                                         {

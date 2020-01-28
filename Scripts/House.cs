@@ -21,7 +21,7 @@ public class House : Building {
         housing = GetHousingValue(ID);
     }
 
-    public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
+    public override void SetBasement(Plane b, PixelPosByte pos) {		
 		if (b == null) return;
         //#set house data
         SetBuildingData(b, pos);

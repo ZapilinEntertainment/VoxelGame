@@ -167,10 +167,10 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddGrassland:
                     {
-                        SurfaceBlock sb = b as SurfaceBlock;
+                        Plane sb = b as Plane;
                         if (sb == null & b.pos.y < Chunk.CHUNK_SIZE - 1)
                         {
-                            sb = b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, ResourceType.DIRT_ID, true) as SurfaceBlock;
+                            sb = b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, ResourceType.DIRT_ID, true) as Plane;
                             action = true;
                         }
                         if (sb != null && sb.grassland == null)
@@ -184,7 +184,7 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.DeleteGrassland:
                     {
-                        SurfaceBlock sb = b as SurfaceBlock;
+                        Plane sb = b as Plane;
                         if (sb != null && sb.grassland != null)
                         {
                             sb.grassland.Annihilation(true, true);
@@ -387,19 +387,19 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddLifepower:
                     {
-                        SurfaceBlock sb = b as SurfaceBlock;
+                        Plane sb = b as Plane;
                         if (sb != null && sb.grassland != null) sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
                     }
                     break;
                 case ClickAction.TakeLifepower:
                     {
-                        SurfaceBlock sb = b as SurfaceBlock;
+                        Plane sb = b as Plane;
                         if (sb != null && sb.grassland != null) sb.grassland.TakeLifepowerAndCalculate(LIFEPOWER_PORTION);
                         break;
                     }
                 case ClickAction.CreateLifesource:
                     {
-                        SurfaceBlock sb = b as SurfaceBlock;
+                        Plane sb = b as Plane;
                         if (sb != null)
                         {
                             if (lifesource != null) lifesource.Annihilate(true, false, false);

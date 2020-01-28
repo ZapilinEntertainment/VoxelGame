@@ -16,7 +16,7 @@ public class Hospital : WorkBuilding {
 		SetBirthrateMode(0);
 	}
 
-	public override void SetBasement(SurfaceBlock b, PixelPosByte pos) {		
+	public override void SetBasement(Plane b, PixelPosByte pos) {		
 		if (b == null) return;
         SetWorkbuildingData(b, pos);
         coverage = 0;

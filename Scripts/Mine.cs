@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Mine : WorkBuilding {
-	CubeBlock workObject;
+	//CubeBlock workObject;
 	bool workFinished = false;
 	ChunkPos lastWorkObjectPos;
 	public List<Structure> elevators;
@@ -14,7 +14,7 @@ public class Mine : WorkBuilding {
 		elevators = new List<Structure>();
 	}
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+	override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;
 		SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
@@ -23,18 +23,19 @@ public class Mine : WorkBuilding {
             subscribedToUpdate = true;
         }
 		Block bb = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y - 1, basement.pos.z);
-		workObject = bb as CubeBlock;
+		//workObject = bb as CubeBlock;
 		lastWorkObjectPos = bb.pos;
 	}
 
 	override public void LabourUpdate() {
 		if (awaitingElevatorBuilding) {
 			Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y, lastWorkObjectPos.z);
+            /*
 			if ( b != null ) {                
                 if (b.type == BlockType.Surface)
                 {
                     Structure s = GetStructureByID(MINE_ELEVATOR_ID);
-                    s.SetBasement(b as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2, SurfaceBlock.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2));
+                    s.SetBasement(b as Plane, new PixelPosByte(Plane.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2, Plane.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2));
                     elevators.Add(s);
                     awaitingElevatorBuilding = false;
                     GameLogUI.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
@@ -47,7 +48,7 @@ public class Mine : WorkBuilding {
                         if (cvb.haveSurface)
                         {
                             Structure s = GetStructureByID(MINE_ELEVATOR_ID);
-                            s.SetBasement(cvb, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2, SurfaceBlock.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2));
+                            s.SetBasement(cvb, new PixelPosByte(Plane.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2, Plane.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2));
                             elevators.Add(s);
                             awaitingElevatorBuilding = false;
                             GameLogUI.MakeAnnouncement(Localization.GetActionLabel(LocalizationActionLabels.MineLevelFinished));
@@ -77,16 +78,18 @@ public class Mine : WorkBuilding {
                     workflow -= workflowToProcess;
                 }
             }
+            */
         }
-	}
+    }
 
 override protected void LabourResult() {
 		int x = (int) workflow;
 		float production = x;
-		production = workObject.Dig(x, false);
-		GameMaster.geologyModule.CalculateOutput(production, workObject, colony.storage);
+		//production = workObject.Dig(x, false);
+		//GameMaster.geologyModule.CalculateOutput(production, workObject, colony.storage);
+        /*
 		if ( workObject!=null && workObject.volume != 0) {
-		    float percent = workObject.volume / (float) CubeBlock.MAX_VOLUME;
+		    float percent = workObject.volume / (float) BlockExtension.MAX_VOLUME;
 			if (showOnGUI) workbuildingObserver.SetActionLabel( string.Format("{0:0.##}", (1 - percent) * 100) + "% " + Localization.GetActionLabel(LocalizationActionLabels.Extracted)); 
 			workflow -= production;	
 		}
@@ -95,32 +98,36 @@ override protected void LabourResult() {
             if (showOnGUI) workbuildingObserver.SetActionLabel(Localization.GetActionLabel(LocalizationActionLabels.WorkStopped));
 			awaitingElevatorBuilding = true;
 		}			
+        */
 	}
 
-	override public void RecalculateWorkspeed() {
+override public void RecalculateWorkspeed() {
 		workSpeed = colony.labourCoefficient * workersCount * GameConstants.MINING_SPEED;
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 
-	void UpgradeMine(byte f_level) {
-		if (f_level == level ) return;
-		GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
-		if (nextModel != null) {
+    void UpgradeMine(byte f_level)
+    {
+        if (f_level == level) return;
+        GameObject nextModel = Resources.Load<GameObject>("Prefs/minePref_level_" + (f_level).ToString());
+        if (nextModel != null)
+        {
             Transform model = transform.GetChild(0);
             if (model != null) Destroy(model.gameObject);
-            GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);			
+            GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
             newModelGO.SetActive(visible);
             if (!isActive | !isEnergySupplied) ChangeRenderersView(false);
-        }		
-		level = f_level;
-	}
+        }
+        level = f_level;
+    }
 
+    /*
     override public bool IsLevelUpPossible(ref string refusalReason)
     {
         if (workFinished && !awaitingElevatorBuilding)
         {
-            Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
-            if (b != null && b.type == BlockType.Cube) return true;
+            //Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
+            //if (b != null && b.type == BlockType.Cube) return true;
             else
             {
                 refusalReason = Localization.GetRefusalReason(RefusalReason.NoBlockBelow);
@@ -133,11 +140,12 @@ override protected void LabourResult() {
             return false;
         }
     }
+    */
 
     override public void LevelUp(bool returnToUI)
     {
         Block b = basement.myChunk.GetBlock(lastWorkObjectPos.x, lastWorkObjectPos.y - 1, lastWorkObjectPos.z);
-        if (b != null && b.type == BlockType.Cube)
+        //if (b != null && b.type == BlockType.Cube)
         {
             if (!GameMaster.realMaster.weNeedNoResources)
             {
@@ -151,7 +159,7 @@ override protected void LabourResult() {
                     }
                 }
             }
-            workObject = b as CubeBlock;
+         //   workObject = b as CubeBlock;
             lastWorkObjectPos = b.pos;
             workFinished = false;
             UpgradeMine((byte)(level + 1));
@@ -240,7 +248,7 @@ override protected void LabourResult() {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
@@ -273,7 +281,7 @@ override protected void LabourResult() {
                 fs.Read(eData, 0, eDataLength);
                 Structure s = GetStructureByID(MINE_ELEVATOR_ID);
                 s.SetModelRotation(eData[1]);
-                s.SetBasement(chunk.GetBlock(x, eData[0],z) as SurfaceBlock, new PixelPosByte(SurfaceBlock.INNER_RESOLUTION / 2 - s.surfaceRect.size /2, SurfaceBlock.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2));
+                //s.SetBasement(chunk.GetBlock(x, eData[0],z) as Plane, new PixelPosByte(Plane.INNER_RESOLUTION / 2 - s.surfaceRect.size /2, Plane.INNER_RESOLUTION / 2 - s.surfaceRect.size / 2));
                 s.SetHP(eData[2] / 255f * s.maxHp);
                 elevators.Add(s);
             }
@@ -281,7 +289,7 @@ override protected void LabourResult() {
 
         workFinished = data[0] == 1;
         lastWorkObjectPos = new ChunkPos(data[1], data[2], data[3]);
-        if (!workFinished) workObject = basement.myChunk.GetBlock(lastWorkObjectPos) as CubeBlock;
+        //if (!workFinished) workObject = basement.myChunk.GetBlock(lastWorkObjectPos) as CubeBlock;
         awaitingElevatorBuilding = data[4] == 1;
     }   
     #endregion

@@ -21,7 +21,7 @@ public sealed class Observatory : WorkBuilding {
     {
         return 1f;
     }
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (alreadyBuilt) {
             Destroy(gameObject);

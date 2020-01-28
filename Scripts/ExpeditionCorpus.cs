@@ -1,7 +1,7 @@
 ﻿public sealed class ExpeditionCorpus : WorkBuilding {
     public static ExpeditionCorpus current;
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         if (current != null)

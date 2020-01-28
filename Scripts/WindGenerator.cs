@@ -14,7 +14,7 @@ public class WindGenerator : Building {
 		PrepareBuilding();
 	}
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+    override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);
         subscribedToUpdate = true;

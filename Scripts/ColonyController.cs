@@ -342,11 +342,11 @@ public sealed class ColonyController : MonoBehaviour
     {
         bool found = false;
         var blocks = GameMaster.realMaster.mainChunk.blocks;
-        SurfaceBlock sb = null;
+        Plane sb = null;
         WorkBuilding wb = null;
         foreach (var bd in blocks)
         {
-            sb = bd.Value as SurfaceBlock;
+            sb = bd.Value as Plane;
             if (sb == null || sb.noEmptySpace == false) continue;
             foreach (Structure s in sb.structures)
             {

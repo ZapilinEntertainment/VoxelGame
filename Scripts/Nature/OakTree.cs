@@ -316,7 +316,7 @@ public class OakTree : Plant
         lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
         growth = 0;
     }
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         //#setStructureData

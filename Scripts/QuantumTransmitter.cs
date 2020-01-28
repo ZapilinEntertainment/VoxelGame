@@ -73,7 +73,7 @@ public sealed class QuantumTransmitter : Building {
     }
 
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
@@ -117,7 +117,7 @@ public sealed class QuantumTransmitter : Building {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         var data = new byte[4];

@@ -46,7 +46,7 @@ public sealed class HeadQuarters : Building
         indestructible = true;
     }
 
-    public override void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    public override void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         colony = GameMaster.realMaster.colonyController;
@@ -261,7 +261,7 @@ public sealed class HeadQuarters : Building
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sb)
+    override public void Load(System.IO.FileStream fs, Plane sb)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

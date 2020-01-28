@@ -53,7 +53,7 @@ public sealed class Workshop : WorkBuilding {
         data.Add((byte)mode);
         return data;
     }
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         mode = (WorkshopMode)fs.ReadByte();

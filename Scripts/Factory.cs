@@ -48,7 +48,7 @@ public class Factory : WorkBuilding
         inputResourcesBuffer = 0;
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetWorkbuildingData(b, pos);
@@ -261,7 +261,7 @@ public class Factory : WorkBuilding
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);

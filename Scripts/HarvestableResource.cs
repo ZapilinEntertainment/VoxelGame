@@ -40,7 +40,7 @@ public class HarvestableResource : Structure
                     {
                         mr.sharedMaterial = PoolMaster.GetMaterial(MaterialType.Basic);
                     }
-                    byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
+                    byte c = (byte)(Plane.INNER_RESOLUTION / 4);
                     hr.surfaceRect = new SurfaceRect(c, c, (byte)(c + c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f;
                     break;
@@ -49,7 +49,7 @@ public class HarvestableResource : Structure
                 {
                     hr.gameObject.name = "dead Tree of Life";
                     model = Instantiate(Resources.Load<GameObject>("Lifeforms/deadTreeOfLife"));
-                    byte c = (byte)(SurfaceBlock.INNER_RESOLUTION / 4);
+                    byte c = (byte)(Plane.INNER_RESOLUTION / 4);
                     hr.surfaceRect = new SurfaceRect(c, c, (byte)(c+c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f ;
                     break;
@@ -267,7 +267,7 @@ public class HarvestableResource : Structure
         model_id = ContainerModelType.Default;
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         //#setStructureData
@@ -319,7 +319,7 @@ public class HarvestableResource : Structure
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + CONTAINER_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
@@ -336,7 +336,7 @@ public class HarvestableResource : Structure
         maxHp = System.BitConverter.ToSingle(data, 812);
     }
 
-    public static void LoadContainer(System.IO.FileStream fs, SurfaceBlock sblock)
+    public static void LoadContainer(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + CONTAINER_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

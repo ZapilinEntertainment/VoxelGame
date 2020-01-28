@@ -50,7 +50,7 @@ public sealed class RecruitingCenter : WorkBuilding {
         hireCost = f;
     }
 
-	override public void SetBasement(SurfaceBlock b, PixelPosByte pos) {
+	override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (hireCost == -1) ResetStaticData();
 		if (b == null) return;
 		SetWorkbuildingData(b, pos);
@@ -167,7 +167,7 @@ public sealed class RecruitingCenter : WorkBuilding {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         var data = new byte[5];

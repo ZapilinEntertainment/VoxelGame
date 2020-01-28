@@ -3,7 +3,7 @@
     ColonyController colony;
     float charge = 0, chargeSpeed = 0.01f;
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetStructureData(b, pos);
@@ -70,7 +70,7 @@
         Destroy(gameObject);
     }
 
-    override public void Load(System.IO.FileStream fs, SurfaceBlock sblock)
+    override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);

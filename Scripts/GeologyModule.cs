@@ -161,10 +161,10 @@ public class GeologyModule : MonoBehaviour {
         }
 	}
 
-	public void CalculateOutput(float production, Block workObject, Storage storage) {
+	public void CalculateOutput(float production, BlockExtension workObject, Storage storage) {
         if (workObject == null) return;
         ColonyController colony = GameMaster.realMaster.colonyController;
-        int materialID = workObject.GetMaterialID();
+        int materialID = workObject.materialID;
         if (workObject.GetFossilsVolume() > 0) {            
 			float v = Random.value - GameMaster.LUCK_COEFFICIENT; 
 			float m = 0;            

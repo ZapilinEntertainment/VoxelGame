@@ -1,7 +1,7 @@
 ﻿public class ConnectTower : Building {
     public static ConnectTower current { get; private set; }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);

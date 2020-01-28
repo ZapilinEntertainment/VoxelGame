@@ -25,7 +25,7 @@ public sealed class XStation : WorkBuilding {
         }   
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetWorkbuildingData(b, pos);

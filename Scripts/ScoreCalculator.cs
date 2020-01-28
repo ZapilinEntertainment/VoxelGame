@@ -128,8 +128,8 @@
                     case BlockType.Surface:
                     case BlockType.Cave:
                         if (b.material_id > 0)
-                            score += SurfaceBlock.INNER_RESOLUTION * SurfaceBlock.INNER_RESOLUTION * resourcesCosts[b.material_id];
-                        SurfaceBlock sb = b as SurfaceBlock;
+                            score += Plane.INNER_RESOLUTION * Plane.INNER_RESOLUTION * resourcesCosts[b.material_id];
+                        Plane sb = b as Plane;
                         if (sb.noEmptySpace != false)
                         {
                             foreach (Structure s in sb.structures)

@@ -35,7 +35,7 @@ public class Farm : WorkBuilding
 
     }
 
-    override public void SetBasement(SurfaceBlock b, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         if (b.noEmptySpace != false)

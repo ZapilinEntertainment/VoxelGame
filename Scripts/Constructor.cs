@@ -349,12 +349,12 @@ public abstract class Constructor
         var blocks = chunk.blocks;
         int dirtID = ResourceType.DIRT_ID, size = Chunk.CHUNK_SIZE;
         int y = 0, x, z;
-        SurfaceBlock chosenSurface = null;
+        Plane chosenSurface = null;
         bool lifesourceIsTree = Random.value > 0.5f;
         if (GameMaster.gameStartSettings.generationMode == ChunkGenerationMode.Peak) lifesourceIsTree = false;
         if (lifesourceIsTree)
         {
-            foreach (SurfaceBlock sblock in chunk.surfaceBlocks)
+            foreach (Plane sblock in chunk.surfaceBlocks)
             {
                 if (sblock != null && sblock.pos.y > y)
                 {
@@ -420,7 +420,7 @@ public abstract class Constructor
         else
         {
             y = size;
-            foreach (SurfaceBlock sblock in chunk.surfaceBlocks)
+            foreach (Plane sblock in chunk.surfaceBlocks)
             {
                 if (sblock != null && sblock.pos.y < size)
                 {
@@ -497,15 +497,15 @@ public abstract class Constructor
             bool found = false;
             int x = 0, y = 0, z = 0;
             Block b1, b2;
-            foreach (SurfaceBlock sblock in c.surfaceBlocks)
+            foreach (Plane sblock in c.surfaceBlocks)
             {
                 x = sblock.pos.x; y = sblock.pos.y; z = sblock.pos.z;
                 // z - axis
                 b1 = c.GetBlock(x, y, z + 1);
-                if (b1 != null && b1 is SurfaceBlock)
+                if (b1 != null && b1 is Plane)
                 {
                     b2 = c.GetBlock(x, y, z + 2);
-                    if (b2 != null && b2 is SurfaceBlock)
+                    if (b2 != null && b2 is Plane)
                     {
                         found = true;
                         break;
@@ -513,7 +513,7 @@ public abstract class Constructor
                     else
                     {
                         b2 = c.GetBlock(x, y, z - 1);
-                        if (b2 != null && b2 is SurfaceBlock)
+                        if (b2 != null && b2 is Plane)
                         {
                             found = true;
                             break;
@@ -523,10 +523,10 @@ public abstract class Constructor
                 else
                 {
                     b1 = c.GetBlock(x, y, z - 1);
-                    if (b1 != null && b1 is SurfaceBlock)
+                    if (b1 != null && b1 is Plane)
                     {
                         b2 = c.GetBlock(x, y, z - 2);
-                        if (b2 != null && b2 is SurfaceBlock)
+                        if (b2 != null && b2 is Plane)
                         {
                             found = true;
                             break;
@@ -535,10 +535,10 @@ public abstract class Constructor
                 }
                 //x -axis
                 b1 = c.GetBlock(x + 1, y, z);
-                if (b1 != null && b1 is SurfaceBlock)
+                if (b1 != null && b1 is Plane)
                 {
                     b2 = c.GetBlock(x + 2, y, z);
-                    if (b2 != null && b2 is SurfaceBlock)
+                    if (b2 != null && b2 is Plane)
                     {
                         found = true;
                         break;
@@ -546,7 +546,7 @@ public abstract class Constructor
                     else
                     {
                         b2 = c.GetBlock(x - 1, y, z);
-                        if (b2!= null && b2 is SurfaceBlock)
+                        if (b2!= null && b2 is Plane)
                         {
                             found = true;
                             break;
@@ -556,10 +556,10 @@ public abstract class Constructor
                 else
                 {
                     b1 = c.GetBlock(x - 1, y, z);
-                    if (b1 != null && b1 is SurfaceBlock)
+                    if (b1 != null && b1 is Plane)
                     {
                         b2 = c.GetBlock(x - 2, y, z);
-                        if (b2 != null && b2 is SurfaceBlock)
+                        if (b2 != null && b2 is Plane)
                         {
                             found = true;
                             break;
