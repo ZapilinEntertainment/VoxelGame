@@ -38,26 +38,27 @@ public class Farm : WorkBuilding
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        if (b.noEmptySpace != false)
+        if (b.ContainStructures())
         {
             int i = 0;
             Plant p = null;
-            while (i < b.structures.Count)
+            var slist = b.GetStructuresList();
+            while (i < slist.Count)
             {
-                if (b.structures[i] == null)
+                if (slist[i] == null)
                 {
                     i++;
                     continue;
                 }
                 else
                 {
-                    p = b.structures[i] as Plant;
+                    p = slist[i] as Plant;
                     if (p != null && p.plant_ID == crop_id)
                     {
                         i++;
                         continue;
                     }
-                    else b.structures[i].Annihilate(true, true, false);
+                    else slist[i].Annihilate(true, true, false);
                 }
             }
         }
@@ -95,11 +96,11 @@ public class Farm : WorkBuilding
         float totalCost = 0;
         float actionsPoints = workflow / workflowToProcess;
         workflow = 0;
-        List<Structure> structures = basement.structures;   
+        List<Structure> structures = basement.GetStructuresList();   
         
-        if (basement.noEmptySpace != true)
+        if (basement.fulfillStatus != FullfillStatus.Full)
         {
-            List<PixelPosByte> pos = basement.GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
+            List<PixelPosByte> pos = basement.GetExtension().GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
             int cost = Plant.GetCreateCost(crop_id);
             i = 0;
             while (i < pos.Count )
@@ -143,16 +144,16 @@ public class Farm : WorkBuilding
                 i++;
             }
         }
-        if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce((int)totalCost);
+        //if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce((int)totalCost);
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if ((basement != null & clearFromSurface) && basement.material_id == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
+        if ((basement != null & clearFromSurface) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

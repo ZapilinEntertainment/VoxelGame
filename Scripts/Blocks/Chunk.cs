@@ -12,43 +12,6 @@ public struct ChunkRaycastHit
         faceIndex = face;
     }
 }
-public struct ChunkPos
-{
-    public byte x, y, z;
-    public ChunkPos(byte xpos, byte ypos, byte zpos)
-    {
-        x = xpos; y = ypos; z = zpos;
-    }
-    public ChunkPos(int xpos, int ypos, int zpos)
-    {
-        if (xpos < 0) xpos = 0; if (ypos < 0) ypos = 0; if (zpos < 0) zpos = 0;
-        x = (byte)xpos; y = (byte)ypos; z = (byte)zpos;
-    }
-    public Vector3 ToWorldSpace()
-    {
-        return new Vector3(x, y, z) * Block.QUAD_SIZE;
-    }
-    public static bool operator ==(ChunkPos lhs, ChunkPos rhs) { return lhs.Equals(rhs); }
-    public static bool operator !=(ChunkPos lhs, ChunkPos rhs) { return !(lhs.Equals(rhs)); }
-    public override bool Equals(object obj)
-    {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
-
-        ChunkPos p = (ChunkPos)obj;
-        return (x == p.x) & (y == p.y) & (z == p.z);
-    }
-    public override int GetHashCode()
-    {
-        return x * 100 + y * 10 + z;
-    }
-    public override string ToString()
-    {
-        return '(' + x.ToString() +' '+ y.ToString() + ' '+ z.ToString() + ')';
-    }
-}
-
 public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, Peak, TerrainLoading, DontGenerate }
 
 public sealed partial class Chunk : MonoBehaviour
@@ -399,7 +362,6 @@ public sealed partial class Chunk : MonoBehaviour
         return b;
     }
 
-
     public Block GetBlock(ChunkPos cpos) {
         if (blocks.ContainsKey(cpos))
         {
@@ -539,6 +501,7 @@ public sealed partial class Chunk : MonoBehaviour
         return new ChunkRaycastHit(b, face);
     }
 
+    public List<Plane> GetSurfacesList() { return surfaces; }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
         if (surfaces == null || x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;
@@ -581,7 +544,7 @@ public sealed partial class Chunk : MonoBehaviour
             for (int i = 0; i < surfaces.Count; i++)
             {
                 p = surfaces[i];
-                if (p.extension != null && p.extension.noEmptySpace == true) continue;
+                if (p.fulfillStatus == FullfillStatus.Full) continue;
                 else
                 {
                     cpos = p.GetChunkPosition();
@@ -614,7 +577,7 @@ public sealed partial class Chunk : MonoBehaviour
             for (; i < surfaces.Count; i++)
             {
                 p = surfaces[i];
-                if (p.extension == null || p.extension.artificialStructuresCount == 0) suitable.Add(i);
+                if (p.fulfillStatus ==FullfillStatus.Empty|| p.extension.artificialStructuresCount == 0) suitable.Add(i);
             }
             answer = new Vector3Int(0, 0, suitable[Random.Range(0, suitable.Count - 1)]);
             return true;
@@ -626,7 +589,7 @@ public sealed partial class Chunk : MonoBehaviour
                 for (; i < surfaces.Count; i++)
                 {
                     p = surfaces[i];
-                    if (p.extension == null || p.extension.noEmptySpace != true) suitable.Add(i);
+                    if (p.fulfillStatus != FullfillStatus.Full) suitable.Add(i);
                 }
                 i = Random.Range(0, suitable.Count - 1);
                 int realIndex = suitable[i];
@@ -639,7 +602,7 @@ public sealed partial class Chunk : MonoBehaviour
                 for (; i < surfaces.Count; i++)
                 {
                     p = surfaces[i];
-                    if (p.extension == null || p.extension.noEmptySpace != true) suitable.Add(i);
+                    if (p.fulfillStatus != FullfillStatus.Full) suitable.Add(i);
                 }
                 PixelPosByte ppos = PixelPosByte.Empty;
                 int realIndex = 0;

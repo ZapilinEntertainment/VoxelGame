@@ -102,9 +102,7 @@ public class FoodFactory : WorkBuilding {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) {
-            UnsetBasement();
-        }
+        if (!clearFromSurface) basement = null;
         if (returnResources) {
             if (food_inputBuffer > 0) storage.AddResource(ResourceType.Food, food_inputBuffer);
             if (metalP_inputBuffer > 0) storage.AddResource(ResourceType.metal_P, metalP_inputBuffer);

@@ -1,56 +1,28 @@
-﻿public class DockAddon : Building {
+﻿using System;
+public class DockAddon : Building {
 
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
-
-        Chunk c = basement.myChunk;
-        int x = basement.pos.x, y = basement.pos.y, z = basement.pos.z;
-
-        Block nearblock = c.GetBlock(x, y, z + 1);
-        Plane nearSurfaceBlock = nearblock as Plane;
-        Dock d;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
+        AddonCheckRequest(b.pos);
+    }
+    private void AddonCheckRequest(ChunkPos cpos)
+    {
+        ChunkPos dpos;
+        var dlist = FindObjectsOfType<Dock>();
+        int deltaX, deltaZ;
+        if (dlist != null)
         {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null )
+            foreach (var d in dlist)
             {
-                d.CheckAddons(nearSurfaceBlock);
-            }
-        }
-
-        nearblock = c.GetBlock(x + 1, y, z );
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null )
-            {
-                d.CheckAddons(nearSurfaceBlock);
-            }
-        }
-
-
-        nearblock = c.GetBlock(x, y, z - 1);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null )
-            {
-                d.CheckAddons(nearSurfaceBlock);
-            }
-        }
-
-        nearblock = c.GetBlock(x - 1, y, z);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null)
-            {
-                d.CheckAddons(nearSurfaceBlock);
+                dpos = d.basement.pos;
+                if (dpos.y == cpos.y)
+                {
+                    deltaX = Math.Abs(dpos.x - cpos.x);
+                    deltaZ = Math.Abs(dpos.z - cpos.z);
+                    if ((deltaX == 1 & deltaZ == 0) || (deltaX == 0 & deltaZ == 1)) d.CheckAddons();
+                }
             }
         }
     }
@@ -59,42 +31,13 @@
     {
         if (destroyed) return;
         else destroyed = true;
-        Chunk c = basement.myChunk;
-        int x = basement.pos.x, y = basement.pos.y, z = basement.pos.z;
-        PrepareBuildingForDestruction(clearFromSurface,returnResources,leaveRuins);        
-
-        Block nearblock = c.GetBlock(x, y, z + 1);
-        Plane nearSurfaceBlock = nearblock as Plane;
-        Dock d;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null) d.CheckAddons(d.basement);
-        }
-
-        nearblock = c.GetBlock(x + 1, y, z);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null) d.CheckAddons(d.basement);
-        }
-
-        nearblock = c.GetBlock(x, y, z - 1);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null) d.CheckAddons(d.basement);
-        }
-
-        nearblock = c.GetBlock(x - 1, y, z);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            d = nearSurfaceBlock.structures[0] as Dock;
-            if (d != null) d.CheckAddons(d.basement);
-        }
+        bool initiateCheckRequest = true;
+        ChunkPos cpos = ChunkPos.zer0;
+        if (basement != null)  cpos = basement.pos;
+        else initiateCheckRequest = false;
+        PrepareBuildingForDestruction(clearFromSurface,returnResources,leaveRuins);
+        if (initiateCheckRequest) AddonCheckRequest(cpos);
+        
         Destroy(gameObject);
     }
 }

@@ -118,8 +118,8 @@ public abstract class Constructor
         Chunk c = g.AddComponent<Chunk>();
         GameMaster.realMaster.SetMainChunk(c);
         c.CreateNewChunk(dat);
-        NatureCreation(c);
-        CheckForLandingPosition(c);
+        //NatureCreation(c);
+        //CheckForLandingPosition(c);
         c.RenderDataFullRecalculation();
     }
     public static void ConstructBlock(byte chunkSize)
@@ -131,8 +131,8 @@ public abstract class Constructor
         Chunk c = g.AddComponent<Chunk>();
         GameMaster.realMaster.SetMainChunk(c);
         c.CreateNewChunk(dat);
-        NatureCreation(c);
-        CheckForLandingPosition(c);
+        //NatureCreation(c);
+        //CheckForLandingPosition(c);
     }
 
     private static void GenerateSpiralsData(int size, ref int[,,] data)
@@ -341,243 +341,6 @@ public abstract class Constructor
             }
         }
         return data;
-    }
-
-    private static void NatureCreation(Chunk chunk)
-    {
-        LifeSource ls = null;
-        var blocks = chunk.blocks;
-        int dirtID = ResourceType.DIRT_ID, size = Chunk.CHUNK_SIZE;
-        int y = 0, x, z;
-        Plane chosenSurface = null;
-        bool lifesourceIsTree = Random.value > 0.5f;
-        if (GameMaster.gameStartSettings.generationMode == ChunkGenerationMode.Peak) lifesourceIsTree = false;
-        if (lifesourceIsTree)
-        {
-            foreach (Plane sblock in chunk.surfaceBlocks)
-            {
-                if (sblock != null && sblock.pos.y > y)
-                {
-                    if (sblock.pos.x > 0 & sblock.pos.x < size - 1 & sblock.pos.z > 0 & sblock.pos.z < size - 1)
-                    {
-                        chosenSurface = sblock;
-                        y = sblock.pos.y;
-                    }
-                }
-            }
-            if (chosenSurface != null)
-            {
-                x = chosenSurface.pos.x;
-                z = chosenSurface.pos.z;
-                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
-
-                chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
-
-                if (y + 1 < size)
-                {
-                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z));
-                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
-                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
-                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
-                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));
-                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));
-                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));
-                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));
-                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
-                    if (y + 2 < size)
-                    {
-                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z));
-                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
-                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
-                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
-                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
-                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
-                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
-                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
-                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
-                    }
-                }
-                chosenSurface.ReplaceMaterial(dirtID);
-                ls = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as LifeSource;
-                ls.SetBasement(chosenSurface, PixelPosByte.zero);
-                chunk.GenerateNature(ls.transform.position);
-            }
-        }
-        else
-        {
-            y = size;
-            foreach (Plane sblock in chunk.surfaceBlocks)
-            {
-                if (sblock != null && sblock.pos.y < size)
-                {
-                    if (sblock.pos.x > 0 & sblock.pos.x < size - 1 & sblock.pos.z > 0 & sblock.pos.z < size - 1)
-                    {
-                        chosenSurface = sblock;
-                        y = sblock.pos.y;
-                    }
-                }
-            }
-            if (chosenSurface != null)
-            {
-                x = chosenSurface.pos.x;
-                z = chosenSurface.pos.z;
-                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z - 1), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z), BlockType.Cube, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y - 1, z + 1), BlockType.Cube, dirtID, true);
-
-                chunk.ReplaceBlock(new ChunkPos(x, y, z + 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z + 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x + 1, y, z - 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x, y, z - 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z - 1), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z), BlockType.Surface, dirtID, true);
-                chunk.ReplaceBlock(new ChunkPos(x - 1, y, z + 1), BlockType.Surface, dirtID, true);
-
-                if (y + 1 < size)
-                {
-                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z + 1));
-                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z + 1));
-                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z));
-                    chunk.DeleteBlock(new ChunkPos(x + 1, y + 1, z - 1));
-                    chunk.DeleteBlock(new ChunkPos(x, y + 1, z - 1));
-                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z - 1));
-                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z));
-                    chunk.DeleteBlock(new ChunkPos(x - 1, y + 1, z + 1));
-                    if (y + 2 < size)
-                    {
-                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z + 1));
-                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z + 1));
-                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z));
-                        chunk.DeleteBlock(new ChunkPos(x + 1, y + 2, z - 1));
-                        chunk.DeleteBlock(new ChunkPos(x, y + 2, z - 1));
-                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z - 1));
-                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z));
-                        chunk.DeleteBlock(new ChunkPos(x - 1, y + 2, z + 1));
-                    }
-                }
-                chosenSurface.ReplaceMaterial(dirtID);
-                ls = Structure.GetStructureByID(Structure.LIFESTONE_ID) as LifeSource;
-                ls.SetBasement(chosenSurface, PixelPosByte.zero);
-                chunk.GenerateNature(ls.transform.position);
-                return;
-            }
-        }
-    }
-
-    private static void CheckForLandingPosition(Chunk c)
-    {
-        bool artificialLanding = false;
-        var surfaces = c.surfaceBlocks;
-        if (surfaces.Count == 0)
-        {
-            artificialLanding = true;
-        }
-        else
-        {
-            bool found = false;
-            int x = 0, y = 0, z = 0;
-            Block b1, b2;
-            foreach (Plane sblock in c.surfaceBlocks)
-            {
-                x = sblock.pos.x; y = sblock.pos.y; z = sblock.pos.z;
-                // z - axis
-                b1 = c.GetBlock(x, y, z + 1);
-                if (b1 != null && b1 is Plane)
-                {
-                    b2 = c.GetBlock(x, y, z + 2);
-                    if (b2 != null && b2 is Plane)
-                    {
-                        found = true;
-                        break;
-                    }
-                    else
-                    {
-                        b2 = c.GetBlock(x, y, z - 1);
-                        if (b2 != null && b2 is Plane)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    b1 = c.GetBlock(x, y, z - 1);
-                    if (b1 != null && b1 is Plane)
-                    {
-                        b2 = c.GetBlock(x, y, z - 2);
-                        if (b2 != null && b2 is Plane)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                //x -axis
-                b1 = c.GetBlock(x + 1, y, z);
-                if (b1 != null && b1 is Plane)
-                {
-                    b2 = c.GetBlock(x + 2, y, z);
-                    if (b2 != null && b2 is Plane)
-                    {
-                        found = true;
-                        break;
-                    }
-                    else
-                    {
-                        b2 = c.GetBlock(x - 1, y, z);
-                        if (b2!= null && b2 is Plane)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    b1 = c.GetBlock(x - 1, y, z);
-                    if (b1 != null && b1 is Plane)
-                    {
-                        b2 = c.GetBlock(x - 2, y, z);
-                        if (b2 != null && b2 is Plane)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!found) artificialLanding = true;
-        }
-        if (artificialLanding)
-        {
-            c.AddBlock(new ChunkPos(0, 0, 0), BlockType.Cave, ResourceType.METAL_S_ID, -1, false);
-            c.AddBlock(new ChunkPos(1, 0, 0), BlockType.Cave, ResourceType.METAL_S_ID, -1, false);
-            c.AddBlock(new ChunkPos(2, 0, 0), BlockType.Cave, ResourceType.METAL_S_ID, -1, false);
-            c.AddBlock(new ChunkPos(0, 1, 0), BlockType.Surface, ResourceType.METAL_S_ID, false);
-            c.AddBlock(new ChunkPos(1, 1, 0), BlockType.Surface, ResourceType.METAL_S_ID, false);
-            c.AddBlock(new ChunkPos(2, 1, 0), BlockType.Surface, ResourceType.METAL_S_ID, false);
-        }
     }
 
     public static GameObject CreatePeakBasis(int res, int materialID)
@@ -796,43 +559,43 @@ public abstract class Constructor
                     var gmi = dataArray[x, y, z];
                     if (gmi.fwdFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.fwdFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.fwdFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf) + correctionVectors[0]), rotations[0], scale);
                         i++;
                     }
                     if (gmi.rightFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.rightFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.rightFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf) + correctionVectors[1]), rotations[1], scale);
                         i++;
                     }
                     if (gmi.backFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.backFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.backFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf) + correctionVectors[2]), rotations[2], scale);
                         i++;
                     }
                     if (gmi.leftFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.leftFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.leftFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf) + correctionVectors[3]), rotations[3], scale);
                         i++;
                     }
                     if (gmi.upFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.upFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.upFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf) + correctionVectors[4]), rotations[5], scale);
                         i++;
                     }
                     if (gmi.downFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.downFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.downFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf) + correctionVectors[5]), rotations[5], scale);
                         i++;
                     }
                     if (gmi.innerFaceType != MeshType.NoMesh)
                     {
-                        ci[i].mesh = PoolMaster.GetMesh(gmi.innerFaceType, materialID);
+                        ci[i].mesh = MeshMaster.GetMesh(gmi.innerFaceType, materialID);
                         ci[i].transform = Matrix4x4.TRS((new Vector3(x - xhalf, y - ysize, z - zhalf)),
                             (gmi.fwdFaceType == MeshType.NoMesh) ? rotations[0] : (gmi.rightFaceType == MeshType.NoMesh ? rotations[1] : (
                             gmi.backFaceType == MeshType.NoMesh ? rotations[2] : rotations[3]

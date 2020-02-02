@@ -34,8 +34,8 @@ public sealed class BlockExtension
         volume = MAX_VOLUME;
         //
         existingPlanesMask = Block.FWD_FACE_INDEX + Block.RIGHT_FACE_INDEX + Block.BACK_FACE_INDEX + Block.LEFT_FACE_INDEX + Block.UP_FACE_INDEX + Block.DOWN_FACE_INDEX;
-    }
-    public BlockExtension(Block i_myBlock, Block.BlockMaterialsList bml, int i_mainMaterialID, float i_volume, bool i_natural) : this(i_myBlock, i_mainMaterialID, i_natural)  {
+    }   
+    public BlockExtension(Block i_myBlock, Block.BlockMaterialsList bml, bool i_natural) : this(i_myBlock,bml.mainMaterial, i_natural)  {
         int nomat = PoolMaster.NO_MATERIAL_ID;
         int mat = bml[Block.FWD_FACE_INDEX];
         if (mat != nomat)
@@ -84,9 +84,11 @@ public sealed class BlockExtension
         {
             existingPlanesMask += 1 << Block.CEILING_FACE_INDEX;
             if (materialID != mat) CreatePlane(Block.CEILING_FACE_INDEX, mat);
-        }
-
-        volume = MAX_VOLUME * i_volume;
+        }        
+    }
+    public BlockExtension(Block i_myBlock, Block.BlockMaterialsList bml, float i_volume_pc, bool i_natural) : this(i_myBlock, bml, i_natural)
+    {
+        volume = MAX_VOLUME * i_volume_pc;
         fossilsVolume = isNatural ? volume : 0f;
     }
 
@@ -170,6 +172,23 @@ public sealed class BlockExtension
             return true;
         }
     }
+    public bool ContainsStructures()
+    {
+        if (planes == null) return false;
+        else
+        {
+            foreach (var p in planes)
+            {
+                if (p.Value.ContainStructures()) return true;
+            }
+            return false;
+        }
+    }
+    public bool IsCube()
+    {
+        byte fullmask = Block.FWD_FACE_INDEX + Block.RIGHT_FACE_INDEX + Block.BACK_FACE_INDEX + Block.LEFT_FACE_INDEX + Block.UP_FACE_INDEX + Block.DOWN_FACE_INDEX;
+        return ( (fullmask & existingPlanesMask) == fullmask);
+    }
 
     public float Dig(int d_volume, bool openPit, byte faceIndex)
     {
@@ -191,14 +210,25 @@ public sealed class BlockExtension
         else
         {
             if (openPit) {
-                float x = volume / MAX_VOLUME;
-                planes[faceIndex].VolumeChanges(x);
+                planes[faceIndex].VolumeChanges(volume / MAX_VOLUME);
             }
         }
         return d_volume;
     }
+    public float PourIn(int d_volume, byte faceIndex)
+    {
+        if (volume + d_volume > MAX_VOLUME) d_volume = Mathf.CeilToInt(MAX_VOLUME - volume);
+        if (d_volume > 0)
+        {
+            volume += d_volume;
+            planes[faceIndex].VolumeChanges(volume / MAX_VOLUME);
+            return d_volume;
+        }
+        else return 0f;
+    }
     public float GetFossilsVolume() { return fossilsVolume; }
     public void TakeFossilsVolume(float f) { fossilsVolume -= f; if (fossilsVolume < 0f) fossilsVolume = 0f; }
+    public float GetVolumePercent() { return volume / (float)MAX_VOLUME; }
 
     public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte vismask)
     {

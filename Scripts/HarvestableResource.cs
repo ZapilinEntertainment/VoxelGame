@@ -40,7 +40,7 @@ public class HarvestableResource : Structure
                     {
                         mr.sharedMaterial = PoolMaster.GetMaterial(MaterialType.Basic);
                     }
-                    byte c = (byte)(Plane.INNER_RESOLUTION / 4);
+                    byte c = (byte)(PlaneExtension.INNER_RESOLUTION / 4);
                     hr.surfaceRect = new SurfaceRect(c, c, (byte)(c + c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f;
                     break;
@@ -49,7 +49,7 @@ public class HarvestableResource : Structure
                 {
                     hr.gameObject.name = "dead Tree of Life";
                     model = Instantiate(Resources.Load<GameObject>("Lifeforms/deadTreeOfLife"));
-                    byte c = (byte)(Plane.INNER_RESOLUTION / 4);
+                    byte c = (byte)(PlaneExtension.INNER_RESOLUTION / 4);
                     hr.surfaceRect = new SurfaceRect(c, c, (byte)(c+c));
                     hr.maxHp = LifeSource.MAX_HP * 0.9f ;
                     break;

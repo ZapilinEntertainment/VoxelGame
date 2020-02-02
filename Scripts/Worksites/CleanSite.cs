@@ -15,7 +15,7 @@ public class CleanSite : Worksite {
 
         diggingMission = f_diggingMission;
         if (workersCount < START_WORKERS_COUNT) colony.SendWorkers(START_WORKERS_COUNT, this);
-        if (!worksitesList.Contains(this)) worksitesList.Add(this);
+        worksitesList.Add(this);
         GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
         subscribedToUpdate = true;
     }
@@ -30,9 +30,8 @@ public class CleanSite : Worksite {
             if (diggingMission)
             {
                 workplace.RemoveWorksiteLink(this);
-                DigSite ds = new DigSite();
+                DigSite ds = new DigSite(workplace, faceIndex, true);
                 TransferWorkers(this, ds);
-                ds.Set(workplace, true);
                 if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
             }
             StopWork();
@@ -125,7 +124,7 @@ public class CleanSite : Worksite {
 		return data;
 	}
 
-    public static Worksite Load(System.IO.FileStream fs, Chunk chunk )
+    public static CleanSite Load(System.IO.FileStream fs, Chunk chunk )
     {
         var data = new byte[5];
         fs.Read(data, 0, data.Length);

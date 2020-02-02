@@ -1068,6 +1068,10 @@ public class Structure : MonoBehaviour
         if (transform.childCount == 0) SetModel();
         basement.AddStructure(this);
     }  
+    public void ClearBasementLink(Plane p)
+    {
+        if (basement == p) basement = null;
+    }
 
     virtual public void ApplyDamage(float d)
     {

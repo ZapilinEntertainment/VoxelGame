@@ -32,8 +32,9 @@ public sealed class Block {
     public struct BlockMaterialsList
     {
         public int[] mlist;
+        public int mainMaterial;
         public const int MATERIALS_COUNT = 8;
-        public BlockMaterialsList(int mat_fwd, int mat_right, int mat_back, int mat_left, int mat_up, int mat_down, int mat_surf, int mat_ceil)
+        public BlockMaterialsList(int mat_fwd, int mat_right, int mat_back, int mat_left, int mat_up, int mat_down, int mat_surf, int mat_ceil, int i_mainMaterial)
         {
             mlist = new int[MATERIALS_COUNT];
             mlist[FWD_FACE_INDEX] = mat_fwd;
@@ -44,6 +45,7 @@ public sealed class Block {
             mlist[DOWN_FACE_INDEX] = mat_down;
             mlist[SURFACE_FACE_INDEX] = mat_surf;
             mlist[CEILING_FACE_INDEX] = mat_ceil;
+            mainMaterial = i_mainMaterial;
         }
         public int this[int i]
         {
@@ -68,7 +70,11 @@ public sealed class Block {
         }
     }
 
-    public Block (Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml, bool i_natural) : this(f_chunk, f_chunkPos)
+    public Block(Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml, float i_volume_pc, bool i_natural) : this(f_chunk, f_chunkPos)
+    {
+        extension = new BlockExtension(this, bml, i_volume_pc, i_natural);
+    }
+    public Block (Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml,bool i_natural) : this(f_chunk, f_chunkPos)
     {
         extension = new BlockExtension(this, bml, i_natural);
     }
@@ -110,6 +116,21 @@ public sealed class Block {
     }    
 
     public int GetMaterialID() { if (extension == null) return PoolMaster.NO_MATERIAL_ID; else return extension.materialID; }
+    public bool ContainStructures()
+    {
+        if (mainStructure != null) return true;
+        else
+        {
+            if (extension != null) return extension.ContainsStructures();
+            else return false;
+
+        }
+    }
+    public bool IsCube()
+    {
+        if (extension == null) return false;
+        else return extension.IsCube();
+    }
 
     public bool HavePlane(byte faceIndex) { if (extension == null) return false; else return extension.HavePlane(faceIndex); }
     public bool TryGetPlane(byte faceIndex, out Plane result)

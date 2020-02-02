@@ -51,7 +51,7 @@ public sealed class Dock : WorkBuilding {
 		if (b == null) return;
         if (!GameMaster.loading)
         {
-            if (CheckAddons(b)) return;
+            if (CheckAddons()) return;
             Chunk c = b.myChunk;
             if (c.GetBlock(b.pos.x, b.pos.y, b.pos.z + 1) != null)
             {
@@ -315,94 +315,71 @@ public sealed class Dock : WorkBuilding {
             }
         }
     }
-    public bool CheckAddons(Plane sb)
+
+    /// <summary>
+    /// returns true if need to be upgraded
+    /// </summary>
+    /// <returns></returns>
+    public bool CheckAddons()
     {
-        Chunk c = sb.myChunk;
-        int x = sb.pos.x, y = sb.pos.y, z = sb.pos.z;
-
-        Block nearblock = c.GetBlock(x, y, z + 1);
-        Plane nearSurfaceBlock = nearblock as Plane;
-        DockAddon da;
+        var alist = FindObjectsOfType<DockAddon>();
         bool haveAddon1 = false, haveAddon2 = false;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
+        if (alist == null) return false;
+        else
         {
-            da = nearSurfaceBlock.structures[0] as DockAddon;
-            if (da != null )
+            ChunkPos cpos = basement.pos, apos;
+            int xdelta, zdelta;
+            foreach (var addon in alist)
             {
-                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+                apos = addon.basement.pos;
+                if (apos.y == cpos.y)
+                {
+                    xdelta = Mathf.Abs(apos.x - cpos.x);
+                    zdelta = Mathf.Abs(apos.z - cpos.z);
+                    if ( (xdelta == 1 & zdelta == 0) || (xdelta == 0 & zdelta == 1) )
+                    {
+                        if (addon.level == 1) haveAddon1 = true; else haveAddon2 = true;
+                    }
+                }
             }
-        }
-
-        nearblock = c.GetBlock(x + 1, y, z);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            da = nearSurfaceBlock.structures[0] as DockAddon;
-            if (da != null )
+            byte newDockLevel = level;
+            if (haveAddon1)
             {
-                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+                if (haveAddon2) newDockLevel = 3;
+                else newDockLevel = 2;
             }
-        }
+            else newDockLevel = 1;
 
-        nearblock = c.GetBlock(x, y, z - 1);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            da = nearSurfaceBlock.structures[0] as DockAddon;
-            if (da != null )
+            if (newDockLevel != level)
             {
-                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
+                int wCount = workersCount;
+                Dock d;
+                switch (newDockLevel)
+                {
+                    case 1:
+                        FreeWorkers();
+                        d = GetStructureByID(DOCK_ID) as Dock;
+                        d.SetModelRotation(modelRotation);
+                        d.SetBasement(basement, PixelPosByte.zero);
+                        colony.SendWorkers(wCount, d);
+                        return true;
+                    case 2:
+                        d = GetStructureByID(DOCK_2_ID) as Dock;
+                        d.SetBasement(basement, PixelPosByte.zero);
+                        d.SetModelRotation(modelRotation);
+                        colony.SendWorkers(wCount, d);
+                        return true;
+                    case 3:
+                        d = GetStructureByID(DOCK_3_ID) as Dock;
+                        d.SetBasement(basement, PixelPosByte.zero);
+                        d.SetModelRotation(modelRotation);
+                        colony.SendWorkers(wCount, d);
+                        return true;
+                    default: return false;
+                }
             }
+            else return false;
         }
-
-        nearblock = c.GetBlock(x - 1, y, z);
-        nearSurfaceBlock = nearblock as Plane;
-        if (nearSurfaceBlock != null && nearSurfaceBlock.noEmptySpace != false)
-        {
-            da = nearSurfaceBlock.structures[0] as DockAddon;
-            if (da != null )
-            {
-                if (da.level == 1) haveAddon1 = true; else haveAddon2 = true;
-            }
-        }
-
-        byte newDockLevel;
-        if (haveAddon1)
-        {
-            if (haveAddon2) newDockLevel = 3;
-            else newDockLevel = 2;
-        }
-        else newDockLevel = 1;
-
-        if (newDockLevel != level)
-        {
-            int wCount = workersCount;
-            Dock d;
-            switch (newDockLevel)
-            {
-                case 1:
-                    FreeWorkers();
-                    d = GetStructureByID(DOCK_ID) as Dock;
-                    d.SetModelRotation(modelRotation);
-                    d.SetBasement(sb, PixelPosByte.zero);
-                    colony.SendWorkers(wCount, d);
-                    return true;
-                case 2:
-                    d = GetStructureByID(DOCK_2_ID) as Dock;
-                    d.SetBasement(sb, PixelPosByte.zero);
-                    d.SetModelRotation(modelRotation);
-                    colony.SendWorkers(wCount, d);
-                    return true;
-                case 3:
-                    d = GetStructureByID(DOCK_3_ID) as Dock;
-                    d.SetBasement(sb, PixelPosByte.zero);
-                    d.SetModelRotation(modelRotation);
-                    colony.SendWorkers(wCount, d);
-                    return true;
-                default: return false;
-            }
-        }
-        else return false;
     }
 
     public void ShipLoading(Ship s)
@@ -524,7 +501,7 @@ public sealed class Dock : WorkBuilding {
             dependentBlocksList.Clear();            
         }
         if (showOnGUI & correctLocation) PoolMaster.current.DisableFlightZone();
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         colony.RemoveDock(this);
         if (maintainingShip & loadingShip != null) loadingShip.Undock();

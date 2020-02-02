@@ -3,18 +3,42 @@ using UnityEngine;
 
 public class BlockBuildingSite : Worksite
 {
-    Plane workObject;
-    ResourceType rtype;
-    const int START_WORKERS_COUNT = 20;
+    private ResourceType rtype;
+    private const int START_WORKERS_COUNT = 20;
 
-    public override int GetMaxWorkers()
+    public override int GetMaxWorkers()  { return 400; }
+
+    public BlockBuildingSite(Plane p, byte i_faceIndex, ResourceType i_type) : base(p, i_faceIndex)
     {
-        return 400;
+        rtype = i_type;
+        actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
+        sign = new GameObject("Block Building Site sign").AddComponent<WorksiteSign>();
+        BoxCollider bc = sign.gameObject.AddComponent<BoxCollider>();
+        bc.size = new Vector3(Block.QUAD_SIZE, 0.5f, Block.QUAD_SIZE);
+        bc.center = new Vector3(0, -0.75f, 0);
+        bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
+        sign.worksite = this;
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE * 0.5f; break;
+            case Block.RIGHT_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE * 0.5f; break;
+            case Block.BACK_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.back * Block.QUAD_SIZE * 0.5f; break;
+            case Block.LEFT_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.left * Block.QUAD_SIZE * 0.5f; break;
+            case Block.UP_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.5f; break;
+            case Block.DOWN_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.5f; break;
+            case Block.SURFACE_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.5f; break;
+            case Block.CEILING_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.5f; break;
+        }
+
+        colony.SendWorkers(START_WORKERS_COUNT, this);
+        worksitesList.Add(this);
+        GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+        subscribedToUpdate = true;
     }
 
     override public void WorkUpdate()
     {
-        if (workObject == null)
+        if (workplace == null)
         {
             StopWork();
         }
@@ -48,12 +72,12 @@ public class BlockBuildingSite : Worksite
         int finishedPillarsCount = 0, totalResourcesCount = 0, deletedStructures = 0;
         var unfinishedPillarsList = new List<ScalableHarvestableResource>();
         ScalableHarvestableResource shr = null;
+        PlaneExtension pe = workplace.GetExtension(); // создаем запросом, так как все равно понадобится
 
-        /*
-        if (workObject.noEmptySpace != false) { // на поверхности есть какие-то структуры
+        if (pe.noEmptySpace != false) { // на поверхности есть какие-то структуры
             byte maxVolume = ScalableHarvestableResource.MAX_STICK_VOLUME;
             int i = 0;
-            var strs = workObject.structures;
+            var strs = pe.GetStructuresList();
             
             while (i < strs.Count)
             {
@@ -104,10 +128,20 @@ public class BlockBuildingSite : Worksite
         if (finishedPillarsCount == maxPillarsCount)
         {
             actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
-            workObject.ClearSurface(false, false); // false так как все равно его удаляем
-            workObject.myChunk.ReplaceBlock(workObject.pos, BlockType.Cube, rtype.ID, rtype.ID, false);
-            workObject.myChunk.RenderStatusUpdate();
+            var cpos = workplace.pos;
+            switch (faceIndex)
+            {
+                case Block.FWD_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); break;
+                case Block.RIGHT_FACE_INDEX: cpos = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); break;
+                case Block.BACK_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); break;
+                case Block.LEFT_FACE_INDEX: cpos = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); break;
+                case Block.UP_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z); break;
+                case Block.DOWN_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y - 1, cpos.z + 1); break;
+            }
+            workplace.myChunk.AddBlock(cpos, rtype.ID, false);
+            pe.ClearSurface(false, false, true);
             StopWork();
+            return;
         }
         else
         {
@@ -134,7 +168,7 @@ public class BlockBuildingSite : Worksite
                         if (epcount > 0)
                         {
                             int combinedIndex = emptyPositionsIndexes[Random.Range(0, epcount - 1)];
-                            ScalableHarvestableResource.Create(rtype, resourceNeeded, workObject,
+                            ScalableHarvestableResource.Create(rtype, resourceNeeded, workplace,
                                 new PixelPosByte(
                                     (combinedIndex / length) * ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE,
                                     (combinedIndex % length) * ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE)
@@ -157,39 +191,12 @@ public class BlockBuildingSite : Worksite
                 else { if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources); }
             }
         }
-        actionLabel = string.Format("{0:0.##}", totalResourcesCount / (float)CubeBlock.MAX_VOLUME * 100f) + '%';
-        */
     }
 
     protected override void RecalculateWorkspeed()
     {
         workSpeed = colony.labourCoefficient * workersCount * GameConstants.BLOCK_BUILDING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
-    }
-    public void Set(Plane block, ResourceType type)
-    {
-        workObject = block;
-        //workObject.SetWorksite(this);
-        rtype = type;
-        actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
-        colony.SendWorkers(START_WORKERS_COUNT, this);
-        if (!worksitesList.Contains(this)) worksitesList.Add(this);
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
-            subscribedToUpdate = true;
-        }
-
-        if (sign == null)
-        {
-            sign = new GameObject("Block Building Site sign").AddComponent<WorksiteSign>();
-            BoxCollider bc = sign.gameObject.AddComponent<BoxCollider>();
-            bc.size = new Vector3(Block.QUAD_SIZE, 0.5f, Block.QUAD_SIZE);
-            bc.center = new Vector3(0, - 0.75f, 0);
-            bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
-            sign.worksite = this;
-            sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.up * 0.5f * Block.QUAD_SIZE;
-        }
     }
 
     override public void StopWork()
@@ -221,30 +228,37 @@ public class BlockBuildingSite : Worksite
     #region save-load system
     override protected List<byte> Save()
     {
-        if (workObject == null)
+        if (workplace == null)
         {
             StopWork();
             return null;
         }
-        var data = new List<byte>() { (byte)WorksiteType.BlockBuildingSite };
-        data.Add(workObject.pos.x);
-        data.Add(workObject.pos.y);
-        data.Add(workObject.pos.z);
+        var pos = workplace.pos;
+        var data = new List<byte>() {
+            (byte)WorksiteType.BlockBuildingSite,
+            pos.x, pos.y, pos.z, faceIndex
+        };
         data.AddRange(System.BitConverter.GetBytes(rtype.ID));
         data.AddRange(SerializeWorksite());        
         return data;
     }
-    override protected void Load(System.IO.FileStream fs, ChunkPos cpos)
+    public static BlockBuildingSite Load(System.IO.FileStream fs, Chunk chunk)
     {
-        byte[] data = new byte[4];
-        fs.Read(data, 0, 4);
-        /*
-        Set(
-            GameMaster.realMaster.mainChunk.GetBlock(cpos) as Plane, 
-            ResourceType.GetResourceTypeById(System.BitConverter.ToInt32(data, 0))
-            );
-            */
-        LoadWorksiteData(fs);
+        var data = new byte[8];
+        fs.Read(data, 0, data.Length);
+        Plane plane = null;
+        if (chunk.GetBlock(data[0], data[1], data[2])?.TryGetPlane(data[3], out plane) == true)
+        {
+            int x = System.BitConverter.ToInt32(data, 4);
+            var cs = new BlockBuildingSite(plane, data[3], ResourceType.GetResourceTypeById(x));
+            cs.LoadWorksiteData(fs);
+            return cs;
+        }
+        else
+        {
+            Debug.Log("block building site load error");
+            return null;
+        }
     }
     #endregion
 }

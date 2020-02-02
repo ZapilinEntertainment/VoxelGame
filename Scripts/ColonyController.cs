@@ -341,16 +341,11 @@ public sealed class ColonyController : MonoBehaviour
     private IEnumerator DeportateWorkingCitizen() // чтобы не тормозить апдейт
     {
         bool found = false;
-        var blocks = GameMaster.realMaster.mainChunk.blocks;
-        Plane sb = null;
-        WorkBuilding wb = null;
-        foreach (var bd in blocks)
+        var wbs = FindObjectsOfType<WorkBuilding>();
+        if (wbs != null)
         {
-            sb = bd.Value as Plane;
-            if (sb == null || sb.noEmptySpace == false) continue;
-            foreach (Structure s in sb.structures)
+            foreach (var wb in wbs)
             {
-                wb = s as WorkBuilding;
                 if (wb == null || wb.workersCount == 0) continue;
                 wb.FreeWorkers(1);// knock-knock, whos there? ME ME ME ME ME HAHAHA
                 found = true;

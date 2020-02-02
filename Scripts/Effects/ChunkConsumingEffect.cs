@@ -111,11 +111,9 @@ public class ChunkConsumingEffect : MonoBehaviour {
         foreach (var bd in blocks)
         {
             b = bd.Value;
-            if (b.type == BlockType.Cube)
+            if (b.IsCube())
             {
-                Plane sb = chunk.GetBlock(b.pos.x , b.pos.y + 1, b.pos.z) as Plane;
-                if (sb != null && sb.artificialStructures != 0) continue;
-                chunk.DeleteBlock(b.pos);
+                chunk.DeleteBlock(b.pos, false);
                 SpawnEffectCube(b.pos.ToWorldSpace(), true);
                 return;
             }
@@ -129,9 +127,9 @@ private void SpawnCube_BottomToUp()
         foreach (var bd in blocks)
         {
             b = bd.Value;
-            if (b.type == BlockType.Cube)
+            if (b.IsCube())
             {
-                chunk.DeleteBlock(b.pos);
+                chunk.DeleteBlock(b.pos, false);
                 SpawnEffectCube(b.pos.ToWorldSpace(), false);
                 return;
             }

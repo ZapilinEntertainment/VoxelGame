@@ -1,14 +1,25 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-public sealed class Plane 
+public sealed class Plane
 {
     public int materialID { get; private set; }
     public byte faceIndex { get; private set; }
     public MeshType meshType { get; private set; }
-    public Structure mainStructure  { get; private set; }  
+    public Structure mainStructure { get; private set; }
     public bool visible { get; private set; }
     public PlaneExtension extension { get; private set; }
     public Worksite worksite { get; private set; }
+    public FullfillStatus fulfillStatus {
+        get
+        {
+            if (mainStructure != null) return FullfillStatus.Full;
+            else
+            {
+                if (extension != null) return extension.fullfillStatus;
+                else return FullfillStatus.Empty;
+            }
+        }
+    }
     private bool dirty = false; // запрещает удалять плоскость для оптимизации
 
     public Chunk myChunk { get { return myBlockExtension.myBlock.myChunk; } }
@@ -141,7 +152,10 @@ public sealed class Plane
     {
         if (w == worksite) worksite = null;
     }
-
+    public void NullifyExtesionLink(PlaneExtension e)
+    {
+        if (extension == e) extension = null;
+    }
     public void VolumeChanges(float x)
     {
         if (meshType == MeshType.Quad || meshType == MeshType.ExcavatedPlane025 || 
@@ -244,9 +258,13 @@ public sealed class Plane
         if (extension == null) extension = new PlaneExtension(this, mainStructure);
         return extension;
     }
-    public void NullifyExtesionLink(PlaneExtension e)
-    {
-        if (extension == e) extension = null;
+   public bool ContainStructures() {
+        if (mainStructure != null) return true;
+        else
+        {
+            if (extension == null) return false;
+            else return (extension.fullfillStatus != FullfillStatus.Empty);
+        }
     }
 
     public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)

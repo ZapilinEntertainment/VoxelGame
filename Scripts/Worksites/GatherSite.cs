@@ -3,14 +3,29 @@ using UnityEngine;
 
 public class GatherSite : Worksite
 {
-    float destructionTimer;
-    Plane workObject;
-    const int START_WORKERS_COUNT = 5;
+    private float destructionTimer;
+    private const int START_WORKERS_COUNT = 5;
     // public const int MAX_WORKERS = 32
+
+    public GatherSite(Plane i_plane, byte i_faceIndex) : base(i_plane, i_faceIndex)
+    {
+        sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/GatherSign")).GetComponent<WorksiteSign>();
+        sign.worksite = this;
+        sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * 0.5f * Block.QUAD_SIZE;
+        actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
+        colony.SendWorkers(START_WORKERS_COUNT, this);
+        if (!worksitesList.Contains(this)) worksitesList.Add(this);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+            subscribedToUpdate = true;
+        }
+        destructionTimer = 10;
+    }
 
     override public void WorkUpdate()
     {
-        if (workObject == null || workObject.structures.Count == 0)
+        if (workplace == null)
         {
             StopWork();
         }
@@ -22,7 +37,7 @@ public class GatherSite : Worksite
             {
                 int i = 0;
                 bool resourcesFound = false;
-                List<Structure> strs = workObject.structures;
+                List<Structure> strs = workplace.GetStructuresList();
                 while (i < strs.Count & workflow > 0)
                 {
                     switch (strs[i].ID)
@@ -74,23 +89,7 @@ public class GatherSite : Worksite
         workSpeed = colony.labourCoefficient * workersCount * GameConstants.GATHERING_SPEED;
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
-    public void Set(Plane block)
-    {
-        workObject = block;
-        workObject.SetWorksite(this);
-        if (sign == null) sign = MonoBehaviour.Instantiate(Resources.Load<GameObject>("Prefs/GatherSign")).GetComponent<WorksiteSign>();
-        sign.worksite = this;
-        sign.transform.position = workObject.pos.ToWorldSpace() + Vector3.down * 0.5f * Block.QUAD_SIZE;
-        actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
-        colony.SendWorkers(START_WORKERS_COUNT, this);
-        if (!worksitesList.Contains(this)) worksitesList.Add(this);
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
-            subscribedToUpdate = true;
-        }
-        destructionTimer = 10;
-    }
+    
 
     override public void StopWork()
     {
@@ -108,10 +107,10 @@ public class GatherSite : Worksite
             GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
             subscribedToUpdate = false;
         }
-        if (workObject != null)
+        if (workplace != null)
         {
-            if (workObject.worksite == this) workObject.ResetWorksite();
-            workObject = null;
+            workplace.RemoveWorksiteLink(this);
+            workplace = null;
         }
         if (showOnGUI)
         {
@@ -125,26 +124,39 @@ public class GatherSite : Worksite
     #region save-load system
     override protected List<byte> Save()
     {
-        if (workObject == null)
+        if (workplace == null)
         {
             StopWork();
             return null;
         }
-        var data = new List<byte>() { (byte)WorksiteType.GatherSite };
-        data.Add(workObject.pos.x);
-        data.Add(workObject.pos.y);
-        data.Add(workObject.pos.z);
-        data.AddRange(System.BitConverter.GetBytes(destructionTimer));
-        data.AddRange(SerializeWorksite());
-        return data;
+        else
+        {
+            var pos = workplace.pos;
+            var data = new List<byte>() {
+                (byte)WorksiteType.GatherSite, pos.x ,pos.y, pos.z, faceIndex
+            };
+            data.AddRange(System.BitConverter.GetBytes(destructionTimer));
+            data.AddRange(SerializeWorksite());
+            return data;
+        }
     }
-    override protected void Load(System.IO.FileStream fs, ChunkPos pos)
+    public static GatherSite Load(System.IO.FileStream fs, Chunk chunk)
     {
-        Set(GameMaster.realMaster.mainChunk.GetBlock(pos) as Plane);
-        var data = new byte[4];
-        fs.Read(data, 0, 4);
-        destructionTimer = System.BitConverter.ToSingle(data, 0);
-        LoadWorksiteData(fs);
+        var data = new byte[8];
+        fs.Read(data, 0, data.Length);
+        Plane plane = null;
+        if (chunk.GetBlock(data[0], data[1], data[2])?.TryGetPlane(data[3], out plane) == true)
+        {
+            var cs = new GatherSite(plane, data[3]);
+            cs.destructionTimer = System.BitConverter.ToSingle(data, 4);
+            cs.LoadWorksiteData(fs);
+            return cs;
+        }
+        else
+        {
+            Debug.Log("gather site load error");
+            return null;
+        }
     }
 
     #endregion

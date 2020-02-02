@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WorksiteType : byte { Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite, TunnelBuildingSite }
+public enum WorksiteType : byte { Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite }
 
 public abstract class Worksite
 {
@@ -122,8 +122,9 @@ public abstract class Worksite
             colony.AddWorkers(workersCount);
             workersCount = 0;
         }
-        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);
+        if (sign != null) Object.Destroy(sign.gameObject);
         worksitesList.Remove(this);
+        workplace = null;
     }
 
     #region save-load system   
@@ -202,56 +203,27 @@ public abstract class Worksite
             Chunk chunk = GameMaster.realMaster.mainChunk;
             for (int i = 0; i < count; i++)
             {
-                switch ((WorksiteType)data[0])
+                switch ((WorksiteType)fs.ReadByte())
                 {
                     case WorksiteType.CleanSite:
                         {
                             w = CleanSite.Load(fs, chunk);
                             break;
                         }
-                    case WorksiteType.BlockBuildingSite:
-                        {
-                            Plane sblock = chunk.GetBlock(pos) as Plane;
-                            if (sblock != null)
-                            {
-                                w = new BlockBuildingSite();
-                                worksitesList.Add(w);
-                                w.Load(fs, pos);
-                            }
-                            break;
-                        }
-
                     case WorksiteType.DigSite:
                         {
-                            CubeBlock cb = chunk.GetBlock(pos) as CubeBlock;
-                            if (cb != null)
-                            {
-                                w = new DigSite();
-                                worksitesList.Add(w);
-                                w.Load(fs, pos);
-                            }
+                            w = DigSite.Load(fs, chunk);
                             break;
                         }
+                    case WorksiteType.BlockBuildingSite:
+                        {
+                            w = BlockBuildingSite.Load(fs, chunk);
+                            break;
+                        }
+                    
                     case WorksiteType.GatherSite:
                         {
-                            Plane sblock = chunk.GetBlock(pos) as Plane;
-                            if (sblock != null)
-                            {
-                                w = new GatherSite();
-                                worksitesList.Add(w);
-                                w.Load(fs, pos);
-                            }
-                            break;
-                        }
-                    case WorksiteType.TunnelBuildingSite:
-                        {
-                            CubeBlock cb = chunk.GetBlock(pos) as CubeBlock;
-                            if (cb != null)
-                            {
-                                w = new TunnelBuildingSite();
-                                worksitesList.Add(w);
-                                w.Load(fs, pos);
-                            }
+                            w = GatherSite.Load(fs, chunk);
                             break;
                         }
                     default: w = null; break;

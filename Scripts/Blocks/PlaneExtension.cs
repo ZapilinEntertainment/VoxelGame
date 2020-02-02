@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 public sealed class PlaneExtension
-{
+{    
     private readonly Plane myPlane;
     private List<Structure> structures;
-    public bool? noEmptySpace { get; private set; }// true - full, false - empty, null - not either
+    public FullfillStatus fullfillStatus;
     public int artificialStructuresCount { get; private set; }
     private BitArray map;
     public const byte INNER_RESOLUTION = 16;
@@ -27,8 +27,7 @@ public sealed class PlaneExtension
     }
 
     public PlaneExtension(Plane i_myPlane, Structure i_mainStructure)
-    {
-        noEmptySpace = false;
+    {        
         ResetMap();
         artificialStructuresCount = 0;
         myPlane = i_myPlane;
@@ -44,7 +43,7 @@ public sealed class PlaneExtension
     {
         ResetMap();
         artificialStructuresCount = 0;
-        noEmptySpace = null;
+        fullfillStatus = FullfillStatus.Empty;
 
         bool allCellsEmpty = true;
         if (structures != null)
@@ -78,17 +77,17 @@ public sealed class PlaneExtension
                 else
                 {
                     map.SetAll(true);
-                    noEmptySpace = true;
+                    fullfillStatus = FullfillStatus.Full;
                 }
                 a++;
             }
             if (structures.Count == 0) structures = null;
         }
-        if (noEmptySpace == null)
+        if (fullfillStatus == FullfillStatus.Unknown)
         {
             if (allCellsEmpty)
             {
-                noEmptySpace = false;
+                fullfillStatus = FullfillStatus.Empty;
             }
             else
             {
@@ -103,11 +102,11 @@ public sealed class PlaneExtension
                 }
                 if (allCellsFull)
                 {
-                    noEmptySpace = true;
+                    fullfillStatus = FullfillStatus.Full;
                 }
                 else
                 {
-                    noEmptySpace = null;
+                    fullfillStatus = FullfillStatus.Unknown;
                 }
             }
         }
@@ -162,7 +161,7 @@ public sealed class PlaneExtension
         // eo red axis
 
         RecalculateSurface(); // обновит данные и избавит от проверки на null
-        if (noEmptySpace != false)
+        if (fullfillStatus != FullfillStatus.Empty)
         {
             foreach (Structure s in structures)
             {
@@ -219,7 +218,7 @@ public sealed class PlaneExtension
             return;
         }
         Structure savedBasementForNow = null;
-        if (noEmptySpace != false)
+        if (fullfillStatus != FullfillStatus.Empty)
         {
             SurfaceRect sr = s.surfaceRect;
             int i = 0;
@@ -308,10 +307,6 @@ public sealed class PlaneExtension
         structures.Add(s);
     }
 
-    /// <summary>
-    /// collider check - enables surface collider, if inactive
-    /// </summary>
-    /// <param name="colliderCheck"></param>
 	public void ClearSurface(bool check, bool returnResources, bool deleteExtensionLink)
     {
         if (structures.Count > 0)
@@ -436,10 +431,10 @@ public sealed class PlaneExtension
 
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
     {
-        if (noEmptySpace == false) return;
+        if (fullfillStatus == FullfillStatus.Empty) return;
         else
         {
-            if (noEmptySpace == true & structures.Count == 1)
+            if (fullfillStatus == FullfillStatus.Full & structures.Count == 1)
             {
                 structures[0].ApplyDamage(damage);
                 return;
@@ -489,10 +484,10 @@ public sealed class PlaneExtension
 
     public PixelPosByte GetRandomCell()
     {
-        if (noEmptySpace == true) return PixelPosByte.Empty;
+        if (fullfillStatus == FullfillStatus.Full) return PixelPosByte.Empty;
         else
         {
-            if (noEmptySpace == false) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
+            if (fullfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
             else
             {
                 List<PixelPosByte> acceptableVariants = GetAcceptablePositions(10);
@@ -508,7 +503,7 @@ public sealed class PlaneExtension
     public List<PixelPosByte> GetRandomCells(int count)
     {
         List<PixelPosByte> positions = new List<PixelPosByte>();
-        if (noEmptySpace != true)
+        if (fullfillStatus != FullfillStatus.Full)
         {
             List<PixelPosByte> acceptableVariants = GetAcceptablePositions(INNER_RESOLUTION * INNER_RESOLUTION);
             while (positions.Count < count && acceptableVariants.Count > 0)
@@ -523,8 +518,8 @@ public sealed class PlaneExtension
 
     public PixelPosByte GetRandomPosition(byte size)
     {
-        if (noEmptySpace == true || size >= INNER_RESOLUTION || size < 1) return PixelPosByte.Empty;
-        if (noEmptySpace == false) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
+        if (fullfillStatus == FullfillStatus.Full || size >= INNER_RESOLUTION || size < 1) return PixelPosByte.Empty;
+        if (fullfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
         else return GetAcceptablePosition(size);
     }
 
@@ -622,7 +617,7 @@ public sealed class PlaneExtension
         }
         if (acceptableVariants.Count == 0)
         {
-            noEmptySpace = true;
+            fullfillStatus = FullfillStatus.Full;
             return new List<PixelPosByte>();
         }
         else
@@ -638,7 +633,7 @@ public sealed class PlaneExtension
 
     public bool IsAnyBuildingInArea(SurfaceRect sa)
     {
-        if (noEmptySpace == false) return false;
+        if (fullfillStatus == FullfillStatus.Empty) return false;
         bool found = false;
         foreach (Structure suro in structures)
         {
@@ -658,7 +653,7 @@ public sealed class PlaneExtension
     }
     public Structure GetBuildingByHitpoint(Vector3 point)
     {
-        if (noEmptySpace == false) return null;
+        if (fullfillStatus == FullfillStatus.Empty) return null;
         else
         {
             var p = WorldToMapPosition(point);
@@ -751,7 +746,7 @@ public sealed class PlaneExtension
 
     public void Annihilate(bool compensateStructures)
     {
-        if (noEmptySpace != false)
+        if (fullfillStatus != FullfillStatus.Empty)
         {
             foreach (var s in structures)
             {

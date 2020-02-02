@@ -4,9 +4,9 @@ public struct SurfaceRect
     public byte x, z, size;
     public SurfaceRect(byte f_x, byte f_z, byte f_size)
     {
-        if (f_x < 0) f_x = 0; if (f_x >= ImprovedPlane.INNER_RESOLUTION) f_x = ImprovedPlane.INNER_RESOLUTION - 1;
-        if (f_z < 0) f_z = 0; if (f_z >= ImprovedPlane.INNER_RESOLUTION) f_z = ImprovedPlane.INNER_RESOLUTION - 1;
-        if (f_size < 1) f_size = 1; if (f_size > ImprovedPlane.INNER_RESOLUTION) f_size = ImprovedPlane.INNER_RESOLUTION;
+        if (f_x < 0) f_x = 0; if (f_x >= PlaneExtension.INNER_RESOLUTION) f_x = PlaneExtension.INNER_RESOLUTION - 1;
+        if (f_z < 0) f_z = 0; if (f_z >= PlaneExtension.INNER_RESOLUTION) f_z = PlaneExtension.INNER_RESOLUTION - 1;
+        if (f_size < 1) f_size = 1; if (f_size > PlaneExtension.INNER_RESOLUTION) f_size = PlaneExtension.INNER_RESOLUTION;
         x = f_x;
         z = f_z;
         size = f_size;
@@ -15,7 +15,7 @@ public struct SurfaceRect
     static SurfaceRect()
     {
         one = new SurfaceRect(0, 0, 1);
-        full = new SurfaceRect(0, 0, ImprovedPlane.INNER_RESOLUTION);
+        full = new SurfaceRect(0, 0, PlaneExtension.INNER_RESOLUTION);
     }
 
     public bool Intersect(SurfaceRect sr)
