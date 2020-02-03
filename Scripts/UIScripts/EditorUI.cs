@@ -78,56 +78,56 @@ public sealed class EditorUI : MonoBehaviour
                     {
                         switch (bh.faceIndex)
                         {
-                            case 0:
+                            case Block.FWD_FACE_INDEX:
                                 {
                                     if (b.pos.z < Chunk.CHUNK_SIZE - 1)
                                     {
-                                        chunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1), BlockType.Cube, chosenMaterialId, true);
+                                        chunk.AddBlock(b.pos.OneBlockForward(), chosenMaterialId, true, true);
                                         action = true;
                                     }
                                     break;
                                 }
-                            case 1:
+                            case Block.RIGHT_FACE_INDEX:
                                 {
                                     if (b.pos.x < Chunk.CHUNK_SIZE - 1)
                                     {
-                                        chunk.AddBlock(new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z), BlockType.Cube, chosenMaterialId, true);
+                                        chunk.AddBlock(b.pos.OneBlockRight(), chosenMaterialId, true, true);
                                         action = true;
                                     }
                                     break;
                                 }
-                            case 2:
+                            case Block.BACK_FACE_INDEX:
                                 {
                                     if (b.pos.z > 0)
                                     {
-                                        chunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y, b.pos.z - 1), BlockType.Cube, chosenMaterialId, true);
+                                        chunk.AddBlock(b.pos.OneBlockBack(), chosenMaterialId, true, true);
                                         action = true;
                                     }
                                     break;
                                 }
-                            case 3:
+                            case Block.LEFT_FACE_INDEX:
                                 {
                                     if (b.pos.x  > 0)
                                     {
-                                        chunk.AddBlock(new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z), BlockType.Cube, chosenMaterialId, true);
+                                        chunk.AddBlock(b.pos.OneBlockLeft(), chosenMaterialId, true, true);
                                         action = true;
                                     }
                                     break;
                                 }
-                            case 4:
+                            case Block.UP_FACE_INDEX:
                                 {
                                     if (b.pos.y < Chunk.CHUNK_SIZE - 1)
                                     {
-                                        chunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Cube, chosenMaterialId, true);
+                                        chunk.AddBlock(b.pos.OneBlockHigher(), chosenMaterialId, true, true);
                                         action = true;
                                     }
                                     break;
                                 }
-                            case 5:
+                            case Block.DOWN_FACE_INDEX:
                                 {
                                     if (b.pos.y > 0)
                                     {
-                                        chunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y - 1, b.pos.z), BlockType.Cube, chosenMaterialId, true);
+                                        chunk.AddBlock(b.pos.OneBlockDown(), chosenMaterialId, true, true);
                                         action = true;
                                     }
                                     break;
@@ -135,7 +135,7 @@ public sealed class EditorUI : MonoBehaviour
                             case 6:
                             case 7:
                                 {
-                                    chunk.ReplaceBlock(b.pos, BlockType.Cube, chosenMaterialId, true);
+                                    b.RebuildBlock(new BlockMaterialsList(chosenMaterialId), true, false, true);
                                     action = true;
                                     break;
                                 }
@@ -144,272 +144,45 @@ public sealed class EditorUI : MonoBehaviour
                     break;
                 case ClickAction.DeleteBlock:
                     {
-                        if (b.type == BlockType.Surface)
-                        {
-                            var lb = chunk.GetBlock(b.pos.x, b.pos.y - 1, b.pos.z);
-                            if (lb != null && (lb.type == BlockType.Cube | lb.type == BlockType.Cave))
-                            {
-                                chunk.DeleteBlock(lb.pos);
-                            }
-                            else chunk.DeleteBlock(b.pos);
-                        }
-                        else
-                        {
-                            if (b.type == BlockType.Cube)    chunk.DeleteBlock(b.pos);
-                            else
-                            {
-                                if (bh.faceIndex == 6) (b as CaveBlock).DestroySurface();
-                                else chunk.DeleteBlock(b.pos);
-                            }
-                        }
+                        if (b.IsCube()) chunk.DeleteBlock(b.pos, false);
+                        else b.DeletePlane(bh.faceIndex, false, true);
                         action = true;
                         break;
                     }
                 case ClickAction.AddGrassland:
                     {
-                        Plane sb = b as Plane;
-                        if (sb == null & b.pos.y < Chunk.CHUNK_SIZE - 1)
-                        {
-                            sb = b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, ResourceType.DIRT_ID, true) as Plane;
-                            action = true;
-                        }
-                        if (sb != null && sb.grassland == null)
-                        {
-                            if (sb.material_id != ResourceType.DIRT_ID | sb.material_id != ResourceType.FERTILE_SOIL_ID) sb.ReplaceMaterial(ResourceType.DIRT_ID);
-                            Grassland.CreateOn(sb);
-                            sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
-                            action = true;
-                        }
                         break;
                     }
                 case ClickAction.DeleteGrassland:
                     {
-                        Plane sb = b as Plane;
-                        if (sb != null && sb.grassland != null)
-                        {
-                            sb.grassland.Annihilation(true, true);
-                            action = true;
-                        }
                         break;
                     }
                 case ClickAction.MakeSurface:
                     {
-                        if (bh.faceIndex == 4)
+                        Plane p = null;
+                        if ( b.TryGetPlane(bh.faceIndex, out p))
                         {
-                            if (b.type != BlockType.Surface)
-                            {
-                                if (b.pos.y < Chunk.CHUNK_SIZE - 1) b.myChunk.AddBlock(new ChunkPos(b.pos.x, b.pos.y + 1, b.pos.z), BlockType.Surface, chosenMaterialId, true);
-                            }
-                            else b.ReplaceMaterial(chosenMaterialId);
-                            action = true;
-                        }
-                        else
-                        {
-                            int newY;
-                            if (b.type == BlockType.Cave) newY = b.pos.y;
-                            else newY = b.pos.y - 1;
-                            if (bh.faceIndex < 4 & b.pos.y - 1 >= 0)
-                            {
-                                ChunkPos cpos = b.pos;
-                                bool correctFace = false;
-                                switch (bh.faceIndex)
-                                {                                  
-                                    case 0:
-                                        {
-                                            if (b.pos.z + 1 <= Chunk.CHUNK_SIZE - 1)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x, newY, b.pos.z + 1);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        }
-                                    case 1:
-                                        {
-                                            if (b.pos.x + 1 <= Chunk.CHUNK_SIZE - 1)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x + 1, newY, b.pos.z);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        }
-                                    case 2:
-                                        {
-                                            if (b.pos.z - 1 >= 0)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x, newY, b.pos.z - 1);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        }
-                                    case 3:
-                                        {
-                                            if (b.pos.x - 1 >= 0)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x - 1, newY, b.pos.z);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        }
-                                }
-                                if (correctFace)
-                                {
-                                    var lb = chunk.GetBlock(cpos);
-                                    if (lb == null)
-                                    {
-                                        chunk.AddBlock(cpos, BlockType.Cave, PoolMaster.NO_MATERIAL_ID, chosenMaterialId, true);
-                                        action = true;
-                                    }
-                                    else
-                                    {
-                                        if (lb.type == BlockType.Surface | lb.type == BlockType.Shapeless)
-                                        {
-                                            chunk.ReplaceBlock(cpos, BlockType.Cube, lb.material_id, chosenMaterialId, true);
-                                            action = true;
-                                        }
-                                    }
-                                }
-                            }
+                            p.ChangeMaterial(chosenMaterialId, true);
                         }                        
                         break;
                     }
                 case ClickAction.MakeCave:
                     {
-                        if (b.type == BlockType.Cube)
-                        {
-                            var cb = b as CubeBlock;
-                            float x = cb.myChunk.CalculateSupportPoints(cb.pos.x, cb.pos.y, cb.pos.z);
-                            if (x >= Chunk.SUPPORT_POINTS_ENOUGH_FOR_HANGING)
-                            {
-                                Block lb = cb.myChunk.GetBlock(cb.pos.x, cb.pos.y - 1, cb.pos.z); 
-                                cb.myChunk.ReplaceBlock(cb.pos, BlockType.Cave, lb != null ? lb.material_id : -1, true);
-                                action = true;
-                            }
-                            else
-                            {
-                                bool correctFace = false;
-                                ChunkPos cpos = b.pos;
-                                switch (bh.faceIndex)
-                                {
-                                    case 0:
-                                        if (b.pos.z + 1 <= Chunk.CHUNK_SIZE - 1)
-                                        {
-                                            cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1);
-                                            correctFace = true;
-                                        }
-                                        break;
-                                    case 1:
-                                        if (b.pos.x + 1 <= Chunk.CHUNK_SIZE - 1)
-                                        {
-                                            cpos = new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z);
-                                            correctFace = true;
-                                        }
-                                        break;
-                                    case 2:
-                                        if (b.pos.z - 1 >= 0)
-                                        {
-                                            cpos = new ChunkPos(b.pos.z, b.pos.y, b.pos.z - 1);
-                                            correctFace = true;
-                                        }
-                                        break;
-                                    case 3:
-                                        if (b.pos.x - 1 <= Chunk.CHUNK_SIZE - 1)
-                                        {
-                                            cpos = new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z);
-                                            correctFace = true;
-                                        }
-                                        break;
-                                }
-                                if (correctFace)
-                                {
-                                    chunk.AddBlock(cpos, BlockType.Cave, chosenMaterialId, true);
-                                    action = true;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (b.type == BlockType.Cave)
-                            {
-                                var cvb = b as CaveBlock;
-                                if (!cvb.haveSurface)
-                                {
-                                    cvb.RestoreSurface(chosenMaterialId);
-                                }
-                                else
-                                {
-                                    bool correctFace = false;
-                                    ChunkPos cpos = b.pos;
-                                    switch (bh.faceIndex)
-                                    {
-                                        case 0:
-                                            if (b.pos.z + 1 <= Chunk.CHUNK_SIZE - 1)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x, b.pos.y, b.pos.z + 1);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        case 1:
-                                            if (b.pos.x + 1 <= Chunk.CHUNK_SIZE - 1)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x + 1, b.pos.y, b.pos.z);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        case 2:
-                                            if (b.pos.z - 1 >= 0)
-                                            {
-                                                cpos = new ChunkPos(b.pos.z, b.pos.y, b.pos.z - 1);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                        case 3:
-                                            if (b.pos.x - 1 <= Chunk.CHUNK_SIZE - 1)
-                                            {
-                                                cpos = new ChunkPos(b.pos.x - 1, b.pos.y, b.pos.z);
-                                                correctFace = true;
-                                            }
-                                            break;
-                                    }
-                                    if (correctFace)
-                                    {
-                                        chunk.AddBlock(cpos, BlockType.Cave, chosenMaterialId, true);
-                                        action = true;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                chunk.ReplaceBlock(b.pos, BlockType.Cave, b.material_id, chosenMaterialId, true);
-                                action = true;
-                            }
-                        }
+                        
                         break;
                     }
                 case ClickAction.AddLifepower:
                     {
-                        Plane sb = b as Plane;
-                        if (sb != null && sb.grassland != null) sb.grassland.AddLifepowerAndCalculate(LIFEPOWER_PORTION);
-                    }
-                    break;
+                        break;
+                    }                    
                 case ClickAction.TakeLifepower:
                     {
-                        Plane sb = b as Plane;
-                        if (sb != null && sb.grassland != null) sb.grassland.TakeLifepowerAndCalculate(LIFEPOWER_PORTION);
+                      
                         break;
                     }
                 case ClickAction.CreateLifesource:
                     {
-                        Plane sb = b as Plane;
-                        if (sb != null)
-                        {
-                            if (lifesource != null) lifesource.Annihilate(true, false, false);
-                            if (b.pos.y < Chunk.CHUNK_SIZE / 2)
-                            {
-                                lifesource = Structure.GetStructureByID(Structure.LIFESTONE_ID) as LifeSource;
-                            }
-                            else lifesource = Structure.GetStructureByID(Structure.TREE_OF_LIFE_ID) as LifeSource;
-                            lifesource.SetBasement(sb, PixelPosByte.zero);
-                        }
+                        
                         break;
                     }
             }

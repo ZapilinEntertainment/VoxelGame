@@ -63,7 +63,7 @@ public class Farm : WorkBuilding
             }
         }
         SetWorkbuildingData(b, pos);
-        b.ReplaceMaterial(ResourceType.FERTILE_SOIL_ID);
+        b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
@@ -76,7 +76,6 @@ public class Farm : WorkBuilding
         workSpeed = colony.labourCoefficient * workersCount * GameConstants.OPEN_FARM_SPEED;
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
-
     override public void LabourUpdate()
     {
         if (isActive & isEnergySupplied)
@@ -89,7 +88,6 @@ public class Farm : WorkBuilding
             }
         }
     }
-
     override protected void LabourResult()
     {
         int i = 0;
@@ -147,13 +145,23 @@ public class Farm : WorkBuilding
         //if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce((int)totalCost);
     }
 
+    override public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
+    {
+        if (!Nature.MaterialIsLifeSupporting(p.materialID))
+        {
+            refusalReason = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
+            return false;
+        }
+        else return true;
+    }
+
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
         else destroyed = true;
         if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if ((basement != null & clearFromSurface) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ReplaceMaterial(ResourceType.DIRT_ID);
+        if ((basement != null & clearFromSurface) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ChangeMaterial(ResourceType.DIRT_ID, true);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

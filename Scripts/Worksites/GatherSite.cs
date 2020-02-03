@@ -7,7 +7,7 @@ public class GatherSite : Worksite
     private const int START_WORKERS_COUNT = 5;
     // public const int MAX_WORKERS = 32
 
-    public GatherSite(Plane i_plane, byte i_faceIndex) : base(i_plane, i_faceIndex)
+    public GatherSite(Plane i_plane) : base(i_plane)
     {
         sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/GatherSign")).GetComponent<WorksiteSign>();
         sign.worksite = this;
@@ -133,7 +133,7 @@ public class GatherSite : Worksite
         {
             var pos = workplace.pos;
             var data = new List<byte>() {
-                (byte)WorksiteType.GatherSite, pos.x ,pos.y, pos.z, faceIndex
+                (byte)WorksiteType.GatherSite, pos.x ,pos.y, pos.z, workplace.faceIndex
             };
             data.AddRange(System.BitConverter.GetBytes(destructionTimer));
             data.AddRange(SerializeWorksite());
@@ -147,7 +147,7 @@ public class GatherSite : Worksite
         Plane plane = null;
         if (chunk.GetBlock(data[0], data[1], data[2])?.TryGetPlane(data[3], out plane) == true)
         {
-            var cs = new GatherSite(plane, data[3]);
+            var cs = new GatherSite(plane);
             cs.destructionTimer = System.BitConverter.ToSingle(data, 4);
             cs.LoadWorksiteData(fs);
             return cs;

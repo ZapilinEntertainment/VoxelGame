@@ -8,10 +8,9 @@ public sealed class Block {
 
     public readonly ChunkPos pos;
     public bool destroyed { get; private set; }
-    public bool isBlockedByStructure { get { return mainStructure != null; } }
     public Chunk myChunk { get; private set; }
     
-    private Structure mainStructure;
+    public Structure mainStructure; private bool mainStructureBlockingMode; // распологается ли структура в этом блоке, или прост облокирует его?
     private GameObject blockingMarker;
     private BlockExtension extension;
 
@@ -29,64 +28,29 @@ public sealed class Block {
         return pos.x + pos.y * 3 + pos.z * 5;
     }
 
-    public struct BlockMaterialsList
+    public Block(Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml, float i_volume_pc, bool i_natural, bool redrawCall) : this(f_chunk, f_chunkPos)
     {
-        public int[] mlist;
-        public int mainMaterial;
-        public const int MATERIALS_COUNT = 8;
-        public BlockMaterialsList(int mat_fwd, int mat_right, int mat_back, int mat_left, int mat_up, int mat_down, int mat_surf, int mat_ceil, int i_mainMaterial)
-        {
-            mlist = new int[MATERIALS_COUNT];
-            mlist[FWD_FACE_INDEX] = mat_fwd;
-            mlist[RIGHT_FACE_INDEX] = mat_right;
-            mlist[BACK_FACE_INDEX] = mat_back;
-            mlist[LEFT_FACE_INDEX] = mat_left;
-            mlist[UP_FACE_INDEX] = mat_up;
-            mlist[DOWN_FACE_INDEX] = mat_down;
-            mlist[SURFACE_FACE_INDEX] = mat_surf;
-            mlist[CEILING_FACE_INDEX] = mat_ceil;
-            mainMaterial = i_mainMaterial;
-        }
-        public int this[int i]
-        {
-            get
-            {
-                if (i >= 0 && i < MATERIALS_COUNT) return mlist[i];
-                else return PoolMaster.NO_MATERIAL_ID;
-            }
-        }
-        public byte GetExistenceMask()
-        {
-            byte m = 0; int nomat = PoolMaster.NO_MATERIAL_ID;
-            if (mlist[0] != nomat) m += 1;
-            if (mlist[1] != nomat) m += 2;
-            if (mlist[2] != nomat) m += 4;
-            if (mlist[3] != nomat) m += 8;
-            if (mlist[4] != nomat) m += 16;
-            if (mlist[5] != nomat) m += 32;
-            if (mlist[6] != nomat) m += 64;
-            if (mlist[7] != nomat) m += 128;
-            return m;
-        }
+        extension = new BlockExtension(this, bml, i_volume_pc, i_natural, redrawCall);
     }
-
-    public Block(Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml, float i_volume_pc, bool i_natural) : this(f_chunk, f_chunkPos)
+    public Block (Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml,bool i_natural, bool redrawCall) : this(f_chunk, f_chunkPos)
     {
-        extension = new BlockExtension(this, bml, i_volume_pc, i_natural);
-    }
-    public Block (Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml,bool i_natural) : this(f_chunk, f_chunkPos)
-    {
-        extension = new BlockExtension(this, bml, i_natural);
+        extension = new BlockExtension(this, bml, i_natural, redrawCall);
     }
     public Block (Chunk f_chunk, ChunkPos f_chunkPos, int f_materialID, bool f_natural) : this(f_chunk, f_chunkPos)
     {        
         extension = new BlockExtension(this, f_materialID, f_natural);
     }
-	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) : this(f_chunk, f_chunkPos) {
-        if (f_mainStructure != null)
-        {
-            mainStructure = f_mainStructure;
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure, bool blockingMode) : this(f_chunk, f_chunkPos) {
+        mainStructure = f_mainStructure;
+        if (blockingMode)
+        {            
+            mainStructureBlockingMode = true;
             AddBlockingMarker();
+        }
+        else
+        {
+            extension = new BlockExtension(mainStructure);
+            mainStructureBlockingMode = false;
         }
     }
 	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
@@ -103,16 +67,63 @@ public sealed class Block {
         sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
         blockingMarker.transform.localPosition = pos.ToWorldSpace();
     }
-    public void SetMainStructure(Structure ms)
+    public void SetMainStructure(Structure ms, bool blockingMode, bool forced, bool compensateStructures)
     {
-        if (mainStructure != null) mainStructure.SectionDeleted(pos);
-        mainStructure = ms;
-        if (blockingMarker == null) AddBlockingMarker();
+        if (mainStructure == ms | ms == null) return;
+        else
+        {
+            if (extension != null & !forced) return;
+            if (mainStructure != null)
+            {
+                if (!forced) return;
+                else
+                {
+                    if (mainStructureBlockingMode) mainStructure.SectionDeleted(pos);
+                    else
+                    {
+                        extension?.Annihilate(true, compensateStructures);
+                    }
+                }
+            }
+            mainStructureBlockingMode = blockingMode;
+            if (mainStructureBlockingMode)
+            {
+                extension?.Annihilate(true, compensateStructures);
+                if (blockingMarker == null) AddBlockingMarker();
+            }
+            else
+            {
+                if (mainStructure.IsCube())
+                {
+                    if (extension == null) extension = new BlockExtension(mainStructure);
+                    else extension.Rebuild(mainStructure, compensateStructures);
+                }
+                else
+                {
+                    extension?.Annihilate(true, compensateStructures);
+                }
+                if (blockingMarker != null)
+                {
+                    Object.Destroy(blockingMarker);
+                    blockingMarker = null;
+                }
+            }
+            mainStructure = ms;
+            
+        }
     }
-    public void ResetMainStructure()
+    public void RemoveMainStructureLink(Structure ms)
     {
-        mainStructure = null;
-        if (blockingMarker != null) MonoBehaviour.Destroy(blockingMarker);
+        if (ms == mainStructure && ms != null)
+        {
+            mainStructure = null;
+            if (blockingMarker != null)
+            {
+                Object.Destroy(blockingMarker);
+                blockingMarker = null;
+            }
+            if (extension == null) myChunk.DeleteBlock(pos, false);
+        }
     }    
 
     public int GetMaterialID() { if (extension == null) return PoolMaster.NO_MATERIAL_ID; else return extension.materialID; }
@@ -123,8 +134,17 @@ public sealed class Block {
         {
             if (extension != null) return extension.ContainsStructures();
             else return false;
-
         }
+    }
+    public bool TryGetStructuresList(ref List<Structure> result)
+    {
+        if (result == null) result = new List<Structure>();
+        if (extension != null) {
+            extension.TryGetStructuresList(ref result);
+            return true;
+        }
+        else return false;
+        //ignore mainstructure
     }
     public bool IsCube()
     {
@@ -141,6 +161,11 @@ public sealed class Block {
             return extension.TryGetPlane(faceIndex, out result);
         }
     }
+    public Plane GetPlane(byte faceIndex)
+    {
+        if (extension != null) return extension.GetPlane(faceIndex);
+        else return null;
+    }
     public bool IsFaceTransparent(byte faceIndex)
     {
         if (extension == null) return true;
@@ -153,6 +178,10 @@ public sealed class Block {
     public void DeactivatePlane(byte faceIndex) {
         extension?.DeactivatePlane(faceIndex);
     }
+    public void DeletePlane(byte faceIndex, bool compensateStructures, bool redrawCall)
+    {
+        extension?.DeletePlane(faceIndex, compensateStructures, redrawCall);
+    }
 
     public float GetFossilsVolume() {
         if (extension == null) return 0f;
@@ -161,8 +190,9 @@ public sealed class Block {
     public void TakeFossilsVolume(float f) {
         extension?.TakeFossilsVolume(f);
     }
+    public float GetVolume() { return extension?.GetVolume() ?? 0f; }
 
-    public void ChangeMaterial(int m_id, bool naturalAffect)
+    public void ChangeMaterial(int m_id, bool naturalAffect, bool redrawCall)
     {
         if (m_id == PoolMaster.NO_MATERIAL_ID) return;
         if (extension == null)
@@ -171,13 +201,26 @@ public sealed class Block {
         }
         else
         {
-            extension.ChangeMaterial(m_id);
+            extension.ChangeMaterial(m_id,redrawCall);
         }
     }
-    public void RebuildBlock(BlockMaterialsList bml, bool i_natural, bool compensateStructures)
+    public void RebuildBlock(BlockMaterialsList bml, bool i_natural, bool compensateStructures, bool redrawCall)
     {
-        if (extension == null) extension = new BlockExtension(this, bml, i_natural);
-        else extension.Rebuild(bml, i_natural, compensateStructures);
+        if (extension == null) extension = new BlockExtension(this, bml, i_natural, redrawCall);
+        else extension.Rebuild(bml, i_natural, compensateStructures,redrawCall);
+    }
+    public void EnvironmentalStrike(byte i_faceIndex, Vector3 hitpoint, byte radius, float damage)
+    {
+        if (mainStructure != null) mainStructure.ApplyDamage(damage);
+        else
+        {
+            Plane p = null;
+            if (TryGetPlane(i_faceIndex, out p))
+            {
+                p.EnvironmentalStrike(hitpoint, radius, damage);
+            }
+            else extension?.Dig((int)damage, true, i_faceIndex);
+        }
     }
 
     public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte visualMask)

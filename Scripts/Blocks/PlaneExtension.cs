@@ -212,6 +212,7 @@ public sealed class PlaneExtension
         {
             return;
         }
+        if (structures == null) structures = new List<Structure>();
         if (s.surfaceRect.size == 1 && s.surfaceRect.size == 1)
         {
             AddCellStructure(s);
@@ -286,7 +287,7 @@ public sealed class PlaneExtension
     {
         var t = s.transform;
         t.parent = myPlane.myBlockExtension.myBlock.myChunk.transform;
-        t.position = GetLocalPosition(s.surfaceRect);
+        t.position = myPlane.GetLocalPosition(s.surfaceRect);
         s.SetVisibility(myPlane.visible);
         switch (myPlane.faceIndex)
         {
@@ -309,6 +310,11 @@ public sealed class PlaneExtension
 
 	public void ClearSurface(bool check, bool returnResources, bool deleteExtensionLink)
     {
+        if (structures == null)
+        {
+            myPlane.NullifyExtesionLink(this);
+            return;
+        }
         if (structures.Count > 0)
         {
             for (int i = 0; i < structures.Count; i++)
@@ -341,83 +347,7 @@ public sealed class PlaneExtension
         RecalculateSurface();
     }
 
-    #region giving info
-    public Vector3 GetLocalPosition(float x, float z)
-    {
-        Vector3 leftBottomCorner = myPlane.myBlockExtension.myBlock.pos.ToWorldSpace(), xdir, zdir;
-        float q = Block.QUAD_SIZE;
-        switch (myPlane.faceIndex)
-        {
-            case Block.FWD_FACE_INDEX:
-                leftBottomCorner += new Vector3(0.5f, -0.5f, 0.5f) * q;
-                xdir = Vector3.left * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.RIGHT_FACE_INDEX:
-                leftBottomCorner += new Vector3(0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.BACK_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.right * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.LEFT_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, 0.5f) * q;
-                xdir = Vector3.back * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.DOWN_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.right * q;
-                zdir = Vector3.back * q;
-                break;
-            case Block.CEILING_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
-                xdir = Vector3.right * q;
-                zdir = Vector3.back * q;
-                break;
-            case Block.UP_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.SURFACE_FACE_INDEX:
-            default:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
-                break;
-        }
-        float ir = INNER_RESOLUTION;
-        return leftBottomCorner + xdir * x / ir + zdir * z / ir;
-    }
-    public Vector3 GetLocalPosition(SurfaceRect sr)
-    {
-        return GetLocalPosition(sr.x + sr.size / 2f, sr.z + sr.size / 2f);
-    }
-    /// <summary>
-    /// returns in 0 - 1 
-    /// </summary>
-    public Vector2 WorldToMapPosition(Vector3 point)
-    {
-        Vector3 dir = point - GetLocalPosition(0, 0);
-        switch (myPlane.faceIndex)
-        {
-            case Block.FWD_FACE_INDEX: return new Vector2(dir.x, dir.y);
-            case Block.RIGHT_FACE_INDEX: return new Vector2(dir.z, dir.y);
-            case Block.BACK_FACE_INDEX: return new Vector2(dir.x, dir.y);
-            case Block.LEFT_FACE_INDEX: return new Vector2(dir.z, dir.y);
-            case Block.DOWN_FACE_INDEX:
-            case Block.CEILING_FACE_INDEX:
-                return new Vector2(dir.x, dir.z);
-            case Block.SURFACE_FACE_INDEX:
-            case Block.UP_FACE_INDEX:
-            default:
-                return new Vector2(dir.x, dir.z);
-        }
-    }
+    #region giving info 
     public int GetStructuresCount()
     {
         if (structures == null) return 0;
@@ -441,7 +371,7 @@ public sealed class PlaneExtension
             }
             else
             {
-                Vector2 inpos = WorldToMapPosition(hitpoint);
+                Vector2 inpos = myPlane.WorldToMapPosition(hitpoint);
                 byte xpos = (byte)(inpos.x * INNER_RESOLUTION),
                     ypos = (byte)(inpos.y * INNER_RESOLUTION);
                 if (radius > 1)
@@ -656,7 +586,7 @@ public sealed class PlaneExtension
         if (fullfillStatus == FullfillStatus.Empty) return null;
         else
         {
-            var p = WorldToMapPosition(point);
+            var p = myPlane.WorldToMapPosition(point);
             if (p.x < 0 | p.x > 1 | p.y < 0 | p.y < 1) return null;
             else
             {

@@ -131,7 +131,7 @@ public abstract class Plant : Structure {
         PrepareStructureForDestruction(clearFromSurface, returnResources, false);
         if (clearFromSurface)
         {
-            if (basement != null && basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
+           // if (basement != null && basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
         }
     }
 
@@ -139,7 +139,7 @@ public abstract class Plant : Structure {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) { basement = null; }
         PreparePlantForDestruction(clearFromSurface, returnResources);
         basement = null;
         Destroy(gameObject);

@@ -361,7 +361,6 @@ public class Structure : MonoBehaviour
         model.transform.localPosition = Vector3.zero;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }
-
     virtual public void SetModelRotation(int r)
     {
         if (r > 7) r %= 8;
@@ -382,8 +381,11 @@ public class Structure : MonoBehaviour
         if (hp == 0) Annihilate(true, false, true);
     }
     public bool IsDestroyed() { return destroyed; }
-
-   
+    virtual public bool IsCube() { return false; }
+    virtual public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
+    {
+        return true;
+    }
 
     virtual public void Prepare()
     {
@@ -1067,12 +1069,16 @@ public class Structure : MonoBehaviour
         basement = p;
         if (transform.childCount == 0) SetModel();
         basement.AddStructure(this);
-    }  
+    }
+    public void ChangeInnerPosition(SurfaceRect sr)
+    {
+        if (basement != null) return;
+        else surfaceRect = sr;
+    }
     public void ClearBasementLink(Plane p)
     {
         if (basement == p) basement = null;
     }
-
     virtual public void ApplyDamage(float d)
     {
         if (destroyed | indestructible) return;
@@ -1085,7 +1091,6 @@ public class Structure : MonoBehaviour
         if (basement == null) return;
         
     }
-
     virtual public void SetVisibility(bool x)
     {
         if (x == visible) return;
@@ -1106,16 +1111,9 @@ public class Structure : MonoBehaviour
     virtual public void DisableGUI()
     {
         showOnGUI = false;
-    }
-
-    public void ChangeInnerPosition(SurfaceRect sr)
-    {
-        if (basement != null) return;
-        else surfaceRect = sr;
-    }
+    }    
 
     virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
-
     // в финальном виде копипастить в потомков
     protected void PrepareStructureForDestruction(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
@@ -1150,7 +1148,6 @@ public class Structure : MonoBehaviour
         }
         basement = null;
     }
-
     protected int CalculateRuinsVolume()
     {
         var cost = ResourcesCost.GetCost(ID);

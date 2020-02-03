@@ -8,7 +8,7 @@ public class BlockBuildingSite : Worksite
 
     public override int GetMaxWorkers()  { return 400; }
 
-    public BlockBuildingSite(Plane p, byte i_faceIndex, ResourceType i_type) : base(p, i_faceIndex)
+    public BlockBuildingSite(Plane p, ResourceType i_type) : base(p)
     {
         rtype = i_type;
         actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
@@ -18,7 +18,7 @@ public class BlockBuildingSite : Worksite
         bc.center = new Vector3(0, -0.75f, 0);
         bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
         sign.worksite = this;
-        switch (faceIndex)
+        switch (p.faceIndex)
         {
             case Block.FWD_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE * 0.5f; break;
             case Block.RIGHT_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE * 0.5f; break;
@@ -74,7 +74,7 @@ public class BlockBuildingSite : Worksite
         ScalableHarvestableResource shr = null;
         PlaneExtension pe = workplace.GetExtension(); // создаем запросом, так как все равно понадобится
 
-        if (pe.noEmptySpace != false) { // на поверхности есть какие-то структуры
+        if (pe.fullfillStatus != FullfillStatus.Empty) { // на поверхности есть какие-то структуры
             byte maxVolume = ScalableHarvestableResource.MAX_STICK_VOLUME;
             int i = 0;
             var strs = pe.GetStructuresList();
@@ -129,7 +129,7 @@ public class BlockBuildingSite : Worksite
         {
             actionLabel = Localization.GetActionLabel(LocalizationActionLabels.BlockCompleted);
             var cpos = workplace.pos;
-            switch (faceIndex)
+            switch (workplace.faceIndex)
             {
                 case Block.FWD_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); break;
                 case Block.RIGHT_FACE_INDEX: cpos = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); break;
@@ -138,7 +138,7 @@ public class BlockBuildingSite : Worksite
                 case Block.UP_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z); break;
                 case Block.DOWN_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y - 1, cpos.z + 1); break;
             }
-            workplace.myChunk.AddBlock(cpos, rtype.ID, false);
+            workplace.myChunk.AddBlock(cpos, rtype.ID, false, true);
             pe.ClearSurface(false, false, true);
             StopWork();
             return;
@@ -236,7 +236,7 @@ public class BlockBuildingSite : Worksite
         var pos = workplace.pos;
         var data = new List<byte>() {
             (byte)WorksiteType.BlockBuildingSite,
-            pos.x, pos.y, pos.z, faceIndex
+            pos.x, pos.y, pos.z, workplace.faceIndex
         };
         data.AddRange(System.BitConverter.GetBytes(rtype.ID));
         data.AddRange(SerializeWorksite());        
@@ -250,7 +250,7 @@ public class BlockBuildingSite : Worksite
         if (chunk.GetBlock(data[0], data[1], data[2])?.TryGetPlane(data[3], out plane) == true)
         {
             int x = System.BitConverter.ToInt32(data, 4);
-            var cs = new BlockBuildingSite(plane, data[3], ResourceType.GetResourceTypeById(x));
+            var cs = new BlockBuildingSite(plane, ResourceType.GetResourceTypeById(x));
             cs.LoadWorksiteData(fs);
             return cs;
         }

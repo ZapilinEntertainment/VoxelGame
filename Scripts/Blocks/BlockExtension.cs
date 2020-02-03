@@ -33,66 +33,73 @@ public sealed class BlockExtension
         fossilsVolume = isNatural ? MAX_VOLUME : 0f;
         volume = MAX_VOLUME;
         //
-        existingPlanesMask = Block.FWD_FACE_INDEX + Block.RIGHT_FACE_INDEX + Block.BACK_FACE_INDEX + Block.LEFT_FACE_INDEX + Block.UP_FACE_INDEX + Block.DOWN_FACE_INDEX;
+        existingPlanesMask = 
+            (1 << Block.FWD_FACE_INDEX) + (1 << Block.RIGHT_FACE_INDEX) + (1 << Block.BACK_FACE_INDEX) + 
+            (1 << Block.LEFT_FACE_INDEX) + (1 << Block.UP_FACE_INDEX) + ( 1 << Block.DOWN_FACE_INDEX);
     }   
-    public BlockExtension(Block i_myBlock, Block.BlockMaterialsList bml, bool i_natural) : this(i_myBlock,bml.mainMaterial, i_natural)  {
+    public BlockExtension(Block i_myBlock, BlockMaterialsList bml, bool i_natural, bool redrawCall) : this(i_myBlock,bml.mainMaterial, i_natural)  {
         int nomat = PoolMaster.NO_MATERIAL_ID;
         int mat = bml[Block.FWD_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.FWD_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.FWD_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.FWD_FACE_INDEX, mat, false);
         }
         mat = bml[Block.RIGHT_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.RIGHT_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.RIGHT_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.RIGHT_FACE_INDEX, mat, false);
         }
         mat = bml[Block.BACK_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.BACK_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.BACK_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.BACK_FACE_INDEX, mat, false);
         }
         mat = bml[Block.LEFT_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.LEFT_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.LEFT_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.LEFT_FACE_INDEX, mat, false);
         }
         mat = bml[Block.UP_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.UP_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.UP_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.UP_FACE_INDEX, mat, false);
         }
         mat = bml[Block.DOWN_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.DOWN_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.DOWN_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.DOWN_FACE_INDEX, mat, false);
         }
         mat = bml[Block.SURFACE_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.SURFACE_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.SURFACE_FACE_INDEX, mat);
+            if (materialID != mat) CreatePlane(Block.SURFACE_FACE_INDEX, mat, false);
         }
         mat = bml[Block.CEILING_FACE_INDEX];
         if (mat != nomat)
         {
             existingPlanesMask += 1 << Block.CEILING_FACE_INDEX;
-            if (materialID != mat) CreatePlane(Block.CEILING_FACE_INDEX, mat);
-        }        
+            if (materialID != mat) CreatePlane(Block.CEILING_FACE_INDEX, mat, false);
+        }
+        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock);
     }
-    public BlockExtension(Block i_myBlock, Block.BlockMaterialsList bml, float i_volume_pc, bool i_natural) : this(i_myBlock, bml, i_natural)
+    public BlockExtension(Block i_myBlock, BlockMaterialsList bml, float i_volume_pc, bool i_natural, bool redrawCall) : this(i_myBlock, bml, i_natural, redrawCall)
     {
         volume = MAX_VOLUME * i_volume_pc;
         fossilsVolume = isNatural ? volume : 0f;
     }
+    public BlockExtension(Structure mainStructure)
+    {
+        // + rebuild func
+    }
 
-    public void ChangeMaterial(int i_materialID)
+    public void ChangeMaterial(int i_materialID, bool redrawCall)
     {
         if (materialID != i_materialID)
         {
@@ -101,13 +108,13 @@ public sealed class BlockExtension
             {
                 foreach (var fp in planes)
                 {
-                    fp.Value.ReplaceMaterial(materialID);
+                    fp.Value.ChangeMaterial(materialID, redrawCall);
                 }
             }
             myBlock.myChunk.RefreshBlockVisualising(myBlock);
         }
     }
-    public void Rebuild(Block.BlockMaterialsList bml, bool i_natural, bool compensateStructures)
+    public void Rebuild(BlockMaterialsList bml, bool i_natural, bool compensateStructures, bool redrawCall)
     {
         byte newmask = bml.GetExistenceMask();
         byte x;
@@ -123,10 +130,15 @@ public sealed class BlockExtension
             }
             else
             { // создание или изменение
-                if ((existingPlanesMask & x) != 0 && planes != null && planes.ContainsKey(i)) planes[i].ReplaceMaterial(bml[i]);
-                else CreatePlane(i, bml[i]);
+                if ((existingPlanesMask & x) != 0 && planes != null && planes.ContainsKey(i)) planes[i].ChangeMaterial(bml[i],redrawCall);
+                else CreatePlane(i, bml[i],redrawCall);
             }
         }
+        myBlock.myChunk.RefreshBlockVisualising(myBlock);
+    }
+    public void Rebuild(Structure mainStructure, bool compensateStructures)
+    {
+
     }
 
     public byte GetVisualAffectionMask()
@@ -166,10 +178,19 @@ public sealed class BlockExtension
         {
             if (planes == null || !planes.ContainsKey(faceIndex))
             {
-                result = CreatePlane(faceIndex, materialID);
+                result = CreatePlane(faceIndex, materialID, true);
             }
             else result = planes[faceIndex];
             return true;
+        }
+    }
+    public Plane GetPlane(byte faceIndex)
+    {
+        if ((existingPlanesMask & (1 << faceIndex)) == 0) return null;
+        else
+        {
+            if (planes.ContainsKey(faceIndex)) return planes[faceIndex];
+            else return CreatePlane(faceIndex, true);
         }
     }
     public bool ContainsStructures()
@@ -182,6 +203,21 @@ public sealed class BlockExtension
                 if (p.Value.ContainStructures()) return true;
             }
             return false;
+        }
+    }
+    public bool TryGetStructuresList(ref List<Structure> result)
+    {
+        if (planes == null) return false;
+        else
+        {
+            if (result == null) result = new List<Structure>();
+            List<Structure> slist;
+            foreach (var p in planes)
+            {
+                slist = p.Value.GetStructuresList();
+                if (slist != null) result.AddRange(slist);
+            }
+            return true;
         }
     }
     public bool IsCube()
@@ -228,6 +264,7 @@ public sealed class BlockExtension
     }
     public float GetFossilsVolume() { return fossilsVolume; }
     public void TakeFossilsVolume(float f) { fossilsVolume -= f; if (fossilsVolume < 0f) fossilsVolume = 0f; }
+    public float GetVolume() { if (materialID != PoolMaster.NO_MATERIAL_ID) return volume; else return 0f; }
     public float GetVolumePercent() { return volume / (float)MAX_VOLUME; }
 
     public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte vismask)
@@ -284,12 +321,12 @@ public sealed class BlockExtension
                 if (planes.ContainsKey(faceIndex)) return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
             }
             // default plane creation            
-            CreatePlane(faceIndex, materialID);
+            CreatePlane(faceIndex, materialID,false);
             return true;
         }
     }
-    public Plane CreatePlane(byte faceIndex) { return CreatePlane(faceIndex, materialID); }
-    public Plane CreatePlane(byte faceIndex, int i_materialID)
+    public Plane CreatePlane(byte faceIndex, bool redrawCall) { return CreatePlane(faceIndex, materialID, redrawCall); }
+    public Plane CreatePlane(byte faceIndex, int i_materialID, bool redrawCall)
     {
         Plane p = null;
         if (planes == null)  planes = new Dictionary<byte, Plane>();            
@@ -298,7 +335,7 @@ public sealed class BlockExtension
             if (planes.ContainsKey(faceIndex))
             {
                 p = planes[faceIndex];
-                p.ReplaceMaterial(i_materialID);
+                p.ChangeMaterial(i_materialID, redrawCall);
                 return p;
             }
         }
@@ -307,6 +344,7 @@ public sealed class BlockExtension
             p = MeshMaster.GetRooftop(this, pos.x % 2 == 0 & pos.z % 2 == 0 & Random.value > 0.5f, isNatural);
         else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex);
         planes.Add(faceIndex, p);
+        if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(pos, faceIndex);
         return p;
     }
     public void DeactivatePlane(byte faceIndex)
@@ -320,7 +358,7 @@ public sealed class BlockExtension
             }
         }
     }
-    public void RewritePlane(Plane oldplane, Plane newplane)
+    public void RewritePlane(Plane oldplane, Plane newplane, bool redrawCall)
     {
         if (planes == null)
         {
@@ -332,6 +370,18 @@ public sealed class BlockExtension
             planes.Remove(ix);
             planes.Add(ix, newplane);
         }
+        if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(myBlock.pos, oldplane.faceIndex);
+    }
+    public void DeletePlane(byte faceIndex, bool compensateStructures, bool redrawCall)
+    {
+        if (planes.ContainsKey(faceIndex))
+        {
+            planes[faceIndex].Annihilate(compensateStructures);
+            planes.Remove(faceIndex);
+        }
+        byte x = (byte)(1 << faceIndex);
+        if ((existingPlanesMask & x) != 0) existingPlanesMask -= x;
+        if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(myBlock.pos, faceIndex);
     }
 
     public void Annihilate(bool sendRedrawRequest, bool compensateStructures)

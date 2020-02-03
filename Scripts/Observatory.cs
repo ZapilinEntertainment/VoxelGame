@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class Observatory : WorkBuilding {
+public sealed class Observatory : WorkBuilding
+{
     public static bool alreadyBuilt = false;
     public const float SEARCH_WORKFLOW = 250, CHANCE_TO_FIND = 0.3f;
-    private bool mapOpened = false, subscribedToRestoreBlockersUpdate = false;    
+    private bool mapOpened = false, subscribedToRestoreBlockersUpdate = false;
     private List<Block> blockedBlocks;
 
     static Observatory()
     {
-        AddToResetList(typeof(Observatory));        
+        AddToResetList(typeof(Observatory));
     }
     public static void ResetStaticData()
     {
@@ -23,17 +24,18 @@ public sealed class Observatory : WorkBuilding {
     }
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
-        if (alreadyBuilt) {
+        if (alreadyBuilt)
+        {
             Destroy(gameObject);
             return;
-        } 
+        }
         if (b == null) return;
         SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
-        }        
+        }
         if (!GameMaster.loading)
         {
             List<ChunkPos> positionsList = new List<ChunkPos>();
@@ -47,7 +49,8 @@ public sealed class Observatory : WorkBuilding {
             blockedBlocks = new List<Block>();
             b.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
         }
-        else {
+        else
+        {
             if (!subscribedToRestoreBlockersUpdate)
             {
                 GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
@@ -92,6 +95,93 @@ public sealed class Observatory : WorkBuilding {
         gearsDamage = 0;
     }
 
+    override public bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    {
+        if (alreadyBuilt)
+        {
+            reason = Localization.GetRefusalReason(RefusalReason.AlreadyBuilt);
+            return false;
+        }
+        else
+        {
+            if (p.pos.y != Chunk.CHUNK_SIZE - 1)
+            {
+                reason = Localization.GetRefusalReason(RefusalReason.UnacceptableHeight);
+                return false;
+            }
+            else
+            {
+                if (!p.myBlockExtension.HavePlane(Block.CEILING_FACE_INDEX))
+                {
+                    var blocks = p.myChunk.blocks;
+                    ChunkPos pos = p.pos;
+                    int size = Chunk.CHUNK_SIZE;
+
+                    int i = 0;
+                    if (pos.y < size - 1)
+                    {
+                        if (pos.y > 1)
+                        {
+                            for (; i < pos.y - 1; i++)
+                            {
+                                ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
+                                if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                            }
+                        }
+                        for (i = pos.y + 1; i < size; i++)
+                        {
+                            ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
+                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                        }
+                        i = 0;
+                    }
+                    bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true };
+                    //  0  1  2
+                    //  3     4
+                    //  5  6  7
+                    if (pos.x == 0)
+                    {
+                        checkArray[0] = false;
+                        checkArray[3] = false;
+                        checkArray[5] = false;
+                    }
+                    else
+                    {
+                        if (pos.x == size - 1)
+                        {
+                            checkArray[2] = false;
+                            checkArray[4] = false;
+                            checkArray[7] = false;
+                        }
+                    }
+                    if (pos.z == 0)
+                    {
+                        checkArray[5] = false;
+                        checkArray[6] = false;
+                        checkArray[7] = false;
+                    }
+                    else
+                    {
+                        if (pos.z == size - 1)
+                        {
+                            checkArray[0] = false;
+                            checkArray[1] = false;
+                            checkArray[2] = false;
+                        }
+                    }
+                    foreach (bool ca in checkArray)
+                    {
+                        if (ca == false) goto CHECK_FAILED;
+                    }
+                    return true;
+                }
+                CHECK_FAILED:
+                reason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
+                return false;
+            }
+        }
+    }
+
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
@@ -101,10 +191,9 @@ public sealed class Observatory : WorkBuilding {
         {
             if (blockedBlocks != null)
             {
-                basement.myChunk.ClearBlocksList(blockedBlocks, true);
+                basement.myChunk.ClearBlocksList(this, blockedBlocks, true);
             }
-            if (basement.type == BlockType.Surface) basement.myChunk.DeleteBlock(basement.pos);
-        }        
+        }
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

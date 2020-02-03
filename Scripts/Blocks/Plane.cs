@@ -9,7 +9,8 @@ public sealed class Plane
     public bool visible { get; private set; }
     public PlaneExtension extension { get; private set; }
     public Worksite worksite { get; private set; }
-    public FullfillStatus fulfillStatus {
+    public FullfillStatus fulfillStatus
+    {
         get
         {
             if (mainStructure != null) return FullfillStatus.Full;
@@ -39,7 +40,7 @@ public sealed class Plane
     }
     public override int GetHashCode()
     {
-        return myBlockExtension.GetHashCode()+ faceIndex + materialID + (int)meshType;
+        return myBlockExtension.GetHashCode() + faceIndex + materialID + (int)meshType;
     }
 
     public bool isClean() //может быть удалена и восстановлена
@@ -58,6 +59,11 @@ public sealed class Plane
                 else return false;
             }
         }
+    }
+    public bool isSuitableForChanging()
+    {
+        if (meshType == MeshType.Quad) return true;
+        else return false;
     }
 
     public Plane(BlockExtension i_parent, MeshType i_meshType, int i_materialID, byte i_faceIndex)
@@ -84,7 +90,7 @@ public sealed class Plane
         {
             var e = GetExtension();
             e.AddStructure(s);
-            if (mainStructure.IsDestroyed()) mainStructure = null;
+            mainStructure = null;
             return;
         }
         else
@@ -136,12 +142,12 @@ public sealed class Plane
         else return extension.GetStructuresList();
     }
 
-    public void ReplaceMaterial(int newId)
+    public void ChangeMaterial(int newId, bool redrawCall)
     {
         if (materialID == newId) return;
-        materialID = newId;        
+        materialID = newId;
         if (materialID != myBlockExtension.myBlock.GetMaterialID()) dirty = true;
-        myChunk.RewriteFaceVisualData(pos, faceIndex);
+        if (redrawCall & visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
     }
     public void SetWorksite(Worksite w)
     {
@@ -158,7 +164,7 @@ public sealed class Plane
     }
     public void VolumeChanges(float x)
     {
-        if (meshType == MeshType.Quad || meshType == MeshType.ExcavatedPlane025 || 
+        if (meshType == MeshType.Quad || meshType == MeshType.ExcavatedPlane025 ||
             meshType == MeshType.ExcavatedPlane05 || meshType == MeshType.ExcavatedPlane075)
         {
             if (x > 0.5f)
@@ -168,7 +174,7 @@ public sealed class Plane
                     if (meshType != MeshType.Quad)
                     {
                         meshType = MeshType.Quad;
-                        myChunk.RewriteFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
                 else
@@ -176,7 +182,7 @@ public sealed class Plane
                     if (meshType != MeshType.ExcavatedPlane075)
                     {
                         meshType = MeshType.ExcavatedPlane075;
-                        myChunk.RewriteFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
             }
@@ -187,7 +193,7 @@ public sealed class Plane
                     if (meshType != MeshType.ExcavatedPlane025)
                     {
                         meshType = MeshType.ExcavatedPlane025;
-                        myChunk.RewriteFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
                 else
@@ -195,10 +201,19 @@ public sealed class Plane
                     if (meshType != MeshType.ExcavatedPlane05)
                     {
                         meshType = MeshType.ExcavatedPlane075;
-                        myChunk.RewriteFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
             }
+        }
+    }
+    public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
+    {
+        if (mainStructure != null) mainStructure.ApplyDamage(damage);
+        else
+        {
+            if (extension != null) extension.EnvironmentalStrike(hitpoint, radius, damage);
+            else myBlockExtension.Dig((int)damage, true, faceIndex);
         }
     }
 
@@ -252,13 +267,14 @@ public sealed class Plane
                 break;
         }
         return leftBottomCorner + xdir * 0.5f + zdir * 0.5f;
-    }    
+    }
     public PlaneExtension GetExtension()
     {
         if (extension == null) extension = new PlaneExtension(this, mainStructure);
         return extension;
     }
-   public bool ContainStructures() {
+    public bool ContainStructures()
+    {
         if (mainStructure != null) return true;
         else
         {
@@ -266,11 +282,21 @@ public sealed class Plane
             else return (extension.fullfillStatus != FullfillStatus.Empty);
         }
     }
+    public bool IsAnyBuildingInArea(SurfaceRect sa)
+    {
+        if (extension != null) return extension.IsAnyBuildingInArea(sa);
+        else
+        {
+            if (mainStructure != null) return true;
+            else return false;
+        }
+    }
 
     public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
     {
-        if (materialID == PoolMaster.NO_MATERIAL_ID | meshType == MeshType.NoMesh) return null;
-        else {           
+        if (!visible || materialID == PoolMaster.NO_MATERIAL_ID | meshType == MeshType.NoMesh) return null;
+        else
+        {
             return new BlockpartVisualizeInfo(cpos,
                 new MeshVisualizeInfo(faceIndex, PoolMaster.GetMaterialType(materialID), GetLightValue(chunk, cpos, faceIndex)),
                 meshType,
@@ -282,16 +308,92 @@ public sealed class Plane
     {
         switch (faceIndex)
         {
-            case Block.FWD_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y, cpos.z + 1); 
-            case Block.RIGHT_FACE_INDEX: return chunk.GetLightValue(cpos.x + 1, cpos.y, cpos.z); 
+            case Block.FWD_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y, cpos.z + 1);
+            case Block.RIGHT_FACE_INDEX: return chunk.GetLightValue(cpos.x + 1, cpos.y, cpos.z);
             case Block.BACK_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y, cpos.z - 1);
             case Block.LEFT_FACE_INDEX: return chunk.GetLightValue(cpos.x - 1, cpos.y, cpos.z);
-            case Block.UP_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y + 1, cpos.z); 
-            case Block.DOWN_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y - 1, cpos.z); 
+            case Block.UP_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y + 1, cpos.z);
+            case Block.DOWN_FACE_INDEX: return chunk.GetLightValue(cpos.x, cpos.y - 1, cpos.z);
             case Block.SURFACE_FACE_INDEX:
             case Block.CEILING_FACE_INDEX:
             default:
                 return chunk.GetLightValue(cpos);
+        }
+    }
+    public Vector3 GetLocalPosition(float x, float z)
+    {
+        Vector3 leftBottomCorner = pos.ToWorldSpace(), xdir, zdir;
+        float q = Block.QUAD_SIZE;
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX:
+                leftBottomCorner += new Vector3(0.5f, -0.5f, 0.5f) * q;
+                xdir = Vector3.left * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.RIGHT_FACE_INDEX:
+                leftBottomCorner += new Vector3(0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.forward * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.BACK_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.LEFT_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, 0.5f) * q;
+                xdir = Vector3.back * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.DOWN_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.back * q;
+                break;
+            case Block.CEILING_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.back * q;
+                break;
+            case Block.UP_FACE_INDEX:
+                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                xdir = Vector3.forward * q;
+                zdir = Vector3.up * q;
+                break;
+            case Block.SURFACE_FACE_INDEX:
+            default:
+                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.forward * q;
+                zdir = Vector3.up * q;
+                break;
+        }
+        float ir = PlaneExtension.INNER_RESOLUTION;
+        return leftBottomCorner + xdir * x / ir + zdir * z / ir;
+    }
+    public Vector3 GetLocalPosition(SurfaceRect sr)
+    {
+        return GetLocalPosition(sr.x + sr.size / 2f, sr.z + sr.size / 2f);
+    }
+    /// <summary>
+    /// returns in 0 - 1 
+    /// </summary>
+    public Vector2 WorldToMapPosition(Vector3 point)
+    {
+        Vector3 dir = point - GetLocalPosition(0, 0);
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX: return new Vector2(dir.x, dir.y);
+            case Block.RIGHT_FACE_INDEX: return new Vector2(dir.z, dir.y);
+            case Block.BACK_FACE_INDEX: return new Vector2(dir.x, dir.y);
+            case Block.LEFT_FACE_INDEX: return new Vector2(dir.z, dir.y);
+            case Block.DOWN_FACE_INDEX:
+            case Block.CEILING_FACE_INDEX:
+                return new Vector2(dir.x, dir.z);
+            case Block.SURFACE_FACE_INDEX:
+            case Block.UP_FACE_INDEX:
+            default:
+                return new Vector2(dir.x, dir.z);
         }
     }
 
@@ -299,7 +401,7 @@ public sealed class Plane
     {
         if (extension != null) extension.Annihilate(compensateStructures);
         else mainStructure?.SectionDeleted(myBlockExtension.myBlock.pos);
-        if (!GameMaster.sceneClearing & faceIndex == Block.SURFACE_FACE_INDEX) myBlockExtension.myBlock.myChunk.needSurfacesUpdate = true;
+        if (visible && !GameMaster.sceneClearing && faceIndex == Block.UP_FACE_INDEX) myBlockExtension.myBlock.myChunk.needSurfacesUpdate = true;
     }
 
     #region save-load system

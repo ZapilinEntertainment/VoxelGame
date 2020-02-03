@@ -126,7 +126,7 @@ public sealed class Storage : MonoBehaviour {
             else cpos = GameMaster.realMaster.colonyController.hq.basement.pos;
             var sblock = chunk.GetNearestUnoccupiedSurface(cpos);
             SECOND_TRY:
-            if (sblock != null && sblock.noEmptySpace != true)
+            if (sblock != null)
             {
                 int maxIndex = 0, sid = 0;
                 float maxValue = 0;
@@ -143,7 +143,7 @@ public sealed class Storage : MonoBehaviour {
                 int dumpingVal = 1000;
                 if (dumpingVal > maxValue) dumpingVal = (int)maxValue;
 
-                dumpingVal -= sblock.ScatterResources(SurfaceRect.full, ResourceType.GetResourceTypeById(maxIndex), dumpingVal);
+                dumpingVal -= sblock.GetExtension().ScatterResources(SurfaceRect.full, ResourceType.GetResourceTypeById(maxIndex), dumpingVal);
 
                 if (dumpingVal != 0)
                 {
@@ -155,7 +155,7 @@ public sealed class Storage : MonoBehaviour {
                     if (!secondTry)
                     {
                         secondTry = true;
-                        sblock = chunk.GetRandomSurface();
+                        sblock = chunk.GetRandomSurface(Block.UP_FACE_INDEX);
                         goto SECOND_TRY;
                     }
                 }

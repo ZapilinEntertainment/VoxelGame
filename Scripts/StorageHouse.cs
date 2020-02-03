@@ -41,7 +41,7 @@ public sealed class StorageHouse : Building {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) basement = null;
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
         Destroy(gameObject);

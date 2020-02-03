@@ -215,7 +215,7 @@ sealed public class Corn : Plant {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) basement = null;
         PreparePlantForDestruction(clearFromSurface, returnResources);
         if (addedToClassList)
         {

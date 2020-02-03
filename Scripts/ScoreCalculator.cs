@@ -111,36 +111,34 @@
         #endregion
 
         Chunk c = gm.mainChunk;
+        
         if (c != null)
         {
+            int r_id, n_id = ResourceType.Nothing.ID;
             foreach (var bd in c.blocks)
             {
                 Block b = bd.Value;
-                switch (b.type)
+                r_id = ResourceType.GetResourceTypeById(b.GetMaterialID()).ID;
+                if (r_id != n_id)
                 {
-                    case BlockType.Shapeless:
-                        // AWAITING
-                        break;
-                    case BlockType.Cube:
-                        if (b.material_id > 0)
-                            score += (b as CubeBlock).volume * CubeBlock.MAX_VOLUME * resourcesCosts[b.material_id];
-                        break;
-                    case BlockType.Surface:
-                    case BlockType.Cave:
-                        if (b.material_id > 0)
-                            score += Plane.INNER_RESOLUTION * Plane.INNER_RESOLUTION * resourcesCosts[b.material_id];
-                        Plane sb = b as Plane;
-                        if (sb.noEmptySpace != false)
-                        {
-                            foreach (Structure s in sb.structures)
-                            {
-                                score += structuresCost[s.ID];
-                            }
-                        }
-                        break;
+                    score += resourcesCosts[r_id] * b.GetVolume();
                 }
             }
             score += c.lifePower;
+        }
+        var slist = UnityEngine.Object.FindObjectsOfType<Structure>();
+        if (slist != null)
+        {
+            int ct = structuresCost.Length, id;
+            foreach (var s in slist)
+            {
+                id = s.ID;
+                if (id >= 0 & id < ct)
+                {
+                    score += structuresCost[id];
+                }
+            }
+            slist = null;
         }
 
         ColonyController colony = gm.colonyController;

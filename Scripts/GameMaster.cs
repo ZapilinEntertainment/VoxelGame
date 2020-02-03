@@ -241,7 +241,7 @@ public sealed class GameMaster : MonoBehaviour
                         break;
 
                     case GameStart.Headquarters:
-                        List<Plane> sblocks = mainChunk.surfaceBlocks;
+                        List<Plane> sblocks = mainChunk.GetSurfacesList();
                         Plane sb = sblocks[Random.Range(0, sblocks.Count)];
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
@@ -515,7 +515,7 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     lifepowerTimer = LIFEPOWER_TICK;
                     Plant.PlantUpdate();
-                    if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
+                    //if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
                     if (lifepowerUpdateEvent != null) lifepowerUpdateEvent();
                 }
                 timeGone += fixedTime;
@@ -785,7 +785,6 @@ public sealed class GameMaster : MonoBehaviour
             if (mainChunk != null) mainChunk.ClearChunk();
             // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
             Crew.Reset(); 
-            Grassland.ScriptReset();
             Expedition.GameReset();
             Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
             if (colonyController != null) colonyController.ResetToDefaults(); // подчищает все списки
@@ -1008,55 +1007,57 @@ public sealed class GameMaster : MonoBehaviour
     private void TestMethod()
     {
         Vector3Int ecpos = Vector3Int.zero;
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        byte ir = PlaneExtension.INNER_RESOLUTION;
+        var slist = mainChunk.GetSurfacesList();
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
 
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
             (s as WorkBuilding).AddWorkers(50);
         }
        
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
 
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.SCIENCE_LAB_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
 
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
         }
-        if (mainChunk.TryGetPlace(ref ecpos, Plane.INNER_RESOLUTION))
+        if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
-            s.SetBasement(mainChunk.surfaceBlocks[ecpos.z], PixelPosByte.zero);
+            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
             (s as Hangar).FORCED_MakeShuttle();
         }
 

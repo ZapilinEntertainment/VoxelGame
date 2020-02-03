@@ -50,9 +50,10 @@ public sealed class Settlement : House
                 center.pointsFilled = 0;
                 center.maxPoints = center.GetMaxPoints();
 
-                if (center.basement.noEmptySpace != false)
-                {                    
-                    foreach (var s in center.basement.structures)
+                if (center.basement.fulfillStatus != FullfillStatus.Empty)
+                {
+                    var slist = center.basement.GetStructuresList();
+                    foreach (var s in slist)
                     {
                         if (s.ID == SETTLEMENT_STRUCTURE_ID)
                         {
@@ -151,7 +152,8 @@ public sealed class Settlement : House
         isEnergySupplied = x;
         if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
         ChangeRenderersView(x & isActive);
-        foreach (var s in basement.structures)
+        var slist = basement.GetStructuresList();
+        foreach (var s in slist)
         {
             if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
             {
@@ -219,17 +221,18 @@ public sealed class Settlement : House
         energySurplus = GetEnergySurplus(ID);
         float onePartEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
 
-        int x = Plane.INNER_RESOLUTION / SettlementStructure.CELLSIZE, xpos, zpos;
+        int x = PlaneExtension.INNER_RESOLUTION / SettlementStructure.CELLSIZE, xpos, zpos;
         var map = new SettlementStructureType[x, x];
         int centerPos = x / 2 - 1;
         map[centerPos, centerPos] = SettlementStructureType.SystemBlocked;
         map[centerPos, centerPos + 1] = SettlementStructureType.SystemBlocked;
         map[centerPos + 1, centerPos] = SettlementStructureType.SystemBlocked;
         map[centerPos + 1, centerPos + 1] = SettlementStructureType.SystemBlocked;
-        if (basement.noEmptySpace != false)
+        if (basement.fulfillStatus != FullfillStatus.Empty)
         {
             SettlementStructure s2;
-            foreach (var s in basement.structures)
+            var slist = basement.GetStructuresList();
+            foreach (var s in slist)
             {
                 if (s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
@@ -872,10 +875,11 @@ public sealed class Settlement : House
         energySurplus = GetEnergySurplus(ID);
         float onePartEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
 
-        if (basement.noEmptySpace != false)
+        if (basement.fulfillStatus != FullfillStatus.Empty)
         {
             SettlementStructure s2;
-            foreach (var s in basement.structures)
+            var slist = basement.GetStructuresList();
+            foreach (var s in slist)
             {
                 if (s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
@@ -999,7 +1003,8 @@ public sealed class Settlement : House
         else destroyed = true;
         if (basement != null)
         {
-            foreach (var s in basement.structures)
+            var slist = basement.GetStructuresList();
+            foreach (var s in slist)
             {
                 if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
                 {

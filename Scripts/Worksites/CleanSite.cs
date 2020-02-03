@@ -6,7 +6,7 @@ public class CleanSite : Worksite {
 	const int START_WORKERS_COUNT = 10;
     // public const int MAX_WORKERS = 32
 
-    public CleanSite(Plane p, byte i_faceIndex, bool f_diggingMission) : base (p, i_faceIndex)
+    public CleanSite(Plane p, bool f_diggingMission) : base (p)
     {        
         if (sign == null) sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/ClearSign")).GetComponent<WorksiteSign>();
         sign.worksite = this;
@@ -30,7 +30,7 @@ public class CleanSite : Worksite {
             if (diggingMission)
             {
                 workplace.RemoveWorksiteLink(this);
-                DigSite ds = new DigSite(workplace, faceIndex, true);
+                DigSite ds = new DigSite(workplace, true);
                 TransferWorkers(this, ds);
                 if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
             }
@@ -117,7 +117,7 @@ public class CleanSite : Worksite {
 			return null;
 		}
         var pos = workplace.pos;
-        var data = new List<byte>() { (byte)WorksiteType.CleanSite, pos.x, pos.y, pos.z, faceIndex,
+        var data = new List<byte>() { (byte)WorksiteType.CleanSite, pos.x, pos.y, pos.z, workplace.faceIndex,
             diggingMission ? (byte)1 : (byte)0
         };
         data.AddRange(SerializeWorksite());
@@ -131,7 +131,7 @@ public class CleanSite : Worksite {
         Plane plane = null;
         if (chunk.GetBlock(data[0], data[1], data[2])?.TryGetPlane(data[3], out plane) == true)
         {
-            var cs = new CleanSite(plane, data[3], data[4] == 1);
+            var cs = new CleanSite(plane, data[4] == 1);
             cs.LoadWorksiteData(fs);
             return cs;
         }

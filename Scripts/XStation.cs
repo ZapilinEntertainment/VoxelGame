@@ -170,7 +170,7 @@ public sealed class XStation : WorkBuilding {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (current == this) current = null;
         if (indicatorPrepared & markerEnabled)

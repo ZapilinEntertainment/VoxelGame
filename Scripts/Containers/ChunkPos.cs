@@ -8,13 +8,43 @@
     }
     public ChunkPos(int xpos, int ypos, int zpos)
     {
-        if (xpos < 0) xpos = 0; if (ypos < 0) ypos = 0; if (zpos < 0) zpos = 0;
+        if (xpos < 0) xpos = 255; if (ypos < 0) ypos = 255; if (zpos < 0) zpos = 255;
         x = (byte)xpos; y = (byte)ypos; z = (byte)zpos;
     }
+
     public UnityEngine.Vector3 ToWorldSpace()
     {
         return new UnityEngine.Vector3(x, y, z) * Block.QUAD_SIZE;
     }
+    public ChunkPos OneBlockHigher()
+    {
+        return new ChunkPos(x, y + 1, z);
+    }
+    public ChunkPos TwoBlocksHigher()
+    {
+        return new ChunkPos(x, y + 2, z);
+    }
+    public ChunkPos OneBlockForward()
+    {
+        return new ChunkPos(x, y, z + 1);
+    }
+    public ChunkPos OneBlockRight()
+    {
+        return new ChunkPos(x + 1, y, z);
+    }
+    public ChunkPos OneBlockBack()
+    {
+        return new ChunkPos(x, y, z - 1);
+    }
+    public ChunkPos OneBlockLeft()
+    {
+        return new ChunkPos(x - 1, y, z);
+    }
+    public ChunkPos OneBlockDown()
+    {
+        return new ChunkPos(x, y - 1, z);
+    }
+
     public static bool operator ==(ChunkPos lhs, ChunkPos rhs) { return lhs.Equals(rhs); }
     public static bool operator !=(ChunkPos lhs, ChunkPos rhs) { return !(lhs.Equals(rhs)); }
     public override bool Equals(object obj)

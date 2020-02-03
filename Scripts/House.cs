@@ -31,9 +31,9 @@ public class House : Building {
             if (!GameMaster.loading)
             {
                 // # set blockers
-                int x = basement.pos.x, y = basement.pos.y, z = basement.pos.z;
-                basement.myChunk.BlockByStructure(x, y + 1, z, this);
-                basement.myChunk.BlockByStructure(x, y + 2, z, this);
+                var bpos = basement.pos;
+                basement.myChunk.AddBlock(bpos.OneBlockHigher(), this, true, true, true);
+                basement.myChunk.AddBlock(bpos.TwoBlocksHigher(), this, true, true, true);
                 //
             }
             else
@@ -52,9 +52,9 @@ public class House : Building {
         if (subscribedToRestoreBlockersUpdate)
         {
             // # set blockers
-            int x = basement.pos.x, y = basement.pos.y, z = basement.pos.z;
-            basement.myChunk.BlockByStructure(x, y + 1, z, this);
-            basement.myChunk.BlockByStructure(x, y + 2, z, this);
+            var bpos = basement.pos;
+            basement.myChunk.AddBlock(bpos.OneBlockHigher(), this, true, true, true);
+            basement.myChunk.AddBlock(bpos.TwoBlocksHigher(), this, true, true, true);
             //
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
@@ -70,6 +70,16 @@ public class House : Building {
 		ChangeRenderersView(x);
 	}
 
+    override public bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    {
+        if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
+        {
+            reason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
+            return false;
+        }
+        else return true;
+    }
+
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
@@ -78,11 +88,9 @@ public class House : Building {
         GameMaster.realMaster.colonyController.DeleteHousing(this);
         if (ID == HOUSING_MAST_6_ID & basement != null)
         {
-            int x = basement.pos.x, y = basement.pos.y, z = basement.pos.z;
-            var b = basement.myChunk.GetBlock(x, y + 1, z);
-            if (b != null && b.type == BlockType.Shapeless && b.mainStructure == this) basement.myChunk.DeleteBlock(new ChunkPos(x, y + 1, z));
-            b = basement.myChunk.GetBlock(x, y + 2, z);
-            if (b != null && b.type == BlockType.Shapeless && b.mainStructure == this) basement.myChunk.DeleteBlock(new ChunkPos(x, y + 2, z));
+            var bpos = basement.pos;
+            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.RemoveMainStructureLink(this);
+            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.RemoveMainStructureLink(this);
         }
         if (subscribedToRestoreBlockersUpdate)
         {

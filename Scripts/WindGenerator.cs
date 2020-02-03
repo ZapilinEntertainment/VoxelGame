@@ -81,7 +81,7 @@ public class WindGenerator : Building {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) { basement = null; }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (subscribedToWindUpdate)
         {

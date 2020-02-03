@@ -291,23 +291,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                             if (hitobject.tag == Chunk.BLOCK_COLLIDER_TAG)
                             {
                                 var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
-                                Block b = crh.block;
-                                if (b != null)
-                                {
-                                    if (b.type == BlockType.Cube) (b as CubeBlock).Dig((int)damage, true);
-                                    else
-                                    {
-                                        var sb = b as Plane;
-                                        if (sb != null)
-                                        {
-                                            sb.EnvironmentalStrike(rh.point, 2, damage);
-                                        }
-                                        else
-                                        {
-                                            if (b.blockingStructure != null) b.blockingStructure.ApplyDamage(damage);
-                                        }
-                                    }
-                                }
+                                crh.block?.EnvironmentalStrike(crh.faceIndex, rh.point, 2, damage);
                             }
                         }
                     }

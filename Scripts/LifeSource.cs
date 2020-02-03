@@ -11,18 +11,13 @@ public sealed class LifeSource : Structure {
     override public void SetBasement(Plane sb, PixelPosByte pos) {
 		if (sb == null) return;
 		SetStructureData(sb,pos);        
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.lifepowerUpdateEvent += LifepowerUpdate;
-            subscribedToUpdate = true;
-        }
         if (!GameMaster.loading) { 
             // #blocking
             Chunk chunk = basement.myChunk;
             byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
             if (dependentBlocks != null)
             {
-                chunk.ClearBlocksList(dependentBlocks, true);
+                chunk.ClearBlocksList(this, dependentBlocks, true);
             }
             dependentBlocks = new List<Block>();
             var positions = new List<ChunkPos>
@@ -55,7 +50,7 @@ public sealed class LifeSource : Structure {
             byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
             if (dependentBlocks != null)
             {
-                chunk.ClearBlocksList(dependentBlocks, true);
+                chunk.ClearBlocksList(this, dependentBlocks, true);
             }
             dependentBlocks = new List<Block>();
             var positions = new List<ChunkPos>
@@ -74,25 +69,11 @@ public sealed class LifeSource : Structure {
         }
     }
 
-    public void LifepowerUpdate () {
-        tick++;
-        basement.myChunk.AddLifePower(lifepowerPerTick);
-        //if (tick == MAXIMUM_TICKS & !destroyed)
-        //{ // dry
-        //    Annihilate(true, false, false);
-        //}
-	}
-
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
         PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.lifepowerUpdateEvent -= LifepowerUpdate;
-            subscribedToUpdate = false;
-        }
         if (basement != null )
         {
             if (GameMaster.realMaster.gameMode != GameMode.Editor)
@@ -117,7 +98,7 @@ public sealed class LifeSource : Structure {
             }
             if (dependentBlocks != null)
             {
-                basement.myChunk.ClearBlocksList(dependentBlocks, true);
+                basement.myChunk.ClearBlocksList(this, dependentBlocks, true);
             }
         }
         if (subscribedToRestoreBlockersUpdate)

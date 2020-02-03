@@ -102,7 +102,7 @@ public sealed class QuantumTransmitter : Building {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) basement = null;
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (transmittersList.Contains(this)) transmittersList.Remove(this);
         if (transmissionID != NO_TRANSMISSION_VALUE) Expedition.ChangeTransmissionStatus(transmissionID, null);

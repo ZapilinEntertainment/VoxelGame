@@ -67,9 +67,9 @@ public sealed class Zeppelin : MonoBehaviour {
                     //storage
                     s = Structure.GetStructureByID(Structure.STORAGE_0_ID);
                     Plane sb = (landingByZAxis == true) ?
-                        landingSurface.myChunk.GetBlock(landingSurface.pos.x, landingSurface.pos.y, landingSurface.pos.z + 1) as Plane
+                        landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockForward())
                         :
-                        landingSurface.myChunk.GetBlock(landingSurface.pos.x + 1, landingSurface.pos.y, landingSurface.pos.z) as Plane;
+                        landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockRight());
                     s.SetBasement(sb, PixelPosByte.zero);
                     
                     GameMaster.realMaster.SetStartResources();
@@ -94,26 +94,26 @@ public sealed class Zeppelin : MonoBehaviour {
                 Chunk chunk = GameMaster.realMaster.mainChunk;
                 ChunkRaycastHit crh = chunk.GetBlock(rh.point, rh.normal);                
                 Block b = crh.block;
-                if (b != null && crh.faceIndex == 6)
+                if (b != null && crh.faceIndex == Block.UP_FACE_INDEX)
                 {
                     landingSurface = null;
                     landingByZAxis = null;                    
-                    Block minusTwoBlock, minusOneBlock, plusOneBlock, plusTwoBlock;
+                    Plane minusTwoBlock, minusOneBlock, plusOneBlock, plusTwoBlock;
                     int x = b.pos.x, y = b.pos.y, z = b.pos.z;
                     bool[] suitable = new bool[5];
                     suitable[2] = true;
                     // direction 0 - fwd    
                     {
-                        minusOneBlock = chunk.GetBlock(x, y, z - 1); suitable[1] = (minusOneBlock != null) && (minusOneBlock is Plane);
-                        minusTwoBlock = chunk.GetBlock(x, y, z - 2); suitable[0] = (minusTwoBlock != null) && (minusTwoBlock is Plane);
-                        plusOneBlock = chunk.GetBlock(x, y, z + 1); suitable[3] = (plusOneBlock != null) && (plusOneBlock is Plane);
-                        plusTwoBlock = chunk.GetBlock(x, y, z + 2); suitable[4] = (plusTwoBlock != null) && (plusTwoBlock is Plane);
+                        minusOneBlock = chunk.GetSurfacePlane(x, y, z - 1); suitable[1] = (minusOneBlock != null) ;
+                        minusTwoBlock = chunk.GetSurfacePlane(x, y, z - 2); suitable[0] = (minusTwoBlock != null);
+                        plusOneBlock = chunk.GetSurfacePlane(x, y, z + 1); suitable[3] = (plusOneBlock != null);
+                        plusTwoBlock = chunk.GetSurfacePlane(x, y, z + 2); suitable[4] = (plusTwoBlock != null);
                         if (suitable[1])
                         {
                             if (suitable[0])
                             {
                                 landingByZAxis = true;
-                                landingSurface = minusOneBlock as Plane;
+                                landingSurface = minusOneBlock;
                                 goto DRAW_LINE;
                             }
                             else
@@ -121,7 +121,7 @@ public sealed class Zeppelin : MonoBehaviour {
                                 if (suitable[3])
                                 {
                                     landingByZAxis = true;
-                                    landingSurface = b as Plane;
+                                    landingSurface = b.GetPlane(crh.faceIndex);
                                     goto DRAW_LINE;
                                 }
                             }
@@ -141,10 +141,10 @@ public sealed class Zeppelin : MonoBehaviour {
                     }
                     //direction 2 - right
                     {
-                        minusOneBlock = chunk.GetBlock(x - 1, y, z); suitable[1] = (minusOneBlock != null) && (minusOneBlock is Plane);
-                        minusTwoBlock = chunk.GetBlock(x - 2, y, z - 2); suitable[0] = (minusTwoBlock != null) && (minusTwoBlock is Plane);
-                        plusOneBlock = chunk.GetBlock(x + 1, y, z); suitable[3] = (plusOneBlock != null) && (plusOneBlock is Plane);
-                        plusTwoBlock = chunk.GetBlock(x + 2, y, z + 2); suitable[4] = (plusTwoBlock != null) && (plusTwoBlock is Plane);
+                        minusOneBlock = chunk.GetSurfacePlane(x - 1, y, z); suitable[1] = (minusOneBlock != null) && (minusOneBlock is Plane);
+                        minusTwoBlock = chunk.GetSurfacePlane(x - 2, y, z - 2); suitable[0] = (minusTwoBlock != null) && (minusTwoBlock is Plane);
+                        plusOneBlock = chunk.GetSurfacePlane(x + 1, y, z); suitable[3] = (plusOneBlock != null) && (plusOneBlock is Plane);
+                        plusTwoBlock = chunk.GetSurfacePlane(x + 2, y, z + 2); suitable[4] = (plusTwoBlock != null) && (plusTwoBlock is Plane);
                         if (suitable[1])
                         {
                             if (suitable[0])
@@ -158,7 +158,7 @@ public sealed class Zeppelin : MonoBehaviour {
                                 if (suitable[3])
                                 {
                                     landingByZAxis = false;
-                                    landingSurface = b as Plane;
+                                    landingSurface = b.GetPlane(crh.faceIndex);
                                     goto DRAW_LINE;
                                 }
                             }

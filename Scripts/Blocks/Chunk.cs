@@ -113,7 +113,7 @@ public sealed partial class Chunk : MonoBehaviour
                 }
             }
         }
-        PrepareAllPlanes();
+        RecalculateSurfacesList();
         if (surfaces != null & GameMaster.realMaster.gameMode != GameMode.Editor)
         {
            GameMaster.geologyModule.SpreadMinerals(surfaces);
@@ -121,181 +121,19 @@ public sealed partial class Chunk : MonoBehaviour
         RenderDataFullRecalculation();
         FollowingCamera.main.WeNeedUpdate();
     }
-    private void PrepareAllPlanes() 
-    {
-        if (blocks != null)
-        {
-            Block[,,] blockArray = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-            Block b;
-            foreach(var fb in blocks)
-            {
-                b = fb.Value;
-                var cpos = b.pos;
-                blockArray[cpos.x, cpos.y, cpos.z] = b;
-            }
-            bool transparency = true;
-            Block prevBlock = null;
-            //left to right
-            for (int x = 0; x < CHUNK_SIZE; x++)
-            {
-                for (int y = 0; y < CHUNK_SIZE; y++)
-                {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
-                    {
-                        b = blockArray[x, y, z];
-                        if (b == null)
-                        {
-                            transparency = true;
-                            if (prevBlock != null)
-                            {
-                                prevBlock.InitializePlane(Block.RIGHT_FACE_INDEX);
-                                prevBlock = null;
-                            }
-                            continue;
-                        }
-                        else
-                        {
-                            if (transparency)
-                            {
-                                if (b.InitializePlane(Block.LEFT_FACE_INDEX)) // возвращает true, если скроет следующий блок
-                                {
-                                    transparency = false; 
-                                    prevBlock?.DeactivatePlane(Block.RIGHT_FACE_INDEX);
-                                }
-                                else
-                                {
-                                    transparency = true;
-                                    prevBlock?.InitializePlane(Block.RIGHT_FACE_INDEX);
-                                }
-                            }
-                            else
-                            {
-                                b.DeactivatePlane(Block.LEFT_FACE_INDEX);
-                            }
-                            prevBlock = b;
-                        }
-                    }
-                    if (prevBlock != null)
-                    {
-                        prevBlock.InitializePlane(Block.RIGHT_FACE_INDEX);
-                        prevBlock = null;
-                    }
-                    transparency = true;
-                }
-            }
-            //back to fwd
-            for (int z = 0; z < CHUNK_SIZE; z++)
-            {
-                for (int y = 0; y < CHUNK_SIZE; y++)
-                {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
-                    {
-                        b = blockArray[x, y, z];
-                        if (b == null)
-                        {
-                            transparency = true;
-                            if (prevBlock != null)
-                            {
-                                prevBlock.InitializePlane(Block.FWD_FACE_INDEX);
-                                prevBlock = null;
-                            }
-                            continue;
-                        }
-                        else
-                        {
-                            if (transparency)
-                            {
-                                if (b.InitializePlane(Block.BACK_FACE_INDEX)) // возвращает true, если скроет следующий блок
-                                {
-                                    transparency = false;
-                                    prevBlock?.DeactivatePlane(Block.FWD_FACE_INDEX);
-                                }
-                                else
-                                {
-                                    transparency = true;
-                                    prevBlock?.InitializePlane(Block.FWD_FACE_INDEX);
-                                }
-                            }
-                            else
-                            {
-                                b.DeactivatePlane(Block.BACK_FACE_INDEX);
-                            }
-                            prevBlock = b;
-                        }
-                    }
-                    if (prevBlock != null)
-                    {
-                        prevBlock.InitializePlane(Block.FWD_FACE_INDEX);
-                        prevBlock = null;
-                    }
-                    transparency = true;
-                }
-            }
-            //down to up
-            for (int y = 0; y < CHUNK_SIZE; y++)
-            {
-                for (int z = 0; z < CHUNK_SIZE; z++)
-                {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
-                    {
-                        b = blockArray[x, y, z];
-                        if (b == null)
-                        {
-                            transparency = true;
-                            if (prevBlock != null)
-                            {
-                                prevBlock.InitializePlane(Block.UP_FACE_INDEX);
-                                prevBlock = null;
-                            }
-                            continue;
-                        }
-                        else
-                        {
-                            if (transparency)
-                            {
-                                if (b.InitializePlane(Block.DOWN_FACE_INDEX)) // возвращает true, если скроет следующий блок
-                                {
-                                    transparency = false;
-                                    prevBlock?.DeactivatePlane(Block.UP_FACE_INDEX);
-                                }
-                                else
-                                {
-                                    transparency = true;
-                                    prevBlock?.InitializePlane(Block.UP_FACE_INDEX);
-                                }
-                            }
-                            else
-                            {
-                                b.DeactivatePlane(Block.DOWN_FACE_INDEX);
-                            }
-                            prevBlock = b;
-                        }
-                    }
-                    if (prevBlock != null)
-                    {
-                        prevBlock.InitializePlane(Block.UP_FACE_INDEX);
-                        prevBlock = null;
-                    }
-                    transparency = true;
-                }
-            }
-
-            blockArray = null;
-            RecalculateSurfacesList();
-        }
-    }
     private void RecalculateSurfacesList()
     {
         if (blocks != null)
         {
-            byte upcode = Block.SURFACE_FACE_INDEX;
-            Block b;
+            byte upcode = Block.UP_FACE_INDEX;
             Plane p = null;
             if (surfaces == null) surfaces = new List<Plane>(); else surfaces.Clear();
             foreach (var fb in blocks)
             {
-                b = fb.Value;
-                if (b.pos.y != Chunk.CHUNK_SIZE - 1 && b.TryGetPlane(upcode, out p)) surfaces.Add(p);
+                if (fb.Value.TryGetPlane(upcode, out p))
+                {
+                    if (p.isSuitableForChanging()) surfaces.Add(p);
+                }
             }
             if (surfaces.Count == 0) surfaces = null;
         }
@@ -303,15 +141,28 @@ public sealed partial class Chunk : MonoBehaviour
         needSurfacesUpdate = false;
     }
 
-    private Block AddBlock_NoCheck(ChunkPos f_pos, Structure mainStructure)
+    public Block AddBlock(ChunkPos f_pos, Structure main_structure,bool blockingMode, bool forced, bool compensateStructures)
     {
-        var b = new Block(this, f_pos, mainStructure);
+        int x = f_pos.x, y = f_pos.y, z = f_pos.z;
+        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
+        //
+        Block b = GetBlock(x, y, z);
+        if (b == null) return AddBlock_NoCheck(f_pos, main_structure, blockingMode);
+        else
+        {
+            b.SetMainStructure(main_structure, blockingMode, forced, compensateStructures);
+            if (forced) return b; else return null;
+        }
+    } 
+    private Block AddBlock_NoCheck(ChunkPos f_pos, Structure mainStructure, bool blockingMode)
+    {
+        var b = new Block(this, f_pos, mainStructure, blockingMode);
         if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
         blocks.Add(f_pos, b);
         if (PoolMaster.useIlluminationSystem)  RecalculateIlluminationAtPoint(b.pos);
         return b;
     }
-    private Block AddBlock(ChunkPos f_pos, Block.BlockMaterialsList bml, bool i_naturalGeneration )
+    private Block AddBlock(ChunkPos f_pos, BlockMaterialsList bml, bool i_naturalGeneration, bool redrawCall )
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
@@ -320,18 +171,18 @@ public sealed partial class Chunk : MonoBehaviour
         if (prv != null)
         {
             if (bml.GetExistenceMask() == 0) prv.Annihilate(!i_naturalGeneration);
-            else prv.RebuildBlock(bml, i_naturalGeneration, false);
+            else prv.RebuildBlock(bml, i_naturalGeneration, false, redrawCall);
             return prv;
         }
         else
         {
-            var b = new Block(this, f_pos, bml, i_naturalGeneration);
+            var b = new Block(this, f_pos, bml, i_naturalGeneration, redrawCall);
             blocks.Add(f_pos, b);
             if (PoolMaster.useIlluminationSystem)   RecalculateIlluminationAtPoint(b.pos);
             return b;
         }
     }
-    public Block AddBlock(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration)
+    public Block AddBlock(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
@@ -339,19 +190,15 @@ public sealed partial class Chunk : MonoBehaviour
         Block b = GetBlock(x, y, z);
         if (b != null)
         {
-            b.ChangeMaterial(i_materialID, i_naturalGeneration);
+            b.ChangeMaterial(i_materialID, i_naturalGeneration, redrawCall);
             return b;
         }
         else
         {
-            if (i_materialID == PoolMaster.NO_MATERIAL_ID) return AddBlock_NoCheck(f_pos, null);
-            else
-            {
-                b = new Block(this, f_pos, i_materialID, i_naturalGeneration);
-                if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
-                blocks.Add(f_pos, b);
-                if (PoolMaster.useIlluminationSystem)  RecalculateIlluminationAtPoint(b.pos);
-            }
+            b = new Block(this, f_pos, i_materialID, i_naturalGeneration);
+            if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
+            blocks.Add(f_pos, b);
+            if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
         }
 
         RecalculateVisibilityAtPoint(x, y, z);
@@ -501,6 +348,7 @@ public sealed partial class Chunk : MonoBehaviour
         return new ChunkRaycastHit(b, face);
     }
 
+    #region taking surfaces
     public List<Plane> GetSurfacesList() { return surfaces; }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
@@ -563,6 +411,24 @@ public sealed partial class Chunk : MonoBehaviour
             else return null;
         }
     }
+    public Plane GetSurfacePlane(int x, int y, int z)
+    {
+        if (x < 0 || y < 0 || z < 0) return null;
+        else return GetSurfacePlane(new ChunkPos(x, y, z));
+    }
+    public Plane GetSurfacePlane(ChunkPos cpos)
+    {
+        if (surfaces == null) return null;
+        else
+        {
+            foreach (var s in surfaces)
+            {
+                if (s.pos == cpos) return s;
+            }
+            return null;
+        }
+    }
+    #endregion
     /// <summary>
     /// Seek a position for structure somewhere. Returns (xpos, zpos, surface_block_index)
     /// </summary>
@@ -668,7 +534,7 @@ public sealed partial class Chunk : MonoBehaviour
             if (b != null) continue;
             else
             {
-                dependentBlocks.Add(AddBlock_NoCheck(pos, s));
+                dependentBlocks.Add(AddBlock_NoCheck(pos, s, true));
             }
         }
     }
@@ -719,7 +585,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int z = 0; z < CHUNK_SIZE; z++)
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
-                        bk = new Block(this, cpos, sender);
+                        bk = new Block(this, cpos, sender, true);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -736,7 +602,7 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
                        
-                        bk = new Block(this, cpos, sender);
+                        bk = new Block(this, cpos, sender, true);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -863,7 +729,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z < CHUNK_SIZE; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);
+                                bk = new Block(this, cpos, sender, true);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -875,7 +741,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int z = zStart; z < CHUNK_SIZE; z++)
                     {
                         var cpos = new ChunkPos(xStart, yStart, z);
-                        bk = new Block(this, cpos, sender);
+                        bk = new Block(this, cpos, sender, true);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -891,7 +757,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z < zEnd; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);
+                                bk = new Block(this, cpos, sender, true);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -903,7 +769,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int x = xStart; x < CHUNK_SIZE; x++)
                     {
                         var cpos = new ChunkPos(x, yStart, zStart);
-                        bk = new Block(this, cpos, sender);
+                        bk = new Block(this, cpos, sender, true);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -919,7 +785,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z >= 0; z--)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);
+                                bk = new Block(this, cpos, sender, true);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -931,7 +797,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int z = zStart; z >= 0; z--)
                     {
                         var cpos = new ChunkPos(xStart, yStart, z);
-                        bk = new Block(this, cpos, sender);
+                        bk = new Block(this, cpos, sender, true);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -947,7 +813,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z < zEnd; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender);
+                                bk = new Block(this, cpos, sender, true);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -959,7 +825,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int x = xStart; x >= 0; x--)
                     {
                         var cpos = new ChunkPos(x, yStart, zStart);
-                        bk = new Block(this, cpos, sender);
+                        bk = new Block(this, cpos, sender, true);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -969,14 +835,14 @@ public sealed partial class Chunk : MonoBehaviour
         chunkDataUpdateRequired = true;
         return true;
     }
-    public void ClearBlocksList(List<Block> list, bool clearMainStructureField)
+    public void ClearBlocksList(Structure s, List<Block> list, bool clearMainStructureField)
     {
         bool actions = false;
         foreach (Block b in list)
         {
             if (b != null)
             {
-                if (clearMainStructureField) b.ResetMainStructure();
+                if (clearMainStructureField) b.RemoveMainStructureLink(s);
                 // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
                 blocks.Remove(b.pos);
                 b.Annihilate(false);                

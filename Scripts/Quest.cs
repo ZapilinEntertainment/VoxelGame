@@ -383,11 +383,12 @@ public class Quest
                         break;
                     case ProgressQuestID.Progress_SecondFloor:
                         {
+                            /*
                             List<ChunkPos> checkForBuildings = new List<ChunkPos>();
-                            foreach (Plane sb in GameMaster.realMaster.mainChunk.surfaceBlocks)
+                            var slist = GameMaster.realMaster.mainChunk.GetSurfacesList();
+                            foreach (Plane sb in slist)
                             {
                                 if (sb == null || sb.noEmptySpace == false) continue;
-                                else
                                 {
                                     foreach (Structure s in sb.structures)
                                     {
@@ -423,6 +424,7 @@ public class Quest
                                 stepsFinished[0] = true;
                             }
                             else stepsFinished[0] = false;
+                            */
                         }
                         break;
                     case ProgressQuestID.Progress_FoodStocks:
@@ -609,7 +611,7 @@ public class Quest
                     case ProgressQuestID.Progress_Tier3: if (lvl == 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_4MiniReactors: if (lvl == 4) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_100Fuel: if (resources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(q); break;
-                    //case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_CoveredFarm:
                     case ProgressQuestID.Progress_CoveredLumbermill:
@@ -617,7 +619,7 @@ public class Quest
                     case ProgressQuestID.Progress_FirstExpedition: if (lvl > 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier5: if (lvl == 4) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_FactoryComplex: if (lvl > 4) acceptableQuest.Add(q); break;
-                    case ProgressQuestID.Progress_SecondFloor: if (lvl > 2) acceptableQuest.Add(q); break;
+                    //case ProgressQuestID.Progress_SecondFloor: if (lvl > 2) acceptableQuest.Add(q); break;
                 }
             }
             if (acceptableQuest.Count > 0)

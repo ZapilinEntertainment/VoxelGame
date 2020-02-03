@@ -165,8 +165,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		else {
 			GatherSite gs = observingSurface.worksite as GatherSite;
 			if (gs == null) {
-				gs = new GatherSite();
-				gs.Set(observingSurface);
+				gs = new GatherSite(observingSurface);
                 UIController.current.ShowWorksite(gs);
 			}
 			else gs.StopWork();
@@ -182,8 +181,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 CleanSite cs = observingSurface.worksite as CleanSite;
                 if (cs == null)
                 {
-                    cs = new CleanSite();
-                    cs.Set(observingSurface, true);
+                    cs = new CleanSite(observingSurface, true);
                     UIController.current.ShowWorksite(cs);
                 }
                 else
@@ -207,7 +205,7 @@ public sealed class UISurfacePanelController : UIObserver {
         }
         else
         {
-            if (observingSurface.noEmptySpace != false)
+            if (observingSurface.fulfillStatus != FullfillStatus.Empty)
             {
                 if (status_gather != false)
                 {
@@ -317,7 +315,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     int lastUsedIndex = 0;                    
                     foreach (ResourceType rt in ResourceType.materialsForCovering)
                     {
-                        if (rt.ID == observingSurface.material_id) continue;
+                        if (rt.ID == observingSurface.materialID) continue;
                         t = buttonsKeeper.GetChild(lastUsedIndex);
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
@@ -440,7 +438,7 @@ public sealed class UISurfacePanelController : UIObserver {
         costPanel.transform.GetChild(0).GetChild(indexes.x).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = costPanel.transform.GetChild(2);// build button
         t.gameObject.SetActive(true);
-        t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? Plane.INNER_RESOLUTION * Plane.INNER_RESOLUTION : CubeBlock.MAX_VOLUME ) + ')';
+        t.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build) + " (" + (costPanelMode == CostPanelMode.SurfaceMaterialChanging ? PlaneExtension.INNER_RESOLUTION * PlaneExtension.INNER_RESOLUTION : BlockExtension.MAX_VOLUME ) + ')';
     }
     public void CostPanel_Build()
     {        
@@ -448,9 +446,9 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             case CostPanelMode.SurfaceMaterialChanging:
                     ResourceType rt = ResourceType.GetResourceTypeById(costPanel_selectedButton.y);
-                if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, Plane.INNER_RESOLUTION * Plane.INNER_RESOLUTION) }))
+                if (colony.storage.CheckBuildPossibilityAndCollectIfPossible(new ResourceContainer[] { new ResourceContainer(rt, PlaneExtension.INNER_RESOLUTION * PlaneExtension.INNER_RESOLUTION) }))
                 {
-                    observingSurface.ReplaceMaterial(rt.ID);
+                    observingSurface.ChangeMaterial(rt.ID, true);
                     costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
                 }
                 else GameLogUI.NotEnoughResourcesAnnounce();
@@ -476,8 +474,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
                 break;
             case CostPanelMode.BlockBuilding:
-                BlockBuildingSite bbs = new BlockBuildingSite ();
-                bbs.Set(observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
+                BlockBuildingSite bbs = new BlockBuildingSite (observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
                 SetCostPanelMode(CostPanelMode.Disabled);
                 UIController.current.ShowWorksite(bbs);
                 break;
@@ -581,7 +578,7 @@ public sealed class UISurfacePanelController : UIObserver {
     {
         surfaceBuildingPanel.SetActive(false);
         constructionPlane.transform.position = observingSurface.pos.ToWorldSpace() + Vector3.down * 0.45f;   
-        constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetMapTexture());
+        constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetExtension().GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
         if (chosenStructure != null) FollowingCamera.main.CameraRotationBlock(false);
@@ -650,123 +647,12 @@ public sealed class UISurfacePanelController : UIObserver {
 		Building bd = chosenStructure as Building;
         if (bd != null)
         {
-            bool acceptable = true;
             string reason = "UNACCEPTABLE!";
+            bool acceptable = true;
+           
             if (bd.specialBuildingConditions)
             {
-                int mid = observingSurface.material_id;
-                switch (bd.ID)
-                {
-                    case Structure.FARM_1_ID:
-                    case Structure.FARM_2_ID:
-                    case Structure.FARM_3_ID:
-                    case Structure.LUMBERMILL_1_ID:
-                    case Structure.LUMBERMILL_2_ID:
-                    case Structure.LUMBERMILL_3_ID:                        
-                        if ( !Grassland.MaterialIsLifeSupporting(observingSurface.material_id) ) {
-                            acceptable = false;
-                            reason = Localization.GetRestrictionPhrase(RestrictionKey.UnacceptableSurfaceMaterial);
-                        }
-                        break;
-                    case Structure.CONNECT_TOWER_6_ID:
-                    case Structure.HOTEL_BLOCK_6_ID:
-                    case Structure.HOUSING_MAST_6_ID:
-                    //case Structure.CONTROL_CENTER_6_ID:
-                        if (mid != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
-                        {
-                            acceptable = false;
-                            reason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
-                        }
-                        break;
-                    case Structure.OBSERVATORY_ID:
-                        {
-                            if (Observatory.alreadyBuilt)
-                            {
-                                acceptable = false;
-                                reason = Localization.GetRefusalReason(RefusalReason.AlreadyBuilt);
-                            }
-                            else
-                            {
-                                if (observingSurface.pos.y != Chunk.CHUNK_SIZE - 1)
-                                {
-                                    acceptable = false;
-                                    reason = Localization.GetRefusalReason(RefusalReason.UnacceptableHeight);
-                                }
-                                else
-                                {
-                                    if (observingSurface.type == BlockType.Surface)
-                                    {
-                                        var blocks = observingSurface.myChunk.blocks;
-                                        ChunkPos pos = observingSurface.pos;
-                                        int size = Chunk.CHUNK_SIZE;
-
-                                        int i = 0;
-                                        if (pos.y < size - 1)
-                                        {
-                                            if (pos.y > 1)
-                                            {
-                                                for (; i < pos.y - 1; i++)
-                                                {
-                                                    ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                                                    if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                                }
-                                            }
-                                            for (i = pos.y + 1; i < size; i++)
-                                            {
-                                                ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                                                if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
-                                            }
-                                            i = 0;
-                                        }
-                                        bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true };
-                                        //  0  1  2
-                                        //  3     4
-                                        //  5  6  7
-                                        if (pos.x == 0)
-                                        {
-                                            checkArray[0] = false;
-                                            checkArray[3] = false;
-                                            checkArray[5] = false;
-                                        }
-                                        else
-                                        {
-                                            if (pos.x == size - 1)
-                                            {
-                                                checkArray[2] = false;
-                                                checkArray[4] = false;
-                                                checkArray[7] = false;
-                                            }
-                                        }
-                                        if (pos.z == 0)
-                                        {
-                                            checkArray[5] = false;
-                                            checkArray[6] = false;
-                                            checkArray[7] = false;
-                                        }
-                                        else
-                                        {
-                                            if (pos.z == size - 1)
-                                            {
-                                                checkArray[0] = false;
-                                                checkArray[1] = false;
-                                                checkArray[2] = false;
-                                            }
-                                        }
-                                        foreach (bool ca in checkArray)
-                                        {
-                                            if (ca == false) goto CHECK_FAILED;
-                                        }
-                                        acceptable = true;
-                                        break;
-                                    }
-                                    CHECK_FAILED:
-                                    acceptable = false;
-                                    reason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
-                                }
-                            }
-                        }
-                        break;
-                }                
+                acceptable = bd.CheckSpecialBuildingCondition(observingSurface, ref reason);
             }
             if (!acceptable)
             {
@@ -823,13 +709,13 @@ public sealed class UISurfacePanelController : UIObserver {
 	public void CreateSelectedBuilding () {
         if (chosenStructure.placeInCenter )
         {
-            CreateSelectedBuilding( (byte)(Plane.INNER_RESOLUTION /2 - chosenStructure.surfaceRect.size/2), (byte)(Plane.INNER_RESOLUTION/ 2 - chosenStructure.surfaceRect.size/2), true );
+            CreateSelectedBuilding( (byte)(PlaneExtension.INNER_RESOLUTION /2 - chosenStructure.surfaceRect.size/2), (byte)(PlaneExtension.INNER_RESOLUTION/ 2 - chosenStructure.surfaceRect.size/2), true );
         }
         else
         {
             if (chosenStructure is Farm)
             {
-                int size = Plane.INNER_RESOLUTION;
+                int size = PlaneExtension.INNER_RESOLUTION;
                 SurfaceRect sr = chosenStructure.surfaceRect;
                 CreateSelectedBuilding((byte)(size/ 2 - sr.size/2), (byte)(size / 2 - sr.size/2), true);
             }
@@ -848,7 +734,7 @@ public sealed class UISurfacePanelController : UIObserver {
         else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
         if (colony.storage.CheckSpendPossibility(cost))
         {
-            byte strSize = chosenStructure.surfaceRect.size,  res = Plane.INNER_RESOLUTION;
+            byte strSize = chosenStructure.surfaceRect.size,  res = PlaneExtension.INNER_RESOLUTION;
             if (x + strSize > res) x = (byte)(res - strSize);
             if (z + strSize > res) z = (byte)(res - strSize);
             if (checkForIntersections && observingSurface.IsAnyBuildingInArea(new SurfaceRect(x, z, strSize)))
@@ -879,7 +765,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 if (s.ID != Structure.DOCK_ID & s.ID != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
                 if (GameMaster.eventsTracking) EventChecker.PlayerConstructedBuilding(s);
-                if (observingSurface.noEmptySpace != false)
+                if (observingSurface.fulfillStatus != FullfillStatus.Empty)
                 {
                     if (constructionPlane.activeSelf)
                     {
@@ -905,8 +791,8 @@ public sealed class UISurfacePanelController : UIObserver {
     public void ConstructingPlaneTouch(Vector3 pos)
     {
         if (buildIntersectionSubmit.activeSelf | chosenStructure == null | observingSurface == null) return;
-        Vector2 mappos = observingSurface.WorldToMapCoordinates(pos);
-        CreateSelectedBuilding((byte)(mappos.x * Plane.INNER_RESOLUTION), (byte)(mappos.y * Plane.INNER_RESOLUTION), true);
+        Vector2 mappos = observingSurface.WorldToMapPosition(pos);
+        CreateSelectedBuilding((byte)(mappos.x * PlaneExtension.INNER_RESOLUTION), (byte)(mappos.y * PlaneExtension.INNER_RESOLUTION), true);
     }
 	
 

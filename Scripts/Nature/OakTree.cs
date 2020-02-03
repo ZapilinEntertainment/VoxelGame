@@ -797,13 +797,13 @@ public class OakTree : Plant
     {
         if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
-        if (!clearFromSurface) { UnsetBasement(); }
+        if (!clearFromSurface) basement = null;
         else
         {
             if (basement != null)
             {
                 basement.RemoveStructure(this);
-                if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
+                //if (basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
             }
         }
         if (addedToClassList)

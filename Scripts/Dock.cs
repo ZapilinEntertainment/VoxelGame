@@ -67,7 +67,7 @@ public sealed class Dock : WorkBuilding {
             }
         }       
 		SetWorkbuildingData(b, pos);	
-		basement.ReplaceMaterial(ResourceType.CONCRETE_ID);
+		basement.ChangeMaterial(ResourceType.CONCRETE_ID, true);
 		colony.AddDock(this);		
         if (!subscribedToUpdate)
         {
@@ -177,7 +177,7 @@ public sealed class Dock : WorkBuilding {
         {
             if (dependentBlocksList.Count > 0)
             {
-                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
                 dependentBlocksList.Clear();
             }
         }
@@ -310,7 +310,7 @@ public sealed class Dock : WorkBuilding {
             }
             if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
             {
-                basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
                 dependentBlocksList.Clear();
             }
         }
@@ -497,7 +497,7 @@ public sealed class Dock : WorkBuilding {
         else destroyed = true;
         if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
         {
-            basement.myChunk.ClearBlocksList(dependentBlocksList, true);
+            basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
             dependentBlocksList.Clear();            
         }
         if (showOnGUI & correctLocation) PoolMaster.current.DisableFlightZone();

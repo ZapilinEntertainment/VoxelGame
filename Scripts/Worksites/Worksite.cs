@@ -10,7 +10,6 @@ public abstract class Worksite
     public static List<Worksite> worksitesList { get; protected set; }
 
     public Plane workplace { get; protected set; }
-    protected byte faceIndex;
     public int workersCount { get; protected set; }
     public float workSpeed { get; protected set; }
     public WorksiteSign sign;
@@ -30,11 +29,11 @@ public abstract class Worksite
             return false;
 
         Worksite w = (Worksite)obj;
-        return w.faceIndex == faceIndex && workplace == w.workplace;
+        return workplace == w.workplace & workersCount == w.workersCount & workflow == w.workflow;
     }
     public override int GetHashCode()
     {
-        return workplace.GetHashCode() + faceIndex + workersCount;
+        return workplace.GetHashCode() + workersCount;
     }
 
 
@@ -42,10 +41,9 @@ public abstract class Worksite
     {
         worksitesList = new List<Worksite>();
     }
-    public Worksite(Plane i_workplace, byte i_faceIndex)
+    public Worksite(Plane i_workplace)
     {
         workplace = i_workplace;
-        faceIndex = i_faceIndex;
         workplace.SetWorksite(this);
     }
 

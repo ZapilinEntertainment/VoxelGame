@@ -65,8 +65,10 @@ public sealed class HeadQuarters : Building
         {
             if (!GameMaster.loading)
             {
-                basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
-                if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+                var chunk = basement.myChunk;
+                var cpos = basement.pos.OneBlockHigher();
+                chunk.AddBlock(cpos, this, true, true, true);
+                if (level == 6) chunk.AddBlock(cpos.OneBlockHigher(), this, true, true, true);
             }
             else
             {
@@ -84,8 +86,8 @@ public sealed class HeadQuarters : Building
         {
             if (level > 3)
             {
-                basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
-                if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+                basement.myChunk.AddBlock(basement.pos.OneBlockHigher(), this, true, true, true);
+                if (level == 6) basement.myChunk.AddBlock(basement.pos.TwoBlocksHigher(), this, true, true, true);
             }
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersEvent = false;
@@ -142,8 +144,7 @@ public sealed class HeadQuarters : Building
                 {
                     if (level == 3)
                     {
-                        Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y + 1, basement.pos.z);
-                        if (upperBlock != null && upperBlock.type != BlockType.Shapeless)
+                        if (basement.myChunk.GetBlock(basement.pos.OneBlockHigher()) != null)
                         {
                             refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
                             return false;
@@ -154,8 +155,7 @@ public sealed class HeadQuarters : Building
                     {
                         if (level == 5)
                         {
-                            Block upperBlock = basement.myChunk.GetBlock(basement.pos.x, basement.pos.y + 2, basement.pos.z);
-                            if (upperBlock != null && upperBlock.type != BlockType.Shapeless)
+                            if (basement.myChunk.GetBlock(basement.pos.TwoBlocksHigher()) != null)
                             {
                                 refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
                                 return false;
@@ -201,8 +201,8 @@ public sealed class HeadQuarters : Building
         }
         if (level > 3)
         {
-            if (level == 4) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 1, basement.pos.z, this);
-            if (level == 6) basement.myChunk.BlockByStructure(basement.pos.x, basement.pos.y + 2, basement.pos.z, this);
+            if (level == 4) basement.myChunk.AddBlock(basement.pos.OneBlockHigher(), this, true, true, true);
+            if (level == 6) basement.myChunk.AddBlock(basement.pos.TwoBlocksHigher(), this, true, true, true);
         }
         level++;
         nextStageConditionMet = CheckUpgradeCondition();

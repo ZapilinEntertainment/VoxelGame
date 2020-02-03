@@ -422,7 +422,7 @@ public sealed partial class Chunk : MonoBehaviour {
             chunkRenderUpdateRequired = true;
         }
     }
-    public void RewriteFaceVisualData(ChunkPos pos, byte faceIndex )
+    public void RefreshFaceVisualData(ChunkPos pos, byte faceIndex )
     {
         if (blockVisualizersList == null)
         {
@@ -548,6 +548,7 @@ public sealed partial class Chunk : MonoBehaviour {
             Destroy(renderersHolders[4]);
             Destroy(renderersHolders[5]);
             Destroy(renderersHolders[6]);
+            Destroy(renderersHolders[7]);
         }
         renderersHolders = new GameObject[8];
         GameObject g = new GameObject("renderersHolder_face0");
