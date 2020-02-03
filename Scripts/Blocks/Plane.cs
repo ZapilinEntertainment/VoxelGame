@@ -5,6 +5,7 @@ public sealed class Plane
     public int materialID { get; private set; }
     public byte faceIndex { get; private set; }
     public MeshType meshType { get; private set; }
+    private byte meshRotation;
     public Structure mainStructure { get; private set; }
     public bool visible { get; private set; }
     public PlaneExtension extension { get; private set; }
@@ -22,6 +23,17 @@ public sealed class Plane
         }
     }
     private bool dirty = false; // запрещает удалять плоскость для оптимизации
+    public int artificialStructuresCount {
+        get { if (extension != null) return extension.artificialStructuresCount;
+            else {
+                if (mainStructure == null) return 0;
+                else
+                {
+                    if (mainStructure.isArtificial) return 1; else return 0;
+                }
+            }
+        }
+    }
 
     public Chunk myChunk { get { return myBlockExtension.myBlock.myChunk; } }
     public ChunkPos pos { get { return myBlockExtension.myBlock.pos; } }
@@ -66,14 +78,15 @@ public sealed class Plane
         else return false;
     }
 
-    public Plane(BlockExtension i_parent, MeshType i_meshType, int i_materialID, byte i_faceIndex)
+    public Plane(BlockExtension i_parent, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
     {
         myBlockExtension = i_parent;
         meshType = i_meshType;
         materialID = i_materialID;
         mainStructure = null;
         faceIndex = i_faceIndex;
-        if (i_meshType != defaultMeshType) dirty = true;
+        meshRotation = i_meshRotation;
+        if (i_meshType != defaultMeshType | meshRotation != 0) dirty = true;
     }
 
     public void SetVisibility(bool x)
@@ -97,7 +110,7 @@ public sealed class Plane
         {
             if (extension != null)
             {
-                extension.ClearSurface(false, true, false);
+                extension.ClearSurface(false, false, false);
                 extension = null;
             }
             mainStructure?.Annihilate(false, true, false);
@@ -120,7 +133,7 @@ public sealed class Plane
                 default:
                     t.rotation = Quaternion.Euler(0f, s.modelRotation * 45f, 0f); break;
             }
-            t.localPosition = GetCenterPosition();
+            t.position = GetCenterPosition();
             s.SetVisibility(visible);
         }
     }
@@ -174,6 +187,8 @@ public sealed class Plane
                     if (meshType != MeshType.Quad)
                     {
                         meshType = MeshType.Quad;
+                        meshRotation = (byte)Random.Range(0, 3);
+                        dirty = true;
                         if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
@@ -182,6 +197,8 @@ public sealed class Plane
                     if (meshType != MeshType.ExcavatedPlane075)
                     {
                         meshType = MeshType.ExcavatedPlane075;
+                        meshRotation = (byte)Random.Range(0, 3);
+                        dirty = true;
                         if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
@@ -193,6 +210,8 @@ public sealed class Plane
                     if (meshType != MeshType.ExcavatedPlane025)
                     {
                         meshType = MeshType.ExcavatedPlane025;
+                        meshRotation = (byte)Random.Range(0, 3);
+                        dirty = true;
                         if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
@@ -201,6 +220,8 @@ public sealed class Plane
                     if (meshType != MeshType.ExcavatedPlane05)
                     {
                         meshType = MeshType.ExcavatedPlane075;
+                        meshRotation = (byte)Random.Range(0, 3);
+                        dirty = true;
                         if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
                     }
                 }
@@ -216,58 +237,7 @@ public sealed class Plane
             else myBlockExtension.Dig((int)damage, true, faceIndex);
         }
     }
-
-    public ChunkPos GetChunkPosition() { return myBlockExtension.myBlock.pos; }
-    public Vector3 GetCenterPosition()
-    {
-        Vector3 leftBottomCorner = myBlockExtension.myBlock.pos.ToWorldSpace(), xdir, zdir;
-        float q = Block.QUAD_SIZE;
-        switch (faceIndex)
-        {
-            case Block.FWD_FACE_INDEX:
-                leftBottomCorner += new Vector3(0.5f, -0.5f, 0.5f) * q;
-                xdir = Vector3.left * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.RIGHT_FACE_INDEX:
-                leftBottomCorner += new Vector3(0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.BACK_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.right * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.LEFT_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, 0.5f) * q;
-                xdir = Vector3.back * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.DOWN_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.right * q;
-                zdir = Vector3.back * q;
-                break;
-            case Block.CEILING_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
-                xdir = Vector3.right * q;
-                zdir = Vector3.back * q;
-                break;
-            case Block.UP_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
-                break;
-            case Block.SURFACE_FACE_INDEX:
-            default:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
-                break;
-        }
-        return leftBottomCorner + xdir * 0.5f + zdir * 0.5f;
-    }
+ 
     public PlaneExtension GetExtension()
     {
         if (extension == null) extension = new PlaneExtension(this, mainStructure);
@@ -294,13 +264,14 @@ public sealed class Plane
 
     public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
     {
-        if (!visible || materialID == PoolMaster.NO_MATERIAL_ID | meshType == MeshType.NoMesh) return null;
+        if ( materialID == PoolMaster.NO_MATERIAL_ID | meshType == MeshType.NoMesh) return null;
         else
         {
             return new BlockpartVisualizeInfo(cpos,
                 new MeshVisualizeInfo(faceIndex, PoolMaster.GetMaterialType(materialID), GetLightValue(chunk, cpos, faceIndex)),
                 meshType,
-                materialID
+                materialID,
+                meshRotation
                 );
         }
     }
@@ -320,56 +291,92 @@ public sealed class Plane
                 return chunk.GetLightValue(cpos);
         }
     }
+
+    public ChunkPos GetChunkPosition() { return myBlockExtension.myBlock.pos; }
+    public Vector3 GetCenterPosition()
+    {
+        Vector3 centerPos = myBlockExtension.myBlock.pos.ToWorldSpace();
+        float q = Block.QUAD_SIZE * 0.5f;
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX:
+                centerPos += Vector3.forward * q;
+                break;
+            case Block.RIGHT_FACE_INDEX:
+                centerPos += Vector3.right * q;
+                break;
+            case Block.BACK_FACE_INDEX:
+                centerPos += Vector3.back * q;
+                break;
+            case Block.LEFT_FACE_INDEX:
+                centerPos += Vector3.left * q;
+                break;
+            case Block.DOWN_FACE_INDEX:
+                centerPos += Vector3.down * q;
+                break;
+            case Block.CEILING_FACE_INDEX:
+                centerPos += Vector3.up * (q - Block.CEILING_THICKNESS);
+                break;
+            case Block.UP_FACE_INDEX:
+                centerPos += Vector3.up * q;
+                break;
+            case Block.SURFACE_FACE_INDEX:
+            default:
+                centerPos += Vector3.down * q;
+                break;
+        }
+        return centerPos;
+    }
     public Vector3 GetLocalPosition(float x, float z)
     {
-        Vector3 leftBottomCorner = pos.ToWorldSpace(), xdir, zdir;
+        Vector3 blockCenter = pos.ToWorldSpace(), xdir, zdir;
         float q = Block.QUAD_SIZE;
         switch (faceIndex)
         {
             case Block.FWD_FACE_INDEX:
-                leftBottomCorner += new Vector3(0.5f, -0.5f, 0.5f) * q;
+                blockCenter += new Vector3(0.5f, -0.5f, 0.5f) * q;
                 xdir = Vector3.left * q;
                 zdir = Vector3.up * q;
                 break;
             case Block.RIGHT_FACE_INDEX:
-                leftBottomCorner += new Vector3(0.5f, -0.5f, -0.5f) * q;
+                blockCenter += new Vector3(0.5f, -0.5f, -0.5f) * q;
                 xdir = Vector3.forward * q;
                 zdir = Vector3.up * q;
                 break;
             case Block.BACK_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                blockCenter += new Vector3(-0.5f, -0.5f, -0.5f) * q;
                 xdir = Vector3.right * q;
                 zdir = Vector3.up * q;
                 break;
             case Block.LEFT_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, 0.5f) * q;
+                blockCenter += new Vector3(-0.5f, -0.5f, 0.5f) * q;
                 xdir = Vector3.back * q;
                 zdir = Vector3.up * q;
                 break;
             case Block.DOWN_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                blockCenter += new Vector3(-0.5f, -0.5f, -0.5f) * q;
                 xdir = Vector3.right * q;
                 zdir = Vector3.back * q;
                 break;
             case Block.CEILING_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                blockCenter += new Vector3(-0.5f, +0.5f, -0.5f) * q;
                 xdir = Vector3.right * q;
                 zdir = Vector3.back * q;
                 break;
             case Block.UP_FACE_INDEX:
-                leftBottomCorner += new Vector3(-0.5f, +0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
+                blockCenter += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.forward * q;
                 break;
             case Block.SURFACE_FACE_INDEX:
             default:
-                leftBottomCorner += new Vector3(-0.5f, -0.5f, -0.5f) * q;
-                xdir = Vector3.forward * q;
-                zdir = Vector3.up * q;
+                blockCenter += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                xdir = Vector3.right * q;
+                zdir = Vector3.forward * q;
                 break;
         }
         float ir = PlaneExtension.INNER_RESOLUTION;
-        return leftBottomCorner + xdir * x / ir + zdir * z / ir;
+        return blockCenter + xdir * x / ir + zdir * z / ir;
     }
     public Vector3 GetLocalPosition(SurfaceRect sr)
     {

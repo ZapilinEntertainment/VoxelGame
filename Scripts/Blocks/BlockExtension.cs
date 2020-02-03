@@ -176,12 +176,16 @@ public sealed class BlockExtension
         if (!HavePlane(faceIndex)) { result = null; return false; }
         else
         {
-            if (planes == null || !planes.ContainsKey(faceIndex))
+            if (planes != null && planes.ContainsKey(faceIndex))
             {
-                result = CreatePlane(faceIndex, materialID, true);
+                result = planes[faceIndex];
+                return true;
             }
-            else result = planes[faceIndex];
-            return true;
+            else
+            {
+                result = null;
+                return false;
+            }
         }
     }
     public Plane GetPlane(byte faceIndex)
@@ -295,7 +299,8 @@ public sealed class BlockExtension
                                 new BlockpartVisualizeInfo(cpos,
                                 new MeshVisualizeInfo(i, PoolMaster.GetMaterialType(materialID), Plane.GetLightValue(chunk, cpos, i)),
                                 Plane.defaultMeshType,
-                                materialID
+                                materialID,
+                                0
                                 ));
                         }
                     }
@@ -341,8 +346,8 @@ public sealed class BlockExtension
         }
         var pos = myBlock.pos;
         if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.CHUNK_SIZE - 1)
-            p = MeshMaster.GetRooftop(this, pos.x % 2 == 0 & pos.z % 2 == 0 & Random.value > 0.5f, isNatural);
-        else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex);
+            p = MeshMaster.GetRooftop(this, Random.value < 0.14f, !isNatural);
+        else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex, 0);
         planes.Add(faceIndex, p);
         if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(pos, faceIndex);
         return p;

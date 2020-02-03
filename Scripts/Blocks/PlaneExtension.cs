@@ -286,7 +286,7 @@ public sealed class PlaneExtension
     private void SetStructureTransform(Structure s)
     {
         var t = s.transform;
-        t.parent = myPlane.myBlockExtension.myBlock.myChunk.transform;
+        t.parent = myPlane.myChunk.transform;
         t.position = myPlane.GetLocalPosition(s.surfaceRect);
         s.SetVisibility(myPlane.visible);
         switch (myPlane.faceIndex)

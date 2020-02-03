@@ -16,18 +16,7 @@ public static class MeshMaster
     public static Mesh GetMesh(MeshType mtype)
     {
         switch (mtype)
-        {
-            default:
-            case MeshType.Quad:
-            if (quadMesh == null)
-            {
-                    quadMesh = new Mesh();
-                    quadMesh.vertices = new Vector3[4] { new Vector3(0.5f, -0.5f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0) };
-                    quadMesh.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
-                    quadMesh.normals = new Vector3[4] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
-                    quadMesh.uv = new Vector2[4] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1) };
-                }
-            return quadMesh;
+        {            
             case MeshType.ExcavatedPlane025:
                 if (plane_excavated_025 == null) plane_excavated_025 = Resources.Load<Mesh>("Meshes/Plane_excavated_025");
                 return plane_excavated_025;
@@ -82,26 +71,37 @@ public static class MeshMaster
                     return caveCeil;
                 }
             case MeshType.NaturalRooftop_0:
-                if (natRoof_0 == null) natRoof_0 = Resources.Load<Mesh>("Meshes/Rooftops/naturalRooftop0");
+                if (natRoof_0 == null) natRoof_0 = Resources.Load<Mesh>("Meshes/Rooftops/natural_rooftop0");
                 return natRoof_0;
             case MeshType.NaturalRooftop_1:
-                if (natRoof_1 == null) natRoof_1 = Resources.Load<Mesh>("Meshes/Rooftops/naturalRooftop1");
+                if (natRoof_1 == null) natRoof_1 = Resources.Load<Mesh>("Meshes/Rooftops/natural_rooftop1");
                 return natRoof_1;
             case MeshType.NaturalRooftop_2:
-                if (natRoof_2 == null) natRoof_0 = Resources.Load<Mesh>("Meshes/Rooftops/naturalRooftop2");
+                if (natRoof_2 == null) natRoof_2 = Resources.Load<Mesh>("Meshes/Rooftops/natural_rooftop2");
                 return natRoof_2;
             case MeshType.NaturalRooftop_3:
-                if (natRoof_3 == null) natRoof_3 = Resources.Load<Mesh>("Meshes/Rooftops/naturalRooftop3");
+                if (natRoof_3 == null) natRoof_3 = Resources.Load<Mesh>("Meshes/Rooftops/natural_rooftop3");
                 return natRoof_3;
             case MeshType.NaturalPeak_0:
-                if (natPeak_0 == null) natPeak_0 = Resources.Load<Mesh>("Meshes/Rooftops/naturalPeak0");
-                return natPeak_0;
+                if (natPeak_0 == null) natPeak_0 = Resources.Load<Mesh>("Meshes/Rooftops/natural_peak0");
+                return natPeak_0;            
+            case MeshType.Quad:
+            default:
+                if (quadMesh == null)
+                {
+                    quadMesh = new Mesh();
+                    quadMesh.vertices = new Vector3[4] { new Vector3(0.5f, -0.5f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0) };
+                    quadMesh.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
+                    quadMesh.normals = new Vector3[4] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
+                    quadMesh.uv = new Vector2[4] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1) };
+                }
+                return quadMesh;
         }
     }
     public static Mesh GetMesh(MeshType mtype, int materialID)
     {
         Mesh m = Object.Instantiate(GetMesh(mtype));
-        SetMeshUVs(ref m, materialID);
+        if (materialID != PoolMaster.MATERIAL_COMBINED_BASIC_ID) SetMeshUVs(ref m, materialID);
         return m;
     }
     public static void SetMeshUVs(ref Mesh m, int materialID)
@@ -219,12 +219,12 @@ public static class MeshMaster
                 if (seed > 0.5f)
                 {
                     if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else uvEdited = new Vector2[] { borders[2], borders[3], borders[1], borders[0] };
+                    else uvEdited = new Vector2[] { borders[2], borders[0], borders[1], borders[3] };
                 }
                 else
                 {
                     if (seed > 0.25f) uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else uvEdited = new Vector2[] { borders[1], borders[0], borders[2], borders[3] };
+                    else uvEdited = new Vector2[] { borders[1], borders[3], borders[2], borders[0] };
                 }
             }
             else
@@ -280,19 +280,9 @@ public static class MeshMaster
 
     public static Plane GetRooftop(BlockExtension b, bool peak, bool artificial)
     {
-        if (artificial) return GetRooftop(b, peak, artificial, 0);
-        else
-        {
-            if (peak)
-            {
-                float f = Random.value;
-                byte n = 0;
-                if (f >= 0.77f) n = 2;
-                else if (f <= 0.33f) n = 0; else n = 1;
-                return GetRooftop(b,true, false, n);
-            }
-            else { if (Random.value > 0.5f) return GetRooftop(b,false, false, 0); else return GetRooftop(b,false, false, 1); }
-        }
+        byte number = 0;
+        if (!artificial & !peak) number = (byte)Random.Range(0, 3);
+        return GetRooftop(b, peak, artificial, number);
     }
     public static Plane GetRooftop(BlockExtension b, bool peak, bool artificial, byte number)
     {
@@ -314,7 +304,7 @@ public static class MeshMaster
         {
 
         }
-        return new Plane(b, mtype, materialID, Block.UP_FACE_INDEX);
+        return new Plane(b, mtype, materialID, Block.UP_FACE_INDEX, (byte)Random.Range(0,3));
     }
     public static GameObject GetFlyingPlatform()
     {

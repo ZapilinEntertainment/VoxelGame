@@ -113,13 +113,180 @@ public sealed partial class Chunk : MonoBehaviour
                 }
             }
         }
-        RecalculateSurfacesList();
+        PreparePlanes();
         if (surfaces != null & GameMaster.realMaster.gameMode != GameMode.Editor)
         {
            GameMaster.geologyModule.SpreadMinerals(surfaces);
         }
         RenderDataFullRecalculation();
         FollowingCamera.main.WeNeedUpdate();
+    }
+    private void PreparePlanes()
+    {
+        if (blocks != null)
+        {
+            Block[,,] blockArray = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+            Block b;
+            foreach (var fb in blocks)
+            {
+                b = fb.Value;
+                var cpos = b.pos;
+                blockArray[cpos.x, cpos.y, cpos.z] = b;
+            }
+            bool transparency = true;
+            Block prevBlock = null;
+            //left to right
+            for (int x = 0; x < CHUNK_SIZE; x++)
+            {
+                for (int y = 0; y < CHUNK_SIZE; y++)
+                {
+                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    {
+                        b = blockArray[x, y, z];
+                        if (b == null)
+                        {
+                            transparency = true;
+                            if (prevBlock != null)
+                            {
+                                prevBlock.InitializePlane(Block.RIGHT_FACE_INDEX);
+                                prevBlock = null;
+                            }
+                            continue;
+                        }
+                        else
+                        {
+                            if (transparency)
+                            {
+                                if (b.InitializePlane(Block.LEFT_FACE_INDEX)) // возвращает true, если скроет следующий блок
+                                {
+                                    transparency = false;
+                                    prevBlock?.DeactivatePlane(Block.RIGHT_FACE_INDEX);
+                                }
+                                else
+                                {
+                                    transparency = true;
+                                    prevBlock?.InitializePlane(Block.RIGHT_FACE_INDEX);
+                                }
+                            }
+                            else
+                            {
+                                b.DeactivatePlane(Block.LEFT_FACE_INDEX);
+                            }
+                            prevBlock = b;
+                        }
+                    }
+                    if (prevBlock != null)
+                    {
+                        prevBlock.InitializePlane(Block.RIGHT_FACE_INDEX);
+                        prevBlock = null;
+                    }
+                    transparency = true;
+                }
+            }
+            //back to fwd            
+            for (int z = 0; z < CHUNK_SIZE; z++)
+            {
+                for (int y = 0; y < CHUNK_SIZE; y++)
+                {
+                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    {
+                        b = blockArray[x, y, z];
+                        if (b == null)
+                        {
+                            transparency = true;
+                            if (prevBlock != null)
+                            {
+                                prevBlock.InitializePlane(Block.FWD_FACE_INDEX);
+                                prevBlock = null;
+                            }
+                            continue;
+                        }
+                        else
+                        {
+                            if (transparency)
+                            {
+                                if (b.InitializePlane(Block.BACK_FACE_INDEX)) // возвращает true, если скроет следующий блок
+                                {
+                                    transparency = false;
+                                    prevBlock?.DeactivatePlane(Block.FWD_FACE_INDEX);
+                                }
+                                else
+                                {
+                                    transparency = true;
+                                    prevBlock?.InitializePlane(Block.FWD_FACE_INDEX);
+                                }
+                            }
+                            else
+                            {
+                                b.DeactivatePlane(Block.BACK_FACE_INDEX);
+                            }
+                            prevBlock = b;
+                        }
+                    }
+                    if (prevBlock != null)
+                    {
+                        prevBlock.InitializePlane(Block.FWD_FACE_INDEX);
+                        prevBlock = null;
+                    }
+                    transparency = true;
+                }
+                transparency = true;
+                prevBlock = null;
+            }
+            //down to up            
+            for (int y = 0; y < CHUNK_SIZE; y++)
+            {
+                for (int z = 0; z < CHUNK_SIZE; z++)
+                {
+                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    {
+                        b = blockArray[x, y, z];
+                        if (b == null)
+                        {
+                            transparency = true;
+                            if (prevBlock != null)
+                            {
+                                prevBlock.InitializePlane(Block.UP_FACE_INDEX);
+                                prevBlock = null;
+                            }
+                            continue;
+                        }
+                        else
+                        {
+                            if (transparency)
+                            {
+                                if (b.InitializePlane(Block.DOWN_FACE_INDEX)) // возвращает true, если скроет следующий блок
+                                {
+                                    transparency = false;
+                                    prevBlock?.DeactivatePlane(Block.UP_FACE_INDEX);
+                                }
+                                else
+                                {
+                                    transparency = true;
+                                    prevBlock?.InitializePlane(Block.UP_FACE_INDEX);
+                                }
+                            }
+                            else
+                            {
+                                b.DeactivatePlane(Block.DOWN_FACE_INDEX);
+                            }
+                            prevBlock = b;
+                        }
+                    }
+                    if (prevBlock != null)
+                    {
+                        prevBlock.InitializePlane(Block.UP_FACE_INDEX);
+                        prevBlock = null;
+                    }
+                    transparency = true;
+                }
+                transparency = true;
+                prevBlock = null;
+            }
+
+            blockArray = null;
+            RecalculateSurfacesList();
+        }
     }
     private void RecalculateSurfacesList()
     {
@@ -138,6 +305,7 @@ public sealed partial class Chunk : MonoBehaviour
             if (surfaces.Count == 0) surfaces = null;
         }
         else surfaces = null;
+        if (surfaces != null) Debug.Log(surfaces.Count);
         needSurfacesUpdate = false;
     }
 
@@ -443,7 +611,7 @@ public sealed partial class Chunk : MonoBehaviour
             for (; i < surfaces.Count; i++)
             {
                 p = surfaces[i];
-                if (p.fulfillStatus ==FullfillStatus.Empty|| p.extension.artificialStructuresCount == 0) suitable.Add(i);
+                if (p.fulfillStatus ==FullfillStatus.Empty || p.artificialStructuresCount == 0) suitable.Add(i);
             }
             answer = new Vector3Int(0, 0, suitable[Random.Range(0, suitable.Count - 1)]);
             return true;

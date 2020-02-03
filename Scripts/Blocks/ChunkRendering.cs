@@ -42,13 +42,15 @@ public sealed class BlockpartVisualizeInfo
     public MeshVisualizeInfo rinfo;
     public MeshType meshType;
     public int materialID;
+    public byte meshRotation;  
 
-    public BlockpartVisualizeInfo(ChunkPos i_pos, MeshVisualizeInfo i_meshVI, MeshType i_meshType, int i_materialID)
+    public BlockpartVisualizeInfo(ChunkPos i_pos, MeshVisualizeInfo i_meshVI, MeshType i_meshType, int i_materialID, byte i_meshRotation)
     {
         pos = i_pos;
         rinfo = i_meshVI;
         meshType = i_meshType;
         materialID = i_materialID;
+        meshRotation = i_meshRotation;
     }
 
     public Matrix4x4 GetPositionMatrix()
@@ -60,34 +62,35 @@ public sealed class BlockpartVisualizeInfo
         {
             case Block.FWD_FACE_INDEX:
                 faceVector = Vector3.forward * step;
+                rotation = Quaternion.Euler(0f, 0f, meshRotation * 90f);
                 break;
             case Block.RIGHT_FACE_INDEX:
                 faceVector = Vector3.right * step;
-                rotation = Quaternion.Euler(0, 90, 0);
+                rotation = Quaternion.Euler(0, 90, meshRotation * 90f);
                 break;
             case Block.BACK_FACE_INDEX:
                 faceVector = Vector3.back * step;
-                rotation = Quaternion.Euler(0, 180, 0);
+                rotation = Quaternion.Euler(0, 180, meshRotation * 90f);
                 break;
             case Block.LEFT_FACE_INDEX:
                 faceVector = Vector3.left * step;
-                rotation = Quaternion.Euler(0, 270, 0);
+                rotation = Quaternion.Euler(0, 270, meshRotation * 90f);
                 break;
             case Block.UP_FACE_INDEX:
                 faceVector = Vector3.up * step;
-                rotation = Quaternion.Euler(-90, 0, 0);
+                rotation = Quaternion.Euler(-90, 0, meshRotation * 90f);
                 break;
             case Block.DOWN_FACE_INDEX:
                 faceVector = Vector3.down * step;
-                rotation = Quaternion.Euler(90, 0, 0);
+                rotation = Quaternion.Euler(90, 0, meshRotation * 90f);
                 break;
             case Block.SURFACE_FACE_INDEX:
                 faceVector = Vector3.down * step;
-                rotation = Quaternion.Euler(-90, 0, 0);
+                rotation = Quaternion.Euler(-90, 0, meshRotation * 90f);
                 break;
             case Block.CEILING_FACE_INDEX:
                 faceVector = Vector3.up * (0.5f - Block.CEILING_THICKNESS) * Block.QUAD_SIZE;
-                rotation = Quaternion.Euler(90, 0, 0);
+                rotation = Quaternion.Euler(90, 0, meshRotation * 90f);
                 break;
         }
         return Matrix4x4.TRS(
