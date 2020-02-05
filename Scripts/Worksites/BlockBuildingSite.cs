@@ -29,18 +29,14 @@ public class BlockBuildingSite : Worksite
             case Block.SURFACE_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.5f; break;
             case Block.CEILING_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.5f; break;
         }
-
-        colony.SendWorkers(START_WORKERS_COUNT, this);
-        worksitesList.Add(this);
-        GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
-        subscribedToUpdate = true;
+        colony.SendWorkers(START_WORKERS_COUNT, this);             
     }
 
     override public void WorkUpdate()
     {
         if (workplace == null)
         {
-            StopWork();
+            StopWork(true);
         }
         if (workersCount > 0)
         {
@@ -140,7 +136,7 @@ public class BlockBuildingSite : Worksite
             }
             workplace.myChunk.AddBlock(cpos, rtype.ID, false, true);
             pe.ClearSurface(false, false, true);
-            StopWork();
+            StopWork(true);
             return;
         }
         else
@@ -199,48 +195,22 @@ public class BlockBuildingSite : Worksite
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
 
-    override public void StopWork()
-    {
-        if (destroyed) return;
-        else destroyed = true;
-        if (workersCount > 0)
-        {
-            colony.AddWorkers(workersCount);
-            workersCount = 0;
-        }
-        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);        
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
-            subscribedToUpdate = false;
-        }
-        //if (workObject != null & workObject.worksite == this) workObject.ResetWorksite();
-        if (showOnGUI)
-        {
-            observer.SelfShutOff();
-            showOnGUI = false;
-            UIController.current.ChangeChosenObject(ChosenObjectType.None);
-        }
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
-    }
-
-
     #region save-load system
-    override protected List<byte> Save()
+    override public void Save(System.IO.FileStream fs)
     {
         if (workplace == null)
         {
-            StopWork();
-            return null;
+            StopWork(true);
+            return;
         }
         var pos = workplace.pos;
-        var data = new List<byte>() {
-            (byte)WorksiteType.BlockBuildingSite,
-            pos.x, pos.y, pos.z, workplace.faceIndex
-        };
-        data.AddRange(System.BitConverter.GetBytes(rtype.ID));
-        data.AddRange(SerializeWorksite());        
-        return data;
+        fs.WriteByte((byte)WorksiteType.BlockBuildingSite);
+        fs.WriteByte(pos.x);
+        fs.WriteByte(pos.y);
+        fs.WriteByte(pos.z);
+        fs.WriteByte(workplace.faceIndex);
+        fs.Write(System.BitConverter.GetBytes(rtype.ID),0,4);
+        SerializeWorksite(fs);
     }
     public static BlockBuildingSite Load(System.IO.FileStream fs, Chunk chunk)
     {

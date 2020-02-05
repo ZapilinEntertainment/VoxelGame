@@ -7,7 +7,6 @@ public enum WorksiteType : byte { Abstract, BlockBuildingSite, CleanSite, DigSit
 public abstract class Worksite
 {
     public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
-    public static List<Worksite> worksitesList { get; protected set; }
 
     public Plane workplace { get; protected set; }
     public int workersCount { get; protected set; }
@@ -20,7 +19,7 @@ public abstract class Worksite
 
     protected bool subscribedToUpdate = false;
     protected float workflow, gearsDamage;
-    protected static ColonyController colony;
+    protected ColonyController colony;
 
     public override bool Equals(object obj)
     {
@@ -36,18 +35,15 @@ public abstract class Worksite
         return workplace.GetHashCode() + workersCount;
     }
 
-
-    static Worksite()
-    {
-        worksitesList = new List<Worksite>();
-    }
     public Worksite(Plane i_workplace)
     {
+        colony = GameMaster.realMaster.colonyController;
         workplace = i_workplace;
-        workplace.SetWorksite(this);
-    }
+        colony.AddWorksiteToList(this);
 
-    public static void SetColonyLink(ColonyController cc) { colony = cc; }
+        GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+        subscribedToUpdate = true;
+    }
 
     public virtual int GetMaxWorkers() { return 32; }
     public virtual void WorkUpdate()
@@ -111,7 +107,7 @@ public abstract class Worksite
         return observer;
     }
 
-    virtual public void StopWork()
+    virtual public void StopWork(bool removeFromListRequest)
     {
         if (destroyed) return;
         else destroyed = true;
@@ -121,24 +117,34 @@ public abstract class Worksite
             workersCount = 0;
         }
         if (sign != null) Object.Destroy(sign.gameObject);
-        worksitesList.Remove(this);
-        workplace = null;
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
+            subscribedToUpdate = false;
+        }
+        if (showOnGUI)
+        {
+            if (observer.observingWorksite == this)
+            {
+                observer.SelfShutOff();
+                UIController.current.ChangeChosenObject(ChosenObjectType.Plane);
+            }
+            showOnGUI = false;
+        }
+        if (removeFromListRequest) colony?.RemoveWorksite(this);
     }
 
     #region save-load system   
-    protected virtual List<byte> Save()
+    public virtual void Save( System.IO.FileStream fs)
     {
-        var data = SerializeWorksite();
-        data.Insert(0, (byte)WorksiteType.Abstract);
-        return data;
+        fs.WriteByte((byte)WorksiteType.Abstract);
+        SerializeWorksite(fs);
     }
-    protected List<byte> SerializeWorksite()
+    protected void SerializeWorksite(System.IO.FileStream fs)
     {
-        var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(workersCount));
-        data.AddRange(System.BitConverter.GetBytes(workflow));
-        data.AddRange(System.BitConverter.GetBytes(workSpeed));
-        return data;
+        fs.Write(System.BitConverter.GetBytes(workersCount), 0,4);
+        fs.Write(System.BitConverter.GetBytes(workflow),0,4);
+        fs.Write(System.BitConverter.GetBytes(workSpeed),0,4);
     }
 
 
@@ -155,40 +161,8 @@ public abstract class Worksite
         workSpeed = System.BitConverter.ToSingle(data, 8);
     }
 
-    public static void StaticSave(System.IO.FileStream fs)
+    public static void StaticLoad(System.IO.FileStream fs, int count)
     {
-        int count = worksitesList.Count;
-        List<byte> saveList = new List<byte>();
-        if (count > 0)
-        {
-            count = 0;
-            while (count < worksitesList.Count)
-            {
-                if (worksitesList[count] == null)
-                {
-                    worksitesList.RemoveAt(count);
-                    continue;
-                }
-                else
-                {
-                    saveList.AddRange(worksitesList[count].Save());
-                    count++;
-                }
-            }
-        }
-        fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-        if (count > 0)
-        {
-            var dataArray = saveList.ToArray();
-            fs.Write(dataArray, 0, dataArray.Length);
-        }
-    }
-    public static void StaticLoad(System.IO.FileStream fs)
-    {
-        worksitesList = new List<Worksite>();
-        var data = new byte[4];
-        fs.Read(data, 0, 4);
-        int count = System.BitConverter.ToInt32(data, 0);
         if (count < 0 | count > 1000)
         {
             Debug.Log("worksites loading error - incorrect count");

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 public sealed class PlaneExtension
-{    
+{
+    public Grassland grassland { get; private set; }
     private readonly Plane myPlane;
     private List<Structure> structures;
     public FullfillStatus fullfillStatus;
@@ -289,22 +290,7 @@ public sealed class PlaneExtension
         t.parent = myPlane.myChunk.transform;
         t.position = myPlane.GetLocalPosition(s.surfaceRect);
         s.SetVisibility(myPlane.visible);
-        switch (myPlane.faceIndex)
-        {
-            case Block.FWD_FACE_INDEX:
-
-                break;
-            case Block.RIGHT_FACE_INDEX: t.localRotation = Quaternion.Euler(-90f, s.modelRotation * 45f, 0f); break;
-            case Block.BACK_FACE_INDEX: t.localRotation = Quaternion.Euler(0f, s.modelRotation * 45f, -90f); break;
-            case Block.LEFT_FACE_INDEX: t.localRotation = Quaternion.Euler(90f, s.modelRotation * 45f, 0f); break;
-            case Block.DOWN_FACE_INDEX:
-            case Block.CEILING_FACE_INDEX:
-                t.localRotation = Quaternion.Euler(0f, s.modelRotation * 45f, 90f); break;
-            case Block.UP_FACE_INDEX:
-            case Block.SURFACE_FACE_INDEX:
-            default:
-                t.localRotation = Quaternion.Euler(0f, s.modelRotation * 45f, 0f); break;
-        }
+        t.localRotation = Quaternion.Euler(myPlane.GetRotation() + Vector3.up * s.modelRotation * 45f);
         structures.Add(s);
     }
 
@@ -356,6 +342,10 @@ public sealed class PlaneExtension
     public List<Structure> GetStructuresList()
     {
         return structures;
+    }
+    public bool HaveGrassland()
+    {
+        return grassland != null;
     }
     #endregion
 
@@ -445,7 +435,6 @@ public sealed class PlaneExtension
         }
         return positions;
     }
-
     public PixelPosByte GetRandomPosition(byte size)
     {
         if (fullfillStatus == FullfillStatus.Full || size >= INNER_RESOLUTION || size < 1) return PixelPosByte.Empty;
@@ -490,7 +479,6 @@ public sealed class PlaneExtension
         if (acceptablePositions.Count > 0) return acceptablePositions[Random.Range(0, acceptablePositions.Count)];
         else return PixelPosByte.Empty;
     }
-
     List<PixelPosByte> GetAcceptablePositions(byte xsize, byte zsize, int maxVariants)
     {
         if (maxVariants > INNER_RESOLUTION * INNER_RESOLUTION) maxVariants = INNER_RESOLUTION * INNER_RESOLUTION;
@@ -534,7 +522,6 @@ public sealed class PlaneExtension
         }
         return acceptablePositions;
     }
-
     public List<PixelPosByte> GetAcceptablePositions(int count)
     {
         List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();

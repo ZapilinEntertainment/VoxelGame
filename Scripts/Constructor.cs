@@ -114,6 +114,24 @@ public abstract class Constructor
             case ChunkGenerationMode.Cube: GeneratePyramidData(size, ref dat); break;
             case ChunkGenerationMode.Peak: dat = GeneratePeakData(size); break;
         }
+
+        //testzone
+        /*
+        dat = new int[size, size, size];
+        var ac = PoolMaster.MATERIAL_WHITE_METAL_ID;
+        for (int x = 0; x < size; x++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    dat[x, y, z] = ac;
+                }
+            }
+        }
+        */
+        //eo testzone
+
         GameObject g = new GameObject("chunk");
         Chunk c = g.AddComponent<Chunk>();
         GameMaster.realMaster.SetMainChunk(c);

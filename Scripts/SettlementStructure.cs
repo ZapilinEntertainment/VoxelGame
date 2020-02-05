@@ -15,7 +15,13 @@ public sealed class SettlementStructure : Structure
     {
         if (type == Settlement.SettlementStructureType.Empty) return;
         GameObject model;
-        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
+        Quaternion prevRot = Quaternion.identity;
+        if (transform.childCount != 0)
+            {
+                var p = transform.GetChild(0);
+                prevRot = p.localRotation;
+                Destroy(p.gameObject);
+            }
         switch (type)
         {
             case Settlement.SettlementStructureType.House:
@@ -41,7 +47,7 @@ public sealed class SettlementStructure : Structure
                 break;
         }
         model.transform.parent = transform;
-        model.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        model.transform.localRotation = prevRot;
         model.transform.localPosition = Vector3.zero;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }

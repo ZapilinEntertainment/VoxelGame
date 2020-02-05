@@ -69,7 +69,7 @@ public sealed class GameMaster : MonoBehaviour
     public GlobalMap globalMap { get; private set; }
 
     public delegate void RegularUpdate();
-    public event RegularUpdate labourUpdateEvent, lifepowerUpdateEvent, blockersRestoreEvent, everydayUpdate;
+    public event RegularUpdate labourUpdateEvent, blockersRestoreEvent, everydayUpdate;
     public GameStart startGameWith = GameStart.Zeppelin;
 
     public float lifeGrowCoefficient { get; private set; }
@@ -95,7 +95,7 @@ public sealed class GameMaster : MonoBehaviour
     public const float DAY_LONG = 60;
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
-    private float labourTimer = 0, lifepowerTimer = 0;
+    private float labourTimer = 0;
     private bool gameStarted = false;
     private bool? realSpaceConsuming = null; // true - real space consuming, false - last sector consuming
     // FOR TESTING
@@ -505,18 +505,10 @@ public sealed class GameMaster : MonoBehaviour
             if (gameMode != GameMode.Editor)
             {
                 labourTimer -= fixedTime;
-                lifepowerTimer -= fixedTime;
                 if (labourTimer <= 0)
                 {
                     labourTimer = LABOUR_TICK;
                     if (labourUpdateEvent != null) labourUpdateEvent();
-                }
-                if (lifepowerTimer <= 0)
-                {
-                    lifepowerTimer = LIFEPOWER_TICK;
-                    Plant.PlantUpdate();
-                    //if (mainChunk != null) mainChunk.LifepowerUpdate(); // внутри обновляет все grasslands  
-                    if (lifepowerUpdateEvent != null) lifepowerUpdateEvent();
                 }
                 timeGone += fixedTime;
 
@@ -723,9 +715,8 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(stability), 0, 4);
         // 61
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(lifepowerTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
-        // 73
+        // 69
         if (realSpaceConsuming == null) fs.WriteByte(0);
         else
         {
@@ -742,7 +733,7 @@ public sealed class GameMaster : MonoBehaviour
             if (cce != null) x = cce.GetTimerValue();
             fs.Write(System.BitConverter.GetBytes(x),0,4);
         }
-        //74 (+4) end
+        //70 (+4) end
         #endregion
 
         DockSystem.SaveDockSystem(fs);
@@ -804,7 +795,7 @@ public sealed class GameMaster : MonoBehaviour
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
             //start writing
-            data = new byte[74]; 
+            data = new byte[70]; 
             fs.Read(data, 0, data.Length);
             gameSpeed = System.BitConverter.ToSingle(data, 0);
             lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
@@ -829,10 +820,9 @@ public sealed class GameMaster : MonoBehaviour
             stability = System.BitConverter.ToSingle(data, 57);
 
             labourTimer = System.BitConverter.ToSingle(data, 61);
-            lifepowerTimer = System.BitConverter.ToSingle(data, 65);
-            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 69));
+            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 65));
 
-            int x = data[73];
+            int x = data[69];
             float consumingTimerValue = 0f;
             if (x != 0)
             {

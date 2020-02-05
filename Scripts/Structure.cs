@@ -285,7 +285,13 @@ public class Structure : MonoBehaviour
     {
         //switch skin index
         GameObject model;
-        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
+        Quaternion prevRot = Quaternion.identity;
+        if (transform.childCount != 0)
+        {
+            var p = transform.GetChild(0);
+            prevRot = p.localRotation;
+            Destroy(p.gameObject);
+        }
         switch (ID)
         {
             default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
@@ -357,7 +363,7 @@ public class Structure : MonoBehaviour
             case SCIENCE_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/scienceLab")); break;
         }
         model.transform.parent = transform;
-        model.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        model.transform.localRotation = prevRot;
         model.transform.localPosition = Vector3.zero;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
     }
@@ -372,7 +378,8 @@ public class Structure : MonoBehaviour
 
         if (basement != null)
         {
-            transform.localRotation = Quaternion.AngleAxis(modelRotation * 45, Vector3.up);
+            transform.localRotation = Quaternion.Euler(basement.GetRotation());
+            transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
         }
     }
     public void SetHP(float t)

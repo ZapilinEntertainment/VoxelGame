@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 public sealed class Plane
 {
+    public bool visible { get; private set; }
+    public bool haveWorksite { get; private set; }
     public int materialID { get; private set; }
     public byte faceIndex { get; private set; }
     public MeshType meshType { get; private set; }
     private byte meshRotation;
-    public Structure mainStructure { get; private set; }
-    public bool visible { get; private set; }
+    public Structure mainStructure { get; private set; }    
     public PlaneExtension extension { get; private set; }
-    public Worksite worksite { get; private set; }
     public FullfillStatus fulfillStatus
     {
         get
@@ -40,6 +40,7 @@ public sealed class Plane
 
     public readonly BlockExtension myBlockExtension;
     public static readonly MeshType defaultMeshType = MeshType.Quad;
+    private static UISurfacePanelController observer;
 
     public override bool Equals(object obj)
     {
@@ -72,10 +73,14 @@ public sealed class Plane
             }
         }
     }
-    public bool isSuitableForChanging()
+    public bool isSuitableForStructures()
     {
         if (meshType == MeshType.Quad) return true;
         else return false;
+    }
+    public bool haveGrassland()
+    {
+        return extension?.HaveGrassland() ?? false;
     }
 
     public Plane(BlockExtension i_parent, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
@@ -115,24 +120,9 @@ public sealed class Plane
             }
             mainStructure?.Annihilate(false, true, false);
             mainStructure = s;
-            var t = mainStructure.transform;
+            var t = s.transform;
             t.parent = myBlockExtension.myBlock.myChunk.transform;
-            switch (faceIndex)
-            {
-                case Block.FWD_FACE_INDEX:
-                    t.rotation = Quaternion.Euler(90f, s.modelRotation * 45f, 0f);
-                    break;
-                case Block.RIGHT_FACE_INDEX: t.rotation = Quaternion.Euler(0f, s.modelRotation * 45f, -90f); break;
-                case Block.BACK_FACE_INDEX: t.rotation = Quaternion.Euler(-90f, s.modelRotation * 45f, 0f); break;
-                case Block.LEFT_FACE_INDEX: t.rotation = Quaternion.Euler(0f, s.modelRotation * 45f, 90f); break;
-                case Block.DOWN_FACE_INDEX:
-                case Block.CEILING_FACE_INDEX:
-                    t.rotation = Quaternion.Euler(180f, s.modelRotation * 45f, -90f); break;
-                case Block.UP_FACE_INDEX:
-                case Block.SURFACE_FACE_INDEX:
-                default:
-                    t.rotation = Quaternion.Euler(0f, s.modelRotation * 45f, 0f); break;
-            }
+            t.rotation = Quaternion.Euler(GetRotation());
             t.position = GetCenterPosition();
             s.SetVisibility(visible);
         }
@@ -162,14 +152,9 @@ public sealed class Plane
         if (materialID != myBlockExtension.myBlock.GetMaterialID()) dirty = true;
         if (redrawCall & visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
     }
-    public void SetWorksite(Worksite w)
+    public void SetWorksitePresence(bool x)
     {
-        if (worksite != null && worksite != w) worksite.StopWork();
-        worksite = w;
-    }
-    public void RemoveWorksiteLink(Worksite w)
-    {
-        if (w == worksite) worksite = null;
+        haveWorksite = x;
     }
     public void NullifyExtesionLink(PlaneExtension e)
     {
@@ -291,7 +276,6 @@ public sealed class Plane
                 return chunk.GetLightValue(cpos);
         }
     }
-
     public ChunkPos GetChunkPosition() { return myBlockExtension.myBlock.pos; }
     public Vector3 GetCenterPosition()
     {
@@ -382,6 +366,23 @@ public sealed class Plane
     {
         return GetLocalPosition(sr.x + sr.size / 2f, sr.z + sr.size / 2f);
     }
+    public Vector3 GetRotation()
+    {
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX:return Vector3.right * 90f;
+            case Block.RIGHT_FACE_INDEX: return Vector3.back * 90f;
+            case Block.BACK_FACE_INDEX: return Vector3.left * 90f;
+            case Block.LEFT_FACE_INDEX: return Vector3.forward * 90f;
+            case Block.DOWN_FACE_INDEX:
+            case Block.CEILING_FACE_INDEX:
+                return Vector3.right * 180f;
+            case Block.UP_FACE_INDEX:
+            case Block.SURFACE_FACE_INDEX:
+            default:
+                return Vector3.zero;
+        }
+    }
     /// <summary>
     /// returns in 0 - 1 
     /// </summary>
@@ -404,11 +405,29 @@ public sealed class Plane
         }
     }
 
+    public UISurfacePanelController ShowOnGUI()
+    {
+        if (observer == null)
+        {
+            observer = UISurfacePanelController.InitializeSurfaceObserverScript();
+        }
+        else observer.gameObject.SetActive(true);
+        observer.SetObservingSurface(this);
+        return observer;
+    }
+
     public void Annihilate(bool compensateStructures)
     {
         if (extension != null) extension.Annihilate(compensateStructures);
         else mainStructure?.SectionDeleted(myBlockExtension.myBlock.pos);
-        if (visible && !GameMaster.sceneClearing && faceIndex == Block.UP_FACE_INDEX) myBlockExtension.myBlock.myChunk.needSurfacesUpdate = true;
+        if (!GameMaster.sceneClearing) {
+            if (haveWorksite)
+            {
+                GameMaster.realMaster.colonyController.RemoveWorksite(this);
+                haveWorksite = false;
+            }
+            if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) myBlockExtension.myBlock.myChunk.needSurfacesUpdate = true;
+        }
     }
 
     #region save-load system

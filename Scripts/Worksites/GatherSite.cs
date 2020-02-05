@@ -14,12 +14,6 @@ public class GatherSite : Worksite
         sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * 0.5f * Block.QUAD_SIZE;
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
         colony.SendWorkers(START_WORKERS_COUNT, this);
-        if (!worksitesList.Contains(this)) worksitesList.Add(this);
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
-            subscribedToUpdate = true;
-        }
         destructionTimer = 10;
     }
 
@@ -27,7 +21,7 @@ public class GatherSite : Worksite
     {
         if (workplace == null)
         {
-            StopWork();
+            StopWork(true);
         }
         if (workersCount > 0)
         {
@@ -38,50 +32,53 @@ public class GatherSite : Worksite
                 int i = 0;
                 bool resourcesFound = false;
                 List<Structure> strs = workplace.GetStructuresList();
-                while (i < strs.Count & workflow > 0)
+                if (strs != null)
                 {
-                    switch (strs[i].ID)
+                    while (i < strs.Count & workflow > 0)
                     {
-                        case Structure.PLANT_ID:
-                            Plant p = strs[i] as Plant;
-                            if (p != null)
-                            {
-                                byte hstage = p.GetHarvestableStage();
-                                if (hstage != 255 & p.stage >= hstage)
+                        switch (strs[i].ID)
+                        {
+                            case Structure.PLANT_ID:
+                                Plant p = strs[i] as Plant;
+                                if (p != null)
                                 {
-                                    p.Harvest(false);
+                                    byte hstage = p.GetHarvestableStage();
+                                    if (hstage != 255 & p.stage >= hstage)
+                                    {
+                                        p.Harvest(false);
+                                        resourcesFound = true;
+                                        workflow--;
+                                    }
+                                }
+                                break;
+                            case Structure.CONTAINER_ID:
+                                HarvestableResource hr = strs[i] as HarvestableResource;
+                                if (hr != null)
+                                {
+                                    hr.Harvest();
                                     resourcesFound = true;
                                     workflow--;
                                 }
-                            }
-                            break;
-                        case Structure.CONTAINER_ID:
-                            HarvestableResource hr = strs[i] as HarvestableResource;
-                            if (hr != null)
-                            {
-                                hr.Harvest();
-                                resourcesFound = true;
-                                workflow--;
-                            }
-                            break;
-                        case Structure.RESOURCE_STICK_ID:
-                            ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
-                            if (shr != null)
-                            {
-                                shr.Harvest();
-                                resourcesFound = true;
-                                workflow--;
-                            }
-                            break;
+                                break;
+                            case Structure.RESOURCE_STICK_ID:
+                                ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
+                                if (shr != null)
+                                {
+                                    shr.Harvest();
+                                    resourcesFound = true;
+                                    workflow--;
+                                }
+                                break;
+                        }
+                        i++;
                     }
-                    i++;
+                    if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
                 }
-                if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
             }
         }
 
         destructionTimer -= GameMaster.LABOUR_TICK;
-        if (destructionTimer <= 0) StopWork();
+        if (destructionTimer <= 0) StopWork(true);
     }
 
     protected override void RecalculateWorkspeed()
@@ -91,53 +88,24 @@ public class GatherSite : Worksite
     }
     
 
-    override public void StopWork()
-    {
-        if (destroyed) return;
-        else destroyed = true;
-        if (workersCount > 0)
-        {
-            GameMaster.realMaster.colonyController.AddWorkers(workersCount);
-            workersCount = 0;
-        }
-        if (sign != null) MonoBehaviour.Destroy(sign.gameObject);
-        
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
-            subscribedToUpdate = false;
-        }
-        if (workplace != null)
-        {
-            workplace.RemoveWorksiteLink(this);
-            workplace = null;
-        }
-        if (showOnGUI)
-        {
-            observer.SelfShutOff();
-            showOnGUI = false;
-            UIController.current.ChangeChosenObject(ChosenObjectType.Surface);
-        }
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
-    }
-
     #region save-load system
-    override protected List<byte> Save()
+    override public void Save(System.IO.FileStream fs)
     {
         if (workplace == null)
         {
-            StopWork();
-            return null;
+            StopWork(true);
+            return;
         }
         else
         {
             var pos = workplace.pos;
-            var data = new List<byte>() {
-                (byte)WorksiteType.GatherSite, pos.x ,pos.y, pos.z, workplace.faceIndex
-            };
-            data.AddRange(System.BitConverter.GetBytes(destructionTimer));
-            data.AddRange(SerializeWorksite());
-            return data;
+            fs.WriteByte((byte)WorksiteType.GatherSite);
+            fs.WriteByte(pos.x);
+            fs.WriteByte(pos.y);
+            fs.WriteByte(pos.z);
+            fs.WriteByte(workplace.faceIndex);
+            fs.Write(System.BitConverter.GetBytes(destructionTimer),0,4);
+            SerializeWorksite(fs);
         }
     }
     public static GatherSite Load(System.IO.FileStream fs, Chunk chunk)

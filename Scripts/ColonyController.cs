@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public sealed class ColonyController : MonoBehaviour
 {
     public string cityName { get; private set; }
@@ -41,6 +40,7 @@ public sealed class ColonyController : MonoBehaviour
     public List<Building> powerGrid { get; private set; }
     public List<Dock> docks { get; private set; }
     public List<House> houses { get; private set; }
+    private Dictionary<Plane, Worksite> worksites;
     public byte docksLevel { get; private set; }
     public float housingLevel { get; private set; }
     public float foodMonthConsumption
@@ -94,7 +94,6 @@ public sealed class ColonyController : MonoBehaviour
             birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
             energyCrystalsCount = START_ENERGY_CRYSTALS_COUNT;
-            Worksite.SetColonyLink(this);
 
             cityName = "My Colony";
         }
@@ -109,7 +108,6 @@ public sealed class ColonyController : MonoBehaviour
         docks.Clear();
         houses.Clear();
         if (hospitals != null) hospitals.Clear();
-        Worksite.SetColonyLink(this);
         happinessModifiers = null;
     }
 
@@ -362,21 +360,17 @@ public sealed class ColonyController : MonoBehaviour
         }
         else
         {
-            if (Worksite.worksitesList.Count > 0)
+            if (worksites != null)
             {
-                foreach (Worksite w in Worksite.worksitesList)
+                foreach (var pw in worksites)
                 {
-                    if (w == null || w.workersCount == 0) continue;
-                    else
+                    pw.Value.FreeWorkers();
+                    if (freeWorkers > 0)
                     {
-                        w.FreeWorkers();
-                        if (freeWorkers > 0)
-                        {
-                            freeWorkers--;
-                            citizenCount--;
-                        }
-                        break;
+                        freeWorkers--;
+                        citizenCount--;
                     }
+                    break;
                 }
             }
         }
@@ -401,7 +395,7 @@ public sealed class ColonyController : MonoBehaviour
         freeWorkers = freeWorkers - x + w.AddWorkers(x);
     }
 
-    #region AddingToLists
+    #region ListsManagement
 
     public void AddHousing(House h)
     {
@@ -709,6 +703,75 @@ public sealed class ColonyController : MonoBehaviour
             if (happinessAffects.Count < 255)   happinessAffects.Add((val, time));
         }
     }
+
+    public void AddWorksiteToList(Worksite w)
+    {
+        if (w == null || w.workplace == null) return;
+        else
+        {
+            var p = w.workplace;
+            if (worksites == null) worksites = new Dictionary<Plane, Worksite>();
+            else
+            {
+                if (worksites.ContainsKey(p))
+                {
+                    if (worksites[p] != null) worksites[p].StopWork(false);
+                    worksites[p] = w;
+                    return;
+                }
+            }
+            worksites.Add(p, w);
+            p.SetWorksitePresence(true);
+        }
+    }
+    public Worksite GetWorksite(Plane p)
+    {
+        if (worksites == null) return null;
+        else
+        {
+            if (worksites.ContainsKey(p)) return worksites[p];
+            else return null;
+        }
+    }
+    public void ReplaceWorksiteFromList(Plane p, Worksite w, bool sendStopMessage)
+    {
+        if (worksites == null || !worksites.ContainsKey(p))
+        {
+            AddWorksiteToList(w);
+            return;
+        }
+        else
+        {
+            if (worksites[p] != null && sendStopMessage) worksites[p].StopWork(false);
+            worksites[p] = w;
+        }
+    }
+    public void RemoveWorksite(Worksite w)
+    {
+        if (worksites != null && worksites.ContainsValue(w))
+        {
+            foreach (var pw in worksites)
+            {
+                if (pw.Value == w)
+                {
+                    var p = pw.Key;
+                    worksites.Remove(p);
+                    p.SetWorksitePresence(false);
+                    if (worksites.Count == 0) worksites = null;
+                    return;
+                }
+            }            
+        }
+    }
+    public void RemoveWorksite(Plane p)
+    {
+        if (worksites != null && worksites.ContainsKey(p))
+        {
+            var w = worksites[p];
+            if (w != null) w.StopWork(false);
+            worksites.Remove(p);
+        }
+    }
     #endregion
 
     public void RenameColony(string nm)
@@ -766,8 +829,30 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 6 x 4
-
-        Worksite.StaticSave(fs);
+        //worksites saveing
+        int count = 0;
+        if (worksites != null)
+        {            
+            var keys = worksites.Keys;
+            foreach (var k in keys)
+            {
+                if (k == null | worksites[k] == null) worksites.Remove(k);
+            }
+            count = worksites.Count;
+            if (count > 0)
+            {
+                fs.WriteByte(1);
+                fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+                keys = worksites.Keys;
+                foreach (var k in keys) // т.к. могут сами удаляться при сохранении, если нет workplace
+                { 
+                    worksites[k].Save(fs);
+                }
+            }
+            else fs.WriteByte(0);
+        }
+        else fs.WriteByte(0);
+        // eo worksites saving
         fs.Write(System.BitConverter.GetBytes(freeWorkers), 0, 4);
         fs.Write(System.BitConverter.GetBytes(citizenCount), 0, 4);
         fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
@@ -788,7 +873,7 @@ public sealed class ColonyController : MonoBehaviour
         else fs.WriteByte(0);
 
         var nameArray = System.Text.Encoding.Default.GetBytes(cityName);
-        int count = nameArray.Length;
+        count = nameArray.Length;
         fs.Write(System.BitConverter.GetBytes(count), 0, 4); // количество байтов, не длина строки
         if (count > 0) fs.Write(nameArray, 0, nameArray.Length);
     }
@@ -797,7 +882,7 @@ public sealed class ColonyController : MonoBehaviour
         if (storage == null) storage = gameObject.AddComponent<Storage>();
         storage.Load(fs);
        
-        var data = new byte[24];        
+        var data = new byte[25];        
         fs.Read(data, 0, 24);
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
         happiness_coefficient = System.BitConverter.ToSingle(data, 4);
@@ -805,8 +890,15 @@ public sealed class ColonyController : MonoBehaviour
         birthrateCoefficient = System.BitConverter.ToSingle(data, 12);
         energyStored = System.BitConverter.ToSingle(data, 16);
         energyCrystalsCount = System.BitConverter.ToSingle(data, 20);
-        Worksite.StaticLoad(fs);
-
+        //
+        if (data[25] != 0)
+        {
+            data = new byte[4];
+            fs.Read(data, 0, data.Length);
+            int count = System.BitConverter.ToInt32(data, 0);
+            Worksite.StaticLoad(fs, count);
+        }
+        //
         data = new byte[22]; // 20 + 1 + 1- name length
         fs.Read(data, 0, 25);
         freeWorkers = System.BitConverter.ToInt32(data, 0);

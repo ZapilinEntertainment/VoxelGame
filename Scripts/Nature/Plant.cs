@@ -69,13 +69,6 @@ public abstract class Plant : Structure {
 		growth = 0;
 	}
 
-	public static void PlantUpdate() { // можно выделить в потоки
-        if (existingPlantsMask != 0) {
-            if ((existingPlantsMask & (1 << CROP_CORN_ID)) != 0) Corn.UpdatePlants();
-            if ((existingPlantsMask & (1 << TREE_OAK_ID)) != 0) OakTree.UpdatePlants();
-        }
-	}
-
     virtual public int GetMaxLifeTransfer()
     {
         return 1;

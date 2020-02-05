@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum ChosenObjectType : byte { None, Surface, Cube, Structure, Worksite }
+public enum ChosenObjectType : byte { None, Plane, Structure, Worksite }
 public enum Icons : byte
 {
     Unknown,GreenArrow, GuidingStar, OutOfPowerButton, PowerPlus, PowerMinus, PowerButton, Citizen, RedArrow, CrewBadIcon,
@@ -23,13 +23,13 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] GameObject colonyPanel, tradePanel, hospitalPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
-    [SerializeField] Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
-    [SerializeField] Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
-    [SerializeField] Transform storagePanelContent;
-    [SerializeField] RawImage progressPanelIcon;
-    [SerializeField] QuestUI _questUI;
-    [SerializeField] InputField colonyNameField;
+    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
+    [SerializeField] private Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
+    [SerializeField] private Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
+    [SerializeField] private Transform storagePanelContent;
+    [SerializeField] private RawImage progressPanelIcon;
+    [SerializeField] private QuestUI _questUI;
+    [SerializeField] private InputField colonyNameField;
 #pragma warning restore 0649
 
     public bool showLayerCut { get; private set; }
@@ -41,16 +41,16 @@ sealed public class UIController : MonoBehaviour
     public Texture resourcesIcons { get; private set; }
     public Texture buildingsIcons { get; private set; }
     public Transform mainCanvas { get; private set; }
-    public Plane chosenSurface { get; private set; }
+    public Plane selectedPlane { get; private set; }
     public QuestUI questUI { get; private set; }
 
-    Vector3 flyingMoneyOriginalPoint = Vector3.zero;
+    private Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
     private enum MenuSection { NoSelection, Save, Load, Options }
     private MenuSection selectedMenuSection = MenuSection.NoSelection;
     private SaveSystemUI saveSystem;
 
-    const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;
+    private const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;
     public int interceptingConstructPlaneID = -1;
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
@@ -70,7 +70,7 @@ sealed public class UIController : MonoBehaviour
     private Storage storage;
     public UIObserver workingObserver { get; private set; }
     Worksite chosenWorksite;
-    ChosenObjectType chosenObjectType;
+    ChosenObjectType selectedObjectType;
     Transform selectionFrame; Material selectionFrameMaterial;
 
     public static UIController current;
@@ -463,7 +463,7 @@ sealed public class UIController : MonoBehaviour
                             else
                             {
                                 chosenStructure = s;
-                                chosenSurface = s.basement;
+                                selectedPlane = s.basement;
                                 chosenWorksite = null;
                                 ChangeChosenObject(ChosenObjectType.Structure);
                                 faceIndex = Chunk.NO_FACE_VALUE;
@@ -475,12 +475,14 @@ sealed public class UIController : MonoBehaviour
                     {
                         var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
                         Block b = crh.block;
-
                         faceIndex = crh.faceIndex;
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
                         else
                         {
-                            
+                            chosenStructure = null;
+                            selectedPlane = b.GetPlane(faceIndex);
+                            chosenWorksite = null;
+                            ChangeChosenObject(ChosenObjectType.Plane);
                         }
                         break;
                     }
@@ -492,7 +494,7 @@ sealed public class UIController : MonoBehaviour
                             if (ws.worksite == chosenWorksite) return;
                             else
                             {
-                                chosenSurface = null;
+                                selectedPlane = null;
                                 chosenStructure = null;
                                 chosenWorksite = ws.worksite;
                                 ChangeChosenObject(ChosenObjectType.Worksite);
@@ -517,11 +519,11 @@ sealed public class UIController : MonoBehaviour
     {
         if (s != null)
         {
-            if (chosenObjectType == ChosenObjectType.Structure & chosenStructure == s) return;
+            if (selectedObjectType == ChosenObjectType.Structure & chosenStructure == s) return;
             else
             {
                 chosenStructure = s;
-                chosenSurface = s.basement;
+                selectedPlane = s.basement;
                 chosenWorksite = null;
                 faceIndex = Chunk.NO_FACE_VALUE;
                 ChangeChosenObject(ChosenObjectType.Structure);
@@ -550,10 +552,10 @@ sealed public class UIController : MonoBehaviour
             rightPanel.SetActive(false);
             FollowingCamera.main.ResetTouchRightBorder();
             selectionFrame.gameObject.SetActive(false);
-            chosenObjectType = ChosenObjectType.None;
+            selectedObjectType = ChosenObjectType.None;
             chosenWorksite = null;
             chosenStructure = null;
-            chosenSurface = null;
+            selectedPlane = null;
             faceIndex = Chunk.NO_FACE_VALUE;
             changeFrameColor = false;
         }
@@ -562,11 +564,11 @@ sealed public class UIController : MonoBehaviour
             switch (newChosenType)
             {
                 case ChosenObjectType.Structure: if (chosenStructure == null) return; else break;
-                case ChosenObjectType.Surface: if (chosenSurface == null) return; else break;
+                case ChosenObjectType.Plane: if (selectedPlane == null) return; else break;
                 case ChosenObjectType.Worksite: if (chosenWorksite == null) return; else break;
             }
             FollowingCamera.main.SetTouchRightBorder(Screen.width - rightPanel.GetComponent<RectTransform>().rect.width);
-            chosenObjectType = newChosenType;
+            selectedObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
             rightPanel.SetActive(true);
             selectionFrame.gameObject.SetActive(true);
@@ -577,105 +579,26 @@ sealed public class UIController : MonoBehaviour
         }
 
         Vector3 sframeColor = Vector3.one;
-        switch (chosenObjectType)
+        switch (selectedObjectType)
         {
-            case ChosenObjectType.Surface:
+            case ChosenObjectType.Plane:
                 {
-                    faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
-                    Vector3 pos = chosenSurface.pos.ToWorldSpace();
-                    selectionFrame.position = pos + Vector3.down * Block.QUAD_SIZE / 2f;
-                    selectionFrame.rotation = Quaternion.identity;
+                    faceIndex = selectedPlane.faceIndex; 
+                    Vector3 pos = selectedPlane.pos.ToWorldSpace();
+                    selectionFrame.position = selectedPlane.GetCenterPosition();
+                    selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetRotation());
                     selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
-                    //workingObserver = chosenSurface.ShowOnGUI();
+                    workingObserver = selectedPlane.ShowOnGUI();
                     FollowingCamera.main.SetLookPoint(pos);
                 }
-                break;
-
-                /*
-            case ChosenObjectType.Cube:
-                {
-                    bool activatePlatformCreatingButton = false;
-                    switch (faceIndex)
-                    {
-                        case 0:
-                            {
-                                selectionFrame.transform.rotation = Quaternion.Euler(90, 0, 0);
-                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE / 2f;
-                                int z = chosenCube.pos.z + 1;
-                                if (z < Chunk.CHUNK_SIZE)
-                                {
-                                    Block b = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y, z);
-                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                }
-                                break;
-                            }
-                        case 1:
-                            {
-                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE / 2f;
-                                selectionFrame.transform.rotation = Quaternion.Euler(0, 0, -90);
-                                int x = chosenCube.pos.x + 1;
-                                if (x < Chunk.CHUNK_SIZE)
-                                {
-                                    Block b = chosenCube.myChunk.GetBlock(x, chosenCube.pos.y, chosenCube.pos.z);
-                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                }
-                                break;
-                            }
-                        case 2:
-                            {
-                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.back * Block.QUAD_SIZE / 2f;
-                                selectionFrame.transform.rotation = Quaternion.Euler(-90, 0, 0);
-                                int z = chosenCube.pos.z - 1;
-                                if (z >= 0)
-                                {
-                                    Block b = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y, z);
-                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                }
-                                break;
-                            }
-                        case 3:
-                            {
-                                selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.left * Block.QUAD_SIZE / 2f;
-                                selectionFrame.transform.rotation = Quaternion.Euler(0, 0, 90);
-                                int x = chosenCube.pos.x - 1;
-                                if (x >= 0)
-                                {
-                                    Block b = chosenCube.myChunk.GetBlock(x, chosenCube.pos.y, chosenCube.pos.z);
-                                    if (b == null || (b.type == BlockType.Shapeless | (b.type == BlockType.Cave && !(b as CaveBlock).haveSurface))) activatePlatformCreatingButton = true;
-                                }
-                                break;
-                            }
-                        case 4:
-                            selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE / 2f;
-                            selectionFrame.transform.rotation = Quaternion.identity;
-                            break;
-                        case 5:
-                            selectionFrame.position = chosenCube.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE / 2f;
-                            selectionFrame.transform.rotation = Quaternion.Euler(-180, 0, 0);
-                            break;
-                    }
-                    selectionFrame.localScale = new Vector3(Plane.INNER_RESOLUTION, 1, Plane.INNER_RESOLUTION);
-                    sframeColor = new Vector3(140f / 255f, 1, 0.9f);
-
-
-                    FollowingCamera.main.SetLookPoint(chosenCube.pos.ToWorldSpace());
-
-                    Transform t = rightPanel.transform;
-                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(true);
-                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(chosenCube.excavatingStatus != 0); // pour in button
-                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).gameObject.SetActive(faceIndex == 4); // make surface button
-                    t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 3).gameObject.SetActive(activatePlatformCreatingButton); // create platform button
-                    disableCubeMenuButtons = false;
-                }
-                break;
-                */
+                break;              
 
             case ChosenObjectType.Structure:
                 faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
                 selectionFrame.position = chosenStructure.transform.position;
-                selectionFrame.rotation = Quaternion.identity;
+                selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetRotation());
                 selectionFrame.localScale = new Vector3(chosenStructure.surfaceRect.size, 1, chosenStructure.surfaceRect.size);
                 sframeColor = new Vector3(1, 0, 1);
                 workingObserver = chosenStructure.ShowOnGUI();
@@ -1029,7 +952,7 @@ sealed public class UIController : MonoBehaviour
     #region right panel
     public void SelectedObjectLost()
     {
-        if (chosenObjectType == ChosenObjectType.None) return;
+        if (selectedObjectType == ChosenObjectType.None) return;
         ChangeChosenObject(ChosenObjectType.None);
     }
 

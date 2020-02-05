@@ -105,8 +105,16 @@ public sealed class UISurfacePanelController : UIObserver {
                     hq = colony.hq;
                     CheckGatherButton();
 
-                    CleanSite cs = observingSurface.worksite as CleanSite;
-                    bool check = (cs != null && cs.diggingMission);
+                    bool check = false;
+                    if (observingSurface.haveWorksite)
+                    {
+                        var w = colony.GetWorksite(observingSurface);
+                        if (w != null)
+                        {
+                            var cs = w as CleanSite;
+                            check = (cs != null && cs.diggingMission);
+                        }
+                    }
                     if (check != status_digOrdered)
                     {
                         status_digOrdered = check;
@@ -163,12 +171,21 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-			GatherSite gs = observingSurface.worksite as GatherSite;
-			if (gs == null) {
-				gs = new GatherSite(observingSurface);
+            bool newGatherSite = true;
+            if (observingSurface.haveWorksite)
+            {
+                var w = colony.GetWorksite(observingSurface);
+                if (w != null && w is GatherSite)
+                {
+                    w.StopWork(true);
+                    newGatherSite = false;
+                }
+            }
+            if (newGatherSite)
+            {
+                var gs = new GatherSite(observingSurface);
                 UIController.current.ShowWorksite(gs);
-			}
-			else gs.StopWork();
+            }
 			StatusUpdate();
 		}
 	}
@@ -178,23 +195,32 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-                CleanSite cs = observingSurface.worksite as CleanSite;
-                if (cs == null)
+            bool newCleanSite = true;
+            if (observingSurface.haveWorksite)
+            {
+                var w = colony.GetWorksite(observingSurface);
+                if (w != null && w is CleanSite)
                 {
-                    cs = new CleanSite(observingSurface, true);
-                    UIController.current.ShowWorksite(cs);
+                    if ((w as CleanSite).diggingMission)
+                    {
+                        w.StopWork(true);
+                        newCleanSite = false;
+                    }
                 }
-                else
-                {
-                    if (cs.diggingMission) cs.StopWork();
-                }
+            }
+            if (newCleanSite)
+            {
+                var cs = new CleanSite(observingSurface, true);
+                UIController.current.ShowWorksite(cs);
+            }
 			StatusUpdate();
 		}
 	}
 
     void CheckGatherButton()
     {
-        if ( observingSurface.worksite is GatherSite )
+        Worksite w = colony.GetWorksite(observingSurface) as GatherSite;
+        if ( w is GatherSite )
         {
             if (status_gather != true)
             {
@@ -507,7 +533,7 @@ public sealed class UISurfacePanelController : UIObserver {
         gatherButton.gameObject.SetActive(working);
 		if (working) {
             CheckGatherButton();
-            CleanSite cs = observingSurface.worksite as CleanSite;
+            CleanSite cs = colony.GetWorksite(observingSurface) as CleanSite;
             if (cs != null && cs.diggingMission)
             {
 

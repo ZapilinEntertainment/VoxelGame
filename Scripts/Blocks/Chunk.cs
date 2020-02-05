@@ -27,6 +27,7 @@ public sealed partial class Chunk : MonoBehaviour
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
     private List<Plane> surfaces;
+    public Nature nature { get; private set; }
 
     public const float CHUNK_UPDATE_TICK = 0.5f;
     public const byte MIN_CHUNK_SIZE = 3 , NO_FACE_VALUE = 10;
@@ -67,7 +68,6 @@ public sealed partial class Chunk : MonoBehaviour
         GameMaster.layerCutHeight = CHUNK_SIZE;
         GameMaster.prevCutHeight = CHUNK_SIZE;
     }
-
     public void Awake()
     {
         FollowingCamera.main.cameraChangedEvent += CullingUpdate;
@@ -88,6 +88,17 @@ public sealed partial class Chunk : MonoBehaviour
         if (PoolMaster.shadowCasting & shadowsUpdateRequired)      ShadowsUpdate();
         if (needSurfacesUpdate) RecalculateSurfacesList();
     }  
+
+    public Nature GetNature()
+    {
+        if (nature == null)
+        {
+            nature = gameObject.AddComponent<Nature>();
+            nature.Prepare(this);
+        }
+        return nature;
+    }
+
     #region operating blocks data
 
     public void CreateNewChunk(int[,,] newData)
@@ -99,7 +110,7 @@ public sealed partial class Chunk : MonoBehaviour
         Prepare();
 
         ChunkPos cpos;
-        for (int y = size - 1; y > -1; y--)
+        for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
             {
@@ -114,6 +125,7 @@ public sealed partial class Chunk : MonoBehaviour
             }
         }
         PreparePlanes();
+        RecalculateSurfacesList();
         if (surfaces != null & GameMaster.realMaster.gameMode != GameMode.Editor)
         {
            GameMaster.geologyModule.SpreadMinerals(surfaces);
@@ -136,11 +148,11 @@ public sealed partial class Chunk : MonoBehaviour
             bool transparency = true;
             Block prevBlock = null;
             //left to right
-            for (int x = 0; x < CHUNK_SIZE; x++)
+            for (int z = 0; z < CHUNK_SIZE; z++)
             {
                 for (int y = 0; y < CHUNK_SIZE; y++)
                 {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    for (int x = 0; x < CHUNK_SIZE; x++)
                     {
                         b = blockArray[x, y, z];
                         if (b == null)
@@ -184,11 +196,11 @@ public sealed partial class Chunk : MonoBehaviour
                 }
             }
             //back to fwd            
-            for (int z = 0; z < CHUNK_SIZE; z++)
+            for (int x = 0; x < CHUNK_SIZE; x++)
             {
                 for (int y = 0; y < CHUNK_SIZE; y++)
                 {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    for (int z = 0; z < CHUNK_SIZE; z++)
                     {
                         b = blockArray[x, y, z];
                         if (b == null)
@@ -234,11 +246,11 @@ public sealed partial class Chunk : MonoBehaviour
                 prevBlock = null;
             }
             //down to up            
-            for (int y = 0; y < CHUNK_SIZE; y++)
+            for (int x = 0; x < CHUNK_SIZE; x++)
             {
                 for (int z = 0; z < CHUNK_SIZE; z++)
                 {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    for (int y = 0; y < CHUNK_SIZE; y++)
                     {
                         b = blockArray[x, y, z];
                         if (b == null)
@@ -280,12 +292,9 @@ public sealed partial class Chunk : MonoBehaviour
                     }
                     transparency = true;
                 }
-                transparency = true;
-                prevBlock = null;
             }
 
             blockArray = null;
-            RecalculateSurfacesList();
         }
     }
     private void RecalculateSurfacesList()
@@ -299,13 +308,12 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (fb.Value.TryGetPlane(upcode, out p))
                 {
-                    if (p.isSuitableForChanging()) surfaces.Add(p);
+                    if (p.isSuitableForStructures()) surfaces.Add(p);
                 }
             }
             if (surfaces.Count == 0) surfaces = null;
         }
         else surfaces = null;
-        if (surfaces != null) Debug.Log(surfaces.Count);
         needSurfacesUpdate = false;
     }
 
@@ -518,6 +526,19 @@ public sealed partial class Chunk : MonoBehaviour
 
     #region taking surfaces
     public List<Plane> GetSurfacesList() { return surfaces; }
+    public List<Plane> GetSurfacesWithoutLifeforms()
+    {
+        if (surfaces == null) return null;
+        else
+        {
+            var gls = new List<Plane>();
+            foreach (var s in surfaces)
+            {
+                if (s.haveGrassland()) gls.Add(s);
+            }
+            if (gls.Count != 0) return gls; else return null;
+        }
+    }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
         if (surfaces == null || x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;
@@ -595,7 +616,7 @@ public sealed partial class Chunk : MonoBehaviour
             }
             return null;
         }
-    }
+    }   
     #endregion
     /// <summary>
     /// Seek a position for structure somewhere. Returns (xpos, zpos, surface_block_index)

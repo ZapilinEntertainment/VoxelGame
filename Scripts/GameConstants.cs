@@ -4,13 +4,10 @@ public abstract class GameConstants {
 
     public const byte HQ_LEVEL_TO_CREATE_BLOCK = 4, HQ_MAX_LEVEL = 6;
 
-    public const int LIFEPOWER_PER_BLOCK = 130; // 200
-    public const int LIFEPOWER_SPREAD_SPEED = 10 ;
     public const int CELESTIAL_LAYER = 9;
     public const float START_HAPPINESS = 0.5f, LOW_HAPPINESS = 0.2f, HIGH_HAPPINESS = 0.9f,
         HAPPINESS_CHANGE_SPEED = 0.001f, 
         HEALTH_CHANGE_SPEED = 0.001f,
-        LIFE_DECAY_SPEED = 0.1f,
         CAM_LOOK_SPEED = 10,
         START_BIRTHRATE_COEFFICIENT = 0.001f,
         HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000,
@@ -35,7 +32,6 @@ public abstract class GameConstants {
     }
     public static float FACTORY_GEARS_DAMAGE_COEFFICIENT { get { return 0.000003f * GameMaster.realMaster.GetDifficultyCoefficient(); } }
     public static float WORKSITES_GEARS_DAMAGE_COEFFICIENT { get { return 0.000012f * GameMaster.realMaster.GetDifficultyCoefficient(); } }
-    public const int MAX_LIFEPOWER_TRANSFER = 16;
 
     public const string BASE_SETTINGS_PLAYERPREF = "baseSettings";
     // int key - 32 values

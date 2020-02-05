@@ -15,26 +15,23 @@ public class CleanSite : Worksite {
 
         diggingMission = f_diggingMission;
         if (workersCount < START_WORKERS_COUNT) colony.SendWorkers(START_WORKERS_COUNT, this);
-        worksitesList.Add(this);
-        GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
-        subscribedToUpdate = true;
     }
 
     override public void WorkUpdate () {
 		if (workplace == null) {
-            StopWork();
+            StopWork(true);
 			return;
 		}
         var strlist = workplace.GetStructuresList();
 		if (strlist == null) {
             if (diggingMission)
             {
-                workplace.RemoveWorksiteLink(this);
-                DigSite ds = new DigSite(workplace, true);
+                colony.ReplaceWorksiteFromList(workplace, this, false);
+                DigSite ds = new DigSite(workplace, true, 0);
                 TransferWorkers(this, ds);
                 if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
             }
-            StopWork();
+            StopWork(true);
             return;
 		}		
         else
@@ -72,56 +69,24 @@ public class CleanSite : Worksite {
         gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 
-	
-
-    override public void StopWork()
-    {
-        if (destroyed) return;
-        else destroyed = true;
-        if (workersCount > 0)
-        {
-            colony.AddWorkers(workersCount);
-            workersCount = 0;
-        }
-        if (sign != null)
-        {
-          //  FollowingCamera.main.cameraChangedEvent -= SignCameraUpdate;
-            MonoBehaviour.Destroy(sign.gameObject);
-        }        
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
-            subscribedToUpdate = false;
-        }
-        if (workplace != null)
-        {
-            workplace.RemoveWorksiteLink(this);
-            workplace = null;
-        }
-        if (showOnGUI)
-        {
-            if (observer.observingWorksite == this)
-            {
-                observer.SelfShutOff();
-                UIController.current.ChangeChosenObject(ChosenObjectType.Surface);
-            }
-            showOnGUI = false;
-        }
-        if (worksitesList.Contains(this)) worksitesList.Remove(this);
-    }
-
     #region save-load mission
-    override protected List<byte> Save() {
-		if (workplace == null) {
-            StopWork();
-			return null;
-		}
-        var pos = workplace.pos;
-        var data = new List<byte>() { (byte)WorksiteType.CleanSite, pos.x, pos.y, pos.z, workplace.faceIndex,
-            diggingMission ? (byte)1 : (byte)0
-        };
-        data.AddRange(SerializeWorksite());
-		return data;
+    override public void Save(System.IO.FileStream fs) {
+        if (workplace == null)
+        {
+            StopWork(true);
+            return;
+        }
+        else
+        {
+            var pos = workplace.pos;
+            fs.WriteByte((byte)WorksiteType.CleanSite);
+            fs.WriteByte(pos.x);
+            fs.WriteByte(pos.y);
+            fs.WriteByte(pos.z);
+            fs.WriteByte(workplace.faceIndex);
+            fs.WriteByte(diggingMission ? (byte)1 : (byte)0);
+            SerializeWorksite(fs);
+        }
 	}
 
     public static CleanSite Load(System.IO.FileStream fs, Chunk chunk )

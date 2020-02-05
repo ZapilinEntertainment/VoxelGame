@@ -139,7 +139,7 @@ public sealed class Settlement : House
         //#
         if (!subscribedToUpdate)
         {
-            GameMaster.realMaster.lifepowerUpdateEvent += LifepowerUpdate;
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
             settlements.Add(this);
             maxPoints = GetMaxPoints();
@@ -177,7 +177,7 @@ public sealed class Settlement : House
         }
     }
 
-    public void LifepowerUpdate()
+    public void LabourUpdate()
     {
         if (isEnergySupplied)
         {
@@ -1016,7 +1016,7 @@ public sealed class Settlement : House
         GameMaster.realMaster.colonyController.DeleteHousing(this);
         if (subscribedToUpdate)
         {
-            GameMaster.realMaster.lifepowerUpdateEvent -= LifepowerUpdate;
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
             settlements.Remove(this);
         }

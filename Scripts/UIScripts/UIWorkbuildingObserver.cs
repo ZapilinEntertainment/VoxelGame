@@ -344,7 +344,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
     {
         if (observingWorksite != null)
         {
-            observingWorksite.StopWork();
+            observingWorksite.StopWork(true);
             observingWorksite = null;
             SelfShutOff();            
         }

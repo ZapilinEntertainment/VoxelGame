@@ -243,7 +243,12 @@ public sealed class BlockExtension
 
         if (volume <= 1f)
         {
-            planes[faceIndex].worksite.StopWork();
+            var p = planes[faceIndex];
+            if (p.haveWorksite)
+            {
+                GameMaster.realMaster.colonyController.RemoveWorksite(p);
+                p.SetWorksitePresence(false);
+            }
             Annihilate(true, true);
             return 0f;
         }

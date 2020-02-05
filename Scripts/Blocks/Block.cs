@@ -173,7 +173,8 @@ public sealed class Block {
     }
     public bool InitializePlane(byte faceIndex)
     {
-        if (extension != null) return extension.InitializePlane(faceIndex); else return false;
+        if (extension != null) return extension.InitializePlane(faceIndex);
+        else return false;
     }
     public void DeactivatePlane(byte faceIndex) {
         extension?.DeactivatePlane(faceIndex);

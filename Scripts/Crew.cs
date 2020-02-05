@@ -49,7 +49,7 @@ public sealed class Crew : MonoBehaviour {
     static Crew()
     {
         crewsList = new List<Crew>();
-        GameMaster.realMaster.lifepowerUpdateEvent += CrewsUpdateEvent;
+        GameMaster.realMaster.labourUpdateEvent += CrewsUpdateEvent;
     }
     public static void CrewsUpdateEvent()
     {

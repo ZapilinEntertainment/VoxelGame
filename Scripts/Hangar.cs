@@ -111,7 +111,8 @@ public sealed class Hangar : WorkBuilding
         modelRotation = (byte)r;
         if (basement != null)
         {
-            transform.localRotation = Quaternion.Euler(0, modelRotation * 45, 0);
+            transform.localRotation = Quaternion.Euler(basement.GetRotation());
+            transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
             CheckPositionCorrectness();
         }
     }
