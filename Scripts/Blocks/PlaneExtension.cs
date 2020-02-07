@@ -292,13 +292,15 @@ public sealed class PlaneExtension
         s.SetVisibility(myPlane.visible);
         t.localRotation = Quaternion.Euler(myPlane.GetRotation() + Vector3.up * s.modelRotation * 45f);
         structures.Add(s);
+
+        if (grassland != null && s.ID == Structure.PLANT_ID) grassland.needRecalculation = true;
     }
 
 	public void ClearSurface(bool check, bool returnResources, bool deleteExtensionLink)
     {
         if (structures == null)
         {
-            myPlane.NullifyExtesionLink(this);
+            myPlane.NullifyExtensionLink(this);
             return;
         }
         if (structures.Count > 0)
@@ -312,11 +314,11 @@ public sealed class PlaneExtension
         if (check) RecalculateSurface();
         else
         {
-            if (deleteExtensionLink) myPlane.NullifyExtesionLink(this);
+            if (deleteExtensionLink) myPlane.NullifyExtensionLink(this);
         }
     }
     /// <summary>
-    /// Remove structure data from this block structures map
+    /// Do not use directly - use Structure.Annihilation(); Remove structure data from this block structures map
     /// </summary>
     public void RemoveStructure(Structure s)
     {
@@ -343,9 +345,43 @@ public sealed class PlaneExtension
     {
         return structures;
     }
+    public List<Plant> GetPlantsList()
+    {
+        if (structures == null) return null;
+        else
+        {
+            var plist = new List<Plant>();
+            var pid = Structure.PLANT_ID;
+            foreach (var s in structures)
+            {
+                if (s.ID == pid) plist.Add(s as Plant);
+            }
+            if (plist.Count > 0) return plist; else return null;
+        }
+    }
     public bool HaveGrassland()
     {
         return grassland != null;
+    }
+    /// <summary>
+    /// returns true if set successful
+    /// </summary>
+    public bool SetGrassland(Grassland g)
+    {
+        if (grassland == null)
+        {
+            grassland = g;
+            return true;
+        }
+        else return false;
+    }
+    public void RemoveGrassland(Grassland g, bool sendAnnihilationRequest)
+    {
+        if (grassland != null && grassland == g)
+        {
+            if (sendAnnihilationRequest) g.Annihilate(true, false);
+            else grassland = null;
+        }
     }
     #endregion
 
@@ -389,7 +425,7 @@ public sealed class PlaneExtension
                         {
                             if (s.surfaceRect.Intersect(x0, z0, x1 - x0, z1 - z0))
                             {
-                                if (s.ID == Structure.PLANT_ID) (s as Plant).Dry();
+                                if (s.ID == Structure.PLANT_ID) (s as Plant).Dry(true);
                                 else s.ApplyDamage(damage);
                             }
                             if (s != null) i++;
@@ -663,13 +699,8 @@ public sealed class PlaneExtension
 
     public void Annihilate(bool compensateStructures)
     {
-        if (fullfillStatus != FullfillStatus.Empty)
-        {
-            foreach (var s in structures)
-            {
-                s.Annihilate(false, compensateStructures, false);
-            }
-        }
+        if (grassland != null) grassland.Annihilate(false, false);
+        ClearSurface(false, compensateStructures, true);
     }
 
     #region save-load system

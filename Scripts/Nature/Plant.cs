@@ -1,139 +1,97 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+public enum PlantCategory : byte { Flower, Bush, Tree} // dependency : grassland, nature
+public enum PlantType : byte { Abstract,OakTree, Corn}
 public abstract class Plant : Structure {
-	public int plant_ID{get;protected set;}
-	public float lifepower;
-	public float lifepowerToGrow {get;protected set;}  // fixed by id		
-	public float growth;
-	public byte stage;	
-    protected bool addedToClassList = false;
+    protected byte stage;
+    public PlantType type { get; protected set; }
 
-    public const int CROP_CORN_ID = 1, TREE_OAK_ID = 2, 
-        TOTAL_PLANT_TYPES = 2;  // при создании нового добавить во все статические функции внизу
-    public const int PLANT_SERIALIZER_LENGTH = 13;
-    public static int existingPlantsMask = 0;
-
-    public static Plant GetNewPlant(int i_plant_id)
+    public static Plant GetNewPlant(PlantType ptype)
     {
         Plant p;
-        switch (i_plant_id)
+        switch (ptype)
         {
             default: return null;
-            case CROP_CORN_ID: p = new GameObject("Corn").AddComponent<Corn>(); break;
-            case TREE_OAK_ID: p = new GameObject("Oak Tree").AddComponent<OakTree>(); break;
+            case PlantType.Corn: p = new GameObject("Corn").AddComponent<Corn>(); break;
+            case PlantType.OakTree: p = new GameObject("Oak Tree").AddComponent<OakTree>(); break;
         }
         p.ID = PLANT_ID;
-        p.plant_ID = i_plant_id;
         p.Prepare();
         return p;
     }
 
-    public static int GetCreateCost(int id)
+    override public void Prepare()
     {
-        switch (id)
-        {
-            case CROP_CORN_ID: return Corn.CREATE_COST;
-            case TREE_OAK_ID: return OakTree.CREATE_COST;
-            default: return 1;
-        }
+        PrepareStructure();
+        stage = 0;
+        type = GetPlantType();
     }
-    public static int GetMaxLifeTransfer(int id) {
-        switch (id)
-        {
-            default: return 1;
-            case CROP_CORN_ID: return Corn.maxLifeTransfer;
-            case TREE_OAK_ID: return OakTree.maxLifeTransfer;
-        }
-    }
-    public static byte GetHarvestableStage(int id)
+
+    /// <summary>
+    /// sets to random position
+    /// </summary>
+    override public void SetBasement(Plane p)
     {
-        switch (id)
+        if (surfaceRect.size == 1)  SetBasement(p, p.GetExtension().GetRandomCell());
+        else
         {
-            default: return 1;
-            case CROP_CORN_ID: return Corn.HARVESTABLE_STAGE;
-            case TREE_OAK_ID: return OakTree.HARVESTABLE_STAGE;
+            if (surfaceRect.size == PlaneExtension.INNER_RESOLUTION) SetBasement(p, PixelPosByte.zero);
+            else SetBasement(p, p.GetExtension().GetRandomPosition(surfaceRect.size));
         }
     }
 
-    virtual public void ResetToDefaults() {
-		lifepower = GetCreateCost(ID);
-		lifepowerToGrow = 1;
-		stage = 0;
-		growth = 0;
-	}
-
-	override public void Prepare() {		
-		PrepareStructure();
-		lifepower = GetCreateCost(ID);
-		growth = 0;
-	}
-
-    virtual public int GetMaxLifeTransfer()
+    virtual public void UpdatePlant()
     {
-        return 1;
+        if (!IsFullGrown()) SetStage((byte)(stage + 1));
     }
-    virtual public byte GetHarvestableStage()
+    virtual protected void SetStage(byte newStage)
     {
-        return 255;
+        stage = newStage;
     }
-
-	#region lifepower operations
-	public virtual void AddLifepower(int life) {
-		lifepower += life;
-	}
-	public virtual void AddLifepowerAndCalculate(int life) {
-		lifepower += life;
-		growth = lifepower / lifepowerToGrow;
-	}
-	public virtual int TakeLifepower(int life) {
-		int lifeTransfer = life;
-		if (life > lifepower) {if (lifepower >= 0) lifeTransfer = (int)lifepower; else lifeTransfer = 0;}
-		lifepower -= lifeTransfer;
-		return lifeTransfer;
-	}
-	virtual public void SetLifepower(float p) {
-		lifepower = p; 
-	}
-	public virtual void SetGrowth(float t) {
-		growth = t;
-	}
-	public virtual void SetStage( byte newStage) {
-		if (newStage == stage) return;
-		stage = newStage;
-		growth = 0;
-	}
-    #endregion
+    virtual public bool IsFullGrown()
+    {
+        return true;
+    }
+    virtual public float GetLifepowerSurplus()
+    {
+        return 0f;
+    }
+    public static PlantType GetPlantType()
+    {
+        return PlantType.Abstract;
+    }
+    //
 
     override public void ApplyDamage(float d)
     {
         if (destroyed | indestructible) return;
         hp -= d;
-        if (hp <= 0) if (hp > -100f) Dry(); else Annihilate(true, false, false);
-    }
-    virtual public void Dry() {
-		Annihilate(true, false, false);
-	}
+        if (hp <= 0) if (hp > -100f) Dry(true); else Annihilate(true, false, false);
+    }    
 
 	virtual public void Harvest(bool replenish) {
-		// сбор ресурсов и перепосадка
+        // сбор ресурсов и перепосадка
+        Annihilate(true, false, false);
 	}
-
-    protected void PreparePlantForDestruction(bool clearFromSurface, bool returnResources)
+    virtual public void Dry(bool sendMessageToGrassland)
     {
-        PrepareStructureForDestruction(clearFromSurface, returnResources, false);
-        if (clearFromSurface)
+        Annihilate(true, sendMessageToGrassland, false);
+    }
+    protected void PreparePlantForDestruction(bool clearFromSurface, bool sendMessageToGrassland)
+    {
+        PrepareStructureForDestruction(clearFromSurface, false, false);
+        if (sendMessageToGrassland)
         {
-           // if (basement != null && basement.grassland != null) basement.grassland.AddLifepower((int)(lifepower * GameMaster.realMaster.lifepowerLossesPercent));
+            if (basement != null && basement.haveGrassland()) basement.GetGrassland().needRecalculation = true;
         }
     }
-
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(bool clearFromSurface, bool sendMessageToGrassland, bool leaveRuins)
     {
         if (destroyed) return;
         else destroyed = true;
         if (!clearFromSurface) { basement = null; }
-        PreparePlantForDestruction(clearFromSurface, returnResources);
+        PreparePlantForDestruction(clearFromSurface, sendMessageToGrassland);
         basement = null;
         Destroy(gameObject);
     }
@@ -148,7 +106,7 @@ public abstract class Plant : Structure {
 
     public static void LoadPlant(System.IO.FileStream fs, Plane sblock)
     {
-        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + PLANT_SERIALIZER_LENGTH];
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 13];
         fs.Read(data, 0, data.Length);
         int plantSerializerIndex = STRUCTURE_SERIALIZER_LENGTH;
         int plantId = System.BitConverter.ToInt32(data, plantSerializerIndex);

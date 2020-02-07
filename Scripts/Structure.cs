@@ -1057,6 +1057,18 @@ public class Structure : MonoBehaviour
         if (p == null) return;
         SetStructureData(p, pos);
     }
+    /// <summary>
+    /// sets to random position
+    /// </summary>
+    virtual public void SetBasement(Plane p)
+    {
+        if (surfaceRect.size == PlaneExtension.INNER_RESOLUTION) SetBasement(p, PixelPosByte.zero);
+        else
+        {
+            if (surfaceRect.size == 1) SetBasement(p, p.GetExtension().GetRandomCell());
+            else SetBasement(p, p.GetExtension().GetRandomPosition(surfaceRect.size));
+        }
+    }
     protected void SetStructureData(Plane p, PixelPosByte pos)
     {
         // dependency - SettlementStructure.setBasement()

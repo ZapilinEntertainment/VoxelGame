@@ -11,51 +11,39 @@ public class OakTree : Plant
     private static List<GameObject> blankTrees_stage4, blankTrees_stage5, blankTrees_stage6;
     private static Sprite[] lodPack_stage4, lodPack_stage5, lodPack_stage6;
 
-    private static bool modelsContainerReady = false;
-    private static float growSpeed, decaySpeed; // fixed by class
+    private static bool modelsContainerReady = false, typeRegistered = false;
     private static float clearTimer = 0;
 
-    public static int maxLifeTransfer { get; protected set; }  // fixed by class
     public static readonly LODRegisterInfo oak4_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 4, 0);
     public static readonly LODRegisterInfo oak5_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 5, 0);
     public static readonly LODRegisterInfo oak6_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 6, 0);
 
     public const byte HARVESTABLE_STAGE = 4;
-    const byte TRANSIT_STAGE = 3;
+    private const byte TRANSIT_STAGE = 3;
     private const int MAX_INACTIVE_BUFFERED_STAGE4 = 12, MAX_INACTIVE_BUFFERED_STAGE5 = 6, MAX_INACTIVE_BUFFERED_STAGE6 = 3, CRITICAL_BUFFER_COUNT = 50;
-    private const float CLEAR_BLANKS_TIME = 10;
+    private const float CLEAR_BLANKS_TIME = 10f, PER_LEVEL_LIFEPOWER_SURPLUS = 0.6f;
 
     private GameObject modelHolder;
     private SpriteRenderer spriter;
     private enum OakDrawMode { NoDraw, DrawStartSprite, DrawModel, DrawLOD }
     private OakDrawMode drawmode;
     private byte lodNumber = 0;
+    private bool addedToClassList = false;
 
     public const byte MAX_STAGE = 6;
-    public const int CREATE_COST = 10, LUMBER = 100, FIRST_LIFEPOWER_TO_GROW = 10, SPRITER_CHILDNUMBER = 0, MODEL_CHILDNUMBER = 1;
+    public const int LUMBER = 100, SPRITER_CHILDNUMBER = 0, MODEL_CHILDNUMBER = 1;
     private const float TREE_SPRITE_MAX_VISIBILITY = 8;
 
     static OakTree()
     {
         oaks = new List<OakTree>();
-        maxLifeTransfer = 10;
-        growSpeed = 0.1f;
-        decaySpeed = growSpeed / 10f;
         AddToResetList(typeof(OakTree));
     }
     public static void ResetStaticData()
     {
         if (blankModelsContainer == null)   modelsContainerReady = false;
         oaks.Clear();
-    }
-    override public void ResetToDefaults()
-    {
-        lifepower = CREATE_COST;
-        lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
-        stage = 0;
-        growth = 0;
-        hp = maxHp;
-        SetStage(0);
+        typeRegistered = false;
     }
 
     // тоже можно рассовать по методам
@@ -310,11 +298,13 @@ public class OakTree : Plant
     override public void Prepare()
     {
         PrepareStructure();
-        plant_ID = TREE_OAK_ID;
         surfaceRect = SurfaceRect.one; isArtificial = false;
-        lifepower = CREATE_COST;
-        lifepowerToGrow = FIRST_LIFEPOWER_TO_GROW;
-        growth = 0;
+        type = GetPlantType();
+        stage = 0;
+    }
+    public static new PlantType GetPlantType()
+    {
+        return PlantType.OakTree;
     }
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
@@ -330,11 +320,10 @@ public class OakTree : Plant
         {
             oaks.Add(this);
             addedToClassList = true;
-            if (((existingPlantsMask >> TREE_OAK_ID) & 1) != 1)
+            if (!typeRegistered)
             {
-                int val = 1;
-                val = val << TREE_OAK_ID;
-                existingPlantsMask += val;
+                GameMaster.realMaster.mainChunk.nature.RegisterNewLifeform(type);
+                typeRegistered = true;
             }
         }
     }
@@ -342,46 +331,12 @@ public class OakTree : Plant
     public static void UpdatePlants()
     {
         float t = GameMaster.LIFEPOWER_TICK;
-        if (oaks.Count > 0)
+        if (oaks.Count == 0)
         {
-            int i = 0;
-            float theoreticalGrowth;
-            while (i < oaks.Count)
+            if (typeRegistered)
             {
-                OakTree oak = oaks[i];
-                if (oak == null)
-                {
-                    oaks.RemoveAt(i);
-                }
-                else
-                {
-                    theoreticalGrowth = oak.lifepower / oak.lifepowerToGrow;
-                    if (oak.growth < theoreticalGrowth)
-                    {
-                        oak.growth = Mathf.MoveTowards(oak.growth, theoreticalGrowth, growSpeed * t);
-                    }
-                    else
-                    {
-                        oak.lifepower -= decaySpeed * t;
-                        if (oak.lifepower <= 0) oak.Dry();
-                    }
-                    if (oak.growth >= 1 & oak.stage < MAX_STAGE)
-                    {
-                        byte nextStage = oak.stage;
-                        nextStage++;
-                        oak.SetStage(nextStage);
-                    }
-                    i++;
-                }
-            }
-        }
-        else
-        {
-            if (((existingPlantsMask >> TREE_OAK_ID) & 1) != 0)
-            {
-                int val = 1;
-                val = val << TREE_OAK_ID;
-                existingPlantsMask -= val;
+                GameMaster.realMaster.mainChunk.nature.UnregisterLifeform(GetPlantType());
+                typeRegistered = false;
             }
         }
         clearTimer -= Time.deltaTime;
@@ -596,45 +551,7 @@ public class OakTree : Plant
         }
     }
 
-    override public int GetMaxLifeTransfer()
-    {
-        return maxLifeTransfer;
-    }
-    override public byte GetHarvestableStage()
-    {
-        return HARVESTABLE_STAGE;
-    }
-
-    #region lifepower operations
-    public override void AddLifepowerAndCalculate(int life)
-    {
-        lifepower += life;
-        byte nstage = 0;
-        float lpg = FIRST_LIFEPOWER_TO_GROW;
-        while (lifepower > lifepowerToGrow & nstage < MAX_STAGE)
-        {
-            nstage++;
-            lpg = GetLifepowerLevelForStage(nstage);
-        }
-        lifepowerToGrow = lpg;
-        SetStage(nstage);
-    }
-    public override int TakeLifepower(int life)
-    {
-        int lifeTransfer = life;
-        if (life > lifepower) { if (lifepower >= 0) lifeTransfer = (int)lifepower; else lifeTransfer = 0; }
-        lifepower -= lifeTransfer;
-        return lifeTransfer;
-    }
-    override public void SetLifepower(float p)
-    {
-        lifepower = p;
-    }
-    override public void SetGrowth(float t)
-    {
-        growth = t;
-    }
-    override public void SetStage(byte newStage)
+    override protected void SetStage(byte newStage)
     {
         if (newStage == stage) return;
         if (transform.childCount != 0)
@@ -655,25 +572,16 @@ public class OakTree : Plant
         SetModel();
         visible = !visible;
         SetVisibility(!visible);
-        lifepowerToGrow = GetLifepowerLevelForStage(stage);
-        growth = lifepower / lifepowerToGrow;
+        basement.GetGrassland().needRecalculation = true;
     }
-
-    public static float GetLifepowerLevelForStage(byte st)
+    override public bool IsFullGrown()
     {
-        switch (st)
-        {
-            default:
-            case 0: return FIRST_LIFEPOWER_TO_GROW; // 10
-            case 1: return FIRST_LIFEPOWER_TO_GROW * 2; // 20
-            case 2: return FIRST_LIFEPOWER_TO_GROW * 4;// 40;
-            case 3: return FIRST_LIFEPOWER_TO_GROW * 8;// 80 - full 3d tree
-            case 4: return FIRST_LIFEPOWER_TO_GROW * 16;// 160
-            case 5: return FIRST_LIFEPOWER_TO_GROW * 32;// 320 - max 
-        }
+        return stage == MAX_STAGE;
     }
-    #endregion
-
+    override public float GetLifepowerSurplus()
+    {
+        return PER_LEVEL_LIFEPOWER_SURPLUS * stage;
+    }
     override public void Harvest(bool replenish)
     {
         if (destroyed) return;
@@ -691,9 +599,9 @@ public class OakTree : Plant
         Annihilate(true, false, false); // реплениш отключен, тк глючит - не успевает поставить спрайтер до обновления
         //else ResetToDefaults();
     }
-
-    override public void Dry()
+    override public void Dry(bool sendMessageToGrassland)
     {
+        if (!sendMessageToGrassland) basement?.RemoveStructure(this);
         if (stage > TRANSIT_STAGE)
         {
             ContainerModelType cmtype;

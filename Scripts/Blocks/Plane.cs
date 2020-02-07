@@ -144,6 +144,11 @@ public sealed class Plane
         }
         else return extension.GetStructuresList();
     }
+    public List<Plant> GetPlantsList()
+    {
+        if (extension == null) return null;
+        else return extension.GetPlantsList();
+    }
 
     public void ChangeMaterial(int newId, bool redrawCall)
     {
@@ -156,7 +161,7 @@ public sealed class Plane
     {
         haveWorksite = x;
     }
-    public void NullifyExtesionLink(PlaneExtension e)
+    public void NullifyExtensionLink(PlaneExtension e)
     {
         if (extension == e) extension = null;
     }
@@ -213,6 +218,16 @@ public sealed class Plane
             }
         }
     }
+    public Grassland GetGrassland()
+    {
+        return extension?.grassland;
+    }
+    public void RemoveGrassland(Grassland g, bool sendAnnihilationRequest)
+    {
+        extension?.RemoveGrassland(g, sendAnnihilationRequest);
+        ChangeMaterial(myBlockExtension.materialID, true);
+    }
+
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
     {
         if (mainStructure != null) mainStructure.ApplyDamage(damage);

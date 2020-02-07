@@ -4,10 +4,8 @@ using UnityEngine;
 
 public class Farm : WorkBuilding
 {
-    public int crop_id = -1;
-    byte harvestableStage = 0;
-    float lifepowerBoost = 1;
-    const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1, PLANT_ACTIVITY_COST = 1;
+    public PlantType cropType;
+    const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1f, PLANT_ACTIVITY_COST = 1f, PLANT_CREATE_COST = 1f, PLANT_BOOST_COST = 1f;
 
     override public void Prepare()
     {
@@ -19,20 +17,16 @@ public class Farm : WorkBuilding
             case FARM_3_ID:
             case FARM_4_ID:
             case FARM_5_ID:
-                crop_id = Plant.CROP_CORN_ID;
-                lifepowerBoost = Plant.GetMaxLifeTransfer(crop_id);
+                cropType = PlantType.Corn;
                 break;
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
             case LUMBERMILL_4_ID:
             case LUMBERMILL_5_ID:
-                crop_id = Plant.TREE_OAK_ID;
-                lifepowerBoost = Plant.GetMaxLifeTransfer(crop_id) / 8f;
+                cropType = PlantType.OakTree;
                 break;
-        }
-        harvestableStage = Plant.GetHarvestableStage(crop_id);        
-
+        }  
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)
@@ -40,25 +34,12 @@ public class Farm : WorkBuilding
         if (b == null) return;
         if (b.ContainStructures())
         {
-            int i = 0;
-            Plant p = null;
-            var slist = b.GetStructuresList();
-            while (i < slist.Count)
+            var plist = basement.GetPlantsList();
+            if (plist != null)
             {
-                if (slist[i] == null)
+                foreach (var p in plist)
                 {
-                    i++;
-                    continue;
-                }
-                else
-                {
-                    p = slist[i] as Plant;
-                    if (p != null && p.plant_ID == crop_id)
-                    {
-                        i++;
-                        continue;
-                    }
-                    else slist[i].Annihilate(true, true, false);
+                    if (p.type != cropType) p.Annihilate(true, true, false);
                 }
             }
         }
@@ -69,6 +50,9 @@ public class Farm : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
+        var gl = basement.GetGrassland();
+        if (gl == null) gl = new Grassland(basement, basement.myChunk.nature);
+        gl.SetCultivatingStatus(true);
     }
 
     override public void RecalculateWorkspeed()
@@ -99,14 +83,13 @@ public class Farm : WorkBuilding
         if (basement.fulfillStatus != FullfillStatus.Full)
         {
             List<PixelPosByte> pos = basement.GetExtension().GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
-            int cost = Plant.GetCreateCost(crop_id);
             i = 0;
             while (i < pos.Count )
             {
-                Plant p = Plant.GetNewPlant(crop_id);
+                Plant p = Plant.GetNewPlant(cropType);
                 p.Prepare();
                 p.SetBasement(basement, pos[i]);
-                totalCost += cost;
+                totalCost += PLANT_CREATE_COST;
                 i++;
             }
         }
@@ -117,21 +100,18 @@ public class Farm : WorkBuilding
                 if (structures[i].ID == PLANT_ID)
                 {
                     Plant p = structures[i] as Plant;
-                    if (p.plant_ID == crop_id)
+                    if (p.type == cropType)
                     {
-                        if (p.stage >= harvestableStage & p.growth >= 1)
+                        if (p.IsFullGrown())
                         {
                             p.Harvest(true);
                             actionsPoints -= HARVEST_ACTIVITY_COST;
                         }
                         else
                         {
-                            if (p.lifepower < p.lifepowerToGrow)
-                            {
-                                p.AddLifepower((int)lifepowerBoost);
-                                totalCost += lifepowerBoost;
-                                actionsPoints -= BOOST_ACTIVITY_COST;
-                            }
+                            p.UpdatePlant();
+                            totalCost += PLANT_BOOST_COST;
+                            actionsPoints -= BOOST_ACTIVITY_COST;
                         }
                     }
                     else
@@ -142,7 +122,7 @@ public class Farm : WorkBuilding
                 i++;
             }
         }
-        //if (totalCost > 0) basement.myChunk.TakeLifePowerWithForce((int)totalCost);
+        if (totalCost > 0) basement.GetGrassland().TakeLifepower(totalCost);
     }
 
     override public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
@@ -161,6 +141,7 @@ public class Farm : WorkBuilding
         else destroyed = true;
         if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        basement?.GetGrassland()?.SetCultivatingStatus(false);
         if ((basement != null & clearFromSurface) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ChangeMaterial(ResourceType.DIRT_ID, true);
         if (subscribedToUpdate)
         {
