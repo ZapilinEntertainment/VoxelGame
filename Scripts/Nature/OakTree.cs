@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class OakTree : Plant
+public sealed class OakTree : Plant
 {
     private static List<OakTree> oaks;
 

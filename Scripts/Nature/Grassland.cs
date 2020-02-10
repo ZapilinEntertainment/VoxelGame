@@ -15,7 +15,7 @@ public sealed class Grassland
     private float lifepower;
     private const int MAX_CATEGORIES_COUNT = 3;
     private const byte MAX_LEVEL = 8;
-    public const float BOOST_VALUE = 10f;
+    public const float BOOST_VALUE = 5f, CREATE_COST_VAL = 10f;
 
     public Grassland(Plane p, Nature n)
     {
@@ -104,7 +104,7 @@ public sealed class Grassland
                 var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
                 p.SetBasement(plane);
                 //перерасчет вызовет сама plane
-                lifepower -= p.GetCreateCost();
+                lifepower -= CREATE_COST_VAL * nature.environmentalConditions;
             }
             else
             {

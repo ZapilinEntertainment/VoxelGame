@@ -7,6 +7,7 @@ public sealed class Nature : MonoBehaviour
     private EnvironmentMaster env;
     private Chunk myChunk;
     public bool needRecalculation = false;
+    public float environmentalConditions { get; private set; }
     private bool prepared = false;
     private float lifepower, lifepowerSurplus, grasslandCreateTimer, grasslandsUpdateTimer;
     private int lastUpdateIndex = 0;
@@ -36,6 +37,8 @@ public sealed class Nature : MonoBehaviour
     public void Prepare(Chunk c)
     {
         myChunk = c;
+        env = GameMaster.realMaster.environmentMaster;
+        environmentalConditions = env.environmentalConditions;
         prepared = true;
     }
 
@@ -100,9 +103,9 @@ public sealed class Nature : MonoBehaviour
         lifepower += f;
     }
 
-    public void CreateGrassland(Plane p)
+    public Grassland CreateGrassland(Plane p)
     {
-
+        return new Grassland(p, this);
     }
     public void AddGrassland(Grassland g)
     {

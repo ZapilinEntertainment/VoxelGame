@@ -40,15 +40,11 @@ public class GatherSite : Worksite
                         {
                             case Structure.PLANT_ID:
                                 Plant p = strs[i] as Plant;
-                                if (p != null)
+                                if (p != null && p.IsFullGrown())
                                 {
-                                    byte hstage = p.GetHarvestableStage();
-                                    if (hstage != 255 & p.stage >= hstage)
-                                    {
-                                        p.Harvest(false);
-                                        resourcesFound = true;
-                                        workflow--;
-                                    }
+                                    p.Harvest(false);
+                                    resourcesFound = true;
+                                    workflow--;
                                 }
                                 break;
                             case Structure.CONTAINER_ID:

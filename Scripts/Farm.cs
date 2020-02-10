@@ -5,7 +5,7 @@ using UnityEngine;
 public class Farm : WorkBuilding
 {
     public PlantType cropType;
-    const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1f, PLANT_ACTIVITY_COST = 1f, PLANT_CREATE_COST = 1f, PLANT_BOOST_COST = 1f;
+    const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1f, PLANT_ACTIVITY_COST = 10f, PLANT_CREATE_COST = 10f, PLANT_BOOST_COST = 10f;
 
     override public void Prepare()
     {
@@ -51,7 +51,7 @@ public class Farm : WorkBuilding
             subscribedToUpdate = true;
         }
         var gl = basement.GetGrassland();
-        if (gl == null) gl = new Grassland(basement, basement.myChunk.nature);
+        if (gl == null) gl = basement.GetExtension().InitializeGrassland();
         gl.SetCultivatingStatus(true);
     }
 
@@ -121,8 +121,12 @@ public class Farm : WorkBuilding
                 }
                 i++;
             }
+        }        
+        if (totalCost > 0) {
+            var gl = basement.GetGrassland();
+            if (gl == null) gl = basement.GetExtension().InitializeGrassland();
+            gl.TakeLifepower(totalCost);
         }
-        if (totalCost > 0) basement.GetGrassland().TakeLifepower(totalCost);
     }
 
     override public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)

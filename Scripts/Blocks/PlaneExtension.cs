@@ -33,6 +33,7 @@ public sealed class PlaneExtension
         artificialStructuresCount = 0;
         myPlane = i_myPlane;
         if (i_mainStructure != null) AddStructure(i_mainStructure);
+        else fullfillStatus = FullfillStatus.Empty;
     }
     private void ResetMap()
     {
@@ -363,9 +364,19 @@ public sealed class PlaneExtension
     {
         return grassland != null;
     }
+
+    public Grassland InitializeGrassland()
+    {
+        if (grassland == null)
+        {
+            grassland = myPlane.myChunk.GetNature().CreateGrassland(myPlane);
+        }
+        return grassland;
+    }
     /// <summary>
     /// returns true if set successful
     /// </summary>
+    /// 
     public bool SetGrassland(Grassland g)
     {
         if (grassland == null)

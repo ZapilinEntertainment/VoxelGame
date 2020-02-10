@@ -95,7 +95,6 @@ public abstract class Plant : Structure {
         basement = null;
         Destroy(gameObject);
     }
-
     #region save-load system
     override public List<byte> Save()
     {
@@ -104,28 +103,21 @@ public abstract class Plant : Structure {
         return data;
     }
 
+  
     public static void LoadPlant(System.IO.FileStream fs, Plane sblock)
     {
-        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 13];
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
         fs.Read(data, 0, data.Length);
         int plantSerializerIndex = STRUCTURE_SERIALIZER_LENGTH;
         int plantId = System.BitConverter.ToInt32(data, plantSerializerIndex);
-        Plant p = GetNewPlant(plantId);
+        Plant p = GetNewPlant((PlantType)data[plantSerializerIndex]);
         p.LoadStructureData(data, sblock);
-        p.lifepower = System.BitConverter.ToSingle(data, plantSerializerIndex + 4);
-        p.SetStage(data[plantSerializerIndex + 12]);
-        p.growth = System.BitConverter.ToSingle(data, plantSerializerIndex + 8);
+        p.SetStage(data[plantSerializerIndex + 1]);
     }
 
     protected List<byte> SerializePlant()
     {
-        var data = new List<byte>();
-        data.AddRange(System.BitConverter.GetBytes(plant_ID)); 
-        data.AddRange(System.BitConverter.GetBytes(lifepower)); 
-        data.AddRange(System.BitConverter.GetBytes(growth)); 
-        data.Add(stage); 
-        //SERIALIZER_LENGTH = 13
-        return data;
+        return new List<byte>() { (byte)type, stage}; 
     }
     #endregion
 }
