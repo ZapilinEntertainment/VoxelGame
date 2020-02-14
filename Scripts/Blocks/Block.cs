@@ -81,14 +81,14 @@ public sealed class Block {
                     if (mainStructureBlockingMode) mainStructure.SectionDeleted(pos);
                     else
                     {
-                        extension?.Annihilate(true, compensateStructures);
+                        extension?.Annihilate(compensateStructures);
                     }
                 }
             }
             mainStructureBlockingMode = blockingMode;
             if (mainStructureBlockingMode)
             {
-                extension?.Annihilate(true, compensateStructures);
+                extension?.Annihilate(compensateStructures);
                 if (blockingMarker == null) AddBlockingMarker();
             }
             else
@@ -100,7 +100,7 @@ public sealed class Block {
                 }
                 else
                 {
-                    extension?.Annihilate(true, compensateStructures);
+                    extension?.Annihilate(compensateStructures);
                 }
                 if (blockingMarker != null)
                 {
@@ -252,7 +252,7 @@ public sealed class Block {
         //#block annihilate
         if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
-        extension?.Annihilate(false, compensateStructures);
+        extension?.Annihilate(compensateStructures);
         if (mainStructure != null)
         {
             mainStructure.SectionDeleted(pos);

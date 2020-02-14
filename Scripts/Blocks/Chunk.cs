@@ -308,7 +308,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (fb.Value.TryGetPlane(upcode, out p))
                 {
-                    if (p.isSuitableForStructures()) surfaces.Add(p);
+                    if (p.isSuitableForStructures) surfaces.Add(p);
                 }
             }
             if (surfaces.Count == 0) surfaces = null;
@@ -526,19 +526,6 @@ public sealed partial class Chunk : MonoBehaviour
 
     #region taking surfaces
     public List<Plane> GetSurfacesList() { return surfaces; }
-    public List<Plane> GetSurfacesWithoutLifeforms()
-    {
-        if (surfaces == null) return null;
-        else
-        {
-            var gls = new List<Plane>();
-            foreach (var s in surfaces)
-            {
-                if (s.haveGrassland()) gls.Add(s);
-            }
-            if (gls.Count != 0) return gls; else return null;
-        }
-    }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
         if (surfaces == null || x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;

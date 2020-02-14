@@ -278,7 +278,7 @@ public sealed partial class Chunk : MonoBehaviour {
         }
     }
 
-    public void ChangeBlockVisualData(Block b, byte face)
+    public void RefreshBlockVisualising(Block b, byte face)
     {
         if (b == null) return;
         byte visibilityMask = GetVisibilityMask(b.pos);
@@ -423,30 +423,6 @@ public sealed partial class Chunk : MonoBehaviour {
                 else i++;
             }
             chunkRenderUpdateRequired = true;
-        }
-    }
-    public void RefreshFaceVisualData(ChunkPos pos, byte faceIndex )
-    {
-        if (blockVisualizersList == null)
-        {
-            RenderDataFullRecalculation();
-            return;
-        }
-        else
-        {
-            foreach (var bvi in blockVisualizersList)
-            {
-                if (bvi.pos == pos)
-                {
-                    if (bvi.rinfo.faceIndex == faceIndex)
-                    {
-                        var mvi = bvi.rinfo;
-                        if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi);
-                        chunkDataUpdateRequired = true;
-                        return;
-                    }
-                }
-            }
         }
     }
 

@@ -249,7 +249,7 @@ public sealed class BlockExtension
                 GameMaster.realMaster.colonyController.RemoveWorksite(p);
                 p.SetWorksitePresence(false);
             }
-            Annihilate(true, true);
+            Annihilate(true);
             return 0f;
         }
         else
@@ -354,7 +354,7 @@ public sealed class BlockExtension
             p = MeshMaster.GetRooftop(this, Random.value < 0.14f, !isNatural);
         else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex, 0);
         planes.Add(faceIndex, p);
-        if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(pos, faceIndex);
+        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
         return p;
     }
     public void DeactivatePlane(byte faceIndex)
@@ -363,7 +363,7 @@ public sealed class BlockExtension
         {
             if (planes.ContainsKey(faceIndex))
             {
-                if (planes[faceIndex].isClean()) planes.Remove(faceIndex);
+                if (planes[faceIndex].isClean) planes.Remove(faceIndex);
                 else planes[faceIndex].SetVisibility(false);
             }
         }
@@ -380,7 +380,7 @@ public sealed class BlockExtension
             planes.Remove(ix);
             planes.Add(ix, newplane);
         }
-        if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(myBlock.pos, oldplane.faceIndex);
+        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, newplane.faceIndex);
     }
     public void DeletePlane(byte faceIndex, bool compensateStructures, bool redrawCall)
     {
@@ -391,11 +391,11 @@ public sealed class BlockExtension
         }
         byte x = (byte)(1 << faceIndex);
         if ((existingPlanesMask & x) != 0) existingPlanesMask -= x;
-        if (redrawCall) myBlock.myChunk.RefreshFaceVisualData(myBlock.pos, faceIndex);
+        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
     }
 
-    public void Annihilate(bool sendRedrawRequest, bool compensateStructures)
+    public void Annihilate(bool compensateStructures)
     {
-
+        if (planes == null) foreach (var px in planes) px.Value.Annihilate(compensateStructures);
     }
 }

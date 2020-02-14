@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public sealed class Grassland 
 {    
-    private Plane plane;
+    public Plane plane { get; private set; }
     private Nature nature;
     private PlantCategory[] categoriesCatalog;
     private List<Plant> plantsList;
@@ -16,6 +16,8 @@ public sealed class Grassland
     private const int MAX_CATEGORIES_COUNT = 3;
     private const byte MAX_LEVEL = 8;
     public const float BOOST_VALUE = 5f, CREATE_COST_VAL = 10f;
+    public byte faceIndex { get { if (plane != null) return plane.faceIndex; else return Block.UP_FACE_INDEX; } }
+    public ChunkPos pos { get { if (plane != null) return plane.pos; else return ChunkPos.zer0; } }
 
     public Grassland(Plane p, Nature n)
     {
@@ -101,10 +103,9 @@ public sealed class Grassland
             if (creating)
             {
                 var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT - 1)];
-                var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
-                p.SetBasement(plane);
-                //перерасчет вызовет сама plane
+                var p = Plant.GetNewPlant(nature.GetPlantType(pcat));                
                 lifepower -= CREATE_COST_VAL * nature.environmentalConditions;
+                p?.SetBasement(plane);  //перерасчет вызовет сама plane             
             }
             else
             {
@@ -122,13 +123,14 @@ public sealed class Grassland
         var prevlps = lifepowerSurplus;
         lifepowerSurplus = 0f;
         canBeBoosted = true;
+        plantsList = plane.GetPlantsList();
         if (plantsList != null)
         {
             if (level == MAX_LEVEL) canBeBoosted = false;
             foreach (Plant p in plantsList)
             {
                 lifepowerSurplus += p.GetLifepowerSurplus();
-                if (p.IsFullGrown()) canBeBoosted = true;
+                if (!p.IsFullGrown()) canBeBoosted = true;
             }
         }
         if (lifepowerSurplus != prevlps) nature.needRecalculation = true;
@@ -151,6 +153,11 @@ public sealed class Grassland
         }
         canBeBoosted = true;
     }
+    public void AddLifepower(float f)
+    {
+        lifepower += f;
+        Update();
+    }
     public void TakeLifepower(float f)
     {
         lifepower -= f;
@@ -166,17 +173,21 @@ public sealed class Grassland
             level = l;
             if (!cultivating)
             {
-                switch (level)
+                var fi = plane.faceIndex;
+                if (fi == Block.SURFACE_FACE_INDEX | fi == Block.UP_FACE_INDEX)
                 {
-                    case 1: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_20_ID, true); break;
-                    case 2: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_40_ID, true); break;
-                    case 3: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_60_ID, true); break;
-                    case 4: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_80_ID, true); break;
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                        plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_100_ID, true); break;
+                    switch (level)
+                    {
+                        case 1: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_20_ID, true); break;
+                        case 2: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_40_ID, true); break;
+                        case 3: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_60_ID, true); break;
+                        case 4: plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_80_ID, true); break;
+                        case 5:
+                        case 6:
+                        case 7:
+                        case 8:
+                            plane.ChangeMaterial(PoolMaster.MATERIAL_GRASS_100_ID, true); break;
+                    }
                 }
             }
         }

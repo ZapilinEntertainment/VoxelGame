@@ -281,7 +281,6 @@ public sealed class PlaneExtension
                 i++;
             }
         }
-        structures.Add(s);
         SetStructureTransform(s);
         RecalculateSurface();
     }
@@ -294,7 +293,10 @@ public sealed class PlaneExtension
         t.localRotation = Quaternion.Euler(myPlane.GetRotation() + Vector3.up * s.modelRotation * 45f);
         structures.Add(s);
 
-        if (grassland != null && s.ID == Structure.PLANT_ID) grassland.needRecalculation = true;
+        if (grassland != null && s.ID == Structure.PLANT_ID)
+        {
+            grassland.needRecalculation = true;
+        }
     }
 
 	public void ClearSurface(bool check, bool returnResources, bool deleteExtensionLink)
@@ -311,6 +313,7 @@ public sealed class PlaneExtension
                 structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
             }
             structures.Clear();
+            grassland?.Annihilate(false, false);
         }
         if (check) RecalculateSurface();
         else

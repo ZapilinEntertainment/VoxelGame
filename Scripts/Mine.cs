@@ -115,7 +115,7 @@ override public void RecalculateWorkspeed() {
             Transform model = transform.GetChild(0);
             if (model != null) Destroy(model.gameObject);
             GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
-            newModelGO.SetActive(visible);
+            newModelGO.SetActive(isVisible);
             if (!isActive | !isEnergySupplied) ChangeRenderersView(false);
         }
         level = f_level;

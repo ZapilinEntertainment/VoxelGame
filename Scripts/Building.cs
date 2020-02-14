@@ -736,13 +736,13 @@ public class Building : Structure
 
     override public void SetVisibility(bool x)
     {
-        if (x == visible) return;
+        if (x == isVisible) return;
         else
         {
-            visible = x;
+            isVisible = x;
             if (transform.childCount > 0)
             {
-                transform.GetChild(0).gameObject.SetActive(visible);
+                transform.GetChild(0).gameObject.SetActive(isVisible);
             }
         }
     }

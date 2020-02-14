@@ -483,6 +483,19 @@ sealed public class UIController : MonoBehaviour
                             selectedPlane = b.GetPlane(faceIndex);
                             chosenWorksite = null;
                             ChangeChosenObject(ChosenObjectType.Plane);
+                            //test
+                            if (selectedPlane != null)
+                            {
+                                if (!selectedPlane.haveGrassland)
+                                {
+                                    var g = selectedPlane.GetExtension().InitializeGrassland();
+                                    g.AddLifepower(1000f);
+                                }
+                                else
+                                {
+                                    Debug.Log(selectedPlane.GetPlantsList().Count);
+                                }
+                            }
                         }
                         break;
                     }

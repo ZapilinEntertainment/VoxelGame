@@ -56,31 +56,33 @@ public sealed class Plane
         return myBlockExtension.GetHashCode() + faceIndex + materialID + (int)meshType;
     }
 
-    public bool isClean() //может быть удалена и восстановлена
+    public bool isClean //может быть удалена и восстановлена
     {
-        if (dirty) return false;
-        else
+        get
         {
-            if (materialID != myBlockExtension.myBlock.GetMaterialID())
-            {
-                dirty = true;
-                return false;
-            }
+            if (dirty) return false;
             else
             {
-                if (extension == null && mainStructure == null) return true;
-                else return false;
+                if (materialID != myBlockExtension.myBlock.GetMaterialID())
+                {
+                    dirty = true;
+                    return false;
+                }
+                else
+                {
+                    if (extension == null && mainStructure == null) return true;
+                    else return false;
+                }
             }
         }
     }
-    public bool isSuitableForStructures()
+    public bool isSuitableForStructures
     {
-        if (meshType == MeshType.Quad) return true;
-        else return false;
+        get { return (meshType == MeshType.Quad); }
     }
-    public bool haveGrassland()
+    public bool haveGrassland
     {
-        return extension?.HaveGrassland() ?? false;
+        get { return extension?.HaveGrassland() ?? false; }
     }
 
     public Plane(BlockExtension i_parent, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
@@ -91,6 +93,7 @@ public sealed class Plane
         mainStructure = null;
         faceIndex = i_faceIndex;
         meshRotation = i_meshRotation;
+        visible = true;
         if (i_meshType != defaultMeshType | meshRotation != 0) dirty = true;
     }
 
@@ -106,8 +109,7 @@ public sealed class Plane
     {
         if (s.surfaceRect != SurfaceRect.full)
         {
-            var e = GetExtension();
-            e.AddStructure(s);
+            GetExtension().AddStructure(s);
             mainStructure = null;
             return;
         }
@@ -155,7 +157,7 @@ public sealed class Plane
         if (materialID == newId) return;
         materialID = newId;
         if (materialID != myBlockExtension.myBlock.GetMaterialID()) dirty = true;
-        if (redrawCall & visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
+        if (redrawCall & visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
     }
     public void SetWorksitePresence(bool x)
     {
@@ -179,7 +181,7 @@ public sealed class Plane
                         meshType = MeshType.Quad;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
                     }
                 }
                 else
@@ -189,7 +191,7 @@ public sealed class Plane
                         meshType = MeshType.ExcavatedPlane075;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
                     }
                 }
             }
@@ -202,7 +204,7 @@ public sealed class Plane
                         meshType = MeshType.ExcavatedPlane025;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
                     }
                 }
                 else
@@ -212,7 +214,7 @@ public sealed class Plane
                         meshType = MeshType.ExcavatedPlane075;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshFaceVisualData(pos, faceIndex);
+                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
                     }
                 }
             }

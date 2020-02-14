@@ -300,7 +300,7 @@ public sealed class OakTree : Plant
         PrepareStructure();
         surfaceRect = SurfaceRect.one; isArtificial = false;
         type = GetPlantType();
-        stage = 0;
+        stage = 1;
     }
     public static new PlantType GetPlantType()
     {
@@ -309,13 +309,10 @@ public sealed class OakTree : Plant
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        //#setStructureData
         basement = b;
         surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
         if (spriter == null) SetModel();
         b.AddStructure(this);
-        // isbasement check deleted
-        //---
         if (!addedToClassList)
         {
             oaks.Add(this);
@@ -330,7 +327,6 @@ public sealed class OakTree : Plant
 
     public static void UpdatePlants()
     {
-        float t = GameMaster.LIFEPOWER_TICK;
         if (oaks.Count == 0)
         {
             if (typeRegistered)
@@ -368,10 +364,10 @@ public sealed class OakTree : Plant
                     if (oak == null) { oaks.RemoveAt(i); continue; }
                     else
                     {
-                        if (!oak.visible) { i++; continue; }
+                        if (!oak.isVisible) { i++; continue; }
                         dist = (oak.transform.position - camPos).magnitude;
                         if (oak.stage <= TRANSIT_STAGE)
-                        {
+                        {                            
                             if (dist > TREE_SPRITE_MAX_VISIBILITY * oak.stage)
                             {
                                 if (oak.drawmode != OakDrawMode.NoDraw)
@@ -460,7 +456,7 @@ public sealed class OakTree : Plant
                     if (oak == null) { oaks.RemoveAt(i); continue; }
                     else
                     {
-                        if (!oak.visible) { i++; continue; }
+                        if (!oak.isVisible) { i++; continue; }
                         dist = (oak.transform.position - camPos).magnitude;
                         if (oak.stage <= TRANSIT_STAGE)
                         {
@@ -553,25 +549,29 @@ public sealed class OakTree : Plant
 
     override protected void SetStage(byte newStage)
     {
-        if (newStage == stage) return;
+        if (destroyed || newStage == stage) return;
         if (transform.childCount != 0)
         {
-            if (stage > TRANSIT_STAGE)
+            if (stage <= TRANSIT_STAGE )
             {
-                ReturnModelToPool();                
+                if (newStage > TRANSIT_STAGE)
+                {
+                    Destroy(transform.GetChild(0).gameObject);
+                    spriter = null;
+                    modelHolder = null;
+                    stage = newStage;
+                    SetModel();
+                }
             }
             else
             {
-                Destroy(transform.GetChild(0).gameObject);
-                spriter = null;
-                modelHolder = null;
+                ReturnModelToPool();
+                stage = newStage;
+                SetModel();
             }
         }
-        stage = newStage;
         if (PoolMaster.qualityLevel > 0) PoolMaster.current.LifepowerSplash(transform.position, stage);
-        SetModel();
-        visible = !visible;
-        SetVisibility(!visible);
+        SetVisibility(isVisible);
         basement.GetGrassland().needRecalculation = true;
     }
     override public bool IsFullGrown()
@@ -637,11 +637,11 @@ public sealed class OakTree : Plant
     }
     override public void SetVisibility(bool x)
     {
-        if (destroyed | x == visible) return;
+        if (destroyed | x == isVisible) return;
         else
         {
-            visible = x;
-            if (visible)
+            isVisible = x;
+            if (isVisible)
             {
                 if (modelHolder != null)
                 {                    
@@ -691,7 +691,7 @@ public sealed class OakTree : Plant
                         modelHolder.transform.GetChild(MODEL_CHILDNUMBER).gameObject.SetActive(true);
                     }
                 }
-                else spriter.enabled = visible;
+                else spriter.enabled = isVisible;
             }
             else
             {

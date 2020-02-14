@@ -13,7 +13,7 @@ public class Structure : MonoBehaviour
     public bool rotate90only { get; private set; } // fixed in ID
     public bool showOnGUI { get; protected set; }
     public int ID { get; protected set; }
-    public bool visible { get; protected set; }
+    public bool isVisible { get; protected set; }
     public byte modelRotation { get; protected set; }
 
     protected bool destroyed = false, subscribedToUpdate = false, subscribedToChunkUpdate = false;
@@ -1112,11 +1112,11 @@ public class Structure : MonoBehaviour
     }
     virtual public void SetVisibility(bool x)
     {
-        if (x == visible) return;
+        if (x == isVisible) return;
         else
         {
-            visible = x;
-            if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(visible);
+            isVisible = x;
+            if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(isVisible);
         }
     }
 

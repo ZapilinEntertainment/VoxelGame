@@ -83,7 +83,7 @@ public abstract class Plant : Structure {
         PrepareStructureForDestruction(clearFromSurface, false, false);
         if (sendMessageToGrassland)
         {
-            if (basement != null && basement.haveGrassland()) basement.GetGrassland().needRecalculation = true;
+            if (basement != null && basement.haveGrassland) basement.GetGrassland().needRecalculation = true;
         }
     }
     override public void Annihilate(bool clearFromSurface, bool sendMessageToGrassland, bool leaveRuins)
