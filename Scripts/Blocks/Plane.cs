@@ -76,7 +76,7 @@ public sealed class Plane
             }
         }
     }
-    public bool isSuitableForStructures
+    public bool isQuad
     {
         get { return (meshType == MeshType.Quad); }
     }
@@ -95,6 +95,14 @@ public sealed class Plane
         meshRotation = i_meshRotation;
         visible = true;
         if (i_meshType != defaultMeshType | meshRotation != 0) dirty = true;
+    }
+    public void SetMeshRotation(byte x, bool sendRedrawRequest)
+    {
+        if (meshRotation != x)
+        {
+            meshRotation = x;
+            if (sendRedrawRequest) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+        }
     }
 
     public void SetVisibility(bool x)
@@ -294,6 +302,7 @@ public sealed class Plane
                 return chunk.GetLightValue(cpos);
         }
     }
+
     public ChunkPos GetChunkPosition() { return myBlockExtension.myBlock.pos; }
     public Vector3 GetCenterPosition()
     {
@@ -451,7 +460,7 @@ public sealed class Plane
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {
-
+        //сохранить meshrotation, если это крыша, или если grassland
     }
     public void Load(System.IO.FileStream fs)
     {

@@ -9,6 +9,7 @@ public sealed class Grassland
     private List<Plant> plantsList;
     public bool canBeBoosted { get; private set; }
     public bool needRecalculation = false;
+    private bool ignoreRecalculationsRequest = false;
     public byte level { get; private set; }
     private bool cultivating = false;
     private float lifepowerSurplus;
@@ -29,6 +30,7 @@ public sealed class Grassland
         categoriesCatalog[2] = (PlantCategory)Random.Range(0, 2);
         if (plane.GetExtension().SetGrassland(this))
         {
+            plane.SetMeshRotation((byte)Random.Range(0, 3),false);            
             nature.AddGrassland(this);
             Recalculation();
         }
@@ -83,6 +85,7 @@ public sealed class Grassland
         if (lifepower <= BOOST_VALUE | cultivating) return;
         else
         {
+            //#update inners
             var luv = GetLevelUpValue();
             if (level < MAX_LEVEL && lifepower > luv)
             {
@@ -116,10 +119,83 @@ public sealed class Grassland
                     lifepower -= BOOST_VALUE;
                 }
             }
+            //
+        }
+    }
+    public void FORCED_AddLifepower(float f)
+    {
+        if (f < 10f)
+        {
+            lifepower += f;
+            return;
+        }
+        else
+        {
+            ignoreRecalculationsRequest = true;
+            //#update inners ~
+            var luv = GetLevelUpValue();
+            plantsList = plane.GetPlantsList();
+            int actionsCountNeeded = 0;
+            if (plantsList != null) actionsCountNeeded = GetMaxPlantsCount() - plantsList.Count;
+            while (f > 0f)
+            {
+                if (actionsCountNeeded <= 0 && level < MAX_LEVEL && f > luv)
+                {
+                    SetLevel((byte)(level + 1));
+                    f -= luv;
+                    luv = GetLevelUpValue();
+                    actionsCountNeeded += 2 * level;
+                    continue;
+                }
+                else
+                {
+                    bool creating = true;
+                    if (plantsList != null)
+                    {
+                        if (plantsList.Count >= GetMaxPlantsCount()) creating = false;
+                        else
+                        {
+                            if (Random.value > 0.5f) creating = false;
+                        }
+                    }
+                    //
+                    if (creating)
+                    {
+                        var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT - 1)];
+                        var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
+                        f -= CREATE_COST_VAL * nature.environmentalConditions;
+                        if (p != null)
+                        {
+                            p.SetBasement(plane);
+                            if (plantsList == null) plantsList = new List<Plant>();
+                            plantsList.Add(p);
+                        }
+                    }
+                    else
+                    {
+                        if (plantsList != null)
+                        {
+                            foreach (var p in plantsList)
+                            {
+                                if (Random.value > 0.33f)
+                                {
+                                    p.UpdatePlant();
+                                    f -= BOOST_VALUE;
+                                }
+                            }
+                        }
+                    }
+                    actionsCountNeeded--;
+                }
+            }
+            if (f > 0f) lifepower += f;
+            ignoreRecalculationsRequest = false;
+            Recalculation();
         }
     }
     private void Recalculation()
     {
+        if (ignoreRecalculationsRequest) return;
         var prevlps = lifepowerSurplus;
         lifepowerSurplus = 0f;
         canBeBoosted = true;

@@ -397,6 +397,14 @@ public sealed class PlaneExtension
             else grassland = null;
         }
     }
+    public void RemoveGrassland()
+    {
+        if (grassland != null)
+        {
+            grassland.Annihilate(true, false);
+            grassland = null;
+        }
+    }
     #endregion
 
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)

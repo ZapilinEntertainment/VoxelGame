@@ -104,10 +104,11 @@ public static class MeshMaster
         if (materialID != PoolMaster.MATERIAL_COMBINED_BASIC_ID) SetMeshUVs(ref m, materialID);
         return m;
     }
+
     public static void SetMeshUVs(ref Mesh m, int materialID)
     {
         Vector2[] borders;
-        float piece = 0.25f, add = ((Random.value > 0.5) ? piece : 0);
+        float piece = 0.25f, add = 0f;// ((Random.value > 0.5) ? piece : 0);
         switch (materialID)
         {
             case ResourceType.STONE_ID:
@@ -201,30 +202,29 @@ public static class MeshMaster
         Vector2[] uvEdited = m.uv;
         if (isQuad)
         {
-            borders[0].x += 0.01f; // (0,0)
-            borders[0].y += 0.01f;
+            var f = 0.00390625f;
+            borders[0].x += f; // (0,0)
+            borders[0].y += f;
 
-            borders[1].x -= 0.01f; //(0,1)
-            borders[1].y -= 0.01f;
+            borders[1].x -= f; //(0,1)
+            borders[1].y -= f;
 
-            borders[2].x += 0.01f; // (1,1)
-            borders[2].y -= 0.01f;
+            borders[2].x += f; // (1,1)
+            borders[2].y -= f;
 
-            borders[3].x -= 0.01f; // (1,0)
-            borders[3].y += 0.01f;
-            bool useTextureRotation = true;
+            borders[3].x -= f; // (1,0)
+            borders[3].y += f;
+
+            bool useTextureRotation = false; // иначе вращаются каждый раз при перерисовке
             if (useTextureRotation)
             {
-                float seed = Random.value;
-                if (seed > 0.5f)
-                {
-                    if (seed > 0.75f) uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] };
-                    else uvEdited = new Vector2[] { borders[2], borders[0], borders[1], borders[3] };
-                }
-                else
-                {
-                    if (seed > 0.25f) uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] };
-                    else uvEdited = new Vector2[] { borders[1], borders[3], borders[2], borders[0] };
+                byte uvRotation = (byte)(Random.value / 0.25f);
+                switch (uvRotation)
+                {                    
+                    case 1: uvEdited = new Vector2[] { borders[1], borders[3], borders[2], borders[0] }; break;
+                    case 2: uvEdited = new Vector2[] { borders[2], borders[0], borders[1], borders[3] }; break;
+                    case 3: uvEdited = new Vector2[] { borders[3], borders[1], borders[0], borders[2] }; break;
+                    default: uvEdited = new Vector2[] { borders[0], borders[2], borders[3], borders[1] }; break;
                 }
             }
             else

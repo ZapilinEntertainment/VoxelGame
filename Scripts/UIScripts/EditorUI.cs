@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public sealed class EditorUI : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] GameObject actionsPanel, listPanel, menuPanel, settingsPanel;
+    [SerializeField] GameObject actionsPanel, listPanel, menuPanel, settingsPanel, touchZone;
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Image saveButtonImage, loadButtonImage;
@@ -19,7 +19,7 @@ public sealed class EditorUI : MonoBehaviour
     private LifeSource lifesource;
     private SaveSystemUI saveSystem;
     private int chosenMaterialId = ResourceType.STONE_ID;
-    private bool visualBorderDrawn = false, listPrepared;
+    private bool visualBorderDrawn = false, listPrepared, touchscreen;
     private readonly int[] availableMaterials = new int[]
     {
         ResourceType.STONE_ID,
@@ -41,20 +41,29 @@ public sealed class EditorUI : MonoBehaviour
         PoolMaster.MATERIAL_ADVANCED_COVERING_ID
     };
 
-    private const int LIFEPOWER_PORTION = 100;
+    private const float LIFEPOWER_PORTION = 100;
 
     private void Start()
-    {
+    {        
         buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
         materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
         if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
         saveSystem.ingame = true;
         ActionsPanel();
-
+        
         FollowingCamera.main.ResetTouchRightBorder();
         FollowingCamera.main.CameraRotationBlock(false);
+        touchscreen = FollowingCamera.touchscreen;
+        touchZone.SetActive(touchscreen);
         LocalizeTitles();        
+    }
+    private void Update()
+    {
+        if (!touchscreen)
+        {
+            if (Input.GetMouseButtonDown(0)) Click();
+        }
     }
 
     public void Click()
@@ -65,7 +74,7 @@ public sealed class EditorUI : MonoBehaviour
             if (Input.touchCount > 1 | FollowingCamera.camRotateTrace > 0) return;
         }
         RaycastHit rh;
-        if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh))
+        if (Physics.Raycast(FollowingCamera.cam.ScreenPointToRay(Input.mousePosition), out rh) && rh.collider.tag == Chunk.BLOCK_COLLIDER_TAG)
         {
             var chunk = GameMaster.realMaster.mainChunk;
             var bh = chunk.GetBlock(rh.point, rh.normal);
@@ -144,17 +153,23 @@ public sealed class EditorUI : MonoBehaviour
                     break;
                 case ClickAction.DeleteBlock:
                     {
-                        if (b.IsCube()) chunk.DeleteBlock(b.pos, false);
-                        else b.DeletePlane(bh.faceIndex, false, true);
+                        chunk.DeleteBlock(b.pos, false);
                         action = true;
                         break;
                     }
                 case ClickAction.AddGrassland:
                     {
+                        Plane p = b.GetPlane(bh.faceIndex);
+                        if (p != null && !p.haveGrassland)
+                        {
+                            p.GetExtension().InitializeGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
+                        }
                         break;
                     }
                 case ClickAction.DeleteGrassland:
                     {
+                        Plane p = b.GetPlane(bh.faceIndex);
+                        if (p.haveGrassland) p.extension?.RemoveGrassland();
                         break;
                     }
                 case ClickAction.MakeSurface:
@@ -173,6 +188,8 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddLifepower:
                     {
+                        Plane p = b.GetPlane(bh.faceIndex);
+                        if (p != null && p.haveGrassland) p.GetGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
                         break;
                     }                    
                 case ClickAction.TakeLifepower:

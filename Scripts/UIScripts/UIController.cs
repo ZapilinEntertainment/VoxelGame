@@ -485,16 +485,17 @@ sealed public class UIController : MonoBehaviour
                             ChangeChosenObject(ChosenObjectType.Plane);
                             //test
                             if (selectedPlane != null)
-                            {
+                            {                            
                                 if (!selectedPlane.haveGrassland)
                                 {
                                     var g = selectedPlane.GetExtension().InitializeGrassland();
-                                    g.AddLifepower(1000f);
+                                    g?.AddLifepower(100f);
                                 }
                                 else
                                 {
-                                    Debug.Log(selectedPlane.GetPlantsList().Count);
+                                    selectedPlane.GetGrassland()?.AddLifepower(200f);
                                 }
+                               
                             }
                         }
                         break;

@@ -43,7 +43,12 @@ public abstract class Plant : Structure {
 
     virtual public void UpdatePlant()
     {
-        if (!IsFullGrown()) SetStage((byte)(stage + 1));
+        if (!IsFullGrown())
+        {
+            byte x = stage;
+            if (x < 255) x++;
+            SetStage(x);
+        }
     }
     virtual protected void SetStage(byte newStage)
     {

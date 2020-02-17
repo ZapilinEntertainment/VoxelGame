@@ -231,16 +231,11 @@ public sealed class Block {
     public BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex)
     {
         if (extension == null) return null;
-        else
-        {
-            Plane p;
-            if (extension.TryGetPlane(faceIndex, out p)) return p.GetVisualInfo(myChunk, pos);
-            else return null;
-        }
+        else  return extension.GetPlane(faceIndex)?.GetVisualInfo(myChunk, pos);
     }
     public byte GetVisualAffectionMask()
     {
-        if (extension == null) return 0;
+        if (extension == null) return 255;
         else return extension.GetVisualAffectionMask();
     }
     

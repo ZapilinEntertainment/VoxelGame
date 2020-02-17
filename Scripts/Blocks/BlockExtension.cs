@@ -162,8 +162,12 @@ public sealed class BlockExtension
     {
         if ((existingPlanesMask & (1 << faceIndex)) != 0)
         {
-            if (planes == null || !planes.ContainsKey(faceIndex)) return false;
-            else return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
+            if (planes == null || !planes.ContainsKey(faceIndex)) return false; // дефолтные квады
+            else
+            {
+                if (planes[faceIndex].isQuad) return false;
+                else return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
+            }
         }
         else return true;
     }
@@ -193,7 +197,7 @@ public sealed class BlockExtension
         if ((existingPlanesMask & (1 << faceIndex)) == 0) return null;
         else
         {
-            if (planes.ContainsKey(faceIndex)) return planes[faceIndex];
+            if (planes != null && planes.ContainsKey(faceIndex)) return planes[faceIndex];
             else return CreatePlane(faceIndex, true);
         }
     }
@@ -278,7 +282,7 @@ public sealed class BlockExtension
 
     public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte vismask)
     {
-        if (planes == null) return null;
+        if (existingPlanesMask == 0) return null;
         else
         {
             var data = new List<BlockpartVisualizeInfo>();
@@ -292,24 +296,18 @@ public sealed class BlockExtension
                 {
                     if ((realVisMask & (1 << i)) != 0)
                     {
-                        if (planes.ContainsKey(i))
+                        if (planes != null && planes.ContainsKey(i))
                         {
                             var bvi = planes[i].GetVisualInfo(chunk, cpos);
                             if (bvi != null) data.Add(bvi);
                         }
                         else
                         {
-                            // default draw data
-                            data.Add(
-                                new BlockpartVisualizeInfo(cpos,
-                                new MeshVisualizeInfo(i, PoolMaster.GetMaterialType(materialID), Plane.GetLightValue(chunk, cpos, i)),
-                                Plane.defaultMeshType,
-                                materialID,
-                                0
-                                ));
+                            var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
+                            if (p != null) data.Add(p); else Debug.LogError("plane not created correctly");
                         }
                     }
-                }
+                }                
                 return data;
             }
             else return null;
@@ -365,6 +363,7 @@ public sealed class BlockExtension
             {
                 if (planes[faceIndex].isClean) planes.Remove(faceIndex);
                 else planes[faceIndex].SetVisibility(false);
+                myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
         }
     }

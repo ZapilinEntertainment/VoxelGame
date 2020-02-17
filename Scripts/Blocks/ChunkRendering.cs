@@ -39,7 +39,7 @@ public struct MeshVisualizeInfo
 public sealed class BlockpartVisualizeInfo
 {
     public readonly ChunkPos pos;
-    public MeshVisualizeInfo rinfo;
+    public MeshVisualizeInfo meshInfo;
     public MeshType meshType;
     public int materialID;
     public byte meshRotation;  
@@ -47,7 +47,7 @@ public sealed class BlockpartVisualizeInfo
     public BlockpartVisualizeInfo(ChunkPos i_pos, MeshVisualizeInfo i_meshVI, MeshType i_meshType, int i_materialID, byte i_meshRotation)
     {
         pos = i_pos;
-        rinfo = i_meshVI;
+        meshInfo = i_meshVI;
         meshType = i_meshType;
         materialID = i_materialID;
         meshRotation = i_meshRotation;
@@ -58,7 +58,7 @@ public sealed class BlockpartVisualizeInfo
         var faceVector = Vector3.zero;
         var rotation = Quaternion.identity;
         float step = Block.QUAD_SIZE * 0.5f;
-        switch (rinfo.faceIndex)
+        switch (meshInfo.faceIndex)
         {
             case Block.FWD_FACE_INDEX:
                 faceVector = Vector3.forward * step;
@@ -119,11 +119,11 @@ public sealed class BlockpartVisualizeInfo
             return false;
 
         BlockpartVisualizeInfo p = (BlockpartVisualizeInfo)obj;
-        return (p.pos == pos) && (p.rinfo == rinfo) && (meshType == p.meshType) && (materialID == p.materialID);
+        return (p.pos == pos) && (p.meshInfo == meshInfo) && (meshType == p.meshType) && (materialID == p.materialID) && (meshRotation == p.meshRotation);
     }
     public override int GetHashCode()
     {
-        return pos.GetHashCode() + 1000 * rinfo.faceIndex;
+        return pos.GetHashCode() + 1000 * meshInfo.faceIndex;
     }
 }
 
@@ -172,7 +172,7 @@ public sealed partial class Chunk : MonoBehaviour {
             for (; i < n; i++)
             {
                 brd = blockVisualizersList[i];
-                ri = brd.rinfo;
+                ri = brd.meshInfo;
                 if (!processedTypes.Contains(ri))
                 {
                     CreateBlockpartsRenderer(ri);
@@ -236,47 +236,6 @@ public sealed partial class Chunk : MonoBehaviour {
             return vmask;
         }
     }
-    public void RecalculateVisibilityAtPoint(int x, int y, int z)
-    {
-        byte affectionMask = 0;
-        Block b = GetBlock(x, y, z);
-        if (b != null) affectionMask = b.GetVisualAffectionMask();
-        b = GetBlock(x, y, z + 1); if (b != null)
-        {
-            if ((affectionMask & (1 << Block.FWD_FACE_INDEX)) != 0) b.InitializePlane(Block.BACK_FACE_INDEX);
-            else b.DeactivatePlane(Block.BACK_FACE_INDEX);
-        }
-        b = GetBlock(x + 1, y, z);
-        if (b != null)
-        {
-            if ((affectionMask & (1 << Block.RIGHT_FACE_INDEX)) != 0) b.InitializePlane(Block.LEFT_FACE_INDEX);
-            else b.DeactivatePlane(Block.LEFT_FACE_INDEX);
-        }
-        b = GetBlock(x, y, z - 1);
-        if (b != null)
-        {
-            if ((affectionMask & (1 << Block.BACK_FACE_INDEX)) != 0) b.InitializePlane(Block.FWD_FACE_INDEX);
-            else b.DeactivatePlane(Block.FWD_FACE_INDEX);
-        }
-        b = GetBlock(x - 1, y, z);
-        if (b != null)
-        {
-            if ((affectionMask & (1 << Block.LEFT_FACE_INDEX)) != 0) b.InitializePlane(Block.RIGHT_FACE_INDEX);
-            else b.DeactivatePlane(Block.RIGHT_FACE_INDEX);
-        }
-        b = GetBlock(x, y + 1, z);
-        if (b != null)
-        {
-            if ((affectionMask & (1 << Block.UP_FACE_INDEX)) != 0) b.InitializePlane(Block.DOWN_FACE_INDEX);
-            else b.DeactivatePlane(Block.DOWN_FACE_INDEX);
-        }
-        b = GetBlock(x, y - 1, z);
-        if (b != null)
-        {
-            if ((affectionMask & (1 << Block.DOWN_FACE_INDEX)) != 0) b.InitializePlane(Block.UP_FACE_INDEX);
-            else b.DeactivatePlane(Block.UP_FACE_INDEX);
-        }
-    }
 
     public void RefreshBlockVisualising(Block b, byte face)
     {
@@ -287,7 +246,7 @@ public sealed partial class Chunk : MonoBehaviour {
         for (int i = 0; i < blockVisualizersList.Count; i++)
         {
             var bvi = blockVisualizersList[i];
-            if (bvi.pos == b.pos && bvi.rinfo.faceIndex == face)
+            if (bvi.pos == b.pos && bvi.meshInfo.faceIndex == face)
             {
                 currentBlockInfo = bvi;
                 arrayIndex = i;
@@ -302,14 +261,14 @@ public sealed partial class Chunk : MonoBehaviour {
                 currentBlockInfo = b.GetFaceVisualData(face);
                 if (currentBlockInfo == null) return;
                 blockVisualizersList.Add(currentBlockInfo);
-                if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
+                if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
             }
             else
             {
-                if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
+                if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
                 currentBlockInfo = b.GetFaceVisualData(face);
                 blockVisualizersList[arrayIndex] = currentBlockInfo;
-                if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
+                if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
             }
         }
         else // не должен быть виден
@@ -317,113 +276,97 @@ public sealed partial class Chunk : MonoBehaviour {
             if (currentBlockInfo != null)
             {
                 blockVisualizersList.RemoveAt(arrayIndex);
-                if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
+                if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
             }
         }
         chunkRenderUpdateRequired = true;
     }
     public void RefreshBlockVisualising(Block b)
     {
-        byte visibilityMask = GetVisibilityMask(b.pos);
-        var blockParts = new BlockpartVisualizeInfo[8];
-        var indexes = new int[8];
+        var correctData = b.GetVisualizeInfo(GetVisibilityMask(b.pos));      
+        var pos = b.pos;        
 
-        if (blockVisualizersList.Count > 0)
-        {
-            for (int i = 0; i < blockVisualizersList.Count; i++)
-            {
-                var bvi = blockVisualizersList[i];
-                if (bvi.pos == b.pos)
-                {
-                    byte findex = bvi.rinfo.faceIndex;
-                    blockParts[findex] = bvi;
-                    indexes[findex] = i;
-                }
-            }
+        if (correctData == null)
+        { // нет видимых частей, удалить все, что относится к блоку            
+            RemoveBlockVisualisers(pos);
+            return;
         }
-        BlockpartVisualizeInfo currentBlockInfo, correctBlockInfo;
-
-        for (byte k = 0; k < 8; k++)
+        else
         {
-            currentBlockInfo = blockParts[k];
-            if ((visibilityMask & (1 << k)) != 0) // должен быть видимым
-            {
-                correctBlockInfo = b.GetFaceVisualData(k);
-                if (currentBlockInfo != null) // данные о блоке есть..
-                {
-                    if (correctBlockInfo == null) // ...но их быть не должно
-                    {
-                        blockVisualizersList.RemoveAt(indexes[k]);
-                        if (k + 1 < 8)
-                        {
-                            for (int j = k + 1; j < 8; j++)
-                            {
-                                if (indexes[j] > indexes[k]) indexes[j]--;
-                            }
-                        }
-                        if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
-                    }
-                    else // ...и мы сравниваем их с правильными
-                    {
-                        if (correctBlockInfo != currentBlockInfo)
-                        {
-                            if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
-                            blockVisualizersList[indexes[k]] = currentBlockInfo;
-                            if (!redrawRequiredTypes.Contains(correctBlockInfo.rinfo)) redrawRequiredTypes.Add(correctBlockInfo.rinfo);
-                        }
-                    }
-                }
-                else // данных о блоке нет...
-                {
-                    if (correctBlockInfo == null) continue; //...и не должно быть
-                    else //... но должны быть
-                    {
-                        blockVisualizersList.Add(correctBlockInfo);
-                        if (!redrawRequiredTypes.Contains(correctBlockInfo.rinfo)) redrawRequiredTypes.Add(correctBlockInfo.rinfo);
-                    }
-                }
-            }
-            else // должен быть невидимым..
-            {
-                if (currentBlockInfo != null) //.. но есть видимая часть, которую нужно удалить
-                {
-                    blockVisualizersList.RemoveAt(indexes[k]);
-                    if (k + 1 < 8)
-                    {
-                        for (int j = k + 1; j < 8; j++)
-                        {
-                            if (indexes[j] > indexes[k]) indexes[j]--;
-                        }
-                    }
-                    if (!redrawRequiredTypes.Contains(currentBlockInfo.rinfo)) redrawRequiredTypes.Add(currentBlockInfo.rinfo);
-                }
-            }
-        }
-        chunkRenderUpdateRequired = true;
-    }
-    private void RemoveBlockVisualisers(ChunkPos cpos) // удаление всей рендер-информации для данной точки
-    {
-        if (blockVisualizersList.Count > 0)
-        {
-            BlockpartVisualizeInfo bvi;
             int i = 0;
+            bool corrections = false;
+            MeshVisualizeInfo mvi;
+            byte findex;
+            var correctDataArray = new BlockpartVisualizeInfo[8];
+            foreach (var fbvi in correctData)
+            {
+                findex = fbvi.meshInfo.faceIndex;
+                correctDataArray[findex] = fbvi;
+            }
+            correctData = null;
+            BlockpartVisualizeInfo bvi;
             while (i < blockVisualizersList.Count)
             {
-                bvi = blockVisualizersList[i];
-                if (bvi.pos == cpos)
+                if (blockVisualizersList[i].pos == pos)
                 {
-                    var ri = bvi.rinfo;
-                    if (!redrawRequiredTypes.Contains(ri))
+                    bvi = blockVisualizersList[i];
+                    mvi = bvi.meshInfo;
+                    findex = bvi.meshInfo.faceIndex;
+                    if (correctDataArray[findex] != null)
                     {
-                        redrawRequiredTypes.Add(ri);
+                        // замена существующих данных
+                        if (bvi != correctDataArray[findex])
+                        {
+                            blockVisualizersList[i] = correctDataArray[findex];
+                            corrections = true;
+                            if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi); // удаленный тип
+                            mvi = correctDataArray[findex].meshInfo;
+                            if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi); // новый тип
+                            correctDataArray[findex] = null; // все записанные стираются, незаписанные впишутся позже
+                        }
+                        i++;
                     }
-                    blockVisualizersList.RemoveAt(i);
-                    continue;
+                    else
+                    {
+                        blockVisualizersList.RemoveAt(i);
+                        corrections = true;
+                        if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi);
+                        continue;
+                    }
                 }
                 else i++;
             }
-            chunkRenderUpdateRequired = true;
+            foreach (var fbvi in correctDataArray)
+            {
+                if (fbvi != null)
+                {
+                    blockVisualizersList.Add(fbvi);
+                    corrections = true;
+                    mvi = fbvi.meshInfo;
+                    if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi);
+                }
+            }
+            if (corrections) chunkRenderUpdateRequired = true;
+        }  
+    }
+    private void RemoveBlockVisualisers(ChunkPos cpos) // удаление всей рендер-информации для данного блока
+    {
+        bool corrections = false;
+        MeshVisualizeInfo mvi;
+        int i = 0;
+        while (i < blockVisualizersList.Count)
+        {
+            if (blockVisualizersList[i].pos == cpos)
+            {
+                mvi = blockVisualizersList[i].meshInfo;
+                if (!redrawRequiredTypes.Contains(mvi)) redrawRequiredTypes.Add(mvi);
+                blockVisualizersList.RemoveAt(i);
+                corrections = true;                
+                continue;
+            }
+            else i++;
         }
+        if (corrections) chunkRenderUpdateRequired = true;
     }
 
     private void CreateBlockpartsRenderer(MeshVisualizeInfo mvi)
@@ -432,7 +375,7 @@ public sealed partial class Chunk : MonoBehaviour {
         var processingIndexes = new List<int>();
         for (int i = 0; i < blockVisualizersList.Count; i++)
         {
-            if (blockVisualizersList[i].rinfo == mvi) processingIndexes.Add(i);
+            if (blockVisualizersList[i].meshInfo == mvi) processingIndexes.Add(i);
         }
 
         int pcount = processingIndexes.Count;
@@ -440,10 +383,10 @@ public sealed partial class Chunk : MonoBehaviour {
         {
             var ci = new CombineInstance[pcount];
             Mesh m;
-
+            BlockpartVisualizeInfo cdata;
             for (int j = 0; j < pcount; j++)
             {
-                var cdata = blockVisualizersList[processingIndexes[j]];
+                cdata = blockVisualizersList[processingIndexes[j]];
                 m = MeshMaster.GetMesh(cdata.meshType, cdata.materialID);
                 ci[j].mesh = m;
                 ci[j].transform = cdata.GetPositionMatrix();
@@ -485,22 +428,23 @@ public sealed partial class Chunk : MonoBehaviour {
                 var indexes = new List<int>();
                 for (int i = 0; i < n; i++)
                 {
-                    if (blockVisualizersList[i].rinfo == mvi) indexes.Add(i);
-                }
+                    if (blockVisualizersList[i].meshInfo == mvi) indexes.Add(i);
+                }                
 
                 n = indexes.Count;
                 if (n > 0)
                 {
                     var ci = new CombineInstance[n];
                     BlockpartVisualizeInfo bvi;
+                    Mesh cm;
                     for (int i = 0; i < n; i++)
                     {
                         bvi = blockVisualizersList[indexes[i]];
-                        Mesh m = MeshMaster.GetMesh(bvi.meshType, bvi.materialID);
-                        ci[i].mesh = m;
+                        cm = MeshMaster.GetMesh(bvi.meshType, bvi.materialID);
+                        ci[i].mesh = cm;
                         ci[i].transform = bvi.GetPositionMatrix();
                     }
-                    Mesh cm = new Mesh();
+                    cm = new Mesh();
                     cm.CombineMeshes(ci);
                     g.GetComponent<MeshFilter>().sharedMesh = cm;
                     g.GetComponent<MeshCollider>().sharedMesh = cm;
@@ -841,7 +785,7 @@ public sealed partial class Chunk : MonoBehaviour {
             {
                 int a;
                 byte lightToCompare;
-                switch (brd.rinfo.faceIndex)
+                switch (brd.meshInfo.faceIndex)
                 {
                     case 0:
                         a = brd.pos.z + 1;
@@ -877,9 +821,9 @@ public sealed partial class Chunk : MonoBehaviour {
                         lightToCompare = lightMap[brd.pos.x, brd.pos.y, brd.pos.z];
                         break;
                 }
-                if (brd.rinfo.illumination != lightToCompare && !redrawRequiredTypes.Contains(brd.rinfo))
+                if (brd.meshInfo.illumination != lightToCompare && !redrawRequiredTypes.Contains(brd.meshInfo))
                 {
-                    redrawRequiredTypes.Add(brd.rinfo);
+                    redrawRequiredTypes.Add(brd.meshInfo);
                 }
             }
         }

@@ -562,6 +562,13 @@ public sealed class OakTree : Plant
                     stage = newStage;
                     SetModel();
                 }
+                else
+                {
+                    stage = newStage;
+                    spriter.sprite = startStageSprites[stage];
+                    spriter.enabled = ((transform.position - FollowingCamera.camPos).magnitude < TREE_SPRITE_MAX_VISIBILITY * stage);
+                    drawmode = OakDrawMode.DrawStartSprite;
+                }
             }
             else
             {

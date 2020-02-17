@@ -308,7 +308,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (fb.Value.TryGetPlane(upcode, out p))
                 {
-                    if (p.isSuitableForStructures) surfaces.Add(p);
+                    if (p.isQuad) surfaces.Add(p);
                 }
             }
             if (surfaces.Count == 0) surfaces = null;
@@ -375,14 +375,27 @@ public sealed partial class Chunk : MonoBehaviour
             if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
             blocks.Add(f_pos, b);
             if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
-        }
 
-        RecalculateVisibilityAtPoint(x, y, z);
-        chunkDataUpdateRequired = true;
-        shadowsUpdateRequired = true;
-        RefreshBlockVisualising(b);
-        chunkRenderUpdateRequired = true;
-        return b;
+            chunkDataUpdateRequired = true;
+            shadowsUpdateRequired = true;
+
+            RefreshBlockVisualising(b);
+            b = GetBlock(x, y, z + 1);
+            if (b != null) RefreshBlockVisualising(b);
+            b = GetBlock(x + 1, y, z);
+            if (b != null) RefreshBlockVisualising(b);
+            b = GetBlock(x, y, z - 1);
+            if (b != null) RefreshBlockVisualising(b);
+            b = GetBlock(x - 1, y, z);
+            if (b != null) RefreshBlockVisualising(b);
+            b = GetBlock(x, y + 1, z);
+            if (b != null) RefreshBlockVisualising(b);
+            b = GetBlock(x, y - 1, z);
+            if (b != null) RefreshBlockVisualising(b);
+
+            chunkRenderUpdateRequired = true;
+            return b;
+        }      
     }
 
     public Block GetBlock(ChunkPos cpos) {
@@ -680,10 +693,22 @@ public sealed partial class Chunk : MonoBehaviour
         b.Annihilate(compensateStructures);
         blocks.Remove(b.pos);
         RemoveBlockVisualisers(b.pos);
-        RecalculateVisibilityAtPoint(x, y, z);
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(pos);
-        chunkDataUpdateRequired = true;
+
+        b = GetBlock(x, y, z + 1);
+        if (b != null) RefreshBlockVisualising(b);
+        b = GetBlock(x + 1, y, z);
+        if (b != null) RefreshBlockVisualising(b);
+        b = GetBlock(x, y, z - 1);
+        if (b != null) RefreshBlockVisualising(b);
+        b = GetBlock(x - 1, y, z);
+        if (b != null) RefreshBlockVisualising(b);
+        b = GetBlock(x, y + 1, z);
+        if (b != null) RefreshBlockVisualising(b);
+        b = GetBlock(x, y - 1, z);
+        if (b != null) RefreshBlockVisualising(b);
         shadowsUpdateRequired = true;
+        chunkDataUpdateRequired = true;
         // chunkRenderUpdateRequired = true; < в свитче
     }
     public void ClearChunk()

@@ -529,6 +529,11 @@ public sealed class PoolMaster : MonoBehaviour {
         }        
     }    
 
+    public static bool IsMaterialAGrass(int id)
+    {
+        return (id == MATERIAL_GRASS_100_ID | id == MATERIAL_GRASS_20_ID | id == MATERIAL_GRASS_40_ID | id == MATERIAL_GRASS_60_ID | id == MATERIAL_GRASS_80_ID);
+    }
+
     public static void ReplaceMaterials(GameObject g, bool i_useAdvancedMaterials)
     {
         Renderer[] rrs = g.GetComponentsInChildren<Renderer>();

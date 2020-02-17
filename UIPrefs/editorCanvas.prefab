@@ -835,7 +835,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &224541950972445032
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1911,6 +1911,7 @@ MonoBehaviour:
   listPanel: {fileID: 1598811031983716}
   menuPanel: {fileID: 1111609041364832}
   settingsPanel: {fileID: 1055021677019248}
+  touchZone: {fileID: 1136949330878486}
   currentActionIcon: {fileID: 114415163196729636}
   materialButtonImage: {fileID: 114411182963920576}
   buttonsImages:
