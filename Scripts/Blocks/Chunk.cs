@@ -26,8 +26,8 @@ public sealed partial class Chunk : MonoBehaviour
     public delegate void ChunkUpdateHandler();
     public event ChunkUpdateHandler ChunkUpdateEvent;
 
-    private List<Plane> surfaces;
-    public Nature nature { get; private set; }
+    public Plane[] surfaces { get; private set; }
+    private Nature nature;
 
     public const float CHUNK_UPDATE_TICK = 0.5f;
     public const byte MIN_CHUNK_SIZE = 3 , NO_FACE_VALUE = 10;
@@ -303,15 +303,25 @@ public sealed partial class Chunk : MonoBehaviour
         {
             byte upcode = Block.UP_FACE_INDEX;
             Plane p = null;
-            if (surfaces == null) surfaces = new List<Plane>(); else surfaces.Clear();
+            var plist = new List<Plane>();
             foreach (var fb in blocks)
             {
                 if (fb.Value.TryGetPlane(upcode, out p))
                 {
-                    if (p.isQuad) surfaces.Add(p);
+                    if (p.isQuad) plist.Add(p);
                 }
             }
-            if (surfaces.Count == 0) surfaces = null;
+            int count = plist.Count;
+            if (count == 0) surfaces = null;
+            else
+            {
+                surfaces = new Plane[count];
+                for (int i = 0; i < count; i++)
+                {
+                    surfaces[i] = plist[i];
+                }
+                plist = null;
+            }
         }
         else surfaces = null;
         needSurfacesUpdate = false;
@@ -392,6 +402,8 @@ public sealed partial class Chunk : MonoBehaviour
             if (b != null) RefreshBlockVisualising(b);
             b = GetBlock(x, y - 1, z);
             if (b != null) RefreshBlockVisualising(b);
+
+            if (b.IsSurface()) needSurfacesUpdate = true;
 
             chunkRenderUpdateRequired = true;
             return b;
@@ -538,7 +550,6 @@ public sealed partial class Chunk : MonoBehaviour
     }
 
     #region taking surfaces
-    public List<Plane> GetSurfacesList() { return surfaces; }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
         if (surfaces == null || x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;
@@ -564,8 +575,7 @@ public sealed partial class Chunk : MonoBehaviour
     {
         if (surfaces != null)
         {
-            int x = surfaces.Count;
-            return surfaces[Random.Range(0,x)];
+            return surfaces[Random.Range(0, surfaces.Length - 1)];
         }
         return null;
     }
@@ -578,7 +588,7 @@ public sealed partial class Chunk : MonoBehaviour
             float a, b, c, m;
             Plane p = null;
             ChunkPos cpos;
-            for (int i = 0; i < surfaces.Count; i++)
+            for (int i = 0; i < surfaces.Length; i++)
             {
                 p = surfaces[i];
                 if (p.fulfillStatus == FullfillStatus.Full) continue;
@@ -629,7 +639,7 @@ public sealed partial class Chunk : MonoBehaviour
         Plane p = null;
         if (size == PlaneExtension.INNER_RESOLUTION)
         {
-            for (; i < surfaces.Count; i++)
+            for (; i < surfaces.Length; i++)
             {
                 p = surfaces[i];
                 if (p.fulfillStatus ==FullfillStatus.Empty || p.artificialStructuresCount == 0) suitable.Add(i);
@@ -641,7 +651,7 @@ public sealed partial class Chunk : MonoBehaviour
         {
             if (size == 1)
             {
-                for (; i < surfaces.Count; i++)
+                for (; i < surfaces.Length; i++)
                 {
                     p = surfaces[i];
                     if (p.fulfillStatus != FullfillStatus.Full) suitable.Add(i);
@@ -654,7 +664,7 @@ public sealed partial class Chunk : MonoBehaviour
             }
             else
             {
-                for (; i < surfaces.Count; i++)
+                for (; i < surfaces.Length; i++)
                 {
                     p = surfaces[i];
                     if (p.fulfillStatus != FullfillStatus.Full) suitable.Add(i);
@@ -690,6 +700,7 @@ public sealed partial class Chunk : MonoBehaviour
         Block b = GetBlock(pos);
         if (b == null) return;
         int x = pos.x, y = pos.y, z = pos.z;
+        if (b.IsSurface()) needSurfacesUpdate = true;
         b.Annihilate(compensateStructures);
         blocks.Remove(b.pos);
         RemoveBlockVisualisers(b.pos);

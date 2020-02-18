@@ -154,10 +154,10 @@ public sealed class Plane
         }
         else return extension.GetStructuresList();
     }
-    public List<Plant> GetPlantsList()
+    public Plant[] GetPlants()
     {
         if (extension == null) return null;
-        else return extension.GetPlantsList();
+        else return extension.GetPlants();
     }
 
     public void ChangeMaterial(int newId, bool redrawCall)
@@ -408,6 +408,23 @@ public sealed class Plane
             case Block.SURFACE_FACE_INDEX:
             default:
                 return Vector3.zero;
+        }
+    }
+    public Vector3 GetLookVector()
+    {
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX: return Vector3.forward;
+            case Block.RIGHT_FACE_INDEX: return Vector3.right;
+            case Block.BACK_FACE_INDEX: return Vector3.back;
+            case Block.LEFT_FACE_INDEX: return Vector3.left;            
+            case Block.DOWN_FACE_INDEX:
+            case Block.CEILING_FACE_INDEX:
+                return Vector3.down;
+            case Block.SURFACE_FACE_INDEX:
+            case Block.UP_FACE_INDEX:
+            default:
+                return Vector3.up;
         }
     }
     /// <summary>

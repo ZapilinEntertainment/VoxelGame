@@ -9,6 +9,7 @@ public sealed class BlockExtension
     private byte existingPlanesMask;    //не может быть нулем, иначе extension не нужен
     private Dictionary<byte, Plane> planes;
     public const float MAX_VOLUME = 4096;
+    //private const byte SURFACE_MASK = (1 << Block.SURFACE_FACE_INDEX) + ( 1 << Block.UP_FACE_INDEX);
 
     public override bool Equals(object obj)
     {
@@ -232,6 +233,22 @@ public sealed class BlockExtension
     {
         byte fullmask = Block.FWD_FACE_INDEX + Block.RIGHT_FACE_INDEX + Block.BACK_FACE_INDEX + Block.LEFT_FACE_INDEX + Block.UP_FACE_INDEX + Block.DOWN_FACE_INDEX;
         return ( (fullmask & existingPlanesMask) == fullmask);
+    }
+    public bool IsSurface()
+    {
+        if (planes == null) return false;
+        else
+        {
+            if (planes.ContainsKey(Block.UP_FACE_INDEX))
+            {
+                return planes[Block.UP_FACE_INDEX].isQuad;
+            }
+            else
+            {
+                if (planes.ContainsKey(Block.SURFACE_FACE_INDEX)) return planes[Block.SURFACE_FACE_INDEX].isQuad;
+                else return false;
+            }
+        }
     }
 
     public float Dig(int d_volume, bool openPit, byte faceIndex)

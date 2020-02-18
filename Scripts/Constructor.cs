@@ -136,7 +136,7 @@ public abstract class Constructor
         Chunk c = g.AddComponent<Chunk>();
         GameMaster.realMaster.SetMainChunk(c);
         c.CreateNewChunk(dat);
-        //NatureCreation(c);
+        c.GetNature().FirstSet(size * size * 500f);
         //CheckForLandingPosition(c);
         c.RenderDataFullRecalculation();
     }

@@ -13,7 +13,7 @@ public sealed class Nature : MonoBehaviour
     private float lifepower, lifepowerSurplus, grasslandCreateTimer, grasslandsUpdateTimer;
     private int lastUpdateIndex = 0;
     private List<Grassland> grasslands;
-    private List<LifeSource> sources;
+    private List<LifeSource> lifesources;
     private List<PlantType> flowerTypes, bushTypes, treeTypes;
     private List<PlantType> islandFlora;
 
@@ -45,6 +45,55 @@ public sealed class Nature : MonoBehaviour
         lifepower = 100f;
         lifepowerSurplus = 2f;
         gm = GameMaster.realMaster;
+    }
+    public void FirstSet(float lpower)
+    {
+        if (!prepared) Prepare(GameMaster.realMaster.mainChunk);
+        var slist = new List<Plane>(myChunk.surfaces);
+        if (slist != null)
+        {
+            int count = slist.Count;
+            var s = slist[Random.Range(0, count - 1)];
+            {
+                var ls = Structure.GetStructureByID(Random.value > 0.5f ? Structure.LIFESTONE_ID : Structure.TREE_OF_LIFE_ID);
+                ls.SetBasement(s);
+            }
+            slist.Remove(s); count--;
+
+            float lifepiece = 50f;
+            if (count > 0)
+            {
+                Plane p;
+                Grassland g;
+                int i;
+                while (lpower > 0f & count > 0)
+                {
+                    i = Random.Range(0, count - 1);
+                    p = slist[i];
+                    if (p.haveGrassland)
+                    {
+                        p.GetGrassland().AddLifepower(lifepiece);
+                        lpower -= lifepiece;
+                    }
+                    else
+                    {
+                        if (Random.value < environmentalConditions)
+                        {
+                            g = p.GetExtension().InitializeGrassland();
+                            g.AddLifepower(lifepiece);
+                            lpower -= lifepiece;
+                        }
+                        else
+                        {
+                            slist.RemoveAt(i);
+                            count--;
+                        }
+                    }
+                }
+                if (lpower > 0f) lifepower += lpower;
+            }
+            needRecalculation = true;
+        }
     }
 
     private void Update()
@@ -234,12 +283,12 @@ public sealed class Nature : MonoBehaviour
                     }
                     else
                     {
-                        var slist = myChunk.GetSurfacesList();
+                        var slist = myChunk.surfaces;
                         if (slist != null)
                         {
                             var ilist = new List<int>();
                             Plane p;
-                            for (int i= 0; i<slist.Count; i++)
+                            for (int i= 0; i<slist.Length; i++)
                             {
                                 p = slist[i];
                                 if (MaterialIsLifeSupporting(p.materialID) && !p.haveGrassland) ilist.Add(i);
@@ -258,6 +307,13 @@ public sealed class Nature : MonoBehaviour
                             }
                         }
                     }                    
+                }
+                else
+                {
+                    if (lifepower < 1000f && grasslands != null)
+                    {
+
+                    }
                 }
                 grasslandCreateTimer = GRASSLAND_CREATE_CHECK_TIME;
             }
@@ -281,6 +337,22 @@ public sealed class Nature : MonoBehaviour
     public void AddLifepower(float f)
     {
         lifepower += f;
+    }
+    public void AddLifesource(LifeSource ls)
+    {
+        if (lifesources == null)
+        {
+            lifesources = new List<LifeSource>() { ls };
+            return;
+        }
+        else
+        {
+            if (!lifesources.Contains(ls)) lifesources.Add(ls);
+        }
+    }
+    public void RemoveLifesource(LifeSource ls)
+    {
+        lifesources?.Remove(ls);
     }
 
     public Grassland CreateGrassland(Plane p)

@@ -603,7 +603,10 @@ public sealed class UISurfacePanelController : UIObserver {
     private void PrepareConstructionPlane()
     {
         surfaceBuildingPanel.SetActive(false);
-        constructionPlane.transform.position = observingSurface.pos.ToWorldSpace() + Vector3.down * 0.45f;   
+        var t = constructionPlane.transform;
+        t.position = observingSurface.GetCenterPosition();
+        t.rotation = Quaternion.Euler(observingSurface.GetRotation());
+        t.position += observingSurface.GetLookVector() * 0.01f;
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetExtension().GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);

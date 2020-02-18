@@ -37,7 +37,7 @@ public sealed class PlaneExtension
     }
     private void ResetMap()
     {
-        map = new BitArray(INNER_RESOLUTION * INNER_RESOLUTION);
+        if (map == null) map = new BitArray(INNER_RESOLUTION * INNER_RESOLUTION);
         map.SetAll(false);
     }
 
@@ -47,7 +47,6 @@ public sealed class PlaneExtension
         artificialStructuresCount = 0;
         fullfillStatus = FullfillStatus.Empty;
 
-        bool allCellsEmpty = true;
         if (structures != null)
         {
             int a = 0;
@@ -59,7 +58,6 @@ public sealed class PlaneExtension
                     structures.RemoveAt(a);
                     continue;
                 }
-                else allCellsEmpty = false;
                 if (s.isArtificial) artificialStructuresCount++;
                 SurfaceRect sr = s.surfaceRect;
                 if (sr.size != INNER_RESOLUTION)
@@ -80,38 +78,28 @@ public sealed class PlaneExtension
                 {
                     map.SetAll(true);
                     fullfillStatus = FullfillStatus.Full;
+                    return;
                 }
                 a++;
             }
-            if (structures.Count == 0) structures = null;
-        }
-        if (fullfillStatus == FullfillStatus.Unknown)
-        {
-            if (allCellsEmpty)
+            if (structures.Count == 0)
             {
-                fullfillStatus = FullfillStatus.Empty;
+                structures = null;
+                return;
             }
             else
             {
-                bool allCellsFull = true;
                 foreach (bool b in map)
                 {
-                    if (b == true)
+                    if (b == false)
                     {
-                        allCellsFull = false;
-                        break;
+                        fullfillStatus = FullfillStatus.Unknown;
+                        return;
                     }
                 }
-                if (allCellsFull)
-                {
-                    fullfillStatus = FullfillStatus.Full;
-                }
-                else
-                {
-                    fullfillStatus = FullfillStatus.Unknown;
-                }
+                fullfillStatus = FullfillStatus.Full;
             }
-        }
+        }        
     }
     public Texture2D GetMapTexture()
     {
@@ -184,9 +172,9 @@ public sealed class PlaneExtension
                     }
                 }
                 SurfaceRect sr = s.surfaceRect;
-                for (int i = sr.x * cellRes; i < (sr.x + sr.size) * cellRes; i++)
+                for (int i = sr.z * cellRes; i < (sr.z + sr.size) * cellRes; i++)
                 {
-                    for (int j = sr.z * cellRes; j < (sr.z + sr.size) * cellRes; j++)
+                    for (int j = sr.x * cellRes; j < (sr.x + sr.size) * cellRes; j++)
                     {
                         index = i * realRes * 4 + j * 4;
                         buildmap[index] = col[0];
@@ -349,7 +337,7 @@ public sealed class PlaneExtension
     {
         return structures;
     }
-    public List<Plant> GetPlantsList()
+    public Plant[] GetPlants()
     {
         if (structures == null) return null;
         else
@@ -360,7 +348,7 @@ public sealed class PlaneExtension
             {
                 if (s.ID == pid) plist.Add(s as Plant);
             }
-            if (plist.Count > 0) return plist; else return null;
+            if (plist.Count > 0) return plist.ToArray(); else return null;
         }
     }
     public bool HaveGrassland()
@@ -468,7 +456,7 @@ public sealed class PlaneExtension
             if (fullfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
             else
             {
-                List<PixelPosByte> acceptableVariants = GetAcceptablePositions(10);
+                List<PixelPosByte> acceptableVariants = GetAcceptableCellPositions(10);
                 if (acceptableVariants.Count == 0) return PixelPosByte.Empty;
                 else
                 {
@@ -483,7 +471,7 @@ public sealed class PlaneExtension
         List<PixelPosByte> positions = new List<PixelPosByte>();
         if (fullfillStatus != FullfillStatus.Full)
         {
-            List<PixelPosByte> acceptableVariants = GetAcceptablePositions(INNER_RESOLUTION * INNER_RESOLUTION);
+            List<PixelPosByte> acceptableVariants = GetAcceptableCellPositions(INNER_RESOLUTION * INNER_RESOLUTION);
             while (positions.Count < count && acceptableVariants.Count > 0)
             {
                 int ppos = Random.Range(0, acceptableVariants.Count);
@@ -580,9 +568,10 @@ public sealed class PlaneExtension
         }
         return acceptablePositions;
     }
-    public List<PixelPosByte> GetAcceptablePositions(int count)
-    {
+    public List<PixelPosByte> GetAcceptableCellPositions(int count)
+    {        
         List<PixelPosByte> acceptableVariants = new List<PixelPosByte>();
+        if (count == 0) return acceptableVariants;
         for (byte i = 0; i < INNER_RESOLUTION; i++)
         {
             for (byte j = 0; j < INNER_RESOLUTION; j++)
@@ -599,9 +588,9 @@ public sealed class PlaneExtension
         {
             while (acceptableVariants.Count > count)
             {
-                int i = Random.Range(0, acceptableVariants.Count);
+                int i = Random.Range(0, acceptableVariants.Count - 1);
                 acceptableVariants.RemoveAt(i);
-            }
+            }            
             return acceptableVariants;
         }
     }

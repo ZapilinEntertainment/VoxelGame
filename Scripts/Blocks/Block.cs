@@ -151,6 +151,11 @@ public sealed class Block {
         if (extension == null) return false;
         else return extension.IsCube();
     }
+    public bool IsSurface()
+    {
+        if (extension == null) return false;
+        else return extension.IsSurface();
+    }
 
     public bool HavePlane(byte faceIndex) { if (extension == null) return false; else return extension.HavePlane(faceIndex); }
     public bool TryGetPlane(byte faceIndex, out Plane result)

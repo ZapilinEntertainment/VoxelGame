@@ -40,6 +40,8 @@ public sealed class LifeSource : Structure {
                 subscribedToRestoreBlockersUpdate = true;
             }
         }
+        basement.myChunk.GetNature().AddLifesource(this);
+        basement.ChangeMaterial(PoolMaster.MATERIAL_GRASS_100_ID, true);
     }
     public void RestoreBlockers()
     {
@@ -72,12 +74,14 @@ public sealed class LifeSource : Structure {
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed | GameMaster.sceneClearing) return;
-        else destroyed = true;
+        else destroyed = true;        
         PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (basement != null )
         {
+            basement.myChunk.GetNature().RemoveLifesource(this);
+            basement.ChangeMaterial(ResourceType.DIRT_ID, true);
             if (GameMaster.realMaster.gameMode != GameMode.Editor)
-            {
+            {               
                 switch (ID)
                 {
                     case TREE_OF_LIFE_ID:

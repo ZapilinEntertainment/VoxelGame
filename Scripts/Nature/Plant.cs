@@ -54,6 +54,7 @@ public abstract class Plant : Structure {
     {
         stage = newStage;
     }
+    public void FORCED_SetStage(byte newStage) { SetStage(newStage); }
     virtual public bool IsFullGrown()
     {
         return true;

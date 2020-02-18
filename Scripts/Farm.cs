@@ -5,7 +5,7 @@ using UnityEngine;
 public class Farm : WorkBuilding
 {
     public PlantType cropType;
-    const float BOOST_ACTIVITY_COST = 0.3f, HARVEST_ACTIVITY_COST = 1f, PLANT_ACTIVITY_COST = 10f, PLANT_CREATE_COST = 10f, PLANT_BOOST_COST = 10f;
+    private const float ACTION_LIFEPOWER_COST = 10f;
 
     override public void Prepare()
     {
@@ -32,17 +32,6 @@ public class Farm : WorkBuilding
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        if (b.ContainStructures())
-        {
-            var plist = basement.GetPlantsList();
-            if (plist != null)
-            {
-                foreach (var p in plist)
-                {
-                    if (p.type != cropType) p.Annihilate(true, true, false);
-                }
-            }
-        }
         SetWorkbuildingData(b, pos);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
         if (!subscribedToUpdate)
@@ -76,52 +65,47 @@ public class Farm : WorkBuilding
     {
         int i = 0;
         float totalCost = 0;
-        float actionsPoints = workflow / workflowToProcess;
-        workflow = 0;
-        List<Structure> structures = basement.GetStructuresList();   
-        
+        int actionsPoints = (int)(workflow / workflowToProcess);
+
         if (basement.fulfillStatus != FullfillStatus.Full)
         {
-            List<PixelPosByte> pos = basement.GetExtension().GetAcceptablePositions((int)(actionsPoints / PLANT_ACTIVITY_COST ));
+            List<PixelPosByte> pos = basement.GetExtension().GetAcceptableCellPositions(actionsPoints);
             i = 0;
-            while (i < pos.Count )
+            while (i < pos.Count)
             {
                 Plant p = Plant.GetNewPlant(cropType);
-                p.Prepare();
                 p.SetBasement(basement, pos[i]);
-                totalCost += PLANT_CREATE_COST;
+                actionsPoints--;
+                totalCost += ACTION_LIFEPOWER_COST;
                 i++;
             }
         }
-        if (actionsPoints > HARVEST_ACTIVITY_COST)
+        else
         {
-            while (i < structures.Count & actionsPoints > 0)
+            var allplants = basement.GetPlants();
+            Plant p;
+            for (i = 0; i < plants.Length; i++)
             {
-                if (structures[i].ID == PLANT_ID)
+                p = plants[i];
+                if (p.type == cropType)
                 {
-                    Plant p = structures[i] as Plant;
-                    if (p.type == cropType)
+                    if (!p.IsFullGrown() & p.type == cropType)
                     {
-                        if (p.IsFullGrown())
-                        {
-                            p.Harvest(true);
-                            actionsPoints -= HARVEST_ACTIVITY_COST;
-                        }
-                        else
-                        {
-                            p.UpdatePlant();
-                            totalCost += PLANT_BOOST_COST;
-                            actionsPoints -= BOOST_ACTIVITY_COST;
-                        }
+                        p.UpdatePlant();
+                        totalCost += ACTION_LIFEPOWER_COST;                        
                     }
                     else
                     {
-                        p.Harvest(false);
+                        p.Harvest(true);
                     }
                 }
-                i++;
+                else
+                {
+                    p.Harvest(false);
+                }
+                actionsPoints--;
             }
-        }        
+        }
         if (totalCost > 0) {
             var gl = basement.GetGrassland();
             if (gl == null) gl = basement.GetExtension().InitializeGrassland();

@@ -241,8 +241,8 @@ public sealed class GameMaster : MonoBehaviour
                         break;
 
                     case GameStart.Headquarters:
-                        List<Plane> sblocks = mainChunk.GetSurfacesList();
-                        Plane sb = sblocks[Random.Range(0, sblocks.Count)];
+                        var sblocks = mainChunk.surfaces;
+                        Plane sb = sblocks[Random.Range(0, sblocks.Length - 1)];
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 
@@ -998,7 +998,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         Vector3Int ecpos = Vector3Int.zero;
         byte ir = PlaneExtension.INNER_RESOLUTION;
-        var slist = mainChunk.GetSurfacesList();
+        var slist = mainChunk.surfaces;
         if (mainChunk.TryGetPlace(ref ecpos, ir))
         {
             Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);

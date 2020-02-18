@@ -6,7 +6,7 @@ public sealed class Grassland
     public Plane plane { get; private set; }
     private Nature nature;
     private PlantCategory[] categoriesCatalog;
-    private List<Plant> plantsList;
+    private Plant[] plants;
     public bool canBeBoosted { get; private set; }
     public bool needRecalculation = false;
     private bool ignoreRecalculationsRequest = false;
@@ -94,9 +94,9 @@ public sealed class Grassland
                 if (lifepower <= BOOST_VALUE) return;
             }
             bool creating = true;
-            if (plantsList != null)
+            if (plants != null)
             {
-                if (plantsList.Count >= GetMaxPlantsCount()) creating = false;
+                if (plants.Length >= GetMaxPlantsCount()) creating = false;
                 else
                 {
                     if (Random.value > 0.5f) creating = false;
@@ -112,7 +112,7 @@ public sealed class Grassland
             }
             else
             {
-                var p = plantsList[Random.Range(0, plantsList.Count)];
+                var p = plants[Random.Range(0, plants.Length - 1)];
                 if (!p.IsFullGrown())
                 {
                     p.UpdatePlant();
@@ -134,9 +134,9 @@ public sealed class Grassland
             ignoreRecalculationsRequest = true;
             //#update inners ~
             var luv = GetLevelUpValue();
-            plantsList = plane.GetPlantsList();
+            plants = plane.GetPlants();
             int actionsCountNeeded = 0;
-            if (plantsList != null) actionsCountNeeded = GetMaxPlantsCount() - plantsList.Count;
+            if (plants!= null) actionsCountNeeded = GetMaxPlantsCount() - plants.Length;
             while (f > 0f)
             {
                 if (actionsCountNeeded <= 0 && level < MAX_LEVEL && f > luv)
@@ -150,9 +150,9 @@ public sealed class Grassland
                 else
                 {
                     bool creating = true;
-                    if (plantsList != null)
+                    if (plants != null)
                     {
-                        if (plantsList.Count >= GetMaxPlantsCount()) creating = false;
+                        if (plants.Length >= GetMaxPlantsCount()) creating = false;
                         else
                         {
                             if (Random.value > 0.5f) creating = false;
@@ -167,13 +167,13 @@ public sealed class Grassland
                         if (p != null)
                         {
                             p.SetBasement(plane);
-                            if (plantsList == null) plantsList = new List<Plant>();
-                            plantsList.Add(p);
+                            if (plants == null) plants = ;
+                            plants.Add(p);
                         }
                     }
                     else
                     {
-                        if (plantsList != null)
+                        if (plants != null)
                         {
                             foreach (var p in plantsList)
                             {

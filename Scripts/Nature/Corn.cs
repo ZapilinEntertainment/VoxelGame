@@ -38,7 +38,15 @@ sealed public class Corn : Plant {
         sr.sprite = stageSprites[0];
         sr.sharedMaterial = PoolMaster.verticalWavingBillboardMaterial;
     }
-	override protected void SetStage( byte newStage) {
+    override public void SetBasement(Plane b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        basement = b;
+        surfaceRect = new SurfaceRect(pos.x, pos.y, 1);
+        if (model == null) SetModel();
+        b.AddStructure(this);
+    }
+    override protected void SetStage( byte newStage) {
 		if (newStage == stage) return;
 		stage = newStage;
         if (model != null) model.GetComponent<SpriteRenderer>().sprite = stageSprites[stage];

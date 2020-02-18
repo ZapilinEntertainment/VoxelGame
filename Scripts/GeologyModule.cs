@@ -14,7 +14,7 @@ public class GeologyModule : MonoBehaviour {
 		mineralF_abundance = 0.02f; mineralL_abundance = 0.02f; // sum must be less than one!
 	}
 
-	public void SpreadMinerals(List<Plane> planes) {
+	public void SpreadMinerals(Plane[] planes) {
         int res = PlaneExtension.INNER_RESOLUTION;
         int maxObjectsCount = res * res / 2, positionsLeft;
         PlaneExtension pe;
