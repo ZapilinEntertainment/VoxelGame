@@ -327,27 +327,6 @@ public sealed partial class Chunk : MonoBehaviour
         needSurfacesUpdate = false;
     }
 
-    public Block AddBlock(ChunkPos f_pos, Structure main_structure,bool blockingMode, bool forced, bool compensateStructures)
-    {
-        int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
-        //
-        Block b = GetBlock(x, y, z);
-        if (b == null) return AddBlock_NoCheck(f_pos, main_structure, blockingMode);
-        else
-        {
-            b.SetMainStructure(main_structure, blockingMode, forced, compensateStructures);
-            if (forced) return b; else return null;
-        }
-    } 
-    private Block AddBlock_NoCheck(ChunkPos f_pos, Structure mainStructure, bool blockingMode)
-    {
-        var b = new Block(this, f_pos, mainStructure, blockingMode);
-        if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
-        blocks.Add(f_pos, b);
-        if (PoolMaster.useIlluminationSystem)  RecalculateIlluminationAtPoint(b.pos);
-        return b;
-    }
     private Block AddBlock(ChunkPos f_pos, BlockMaterialsList bml, bool i_naturalGeneration, bool redrawCall )
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
@@ -373,7 +352,7 @@ public sealed partial class Chunk : MonoBehaviour
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
         //
-        Block b = GetBlock(x, y, z);
+        Block b = GetBlock(f_pos);
         if (b != null)
         {
             b.ChangeMaterial(i_materialID, i_naturalGeneration, redrawCall);
@@ -403,11 +382,22 @@ public sealed partial class Chunk : MonoBehaviour
             b = GetBlock(x, y - 1, z);
             if (b != null) RefreshBlockVisualising(b);
 
-            if (b.IsSurface()) needSurfacesUpdate = true;
+            if (b.ContainSurface()) needSurfacesUpdate = true;
 
             chunkRenderUpdateRequired = true;
             return b;
         }      
+    }
+    public Block CreateSurface(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
+    {
+        int x = f_pos.x, y = f_pos.y, z = f_pos.z;
+        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
+        Block b = GetBlock(f_pos);
+        if (b != null) return b;
+        else
+        {
+            b = new Block()
+        }
     }
 
     public Block GetBlock(ChunkPos cpos) {
@@ -700,7 +690,7 @@ public sealed partial class Chunk : MonoBehaviour
         Block b = GetBlock(pos);
         if (b == null) return;
         int x = pos.x, y = pos.y, z = pos.z;
-        if (b.IsSurface()) needSurfacesUpdate = true;
+        if (b.ContainSurface()) needSurfacesUpdate = true;
         b.Annihilate(compensateStructures);
         blocks.Remove(b.pos);
         RemoveBlockVisualisers(b.pos);
@@ -727,7 +717,6 @@ public sealed partial class Chunk : MonoBehaviour
         if (blocks.Count > 0)
         {
             foreach (var b in blocks) { b.Value.Annihilate(false); }
-            blocks.Clear();
         }
         blocks = new Dictionary<ChunkPos, Block>();
         surfaces = null;
@@ -737,18 +726,57 @@ public sealed partial class Chunk : MonoBehaviour
         RenderDataFullRecalculation();
     }
 
-    public void BlockRegion(List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
+    //
+    public void CreateBlocker(ChunkPos f_pos, Structure main_structure, bool forced)
+    {
+        int x = f_pos.x, y = f_pos.y, z = f_pos.z;
+        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return;
+        //
+        Block b = GetBlock(x, y, z);
+        if (b != null)
+        {
+            if (b.haveExtension) return;
+            else
+            {
+                if (b.mainStructure != null)
+                {
+                    if (!forced) return;
+                    else
+                    {
+                        b.ReplaceBlocker(main_structure);
+                        return;
+                    }
+                }
+                else
+                {
+                    b.ReplaceBlocker(main_structure);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            b = new Block(this, f_pos, main_structure);
+            if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
+            blocks.Add(f_pos, b);
+            return;
+        }
+    }
+    public bool BlockRegion(List<ChunkPos> positions, Structure s, ref List<Block> dependentBlocks)
     {
         foreach (ChunkPos pos in positions)
         {
-            if ((pos.x >= CHUNK_SIZE || pos.x < 0) | (pos.y >= CHUNK_SIZE || pos.y < 0) | (pos.z >= CHUNK_SIZE || pos.z < 0)) continue;
-            Block b = GetBlock(pos);
-            if (b != null) continue;
-            else
-            {
-                dependentBlocks.Add(AddBlock_NoCheck(pos, s, true));
-            }
+            if (blocks.ContainsKey(pos)) return false;
         }
+        // все проверки пройдены
+        Block b;
+        foreach (ChunkPos pos in positions)
+        {
+            b = new Block(this, pos, s);
+            blocks.Add(pos, b);
+            dependentBlocks.Add(b);
+        }
+        return true;
     }
     /// <summary>
     /// uses min coordinates ( left down corner); start positions including!
@@ -767,7 +795,7 @@ public sealed partial class Chunk : MonoBehaviour
                 {
                     for (int z = 0; z < CHUNK_SIZE; z++)
                     {
-                        if (GetBlock(x, y, z) != null) return false;
+                        if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                         //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x,y,z));
                     }
                 }
@@ -781,12 +809,13 @@ public sealed partial class Chunk : MonoBehaviour
                 {
                     for (int x = 0; x < CHUNK_SIZE; x++)
                     {
-                        if (GetBlock(x, y, z) != null) return false;
+                        if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                         //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x, y, z));
                     }
                 }
             }
         }
+        // все проверки на наличие блоков пройдены
         Block bk;
         if (xyAxis)
         {
@@ -797,7 +826,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int z = 0; z < CHUNK_SIZE; z++)
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
-                        bk = new Block(this, cpos, sender, true);
+                        bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -814,7 +843,7 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
                        
-                        bk = new Block(this, cpos, sender, true);
+                        bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -941,7 +970,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z < CHUNK_SIZE; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender, true);
+                                bk = new Block(this, cpos, sender);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -953,7 +982,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int z = zStart; z < CHUNK_SIZE; z++)
                     {
                         var cpos = new ChunkPos(xStart, yStart, z);
-                        bk = new Block(this, cpos, sender, true);
+                        bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -969,7 +998,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z < zEnd; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender, true);
+                                bk = new Block(this, cpos, sender);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -981,7 +1010,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int x = xStart; x < CHUNK_SIZE; x++)
                     {
                         var cpos = new ChunkPos(x, yStart, zStart);
-                        bk = new Block(this, cpos, sender, true);
+                        bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -997,7 +1026,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z >= 0; z--)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender, true);
+                                bk = new Block(this, cpos, sender);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -1009,7 +1038,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int z = zStart; z >= 0; z--)
                     {
                         var cpos = new ChunkPos(xStart, yStart, z);
-                        bk = new Block(this, cpos, sender, true);
+                        bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -1025,7 +1054,7 @@ public sealed partial class Chunk : MonoBehaviour
                             for (int z = zStart; z < zEnd; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
-                                bk = new Block(this, cpos, sender, true);
+                                bk = new Block(this, cpos, sender);
                                 blocks.Add(cpos, bk);
                                 dependentBlocksList.Add(bk);
                             }
@@ -1037,7 +1066,7 @@ public sealed partial class Chunk : MonoBehaviour
                     for (int x = xStart; x >= 0; x--)
                     {
                         var cpos = new ChunkPos(x, yStart, zStart);
-                        bk = new Block(this, cpos, sender, true);
+                        bk = new Block(this, cpos, sender);
                         blocks.Add(cpos, bk);
                         dependentBlocksList.Add(bk);
                     }
@@ -1054,7 +1083,7 @@ public sealed partial class Chunk : MonoBehaviour
         {
             if (b != null)
             {
-                if (clearMainStructureField) b.RemoveMainStructureLink(s);
+                if (clearMainStructureField) b.DropBlockerLink(s);
                 // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
                 blocks.Remove(b.pos);
                 b.Annihilate(false);                

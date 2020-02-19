@@ -10,7 +10,7 @@ public class CleanSite : Worksite {
     {        
         if (sign == null) sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/ClearSign")).GetComponent<WorksiteSign>();
         sign.worksite = this;
-        sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * 0.5f * Block.QUAD_SIZE;
+        sign.transform.position = workplace.GetCenterPosition() + workplace.GetLookVector() *Block.QUAD_SIZE * 0.5f; ;
         //FollowingCamera.main.cameraChangedEvent += SignCameraUpdate;
 
         diggingMission = f_diggingMission;

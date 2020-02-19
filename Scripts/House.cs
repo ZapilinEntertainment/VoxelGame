@@ -28,14 +28,7 @@ public class House : Building {
         GameMaster.realMaster.colonyController.AddHousing(this);
         if (ID == HOUSING_MAST_6_ID )
         {
-            if (!GameMaster.loading)
-            {
-                // # set blockers
-                var bpos = basement.pos;
-                basement.myChunk.AddBlock(bpos.OneBlockHigher(), this, true, true, true);
-                basement.myChunk.AddBlock(bpos.TwoBlocksHigher(), this, true, true, true);
-                //
-            }
+            if (!GameMaster.loading) SetBlockersForHousingMast();
             else
             {
                 if (!subscribedToRestoreBlockersUpdate)
@@ -47,15 +40,22 @@ public class House : Building {
         }
         //#
     }
+    private void SetBlockersForHousingMast()
+    {
+        if (basement != null)
+        {
+            var c = basement.myChunk;
+            var bpos = basement.pos.OneBlockHigher();
+            c.CreateBlocker(bpos, this, false);
+            c.CreateBlocker(bpos.OneBlockHigher(), this, false);
+        }
+        else UnityEngine.Debug.LogError("house cannot set blockers - no basement set");
+    }
     public void RestoreBlockers()
     {
         if (subscribedToRestoreBlockersUpdate)
         {
-            // # set blockers
-            var bpos = basement.pos;
-            basement.myChunk.AddBlock(bpos.OneBlockHigher(), this, true, true, true);
-            basement.myChunk.AddBlock(bpos.TwoBlocksHigher(), this, true, true, true);
-            //
+            SetBlockersForHousingMast();
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
         }
@@ -89,8 +89,8 @@ public class House : Building {
         if (ID == HOUSING_MAST_6_ID & basement != null)
         {
             var bpos = basement.pos;
-            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.RemoveMainStructureLink(this);
-            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.RemoveMainStructureLink(this);
+            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
+            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
         }
         if (subscribedToRestoreBlockersUpdate)
         {

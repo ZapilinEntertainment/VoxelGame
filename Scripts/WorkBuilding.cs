@@ -46,26 +46,16 @@ public abstract class WorkBuilding : Building
                 }
                 break;
             case FARM_1_ID:
-                {
-                    workflowToProcess = 20;
-                    maxWorkers = 100;
-                }
-                break;
             case FARM_2_ID:
-                {
-                    workflowToProcess = 15;
-                    maxWorkers = 80;
-                }
-                break;
             case FARM_3_ID:
                 {
-                    workflowToProcess = 13;
-                    maxWorkers = 70;
+                    workflowToProcess = 1200f;
+                    maxWorkers = 100;
                 }
                 break;
             case FARM_4_ID:
                 {
-                    workflowToProcess = 30;
+                    workflowToProcess = 50;
                     maxWorkers = 100;
                 }
                 break;

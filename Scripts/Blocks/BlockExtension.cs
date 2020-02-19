@@ -95,10 +95,6 @@ public sealed class BlockExtension
         volume = MAX_VOLUME * i_volume_pc;
         fossilsVolume = isNatural ? volume : 0f;
     }
-    public BlockExtension(Structure mainStructure)
-    {
-        // + rebuild func
-    }
 
     public void ChangeMaterial(int i_materialID, bool redrawCall)
     {
@@ -234,7 +230,7 @@ public sealed class BlockExtension
         byte fullmask = Block.FWD_FACE_INDEX + Block.RIGHT_FACE_INDEX + Block.BACK_FACE_INDEX + Block.LEFT_FACE_INDEX + Block.UP_FACE_INDEX + Block.DOWN_FACE_INDEX;
         return ( (fullmask & existingPlanesMask) == fullmask);
     }
-    public bool IsSurface()
+    public bool ContainSurface()
     {
         if (planes == null) return false;
         else
@@ -270,7 +266,7 @@ public sealed class BlockExtension
                 GameMaster.realMaster.colonyController.RemoveWorksite(p);
                 p.SetWorksitePresence(false);
             }
-            Annihilate(true);
+            myBlock.myChunk.DeleteBlock(myBlock.pos, true);
             return 0f;
         }
         else
@@ -410,6 +406,10 @@ public sealed class BlockExtension
         if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
     }
 
+    /// <summary>
+    /// Do not use directly, use chunk.DeleteBlock
+    /// </summary>
+    /// <param name="compensateStructures"></param>
     public void Annihilate(bool compensateStructures)
     {
         if (planes == null) foreach (var px in planes) px.Value.Annihilate(compensateStructures);

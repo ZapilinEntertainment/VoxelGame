@@ -312,7 +312,10 @@ public sealed class Nature : MonoBehaviour
                 {
                     if (lifepower < 1000f && grasslands != null)
                     {
-
+                        grasslands[Random.Range(0, grasslands.Count - 1)].Dry();
+                        lifepower += 1000f;
+                        needRecalculation = true;
+                        return;
                     }
                 }
                 grasslandCreateTimer = GRASSLAND_CREATE_CHECK_TIME;

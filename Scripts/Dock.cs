@@ -42,7 +42,7 @@ public sealed class Dock : WorkBuilding {
         modelRotation = (byte)r;
         if ( basement != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetRotation());
+            transform.localRotation = Quaternion.Euler(basement.GetEulerRotation());
             transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
             CheckPositionCorrectness();
         }
@@ -52,7 +52,6 @@ public sealed class Dock : WorkBuilding {
 		if (b == null) return;
         if (!GameMaster.loading)
         {
-            if (CheckAddons()) return;
             Chunk c = b.myChunk;
             if (c.GetBlock(b.pos.x, b.pos.y, b.pos.z + 1) != null)
             {
@@ -66,8 +65,8 @@ public sealed class Dock : WorkBuilding {
                     }
                 }
             }
-        }       
-		SetWorkbuildingData(b, pos);	
+        }
+        SetWorkbuildingData(b, pos);	
 		basement.ChangeMaterial(ResourceType.CONCRETE_ID, true);
 		colony.AddDock(this);		
         if (!subscribedToUpdate)
@@ -75,7 +74,7 @@ public sealed class Dock : WorkBuilding {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }        
-        dependentBlocksList = new List<Block>();
+        dependentBlocksList = new List<Block>();        
         if (!GameMaster.loading)
         {
             CheckPositionCorrectness();
@@ -89,6 +88,7 @@ public sealed class Dock : WorkBuilding {
                 subscribedToRestoreBlockersEvent = true;
             }
         }
+        CheckAddons();
     }
     public void RestoreBlockers()
     {
@@ -190,12 +190,25 @@ public sealed class Dock : WorkBuilding {
             else corridorWidth = HEAVY_SHIPS_PATH_WIDTH;
         }
 
-        switch (modelRotation)
+        if (basement.faceIndex == Block.SURFACE_FACE_INDEX)
         {
-            case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
-            case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
-            case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
-            case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
+            switch (modelRotation)
+            {
+                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
+                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
+            }
+        }
+        else
+        {
+            switch (modelRotation)
+            {
+                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2 + 1, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2 + 1, true, corridorWidth, this, ref dependentBlocksList); break;
+                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2 + 1, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2 + 1, true, corridorWidth, this, ref dependentBlocksList); break;
+            }
         }
         if (correctLocation)
         {
@@ -332,7 +345,7 @@ public sealed class Dock : WorkBuilding {
             int xdelta, zdelta;
             foreach (var addon in alist)
             {
-                apos = addon.basement.pos;
+                apos = addon.GetBlockPosition();
                 if (apos.y == cpos.y)
                 {
                     xdelta = Mathf.Abs(apos.x - cpos.x);

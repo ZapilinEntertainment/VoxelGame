@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 public class Structure : MonoBehaviour
 {
-    public Plane basement { get; protected set; }
+    protected Plane basement;
     public SurfaceRect surfaceRect { get; protected set; }
     public bool isArtificial { get; protected set; } // fixed in ID - используется при проверках на снос
     public bool placeInCenter { get; private set; } // fixed in ID 
@@ -87,7 +87,7 @@ public class Structure : MonoBehaviour
             case DRYED_PLANT_ID:
                 s = new GameObject("dryed plant").AddComponent<Structure>(); break;
             case COLUMN_ID:
-                s = new GameObject("Column").AddComponent<Structure>(); break;
+                s = new GameObject("Column").AddComponent<Platform>(); break;
             case RESOURCE_STICK_ID:
                 s = new GameObject("Scalable harvestable resource").AddComponent<ScalableHarvestableResource>(); break;
             case MINE_ELEVATOR_ID:
@@ -378,7 +378,7 @@ public class Structure : MonoBehaviour
 
         if (basement != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetRotation());
+            transform.localRotation = Quaternion.Euler(basement.GetEulerRotation());
             transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
         }
     }
@@ -388,10 +388,9 @@ public class Structure : MonoBehaviour
         if (hp == 0) Annihilate(true, false, true);
     }
     public bool IsDestroyed() { return destroyed; }
-    virtual public bool IsCube() { return false; }
     virtual public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
-        return true;
+        return false;
     }
 
     virtual public void Prepare()
@@ -1056,6 +1055,11 @@ public class Structure : MonoBehaviour
     {
         if (p == null) return;
         SetStructureData(p, pos);
+    }
+    virtual public ChunkPos GetBlockPosition()
+    {
+        if (basement != null) return basement.pos;
+        else return ChunkPos.zer0;
     }
     /// <summary>
     /// sets to random position

@@ -38,7 +38,7 @@ public sealed class Monument : Building
         {
             RecalculateAffection();          
         }
-        if (!GameMaster.loading ) b.myChunk.AddBlock(b.pos.OneBlockHigher(), this, true, false, true); 
+        if (!GameMaster.loading) b.myChunk.CreateBlocker(b.pos.OneBlockHigher(), this, false);
         else
         {
             if (!subscribedToRestoreBlockersEvent)
@@ -52,7 +52,7 @@ public sealed class Monument : Building
     {
         if (subscribedToRestoreBlockersEvent)
         {
-            basement.myChunk.AddBlock(basement.pos.OneBlockHigher(), this, true, false, true);
+            basement.myChunk.CreateBlocker(basement.pos.OneBlockHigher(), this, false);
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersEvent = false;
         }
@@ -227,7 +227,7 @@ public sealed class Monument : Building
         else destroyed = true;
         if (basement != null)
         {
-            basement.myChunk.GetBlock(basement.pos.OneBlockHigher())?.RemoveMainStructureLink(this);
+            basement.myChunk.GetBlock(basement.pos.OneBlockHigher())?.DropBlockerLink(this);
         }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (subscribedToRestoreBlockersEvent)

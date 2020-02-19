@@ -11,7 +11,7 @@ public class GatherSite : Worksite
     {
         sign = Object.Instantiate(Resources.Load<GameObject>("Prefs/GatherSign")).GetComponent<WorksiteSign>();
         sign.worksite = this;
-        sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * 0.5f * Block.QUAD_SIZE;
+        sign.transform.position = workplace.GetCenterPosition() + workplace.GetLookVector()  * 0.01f;
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
         colony.SendWorkers(START_WORKERS_COUNT, this);
         destructionTimer = 10;
@@ -27,7 +27,7 @@ public class GatherSite : Worksite
         {
             workflow += workSpeed;
             colony.gears_coefficient -= gearsDamage;
-            if (workflow >= 1)
+            if (workflow >= 1f)
             {
                 int i = 0;
                 bool resourcesFound = false;
@@ -40,7 +40,7 @@ public class GatherSite : Worksite
                         {
                             case Structure.PLANT_ID:
                                 Plant p = strs[i] as Plant;
-                                if (p != null && p.IsFullGrown())
+                                if (p != null)
                                 {
                                     p.Harvest(false);
                                     resourcesFound = true;

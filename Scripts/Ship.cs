@@ -5,12 +5,12 @@ using UnityEngine;
 public enum ShipType : byte {Passenger, Cargo, Private, Military}
 // при изменении заменить конвертер в сериализаторе
 
-public class Ship : MonoBehaviour {
+public sealed class Ship : MonoBehaviour {
 #pragma warning disable 0649
-    [SerializeField] byte _level = 1;
-    [SerializeField] float acceleration = 1, halfLength = 1; // fixed by asset
-    [SerializeField] int _volume = 50;
-    [SerializeField] ShipType _type;
+    [SerializeField] private byte _level = 1;
+    [SerializeField] private float acceleration = 1, halfLength = 1; // fixed by asset
+    [SerializeField] private int _volume = 50;
+    [SerializeField] private ShipType _type;
 #pragma warning restore 0649
 
     public byte level {get;private set;} // fixed by asset	
@@ -33,7 +33,7 @@ public class Ship : MonoBehaviour {
 
 	public void SetDestination(Dock d) {
         awaitingTimer = 0;
-		ChunkPos cpos = d.basement.pos;
+		ChunkPos cpos = d.GetBlockPosition();
         float width = Dock.SMALL_SHIPS_PATH_WIDTH;
         if (level > 1)
         {

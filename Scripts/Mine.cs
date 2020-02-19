@@ -221,7 +221,7 @@ override public void RecalculateWorkspeed() {
                 else
                 {
                     Structure elevator = elevators[i];
-                    elevatorsData.Add(elevator.basement.pos.y);
+                    elevatorsData.Add(elevator.GetBlockPosition().y);
                     elevatorsData.Add(elevator.modelRotation);
                     byte ehp = (byte)((elevator.hp / elevator.maxHp) * 255);
                     elevatorsData.Add(ehp);

@@ -63,32 +63,33 @@ public sealed class HeadQuarters : Building
 
         if (level > 3 )
         {
-            if (!GameMaster.loading)
-            {
-                var chunk = basement.myChunk;
-                var cpos = basement.pos.OneBlockHigher();
-                chunk.AddBlock(cpos, this, true, true, true);
-                if (level == 6) chunk.AddBlock(cpos.OneBlockHigher(), this, true, true, true);
-            }
+            if (!GameMaster.loading) SetBlockers();
             else
             {
                 if (!subscribedToRestoreBlockersEvent)
-                {                    
+                {
                     GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
                     subscribedToRestoreBlockersEvent = true;
                 }
             }
         }
     }
+    private void SetBlockers()
+    {
+        if (basement != null)
+        {
+            var chunk = basement.myChunk;
+            var cpos = basement.pos.OneBlockHigher();
+            chunk.CreateBlocker(cpos, this, false);
+            if (level == 6) chunk.CreateBlocker(cpos.OneBlockHigher(), this, false);
+        }
+        else Debug.LogError("HQ cannot set blockers - no basement set");
+    }
     public void RestoreBlockers()
     {
         if (subscribedToRestoreBlockersEvent)
         {
-            if (level > 3)
-            {
-                basement.myChunk.AddBlock(basement.pos.OneBlockHigher(), this, true, true, true);
-                if (level == 6) basement.myChunk.AddBlock(basement.pos.TwoBlocksHigher(), this, true, true, true);
-            }
+            if (level > 3) SetBlockers();
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersEvent = false;
         }
@@ -199,11 +200,7 @@ public sealed class HeadQuarters : Building
                 return;
             }
         }
-        if (level > 3)
-        {
-            if (level == 4) basement.myChunk.AddBlock(basement.pos.OneBlockHigher(), this, true, true, true);
-            if (level == 6) basement.myChunk.AddBlock(basement.pos.TwoBlocksHigher(), this, true, true, true);
-        }
+        if (level > 3) SetBlockers();
         level++;
         nextStageConditionMet = CheckUpgradeCondition();
         SetModel();

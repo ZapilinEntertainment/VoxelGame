@@ -195,24 +195,33 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-            bool newCleanSite = true;
-            if (observingSurface.haveWorksite)
+            if (observingSurface.isSurface)
             {
-                var w = colony.GetWorksite(observingSurface);
-                if (w != null && w is CleanSite)
+                bool newCleanSite = true;
+                if (observingSurface.haveWorksite)
                 {
-                    if ((w as CleanSite).diggingMission)
+                    var w = colony.GetWorksite(observingSurface);
+                    if (w != null && w is CleanSite)
                     {
-                        w.StopWork(true);
-                        newCleanSite = false;
+                        if ((w as CleanSite).diggingMission)
+                        {
+                            w.StopWork(true);
+                            newCleanSite = false;
+                        }
                     }
                 }
+                if (newCleanSite)
+                {
+                    var cs = new CleanSite(observingSurface, true);
+                    UIController.current.ShowWorksite(cs);
+                }
             }
-            if (newCleanSite)
+            else
             {
-                var cs = new CleanSite(observingSurface, true);
-                UIController.current.ShowWorksite(cs);
+                var ds = new DigSite(observingSurface, true);
+                UIController.current.ShowWorksite(ds);
             }
+            
 			StatusUpdate();
 		}
 	}
@@ -605,7 +614,7 @@ public sealed class UISurfacePanelController : UIObserver {
         surfaceBuildingPanel.SetActive(false);
         var t = constructionPlane.transform;
         t.position = observingSurface.GetCenterPosition();
-        t.rotation = Quaternion.Euler(observingSurface.GetRotation());
+        t.rotation = Quaternion.Euler(observingSurface.GetEulerRotation());
         t.position += observingSurface.GetLookVector() * 0.01f;
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetExtension().GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();

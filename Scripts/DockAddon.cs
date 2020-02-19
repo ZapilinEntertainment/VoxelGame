@@ -16,7 +16,7 @@ public class DockAddon : Building {
         {
             foreach (var d in dlist)
             {
-                dpos = d.basement.pos;
+                dpos = d.GetBlockPosition();
                 if (dpos.y == cpos.y)
                 {
                     deltaX = Math.Abs(dpos.x - cpos.x);

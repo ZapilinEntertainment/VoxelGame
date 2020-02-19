@@ -111,7 +111,7 @@ public sealed class Hangar : WorkBuilding
         modelRotation = (byte)r;
         if (basement != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetRotation());
+            transform.localRotation = Quaternion.Euler(basement.GetEulerRotation());
             transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
             CheckPositionCorrectness();
         }
@@ -268,12 +268,25 @@ public sealed class Hangar : WorkBuilding
             }
         }
         else dependentBlocksList = new List<Block>();
-        switch (modelRotation)
+        if (basement.faceIndex == Block.SURFACE_FACE_INDEX)
         {
-            case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z + 1), 0, 1, this, ref dependentBlocksList); break;
-            case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x + 1, basement.pos.y, basement.pos.z), 2, 1, this, ref dependentBlocksList); break;
-            case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z - 1), 4, 1, this, ref dependentBlocksList); break;
-            case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x - 1, basement.pos.y, basement.pos.z), 6, 1, this, ref dependentBlocksList); break;
+            switch (modelRotation)
+            {
+                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z + 1), 0, 1, this, ref dependentBlocksList); break;
+                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x + 1, basement.pos.y, basement.pos.z), 2, 1, this, ref dependentBlocksList); break;
+                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y, basement.pos.z - 1), 4, 1, this, ref dependentBlocksList); break;
+                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x - 1, basement.pos.y, basement.pos.z), 6, 1, this, ref dependentBlocksList); break;
+            }
+        }
+        else
+        {
+            switch (modelRotation)
+            {
+                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y + 1, basement.pos.z + 1), 0, 1, this, ref dependentBlocksList); break;
+                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x + 1, basement.pos.y + 1, basement.pos.z), 2, 1, this, ref dependentBlocksList); break;
+                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x, basement.pos.y + 1, basement.pos.z - 1), 4, 1, this, ref dependentBlocksList); break;
+                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x - 1, basement.pos.y + 1, basement.pos.z), 6, 1, this, ref dependentBlocksList); break;
+            }
         }
         if (correctLocation)
         {

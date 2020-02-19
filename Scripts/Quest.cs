@@ -351,13 +351,13 @@ public class Quest
                                 {
                                     if (b.ID == Structure.SMELTERY_5_ID)
                                     {
-                                        if (b.basement != null) blocksPositions.Add(b.basement.pos);
+                                       blocksPositions.Add(b.GetBlockPosition());
                                     }
                                     else
                                     {
                                         if (b.ID == Structure.SMELTERY_3_ID | b.ID == Structure.SMELTERY_2_ID | b.ID == Structure.SMELTERY_1_ID)
                                         {
-                                            if (b.basement != null) factoriesPositions.Add(b.basement.pos);
+                                            factoriesPositions.Add(b.GetBlockPosition());
                                         }
                                     }
                                 }

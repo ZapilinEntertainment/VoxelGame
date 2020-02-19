@@ -10,9 +10,10 @@ public sealed class Block {
     public bool destroyed { get; private set; }
     public Chunk myChunk { get; private set; }
     
-    public Structure mainStructure; private bool mainStructureBlockingMode; // распологается ли структура в этом блоке, или прост облокирует его?
+    public Structure mainStructure; private bool mainStructureIsABlocker; // распологается ли структура в этом блоке, или прост облокирует его?
     private GameObject blockingMarker;
     private BlockExtension extension;
+    public bool haveExtension { get { return extension != null; } }
 
     public override bool Equals(object obj)
     {
@@ -40,19 +41,17 @@ public sealed class Block {
     {        
         extension = new BlockExtension(this, f_materialID, f_natural);
     }
-	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure, bool blockingMode) : this(f_chunk, f_chunkPos) {
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) : this(f_chunk, f_chunkPos) {
         mainStructure = f_mainStructure;
-        if (blockingMode)
-        {            
-            mainStructureBlockingMode = true;
-            AddBlockingMarker();
-        }
-        else
-        {
-            extension = new BlockExtension(mainStructure);
-            mainStructureBlockingMode = false;
-        }
+        mainStructureIsABlocker = true;
+        AddBlockingMarker();
     }
+    public Block (Chunk i_chunk, ChunkPos i_pos, IPlanable i_mainStructure) : this(i_chunk, i_pos)
+    {
+        mainStructure = i_mainStructure.GetStructureData();
+        mainStructureIsABlocker = false;
+    }
+
 	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
         destroyed = false;
         myChunk = f_chunk;
@@ -67,62 +66,31 @@ public sealed class Block {
         sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
         blockingMarker.transform.localPosition = pos.ToWorldSpace();
     }
-    public void SetMainStructure(Structure ms, bool blockingMode, bool forced, bool compensateStructures)
+    public void ReplaceBlocker(Structure ms)
     {
-        if (mainStructure == ms | ms == null) return;
+        if (!mainStructureIsABlocker) return;
         else
         {
-            if (extension != null & !forced) return;
-            if (mainStructure != null)
+            if (mainStructure != null) mainStructure.SectionDeleted(pos);
+            mainStructure = ms;
+            if (blockingMarker == null) AddBlockingMarker();
+        }
+    }
+    public void DropBlockerLink(Structure ms)
+    {
+        if (!mainStructureIsABlocker) return;
+        else
+        {
+            if (ms == mainStructure && ms != null)
             {
-                if (!forced) return;
-                else
-                {
-                    if (mainStructureBlockingMode) mainStructure.SectionDeleted(pos);
-                    else
-                    {
-                        extension?.Annihilate(compensateStructures);
-                    }
-                }
-            }
-            mainStructureBlockingMode = blockingMode;
-            if (mainStructureBlockingMode)
-            {
-                extension?.Annihilate(compensateStructures);
-                if (blockingMarker == null) AddBlockingMarker();
-            }
-            else
-            {
-                if (mainStructure.IsCube())
-                {
-                    if (extension == null) extension = new BlockExtension(mainStructure);
-                    else extension.Rebuild(mainStructure, compensateStructures);
-                }
-                else
-                {
-                    extension?.Annihilate(compensateStructures);
-                }
+                mainStructure = null;
                 if (blockingMarker != null)
                 {
                     Object.Destroy(blockingMarker);
                     blockingMarker = null;
                 }
+                if (extension == null) myChunk.DeleteBlock(pos, false);
             }
-            mainStructure = ms;
-            
-        }
-    }
-    public void RemoveMainStructureLink(Structure ms)
-    {
-        if (ms == mainStructure && ms != null)
-        {
-            mainStructure = null;
-            if (blockingMarker != null)
-            {
-                Object.Destroy(blockingMarker);
-                blockingMarker = null;
-            }
-            if (extension == null) myChunk.DeleteBlock(pos, false);
         }
     }    
 
@@ -151,10 +119,10 @@ public sealed class Block {
         if (extension == null) return false;
         else return extension.IsCube();
     }
-    public bool IsSurface()
+    public bool ContainSurface()
     {
         if (extension == null) return false;
-        else return extension.IsSurface();
+        else return extension.ContainSurface();
     }
 
     public bool HavePlane(byte faceIndex) { if (extension == null) return false; else return extension.HavePlane(faceIndex); }
@@ -237,11 +205,6 @@ public sealed class Block {
     {
         if (extension == null) return null;
         else  return extension.GetPlane(faceIndex)?.GetVisualInfo(myChunk, pos);
-    }
-    public byte GetVisualAffectionMask()
-    {
-        if (extension == null) return 255;
-        else return extension.GetVisualAffectionMask();
     }
     
     /// <summary>

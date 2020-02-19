@@ -463,7 +463,7 @@ sealed public class UIController : MonoBehaviour
                             else
                             {
                                 chosenStructure = s;
-                                selectedPlane = s.basement;
+                                selectedPlane = null;
                                 chosenWorksite = null;
                                 ChangeChosenObject(ChosenObjectType.Structure);
                                 faceIndex = Chunk.NO_FACE_VALUE;
@@ -530,7 +530,7 @@ sealed public class UIController : MonoBehaviour
             else
             {
                 chosenStructure = s;
-                selectedPlane = s.basement;
+                selectedPlane = null;
                 chosenWorksite = null;
                 faceIndex = Chunk.NO_FACE_VALUE;
                 ChangeChosenObject(ChosenObjectType.Structure);
@@ -591,21 +591,20 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Plane:
                 {
                     faceIndex = selectedPlane.faceIndex; 
-                    Vector3 pos = selectedPlane.pos.ToWorldSpace();
                     selectionFrame.position = selectedPlane.GetCenterPosition();
-                    selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetRotation());
+                    selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetEulerRotation());
                     selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
                     workingObserver = selectedPlane.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(pos);
+                    FollowingCamera.main.SetLookPoint(selectedPlane.GetCenterPosition());
                 }
                 break;              
 
             case ChosenObjectType.Structure:
                 faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
                 selectionFrame.position = chosenStructure.transform.position;
-                selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetRotation());
+                selectionFrame.rotation = chosenStructure.transform.rotation;
                 selectionFrame.localScale = new Vector3(chosenStructure.surfaceRect.size, 1, chosenStructure.surfaceRect.size);
                 sframeColor = new Vector3(1, 0, 1);
                 workingObserver = chosenStructure.ShowOnGUI();

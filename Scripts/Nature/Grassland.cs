@@ -164,18 +164,13 @@ public sealed class Grassland
                         var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT - 1)];
                         var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
                         f -= CREATE_COST_VAL * nature.environmentalConditions;
-                        if (p != null)
-                        {
-                            p.SetBasement(plane);
-                            if (plants == null) plants = ;
-                            plants.Add(p);
-                        }
+                        p?.SetBasement(plane);
                     }
                     else
                     {
                         if (plants != null)
                         {
-                            foreach (var p in plantsList)
+                            foreach (var p in plants)
                             {
                                 if (Random.value > 0.33f)
                                 {
@@ -199,11 +194,11 @@ public sealed class Grassland
         var prevlps = lifepowerSurplus;
         lifepowerSurplus = 0f;
         canBeBoosted = true;
-        plantsList = plane.GetPlantsList();
-        if (plantsList != null)
+        plants = plane.GetPlants();
+        if (plants != null)
         {
             if (level == MAX_LEVEL) canBeBoosted = false;
-            foreach (Plant p in plantsList)
+            foreach (Plant p in plants)
             {
                 lifepowerSurplus += p.GetLifepowerSurplus();
                 if (!p.IsFullGrown()) canBeBoosted = true;
@@ -212,21 +207,20 @@ public sealed class Grassland
         if (lifepowerSurplus != prevlps) nature.needRecalculation = true;
         needRecalculation = false;
     }
-    public void Extinct()
+    public void Dry()
     {
-        if (plantsList != null)
-        {
-            var p = plantsList[Random.Range(0, plantsList.Count)];
-            lifepowerSurplus -= p.GetLifepowerSurplus();
-            p.Dry(false);
-            plantsList.Remove(p);
-            if (plantsList.Count == 0) plantsList = null;
-        }
+        if (level > 1) SetLevel((byte)(level - 1));
         else
         {
-            if (level > 1) SetLevel((byte)(level - 1));
-            else Annihilate(false, true);
-        }
+            if (plants != null)
+            {
+                foreach (var p in plants)
+                {
+                    p.Dry(false);
+                }
+            }
+            Annihilate(false, true);
+        }       
         canBeBoosted = true;
     }
     public void AddLifepower(float f)
@@ -277,10 +271,10 @@ public sealed class Grassland
     {
         if (plantsDestruction)
         {
-            var plist = plane.GetPlantsList().ToArray();
+            var plist = plane.GetPlants();
             for (int i = 0; i < plist.Length; i++)
             {
-                plist[i].Dry(false);
+                plist[i].Annihilate(true, false, false);
             }
         }
         nature.RemoveGrassland(this);

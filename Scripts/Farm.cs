@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Farm : WorkBuilding
 {
+    private int lastPlantIndex;
     public PlantType cropType;
     private const float ACTION_LIFEPOWER_COST = 10f;
 
@@ -83,27 +84,42 @@ public class Farm : WorkBuilding
         else
         {
             var allplants = basement.GetPlants();
-            Plant p;
-            for (i = 0; i < plants.Length; i++)
+            var indexes = new List<int>();
+            int count = allplants.Length;            
+            indexes.Capacity = count;
+            for (i = 0; i < count; i++)
             {
-                p = plants[i];
+                indexes.Add(i);
+            }
+            Plant p;
+            while (actionsPoints > 0 & indexes.Count > 0)
+            {
+                if (lastPlantIndex >= count) lastPlantIndex = 0;
+                p = allplants[indexes[lastPlantIndex]];
                 if (p.type == cropType)
                 {
                     if (!p.IsFullGrown() & p.type == cropType)
                     {
                         p.UpdatePlant();
-                        totalCost += ACTION_LIFEPOWER_COST;                        
+                        totalCost += ACTION_LIFEPOWER_COST;
+                        lastPlantIndex++;
+                        actionsPoints -= 4;
                     }
                     else
                     {
                         p.Harvest(true);
+                        indexes.RemoveAt(lastPlantIndex);
+                        count--;
+                        actionsPoints--;
                     }
                 }
                 else
                 {
                     p.Harvest(false);
+                    indexes.RemoveAt(lastPlantIndex);
+                    count--;
+                    actionsPoints -= 2;
                 }
-                actionsPoints--;
             }
         }
         if (totalCost > 0) {

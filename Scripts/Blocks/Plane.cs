@@ -38,7 +38,6 @@ public sealed class Plane
     public Chunk myChunk { get { return myBlockExtension.myBlock.myChunk; } }
     public ChunkPos pos { get { return myBlockExtension.myBlock.pos; } }
 
-    public readonly BlockExtension myBlockExtension;
     public static readonly MeshType defaultMeshType = MeshType.Quad;
     private static UISurfacePanelController observer;
 
@@ -80,6 +79,17 @@ public sealed class Plane
     {
         get { return (meshType == MeshType.Quad); }
     }
+    public bool isSurface
+    {
+        get
+        {
+            if (isQuad)
+            {
+                return (faceIndex == Block.SURFACE_FACE_INDEX | faceIndex == Block.UP_FACE_INDEX);
+            }
+            else return false;
+        }
+    }
     public bool haveGrassland
     {
         get { return extension?.HaveGrassland() ?? false; }
@@ -96,6 +106,7 @@ public sealed class Plane
         visible = true;
         if (i_meshType != defaultMeshType | meshRotation != 0) dirty = true;
     }
+
     public void SetMeshRotation(byte x, bool sendRedrawRequest)
     {
         if (meshRotation != x)
@@ -132,7 +143,7 @@ public sealed class Plane
             mainStructure = s;
             var t = s.transform;
             t.parent = myBlockExtension.myBlock.myChunk.transform;
-            t.rotation = Quaternion.Euler(GetRotation());
+            t.rotation = Quaternion.Euler(GetEulerRotation());
             t.position = GetCenterPosition();
             s.SetVisibility(visible);
         }
@@ -194,9 +205,9 @@ public sealed class Plane
                 }
                 else
                 {
-                    if (meshType != MeshType.ExcavatedPlane075)
+                    if (meshType != MeshType.ExcavatedPlane025)
                     {
-                        meshType = MeshType.ExcavatedPlane075;
+                        meshType = MeshType.ExcavatedPlane025;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
                         if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
@@ -207,9 +218,9 @@ public sealed class Plane
             {
                 if (x < 0.25f)
                 {
-                    if (meshType != MeshType.ExcavatedPlane025)
+                    if (meshType != MeshType.ExcavatedPlane075)
                     {
-                        meshType = MeshType.ExcavatedPlane025;
+                        meshType = MeshType.ExcavatedPlane075;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
                         if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
@@ -219,7 +230,7 @@ public sealed class Plane
                 {
                     if (meshType != MeshType.ExcavatedPlane05)
                     {
-                        meshType = MeshType.ExcavatedPlane075;
+                        meshType = MeshType.ExcavatedPlane05;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
                         if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
@@ -279,7 +290,8 @@ public sealed class Plane
         else
         {
             return new BlockpartVisualizeInfo(cpos,
-                new MeshVisualizeInfo(faceIndex, PoolMaster.GetMaterialType(materialID), GetLightValue(chunk, cpos, faceIndex)),
+                new MeshVisualizeInfo(faceIndex, PoolMaster.GetMaterialType(materialID), 
+                GetLightValue(chunk, cpos, faceIndex)),
                 meshType,
                 materialID,
                 meshRotation
@@ -393,7 +405,7 @@ public sealed class Plane
     {
         return GetLocalPosition(sr.x + sr.size / 2f, sr.z + sr.size / 2f);
     }
-    public Vector3 GetRotation()
+    public Vector3 GetEulerRotation()
     {
         switch (faceIndex)
         {
