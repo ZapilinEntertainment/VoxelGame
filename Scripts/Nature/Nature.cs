@@ -79,7 +79,7 @@ public sealed class Nature : MonoBehaviour
                     {
                         if (Random.value < environmentalConditions)
                         {
-                            g = p.GetExtension().InitializeGrassland();
+                            g = p.FORCED_GetExtension().InitializeGrassland();
                             g.AddLifepower(lifepiece);
                             lpower -= lifepiece;
                         }
@@ -134,7 +134,7 @@ public sealed class Nature : MonoBehaviour
                         g = grasslands[Random.Range(0, grasslands.Count - 1)];
                         var fi = g.faceIndex;
                         List<Plane> candidates = new List<Plane>();
-                        Block b, myBlock = g.plane.myBlockExtension.myBlock; Plane p; ChunkPos cpos = g.pos;
+                        Block b, myBlock = g.plane.GetBlock(); Plane p; ChunkPos cpos = g.pos;
                         switch (fi)
                         {
                             case Block.UP_FACE_INDEX:

@@ -127,7 +127,6 @@ public sealed class BlockpartVisualizeInfo
     }
 }
 
-
 public sealed partial class Chunk : MonoBehaviour {
     public byte[,,] lightMap { get; private set; }
 
@@ -237,6 +236,41 @@ public sealed partial class Chunk : MonoBehaviour {
         }
     }
 
+    public void RecalculateVisibilityAtPoint(ChunkPos cpos, byte affectionMask)
+    {
+        var b = GetBlock(cpos); if (b != null) RefreshBlockVisualising(b);
+        if (affectionMask == 0) return;
+        if ((affectionMask & (1 << Block.FWD_FACE_INDEX)) != 0)
+        {
+            b = GetBlock(cpos.OneBlockForward());
+            if (b != null) RefreshBlockVisualising(b);
+        }
+        if ((affectionMask & (1 << Block.RIGHT_FACE_INDEX)) != 0)
+        {
+            b = GetBlock(cpos.OneBlockRight());
+            if (b != null) RefreshBlockVisualising(b);
+        }
+        if ((affectionMask & (1 << Block.BACK_FACE_INDEX)) != 0)
+        {
+            b = GetBlock(cpos.OneBlockBack());
+            if (b != null) RefreshBlockVisualising(b);
+        }
+        if ((affectionMask & (1 << Block.LEFT_FACE_INDEX)) != 0)
+        {
+            b = GetBlock(cpos.OneBlockLeft());
+            if (b != null) RefreshBlockVisualising(b);
+        }
+        if ((affectionMask & (1 << Block.UP_FACE_INDEX)) != 0)
+        {
+            b = GetBlock(cpos.OneBlockHigher());
+            if (b != null) RefreshBlockVisualising(b);
+        }
+        if ((affectionMask & (1 << Block.DOWN_FACE_INDEX)) != 0)
+        {
+            b = GetBlock(cpos.OneBlockDown());
+            if (b != null) RefreshBlockVisualising(b);
+        }
+    }
     public void RefreshBlockVisualising(Block b, byte face)
     {
         if (b == null) return;
@@ -516,6 +550,11 @@ public sealed partial class Chunk : MonoBehaviour {
         t.localPosition = vzero;
         renderersHolders[7] = g;
     }
+    public Transform GetRenderersHolderTransform(byte faceIndex)
+    {
+        if (faceIndex < 8) return renderersHolders[faceIndex].transform;
+        else return null;
+    }
 
     public void DrawBorder()
     {
@@ -625,6 +664,11 @@ public sealed partial class Chunk : MonoBehaviour {
         if ((renderBitmask & 32) != 0) renderBitmask += 128;
         if (renderBitmask != prevBitmask)
         {
+            for (byte i = 0; i<8; i++)
+            {
+                renderersHolders[i].SetActive( (renderBitmask & (1 << i)) != 0 );
+            }
+            /*
             if (renderers.Count > 0)
             {
                 bool visible;
@@ -636,6 +680,7 @@ public sealed partial class Chunk : MonoBehaviour {
                     if (g.activeSelf != visible) g.SetActive(visible);
                 }
             }
+            */
             prevBitmask = renderBitmask;
         }
     }

@@ -1,5 +1,5 @@
 ﻿
-public sealed class StorageHouse : Building {
+public class StorageHouse : Building {
 	public float volume { get; private set; }
 
     override public void Prepare() {
@@ -9,7 +9,7 @@ public sealed class StorageHouse : Building {
             case STORAGE_0_ID: volume = GetMaxVolume(0);break;
             case STORAGE_1_ID: volume = GetMaxVolume(1); break;
             case STORAGE_2_ID: volume = GetMaxVolume(2); break;
-            case STORAGE_5_ID: volume = GetMaxVolume(5); break;
+            case STORAGE_BLOCK_ID: volume = GetMaxVolume(5); break;
         }
     }
 
@@ -30,12 +30,15 @@ public sealed class StorageHouse : Building {
 		if (b == null) return;
 		SetBuildingData(b, pos);
         GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
+        //copy to StorageBlock.cs
 	}
 
-	override public void SetActivationStatus(bool x, bool recalculateAfter) {
-		isActive = x;
-        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+    override public void SetActivationStatus(bool x, bool recalculateAfter)
+    {
+        isActive = x;
+        ChangeRenderersView(x);
     }
+
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

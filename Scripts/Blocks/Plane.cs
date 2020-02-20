@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-public sealed class Plane
+public class Plane
 {
-    public bool visible { get; private set; }
-    public bool haveWorksite { get; private set; }
-    public int materialID { get; private set; }
-    public byte faceIndex { get; private set; }
-    public MeshType meshType { get; private set; }
-    private byte meshRotation;
-    public Structure mainStructure { get; private set; }    
-    public PlaneExtension extension { get; private set; }
+    public bool isVisible { get; protected set; }
+    public bool haveWorksite { get; protected set; }
+    public int materialID { get; protected set; }
+    public byte faceIndex { get; protected set; }
+    public MeshType meshType { get; protected set; }
+    protected byte meshRotation;
+    public Structure mainStructure { get; protected set; }    
+    public PlaneExtension extension { get; protected set; }
     public FullfillStatus fulfillStatus
     {
         get
@@ -22,7 +22,7 @@ public sealed class Plane
             }
         }
     }
-    private bool dirty = false; // запрещает удалять плоскость для оптимизации
+    protected bool dirty = false; // запрещает удалять плоскость для оптимизации
     public int artificialStructuresCount {
         get { if (extension != null) return extension.artificialStructuresCount;
             else {
@@ -35,8 +35,9 @@ public sealed class Plane
         }
     }
 
-    public Chunk myChunk { get { return myBlockExtension.myBlock.myChunk; } }
-    public ChunkPos pos { get { return myBlockExtension.myBlock.pos; } }
+    protected IPlanable host;
+    public Chunk myChunk { get { return host.GetBlock().myChunk; } }
+    public ChunkPos pos { get { return host.GetBlock().pos; } }
 
     public static readonly MeshType defaultMeshType = MeshType.Quad;
     private static UISurfacePanelController observer;
@@ -48,11 +49,11 @@ public sealed class Plane
             return false;
 
         Plane p = (Plane)obj;
-        return faceIndex == p.faceIndex && myBlockExtension == p.myBlockExtension && materialID == p.materialID && meshType == p.meshType;
+        return faceIndex == p.faceIndex && host == p.host && materialID == p.materialID && meshType == p.meshType;
     }
     public override int GetHashCode()
     {
-        return myBlockExtension.GetHashCode() + faceIndex + materialID + (int)meshType;
+        return host.GetHashCode() + faceIndex + materialID + (int)meshType;
     }
 
     public bool isClean //может быть удалена и восстановлена
@@ -62,7 +63,7 @@ public sealed class Plane
             if (dirty) return false;
             else
             {
-                if (materialID != myBlockExtension.myBlock.GetMaterialID())
+                if (materialID != host.GetBlock().GetMaterialID())
                 {
                     dirty = true;
                     return false;
@@ -95,15 +96,15 @@ public sealed class Plane
         get { return extension?.HaveGrassland() ?? false; }
     }
 
-    public Plane(BlockExtension i_parent, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
+    public Plane(IPlanable i_host, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
     {
-        myBlockExtension = i_parent;
+        host = i_host;
         meshType = i_meshType;
         materialID = i_materialID;
         mainStructure = null;
         faceIndex = i_faceIndex;
         meshRotation = i_meshRotation;
-        visible = true;
+        isVisible = true;
         if (i_meshType != defaultMeshType | meshRotation != 0) dirty = true;
     }
 
@@ -112,23 +113,23 @@ public sealed class Plane
         if (meshRotation != x)
         {
             meshRotation = x;
-            if (sendRedrawRequest) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+            if (sendRedrawRequest) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
         }
     }
 
-    public void SetVisibility(bool x)
+    virtual public void SetVisibility(bool x)
     {
-        if (x != visible)
+        if (x != isVisible)
         {
-            visible = x;
-            mainStructure?.SetVisibility(visible);
+            isVisible = x;
+            mainStructure?.SetVisibility(isVisible);
         }
     }
     public void AddStructure(Structure s)
     {
         if (s.surfaceRect != SurfaceRect.full)
         {
-            GetExtension().AddStructure(s);
+            FORCED_GetExtension().AddStructure(s);
             mainStructure = null;
             return;
         }
@@ -142,10 +143,10 @@ public sealed class Plane
             mainStructure?.Annihilate(false, true, false);
             mainStructure = s;
             var t = s.transform;
-            t.parent = myBlockExtension.myBlock.myChunk.transform;
+            t.parent = host.GetBlock().myChunk.transform;
             t.rotation = Quaternion.Euler(GetEulerRotation());
             t.position = GetCenterPosition();
-            s.SetVisibility(visible);
+            s.SetVisibility(isVisible);
         }
     }
     public void RemoveStructure(Structure s)
@@ -171,12 +172,12 @@ public sealed class Plane
         else return extension.GetPlants();
     }
 
-    public void ChangeMaterial(int newId, bool redrawCall)
+    virtual public void ChangeMaterial(int newId, bool redrawCall)
     {
         if (materialID == newId) return;
         materialID = newId;
-        if (materialID != myBlockExtension.myBlock.GetMaterialID()) dirty = true;
-        if (redrawCall & visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+        if (materialID != host.GetBlock().GetMaterialID()) dirty = true;
+        if (redrawCall & isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
     }
     public void SetWorksitePresence(bool x)
     {
@@ -200,7 +201,7 @@ public sealed class Plane
                         meshType = MeshType.Quad;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
                 else
@@ -210,7 +211,7 @@ public sealed class Plane
                         meshType = MeshType.ExcavatedPlane025;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
             }
@@ -223,7 +224,7 @@ public sealed class Plane
                         meshType = MeshType.ExcavatedPlane075;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
                 else
@@ -233,13 +234,17 @@ public sealed class Plane
                         meshType = MeshType.ExcavatedPlane05;
                         meshRotation = (byte)Random.Range(0, 3);
                         dirty = true;
-                        if (visible) myChunk.RefreshBlockVisualising(myBlockExtension.myBlock, faceIndex);
+                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
             }
         }
     }
 
+    public Block GetBlock()
+    {
+        return host?.GetBlock();
+    }
     public Grassland GetGrassland()
     {
         return extension?.grassland;
@@ -247,7 +252,7 @@ public sealed class Plane
     public void RemoveGrassland(Grassland g, bool sendAnnihilationRequest)
     {
         extension?.RemoveGrassland(g, sendAnnihilationRequest);
-        ChangeMaterial(myBlockExtension.materialID, true);
+        ChangeMaterial(host.GetBlock().GetMaterialID(), true);
     }
 
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
@@ -256,11 +261,11 @@ public sealed class Plane
         else
         {
             if (extension != null) extension.EnvironmentalStrike(hitpoint, radius, damage);
-            else myBlockExtension.Dig((int)damage, true, faceIndex);
+            else host.Damage(damage, faceIndex);
         }
     }
  
-    public PlaneExtension GetExtension()
+    public PlaneExtension FORCED_GetExtension()
     {
         if (extension == null) extension = new PlaneExtension(this, mainStructure);
         return extension;
@@ -284,7 +289,7 @@ public sealed class Plane
         }
     }
 
-    public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
+    virtual public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
     {
         if ( materialID == PoolMaster.NO_MATERIAL_ID | meshType == MeshType.NoMesh) return null;
         else
@@ -315,10 +320,10 @@ public sealed class Plane
         }
     }
 
-    public ChunkPos GetChunkPosition() { return myBlockExtension.myBlock.pos; }
+    public ChunkPos GetChunkPosition() { return host.GetBlock().pos; }
     public Vector3 GetCenterPosition()
     {
-        Vector3 centerPos = myBlockExtension.myBlock.pos.ToWorldSpace();
+        Vector3 centerPos = host.GetBlock().pos.ToWorldSpace();
         float q = Block.QUAD_SIZE * 0.5f;
         switch (faceIndex)
         {
@@ -472,17 +477,17 @@ public sealed class Plane
         return observer;
     }
 
-    public void Annihilate(bool compensateStructures)
+    virtual public void Annihilate(bool compensateStructures)
     {
         if (extension != null) extension.Annihilate(compensateStructures);
-        else mainStructure?.SectionDeleted(myBlockExtension.myBlock.pos);
+        else mainStructure?.SectionDeleted(host.GetBlock().pos);
         if (!GameMaster.sceneClearing) {
             if (haveWorksite)
             {
                 GameMaster.realMaster.colonyController.RemoveWorksite(this);
                 haveWorksite = false;
             }
-            if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) myBlockExtension.myBlock.myChunk.needSurfacesUpdate = true;
+            if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) host.GetBlock().myChunk.needSurfacesUpdate = true;
         }
     }
 

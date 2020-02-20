@@ -453,9 +453,12 @@ sealed public class UIController : MonoBehaviour
             GameObject collided = rh.collider.gameObject;
             switch (collided.tag)
             {
+                case Structure.BLOCKPART_COLLIDER_TAG:
                 case Structure.STRUCTURE_COLLIDER_TAG:
                     {
-                        Structure s = collided.transform.parent.GetComponent<Structure>();
+                        Structure s;
+                        if (collided.tag == Structure.BLOCKPART_COLLIDER_TAG) s = collided.GetComponent<StructurePointer>().GetStructureLink();
+                        else s = collided.transform.parent.GetComponent<Structure>();
                         if (s == null) ChangeChosenObject(ChosenObjectType.None);
                         else
                         {

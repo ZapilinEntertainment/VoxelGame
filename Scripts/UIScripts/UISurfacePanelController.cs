@@ -616,7 +616,7 @@ public sealed class UISurfacePanelController : UIObserver {
         t.position = observingSurface.GetCenterPosition();
         t.rotation = Quaternion.Euler(observingSurface.GetEulerRotation());
         t.position += observingSurface.GetLookVector() * 0.01f;
-        constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.GetExtension().GetMapTexture());
+        constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.FORCED_GetExtension().GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
         if (chosenStructure != null) FollowingCamera.main.CameraRotationBlock(false);

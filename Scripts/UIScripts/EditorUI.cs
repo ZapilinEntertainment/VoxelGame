@@ -162,7 +162,7 @@ public sealed class EditorUI : MonoBehaviour
                         Plane p = b.GetPlane(bh.faceIndex);
                         if (p != null && !p.haveGrassland)
                         {
-                            p.GetExtension().InitializeGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
+                            p.FORCED_GetExtension().InitializeGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
                         }
                         break;
                     }

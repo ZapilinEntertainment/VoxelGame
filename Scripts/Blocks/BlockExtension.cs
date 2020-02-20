@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-public sealed class BlockExtension
+public sealed class BlockExtension : IPlanable
 {
     public readonly Block myBlock;
     private bool isNatural;
@@ -133,28 +133,9 @@ public sealed class BlockExtension
         }
         myBlock.myChunk.RefreshBlockVisualising(myBlock);
     }
-    public void Rebuild(Structure mainStructure, bool compensateStructures)
-    {
 
-    }
-
-    public byte GetVisualAffectionMask()
-    {
-        byte mask = 0;
-        if (planes == null) mask = (byte)(~existingPlanesMask);
-        else
-        {
-            byte x;
-            for (byte i = 0; i < 8; i++)
-            {
-                x = (byte)(1 << i);
-                if ((existingPlanesMask & x) == 0 || (planes.ContainsKey(i) && MeshMaster.IsMeshTransparent(planes[i].meshType))) mask += x;
-            }
-        }
-        if ((mask & (1 << Block.DOWN_FACE_INDEX)) == 1 && (mask & (1 << Block.SURFACE_FACE_INDEX)) == 0) mask -= (1 << Block.DOWN_FACE_INDEX);
-        if ((mask & (1 << Block.UP_FACE_INDEX)) == 1 && (mask & (1 << Block.CEILING_FACE_INDEX)) == 0) mask -= (1 << Block.UP_FACE_INDEX);
-        return mask;
-    }
+    #region interface
+    public bool IsStructure() { return false; }
     public bool IsFaceTransparent(byte faceIndex)
     {
         if ((existingPlanesMask & (1 << faceIndex)) != 0)
@@ -189,7 +170,7 @@ public sealed class BlockExtension
             }
         }
     }
-    public Plane GetPlane(byte faceIndex)
+    public Plane FORCED_GetPlane(byte faceIndex)
     {
         if ((existingPlanesMask & (1 << faceIndex)) == 0) return null;
         else
@@ -198,6 +179,29 @@ public sealed class BlockExtension
             else return CreatePlane(faceIndex, true);
         }
     }
+    public Block GetBlock() { return myBlock; }
+    public bool IsCube()
+    {
+        byte fullmask = Block.CUBE_MASK;
+        return ((fullmask & existingPlanesMask) == fullmask);
+    }
+    public bool ContainSurface()
+    {
+        if (planes == null) return false;
+        else
+        {
+            if (planes.ContainsKey(Block.UP_FACE_INDEX))
+            {
+                return planes[Block.UP_FACE_INDEX].isQuad;
+            }
+            else
+            {
+                if (planes.ContainsKey(Block.SURFACE_FACE_INDEX)) return planes[Block.SURFACE_FACE_INDEX].isQuad;
+                else return false;
+            }
+        }
+    }
+
     public bool ContainsStructures()
     {
         if (planes == null) return false;
@@ -225,26 +229,149 @@ public sealed class BlockExtension
             return true;
         }
     }
-    public bool IsCube()
+
+    public byte GetAffectionMask()
     {
-        byte fullmask = Block.FWD_FACE_INDEX + Block.RIGHT_FACE_INDEX + Block.BACK_FACE_INDEX + Block.LEFT_FACE_INDEX + Block.UP_FACE_INDEX + Block.DOWN_FACE_INDEX;
-        return ( (fullmask & existingPlanesMask) == fullmask);
-    }
-    public bool ContainSurface()
-    {
-        if (planes == null) return false;
+        if (IsCube()) return Block.CUBE_MASK;
         else
         {
-            if (planes.ContainsKey(Block.UP_FACE_INDEX))
+            byte mask = 0, i = (1 << Block.FWD_FACE_INDEX);
+            if ((existingPlanesMask & i) != 0)
             {
-                return planes[Block.UP_FACE_INDEX].isQuad;
+                if (!IsFaceTransparent(Block.FWD_FACE_INDEX)) mask += i;
+            }
+            i = (1 << Block.RIGHT_FACE_INDEX);
+            if ((existingPlanesMask & i) != 0)
+            {
+                if (!IsFaceTransparent(Block.RIGHT_FACE_INDEX)) mask += i;
+            }
+            i = (1 << Block.BACK_FACE_INDEX);
+            if ((existingPlanesMask & i) != 0)
+            {
+                if (!IsFaceTransparent(Block.BACK_FACE_INDEX)) mask += i;
+            }
+            i = (1 << Block.LEFT_FACE_INDEX);
+            if ((existingPlanesMask & i) != 0)
+            {
+                if (!IsFaceTransparent(Block.LEFT_FACE_INDEX)) mask += i;
+            }
+            i = (1 << Block.UP_FACE_INDEX);
+            if ((existingPlanesMask & i) != 0)
+            {
+                if (!IsFaceTransparent(Block.UP_FACE_INDEX)) mask += i;
+            }
+            i = (1 << Block.DOWN_FACE_INDEX);
+            if ((existingPlanesMask & i) != 0)
+            {
+                if (!IsFaceTransparent(Block.DOWN_FACE_INDEX)) mask += i;
+            }
+            return mask;
+        }
+    }
+    //returns false if transparent or wont be instantiated
+    public bool InitializePlane(byte faceIndex)
+    {
+        if ((existingPlanesMask & (1 << faceIndex)) == 0) return false;
+        else
+        {
+            if (planes != null && planes.ContainsKey(faceIndex))
+            {
+                if (!planes[faceIndex].isVisible) planes[faceIndex].SetVisibility(true);
+                return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
             }
             else
             {
-                if (planes.ContainsKey(Block.SURFACE_FACE_INDEX)) return planes[Block.SURFACE_FACE_INDEX].isQuad;
-                else return false;
+                if (planes == null) planes = new Dictionary<byte, Plane>();
+                var p =CreatePlane(faceIndex, materialID, false);
+                return MeshMaster.IsMeshTransparent(p.meshType);
             }
         }
+    }
+    public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte vismask)
+    {
+        if (existingPlanesMask == 0) return null;
+        else
+        {
+            var data = new List<BlockpartVisualizeInfo>();
+            var cpos = myBlock.pos;
+            var chunk = myBlock.myChunk;
+
+            byte realVisMask = (byte)(vismask & existingPlanesMask);
+            if (realVisMask != 0)
+            {
+                for (byte i = 0; i < 8; i++)
+                {
+                    if ((realVisMask & (1 << i)) != 0)
+                    {
+                        if (planes != null && planes.ContainsKey(i))
+                        {
+                            var bvi = planes[i].GetVisualInfo(chunk, cpos);
+                            if (bvi != null) data.Add(bvi);
+                        }
+                        else
+                        {
+                            var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
+                            if (p != null) data.Add(p); else Debug.LogError("plane not created correctly");
+                        }
+                    }
+                }
+                return data;
+            }
+            else return null;
+        }
+    }
+    public BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex)
+    {
+        if ((existingPlanesMask & (1 << faceIndex)) != 0)
+        {
+            if (planes != null && planes.ContainsKey(faceIndex)) return planes[faceIndex].GetVisualInfo(myBlock.myChunk, myBlock.pos);
+            else return CreatePlane(faceIndex, false)?.GetVisualInfo(myBlock.myChunk, myBlock.pos);
+        }
+        else return null;
+    }
+    public void DeactivatePlane(byte faceIndex)
+    {
+        if (planes != null)
+        {
+            if (planes.ContainsKey(faceIndex))
+            {
+                if (planes[faceIndex].isClean)
+                {
+                    planes.Remove(faceIndex);
+                    if (planes.Count == 0) planes = null;
+                }
+                else planes[faceIndex].SetVisibility(false);
+                myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
+            }
+        }
+    }
+
+    public void Damage(float f, byte faceIndex)
+    {
+        Dig((int)f, true, faceIndex);
+    }
+    #endregion
+    public Plane CreatePlane(byte faceIndex, bool redrawCall) { return CreatePlane(faceIndex, materialID, redrawCall); }
+    public Plane CreatePlane(byte faceIndex, int i_materialID, bool redrawCall)
+    {
+        Plane p = null;
+        if (planes == null) planes = new Dictionary<byte, Plane>();
+        else
+        {
+            if (planes.ContainsKey(faceIndex))
+            {
+                p = planes[faceIndex];
+                p.ChangeMaterial(i_materialID, redrawCall);
+                return p;
+            }
+        }
+        var pos = myBlock.pos;
+        if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.CHUNK_SIZE - 1)
+            p = MeshMaster.GetRooftop(this, Random.value < 0.14f, !isNatural);
+        else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex, 0);
+        planes.Add(faceIndex, p);
+        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
+        return p;
     }
 
     public float Dig(int d_volume, bool openPit, byte faceIndex)
@@ -291,125 +418,13 @@ public sealed class BlockExtension
     public float GetFossilsVolume() { return fossilsVolume; }
     public void TakeFossilsVolume(float f) { fossilsVolume -= f; if (fossilsVolume < 0f) fossilsVolume = 0f; }
     public float GetVolume() { if (materialID != PoolMaster.NO_MATERIAL_ID) return volume; else return 0f; }
-    public float GetVolumePercent() { return volume / (float)MAX_VOLUME; }
+    public float GetVolumePercent() { return volume / (float)MAX_VOLUME; }  
 
-    public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte vismask)
-    {
-        if (existingPlanesMask == 0) return null;
-        else
-        {
-            var data = new List<BlockpartVisualizeInfo>();
-            var cpos = myBlock.pos;
-            var chunk = myBlock.myChunk;
 
-            byte realVisMask = (byte)(vismask & existingPlanesMask);
-            if (realVisMask != 0)
-            {
-                for (byte i = 0; i < 8; i++)
-                {
-                    if ((realVisMask & (1 << i)) != 0)
-                    {
-                        if (planes != null && planes.ContainsKey(i))
-                        {
-                            var bvi = planes[i].GetVisualInfo(chunk, cpos);
-                            if (bvi != null) data.Add(bvi);
-                        }
-                        else
-                        {
-                            var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
-                            if (p != null) data.Add(p); else Debug.LogError("plane not created correctly");
-                        }
-                    }
-                }                
-                return data;
-            }
-            else return null;
-        }
-    }
-
-    //returns false if transparent or wont be instantiated
-    public bool InitializePlane(byte faceIndex)
-    {
-        if ((existingPlanesMask & (1 << faceIndex)) == 0) return false;
-        else
-        {
-            if (planes == null)
-            {
-                planes = new Dictionary<byte, Plane>();
-            }
-            else
-            {
-                if (planes.ContainsKey(faceIndex)) return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
-            }
-            // default plane creation            
-            CreatePlane(faceIndex, materialID,false);
-            return true;
-        }
-    }
-    public Plane CreatePlane(byte faceIndex, bool redrawCall) { return CreatePlane(faceIndex, materialID, redrawCall); }
-    public Plane CreatePlane(byte faceIndex, int i_materialID, bool redrawCall)
-    {
-        Plane p = null;
-        if (planes == null)  planes = new Dictionary<byte, Plane>();            
-        else
-        {
-            if (planes.ContainsKey(faceIndex))
-            {
-                p = planes[faceIndex];
-                p.ChangeMaterial(i_materialID, redrawCall);
-                return p;
-            }
-        }
-        var pos = myBlock.pos;
-        if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.CHUNK_SIZE - 1)
-            p = MeshMaster.GetRooftop(this, Random.value < 0.14f, !isNatural);
-        else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex, 0);
-        planes.Add(faceIndex, p);
-        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
-        return p;
-    }
-    public void DeactivatePlane(byte faceIndex)
-    {
-        if (planes != null)
-        {
-            if (planes.ContainsKey(faceIndex))
-            {
-                if (planes[faceIndex].isClean) planes.Remove(faceIndex);
-                else planes[faceIndex].SetVisibility(false);
-                myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
-            }
-        }
-    }
-    public void RewritePlane(Plane oldplane, Plane newplane, bool redrawCall)
-    {
-        if (planes == null)
-        {
-            planes = new Dictionary<byte, Plane>() { { oldplane.faceIndex, oldplane } };
-        }
-        else
-        {
-            byte ix = oldplane.faceIndex;
-            planes.Remove(ix);
-            planes.Add(ix, newplane);
-        }
-        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, newplane.faceIndex);
-    }
-    public void DeletePlane(byte faceIndex, bool compensateStructures, bool redrawCall)
-    {
-        if (planes.ContainsKey(faceIndex))
-        {
-            planes[faceIndex].Annihilate(compensateStructures);
-            planes.Remove(faceIndex);
-        }
-        byte x = (byte)(1 << faceIndex);
-        if ((existingPlanesMask & x) != 0) existingPlanesMask -= x;
-        if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
-    }
 
     /// <summary>
     /// Do not use directly, use chunk.DeleteBlock
     /// </summary>
-    /// <param name="compensateStructures"></param>
     public void Annihilate(bool compensateStructures)
     {
         if (planes == null) foreach (var px in planes) px.Value.Annihilate(compensateStructures);

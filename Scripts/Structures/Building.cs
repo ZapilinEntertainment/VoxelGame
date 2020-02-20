@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure
-{
-    private int _upgradedIndex = -1;
-    public int upgradedIndex { get { return _upgradedIndex; } private set { _upgradedIndex = value; } }
+{    
     public bool canBePowerSwitched { get; protected set; }
     public bool isActive { get; protected set; }
     public bool isEnergySupplied { get; protected set; } //управляется только ColonyController'ом
     public bool connectedToPowerGrid { get; protected set; }// установлено ли подключение к электросети
     public float energySurplus { get; protected set; }
     public float energyCapacity { get; protected set; }
+
+    private int _upgradedIndex = -1;
+    public int upgradedIndex { get { return _upgradedIndex; } private set { _upgradedIndex = value; } }
     private byte _level = 1;
     public byte level { get { return _level; } protected set { _level = value; } }
     public bool specialBuildingConditions { get; protected set; }
 
     public static UIBuildingObserver buildingObserver;
-
     public static List<Building> GetApplicableBuildingsList(byte i_level)
     {
         //относительно ужасное решение
@@ -75,7 +75,7 @@ public class Building : Structure
                 blist.Add(GetStructureByID(FUEL_FACILITY_ID) as Building);
                 break;
             case 5:
-                blist.Add(GetStructureByID(STORAGE_5_ID) as Building);                
+                blist.Add(GetStructureByID(STORAGE_BLOCK_ID) as Building);                
                 blist.Add(GetStructureByID(FARM_5_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
@@ -252,6 +252,10 @@ public class Building : Structure
     }
 
     override public void Prepare() { PrepareBuilding(); }
+    virtual public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
+    {
+        return true;
+    }
 
     protected void ChangeUpgradedIndex(int x)
     {
@@ -303,7 +307,7 @@ public class Building : Structure
                     level = 2;
                 }
                 break;
-            case STORAGE_5_ID:
+            case STORAGE_BLOCK_ID:
                 {
                     level = 5;
                 }
@@ -658,7 +662,6 @@ public class Building : Structure
         if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
         ChangeRenderersView(x & isActive);
     }
-
     protected void ChangeRenderersView(bool setOnline)
     {
         if (transform.childCount == 0) return;

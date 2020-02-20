@@ -20,7 +20,7 @@ public class GeologyModule : MonoBehaviour {
         PlaneExtension pe;
         foreach (var p in planes)
         {
-            pe = p.GetExtension();
+            pe = p.FORCED_GetExtension();
             List<PixelPosByte> positions = pe.GetRandomCells(maxObjectsCount);
             if (positions.Count == 0) return;
             maxObjectsCount = positions.Count;

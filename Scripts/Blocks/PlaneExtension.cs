@@ -277,7 +277,7 @@ public sealed class PlaneExtension
         var t = s.transform;
         t.parent = myPlane.myChunk.transform;
         t.position = myPlane.GetLocalPosition(s.surfaceRect);
-        s.SetVisibility(myPlane.visible);
+        s.SetVisibility(myPlane.isVisible);
         t.localRotation = Quaternion.Euler(myPlane.GetEulerRotation() + Vector3.up * s.modelRotation * 45f);
         structures.Add(s);
 

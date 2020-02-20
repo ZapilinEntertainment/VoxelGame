@@ -5,6 +5,8 @@ using UnityEngine;
 public sealed class Block {
     public const byte FWD_FACE_INDEX = 0, RIGHT_FACE_INDEX = 1, BACK_FACE_INDEX = 2, LEFT_FACE_INDEX = 3, UP_FACE_INDEX = 4, DOWN_FACE_INDEX = 5, SURFACE_FACE_INDEX = 6, CEILING_FACE_INDEX = 7;
     public const float QUAD_SIZE = 1, CEILING_THICKNESS = 0.1f;
+    public const byte CUBE_MASK = (1 << FWD_FACE_INDEX) + (1 << RIGHT_FACE_INDEX) + (1 << BACK_FACE_INDEX)
+        + (1 << LEFT_FACE_INDEX) + (1 << UP_FACE_INDEX) + (1 << DOWN_FACE_INDEX);
 
     public readonly ChunkPos pos;
     public bool destroyed { get; private set; }
@@ -48,8 +50,15 @@ public sealed class Block {
     }
     public Block (Chunk i_chunk, ChunkPos i_pos, IPlanable i_mainStructure) : this(i_chunk, i_pos)
     {
-        mainStructure = i_mainStructure.GetStructureData();
-        mainStructureIsABlocker = false;
+        if (i_mainStructure.IsStructure())
+        {
+            mainStructure = (Structure)i_mainStructure;
+            mainStructureIsABlocker = false;
+        }
+        else
+        {
+            extension = (BlockExtension)i_mainStructure;
+        }
     }
 
 	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
@@ -57,6 +66,20 @@ public sealed class Block {
         myChunk = f_chunk;
         pos = f_chunkPos;
 	}    
+
+    private IPlanable GetPlanesHost()
+    {
+        if (extension != null) return (IPlanable)extension;
+        else
+        {
+            if (mainStructure != null && !mainStructureIsABlocker) return (IPlanable)mainStructure;
+            else return null;
+        }
+    }
+    public BlockExtension GetExtension()
+    {
+        return extension;
+    }
 
     private void AddBlockingMarker()
     {
@@ -97,64 +120,62 @@ public sealed class Block {
     public int GetMaterialID() { if (extension == null) return PoolMaster.NO_MATERIAL_ID; else return extension.materialID; }
     public bool ContainStructures()
     {
-        if (mainStructure != null) return true;
-        else
-        {
-            if (extension != null) return extension.ContainsStructures();
-            else return false;
-        }
+        return GetPlanesHost()?.ContainsStructures() ?? false;
     }
     public bool TryGetStructuresList(ref List<Structure> result)
     {
-        if (result == null) result = new List<Structure>();
-        if (extension != null) {
-            extension.TryGetStructuresList(ref result);
-            return true;
+        var h = GetPlanesHost();
+        if (h != null)
+        {
+            return h.TryGetStructuresList(ref result);
         }
-        else return false;
-        //ignore mainstructure
+        else
+        {
+            result = null;
+            return false;
+        }
     }
     public bool IsCube()
     {
-        if (extension == null) return false;
-        else return extension.IsCube();
+        return GetPlanesHost()?.IsCube() ?? false;
     }
     public bool ContainSurface()
     {
-        if (extension == null) return false;
-        else return extension.ContainSurface();
+        return GetPlanesHost()?.ContainSurface() ?? false;
     }
 
-    public bool HavePlane(byte faceIndex) { if (extension == null) return false; else return extension.HavePlane(faceIndex); }
+    public bool HavePlane(byte faceIndex) {
+        return GetPlanesHost()?.HavePlane(faceIndex) ?? false;
+    }
     public bool TryGetPlane(byte faceIndex, out Plane result)
     {
-        if (extension == null) { result = null; return false; }
+        var h = GetPlanesHost();
+        if (h != null)  return h.TryGetPlane(faceIndex, out result);
         else
         {
-            return extension.TryGetPlane(faceIndex, out result);
+            result = null;
+            return false;
         }
     }
     public Plane GetPlane(byte faceIndex)
     {
-        if (extension != null) return extension.GetPlane(faceIndex);
-        else return null;
+        return GetPlanesHost()?.FORCED_GetPlane(faceIndex);
     }
     public bool IsFaceTransparent(byte faceIndex)
     {
-        if (extension == null) return true;
-        else return extension.IsFaceTransparent(faceIndex);
+        return GetPlanesHost()?.IsFaceTransparent(faceIndex) ?? true;
     }
+    public byte GetAffectionMask()
+    {
+        return GetPlanesHost()?.GetAffectionMask() ?? 0;
+    }
+    //returns false if transparent or wont be instantiated
     public bool InitializePlane(byte faceIndex)
     {
-        if (extension != null) return extension.InitializePlane(faceIndex);
-        else return false;
+        return GetPlanesHost()?.InitializePlane(faceIndex) ?? false;
     }
     public void DeactivatePlane(byte faceIndex) {
-        extension?.DeactivatePlane(faceIndex);
-    }
-    public void DeletePlane(byte faceIndex, bool compensateStructures, bool redrawCall)
-    {
-        extension?.DeletePlane(faceIndex, compensateStructures, redrawCall);
+        GetPlanesHost()?.DeactivatePlane(faceIndex);
     }
 
     public float GetFossilsVolume() {
@@ -183,6 +204,21 @@ public sealed class Block {
         if (extension == null) extension = new BlockExtension(this, bml, i_natural, redrawCall);
         else extension.Rebuild(bml, i_natural, compensateStructures,redrawCall);
     }
+    public void RebuildBlock(IPlanable ms, bool i_natural)
+    {
+        if (!ms.IsStructure())
+        { // extension
+            extension?.Annihilate(!i_natural);
+            extension = (BlockExtension)ms;
+        }
+        else
+        {
+            extension?.Annihilate(!i_natural);
+            mainStructure = (Structure)ms;
+            mainStructureIsABlocker = false;
+        }
+    }
+
     public void EnvironmentalStrike(byte i_faceIndex, Vector3 hitpoint, byte radius, float damage)
     {
         if (mainStructure != null) mainStructure.ApplyDamage(damage);
@@ -199,12 +235,11 @@ public sealed class Block {
 
     public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte visualMask)
     {
-        return extension?.GetVisualizeInfo(visualMask);
+        return GetPlanesHost()?.GetVisualizeInfo(visualMask);
     }
     public BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex)
     {
-        if (extension == null) return null;
-        else  return extension.GetPlane(faceIndex)?.GetVisualInfo(myChunk, pos);
+        return GetPlanesHost()?.GetFaceVisualData(faceIndex);
     }
     
     /// <summary>

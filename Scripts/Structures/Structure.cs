@@ -35,7 +35,7 @@ public class Structure : MonoBehaviour
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
-        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_5_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
+        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
     HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
@@ -45,7 +45,7 @@ public class Structure : MonoBehaviour
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
     //free ids 37,39,40,44, 58, 59, 69
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
-    public const string STRUCTURE_COLLIDER_TAG = "Structure";
+    public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
     public static UIStructureObserver structureObserver;
     private static bool firstLaunch = true;
@@ -100,8 +100,9 @@ public class Structure : MonoBehaviour
             case STORAGE_0_ID:
             case STORAGE_1_ID:
             case STORAGE_2_ID:
-            case STORAGE_5_ID:
                 s = new GameObject("Storage").AddComponent<StorageHouse>(); break;
+            case STORAGE_BLOCK_ID:
+                s = new GameObject("StorageBlock").AddComponent<StorageBlock>(); break;
             case CONTAINER_ID:
                 //use HarvestableResource.ConstructContainer instead
                 s = new GameObject("Container").AddComponent<HarvestableResource>(); break;
@@ -215,7 +216,7 @@ public class Structure : MonoBehaviour
             case TREE_OF_LIFE_ID: return new Rect(3 * p, 7 * p, p, p);
             case STORAGE_1_ID:
             case STORAGE_2_ID:
-            case STORAGE_5_ID:
+            case STORAGE_BLOCK_ID:
             case STORAGE_0_ID: return new Rect(5 * p, 7 * p, p, p);
             case CONTAINER_ID: return new Rect(4 * p, 7 * p, p, p);
             case MINE_ID:
@@ -284,6 +285,7 @@ public class Structure : MonoBehaviour
     virtual protected void SetModel()
     {
         //switch skin index
+        // copy to StorageBlock
         GameObject model;
         Quaternion prevRot = Quaternion.identity;
         if (transform.childCount != 0)
@@ -301,8 +303,7 @@ public class Structure : MonoBehaviour
             case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
             case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
             case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
-            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;           
-            case STORAGE_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/storageBlock_level_5")); break;
+            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;          
             case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
             case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
             case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
@@ -387,12 +388,7 @@ public class Structure : MonoBehaviour
         hp = t;
         if (hp == 0) Annihilate(true, false, true);
     }
-    public bool IsDestroyed() { return destroyed; }
-    virtual public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
-    {
-        return false;
-    }
-
+    public bool IsDestroyed() { return destroyed; } 
     virtual public void Prepare()
     {
         PrepareStructure();
@@ -493,7 +489,7 @@ public class Structure : MonoBehaviour
                     rotate90only = true;
                 }
                 break;
-            case STORAGE_5_ID:
+            case STORAGE_BLOCK_ID:
                 {
                     maxHp = 12000;
                     surfaceRect = SurfaceRect.full;
@@ -1069,8 +1065,8 @@ public class Structure : MonoBehaviour
         if (surfaceRect.size == PlaneExtension.INNER_RESOLUTION) SetBasement(p, PixelPosByte.zero);
         else
         {
-            if (surfaceRect.size == 1) SetBasement(p, p.GetExtension().GetRandomCell());
-            else SetBasement(p, p.GetExtension().GetRandomPosition(surfaceRect.size));
+            if (surfaceRect.size == 1) SetBasement(p, p.FORCED_GetExtension().GetRandomCell());
+            else SetBasement(p, p.FORCED_GetExtension().GetRandomPosition(surfaceRect.size));
         }
     }
     protected void SetStructureData(Plane p, PixelPosByte pos)
@@ -1087,7 +1083,7 @@ public class Structure : MonoBehaviour
     /// do not use directly, use basement.TransferStructures() instead
     /// </summary>
     /// <param name="sb"></param>
-    public void ChangeBasement(Plane p)
+    virtual public void ChangeBasement(Plane p)
     {
         basement = p;
         if (transform.childCount == 0) SetModel();
@@ -1109,11 +1105,8 @@ public class Structure : MonoBehaviour
         if (hp <= 0) Annihilate(true, false, true);
     }
 
-    virtual public void ChunkUpdated()
-    {
-        if (basement == null) return;
-        
-    }
+    virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
+    virtual public void ChunkUpdated() { }
     virtual public void SetVisibility(bool x)
     {
         if (x == isVisible) return;
@@ -1135,8 +1128,7 @@ public class Structure : MonoBehaviour
     {
         showOnGUI = false;
     }    
-
-    virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
+   
     // в финальном виде копипастить в потомков
     protected void PrepareStructureForDestruction(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
@@ -1158,14 +1150,14 @@ public class Structure : MonoBehaviour
             {
                 if (subscribedToChunkUpdate)
                 {
-                    basement.myBlockExtension.myBlock.myChunk.ChunkUpdateEvent -= ChunkUpdated;
+                    basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
                     subscribedToChunkUpdate = false;
                 }
                 basement.extension?.RemoveStructure(this);
 
                 if (leaveRuins && !GameMaster.sceneClearing)
                 {
-                    basement.GetExtension().ScatterResources(surfaceRect, ResourceType.mineral_F, CalculateRuinsVolume());
+                    basement.FORCED_GetExtension().ScatterResources(surfaceRect, ResourceType.mineral_F, CalculateRuinsVolume());
                 }
             }
         }

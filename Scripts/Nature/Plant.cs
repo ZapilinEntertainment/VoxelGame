@@ -33,11 +33,11 @@ public abstract class Plant : Structure {
     /// </summary>
     override public void SetBasement(Plane p)
     {
-        if (surfaceRect.size == 1)  SetBasement(p, p.GetExtension().GetRandomCell());
+        if (surfaceRect.size == 1)  SetBasement(p, p.FORCED_GetExtension().GetRandomCell());
         else
         {
             if (surfaceRect.size == PlaneExtension.INNER_RESOLUTION) SetBasement(p, PixelPosByte.zero);
-            else SetBasement(p, p.GetExtension().GetRandomPosition(surfaceRect.size));
+            else SetBasement(p, p.FORCED_GetExtension().GetRandomPosition(surfaceRect.size));
         }
     }
 

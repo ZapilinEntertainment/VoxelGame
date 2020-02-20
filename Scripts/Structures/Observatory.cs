@@ -111,7 +111,7 @@ public sealed class Observatory : WorkBuilding
             }
             else
             {
-                if (!p.myBlockExtension.HavePlane(Block.CEILING_FACE_INDEX))
+                if (!p.GetBlock().HavePlane(Block.CEILING_FACE_INDEX))
                 {
                     var blocks = p.myChunk.blocks;
                     ChunkPos pos = p.pos;

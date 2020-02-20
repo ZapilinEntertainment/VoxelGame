@@ -327,26 +327,7 @@ public sealed partial class Chunk : MonoBehaviour
         needSurfacesUpdate = false;
     }
 
-    private Block AddBlock(ChunkPos f_pos, BlockMaterialsList bml, bool i_naturalGeneration, bool redrawCall )
-    {
-        int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
-        //
-        Block prv = GetBlock(x, y, z);
-        if (prv != null)
-        {
-            if (bml.GetExistenceMask() == 0) prv.Annihilate(!i_naturalGeneration);
-            else prv.RebuildBlock(bml, i_naturalGeneration, false, redrawCall);
-            return prv;
-        }
-        else
-        {
-            var b = new Block(this, f_pos, bml, i_naturalGeneration, redrawCall);
-            blocks.Add(f_pos, b);
-            if (PoolMaster.useIlluminationSystem)   RecalculateIlluminationAtPoint(b.pos);
-            return b;
-        }
-    }
+
     public Block AddBlock(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
@@ -368,19 +349,7 @@ public sealed partial class Chunk : MonoBehaviour
             chunkDataUpdateRequired = true;
             shadowsUpdateRequired = true;
 
-            RefreshBlockVisualising(b);
-            b = GetBlock(x, y, z + 1);
-            if (b != null) RefreshBlockVisualising(b);
-            b = GetBlock(x + 1, y, z);
-            if (b != null) RefreshBlockVisualising(b);
-            b = GetBlock(x, y, z - 1);
-            if (b != null) RefreshBlockVisualising(b);
-            b = GetBlock(x - 1, y, z);
-            if (b != null) RefreshBlockVisualising(b);
-            b = GetBlock(x, y + 1, z);
-            if (b != null) RefreshBlockVisualising(b);
-            b = GetBlock(x, y - 1, z);
-            if (b != null) RefreshBlockVisualising(b);
+            RecalculateVisibilityAtPoint(f_pos, b.GetAffectionMask());
 
             if (b.ContainSurface()) needSurfacesUpdate = true;
 
@@ -388,16 +357,26 @@ public sealed partial class Chunk : MonoBehaviour
             return b;
         }      
     }
-    public Block CreateSurface(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
+    public Block AddBlock(ChunkPos i_pos, IPlanable ms, bool i_natural)
     {
-        int x = f_pos.x, y = f_pos.y, z = f_pos.z;
+        int x = i_pos.x, y = i_pos.y, z = i_pos.z;
         if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
-        Block b = GetBlock(f_pos);
-        if (b != null) return b;
+        var b = GetBlock(i_pos);        
+        if (b != null)
+        {
+            if (b.ContainSurface()) needSurfacesUpdate = true;
+            b.RebuildBlock(ms, i_natural);
+        }
         else
         {
-            b = new Block()
+            b = new Block(this, i_pos, ms);
+            blocks.Add(i_pos, b);
         }
+        if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
+        if (b.ContainSurface()) needSurfacesUpdate = true;
+        chunkRenderUpdateRequired = true;
+        shadowsUpdateRequired = true;
+        return b;
     }
 
     public Block GetBlock(ChunkPos cpos) {
@@ -648,7 +627,7 @@ public sealed partial class Chunk : MonoBehaviour
                 }
                 i = Random.Range(0, suitable.Count - 1);
                 int realIndex = suitable[i];
-                var ppos = surfaces[realIndex].GetExtension().GetRandomCell();
+                var ppos = surfaces[realIndex].FORCED_GetExtension().GetRandomCell();
                 answer = new Vector3Int(ppos.x, ppos.y, i);
                 return true;
             }
@@ -665,7 +644,7 @@ public sealed partial class Chunk : MonoBehaviour
                 {
                     i = Random.Range(0, suitable.Count - 1);
                     realIndex = suitable[i];
-                    ppos = surfaces[realIndex].GetExtension().GetRandomPosition(size);
+                    ppos = surfaces[realIndex].FORCED_GetExtension().GetRandomPosition(size);
                     if (ppos.exists)
                     {
                         answer = new Vector3Int(ppos.x, ppos.y, realIndex);
@@ -691,23 +670,13 @@ public sealed partial class Chunk : MonoBehaviour
         if (b == null) return;
         int x = pos.x, y = pos.y, z = pos.z;
         if (b.ContainSurface()) needSurfacesUpdate = true;
+        var affectionMask = b.GetAffectionMask();
         b.Annihilate(compensateStructures);
         blocks.Remove(b.pos);
         RemoveBlockVisualisers(b.pos);
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(pos);
 
-        b = GetBlock(x, y, z + 1);
-        if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x + 1, y, z);
-        if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x, y, z - 1);
-        if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x - 1, y, z);
-        if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x, y + 1, z);
-        if (b != null) RefreshBlockVisualising(b);
-        b = GetBlock(x, y - 1, z);
-        if (b != null) RefreshBlockVisualising(b);
+        if (affectionMask != 0) RecalculateVisibilityAtPoint(pos, affectionMask);
         shadowsUpdateRequired = true;
         chunkDataUpdateRequired = true;
         // chunkRenderUpdateRequired = true; < в свитче

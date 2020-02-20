@@ -247,7 +247,7 @@ public sealed class GameMaster : MonoBehaviour
                         int zpos = sb.pos.z;
 
                         //testzone
-                        Structure s = HeadQuarters.GetHQ(4);
+                        Structure s = HeadQuarters.GetHQ(6);
                          weNeedNoResources = true;
 
                         //eo testzone                    

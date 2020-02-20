@@ -114,7 +114,7 @@
                 new ResourceContainer(ResourceType.Plastics, 200)
             };
                 break;
-            case Structure.STORAGE_5_ID:
+            case Structure.STORAGE_BLOCK_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_E, 12),
                 new ResourceContainer(ResourceType.Concrete, 270), new ResourceContainer(ResourceType.metal_M, 15)

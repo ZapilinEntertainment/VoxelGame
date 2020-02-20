@@ -41,7 +41,7 @@ public class Farm : WorkBuilding
             subscribedToUpdate = true;
         }
         var gl = basement.GetGrassland();
-        if (gl == null) gl = basement.GetExtension().InitializeGrassland();
+        if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
         gl.SetCultivatingStatus(true);
     }
 
@@ -70,7 +70,7 @@ public class Farm : WorkBuilding
 
         if (basement.fulfillStatus != FullfillStatus.Full)
         {
-            List<PixelPosByte> pos = basement.GetExtension().GetAcceptableCellPositions(actionsPoints);
+            List<PixelPosByte> pos = basement.FORCED_GetExtension().GetAcceptableCellPositions(actionsPoints);
             i = 0;
             while (i < pos.Count)
             {
@@ -124,7 +124,7 @@ public class Farm : WorkBuilding
         }
         if (totalCost > 0) {
             var gl = basement.GetGrassland();
-            if (gl == null) gl = basement.GetExtension().InitializeGrassland();
+            if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
             gl.TakeLifepower(totalCost);
         }
     }

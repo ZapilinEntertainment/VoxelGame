@@ -68,7 +68,7 @@ public class BlockBuildingSite : Worksite
         int finishedPillarsCount = 0, totalResourcesCount = 0, deletedStructures = 0;
         var unfinishedPillarsList = new List<ScalableHarvestableResource>();
         ScalableHarvestableResource shr = null;
-        PlaneExtension pe = workplace.GetExtension(); // создаем запросом, так как все равно понадобится
+        PlaneExtension pe = workplace.FORCED_GetExtension(); // создаем запросом, так как все равно понадобится
 
         if (pe.fullfillStatus != FullfillStatus.Empty) { // на поверхности есть какие-то структуры
             byte maxVolume = ScalableHarvestableResource.MAX_STICK_VOLUME;

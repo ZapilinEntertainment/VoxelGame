@@ -5,15 +5,16 @@ using UnityEngine;
 public enum MeshType : byte
 {
     NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeilSide, CutPlane, CutEdge012, CutEdge032,
-    NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0,
+    NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0, ArtificialRooftop_0, ArtificialRooftop_1, ArtificialPeak_0, StorageEntrance, StorageSide
 }
 //dependency: GetMesh, IsMeshTransparent, excavated meshes: Plane.VolumeChanges
 public static class MeshMaster
 {
     private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge012, cutEdge032, caveCeil,
-        natRoof_0, natRoof_1, natRoof_2, natRoof_3, natPeak_0;
+        natRoof_0, natRoof_1, natRoof_2, natRoof_3, natPeak_0, artRoof_0;
+    private static GameObject storageEntrancePref, storageSidePref;
 		
-    public static Mesh GetMesh(MeshType mtype)
+    public static Mesh GetMeshSourceLink(MeshType mtype)
     {
         switch (mtype)
         {            
@@ -84,7 +85,10 @@ public static class MeshMaster
                 return natRoof_3;
             case MeshType.NaturalPeak_0:
                 if (natPeak_0 == null) natPeak_0 = Resources.Load<Mesh>("Meshes/Rooftops/natural_peak0");
-                return natPeak_0;            
+                return natPeak_0;
+            case MeshType.ArtificialRooftop_0:
+                if (artRoof_0 == null) artRoof_0 = Resources.Load<Mesh>("Meshes/Rooftops/artificial_rooftop0");
+                return artRoof_0;
             case MeshType.Quad:
             default:
                 if (quadMesh == null)
@@ -100,9 +104,28 @@ public static class MeshMaster
     }
     public static Mesh GetMesh(MeshType mtype, int materialID)
     {
-        Mesh m = Object.Instantiate(GetMesh(mtype));
+        Mesh m = Object.Instantiate(GetMeshSourceLink(mtype));
         if (materialID != PoolMaster.MATERIAL_COMBINED_BASIC_ID) SetMeshUVs(ref m, materialID);
         return m;
+    }
+    public static GameObject InstantiateAdvancedMesh(MeshType mtype)
+    {
+        switch (mtype)
+        {
+            case MeshType.StorageEntrance:
+                if (storageEntrancePref == null) storageEntrancePref = Resources.Load<GameObject>("Prefs/Blockparts/storageEntrance");
+                return Object.Instantiate(storageEntrancePref);
+            case MeshType.StorageSide:
+                if (storageSidePref == null) storageSidePref = Resources.Load<GameObject>("Prefs/Blockparts/storageSide");
+                return Object.Instantiate(storageSidePref);
+            case MeshType.ArtificialPeak_0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialPeak_0"));
+            case MeshType.ArtificialRooftop_0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_0"));
+            case MeshType.ArtificialRooftop_1:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_1"));
+            default: return null;
+        }
     }
 
     public static void SetMeshUVs(ref Mesh m, int materialID)
@@ -278,13 +301,20 @@ public static class MeshMaster
         }
     }
 
-    public static Plane GetRooftop(BlockExtension b, bool peak, bool artificial)
+    public static Plane GetRooftop(IPlanable b, bool peak, bool artificial)
     {
         byte number = 0;
-        if (!artificial & !peak) number = (byte)Random.Range(0, 3);
+        if (!artificial)
+        {
+            if (!peak) number = (byte)Random.Range(0, 3);
+        }
+        else
+        {
+            if (!peak) number = Random.value > 0.5f ? (byte)0 : (byte)1;
+        }
         return GetRooftop(b, peak, artificial, number);
     }
-    public static Plane GetRooftop(BlockExtension b, bool peak, bool artificial, byte number)
+    public static Plane GetRooftop(IPlanable b, bool peak, bool artificial, byte number)
     {
         MeshType mtype = MeshType.NaturalRooftop_0;
         int materialID = PoolMaster.MATERIAL_COMBINED_BASIC_ID;
@@ -299,12 +329,20 @@ public static class MeshMaster
                     case 1: mtype = MeshType.NaturalRooftop_1; break;
                 }
             }
+            return new Plane(b, mtype, materialID, Block.UP_FACE_INDEX, (byte)Random.Range(0, 3));
         }
         else
         {
-
+            GameObject g;
+            if (peak)  mtype = MeshType.ArtificialPeak_0;
+            else
+            {
+                if (number == 1) mtype = MeshType.ArtificialRooftop_1; else mtype = MeshType.ArtificialRooftop_0;
+            }
+            g = InstantiateAdvancedMesh(mtype);
+            return new MultimaterialPlane(b, mtype, Block.UP_FACE_INDEX, g, (byte)Random.Range(0, 3));
         }
-        return new Plane(b, mtype, materialID, Block.UP_FACE_INDEX, (byte)Random.Range(0,3));
+        
     }
     public static GameObject GetFlyingPlatform()
     {

@@ -28,7 +28,7 @@ public sealed class Grassland
         categoriesCatalog[0] = (PlantCategory)Random.Range(0, 2);
         categoriesCatalog[1] = (PlantCategory)Random.Range(0, 2);
         categoriesCatalog[2] = (PlantCategory)Random.Range(0, 2);
-        if (plane.GetExtension().SetGrassland(this))
+        if (plane.FORCED_GetExtension().SetGrassland(this))
         {
             plane.SetMeshRotation((byte)Random.Range(0, 3),false);            
             nature.AddGrassland(this);

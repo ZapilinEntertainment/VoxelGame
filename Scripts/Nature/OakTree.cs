@@ -361,7 +361,10 @@ public sealed class OakTree : Plant
                 while (i < count)
                 {
                     OakTree oak = oaks[i];
-                    if (oak == null) { oaks.RemoveAt(i); continue; }
+                    if (oak == null) {
+                        oaks.RemoveAt(i);
+                        count--;
+                        continue; }
                     else
                     {
                         if (!oak.isVisible) { i++; continue; }

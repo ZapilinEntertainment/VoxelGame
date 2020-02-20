@@ -143,7 +143,7 @@ public sealed class Storage : MonoBehaviour {
                 int dumpingVal = 1000;
                 if (dumpingVal > maxValue) dumpingVal = (int)maxValue;
 
-                dumpingVal -= sblock.GetExtension().ScatterResources(SurfaceRect.full, ResourceType.GetResourceTypeById(maxIndex), dumpingVal);
+                dumpingVal -= sblock.FORCED_GetExtension().ScatterResources(SurfaceRect.full, ResourceType.GetResourceTypeById(maxIndex), dumpingVal);
 
                 if (dumpingVal != 0)
                 {
