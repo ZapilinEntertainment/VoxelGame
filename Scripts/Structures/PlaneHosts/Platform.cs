@@ -22,7 +22,25 @@ public class Platform : Structure, IPlanable
         upperPlane = new Plane(this, MeshType.Quad, ResourceType.CONCRETE_ID, Block.UP_FACE_INDEX, 0);
         return upperPlane;
     }
+
+    override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    {
+        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
+        else
+        {
+            myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
+        }
+        
+    }
     #region interface
+    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareStructureForDestruction(clearFromSurface, compensateResources, leaveRuins);
+        basement = null;
+        Destroy(gameObject);
+    }
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)
     {

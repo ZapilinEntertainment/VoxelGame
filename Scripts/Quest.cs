@@ -253,7 +253,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.ID == Structure.FARM_4_ID | b.ID == Structure.FARM_5_ID)
+                                    if (b.ID == Structure.FARM_4_ID | b.ID == Structure.FARM_BLOCK_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;

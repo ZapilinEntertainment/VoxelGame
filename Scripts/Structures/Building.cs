@@ -76,7 +76,7 @@ public class Building : Structure
                 break;
             case 5:
                 blist.Add(GetStructureByID(STORAGE_BLOCK_ID) as Building);                
-                blist.Add(GetStructureByID(FARM_5_ID) as Building);
+                blist.Add(GetStructureByID(FARM_BLOCK_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
                 //blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
@@ -126,7 +126,7 @@ public class Building : Structure
             case FARM_2_ID: return 20f;
             case FARM_3_ID: return 40f;
             case FARM_4_ID: return 120f;
-            case FARM_5_ID: return 300f;
+            case FARM_BLOCK_ID: return 300f;
 
             case LUMBERMILL_1_ID: return 10f;
             case LUMBERMILL_2_ID: return 40f;
@@ -199,7 +199,7 @@ public class Building : Structure
             case FARM_2_ID: return -4f;
             case FARM_3_ID: return -20f;
             case FARM_4_ID: return -40f;
-            case FARM_5_ID: return -100f;
+            case FARM_BLOCK_ID: return -100f;
 
             case LUMBERMILL_1_ID: return -2f;
             case LUMBERMILL_2_ID: return -4f;
@@ -376,12 +376,12 @@ public class Building : Structure
                 break;
             case FARM_4_ID:
                 {
-                    upgradedIndex = FARM_5_ID;
+                    upgradedIndex = FARM_BLOCK_ID;
                     canBePowerSwitched = true;
                     level = 4;
                 }
                 break;
-            case FARM_5_ID:
+            case FARM_BLOCK_ID:
                 {
                     canBePowerSwitched = true;
                     level = 5;

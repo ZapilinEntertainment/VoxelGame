@@ -243,8 +243,7 @@ public sealed class Grassland
             level = l;
             if (!cultivating)
             {
-                var fi = plane.faceIndex;
-                if (fi == Block.SURFACE_FACE_INDEX | fi == Block.UP_FACE_INDEX)
+                //var fi = plane.faceIndex;
                 {
                     switch (level)
                     {

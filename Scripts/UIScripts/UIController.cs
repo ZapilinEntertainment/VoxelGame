@@ -459,19 +459,7 @@ sealed public class UIController : MonoBehaviour
                         Structure s;
                         if (collided.tag == Structure.BLOCKPART_COLLIDER_TAG) s = collided.GetComponent<StructurePointer>().GetStructureLink();
                         else s = collided.transform.parent.GetComponent<Structure>();
-                        if (s == null) ChangeChosenObject(ChosenObjectType.None);
-                        else
-                        {
-                            if (chosenStructure == s) return;
-                            else
-                            {
-                                chosenStructure = s;
-                                selectedPlane = null;
-                                chosenWorksite = null;
-                                ChangeChosenObject(ChosenObjectType.Structure);
-                                faceIndex = Chunk.NO_FACE_VALUE;
-                            }
-                        }
+                        Select(s);
                         break;
                     }
                 case Chunk.BLOCK_COLLIDER_TAG:
@@ -482,17 +470,12 @@ sealed public class UIController : MonoBehaviour
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
                         else
                         {
-                            chosenStructure = null;
-                            selectedPlane = b.GetPlane(faceIndex);
-                            chosenWorksite = null;
-                            ChangeChosenObject(ChosenObjectType.Plane);
-
-                            //test   
-
-                            if (selectedPlane != null)
+                            Plane p;
+                            if (b.TryGetPlane(faceIndex, out p))
                             {
-                                
-                            }                           
+                                Select(p);
+                            }
+                            else ChangeChosenObject(ChosenObjectType.None);
                         }
                         break;
                     }
@@ -539,6 +522,14 @@ sealed public class UIController : MonoBehaviour
                 ChangeChosenObject(ChosenObjectType.Structure);
             }
         }
+        else ChangeChosenObject(ChosenObjectType.None);
+    }
+    public void Select(Plane p)
+    {
+        selectedPlane = p;
+        chosenStructure = null;
+        chosenWorksite = null;
+        ChangeChosenObject(ChosenObjectType.Plane);
     }
 
     public void ChangeChosenObject(ChosenObjectType newChosenType)

@@ -14,7 +14,10 @@ public class Plane
     {
         get
         {
-            if (mainStructure != null) return FullfillStatus.Full;
+            if (mainStructure != null)  {
+                if (mainStructure.surfaceRect == SurfaceRect.full) return FullfillStatus.Full;
+                else return FullfillStatus.Unknown;
+            }
             else
             {
                 if (extension != null) return extension.fullfillStatus;
@@ -95,6 +98,23 @@ public class Plane
     {
         get { return extension?.HaveGrassland() ?? false; }
     }
+    public bool isTerminate
+    {
+        get
+        {
+            switch (faceIndex)
+            {
+                case Block.FWD_FACE_INDEX: return pos.z == Chunk.CHUNK_SIZE - 1;
+                case Block.RIGHT_FACE_INDEX: return pos.x == Chunk.CHUNK_SIZE - 1;
+                case Block.BACK_FACE_INDEX: return pos.z == 0;
+                case Block.LEFT_FACE_INDEX: return pos.z == 0;
+                case Block.UP_FACE_INDEX: return pos.y == Chunk.CHUNK_SIZE - 1;
+                case Block.DOWN_FACE_INDEX: return pos.y == 0;
+                default:
+                    return false;
+            }
+        }
+    }
 
     public Plane(IPlanable i_host, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
     {
@@ -137,7 +157,7 @@ public class Plane
         {
             if (extension != null)
             {
-                extension.ClearSurface(false, false, false);
+                extension.Annihilate(false);
                 extension = null;
             }
             mainStructure?.Annihilate(false, true, false);
@@ -480,7 +500,14 @@ public class Plane
     virtual public void Annihilate(bool compensateStructures)
     {
         if (extension != null) extension.Annihilate(compensateStructures);
-        else mainStructure?.SectionDeleted(host.GetBlock().pos);
+        else
+        {
+            if (mainStructure != null)
+            {
+                mainStructure.ClearBasementLink(this);
+                mainStructure.SectionDeleted(host.GetBlock().pos);
+            }
+        }
         if (!GameMaster.sceneClearing) {
             if (haveWorksite)
             {

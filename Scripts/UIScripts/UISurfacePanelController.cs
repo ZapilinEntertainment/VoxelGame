@@ -809,7 +809,23 @@ public sealed class UISurfacePanelController : UIObserver {
                     {
                         PrepareConstructionPlane();
                     }
-                    if (strSize == res | chosenStructure.placeInCenter) ReturnButton();
+                    if (strSize == res | chosenStructure.placeInCenter) {
+                        if (s is IPlanable)
+                        {
+                            var ip = s as IPlanable;
+                            Plane p;
+                            if (ip.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.isTerminate)
+                            {
+                                var sbb = selectedBuildingButton;
+                                var sb = chosenStructure;
+                                UIController.current.Select(p);                                
+                                BuildButton();
+                                SelectBuildingForConstruction(sb, sbb);
+                            }
+                            else ReturnButton();
+                        }
+                        else ReturnButton();
+                    }
                 }
                 else ReturnButton();
             }

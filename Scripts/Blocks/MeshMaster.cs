@@ -5,7 +5,8 @@ using UnityEngine;
 public enum MeshType : byte
 {
     NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeilSide, CutPlane, CutEdge012, CutEdge032,
-    NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0, ArtificialRooftop_0, ArtificialRooftop_1, ArtificialPeak_0, StorageEntrance, StorageSide
+    NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0, ArtificialRooftop_0, ArtificialRooftop_1,
+    ArtificialPeak_0, StorageEntrance, StorageSide, FarmFace, FarmSide, Heater0
 }
 //dependency: GetMesh, IsMeshTransparent, excavated meshes: Plane.VolumeChanges
 public static class MeshMaster
@@ -124,6 +125,12 @@ public static class MeshMaster
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_0"));
             case MeshType.ArtificialRooftop_1:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_1"));
+            case MeshType.FarmFace:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/BLockparts/farmFace"));
+            case MeshType.FarmSide:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/BLockparts/farmSide"));
+            case MeshType.Heater0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/BLockparts/heater0"));
             default: return null;
         }
     }
@@ -310,7 +317,7 @@ public static class MeshMaster
         }
         else
         {
-            if (!peak) number = Random.value > 0.5f ? (byte)0 : (byte)1;
+            if (!peak) number = Random.value > 0.75f ? (byte)0 : (byte)1;
         }
         return GetRooftop(b, peak, artificial, number);
     }

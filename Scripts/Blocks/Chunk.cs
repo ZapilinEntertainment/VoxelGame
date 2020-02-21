@@ -383,7 +383,11 @@ public sealed partial class Chunk : MonoBehaviour
         if (blocks.ContainsKey(cpos))
         {
             Block b;
-            if (blocks.TryGetValue(cpos, out b)) return b;
+            if (blocks.TryGetValue(cpos, out b))
+            {
+                if (b != null && !b.destroyed) return b;
+                else return null;
+            }
         }
         return null;
     }

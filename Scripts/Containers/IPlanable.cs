@@ -20,6 +20,7 @@ public interface IPlanable
     void DeactivatePlane(byte faceIndex);
 
     void Damage(float f, byte faceIndex);
+    void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins);
 
     List<BlockpartVisualizeInfo> GetVisualizeInfo(byte visualMask);
     BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex);

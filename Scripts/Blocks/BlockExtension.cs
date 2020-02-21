@@ -418,10 +418,11 @@ public sealed class BlockExtension : IPlanable
     public float GetFossilsVolume() { return fossilsVolume; }
     public void TakeFossilsVolume(float f) { fossilsVolume -= f; if (fossilsVolume < 0f) fossilsVolume = 0f; }
     public float GetVolume() { if (materialID != PoolMaster.NO_MATERIAL_ID) return volume; else return 0f; }
-    public float GetVolumePercent() { return volume / (float)MAX_VOLUME; }  
+    public float GetVolumePercent() { return volume / (float)MAX_VOLUME; }
 
 
 
+    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins) { Annihilate(compensateResources); }
     /// <summary>
     /// Do not use directly, use chunk.DeleteBlock
     /// </summary>

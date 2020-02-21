@@ -17,7 +17,7 @@ public class Farm : WorkBuilding
             case FARM_2_ID:
             case FARM_3_ID:
             case FARM_4_ID:
-            case FARM_5_ID:
+            case FARM_BLOCK_ID:
                 cropType = PlantType.Corn;
                 break;
             case LUMBERMILL_1_ID:

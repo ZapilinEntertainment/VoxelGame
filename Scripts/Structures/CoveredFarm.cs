@@ -10,7 +10,7 @@ public class CoveredFarm : WorkBuilding {
         switch (ID)
         {
             case FARM_4_ID:
-            case FARM_5_ID:
+            case FARM_BLOCK_ID:
                 outputResource = ResourceType.Food;
                 break;
             case LUMBERMILL_4_ID:

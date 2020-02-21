@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class StorageBlock : StorageHouse, IPlanable
+public class FarmBlock : CoveredFarm, IPlanable
 {
     private Block myBlock;
     private Dictionary<byte, Plane> planes;
@@ -17,16 +17,20 @@ public sealed class StorageBlock : StorageHouse, IPlanable
             if (r < 0) r += 8;
         }
         modelRotation = (byte)r;
-    }   
+    }
 
-    override public void SetBasement(Plane p, PixelPosByte pos)
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
-        if (p == null) return;
-        SetBuildingData(p, pos);
-        GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
+        if (b == null) return;
+        SetWorkbuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
         var chunk = basement.myChunk;
         ChunkPos cpos = basement.pos;
-        switch (p.faceIndex)
+        switch (b.faceIndex)
         {
             case Block.FWD_FACE_INDEX: cpos = cpos.OneBlockForward(); break;
             case Block.RIGHT_FACE_INDEX: cpos = cpos.OneBlockRight(); break;
@@ -42,8 +46,9 @@ public sealed class StorageBlock : StorageHouse, IPlanable
             Annihilate(true, true, false);
             return;
         }
-        chunk.RecalculateVisibilityAtPoint(myBlock.pos, GetAffectionMask());        
+        chunk.RecalculateVisibilityAtPoint(myBlock.pos, GetAffectionMask());
     }
+
     public Plane CreatePlane(byte faceIndex, bool redrawCall)
     {
         if (planes == null) planes = new Dictionary<byte, Plane>();
@@ -56,7 +61,13 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         bool isSideMesh = faceIndex < 4;
         if (isSideMesh)
         {
-            mtype = Random.value > 0.75f ? MeshType.StorageEntrance : MeshType.StorageSide;
+            var f = Random.value;
+            if (f < 0.25f) mtype = MeshType.FarmFace;
+            else
+            {
+                if (f > 0.8f) mtype = MeshType.Heater0;
+                else mtype = MeshType.FarmSide;
+            }
         }
         else
         {
@@ -97,7 +108,8 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         return p;
     }
 
-    override public void SectionDeleted(ChunkPos pos) {
+    override public void SectionDeleted(ChunkPos pos)
+    {
         if (basement == null && !TryToRebasement()) Annihilate(false, false, false);
     }
     public bool TryToRebasement()
@@ -162,7 +174,7 @@ public sealed class StorageBlock : StorageHouse, IPlanable
 
     override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
     {
-        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins) ;
+        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
         else
         {
             myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
@@ -174,8 +186,12 @@ public sealed class StorageBlock : StorageHouse, IPlanable
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareBuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
-        GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
+        PrepareWorkbuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
+        if (subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
+            subscribedToUpdate = false;
+        }
         if (planes != null)
         {
             foreach (var p in planes) p.Value.Annihilate(compensateResources);
@@ -186,7 +202,6 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         }
         Destroy(gameObject);
     }
-
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)
     {
@@ -222,7 +237,8 @@ public sealed class StorageBlock : StorageHouse, IPlanable
     {
         return planes?.ContainsKey(Block.UP_FACE_INDEX) ?? false;
     }
-    public byte GetAffectionMask() {
+    public byte GetAffectionMask()
+    {
         return Block.CUBE_MASK;
     }
 

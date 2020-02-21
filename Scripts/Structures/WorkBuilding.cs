@@ -59,7 +59,7 @@ public abstract class WorkBuilding : Building
                     maxWorkers = 100;
                 }
                 break;
-            case FARM_5_ID:
+            case FARM_BLOCK_ID:
                 {
                     workflowToProcess = 25;
                     maxWorkers = 300;
@@ -250,6 +250,7 @@ public abstract class WorkBuilding : Building
         //copy to expedition observatory.cs
         //copy to science lab .cs
         // changed in PsychokineticGenerator
+        //copy to FarmBlock
     }
 
     protected void SetWorkbuildingData(Plane sb, PixelPosByte pos)
@@ -383,6 +384,7 @@ public abstract class WorkBuilding : Building
         //copy to observatory.cs
         //copy to science lab.cs
         //changed in PsychokineticGenerator
+        //copy to farmblock
     }
 
     #region save-load system

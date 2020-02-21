@@ -157,7 +157,7 @@ public sealed class Block {
             return false;
         }
     }
-    public Plane GetPlane(byte faceIndex)
+    public Plane FORCED_GetPlane(byte faceIndex)
     {
         return GetPlanesHost()?.FORCED_GetPlane(faceIndex);
     }
@@ -253,7 +253,8 @@ public sealed class Block {
         extension?.Annihilate(compensateStructures);
         if (mainStructure != null)
         {
-            mainStructure.SectionDeleted(pos);
+            if (mainStructureIsABlocker) mainStructure.SectionDeleted(pos);
+            else (mainStructure as IPlanable).Delete(true, compensateStructures, false);
             mainStructure = null;
         }
     }

@@ -94,7 +94,7 @@
         structuresCost[Structure.FARM_2_ID] = structuresCost[Structure.FARM_1_ID] * 2;
         structuresCost[Structure.FARM_3_ID] = structuresCost[Structure.FARM_2_ID] * 2;
         structuresCost[Structure.FARM_4_ID] = structuresCost[Structure.FARM_3_ID] * 2;
-        structuresCost[Structure.FARM_5_ID] = structuresCost[Structure.FARM_4_ID] * 4;
+        structuresCost[Structure.FARM_BLOCK_ID] = structuresCost[Structure.FARM_4_ID] * 4;
         structuresCost[Structure.LUMBERMILL_1_ID] = structuresCost[Structure.FARM_1_ID] * 0.85;
         structuresCost[Structure.LUMBERMILL_2_ID] = structuresCost[Structure.LUMBERMILL_1_ID] * 2;
         structuresCost[Structure.LUMBERMILL_3_ID] = structuresCost[Structure.LUMBERMILL_2_ID] * 2;

@@ -36,7 +36,7 @@ public class Structure : MonoBehaviour
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
         SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
-    HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_5_ID = 48,
+    HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_BLOCK_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
@@ -123,8 +123,8 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_4_ID:
             case LUMBERMILL_5_ID:
             case FARM_4_ID:
-            case FARM_5_ID:
-                s = new GameObject("CoveredFarm").AddComponent<CoveredFarm>(); break;
+            case FARM_BLOCK_ID:
+                s = new GameObject("FarmBlock").AddComponent<FarmBlock>(); break;
             case MINE_ID:
                 s = new GameObject("Mine").AddComponent<Mine>(); break;
             case SMELTERY_1_ID:
@@ -231,7 +231,7 @@ public class Structure : MonoBehaviour
             case FARM_2_ID:
             case FARM_3_ID:
             case FARM_4_ID:
-            case FARM_5_ID:
+            case FARM_BLOCK_ID:
             case FARM_1_ID: return new Rect(2 * p, 6 * p, p, p);
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
@@ -316,8 +316,7 @@ public class Structure : MonoBehaviour
             case FARM_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_1")); break;
             case FARM_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_2")); break;
             case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
-            case FARM_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;
-            case FARM_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/farmBlock_level_5")); break;
+            case FARM_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;            
             case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
             case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
             case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
@@ -611,7 +610,7 @@ public class Structure : MonoBehaviour
                     isArtificial = true;                    
                 }
                 break;
-            case FARM_5_ID:
+            case FARM_BLOCK_ID:
                 {
                     maxHp = 4000;
                     surfaceRect = SurfaceRect.full;

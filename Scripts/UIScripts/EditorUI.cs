@@ -159,7 +159,7 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddGrassland:
                     {
-                        Plane p = b.GetPlane(bh.faceIndex);
+                        Plane p = b.FORCED_GetPlane(bh.faceIndex);
                         if (p != null && !p.haveGrassland)
                         {
                             p.FORCED_GetExtension().InitializeGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
@@ -168,7 +168,7 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.DeleteGrassland:
                     {
-                        Plane p = b.GetPlane(bh.faceIndex);
+                        Plane p = b.FORCED_GetPlane(bh.faceIndex);
                         if (p.haveGrassland) p.extension?.RemoveGrassland();
                         break;
                     }
@@ -188,7 +188,7 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddLifepower:
                     {
-                        Plane p = b.GetPlane(bh.faceIndex);
+                        Plane p = b.FORCED_GetPlane(bh.faceIndex);
                         if (p != null && p.haveGrassland) p.GetGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
                         break;
                     }                    

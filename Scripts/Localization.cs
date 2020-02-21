@@ -79,7 +79,7 @@ public static class Localization
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Ферма";
                     case Structure.FARM_4_ID: return "Ферма закрытого типа ";
-                    case Structure.FARM_5_ID: return "Блок фермы";
+                    case Structure.FARM_BLOCK_ID: return "Блок фермы";
                     case Structure.HEADQUARTERS_ID: return "Администрация";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
@@ -151,7 +151,7 @@ public static class Localization
                     case Structure.FARM_2_ID: return "Farm (lvl 2)";
                     case Structure.FARM_3_ID: return "Farm (lvl 3)";
                     case Structure.FARM_4_ID: return "Covered farm ";
-                    case Structure.FARM_5_ID: return "Farm Block ";
+                    case Structure.FARM_BLOCK_ID: return "Farm Block ";
                     case Structure.HEADQUARTERS_ID: return "HeadQuarters";
                     case Structure.LUMBERMILL_1_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_2_ID: return "Lumbermill";
@@ -240,7 +240,7 @@ public static class Localization
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Специально подготовленная площадка для выращивания еды. Потребляет жизненную энергию острова. Может быть построена только на грунте.";
                     case Structure.FARM_4_ID:
-                    case Structure.FARM_5_ID: return "Постоянно производит некоторое количество еды. Не потребляет жизненную энергию острова.";
+                    case Structure.FARM_BLOCK_ID: return "Постоянно производит некоторое количество еды. Не потребляет жизненную энергию острова.";
                     case Structure.HEADQUARTERS_ID: return "Главное здание колонии. Производит немного энергии и имеет несколько жилых помещений.";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
@@ -322,7 +322,7 @@ public static class Localization
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "A field prepared for growing up food. Consumes island lifepower. Must be located on dirt.";
                     case Structure.FARM_4_ID:
-                    case Structure.FARM_5_ID: return "Constantly produces food. Doesn't consume lifepower.";
+                    case Structure.FARM_BLOCK_ID: return "Constantly produces food. Doesn't consume lifepower.";
                     case Structure.HEADQUARTERS_ID: return "Colony's main building. Produces small amount of energy and has a small living space.";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:

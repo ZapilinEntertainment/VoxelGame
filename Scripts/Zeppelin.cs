@@ -121,7 +121,7 @@ public sealed class Zeppelin : MonoBehaviour {
                                 if (suitable[3])
                                 {
                                     landingByZAxis = true;
-                                    landingSurface = b.GetPlane(crh.faceIndex);
+                                    landingSurface = b.FORCED_GetPlane(crh.faceIndex);
                                     goto DRAW_LINE;
                                 }
                             }
@@ -158,7 +158,7 @@ public sealed class Zeppelin : MonoBehaviour {
                                 if (suitable[3])
                                 {
                                     landingByZAxis = false;
-                                    landingSurface = b.GetPlane(crh.faceIndex);
+                                    landingSurface = b.FORCED_GetPlane(crh.faceIndex);
                                     goto DRAW_LINE;
                                 }
                             }
