@@ -11,10 +11,7 @@ public class Platform : Structure, IPlanable
     {
         if (p == null) return;
         SetStructureData(p, pos);
-        var chunk = basement.myChunk;
-        myBlock = chunk.AddBlock(basement.pos.OneBlockHigher(), this, false);
-        chunk.RecalculateVisibilityAtPoint(myBlock.pos, GetAffectionMask());
-        if (myBlock == null) Annihilate(true, true, false);
+        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
     }
 
     private Plane PrepareUpperPlane()
@@ -52,11 +49,15 @@ public class Platform : Structure, IPlanable
     }
     public bool TryGetPlane(byte faceIndex, out Plane result)
     {
-        if (!HavePlane(faceIndex) || upperPlane == null) { result = null; return false; }
-        else
+        if (faceIndex == Block.UP_FACE_INDEX && upperPlane != null)
         {
             result = upperPlane;
             return true;
+        }
+        else
+        {
+            result = null;
+            return false;
         }
     }
     public Plane FORCED_GetPlane(byte faceIndex)
@@ -137,12 +138,8 @@ public class Platform : Structure, IPlanable
     {
         if (faceIndex == Block.UP_FACE_INDEX)
         {
-            return new BlockpartVisualizeInfo(myBlock.pos,
-                new MeshVisualizeInfo(Block.UP_FACE_INDEX, MaterialType.Basic, basement.myChunk.GetLightValue(basement.pos.OneBlockHigher())),
-                MeshType.Quad,
-                ResourceType.CONCRETE_ID,
-                0
-            );
+            if (upperPlane != null) return upperPlane.GetVisualInfo(myBlock.myChunk, myBlock.pos);
+            else return PrepareUpperPlane().GetVisualInfo(myBlock.myChunk, myBlock.pos);
         }
         else return null;
     }

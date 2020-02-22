@@ -2,25 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FarmBlock : CoveredFarm, IPlanable
+public class HouseBlock : House, IPlanable
 {
     private Block myBlock;
     private Dictionary<byte, Plane> planes;
     private GameObject[] sideModels;
 
-    override public void SetBasement(Plane b, PixelPosByte pos)
+    override public void SetBasement(Plane p, PixelPosByte pos)
     {
-        if (b == null) return;
-        SetWorkbuildingData(b, pos);
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
-            subscribedToUpdate = true;
-        }
+        if (p == null) return;
+        SetBuildingData(p, pos);
+        GameMaster.realMaster.colonyController.AddHousing(this);
 
         IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
     }
-
     public Plane CreatePlane(byte faceIndex, bool redrawCall)
     {
         if (planes == null) planes = new Dictionary<byte, Plane>();
@@ -33,18 +28,21 @@ public class FarmBlock : CoveredFarm, IPlanable
         bool isSideMesh = faceIndex < 4;
         if (isSideMesh)
         {
-            mtype = MeshType.FarmSide;
-            var f = Random.value;
-            if (f < 0.25f) mtype = MeshType.FarmFace;
+            mtype = MeshType.Housing_0;
+            float f = Random.value;
+            if (f < 0.75f)
+            {
+                if (f > 0.5f) mtype = MeshType.Housing_0; else
+                {
+                    if (f < 0.25f) mtype = MeshType.Housing_1; else mtype = MeshType.Housing_2;
+                }
+            }
             else
             {
-                if (f > 0.8f) mtype = MeshType.IndustryHeater0;
+                if (f > 0.92f) mtype = MeshType.SimpleHeater_0;
                 else
                 {
-                    if (f > 0.7f)
-                    {
-                        if (f > 0.75f) mtype = MeshType.BigWindow; else mtype = MeshType.SmallWindows;
-                    }
+                    if (f > 0.83f) mtype = MeshType.BigWindow; else mtype = MeshType.SmallWindows;
                 }
             }
         }
@@ -185,15 +183,11 @@ public class FarmBlock : CoveredFarm, IPlanable
 
     #region interface
     public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
-    {
+    {       
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
-        if (subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
-            subscribedToUpdate = false;
-        }
+        PrepareBuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
+        GameMaster.realMaster.colonyController.DeleteHousing(this);
         if (planes != null)
         {
             foreach (var p in planes) p.Value.Annihilate(compensateResources);
@@ -204,6 +198,7 @@ public class FarmBlock : CoveredFarm, IPlanable
         }
         Destroy(gameObject);
     }
+
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)
     {

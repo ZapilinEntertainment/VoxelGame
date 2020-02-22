@@ -272,7 +272,7 @@ public static class Localization
                     case Structure.RECRUITING_CENTER_4_ID: return "Набирает и подготавливает команды исследователей из добровольцев.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Центр управления миссиями. Может быть построено только одно такое здание.";
                     case Structure.QUANTUM_TRANSMITTER_4_ID: return "Обеспечивает связь с экспедициями за пределами острова.";
-                    case Structure.FOUNDATION_BLOCK_5_ID: return "Содержит инфраструктуру для обеспечения высокоуровневых зданий";
+                    case Structure.FOUNDATION_BLOCK_5_ID: return "Cтруктура для обеспечения высокоуровневых зданий";
                     case Structure.DOCK_ADDON_1_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Стройте вплотную к доку, чтобы улучшить его до уровня 3.";
                     case Structure.HOTEL_BLOCK_6_ID: return "Принимает гостей колонии и приносит прибыль раз в день";
@@ -354,7 +354,7 @@ public static class Localization
                     case Structure.RECRUITING_CENTER_4_ID: return "Recruits and trains exploring teams.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Controls missions activities.";
                     case Structure.QUANTUM_TRANSMITTER_4_ID: return "Provides connection with expeditions outside the island.";
-                    case Structure.FOUNDATION_BLOCK_5_ID: return "Infrastructure for support high-level structures.";
+                    case Structure.FOUNDATION_BLOCK_5_ID: return "A structure for high-level structures support.";
                     case Structure.DOCK_ADDON_1_ID: return "Build it next to dock to up it to level 2.";
                     case Structure.DOCK_ADDON_2_ID: return "Build it next to dock to up it to level 3.";
                     case Structure.HOTEL_BLOCK_6_ID: return "Houses guests and pays earnings everyday.";
@@ -2663,7 +2663,7 @@ public static class Localization
                         case RefusalReason.NoBlockBelow: return "Ниже ничего нет";
                         case RefusalReason.NotEnoughSlots: return "Нет свободных ячеек";
                         case RefusalReason.WorkNotFinished: return "Работы не окончены";
-                        case RefusalReason.MustBeBuildedOnFoundationBlock: return "Нужно строить на блоке основания";
+                        case RefusalReason.MustBeBuildedOnFoundationBlock: return "Нужно строить на блоке основания или на другом искусственном блоке";
                         case RefusalReason.NoEmptySpace: return "Нет свободного пространства";
                         case RefusalReason.AlreadyBuilt: return "Уже построено";
                         case RefusalReason.UnacceptableHeight: return "Неподходящая высота";
@@ -2686,7 +2686,7 @@ public static class Localization
                         case RefusalReason.NoBlockBelow: return "No block below";
                         case RefusalReason.NotEnoughSlots: return "Not enough slots";
                         case RefusalReason.WorkNotFinished: return "Work not finished";
-                        case RefusalReason.MustBeBuildedOnFoundationBlock: return "Must be builded on Foundation Block";
+                        case RefusalReason.MustBeBuildedOnFoundationBlock: return "Must be builded on Foundation Block or another artificial block";
                         case RefusalReason.NoEmptySpace: return "No empty space";
                         case RefusalReason.AlreadyBuilt: return "Already built";
                         case RefusalReason.UnacceptableHeight: return "Height is not suitable";

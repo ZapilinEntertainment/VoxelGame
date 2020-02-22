@@ -814,7 +814,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         {
                             var ip = s as IPlanable;
                             Plane p;
-                            if (ip.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.isTerminate)
+                            if (ip.TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminate)
                             {
                                 var sbb = selectedBuildingButton;
                                 var sb = chosenStructure;

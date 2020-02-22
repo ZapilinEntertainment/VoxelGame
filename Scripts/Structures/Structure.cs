@@ -108,7 +108,7 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Container").AddComponent<HarvestableResource>(); break;
             case TENT_ID:
             case HOUSE_BLOCK_ID:
-                s = new GameObject("House").AddComponent<House>(); break;
+                s = new GameObject("HouseBlock").AddComponent<HouseBlock>(); break;
             case DOCK_ID:
             case DOCK_2_ID:
             case DOCK_3_ID:
@@ -170,7 +170,7 @@ public class Structure : MonoBehaviour
             case REACTOR_BLOCK_5_ID:
                 s = new GameObject("Reactor block").AddComponent<Powerplant>(); break;
             case FOUNDATION_BLOCK_5_ID:
-                s = new GameObject("Foundation block").AddComponent<Building>(); break;
+                s = new GameObject("Foundation block").AddComponent<FoundationBlock>(); break;
             case CONNECT_TOWER_6_ID:
                 s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break;
             // case CONTROL_CENTER_6_ID:
@@ -307,7 +307,6 @@ public class Structure : MonoBehaviour
             case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
             case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
             case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
-            case HOUSE_BLOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/houseBlock_level_5")); break;
             case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
             case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
             case DOCK_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_3")); break;
@@ -348,8 +347,7 @@ public class Structure : MonoBehaviour
             case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
             case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
             case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;
-            case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;
-            case FOUNDATION_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foundationBlock")); break;
+            case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;          
             case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;

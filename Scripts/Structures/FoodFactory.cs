@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
 public class FoodFactory : WorkBuilding {
-	const float food_input = 10, metalP_input = 1, supplies_output = 15;
-	float food_inputBuffer = 0, metalP_inputBuffer = 0, supplies_outputBuffer = 0; 
+	private const float food_input = 10, metalP_input = 1, supplies_output = 15;
+	private float food_inputBuffer = 0, metalP_inputBuffer = 0, supplies_outputBuffer = 0; 
 	Storage storage;
 	const float BUFFER_LIMIT = 10;
 

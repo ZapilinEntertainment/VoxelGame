@@ -6,44 +6,19 @@ public sealed class StorageBlock : StorageHouse, IPlanable
 {
     private Block myBlock;
     private Dictionary<byte, Plane> planes;
-    private GameObject[] sideModels;
-
-    protected override void SetModel() { }
-    override public void SetModelRotation(int r)
-    {
-        if (r > 7) r %= 8;
-        else
-        {
-            if (r < 0) r += 8;
-        }
-        modelRotation = (byte)r;
-    }   
+    private GameObject[] sideModels;       
 
     override public void SetBasement(Plane p, PixelPosByte pos)
     {
         if (p == null) return;
         SetBuildingData(p, pos);
         GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
-        var chunk = basement.myChunk;
-        ChunkPos cpos = basement.pos;
-        switch (p.faceIndex)
-        {
-            case Block.FWD_FACE_INDEX: cpos = cpos.OneBlockForward(); break;
-            case Block.RIGHT_FACE_INDEX: cpos = cpos.OneBlockRight(); break;
-            case Block.BACK_FACE_INDEX: cpos = cpos.OneBlockBack(); break;
-            case Block.LEFT_FACE_INDEX: cpos = cpos.OneBlockLeft(); break;
-            case Block.UP_FACE_INDEX: cpos = cpos.OneBlockHigher(); break;
-            case Block.DOWN_FACE_INDEX: cpos = cpos.OneBlockDown(); break;
-        }
-        sideModels = new GameObject[4];
-        myBlock = chunk.AddBlock(cpos, this, false);
-        if (myBlock == null)
-        {
-            Annihilate(true, true, false);
-            return;
-        }
-        chunk.RecalculateVisibilityAtPoint(myBlock.pos, GetAffectionMask());        
+
+        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
     }
+
+    
+    //individual meshtypes collection
     public Plane CreatePlane(byte faceIndex, bool redrawCall)
     {
         if (planes == null) planes = new Dictionary<byte, Plane>();
@@ -96,8 +71,34 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
         return p;
     }
+    
+    // copy to FarmBlock.cs, HouseBlock.cs
+    // modified to FoundationBlock.cs
+    #region cubeStructures standart functions
+    protected override void SetModel() { }
+    override public void SetModelRotation(int r) { } 
+    override public void SetVisibility(bool x) { }
 
-    override public void SectionDeleted(ChunkPos pos) {
+    // side-models only
+    override protected void ChangeRenderersView(bool setOnline)
+    {
+        var myRenderers = new List<Renderer>();
+        Renderer[] rrs;
+        foreach (var g in sideModels)
+        {
+            if (g != null)
+            {
+                rrs = g.GetComponentsInChildren<Renderer>();
+                if (rrs != null && rrs.Length > 0) myRenderers.AddRange(rrs);
+            }
+        }
+        if (myRenderers.Count == 0) return;
+        if (setOnline) PoolMaster.SwitchMaterialsToOnline(myRenderers);
+        else PoolMaster.SwitchMaterialsToOffline(myRenderers);
+    }
+    //
+    override public void SectionDeleted(ChunkPos pos)
+    {
         if (basement == null && !TryToRebasement()) Annihilate(false, false, false);
     }
     public bool TryToRebasement()
@@ -159,15 +160,15 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         hp -= d;
         if (hp <= 0) Delete(true, false, true);
     }
-
     override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
     {
-        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins) ;
+        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
         else
         {
             myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
         }
     }
+    #endregion
 
     #region interface
     public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
@@ -257,6 +258,7 @@ public sealed class StorageBlock : StorageHouse, IPlanable
     //returns false if transparent or wont be instantiated
     public bool InitializePlane(byte faceIndex)
     {
+        //#cubeStructure_InitializePlane
         if (faceIndex == Block.SURFACE_FACE_INDEX | faceIndex == Block.CEILING_FACE_INDEX) return false;
         else
         {
@@ -267,7 +269,7 @@ public sealed class StorageBlock : StorageHouse, IPlanable
                     planes[faceIndex].SetVisibility(true);
                     if (faceIndex < 4) sideModels[faceIndex].SetActive(true);
                 }
-                return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
+                return true;
             }
             else
             {
@@ -275,6 +277,7 @@ public sealed class StorageBlock : StorageHouse, IPlanable
                 return true;
             }
         }
+        //
     }
     public void DeactivatePlane(byte faceIndex)
     {
@@ -378,4 +381,5 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         ApplyDamage(f);
     }
     #endregion
+    
 }

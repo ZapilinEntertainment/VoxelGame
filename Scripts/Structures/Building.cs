@@ -75,13 +75,13 @@ public class Building : Structure
                 blist.Add(GetStructureByID(FUEL_FACILITY_ID) as Building);
                 break;
             case 5:
+                blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(STORAGE_BLOCK_ID) as Building);                
                 blist.Add(GetStructureByID(FARM_BLOCK_ID) as Building);
                 blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
                 blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
                 //blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
-                blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);
-                blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
+                blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);                
                 blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(OBSERVATORY_ID) as Building);
                 blist.Add(GetStructureByID(MONUMENT_ID) as Building);
@@ -94,8 +94,9 @@ public class Building : Structure
                         blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
                 }
                 //blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
-                blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
+                //blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
                 blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
+                blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
                 blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
                 //blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
                 blist.Add(GetStructureByID(SCIENCE_LAB_ID) as Building);
@@ -655,88 +656,22 @@ public class Building : Structure
         }
         ChangeRenderersView(x & isEnergySupplied);
     }
-
     public virtual void SetEnergySupply(bool x, bool recalculateAfter)
     {
         isEnergySupplied = x;
         if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
         ChangeRenderersView(x & isActive);
     }
-    protected void ChangeRenderersView(bool setOnline)
+    virtual protected void ChangeRenderersView(bool setOnline)
     {
         if (transform.childCount == 0) return;
         Renderer[] myRenderers = transform.GetChild(0).GetComponentsInChildren<Renderer>();
         if (myRenderers == null | myRenderers.Length == 0) return;
-        if (setOnline == false)
-        {
-            for (int i = 0; i < myRenderers.Length; i++)
-            {
-                if (myRenderers[i].sharedMaterials.Length > 1)
-                {
-                    bool replacing = false;
-                    Material[] newMaterials = new Material[myRenderers[i].sharedMaterials.Length];
-                    for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++)
-                    {
-                        Material m = myRenderers[i].sharedMaterials[j];
-                        if (m == PoolMaster.glassMaterial) { m = PoolMaster.glassMaterial_disabled; replacing = true; }
-                        else
-                        {
-                            if (m == PoolMaster.energyMaterial) { m = PoolMaster.energyMaterial_disabled; replacing = true; }
-                        }
-                        newMaterials[j] = m;
-                    }
-                    if (replacing) myRenderers[i].sharedMaterials = newMaterials;
-                }
-                else
-                {
-                    Material m = myRenderers[i].sharedMaterial;
-                    bool replacing = false;
-                    if (m == PoolMaster.glassMaterial) { m = PoolMaster.glassMaterial_disabled; replacing = true; }
-                    else
-                    {
-                        if (m == PoolMaster.energyMaterial) { m = PoolMaster.energyMaterial_disabled; replacing = true; }
-                    }
-                    if (replacing) myRenderers[i].sharedMaterial = m;
-                }
-            }
-        }
-        else
-        { // Включение
-            for (int i = 0; i < myRenderers.Length; i++)
-            {
-                if (myRenderers[i].sharedMaterials.Length > 1)
-                {
-                    bool replacing = false;
-                    Material[] newMaterials = new Material[myRenderers[i].sharedMaterials.Length];
-                    for (int j = 0; j < myRenderers[i].sharedMaterials.Length; j++)
-                    {
-                        Material m = myRenderers[i].sharedMaterials[j];
-                        if (m == PoolMaster.glassMaterial_disabled) { m = PoolMaster.glassMaterial; replacing = true; }
-                        else
-                        {
-                            if (m == PoolMaster.energyMaterial_disabled) { m = PoolMaster.energyMaterial; replacing = true; }
-                        }
-                        newMaterials[j] = m;
-                    }
-                    if (replacing) myRenderers[i].sharedMaterials = newMaterials;
-                }
-                else
-                {
-                    Material m = myRenderers[i].sharedMaterial;
-                    bool replacing = false;
-                    if (m == PoolMaster.glassMaterial_disabled) { m = PoolMaster.glassMaterial; replacing = true; }
-                    else
-                    {
-                        if (m == PoolMaster.energyMaterial_disabled) { m = PoolMaster.energyMaterial; replacing = true; }
-                    }
-                    if (replacing) myRenderers[i].sharedMaterial = m;
-                }
-            }
-        }
-
+        if (setOnline) PoolMaster.SwitchMaterialsToOnline(myRenderers);
+        else PoolMaster.SwitchMaterialsToOffline(myRenderers);
         //copy to SettlementStructure.SetActivationStatus
+        //copy to StorageBlock and other IPlanables
     }
-
     override public void SetVisibility(bool x)
     {
         if (x == isVisible) return;

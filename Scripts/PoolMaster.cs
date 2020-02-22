@@ -51,7 +51,7 @@ public sealed class PoolMaster : MonoBehaviour {
     public static byte MAX_MATERIAL_LIGHT_DIVISIONS { get; private set; }
     public const int NO_MATERIAL_ID = -1, MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
         MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
-        MATERIAL_WHITEWALL_ID = -11, MATERIAL_MULTIMATERIAL_ID = -12, MATERIAL_COMBINED_BASIC_ID = -13;
+        MATERIAL_WHITEWALL_ID = -11, MATERIAL_MULTIMATERIAL_ID = -12, FIXED_UV_BASIC = -13;
     // зависимость - ResourceType.GetResourceByID
     private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2;
 
@@ -662,6 +662,73 @@ public sealed class PoolMaster : MonoBehaviour {
             {
                 mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 mr.receiveShadows = false;
+            }
+        }
+    }
+    public static void SwitchMaterialsToOnline(ICollection<Renderer> renderers)
+    {
+        if (renderers == null || renderers.Count == 0) return;
+        foreach (var r in renderers)
+        {
+            if (r.sharedMaterials.Length > 1)
+            {
+                bool replacing = false;
+                Material[] newMaterials = new Material[r.sharedMaterials.Length];
+                for (int j = 0; j < r.sharedMaterials.Length; j++)
+                {
+                    Material m = r.sharedMaterials[j];
+                    if (m == glassMaterial_disabled) { m = glassMaterial; replacing = true; }
+                    else
+                    {
+                        if (m == energyMaterial_disabled) { m = energyMaterial; replacing = true; }
+                    }
+                    newMaterials[j] = m;
+                }
+                if (replacing) r.sharedMaterials = newMaterials;
+            }
+            else
+            {
+                Material m = r.sharedMaterial;
+                bool replacing = false;
+                if (m == glassMaterial_disabled) { m = glassMaterial; replacing = true; }
+                else
+                {
+                    if (m == energyMaterial_disabled) { m = energyMaterial; replacing = true; }
+                }
+                if (replacing) r.sharedMaterial = m;
+            }
+        }
+    }
+    public static void SwitchMaterialsToOffline(ICollection<Renderer> renderers)
+    {
+        foreach (var r in renderers)
+        {
+            if (r.sharedMaterials.Length > 1)
+            {
+                bool replacing = false;
+                Material[] newMaterials = new Material[r.sharedMaterials.Length];
+                for (int j = 0; j < r.sharedMaterials.Length; j++)
+                {
+                    Material m = r.sharedMaterials[j];
+                    if (m == glassMaterial) { m = glassMaterial_disabled; replacing = true; }
+                    else
+                    {
+                        if (m == energyMaterial) { m = energyMaterial_disabled; replacing = true; }
+                    }
+                    newMaterials[j] = m;
+                }
+                if (replacing) r.sharedMaterials = newMaterials;
+            }
+            else
+            {
+                Material m = r.sharedMaterial;
+                bool replacing = false;
+                if (m == glassMaterial) { m = glassMaterial_disabled; replacing = true; }
+                else
+                {
+                    if (m == energyMaterial) { m = energyMaterial_disabled; replacing = true; }
+                }
+                if (replacing) r.sharedMaterial = m;
             }
         }
     }

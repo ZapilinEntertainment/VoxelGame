@@ -6,13 +6,14 @@ public enum MeshType : byte
 {
     NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeilSide, CutPlane, CutEdge012, CutEdge032,
     NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0, ArtificialRooftop_0, ArtificialRooftop_1,
-    ArtificialPeak_0, StorageEntrance, StorageSide, FarmFace, FarmSide, Heater0
+    ArtificialPeak_0, StorageEntrance, StorageSide, FarmFace, FarmSide, IndustryHeater0, FoundationSide, BigWindow, Housing_0, Housing_1, Housing_2,
+    SimpleHeater_0, SmallWindows
 }
 //dependency: GetMesh, IsMeshTransparent, excavated meshes: Plane.VolumeChanges
 public static class MeshMaster
 {
     private static Mesh quadMesh, plane_excavated_025, plane_excavated_05, plane_excavated_075, cutPlane, cutEdge012, cutEdge032, caveCeil,
-        natRoof_0, natRoof_1, natRoof_2, natRoof_3, natPeak_0, artRoof_0;
+        natRoof_0, natRoof_1, natRoof_2, natRoof_3, natPeak_0, artRoof_0, foundationSide;
     private static GameObject storageEntrancePref, storageSidePref;
 		
     public static Mesh GetMeshSourceLink(MeshType mtype)
@@ -90,6 +91,9 @@ public static class MeshMaster
             case MeshType.ArtificialRooftop_0:
                 if (artRoof_0 == null) artRoof_0 = Resources.Load<Mesh>("Meshes/Rooftops/artificial_rooftop0");
                 return artRoof_0;
+            case MeshType.FoundationSide:
+                if (foundationSide == null) foundationSide = Resources.Load<Mesh>("Meshes/foundationBlock_side");
+                return foundationSide;
             case MeshType.Quad:
             default:
                 if (quadMesh == null)
@@ -106,8 +110,20 @@ public static class MeshMaster
     public static Mesh GetMesh(MeshType mtype, int materialID)
     {
         Mesh m = Object.Instantiate(GetMeshSourceLink(mtype));
-        if (materialID != PoolMaster.MATERIAL_COMBINED_BASIC_ID) SetMeshUVs(ref m, materialID);
+        if (materialID != PoolMaster.FIXED_UV_BASIC) SetMeshUVs(ref m, materialID);
         return m;
+    }
+    public static Mesh GetMeshColliderLink(MeshType mtype)
+    {
+        switch (mtype)
+        {
+            case MeshType.NoMesh: return null;
+            case MeshType.CutPlane: return GetMeshSourceLink(MeshType.CutPlane);
+            case MeshType.CutEdge012: return GetMeshSourceLink(MeshType.CutEdge012);
+            case MeshType.CutEdge032: return GetMeshSourceLink(MeshType.CutEdge032);
+            case MeshType.CaveCeilSide: return GetMeshSourceLink(MeshType.CaveCeilSide);
+            default: return GetMeshSourceLink(MeshType.Quad);
+        }
     }
     public static GameObject InstantiateAdvancedMesh(MeshType mtype)
     {
@@ -126,11 +142,23 @@ public static class MeshMaster
             case MeshType.ArtificialRooftop_1:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_1"));
             case MeshType.FarmFace:
-                return Object.Instantiate(Resources.Load<GameObject>("Prefs/BLockparts/farmFace"));
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/farmFace"));
             case MeshType.FarmSide:
-                return Object.Instantiate(Resources.Load<GameObject>("Prefs/BLockparts/farmSide"));
-            case MeshType.Heater0:
-                return Object.Instantiate(Resources.Load<GameObject>("Prefs/BLockparts/heater0"));
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/farmSide"));
+            case MeshType.IndustryHeater0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/industryHeater0"));
+            case MeshType.BigWindow:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/bigWindow"));
+            case MeshType.Housing_0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/housing0"));
+            case MeshType.Housing_1:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/housing1"));
+            case MeshType.Housing_2:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/housing2"));
+            case MeshType.SimpleHeater_0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/simpleHeater0"));
+            case MeshType.SmallWindows:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/smallWindows"));
             default: return null;
         }
     }
@@ -324,7 +352,7 @@ public static class MeshMaster
     public static Plane GetRooftop(IPlanable b, bool peak, bool artificial, byte number)
     {
         MeshType mtype = MeshType.NaturalRooftop_0;
-        int materialID = PoolMaster.MATERIAL_COMBINED_BASIC_ID;
+        int materialID = PoolMaster.FIXED_UV_BASIC;
         if (!artificial) {
             if (peak) mtype = MeshType.NaturalPeak_0;
             else

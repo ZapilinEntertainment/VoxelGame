@@ -468,19 +468,25 @@ public sealed partial class Chunk : MonoBehaviour {
                 n = indexes.Count;
                 if (n > 0)
                 {
-                    var ci = new CombineInstance[n];
+                    CombineInstance[] cir = new CombineInstance[n], cic = new CombineInstance[n];
                     BlockpartVisualizeInfo bvi;
                     Mesh cm;
+                    Matrix4x4 mtr;
                     for (int i = 0; i < n; i++)
                     {
                         bvi = blockVisualizersList[indexes[i]];
                         cm = MeshMaster.GetMesh(bvi.meshType, bvi.materialID);
-                        ci[i].mesh = cm;
-                        ci[i].transform = bvi.GetPositionMatrix();
+                        cir[i].mesh = cm;
+                        mtr = bvi.GetPositionMatrix();
+                        cir[i].transform = mtr;
+                        cic[i].mesh = bvi.meshType == MeshType.Quad ? cm : MeshMaster.GetMeshColliderLink(bvi.meshType);
+                        cic[i].transform = mtr;
                     }
                     cm = new Mesh();
-                    cm.CombineMeshes(ci);
+                    cm.CombineMeshes(cir);
                     g.GetComponent<MeshFilter>().sharedMesh = cm;
+                    cm = new Mesh();
+                    cm.CombineMeshes(cic);
                     g.GetComponent<MeshCollider>().sharedMesh = cm;
                     if (PoolMaster.useIlluminationSystem) g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
                     else g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType);
