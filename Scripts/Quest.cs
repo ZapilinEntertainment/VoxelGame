@@ -270,7 +270,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.ID == Structure.LUMBERMILL_4_ID | b.ID == Structure.LUMBERMILL_5_ID)
+                                    if (b.ID == Structure.LUMBERMILL_4_ID | b.ID == Structure.LUMBERMILL_BLOCK_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -349,7 +349,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.ID == Structure.SMELTERY_5_ID)
+                                    if (b.ID == Structure.SMELTERY_BLOCK_ID)
                                     {
                                        blocksPositions.Add(b.GetBlockPosition());
                                     }
@@ -724,7 +724,7 @@ public class Quest
                         case ProgressQuestID.Progress_FactoryComplex:
                             iconRect = new Rect(0, 0, 1, 1);
                             icon = UIController.current.buildingsIcons;
-                            iconRect = Structure.GetTextureRect(Structure.SMELTERY_5_ID);
+                            iconRect = Structure.GetTextureRect(Structure.SMELTERY_BLOCK_ID);
                             break;
                         case ProgressQuestID.Progress_SecondFloor:
                             iconRect = new Rect(0, 0, 1, 1);

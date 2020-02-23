@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class FarmBlock : CoveredFarm, IPlanable
+public class ReactorBlock : Powerplant, IPlanable
 {
     private Block myBlock;
     private Dictionary<byte, Plane> planes;
@@ -10,13 +10,13 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-
         SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
-        }        
+        }
+        ChangeRenderersView(energySurplus > 0f);
 
         IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
     }
@@ -34,18 +34,18 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
         Plane p;
         if (faceIndex < 4)
         {
-            var mtype = (ID == FARM_BLOCK_ID ? MeshType.FarmSide : MeshType.LumbermillSide);
+            MeshType mtype = MeshType.ReactorSide_0;
             var f = Random.value;
-            if (f < 0.25f) mtype = (ID == FARM_BLOCK_ID ? MeshType.FarmFace : MeshType.LumbermillFace);
+            if (f < 0.7f)
+            {
+                if (f > 0.35f) mtype = MeshType.ReactorSide_1;
+            }
             else
             {
-                if (f > 0.8f) mtype = f > 0.9f ? MeshType.IndustryHeater0 : MeshType.IndustryHeater1;
+                if (f > 0.9f) mtype = MeshType.DoubleWindows;
                 else
                 {
-                    if (f > 0.7f)
-                    {
-                        if (f > 0.75f) mtype = MeshType.BigWindow; else mtype = MeshType.SmallWindows;
-                    }
+                    mtype = f > 0.8f ? MeshType.IndustryHeater0 : MeshType.IndustryHeater1;
                 }
             }
             var mp = new MultimaterialPlane(this, mtype, faceIndex, 0);
@@ -67,7 +67,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
     }
     override public void SetModelRotation(int r)
     {
-        if (r < 11) return;
+        if (r < 11 | planes == null) return;
         else
         {
             byte f = (byte)(r - 11);
@@ -78,13 +78,10 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
                 {
                     switch (p.meshType)
                     {
-                        case MeshType.FarmFace: p.ChangeMesh(MeshType.FarmSide); break;
-                        case MeshType.LumbermillFace: p.ChangeMesh(MeshType.LumbermillSide); break;
-                        case MeshType.FarmSide: p.ChangeMesh(MeshType.IndustryHeater0); break;
+                        case MeshType.ReactorSide_0: p.ChangeMesh(MeshType.ReactorSide_1); break;
+                        case MeshType.ReactorSide_1: p.ChangeMesh(MeshType.DoubleWindows); break;
+                        case MeshType.DoubleWindows: p.ChangeMesh(MeshType.IndustryHeater0); break;
                         case MeshType.IndustryHeater0: p.ChangeMesh(MeshType.IndustryHeater1); break;
-                        case MeshType.IndustryHeater1: p.ChangeMesh(MeshType.BigWindow); break;
-                        case MeshType.BigWindow: p.ChangeMesh(MeshType.SmallWindows); break;
-                        case MeshType.SmallWindows: p.ChangeMesh(ID == FARM_BLOCK_ID ? MeshType.FarmFace : MeshType.LumbermillFace); break;
                     }
                 }
             }
@@ -100,10 +97,12 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
+        //
         if (planes != null)
         {
             foreach (var p in planes) p.Value.Annihilate(compensateResources);
         }
+        //
         Destroy(gameObject);
     }
     #endregion

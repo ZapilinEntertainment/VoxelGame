@@ -438,32 +438,32 @@ public sealed class Crew : MonoBehaviour {
 
     public float PersistenceRoll()
     {
-        return Random.Range(0, 20) + GetModifier(persistence); // no neuro
+        return Random.Range(0, 21) + GetModifier(persistence); // no neuro
     }
     public float SurvivalSkillsRoll()
     {
-        return Random.Range(0, 20) + GetModifier(survivalSkills) * (0.9f + 0.15f * adaptability + 0.05f * unity);
+        return Random.Range(0, 21) + GetModifier(survivalSkills) * (0.9f + 0.15f * adaptability + 0.05f * unity);
     }
     public float PerceptionRoll()
     {
-        return Random.Range(0, 20) + GetModifier(perception) * (0.9f + 0.2f * adaptability);
+        return Random.Range(0, 21) + GetModifier(perception) * (0.9f + 0.2f * adaptability);
     }
     public float SecretKnowledgeRoll()
     {
-        return Random.Range(0, 20) + GetModifier(secretKnowledge); // no neuro mod
+        return Random.Range(0, 21) + GetModifier(secretKnowledge); // no neuro mod
     }
     public float IntelligenceRoll()
     {
-        return Random.Range(0, 20) + GetModifier(intelligence) * (0.9f + 0.15f * adaptability + 0.05f * unity);
+        return Random.Range(0, 21) + GetModifier(intelligence) * (0.9f + 0.15f * adaptability + 0.05f * unity);
     }
     public float TechSkillsRoll()
     {
-        return Random.Range(0, 20) + GetModifier(techSkills); // no neuro
+        return Random.Range(0, 21) + GetModifier(techSkills); // no neuro
     }
 
     public float HardTestRoll()
     {
-        float val = Random.Range(0, 20);
+        float val = Random.Range(0, 21);
         switch (exploringPath)
         {
             case Path.LifePath:
@@ -483,27 +483,27 @@ public sealed class Crew : MonoBehaviour {
     }
     public float SoftCheckRoll()
     {
-        return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.3f * loyalty + 0.3f * confidence);
+        return Random.Range(0, 21) + GetModifier(persistence) * (0.5f + 0.3f * loyalty + 0.3f * confidence);
     }
     public float LoyaltyRoll()
     {
-        return Random.Range(0, 20) + GetModifier((byte)(loyalty * MAX_ATTRIBUTE_VALUE));
+        return Random.Range(0, 21) + GetModifier((byte)(loyalty * MAX_ATTRIBUTE_VALUE));
     }
     public float AdaptabilityRoll()
     {
-        return Random.Range(0, 20) + GetModifier((byte)(adaptability * MAX_ATTRIBUTE_VALUE));
+        return Random.Range(0, 21) + GetModifier((byte)(adaptability * MAX_ATTRIBUTE_VALUE));
     }
     public float ConfidenceRoll()
     {
-        return Random.Range(0, 20) + GetModifier((byte)(confidence * MAX_ATTRIBUTE_VALUE));
+        return Random.Range(0, 21) + GetModifier((byte)(confidence * MAX_ATTRIBUTE_VALUE));
     }
     public float UnityRoll()
     {
-        return Random.Range(0, 20) + GetModifier((byte)(unity * MAX_ATTRIBUTE_VALUE));
+        return Random.Range(0, 21) + GetModifier((byte)(unity * MAX_ATTRIBUTE_VALUE));
     }
     public float RejectionRoll()
     {
-        return Random.Range(0, 20) + GetModifier(persistence) * (0.5f + 0.5f * confidence + 0.3f * loyalty) + 0.1f * unity;
+        return Random.Range(0, 21) + GetModifier(persistence) * (0.5f + 0.5f * confidence + 0.3f * loyalty) + 0.1f * unity;
     }
     public bool TestYourMight(float difficultyClass, bool? advantage)
     {

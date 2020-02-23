@@ -56,6 +56,7 @@ public class Powerplant : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
+        ChangeRenderersView(energySurplus > 0f);
     }
 
     public override void LabourUpdate()
@@ -71,6 +72,7 @@ public class Powerplant : WorkBuilding
             {
                 energySurplus = 0;
                 colony.RecalculatePowerGrid();
+                ChangeRenderersView(false);
             }
         }
         else
@@ -82,6 +84,7 @@ public class Powerplant : WorkBuilding
             {
                 energySurplus = newEnergySurplus;
                 colony.RecalculatePowerGrid();
+                ChangeRenderersView(energySurplus > 0f);
             }
         }
         fuelLeft = tickTimer / fuelBurnTime;

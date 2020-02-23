@@ -42,7 +42,7 @@ public sealed class Dock : WorkBuilding {
         modelRotation = (byte)r;
         if ( basement != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetEulerRotation());
+            transform.localRotation = Quaternion.Euler(basement.GetEulerRotationForQuad());
             transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
             CheckPositionCorrectness();
         }

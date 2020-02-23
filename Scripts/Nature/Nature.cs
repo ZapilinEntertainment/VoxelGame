@@ -53,7 +53,7 @@ public sealed class Nature : MonoBehaviour
         if (slist != null)
         {
             int count = slist.Count;
-            var s = slist[Random.Range(0, count - 1)];
+            var s = slist[Random.Range(0, count)];
             {
                 var ls = Structure.GetStructureByID(Random.value > 0.5f ? Structure.LIFESTONE_ID : Structure.TREE_OF_LIFE_ID);
                 ls.SetBasement(s);
@@ -68,7 +68,7 @@ public sealed class Nature : MonoBehaviour
                 int i;
                 while (lpower > 0f & count > 0)
                 {
-                    i = Random.Range(0, count - 1);
+                    i = Random.Range(0, count);
                     p = slist[i];
                     if (p.haveGrassland)
                     {
@@ -131,7 +131,7 @@ public sealed class Nature : MonoBehaviour
                     Grassland g = null;
                     if (expansion)
                     {
-                        g = grasslands[Random.Range(0, grasslands.Count - 1)];
+                        g = grasslands[Random.Range(0, grasslands.Count)];
                         var fi = g.faceIndex;
                         List<Plane> candidates = new List<Plane>();
                         Block b, myBlock = g.plane.GetBlock(); Plane p; ChunkPos cpos = g.pos;
@@ -270,7 +270,7 @@ public sealed class Nature : MonoBehaviour
                         }
                         if (candidates.Count > 0)
                         {
-                            p = candidates[Random.Range(0, candidates.Count - 1)];
+                            p = candidates[Random.Range(0, candidates.Count)];
                             g = CreateGrassland(p);
                             //#grassland starting
                             if (g != null)
@@ -295,7 +295,7 @@ public sealed class Nature : MonoBehaviour
                             }
                             if (ilist.Count != 0)
                             {
-                                p = slist[ilist[Random.Range(0, ilist.Count - 1)]];
+                                p = slist[ilist[Random.Range(0, ilist.Count)]];
                                 g = CreateGrassland(p);
                                 //#grassland starting
                                 if (g != null)
@@ -312,7 +312,7 @@ public sealed class Nature : MonoBehaviour
                 {
                     if (lifepower < 1000f && grasslands != null)
                     {
-                        grasslands[Random.Range(0, grasslands.Count - 1)].Dry();
+                        grasslands[Random.Range(0, grasslands.Count )].Dry();
                         lifepower += 1000f;
                         needRecalculation = true;
                         return;
@@ -406,9 +406,9 @@ public sealed class Nature : MonoBehaviour
         cat = PlantCategory.Tree;
         switch (cat)
         {
-            case PlantCategory.Tree: return treeTypes[Random.Range(0, treeTypes.Count - 1)];
-            case PlantCategory.Bush: return bushTypes[Random.Range(0, bushTypes.Count - 1)];
-            default: return flowerTypes[Random.Range(0, flowerTypes.Count - 1)];
+            case PlantCategory.Tree: return treeTypes[Random.Range(0, treeTypes.Count)];
+            case PlantCategory.Bush: return bushTypes[Random.Range(0, bushTypes.Count)];
+            default: return flowerTypes[Random.Range(0, flowerTypes.Count )];
         }
     }
 }

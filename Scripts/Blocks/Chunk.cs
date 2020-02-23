@@ -548,7 +548,7 @@ public sealed partial class Chunk : MonoBehaviour
     {
         if (surfaces != null)
         {
-            return surfaces[Random.Range(0, surfaces.Length - 1)];
+            return surfaces[Random.Range(0, surfaces.Length)];
         }
         return null;
     }
@@ -617,7 +617,7 @@ public sealed partial class Chunk : MonoBehaviour
                 p = surfaces[i];
                 if (p.fulfillStatus ==FullfillStatus.Empty || p.artificialStructuresCount == 0) suitable.Add(i);
             }
-            answer = new Vector3Int(0, 0, suitable[Random.Range(0, suitable.Count - 1)]);
+            answer = new Vector3Int(0, 0, suitable[Random.Range(0, suitable.Count)]);
             return true;
         }
         else
@@ -629,7 +629,7 @@ public sealed partial class Chunk : MonoBehaviour
                     p = surfaces[i];
                     if (p.fulfillStatus != FullfillStatus.Full) suitable.Add(i);
                 }
-                i = Random.Range(0, suitable.Count - 1);
+                i = Random.Range(0, suitable.Count);
                 int realIndex = suitable[i];
                 var ppos = surfaces[realIndex].FORCED_GetExtension().GetRandomCell();
                 answer = new Vector3Int(ppos.x, ppos.y, i);
@@ -646,7 +646,7 @@ public sealed partial class Chunk : MonoBehaviour
                 int realIndex = 0;
                 while (suitable.Count > 0)
                 {
-                    i = Random.Range(0, suitable.Count - 1);
+                    i = Random.Range(0, suitable.Count );
                     realIndex = suitable[i];
                     ppos = surfaces[realIndex].FORCED_GetExtension().GetRandomPosition(size);
                     if (ppos.exists)

@@ -164,7 +164,7 @@ public class Plane
             mainStructure = s;
             var t = s.transform;
             t.parent = host.GetBlock().myChunk.transform;
-            t.rotation = Quaternion.Euler(GetEulerRotation());
+            t.rotation = Quaternion.Euler(GetEulerRotationForQuad());
             t.position = GetCenterPosition();
             s.SetVisibility(isVisible);
         }
@@ -219,7 +219,7 @@ public class Plane
                     if (meshType != MeshType.Quad)
                     {
                         meshType = MeshType.Quad;
-                        meshRotation = (byte)Random.Range(0, 3);
+                        meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
@@ -229,7 +229,7 @@ public class Plane
                     if (meshType != MeshType.ExcavatedPlane025)
                     {
                         meshType = MeshType.ExcavatedPlane025;
-                        meshRotation = (byte)Random.Range(0, 3);
+                        meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
@@ -242,7 +242,7 @@ public class Plane
                     if (meshType != MeshType.ExcavatedPlane075)
                     {
                         meshType = MeshType.ExcavatedPlane075;
-                        meshRotation = (byte)Random.Range(0, 3);
+                        meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
@@ -252,7 +252,7 @@ public class Plane
                     if (meshType != MeshType.ExcavatedPlane05)
                     {
                         meshType = MeshType.ExcavatedPlane05;
-                        meshRotation = (byte)Random.Range(0, 3);
+                        meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
@@ -430,7 +430,7 @@ public class Plane
     {
         return GetLocalPosition(sr.x + sr.size / 2f, sr.z + sr.size / 2f);
     }
-    public Vector3 GetEulerRotation()
+    public Vector3 GetEulerRotationForQuad()
     {
         switch (faceIndex)
         {
@@ -445,6 +445,23 @@ public class Plane
             case Block.SURFACE_FACE_INDEX:
             default:
                 return Vector3.zero;
+        }
+    }
+    public Vector3 GetEulerRotationForBlockpart()
+    {
+        switch (faceIndex)
+        {
+            case Block.FWD_FACE_INDEX: return Vector3.zero;
+            case Block.RIGHT_FACE_INDEX: return Vector3.up * 90f ;
+            case Block.BACK_FACE_INDEX: return Vector3.up * 180f;
+            case Block.LEFT_FACE_INDEX: return Vector3.down * 90f;            
+            case Block.DOWN_FACE_INDEX:
+            case Block.CEILING_FACE_INDEX:
+                return new Vector3(90f, 90f, 0f);
+            case Block.UP_FACE_INDEX:
+            case Block.SURFACE_FACE_INDEX:
+            default:
+                return Vector3.left * 90f;
         }
     }
     public Vector3 GetLookVector()

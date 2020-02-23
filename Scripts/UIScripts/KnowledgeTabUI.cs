@@ -176,7 +176,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         }
 
         //test
-        if (Input.GetKeyDown("r")) knowledge.AddResearchPoints((Knowledge.ResearchRoute)Random.Range(0, 7), Random.value * 20f);
+        if (Input.GetKeyDown("r")) knowledge.AddResearchPoints((Knowledge.ResearchRoute)Random.Range(0, 8), Random.value * 20f);
     }
 
     public void Click(int i)

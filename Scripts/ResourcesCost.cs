@@ -187,7 +187,7 @@
                 new ResourceContainer(ResourceType.Plastics, 80), new ResourceContainer(ResourceType.metal_K, 16), new ResourceContainer(ResourceType.metal_E, 8)
             };
                 break;
-            case Structure.LUMBERMILL_5_ID:
+            case Structure.LUMBERMILL_BLOCK_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_E, 16),
                 new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_M, 28)
@@ -228,7 +228,7 @@
                 new ResourceContainer(ResourceType.metal_E, 20)
             };
                 break;
-            case Structure.SMELTERY_5_ID:
+            case Structure.SMELTERY_BLOCK_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 350), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_E, 18),
                 new ResourceContainer(ResourceType.Concrete, 250), new ResourceContainer(ResourceType.metal_M, 40)

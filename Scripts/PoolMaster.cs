@@ -699,8 +699,40 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
     }
+    public static void SwitchMaterialToOnline(Renderer r)
+    {
+        if (r == null) return;
+        if (r.sharedMaterials.Length > 1)
+        {
+            bool replacing = false;
+            Material[] newMaterials = new Material[r.sharedMaterials.Length];
+            for (int j = 0; j < r.sharedMaterials.Length; j++)
+            {
+                Material m = r.sharedMaterials[j];
+                if (m == glassMaterial_disabled) { m = glassMaterial; replacing = true; }
+                else
+                {
+                    if (m == energyMaterial_disabled) { m = energyMaterial; replacing = true; }
+                }
+                newMaterials[j] = m;
+            }
+            if (replacing) r.sharedMaterials = newMaterials;
+        }
+        else
+        {
+            Material m = r.sharedMaterial;
+            bool replacing = false;
+            if (m == glassMaterial_disabled) { m = glassMaterial; replacing = true; }
+            else
+            {
+                if (m == energyMaterial_disabled) { m = energyMaterial; replacing = true; }
+            }
+            if (replacing) r.sharedMaterial = m;
+        }
+    }
     public static void SwitchMaterialsToOffline(ICollection<Renderer> renderers)
     {
+        if (renderers == null || renderers.Count == 0) return;
         foreach (var r in renderers)
         {
             if (r.sharedMaterials.Length > 1)
@@ -730,6 +762,37 @@ public sealed class PoolMaster : MonoBehaviour {
                 }
                 if (replacing) r.sharedMaterial = m;
             }
+        }
+    }
+    public static void SwitchMaterialToOffline(Renderer r)
+    {
+        if (r == null) return;
+        if (r.sharedMaterials.Length > 1)
+        {
+            bool replacing = false;
+            Material[] newMaterials = new Material[r.sharedMaterials.Length];
+            for (int j = 0; j < r.sharedMaterials.Length; j++)
+            {
+                Material m = r.sharedMaterials[j];
+                if (m == glassMaterial) { m = glassMaterial_disabled; replacing = true; }
+                else
+                {
+                    if (m == energyMaterial) { m = energyMaterial_disabled; replacing = true; }
+                }
+                newMaterials[j] = m;
+            }
+            if (replacing) r.sharedMaterials = newMaterials;
+        }
+        else
+        {
+            Material m = r.sharedMaterial;
+            bool replacing = false;
+            if (m == glassMaterial) { m = glassMaterial_disabled; replacing = true; }
+            else
+            {
+                if (m == energyMaterial) { m = energyMaterial_disabled; replacing = true; }
+            }
+            if (replacing) r.sharedMaterial = m;
         }
     }
 

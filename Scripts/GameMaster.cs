@@ -242,7 +242,7 @@ public sealed class GameMaster : MonoBehaviour
 
                     case GameStart.Headquarters:
                         var sblocks = mainChunk.surfaces;
-                        Plane sb = sblocks[Random.Range(0, sblocks.Length - 1)];
+                        Plane sb = sblocks[Random.Range(0, sblocks.Length)];
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 

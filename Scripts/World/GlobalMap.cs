@@ -156,7 +156,7 @@ public sealed class GlobalMap : MonoBehaviour
         var availableTypes = MapPoint.GetAvailablePointsType(ascension);
 
         var pos = GetSectorPosition(i);
-        int x = Random.Range(0, availableTypes.Count - 1);
+        int x = Random.Range(0, availableTypes.Count);
         var inpos = GetSectorPosition(i);
         byte ring = DefineRing(pos.y);
         if (availableTypes[x] != MapMarkerType.Star)
@@ -277,7 +277,7 @@ public sealed class GlobalMap : MonoBehaviour
         }
         else
         {
-            byte x2 = (byte)Random.Range(0, RingSector.MAX_POINTS_COUNT - 1);
+            byte x2 = (byte)Random.Range(0, RingSector.MAX_POINTS_COUNT);
             if (rs.innerPointsIDs.ContainsKey(x2)) // в этой позиции уже есть точка
             {
                 MapPoint mp = null;
@@ -535,7 +535,7 @@ public sealed class GlobalMap : MonoBehaviour
 
     public bool Search()
     {
-        int x = Random.Range(0, mapSectors.Length - 1);
+        int x = Random.Range(0, mapSectors.Length );
         RingSector rs = mapSectors[x];
         if (rs == null)
         {

@@ -163,7 +163,7 @@ public class BlockBuildingSite : Worksite
                         int epcount = emptyPositionsIndexes.Count;
                         if (epcount > 0)
                         {
-                            int combinedIndex = emptyPositionsIndexes[Random.Range(0, epcount - 1)];
+                            int combinedIndex = emptyPositionsIndexes[Random.Range(0, epcount)];
                             ScalableHarvestableResource.Create(rtype, resourceNeeded, workplace,
                                 new PixelPosByte(
                                     (combinedIndex / length) * ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE,
@@ -180,7 +180,7 @@ public class BlockBuildingSite : Worksite
                 if (newContainerCreated) resourceTaken = colony.storage.GetResources(rtype, resourceNeeded);
                 if (resourceTaken > 1)
                 {
-                    shr = unfinishedPillarsList[Random.Range(0, unfinishedCount - 1)];
+                    shr = unfinishedPillarsList[Random.Range(0, unfinishedCount)];
                     resourceTaken = shr.AddResource(rtype, resourceTaken);
                     if (resourceTaken > 0) colony.storage.AddResource(rtype, resourceTaken);
                 }

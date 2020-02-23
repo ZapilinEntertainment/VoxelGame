@@ -89,7 +89,7 @@ public abstract class WorkBuilding : Building
                     maxWorkers = 140;
                 }
                 break;
-            case LUMBERMILL_5_ID:
+            case LUMBERMILL_BLOCK_ID:
                 {
                     workflowToProcess = 70;
                     maxWorkers = 280;
@@ -119,7 +119,7 @@ public abstract class WorkBuilding : Building
                     maxWorkers = 100;
                 }
                 break;
-            case SMELTERY_5_ID:
+            case SMELTERY_BLOCK_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 400;

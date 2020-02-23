@@ -25,12 +25,12 @@ public sealed class Grassland
         plane = p;
         nature = n;
         categoriesCatalog = new PlantCategory[MAX_CATEGORIES_COUNT];
-        categoriesCatalog[0] = (PlantCategory)Random.Range(0, 2);
-        categoriesCatalog[1] = (PlantCategory)Random.Range(0, 2);
-        categoriesCatalog[2] = (PlantCategory)Random.Range(0, 2);
+        categoriesCatalog[0] = (PlantCategory)Random.Range(0, 3);
+        categoriesCatalog[1] = (PlantCategory)Random.Range(0, 3);
+        categoriesCatalog[2] = (PlantCategory)Random.Range(0, 3);
         if (plane.FORCED_GetExtension().SetGrassland(this))
         {
-            plane.SetMeshRotation((byte)Random.Range(0, 3),false);            
+            plane.SetMeshRotation((byte)Random.Range(0, 4),false);            
             nature.AddGrassland(this);
             Recalculation();
         }
@@ -105,14 +105,14 @@ public sealed class Grassland
             //
             if (creating)
             {
-                var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT - 1)];
+                var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT)];
                 var p = Plant.GetNewPlant(nature.GetPlantType(pcat));                
                 lifepower -= CREATE_COST_VAL * nature.environmentalConditions;
                 p?.SetBasement(plane);  //перерасчет вызовет сама plane             
             }
             else
             {
-                var p = plants[Random.Range(0, plants.Length - 1)];
+                var p = plants[Random.Range(0, plants.Length)];
                 if (!p.IsFullGrown())
                 {
                     p.UpdatePlant();
@@ -161,7 +161,7 @@ public sealed class Grassland
                     //
                     if (creating)
                     {
-                        var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT - 1)];
+                        var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT)];
                         var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
                         f -= CREATE_COST_VAL * nature.environmentalConditions;
                         p?.SetBasement(plane);

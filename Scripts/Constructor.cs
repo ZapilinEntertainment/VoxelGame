@@ -390,7 +390,7 @@ public abstract class Constructor
                 }
                 if (Random.value > 0.5f)
                 {
-                    dataArray[x, y, z] = GeneratedMeshPartInfo.MakeCutToUp((byte)Random.Range(0, 3), materialID);
+                    dataArray[x, y, z] = GeneratedMeshPartInfo.MakeCutToUp((byte)Random.Range(0, 4), materialID);
                }
                else dataArray[x, y, z] = endFlat;
             }

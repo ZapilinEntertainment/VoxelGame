@@ -29,7 +29,7 @@ public class Factory : WorkBuilding
             case SMELTERY_1_ID:
             case SMELTERY_2_ID:
             case SMELTERY_3_ID:
-            case SMELTERY_5_ID:
+            case SMELTERY_BLOCK_ID:
                 specialization = FactorySpecialization.Smeltery;
                 break;
             case ORE_ENRICHER_2_ID:
@@ -58,6 +58,7 @@ public class Factory : WorkBuilding
             subscribedToUpdate = true;
         }
         SetActivationStatus(false, true);
+        //copy to SmelteryBlock
     }
 
     override public void LabourUpdate()

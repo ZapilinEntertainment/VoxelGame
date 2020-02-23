@@ -302,7 +302,7 @@ public sealed class Settlement : House
 
             if (emptyPositions.Count > 0)
             {
-                var chosenPosition = emptyPositions[Random.Range(0, emptyPositions.Count - 1)];                
+                var chosenPosition = emptyPositions[Random.Range(0, emptyPositions.Count)];                
                 xpos = chosenPosition.x; zpos = chosenPosition.y;
 
                 var chosenType = SettlementStructureType.Empty;

@@ -55,7 +55,7 @@ sealed public class UIController : MonoBehaviour
 
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
     updateTimer, moneyFlySpeed = 0;
-    private byte showingStorageOccupancy, faceIndex = 10;
+    private byte showingStorageOccupancy, selectedFaceIndex = 10;
     private float saved_energySurplus, statusUpdateTimer = 0, powerFailureTimer = 0;
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
@@ -457,7 +457,12 @@ sealed public class UIController : MonoBehaviour
                 case Structure.STRUCTURE_COLLIDER_TAG:
                     {
                         Structure s;
-                        if (collided.tag == Structure.BLOCKPART_COLLIDER_TAG) s = collided.GetComponent<StructurePointer>().GetStructureLink();
+                        if (collided.tag == Structure.BLOCKPART_COLLIDER_TAG)
+                        {
+                            var sp = collided.GetComponent<StructurePointer>();
+                            s = sp.GetStructureLink();
+                            selectedFaceIndex = sp.GetFaceIndex();
+                        }
                         else s = collided.transform.parent.GetComponent<Structure>();
                         Select(s);
                         break;
@@ -466,12 +471,12 @@ sealed public class UIController : MonoBehaviour
                     {
                         var crh = GameMaster.realMaster.mainChunk.GetBlock(rh.point, rh.normal);
                         Block b = crh.block;
-                        faceIndex = crh.faceIndex;
+                        selectedFaceIndex = crh.faceIndex;
                         if (b == null) ChangeChosenObject(ChosenObjectType.None);
                         else
                         {
                             Plane p;
-                            if (b.TryGetPlane(faceIndex, out p))
+                            if (b.TryGetPlane(selectedFaceIndex, out p))
                             {
                                 Select(p);
                             }
@@ -491,7 +496,7 @@ sealed public class UIController : MonoBehaviour
                                 chosenStructure = null;
                                 chosenWorksite = ws.worksite;
                                 ChangeChosenObject(ChosenObjectType.Worksite);
-                                faceIndex = Chunk.NO_FACE_VALUE;
+                                selectedFaceIndex = Chunk.NO_FACE_VALUE;
                             }
                         }
                         else ChangeChosenObject(ChosenObjectType.None);
@@ -518,7 +523,7 @@ sealed public class UIController : MonoBehaviour
                 chosenStructure = s;
                 selectedPlane = null;
                 chosenWorksite = null;
-                faceIndex = Chunk.NO_FACE_VALUE;
+                if (!(s is IPlanable)) selectedFaceIndex = Chunk.NO_FACE_VALUE;
                 ChangeChosenObject(ChosenObjectType.Structure);
             }
         }
@@ -530,6 +535,10 @@ sealed public class UIController : MonoBehaviour
         chosenStructure = null;
         chosenWorksite = null;
         ChangeChosenObject(ChosenObjectType.Plane);
+    }
+    public byte GetSelectedFaceIndex() //  для обсерверов структур - блоков
+    {
+        return selectedFaceIndex;
     }
 
     public void ChangeChosenObject(ChosenObjectType newChosenType)
@@ -557,7 +566,7 @@ sealed public class UIController : MonoBehaviour
             chosenWorksite = null;
             chosenStructure = null;
             selectedPlane = null;
-            faceIndex = Chunk.NO_FACE_VALUE;
+            selectedFaceIndex = Chunk.NO_FACE_VALUE;
             changeFrameColor = false;
         }
         else
@@ -584,9 +593,9 @@ sealed public class UIController : MonoBehaviour
         {
             case ChosenObjectType.Plane:
                 {
-                    faceIndex = selectedPlane.faceIndex; 
+                    selectedFaceIndex = selectedPlane.faceIndex; 
                     selectionFrame.position = selectedPlane.GetCenterPosition();
-                    selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetEulerRotation());
+                    selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetEulerRotationForQuad());
                     selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
@@ -596,17 +605,31 @@ sealed public class UIController : MonoBehaviour
                 break;              
 
             case ChosenObjectType.Structure:
-                faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
-                selectionFrame.position = chosenStructure.transform.position;
-                selectionFrame.rotation = chosenStructure.transform.rotation;
-                selectionFrame.localScale = new Vector3(chosenStructure.surfaceRect.size, 1, chosenStructure.surfaceRect.size);
-                sframeColor = new Vector3(1, 0, 1);
-                workingObserver = chosenStructure.ShowOnGUI();
-                FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
+                if (!(chosenStructure is IPlanable))
+                {
+                    selectedFaceIndex = Chunk.NO_FACE_VALUE;
+                    selectionFrame.position = chosenStructure.transform.position;
+                    selectionFrame.rotation = chosenStructure.transform.rotation;
+                    selectionFrame.localScale = new Vector3(chosenStructure.surfaceRect.size, 1, chosenStructure.surfaceRect.size);
+                    sframeColor = new Vector3(1f, 0f, 1f);
+                    workingObserver = chosenStructure.ShowOnGUI();
+                    FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
+                }
+                else
+                {
+                    var ip = chosenStructure as IPlanable;
+                    var p = ip.FORCED_GetPlane(selectedFaceIndex);
+                    selectionFrame.position = p.GetCenterPosition();
+                    selectionFrame.rotation = Quaternion.Euler(p.GetEulerRotationForQuad());
+                    selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
+                    sframeColor = new Vector3(140f / 255f, 1f, 1f);
+                    workingObserver = chosenStructure.ShowOnGUI();
+                    FollowingCamera.main.SetLookPoint(selectionFrame.position);
+                }
                 break;
 
             case ChosenObjectType.Worksite:
-                faceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
+                selectedFaceIndex = Chunk.NO_FACE_VALUE; // вспомогательная дата для chosenCube
                 selectionFrame.gameObject.SetActive(false);
                 changeFrameColor = false;
                 workingObserver = chosenWorksite.ShowOnGUI();

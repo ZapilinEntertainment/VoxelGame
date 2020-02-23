@@ -78,8 +78,8 @@ public class Building : Structure
                 blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
                 blist.Add(GetStructureByID(STORAGE_BLOCK_ID) as Building);                
                 blist.Add(GetStructureByID(FARM_BLOCK_ID) as Building);
-                blist.Add(GetStructureByID(LUMBERMILL_5_ID) as Building);
-                blist.Add(GetStructureByID(SMELTERY_5_ID) as Building);
+                blist.Add(GetStructureByID(LUMBERMILL_BLOCK_ID) as Building);
+                blist.Add(GetStructureByID(SMELTERY_BLOCK_ID) as Building);
                 //blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
                 blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);                
                 blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
@@ -133,12 +133,12 @@ public class Building : Structure
             case LUMBERMILL_2_ID: return 40f;
             case LUMBERMILL_3_ID: return 80f;
             case LUMBERMILL_4_ID: return 80f;
-            case LUMBERMILL_5_ID: return 160f;
+            case LUMBERMILL_BLOCK_ID: return 160f;
 
             case SMELTERY_1_ID: return 40f;
             case SMELTERY_2_ID: return 60f;
             case SMELTERY_3_ID: return 100f;
-            case SMELTERY_5_ID: return 160f;
+            case SMELTERY_BLOCK_ID: return 160f;
 
             case SUPPLIES_FACTORY_4_ID: return 20f;
             case SUPPLIES_FACTORY_5_ID: return 80f;
@@ -206,7 +206,7 @@ public class Building : Structure
             case LUMBERMILL_2_ID: return -4f;
             case LUMBERMILL_3_ID: return -20f;
             case LUMBERMILL_4_ID: return -20f;
-            case LUMBERMILL_5_ID: return -80f;
+            case LUMBERMILL_BLOCK_ID: return -80f;
 
             case SUPPLIES_FACTORY_4_ID: return -25f;
             case SUPPLIES_FACTORY_5_ID: return -40f;
@@ -216,7 +216,7 @@ public class Building : Structure
             case SMELTERY_1_ID: return -8f;
             case SMELTERY_2_ID: return -15f;
             case SMELTERY_3_ID: return -40f;
-            case SMELTERY_5_ID: return -80f;
+            case SMELTERY_BLOCK_ID: return -80f;
 
             case HOSPITAL_2_ID: return -6f;
             case SHUTTLE_HANGAR_4_ID:
@@ -277,7 +277,6 @@ public class Building : Structure
         specialBuildingConditions = false;
 
         upgradedIndex = -1;
-        canBePowerSwitched = false;
         canBePowerSwitched = false;
         energySurplus = GetEnergySurplus(ID);
         energyCapacity = GetEnergyCapacity(ID);
@@ -412,12 +411,12 @@ public class Building : Structure
                 break;
             case LUMBERMILL_4_ID:
                 {
-                    upgradedIndex = LUMBERMILL_5_ID;
+                    upgradedIndex = LUMBERMILL_BLOCK_ID;
                     canBePowerSwitched = true;
                     level = 4;
                 }
                 break;
-            case LUMBERMILL_5_ID:
+            case LUMBERMILL_BLOCK_ID:
                 {
                     canBePowerSwitched = true;
                     level = 5;
@@ -445,12 +444,12 @@ public class Building : Structure
                 break;
             case SMELTERY_3_ID:
                 {
-                    upgradedIndex = SMELTERY_5_ID;
+                    upgradedIndex = SMELTERY_BLOCK_ID;
                     canBePowerSwitched = true;
                     level = 3;
                 }
                 break;
-            case SMELTERY_5_ID:
+            case SMELTERY_BLOCK_ID:
                 {
                     canBePowerSwitched = true;
                     level = 5;

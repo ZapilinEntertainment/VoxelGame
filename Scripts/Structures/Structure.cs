@@ -37,8 +37,8 @@ public class Structure : MonoBehaviour
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
         SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
     HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_BLOCK_ID = 48,
-    LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_5_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
-    SMELTERY_3_ID = 55, SMELTERY_5_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
+    LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
+    SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
          HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
@@ -121,20 +121,22 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_3_ID:
                 s = new GameObject("Farm").AddComponent<Farm>(); break;
             case LUMBERMILL_4_ID:
-            case LUMBERMILL_5_ID:
             case FARM_4_ID:
+                s = new GameObject("CoveredFarm").AddComponent<CoveredFarm>(); break;           
+            case LUMBERMILL_BLOCK_ID:
             case FARM_BLOCK_ID:
                 s = new GameObject("FarmBlock").AddComponent<FarmBlock>(); break;
             case MINE_ID:
                 s = new GameObject("Mine").AddComponent<Mine>(); break;
             case SMELTERY_1_ID:
             case SMELTERY_2_ID:
-            case SMELTERY_3_ID:
-            case SMELTERY_5_ID:
+            case SMELTERY_3_ID:            
             case ORE_ENRICHER_2_ID:
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_ID:
                 s = new GameObject("Factory").AddComponent<Factory>(); break;
+            case SMELTERY_BLOCK_ID:
+                s = new GameObject("SmelteryBlock").AddComponent<SmelteryBlock>(); break;
             case SUPPLIES_FACTORY_4_ID:
             case SUPPLIES_FACTORY_5_ID:
                 s = new GameObject().AddComponent<FoodFactory>(); break;
@@ -168,7 +170,7 @@ public class Structure : MonoBehaviour
             case EXPEDITION_CORPUS_4_ID:
                 s = new GameObject("Expedition corpus").AddComponent<ExpeditionCorpus>(); break;
             case REACTOR_BLOCK_5_ID:
-                s = new GameObject("Reactor block").AddComponent<Powerplant>(); break;
+                s = new GameObject("Reactor block").AddComponent<ReactorBlock>(); break;
             case FOUNDATION_BLOCK_5_ID:
                 s = new GameObject("Foundation block").AddComponent<FoundationBlock>(); break;
             case CONNECT_TOWER_6_ID:
@@ -236,11 +238,11 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
             case LUMBERMILL_4_ID:
-            case LUMBERMILL_5_ID:
+            case LUMBERMILL_BLOCK_ID:
             case LUMBERMILL_1_ID: return new Rect(3 * p, 6 * p, p, p);
             case SMELTERY_2_ID:
             case SMELTERY_3_ID:
-            case SMELTERY_5_ID:
+            case SMELTERY_BLOCK_ID:
             case SMELTERY_1_ID: return new Rect(4 * p, 6 * p, p, p);
             case WIND_GENERATOR_1_ID: return new Rect(5 * p, 6 * p, p, p);
             case BIOGENERATOR_2_ID: return new Rect(6 * p, 6 * p, p, p);
@@ -319,13 +321,11 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
             case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
             case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
-            case LUMBERMILL_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;
-            case LUMBERMILL_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/lumbermillBlock_level_5")); break;
+            case LUMBERMILL_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;           
             case MINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Mine_level_1")); break;
             case SMELTERY_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_1")); break;
             case SMELTERY_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_2")); break;
             case SMELTERY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_3")); break;
-            case SMELTERY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/smelteryBlock_level_5")); break;
             case WIND_GENERATOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/windGenerator_level_1")); break;
             case BIOGENERATOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Biogenerator_level_2")); break;
             case HOSPITAL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Hospital_level_2")); break;
@@ -346,8 +346,7 @@ public class Structure : MonoBehaviour
             case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
             case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
             case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
-            case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;
-            case REACTOR_BLOCK_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/reactorBlock")); break;          
+            case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;  
             case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
@@ -376,7 +375,7 @@ public class Structure : MonoBehaviour
 
         if (basement != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetEulerRotation());
+            transform.localRotation = Quaternion.Euler(basement.GetEulerRotationForQuad());
             transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
         }
     }
@@ -653,7 +652,7 @@ public class Structure : MonoBehaviour
                     isArtificial = true;                    
                 }
                 break;
-            case LUMBERMILL_5_ID:
+            case LUMBERMILL_BLOCK_ID:
                 {
                     maxHp = 4000;
                     surfaceRect = SurfaceRect.full;
@@ -698,7 +697,7 @@ public class Structure : MonoBehaviour
                     isArtificial = true;                    
                 }
                 break;
-            case SMELTERY_5_ID:
+            case SMELTERY_BLOCK_ID:
                 {
                     maxHp = 4000;
                     surfaceRect = SurfaceRect.full;

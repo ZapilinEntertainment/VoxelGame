@@ -4,19 +4,50 @@ using UnityEngine;
 
 public class MultimaterialPlane : Plane
 {
+    private bool isActive = true;
     private GameObject model;
-    new public bool isQuad { get { return false; } }
+    new public bool isQuad { get { return false; } }    
 
-    public MultimaterialPlane(IPlanable i_host, MeshType i_meshType, byte i_faceIndex, GameObject i_model, byte modelRotation) : 
+    public MultimaterialPlane(IPlanable i_host, MeshType i_meshType, byte i_faceIndex,byte modelRotation) : 
         base (i_host, i_meshType, PoolMaster.MATERIAL_MULTIMATERIAL_ID, i_faceIndex, modelRotation)
     {
-        model = i_model;
-        model.transform.parent = myChunk.GetRenderersHolderTransform(i_faceIndex);
-        model.transform.localPosition = GetCenterPosition();
-        model.transform.localRotation = Quaternion.Euler(GetEulerRotation() + Vector3.up * 90f * meshRotation);
+        meshType = i_meshType;
     }
 
-    override public void ChangeMaterial(int newId, bool redrawCall) { }
+    private void PrepareModel()
+    {
+        model = MeshMaster.InstantiateAdvancedMesh(meshType);
+        model.transform.parent = myChunk.GetRenderersHolderTransform(faceIndex);
+        model.transform.localPosition = GetCenterPosition();
+        model.transform.localRotation = Quaternion.Euler(GetEulerRotationForBlockpart() + Vector3.forward * 90f * meshRotation);
+        model.AddComponent<StructurePointer>().SetStructureLink((Structure)host, faceIndex);
+        if (!isActive) PoolMaster.SwitchMaterialToOffline(model.GetComponentInChildren<Renderer>());
+        model.SetActive(isVisible);
+    }
+    public void ChangeMesh(MeshType mtype)
+    {
+        if (meshType == mtype) return;
+        else
+        {
+            meshType = mtype;
+            if (model != null) Object.Destroy(model);
+            PrepareModel();            
+        }
+    }
+    public void SetActivationStatus(bool x)
+    {
+        if (x != isActive)
+        {
+            isActive = x;
+            if (model != null)
+            {
+                if (x) PoolMaster.SwitchMaterialToOnline(model.GetComponentInChildren<Renderer>());
+                else PoolMaster.SwitchMaterialToOffline(model.GetComponentInChildren<Renderer>());
+            }
+        }
+    }
+
+    override public void ChangeMaterial(int newId, bool redrawCall) { }  
     override public void SetVisibility(bool x)
     {
         if (x != isVisible)
@@ -28,7 +59,7 @@ public class MultimaterialPlane : Plane
     }
     override public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
     {
-        model.SetActive(isVisible);
+        if (model == null) PrepareModel();
         return null;        
     }
 

@@ -24,7 +24,7 @@ public class Farm : WorkBuilding
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
             case LUMBERMILL_4_ID:
-            case LUMBERMILL_5_ID:
+            case LUMBERMILL_BLOCK_ID:
                 cropType = PlantType.OakTree;
                 break;
         }  

@@ -56,17 +56,33 @@ public class UIStructureObserver : UIObserver {
 
     public void RotateLeft()
     {
-        int r = observingStructure.modelRotation;
-        if (observingStructure.rotate90only) r -= 2;
-        else r--;
-        observingStructure.SetModelRotation(r);
+        if (observingStructure != null)
+        {
+            if (observingStructure is IPlanable) observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+            else
+            {
+                int r = observingStructure.modelRotation;
+                if (observingStructure.rotate90only) r -= 2;
+                else r--;
+                observingStructure.SetModelRotation(r);
+            }
+        }
+        else SelfShutOff();
     }
     public void RotateRight()
     {
-        int r = observingStructure.modelRotation;
-        if (observingStructure.rotate90only) r += 2;
-        else r++;
-        observingStructure.SetModelRotation(r);
+        if (observingStructure != null)
+        {
+            if (observingStructure is IPlanable) observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+            else
+            {
+                int r = observingStructure.modelRotation;
+                if (observingStructure.rotate90only) r += 2;
+                else r++;
+                observingStructure.SetModelRotation(r);
+            }
+        }
+        else SelfShutOff();
     }
     public void SpecialButtonClick()
     {

@@ -5,13 +5,25 @@ using UnityEngine;
 public class StructurePointer : MonoBehaviour
 {
     private Structure source;
-    public void SetStructureLink(Structure s)
+    private byte faceIndex;
+    public void SetStructureLink(Structure s, byte i_faceIndex)
     {
         source = s;
-        GetComponent<MeshCollider>().sharedMesh = MeshMaster.GetMeshSourceLink(MeshType.Quad);
+        var mc = GetComponent<MeshCollider>();
+        if (mc == null)
+        {
+            Destroy(this);
+            return;
+        }
+        else
+        {
+            mc.sharedMesh = MeshMaster.GetMeshSourceLink(MeshType.Quad);
+            faceIndex = i_faceIndex;
+        }
     }
     public Structure GetStructureLink()
     {
         return source;
     }
+    public byte GetFaceIndex() { return faceIndex; }
 }

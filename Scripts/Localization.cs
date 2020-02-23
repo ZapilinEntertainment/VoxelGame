@@ -85,12 +85,12 @@ public static class Localization
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Лесопилка";
                     case Structure.LUMBERMILL_4_ID: return "Лесопилка закрытого типа";
-                    case Structure.LUMBERMILL_5_ID: return "Блок лесопилки";
+                    case Structure.LUMBERMILL_BLOCK_ID: return "Блок лесопилки";
                     case Structure.MINE_ID: return "Шахта";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID: return "Плавильня";
-                    case Structure.SMELTERY_5_ID: return "Плавильный блок";
+                    case Structure.SMELTERY_BLOCK_ID: return "Плавильный блок";
                     case Structure.WIND_GENERATOR_1_ID: return "Потоковый генератор";
                     case Structure.BIOGENERATOR_2_ID: return "Биореактор";
                     case Structure.HOSPITAL_2_ID: return "Клиника";
@@ -157,12 +157,12 @@ public static class Localization
                     case Structure.LUMBERMILL_2_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_3_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_4_ID: return "Covered lumbermill";
-                    case Structure.LUMBERMILL_5_ID: return "Lumbermill Block";
+                    case Structure.LUMBERMILL_BLOCK_ID: return "Lumbermill Block";
                     case Structure.MINE_ID: return "Mine Entrance";
                     case Structure.SMELTERY_1_ID: return "Smeltery";
                     case Structure.SMELTERY_2_ID: return "Smeltery";
                     case Structure.SMELTERY_3_ID: return "Smelting Facility";
-                    case Structure.SMELTERY_5_ID: return "Smeltery Block";
+                    case Structure.SMELTERY_BLOCK_ID: return "Smeltery Block";
                     case Structure.WIND_GENERATOR_1_ID: return "Stream generator";
                     case Structure.BIOGENERATOR_2_ID: return "Biogenerator";
                     case Structure.HOSPITAL_2_ID: return "Hospital";
@@ -246,12 +246,12 @@ public static class Localization
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Выращивает и рубит деревья. Потребляет жизненную энергию острова.";
                     case Structure.LUMBERMILL_4_ID:
-                    case Structure.LUMBERMILL_5_ID: return "Постоянно производит некоторое количество древесины. Не потребляет жизненную энергию острова.";
+                    case Structure.LUMBERMILL_BLOCK_ID: return "Постоянно производит некоторое количество древесины. Не потребляет жизненную энергию острова.";
                     case Structure.MINE_ID: return "Добыча полезных ископаемых закрытым методом.";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID:
-                    case Structure.SMELTERY_5_ID: return "Перерабатывает ресурсы.";
+                    case Structure.SMELTERY_BLOCK_ID: return "Перерабатывает ресурсы.";
                     case Structure.WIND_GENERATOR_1_ID: return "Нестабильно вырабатывает энергию в зависимости от силы местных потоков. Лучше располагать как можно выше.";
                     case Structure.BIOGENERATOR_2_ID: return "Вырабатывает энергию, потребляя органическую материю, эффективность зависит от количества рабочих.";
                     case Structure.HOSPITAL_2_ID: return "Обеспечивает колонию медицинской помощью. Может регулировать темп появления новых жителей.";
@@ -328,12 +328,12 @@ public static class Localization
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Grows and cuts trees. Consumes island lifepower.";
                     case Structure.LUMBERMILL_4_ID:
-                    case Structure.LUMBERMILL_5_ID: return "Constantly produces wood. Doesn't consume lifepower.";
+                    case Structure.LUMBERMILL_BLOCK_ID: return "Constantly produces wood. Doesn't consume lifepower.";
                     case Structure.MINE_ID: return "Extracts fossils in closed way.";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID:
-                    case Structure.SMELTERY_5_ID: return "Process resources.";
+                    case Structure.SMELTERY_BLOCK_ID: return "Process resources.";
                     case Structure.WIND_GENERATOR_1_ID: return "Generates energy in dependence of local streams. Build it as high as possible.";
                     case Structure.BIOGENERATOR_2_ID: return "Generates energy from organic. Energy production depends on the number of workers.";
                     case Structure.HOSPITAL_2_ID: return "Supplies colony with healthcare. Can control the spawnrate.";

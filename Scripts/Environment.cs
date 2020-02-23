@@ -176,7 +176,7 @@ public struct Environment
         EnvironmentPreset presetType = EnvironmentPreset.Default;
         if (ascension < 0.3f) // low
         {
-            x = Random.Range(0, 5); 
+            x = Random.Range(0, 6); 
             switch (x)
             {
                 case 0:
@@ -215,7 +215,7 @@ public struct Environment
         {
             if (ascension > 0.7f) // high
             {
-                x = Random.Range(0, 4);
+                x = Random.Range(0, 5);
                 switch (x)
                 {
                     case 0:
@@ -247,7 +247,7 @@ public struct Environment
             }
             else // normal
             {
-                x = Random.Range(0, 6);
+                x = Random.Range(0, 7);
                 switch (x)
                 {
                     case 0:
@@ -339,7 +339,7 @@ public struct Environment
     public MapMarkerType GetSuitablePointType(float ascension)
     {
         var availableTypes = MapPoint.GetAvailablePointsType(ascension);
-        int x = Random.Range(0, availableTypes.Count - 1);
+        int x = Random.Range(0, availableTypes.Count);
         var mp = MapPoint.CreatePointOfType(0, 0, availableTypes[x]);
         List<MapMarkerType> envtypes = new List<MapMarkerType>() {MapMarkerType.Star};
         //full:
@@ -450,6 +450,6 @@ public struct Environment
                 i++;
             }
         }
-        return envtypes[Random.Range(0, envtypes.Count - 1)];
+        return envtypes[Random.Range(0, envtypes.Count)];
     }
 }

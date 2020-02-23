@@ -99,10 +99,10 @@
         structuresCost[Structure.LUMBERMILL_2_ID] = structuresCost[Structure.LUMBERMILL_1_ID] * 2;
         structuresCost[Structure.LUMBERMILL_3_ID] = structuresCost[Structure.LUMBERMILL_2_ID] * 2;
         structuresCost[Structure.LUMBERMILL_4_ID] = structuresCost[Structure.LUMBERMILL_3_ID] * 2;
-        structuresCost[Structure.LUMBERMILL_5_ID] = structuresCost[Structure.LUMBERMILL_5_ID] * 4;
+        structuresCost[Structure.LUMBERMILL_BLOCK_ID] = structuresCost[Structure.LUMBERMILL_BLOCK_ID] * 4;
         structuresCost[Structure.SMELTERY_2_ID] = structuresCost[Structure.SMELTERY_1_ID] * 2;
         structuresCost[Structure.SMELTERY_3_ID] = structuresCost[Structure.SMELTERY_2_ID] * 2;
-        structuresCost[Structure.SMELTERY_5_ID] = structuresCost[Structure.SMELTERY_3_ID] * 4;
+        structuresCost[Structure.SMELTERY_BLOCK_ID] = structuresCost[Structure.SMELTERY_3_ID] * 4;
         structuresCost[Structure.REACTOR_BLOCK_5_ID] = structuresCost[Structure.GRPH_REACTOR_4_ID] * 4;
         structuresCost[Structure.DOCK_ADDON_1_ID] = structuresCost[Structure.DOCK_ID] * 4;
         structuresCost[Structure.DOCK_ADDON_2_ID] = structuresCost[Structure.DOCK_ADDON_1_ID] * 4;

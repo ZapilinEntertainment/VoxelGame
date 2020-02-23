@@ -14,7 +14,7 @@ public class CoveredFarm : WorkBuilding {
                 outputResource = ResourceType.Food;
                 break;
             case LUMBERMILL_4_ID:
-            case LUMBERMILL_5_ID:
+            case LUMBERMILL_BLOCK_ID:
                 outputResource = ResourceType.Lumber;
                 break;
         }		

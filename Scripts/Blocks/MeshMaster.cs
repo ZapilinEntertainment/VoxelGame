@@ -5,9 +5,9 @@ using UnityEngine;
 public enum MeshType : byte
 {
     NoMesh, Quad, ExcavatedPlane025, ExcavatedPlane05, ExcavatedPlane075, CaveCeilSide, CutPlane, CutEdge012, CutEdge032,
-    NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0, ArtificialRooftop_0, ArtificialRooftop_1,
-    ArtificialPeak_0, StorageEntrance, StorageSide, FarmFace, FarmSide, IndustryHeater0, FoundationSide, BigWindow, Housing_0, Housing_1, Housing_2,
-    SimpleHeater_0, SmallWindows
+    NaturalRooftop_0, NaturalRooftop_1, NaturalRooftop_2, NaturalRooftop_3, NaturalPeak_0, ArtificialRooftop_0, ArtificialRooftop_1, ArtificialRooftop_2,
+    ArtificialPeak_0, ArtificialPeak_1, StorageEntrance, StorageSide, FarmFace, FarmSide, IndustryHeater0, IndustryHeater1, FoundationSide, BigWindow, Housing_0, Housing_1, Housing_2,
+    SimpleHeater_0, SmallWindows, DoubleWindows, LumbermillFace, LumbermillSide, ReactorSide_0, ReactorSide_1, SmelterySide_0, SmelterySide_1
 }
 //dependency: GetMesh, IsMeshTransparent, excavated meshes: Plane.VolumeChanges
 public static class MeshMaster
@@ -137,16 +137,22 @@ public static class MeshMaster
                 return Object.Instantiate(storageSidePref);
             case MeshType.ArtificialPeak_0:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialPeak_0"));
+            case MeshType.ArtificialPeak_1:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialPeak_0"));
             case MeshType.ArtificialRooftop_0:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_0"));
             case MeshType.ArtificialRooftop_1:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_1"));
+            case MeshType.ArtificialRooftop_2:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Rooftops/artificialRooftop_2"));
             case MeshType.FarmFace:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/farmFace"));
             case MeshType.FarmSide:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/farmSide"));
             case MeshType.IndustryHeater0:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/industryHeater0"));
+            case MeshType.IndustryHeater1:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/industryHeater1"));
             case MeshType.BigWindow:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/bigWindow"));
             case MeshType.Housing_0:
@@ -159,6 +165,20 @@ public static class MeshMaster
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/simpleHeater0"));
             case MeshType.SmallWindows:
                 return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/smallWindows"));
+            case MeshType.DoubleWindows:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/doubleWindows"));
+            case MeshType.LumbermillFace:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/lumbermillFace"));
+            case MeshType.LumbermillSide:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/lumbermillSide"));
+            case MeshType.ReactorSide_0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/reactorSide0"));
+            case MeshType.ReactorSide_1:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/reactorSide1"));
+            case MeshType.SmelterySide_0:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/smelterySide0"));
+            case MeshType.SmelterySide_1:
+                return Object.Instantiate(Resources.Load<GameObject>("Prefs/Blockparts/smelterySide1"));
             default: return null;
         }
     }
@@ -346,6 +366,7 @@ public static class MeshMaster
         else
         {
             if (!peak) number = Random.value > 0.75f ? (byte)0 : (byte)1;
+            else number = (byte)Random.Range(0, 3);
         }
         return GetRooftop(b, peak, artificial, number);
     }
@@ -368,14 +389,21 @@ public static class MeshMaster
         }
         else
         {
-            GameObject g;
-            if (peak)  mtype = MeshType.ArtificialPeak_0;
+            if (peak)
+            {
+                if (number == 0) mtype = MeshType.ArtificialPeak_0; else mtype = MeshType.ArtificialPeak_1;
+            }
             else
             {
-                if (number == 1) mtype = MeshType.ArtificialRooftop_1; else mtype = MeshType.ArtificialRooftop_0;
+                switch (number)
+                {
+                    case 2: mtype = MeshType.ArtificialRooftop_2; break;
+                    case 1: mtype = MeshType.ArtificialRooftop_1; break;
+                    default: mtype = MeshType.ArtificialRooftop_0; break;
+
+                }
             }
-            g = InstantiateAdvancedMesh(mtype);
-            return new MultimaterialPlane(b, mtype, Block.UP_FACE_INDEX, g, (byte)Random.Range(0, 3));
+            return new MultimaterialPlane(b, mtype, Block.UP_FACE_INDEX, (byte)Random.Range(0, 3));
         }
         
     }

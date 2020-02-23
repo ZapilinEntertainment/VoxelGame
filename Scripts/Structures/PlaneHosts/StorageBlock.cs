@@ -5,20 +5,20 @@ using UnityEngine;
 public sealed class StorageBlock : StorageHouse, IPlanable
 {
     private Block myBlock;
-    private Dictionary<byte, Plane> planes;
-    private GameObject[] sideModels;       
+    private Dictionary<byte, Plane> planes;    
 
     override public void SetBasement(Plane p, PixelPosByte pos)
     {
         if (p == null) return;
+
         SetBuildingData(p, pos);
         GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
 
-        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
+        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);        
     }
 
-    
-    //individual meshtypes collection
+
+    #region individual functions
     public Plane CreatePlane(byte faceIndex, bool redrawCall)
     {
         if (planes == null) planes = new Dictionary<byte, Plane>();
@@ -26,75 +26,90 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         {
             if (planes.ContainsKey(faceIndex)) return planes[faceIndex];
         }
+
         var pos = myBlock.pos;
-        MeshType mtype = MeshType.Quad;
-        bool isSideMesh = faceIndex < 4;
-        if (isSideMesh)
+        Plane p;
+        if (faceIndex < 4)
         {
-            mtype = Random.value > 0.75f ? MeshType.StorageEntrance : MeshType.StorageSide;
+            MeshType mtype = MeshType.Quad;
+            var f = Random.value;
+            if (f < 0.8f)
+            {
+                if (f < 0.4f) mtype = MeshType.StorageEntrance; else mtype = MeshType.StorageSide;
+            }
+            else mtype = MeshType.DoubleWindows;
+            var mp = new MultimaterialPlane(this, mtype, faceIndex, 0);
+            mp.SetActivationStatus(isActive);
+            p = mp;
         }
         else
         {
             if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.CHUNK_SIZE - 1)
             {
-                var px = MeshMaster.GetRooftop(this, Random.value < 0.1f, true);
-                planes.Add(faceIndex, px);
-                if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
-                return px;
+                p = MeshMaster.GetRooftop(this, Random.value < 0.1f, true);
             }
-        }
+            else p = new Plane(this, MeshType.Quad, PoolMaster.MATERIAL_ADVANCED_COVERING_ID, faceIndex, 0);
+        }       
         //
-        var p = new Plane(this, mtype, PoolMaster.MATERIAL_ADVANCED_COVERING_ID, faceIndex, 0);
-        planes.Add(faceIndex, p);
-        if (isSideMesh)
-        {
-            if (sideModels[faceIndex] == null)
-            {
-                var m = MeshMaster.InstantiateAdvancedMesh(mtype);
-                var t = m.transform;
-                t.parent = myBlock.myChunk.GetRenderersHolderTransform(p.faceIndex);
-                t.localPosition = p.GetCenterPosition();
-                switch (faceIndex)
-                {
-                    case Block.FWD_FACE_INDEX: t.localRotation = Quaternion.identity; ; break;
-                    case Block.RIGHT_FACE_INDEX: t.localRotation = Quaternion.Euler(0f, 90f, 0f); break;
-                    case Block.BACK_FACE_INDEX: t.localRotation = Quaternion.Euler(0f, 180f, 0f); break;
-                    case Block.LEFT_FACE_INDEX: t.localRotation = Quaternion.Euler(0f, -90f, 0f); break;
-                    case Block.UP_FACE_INDEX: t.localRotation = Quaternion.Euler(-90f, 0f, 0f); break;
-                    case Block.DOWN_FACE_INDEX: t.localRotation = Quaternion.Euler(90f, 90f, 0f); break;
-                }
-                m.AddComponent<StructurePointer>().SetStructureLink(this);
-                sideModels[faceIndex] = m;
-            }
-            else sideModels[faceIndex].SetActive(planes[faceIndex].isVisible);
-        }
+        planes.Add(faceIndex, p);        
         if (redrawCall) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
         return p;
     }
-    
-    // copy to FarmBlock.cs, HouseBlock.cs
+    override public void SetModelRotation(int r) {
+        if (r < 11 | planes == null) return;
+        else
+        {
+            byte f = (byte)(r - 11);
+            if (f < 4 && planes.ContainsKey(f))
+            {
+                var p = planes[f] as MultimaterialPlane;
+                if (p != null)
+                {
+                    switch (p.meshType)
+                    {
+                        case MeshType.StorageEntrance: p.ChangeMesh(MeshType.StorageSide); break;
+                        case MeshType.StorageSide: p.ChangeMesh(MeshType.DoubleWindows); break;
+                        case MeshType.DoubleWindows: p.ChangeMesh(MeshType.StorageEntrance); break;
+                    }
+                }
+            }
+        }
+    }
+    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    {
+        if (destroyed) return;
+        else destroyed = true;
+        PrepareBuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
+        GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
+        //
+        if (planes != null)
+        {
+            foreach (var p in planes) p.Value.Annihilate(compensateResources);
+        }
+        //
+        Destroy(gameObject);
+    }
+    #endregion
+
+    // copy to FarmBlock.cs, HouseBlock.cs, ReactorBlock.cs, SmelteryBlock.cs
     // modified to FoundationBlock.cs
     #region cubeStructures standart functions
-    protected override void SetModel() { }
-    override public void SetModelRotation(int r) { } 
+    protected override void SetModel() { }  
     override public void SetVisibility(bool x) { }
 
     // side-models only
     override protected void ChangeRenderersView(bool setOnline)
     {
-        var myRenderers = new List<Renderer>();
-        Renderer[] rrs;
-        foreach (var g in sideModels)
+        if (planes == null) return;
+        else
         {
-            if (g != null)
+            MultimaterialPlane mp;
+            foreach (var p in planes)
             {
-                rrs = g.GetComponentsInChildren<Renderer>();
-                if (rrs != null && rrs.Length > 0) myRenderers.AddRange(rrs);
+                mp = p.Value as MultimaterialPlane;
+                if (mp != null) mp.SetActivationStatus(setOnline);
             }
         }
-        if (myRenderers.Count == 0) return;
-        if (setOnline) PoolMaster.SwitchMaterialsToOnline(myRenderers);
-        else PoolMaster.SwitchMaterialsToOffline(myRenderers);
     }
     //
     override public void SectionDeleted(ChunkPos pos)
@@ -170,24 +185,7 @@ public sealed class StorageBlock : StorageHouse, IPlanable
     }
     #endregion
 
-    #region interface
-    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
-    {
-        if (destroyed) return;
-        else destroyed = true;
-        PrepareBuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
-        GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
-        if (planes != null)
-        {
-            foreach (var p in planes) p.Value.Annihilate(compensateResources);
-        }
-        foreach (var g in sideModels)
-        {
-            if (g != null) Destroy(g);
-        }
-        Destroy(gameObject);
-    }
-
+    #region interface 
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)
     {
@@ -267,7 +265,6 @@ public sealed class StorageBlock : StorageHouse, IPlanable
                 if (!planes[faceIndex].isVisible)
                 {
                     planes[faceIndex].SetVisibility(true);
-                    if (faceIndex < 4) sideModels[faceIndex].SetActive(true);
                 }
                 return true;
             }
@@ -294,7 +291,6 @@ public sealed class StorageBlock : StorageHouse, IPlanable
                 else planes[faceIndex].SetVisibility(false);
                 myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
-            if (faceIndex < 4 && sideModels[faceIndex] != null) Destroy(sideModels[faceIndex]);
         }
     }
 
@@ -305,73 +301,42 @@ public sealed class StorageBlock : StorageHouse, IPlanable
         var chunk = myBlock.myChunk;
 
         byte realVisMask = (byte)(vismask & Block.CUBE_MASK);
-        byte i = 0;
-        for (; i < 4; i++)
+        if (realVisMask != 0)
         {
-            if ((realVisMask & (1 << i)) != 0)
+            for (byte i = 0; i < 6; i++)
             {
-                if (planes != null && planes.ContainsKey(i))
+                if ((realVisMask & (1 << i)) != 0)
                 {
-                    sideModels[i].SetActive(true);
+                    if (planes != null && planes.ContainsKey(i))
+                    {
+                        var bvi = planes[i].GetVisualInfo(chunk, cpos);
+                        if (bvi != null) data.Add(bvi);
+                    }
+                    else
+                    {
+                        var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
+                        if (p != null) data.Add(p);
+                    }
                 }
-                else CreatePlane(i, false);
+                else
+                {
+                    if (planes != null && planes.ContainsKey(i)) planes[i].SetVisibility(false);
+                }
             }
-            else
-            {
-                sideModels[i]?.SetActive(false);
-            }
+            return data;
         }
-
-        i = Block.UP_FACE_INDEX;
-        if ((realVisMask & (1 << i)) != 0)
-        {
-            if (planes != null && planes.ContainsKey(i))
-            {
-                var bvi = planes[i].GetVisualInfo(chunk, cpos);
-                if (bvi != null) data.Add(bvi);
-            }
-            else
-            {
-                var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
-                if (p != null) data.Add(p);
-            }
-        }
-
-        i = Block.DOWN_FACE_INDEX;
-        if ((realVisMask & (1 << i)) != 0)
-        {
-            if (planes != null && planes.ContainsKey(i))
-            {
-                var bvi = planes[i].GetVisualInfo(chunk, cpos);
-                if (bvi != null) data.Add(bvi);
-            }
-            else
-            {
-                var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
-                if (p != null) data.Add(p);
-            }
-        }
-        if (data.Count > 0) return data; else return null;
+        else return null;
     }
     public BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex)
     {
-        if (faceIndex < 4)
+        if ((Block.CUBE_MASK & (1 << faceIndex)) != 0)
         {
-            if ((Block.CUBE_MASK & (1 << faceIndex)) != 0)
-            {
-                if (planes != null && planes.ContainsKey(faceIndex)) sideModels[faceIndex].SetActive(true);
-                else CreatePlane(faceIndex, false);
-            }
-            return null;
+            if (planes != null && planes.ContainsKey(faceIndex)) return planes[faceIndex].GetVisualInfo(myBlock.myChunk, myBlock.pos);
+            else return CreatePlane(faceIndex, false)?.GetVisualInfo(myBlock.myChunk, myBlock.pos);
         }
-        else
-        {
-            if ((Block.CUBE_MASK & (1 << faceIndex)) != 0)
-            {
-                if (planes != null && planes.ContainsKey(faceIndex)) return planes[faceIndex].GetVisualInfo(myBlock.myChunk, myBlock.pos);
-                else return CreatePlane(faceIndex, false)?.GetVisualInfo(myBlock.myChunk, myBlock.pos);
-            }
-            else return null;
+        else {
+            if (planes != null && planes.ContainsKey(faceIndex)) planes[faceIndex].SetVisibility(false);
+            return null;
         }
     }
 
