@@ -357,7 +357,7 @@ public abstract class WorkBuilding : Building
         else upgraded.modelRotation = modelRotation;
         upgraded.AddWorkers(workers);
         upgraded.SetBasement(basement, setPos);
-        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
+        GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
         if (returnToUI) upgraded.ShowOnGUI();
         //copied to factory.levelup
     }

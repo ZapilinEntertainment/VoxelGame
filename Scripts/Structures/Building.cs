@@ -724,7 +724,7 @@ public class Building : Structure
         }
         else upgraded.modelRotation = modelRotation;
         upgraded.SetBasement(basement, setPos);
-        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
+        GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
         if (returnToUI) upgraded.ShowOnGUI();
     }
     public virtual ResourceContainer[] GetUpgradeCost()

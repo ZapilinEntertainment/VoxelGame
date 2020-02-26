@@ -208,7 +208,7 @@ public sealed class HeadQuarters : Building
         Quest.ResetHousingQuest();
         GameLogUI.MakeAnnouncement(Localization.LevelReachedString(level));
         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.HQ_Upgraded);
-        if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
+        GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
     }
     override public ResourceContainer[] GetUpgradeCost()
     {

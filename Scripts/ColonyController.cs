@@ -1,9 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public sealed class ColonyController : MonoBehaviour
 {
+    public Action<float> crystalsCountUpdateEvent, happinessUpdateEvent;
+    public Action<int> populationUpdateEvent;
+
     public string cityName { get; private set; }
     public Storage storage { get; private set; }
     public HeadQuarters hq { get; private set; }
@@ -21,9 +25,7 @@ public sealed class ColonyController : MonoBehaviour
     }
     public float happiness_coefficient { get; private set; }
     public float health_coefficient { get; private set; }
-    public bool accumulateEnergy = true, buildingsWaitForReconnection = false;
-    public delegate void PopulationDelegate(int x);
-    public event PopulationDelegate populationChangingEvent;
+    public bool accumulateEnergy = true, buildingsWaitForReconnection = false;    
 
     public float energyStored { get; private set; }
     public float energySurplus { get; private set; }
@@ -33,7 +35,7 @@ public sealed class ColonyController : MonoBehaviour
         private set
         {
             _energyCrystalCount = value;
-            if (GameMaster.eventsTracking) EventChecker.MoneyChanged(_energyCrystalCount);
+            crystalsCountUpdateEvent?.Invoke(_energyCrystalCount);
         }
     }
     private float _energyCrystalCount;
@@ -56,7 +58,7 @@ public sealed class ColonyController : MonoBehaviour
         get { return _citizenCount; }
         private set {
             _citizenCount = value;
-            populationChangingEvent?.Invoke(_citizenCount);
+            populationUpdateEvent?.Invoke(_citizenCount);
         }
     }
     private int _citizenCount;
@@ -71,7 +73,7 @@ public sealed class ColonyController : MonoBehaviour
     private float birthrateCoefficient,peopleSurplus = 0f, 
         tickTimer,
         targetHappiness, targetHealth,
-        happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, renderingHappiness;
+        happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, showingHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false;    
 
     public const byte MAX_HOUSING_LEVEL = 5;
@@ -123,10 +125,10 @@ public sealed class ColonyController : MonoBehaviour
     #region updating
     void Update()
     {
-        if (renderingHappiness != happiness_coefficient)
+        if (showingHappiness != happiness_coefficient)
         {
-            renderingHappiness = Mathf.Lerp(renderingHappiness, happiness_coefficient, Time.deltaTime);
-            RenderSettings.skybox.SetFloat("_Saturation", renderingHappiness * 0.25f + 0.75f);
+            showingHappiness = Mathf.Lerp(showingHappiness, happiness_coefficient, Time.deltaTime);
+            RenderSettings.skybox.SetFloat("_Saturation", showingHappiness * 0.25f + 0.75f);
         }
         if (GameMaster.gameSpeed == 0f | hq == null | GameMaster.loading) return;
         tickTimer -= Time.deltaTime * GameMaster.gameSpeed;
@@ -206,7 +208,7 @@ public sealed class ColonyController : MonoBehaviour
                     {
                         if (freeWorkers > 0f) { freeWorkers--; citizenCount--; }
                         else StartCoroutine(DeportateWorkingCitizen());
-                        if (houses.Count > 0) PoolMaster.current.CitizenLeaveEffect(houses[Random.Range(0, houses.Count )].transform.position);
+                        if (houses.Count > 0) PoolMaster.current.CitizenLeaveEffect(houses[UnityEngine.Random.Range(0, houses.Count )].transform.position);
                         else PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
                     }
                     foodSupplyHappiness = 0f;
@@ -289,7 +291,9 @@ public sealed class ColonyController : MonoBehaviour
             {
                 if (happiness_coefficient > targetHappiness) happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessDecreaseMultiplier);
                 else happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessIncreaseMultiplier);
-            }
+
+                happinessUpdateEvent?.Invoke(happiness_coefficient);
+            }            
 
             //  BIRTHRATE
             {

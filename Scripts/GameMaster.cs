@@ -44,7 +44,6 @@ public sealed class GameMaster : MonoBehaviour
 {
     public static GameMaster realMaster;
     public static float gameSpeed { get; private set; }
-    public static bool eventsTracking { get; private set; }
     public static bool sceneClearing { get; private set; }
     public static bool needTutorial = false;
     public static bool loading { get; private set; }
@@ -65,11 +64,11 @@ public sealed class GameMaster : MonoBehaviour
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
+    public EventChecker eventTracker { get; private set; }
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
 
-    public delegate void RegularUpdate();
-    public event RegularUpdate labourUpdateEvent, blockersRestoreEvent, everydayUpdate;
+    public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate;
     public GameStart startGameWith = GameStart.Zeppelin;
 
     public float lifeGrowCoefficient { get; private set; }
@@ -174,7 +173,6 @@ public sealed class GameMaster : MonoBehaviour
             return;
         }
         gameMode = _gameMode;
-        eventsTracking = (gameMode == GameMode.Play);
         realMaster = this;
         sceneClearing = false;
         if (PoolMaster.current == null)
@@ -182,10 +180,11 @@ public sealed class GameMaster : MonoBehaviour
             PoolMaster pm = gameObject.AddComponent<PoolMaster>();
             pm.Load();
         }
-        if (gameMode != GameMode.Editor)
+        if (gameMode == GameMode.Play)
         {
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
-            globalMap.Prepare();            
+            globalMap.Prepare();
+            eventTracker = new EventChecker();
         }
         if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();
         environmentMaster.Prepare();

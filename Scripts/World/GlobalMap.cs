@@ -15,6 +15,7 @@ public sealed class GlobalMap : MonoBehaviour
 
     private bool prepared = false, mapInterfaceActive = false;
     public GameObject observer { get; private set; }
+    public System.Action<MapPoint> pointsExploringEvent;
 
     public const byte RINGS_COUNT = 5;
     private const byte MAX_OBJECTS_COUNT = 50;
@@ -358,7 +359,7 @@ public sealed class GlobalMap : MonoBehaviour
                             {
                                 mapPoints.RemoveAt(i);
                                 fe.expedition.DropMapMarker();
-                                if (GameMaster.eventsTracking) EventChecker.PointReached(d);
+                                pointsExploringEvent?.Invoke(d);
                                 if (fe.expedition.stage == Expedition.ExpeditionStage.WayIn)
                                 {
                                     fe.expedition.StartMission();

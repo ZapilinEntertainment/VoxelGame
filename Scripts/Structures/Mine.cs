@@ -163,7 +163,7 @@ override public void RecalculateWorkspeed() {
             lastWorkObjectPos = b.pos;
             workFinished = false;
             UpgradeMine((byte)(level + 1));
-            if (GameMaster.eventsTracking) EventChecker.BuildingUpgraded(this);
+            GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
         }        
     }
     override public ResourceContainer[] GetUpgradeCost()
