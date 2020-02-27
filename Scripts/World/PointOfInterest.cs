@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 public class PointOfInterest : MapPoint
 {
+    public enum WisemanSubtype : byte { Human, AncientEntity}
+    public enum SOSSubtype : byte { Ship, Colony}
+
     protected float richness, danger, mysteria, friendliness;
     protected ChallengeField[,] challengeArray;
 

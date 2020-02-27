@@ -7,7 +7,7 @@ public sealed class Monument : Building
     public Path affectionPath { get; private set; }
     public float affectionValue { get; private set; }
     private bool ringEnabled = false, subscribedToRestoreBlockersEvent = false;
-    private int stabilityArrayIndex = -1;
+    private int affectionID = -1;
     private Transform ringSprite;
 
     private static UIMonumentObserver monumentObserver;
@@ -99,6 +99,12 @@ public sealed class Monument : Building
             artifacts[index].ChangeStatus(Artifact.ArtifactStatus.OnConservation);
             artifacts[index] = null;
             RecalculateAffection();
+            bool allArtifactsSlotsEmpty = true;
+            foreach (var a in artifacts)
+            {
+                if (a != null) allArtifactsSlotsEmpty = false;
+            }
+            if (allArtifactsSlotsEmpty) ClearAffection();
         }
     }
 
@@ -123,27 +129,52 @@ public sealed class Monument : Building
                 affectionValue = af / count;
                 ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionPath);
                 ringEnabled = true;
-                if (stabilityArrayIndex == -1)
+                switch (affectionPath)
                 {
-                    if (affectionValue != 0) stabilityArrayIndex = GameMaster.realMaster.AddStabilityModifier(affectionValue);
-                }
-                else
-                {
-                    GameMaster.realMaster.ChangeStabilityModifierValue(stabilityArrayIndex, affectionValue);
+                    case Path.LifePath:
+                        {
+                            var nature = GameMaster.realMaster.mainChunk.GetNature();
+                            if (affectionID == -1)
+                            {
+                                affectionID = nature.AddLifepowerAffection(affectionValue);
+                            }
+                            else nature.ChangeLifepowerAffection(affectionID, affectionValue);
+                            break;
+                        }
+                    case Path.SecretPath:
+                        {
+                            var gmap = GameMaster.realMaster.globalMap;
+                            if (affectionID != -1) affectionID = gmap.AddWorldAffection(affectionValue);
+                            else gmap.ChangeWorldAffection(affectionID, affectionValue);
+                            break;
+                        }
+                    case Path.TechPath:
+                        {
+                            var gm = GameMaster.realMaster;
+                            if (affectionID != -1) affectionID = gm.AddStabilityModifier(affectionValue);
+                            else gm.ChangeStabilityModifierValue(affectionID, affectionValue);
+                            break;
+                        }
                 }
             }
-            else
-            {
-                affectionValue = 0;
-                ringSprite.GetComponent<SpriteRenderer>().sprite = null;
-                ringEnabled = false;
-                if (stabilityArrayIndex != -1)
-                {
-                    GameMaster.realMaster.RemoveStabilityModifier(stabilityArrayIndex);
-                    stabilityArrayIndex = -1;
-                }
-            }
+            else ClearAffection();
         }
+    }
+    private void ClearAffection()
+    {
+        //#clearing
+        if (affectionID != -1)
+        {
+            switch (affectionPath)
+            {
+                case Path.LifePath: GameMaster.realMaster.mainChunk.GetNature()?.RemoveLifepowerAffection(affectionID); break;
+                case Path.TechPath: GameMaster.realMaster.RemoveStabilityModifier(affectionID); break;
+                case Path.SecretPath: GameMaster.realMaster.globalMap.RemoveWorldAffection(affectionID); break;
+            }
+            affectionID = -1;
+        }
+        affectionPath = Path.NoPath;
+        //
     }
 
     private void Update()

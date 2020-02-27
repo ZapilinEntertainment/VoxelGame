@@ -24,6 +24,10 @@ public sealed class GlobalMap : MonoBehaviour
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
 
+    //affection value?
+    private Dictionary<int, float> worldAffectionsList;
+    private int nextWAffectionID = 1;
+
     private void Start()
     {
         if (!prepared) Prepare();
@@ -264,6 +268,29 @@ public sealed class GlobalMap : MonoBehaviour
         }
     }
 
+    public int AddWorldAffection(float f)
+    {
+        if (worldAffectionsList == null) worldAffectionsList = new Dictionary<int, float>();
+        int id = nextWAffectionID++;
+        worldAffectionsList.Add(id, f);
+        return id;
+    }
+    public void RemoveWorldAffection(int id)
+    {
+        if (worldAffectionsList != null && worldAffectionsList.ContainsKey(id))
+        {
+            worldAffectionsList.Remove(id);
+            if (worldAffectionsList.Count == 0) worldAffectionsList = null;
+        }
+    }
+    public void ChangeWorldAffection(int id, float newVal)
+    {
+        if (worldAffectionsList != null && worldAffectionsList.ContainsKey(id))
+        {
+            worldAffectionsList[id] = newVal;
+        }
+    }
+
     /// <summary>
     /// returns true if something has changed
     /// </summary>
@@ -443,6 +470,7 @@ public sealed class GlobalMap : MonoBehaviour
                     {
                         GameMaster.realMaster.environmentMaster.SetEnvironment(Environment.defaultEnvironment);
                     }
+                    Knowledge.GetCurrent()?.CountRouteBonus(Knowledge.EngineRouteBoosters.CityMoveBooster);
                 }
             }
         }

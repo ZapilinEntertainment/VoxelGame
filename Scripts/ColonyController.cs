@@ -653,6 +653,7 @@ public sealed class ColonyController : MonoBehaviour
         }
         powerGridChanged = false;
     }
+    public List<Building> GetPowerGrid() { return powerGrid; }
     public void AddEnergy(float f)
     {
         energyStored += f;

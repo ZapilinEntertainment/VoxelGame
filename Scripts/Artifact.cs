@@ -21,7 +21,7 @@ public sealed class Artifact {
     private static readonly Sprite[] affectionRings;
     public static readonly Texture emptyArtifactFrame_tx;
     public static int listChangesMarkerValue = 0, nextID = 0;    
-    public static List<Artifact> artifactsList;
+    public static List<Artifact> artifactsList { get; private set; }
     public static UIArtifactPanel observer { get; private set; }
 
     public override bool Equals(object obj)

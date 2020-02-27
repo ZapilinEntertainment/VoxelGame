@@ -16,6 +16,8 @@ public sealed class Nature : MonoBehaviour
     private List<LifeSource> lifesources;
     private List<PlantType> flowerTypes, bushTypes, treeTypes;
     private List<PlantType> islandFlora;
+    private Dictionary<int, float> lifepowerAffectionList;
+    private int nextLPowerAffectionID = 1;
 
     private const float GRASSLAND_CREATE_COST = 100f, GRASSLAND_UPDATE_COST = 2f, GRASSLAND_CREATE_CHECK_TIME = 10f, GRASSLAND_UPDATE_TIME = 1f;
 
@@ -113,6 +115,13 @@ public sealed class Nature : MonoBehaviour
                     foreach (var g in grasslands)
                     {
                         lifepowerSurplus += g.GetLifepowerSurplus();
+                    }
+                }
+                if (lifepowerAffectionList != null)
+                {
+                    foreach (var af in lifepowerAffectionList)
+                    {
+                        lifepowerSurplus += af.Value;
                     }
                 }
                 needRecalculation = false;
@@ -358,6 +367,38 @@ public sealed class Nature : MonoBehaviour
         lifesources?.Remove(ls);
     }
 
+    public int AddLifepowerAffection(float f)
+    {
+        if (lifepowerAffectionList == null) lifepowerAffectionList = new Dictionary<int, float>();
+        int id = nextLPowerAffectionID++;
+        lifepowerAffectionList.Add(id, f);
+        needRecalculation = true;
+        return id;
+    }
+    public void RemoveLifepowerAffection(int id)
+    {
+        if (lifepowerAffectionList != null)
+        {
+            if (lifepowerAffectionList.ContainsKey(id))
+            {
+                lifepowerAffectionList.Remove(id);
+                needRecalculation = true;
+                if (lifepowerAffectionList.Count == 0) lifepowerAffectionList = null;
+            }
+        }
+    }
+    public void ChangeLifepowerAffection(int id, float newVal)
+    {
+        if (lifepowerAffectionList != null)
+        {
+            if (lifepowerAffectionList.ContainsKey(id))
+            {
+                lifepowerAffectionList[id] = newVal;
+                needRecalculation = true;
+            }
+        }
+    }
+
     public Grassland CreateGrassland(Plane p)
     {
         return new Grassland(p, this);
@@ -377,8 +418,13 @@ public sealed class Nature : MonoBehaviour
         if (grasslands != null)
         {
             grasslands.Remove(g);
+            if (grasslands.Count == 0) grasslands = null;
             needRecalculation = true;
         }
+    }
+    public List<Grassland> GetGrasslandsList()
+    {
+        return grasslands;
     }
 
     public void RegisterNewLifeform(PlantType pt)
