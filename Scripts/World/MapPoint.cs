@@ -9,17 +9,16 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedi
 //  Localization.GetMapPointLabel()
 // константы максимального количества подвидов
 //  функция загрузки LoadPoints()
-// DeterminePath + overrides
 // GlobalMap.CreateNewSector
 // Environment.GetSuitablePointType
 // PointOfInterest.TakeTreasure, GetArtifact, GenerateChallengesArray
 // ScienceLab.PointExplored
+//Knowledge -point check
 
 public class MapPoint
 {
     public MapMarkerType type { get; protected set; }
     public bool destroyed { get; protected set; }
-    public byte subIndex { get; protected set; }
     public byte ringIndex { get; private set; }
     public float angle;
     public float height {
@@ -88,7 +87,18 @@ public class MapPoint
             case MapMarkerType.Wiseman:
             case MapMarkerType.Wonder:
             case MapMarkerType.Resources:
-                return new PointOfInterest(i_angle, i_height, mtype);
+                float f = Random.value;
+                var p = Path.NoPath;
+                if (f > 0.1f)
+                {
+                    if (f > 0.7f) p = Path.TechPath;
+                    else
+                    {
+                        if (f > 0.4f) p = Path.SecretPath;
+                        else p = Path.LifePath;
+                    }
+                }
+                return new PointOfInterest(i_angle, i_height, mtype, p);
 
             case MapMarkerType.QuestMark:
                 return new MapPoint(i_angle, i_height, mtype);
@@ -111,7 +121,6 @@ public class MapPoint
         ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
         type = mtype;
 
-        subIndex = 0;
         switch (mtype)
         {
             case MapMarkerType.Unknown:
@@ -128,7 +137,6 @@ public class MapPoint
                 break;
             case MapMarkerType.Wreck:
                 stability = 0.1f + 0.23f * Random.value;
-                subIndex = (byte)(Random.Range(0, WRECKS_TYPE_COUNT));
                 break;
             case MapMarkerType.FlyingExpedition:
                 stability = 1f;
@@ -266,31 +274,6 @@ public class MapPoint
         //name, surname, specname
         return Localization.GetMapPointTitle(type);
     }
-    virtual public Path DeterminePath()
-    {
-        switch (type) {
-            case MapMarkerType.Wonder:
-            case MapMarkerType.Wiseman:
-            case MapMarkerType.Star:
-            case MapMarkerType.QuestMark:
-            case MapMarkerType.Portal: return Path.SecretPath;
-
-            case MapMarkerType.Resources:
-            case MapMarkerType.FlyingExpedition:
-            case MapMarkerType.Wreck: 
-            case MapMarkerType.Station: return Path.TechPath;
-
-            case MapMarkerType.MyCity:
-                 return GameMaster.realMaster.colonyController.DeterminePath();
-
-            case MapMarkerType.SOS:
-            case MapMarkerType.Island:
-            case MapMarkerType.Unknown:
-            case MapMarkerType.Colony:
-            default:
-                return Path.LifePath;
-            }
-    }
 
     #region save-load
     public virtual List<byte> Save()
@@ -299,10 +282,9 @@ public class MapPoint
         var bytes = new List<byte>();
         bytes.AddRange(System.BitConverter.GetBytes(ID)); // 0 - 3
         bytes.Add((byte)type); // 4 
-        bytes.Add(subIndex);// 5
-        bytes.AddRange(System.BitConverter.GetBytes(angle)); // 6 - 9
-        bytes.AddRange(System.BitConverter.GetBytes(height)); // 10 - 13
-        bytes.AddRange(System.BitConverter.GetBytes(stability)); // 14 - 17
+        bytes.AddRange(System.BitConverter.GetBytes(angle)); // 5 - 8
+        bytes.AddRange(System.BitConverter.GetBytes(height)); // 9 - 12
+        bytes.AddRange(System.BitConverter.GetBytes(stability)); // 13 - 16
         return bytes;
     }    
 
@@ -314,7 +296,7 @@ public class MapPoint
         int count = System.BitConverter.ToInt32(data,0);
         if (count > 0)
         {            
-            int LENGTH = 18;
+            int LENGTH = 17;
             GlobalMap gmap = GameMaster.realMaster.globalMap;
             for (int i = 0; i < count; i++)
             {
@@ -322,10 +304,9 @@ public class MapPoint
                 fs.Read(data, 0, LENGTH);
                 int ID = System.BitConverter.ToInt32(data, 0);
                 var mmtype = (MapMarkerType)data[4];
-                int subIndex = data[5];
-                float angle = System.BitConverter.ToSingle(data, 6);
-                float height = System.BitConverter.ToSingle(data, 10);
-                float stability = System.BitConverter.ToSingle(data, 14);
+                float angle = System.BitConverter.ToSingle(data, 5);
+                float height = System.BitConverter.ToSingle(data, 9);
+                float stability = System.BitConverter.ToSingle(data, 13);
 
                 switch (mmtype)
                 {

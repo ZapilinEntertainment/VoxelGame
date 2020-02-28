@@ -24,7 +24,7 @@ public class SwitchTower : Building {
     {
         if (UIController.current.showLayerCut) UIController.current.LayerCutButton();
         showOnGUI = false;
-        GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
+        GameMaster.layerCutHeight = Chunk.chunkSize;
         basement.myChunk.LayersCut();
 
     }

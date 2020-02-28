@@ -881,7 +881,7 @@ sealed public class UIController : MonoBehaviour
         {
             layerCutToggleButton.overrideSprite = null;
             GameMaster.prevCutHeight = GameMaster.layerCutHeight;
-            GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
+            GameMaster.layerCutHeight = Chunk.chunkSize;
             GameMaster.realMaster.mainChunk.LayersCut();
         }
 
@@ -894,7 +894,7 @@ sealed public class UIController : MonoBehaviour
     public void LayerCutPlus()
     {
         GameMaster.layerCutHeight++;
-        if (GameMaster.layerCutHeight > Chunk.CHUNK_SIZE) GameMaster.layerCutHeight = Chunk.CHUNK_SIZE;
+        if (GameMaster.layerCutHeight > Chunk.chunkSize) GameMaster.layerCutHeight = Chunk.chunkSize;
         else GameMaster.realMaster.mainChunk.LayersCut();
         layerCutToggleButton.transform.GetChild(3).GetComponent<Text>().text = GameMaster.layerCutHeight.ToString();
     }

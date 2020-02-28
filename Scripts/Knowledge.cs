@@ -49,16 +49,25 @@ public sealed class Knowledge
     };
     private readonly byte[] blockedCells = new byte[8] { 2, 5, 16, 23, 40, 47, 58, 61 };
 
-    #region routes conditions
+    #region boosting
     //foundation:
-    private const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f;
-    private const int R_F_POPULATION_COND = 2500,R_F_IMMIGRANTS_CONDITION = 1000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8, R_CW_CREWS_COUNT_COND = 4;
-    private const byte R_F_SETTLEMENT_LEVEL_COND = 6, R_CW_GRASSLAND_LEVEL_COND = 4, R_CW_UPDATE_FREQUENCY = 5, R_CW_CREW_LEVEL_COND = 3;
+    private const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f, R_E_GEARS_COND = 3.5f, R_P_FUEL_CONDITION = 1000f,
+        R_C_MONEY_COND = 5000f;
+    private const int R_F_POPULATION_COND = 2500,R_F_IMMIGRANTS_CONDITION = 1000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8, 
+        R_CW_CREWS_COUNT_COND = 4, R_E_FACTORYCUBES_COUNT = 4;
+    private const byte R_F_SETTLEMENT_LEVEL_COND = 6, R_CW_GRASSLAND_LEVEL_COND = 4, R_CW_UPDATE_FREQUENCY = 5, R_CW_CREW_LEVEL_COND = 3, 
+        POINT_MASK_POSITION = 6, BUILDINGS_MASK = (1 << 4) + (1 << 5), R_P_ISLAND_SIZE_COND = 8;
     private const uint R_F_IMMIGRANTS_COUNT_COND = 1000;
-    public enum FoundationRouteBoosters : byte {HappinessBoost, PopulationBoost, SettlementBoost, ImmigrantsBoost, HotelBoost, HousingMastBoost, ColonyPointBoost, QuestBooster }
-    public enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, AscensionEngineBoost, PointBoost, QuestBooster}
-    public enum EngineRouteBoosters : byte { EnergyBooster, CityMoveBooster,  GearsBooster, FactoryBooster, IslandEngineBooster, ControlCenterBooster, PointBooster, QuestBooster}
-    #endregion
+
+    //order is important! 4 diff conds + 2 build conds + point cond + quest cond
+    private enum FoundationRouteBoosters : byte {HappinessBoost, PopulationBoost, SettlementBoost, ImmigrantsBoost, HotelBoost, HousingMastBoost, PointBoost, QuestBoost }
+    private enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, AscensionEngineBoost, PointBoost, QuestBoost}
+    private enum EngineRouteBoosters : byte { EnergyBoost, CityMoveBoost,  GearsBoost, FactoryBoost, IslandEngineBoost, ControlCenterBoost, PointBoost, QuestBoost}
+    private enum PipesRouteBoosters: byte { FarmsBoost, SizeBoost, FuelBoost, BiomesBoost, QETBoost, CapacitorMastBoost, PointBoost, QuestBoost}
+    private enum CrystalRouteBoosters : byte { MoneyBoost, PinesBoost, GCubeBoost, BiomeBoost, CrystalliserBoost, CrystalMastBoost, PointsBoost, QuestBoost};
+    private enum MonumentRouteBoosters : byte { MonumentPowerBoost, LifesourceBoost, BiomeBoost, ExpeditionsBoost, MonumentBoost, AnchorMastBoost, PointBoost, QuestBoost}
+    private enum BlossomRouteBoosters : byte { GrasslandsBoost, ArtifactBoost, BiomeBoost, Unknown, GardensBoost, HTowerBoost, PointBoost, QuestBoost}
+    public enum PollenRouteBoosters: byte { FlowersBoost, AscensionBoost, CrewAccidentBoost, BiomeBoost, FilterBoost, ProtectorCoreBoost, PointBoost, QuestBoost}
 
     private void SetSubscriptions()
     {
@@ -66,23 +75,38 @@ public sealed class Knowledge
         byte mask = routeBonusesMask[(int)ResearchRoute.Foundation];
         if (!BoostCounted(FoundationRouteBoosters.HappinessBoost)) colony.happinessUpdateEvent += HappinessCheck;
         if (!BoostCounted(FoundationRouteBoosters.PopulationBoost)) colony.populationUpdateEvent += PopulationCheck;
-
-        var gm = GameMaster.realMaster;
-        gm.eventTracker.buildingConstructionEvent += BuildingConstructionCheck;
-        gm.eventTracker.buildingUpgradeEvent += BuildingUpgradeCheck;
-        gm.globalMap.pointsExploringEvent += PointCheck;
-
+        //
+        var gm = GameMaster.realMaster;      
         mask = routeBonusesMask[(int)ResearchRoute.CloudWhale];
         bool subscribeToEverydayUpdate = 
             !BoostCounted(CloudWhaleRouteBoosters.GrasslandsBoost)
-            |
-            !BoostCounted(CloudWhaleRouteBoosters.StreamGensBoost)
-            |
+            ||
             !BoostCounted(CloudWhaleRouteBoosters.CrewsBoost)
+            ||
+            !BoostCounted(EngineRouteBoosters.EnergyBoost)
+            ||
+            !BoostCounted(EngineRouteBoosters.GearsBoost)
+            ||
+            !BoostCounted(EngineRouteBoosters.EnergyBoost)
+            ||
+            !BoostCounted(PipesRouteBoosters.FuelBoost)
             ;
-        mask = routeBonusesMask[(int)ResearchRoute.Engine];
-        if (!BoostCounted(EngineRouteBoosters.EnergyBooster)) subscribeToEverydayUpdate = true;
         if (subscribeToEverydayUpdate) gm.everydayUpdate += EverydayUpdate;
+        //
+        mask = 255;
+        foreach (var b in routeBonusesMask)
+        {
+            mask &= b;
+        }
+        if ((mask & (1 << POINT_MASK_POSITION)) == 0)  gm.globalMap.pointsExploringEvent += PointCheck;
+        if ((mask & BUILDINGS_MASK) == 0) gm.eventTracker.buildingConstructionEvent += BuildingConstructionCheck;
+        //
+        if (!BoostCounted(FoundationRouteBoosters.SettlementBoost) || !BoostCounted(PipesRouteBoosters.FarmsBoost))
+            gm.eventTracker.buildingUpgradeEvent += BuildingUpgradeCheck;
+        //
+        if (!BoostCounted(PipesRouteBoosters.SizeBoost) | !BoostCounted(CrystalRouteBoosters.GCubeBoost)) gm.mainChunk.ChunkUpdateEvent += BlockArrayCheck;
+        //
+        if (!BoostCounted(CrystalRouteBoosters.MoneyBoost)) colony.crystalsCountUpdateEvent += CrystalsCheck;
     }
 
     private void HappinessCheck(float h)
@@ -107,22 +131,101 @@ public sealed class Knowledge
             }
         }
     }
+    public void ImmigrantsCheck(uint c)
+    {
+        if (c >= R_F_IMMIGRANTS_COUNT_COND)
+        {
+            var b = (byte)FoundationRouteBoosters.ImmigrantsBoost;
+            if (CountRouteBonus(ResearchRoute.Foundation, b))
+                GameMaster.realMaster.eventTracker?.StopTracking(ResearchRoute.Foundation, b);
+        }
+    }
     private void PointCheck(MapPoint mp)
     {
-        switch (mp.type)
-        {
-            case MapMarkerType.Colony:
-                 CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.ColonyPointBoost);
-                break;
-            case MapMarkerType.Wiseman:
-                if ((PointOfInterest.WisemanSubtype)mp.subIndex == PointOfInterest.WisemanSubtype.AncientEntity)
-                    CountRouteBonus(ResearchRoute.CloudWhale, (byte)CloudWhaleRouteBoosters.PointBoost);
-                break;
-            case MapMarkerType.SOS:
-                if ((PointOfInterest.SOSSubtype)mp.subIndex == PointOfInterest.SOSSubtype.Ship)
-                    CountRouteBonus(ResearchRoute.CloudWhale, (byte)CloudWhaleRouteBoosters.PointBoost);
-                break;
+        var poi = mp as PointOfInterest;
+        if (poi != null) {
+            switch (mp.type)
+            {
+                case MapMarkerType.Colony:
+                    CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PointBoost);
+                    break;
+                case MapMarkerType.Wiseman:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.LifePath: CountRouteBonus(CloudWhaleRouteBoosters.PointBoost); break;
+                            case Path.TechPath: CountRouteBonus(CrystalRouteBoosters.PointsBoost); break;
+                            case Path.SecretPath: CountRouteBonus(PipesRouteBoosters.PointBoost); break;
+                        }
+                    break;
+                    }
+                case MapMarkerType.SOS:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.LifePath: break;
+                            case Path.TechPath: 
+                            case Path.SecretPath: CountRouteBonus(CloudWhaleRouteBoosters.PointBoost); break;
+                        }
+                        break;
+                    }
+                case MapMarkerType.Station:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.LifePath: break;
+                            case Path.TechPath: CountRouteBonus(EngineRouteBoosters.PointBoost); break;
+                            case Path.SecretPath: break;
+                        }
+                        break;
+                    }
+                case MapMarkerType.Wreck:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.LifePath: break;
+                            case Path.TechPath: CountRouteBonus(EngineRouteBoosters.PointBoost); break;
+                            case Path.SecretPath: break;
+                        }
+                        break;
+                    }
+                case MapMarkerType.Wonder:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.LifePath: break;
+                            case Path.TechPath: CountRouteBonus(EngineRouteBoosters.PointBoost); break;
+                            case Path.SecretPath: CountRouteBonus(CrystalRouteBoosters.PointsBoost); break;
+                        }
+                        break;
+                    }
+                case MapMarkerType.Portal:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.LifePath: break;
+                            case Path.TechPath: 
+                            case Path.SecretPath: CountRouteBonus(PipesRouteBoosters.PointBoost); break;
+                        }
+                        break;
+                    }
+                case MapMarkerType.Island:
+                    switch (poi.path)
+                    {
+                        case Path.LifePath: break;
+                        case Path.TechPath: CountRouteBonus(CrystalRouteBoosters.PointsBoost); break;
+                        case Path.SecretPath: break;
+                    }
+                    break; 
+            }
         }
+
+        byte mask = 255;
+        foreach (var b in routeBonusesMask)
+        {
+            mask &= b;
+        }
+        if ((mask & (1 << POINT_MASK_POSITION)) != 0) GameMaster.realMaster.globalMap.pointsExploringEvent -= PointCheck;
     }
     private void BuildingConstructionCheck(Structure s)
     {
@@ -137,7 +240,48 @@ public sealed class Knowledge
             case Structure.XSTATION_3_ID:
                 CountRouteBonus(ResearchRoute.CloudWhale, (byte)CloudWhaleRouteBoosters.XStationBoost);
                 break;
+            case Structure.WIND_GENERATOR_1_ID:
+                if (!BoostCounted(CloudWhaleRouteBoosters.StreamGensBoost))
+                {
+                    var pg = GameMaster.realMaster.colonyController.GetPowerGrid();
+                    if (pg != null)
+                    {
+                        int count = 0;
+                        foreach (var b in pg)
+                        {
+                            if (b.ID == Structure.WIND_GENERATOR_1_ID) count++;
+                        }
+                        if (count >= R_CW_STREAMGENS_COUNT_COND) CountRouteBonus(CloudWhaleRouteBoosters.StreamGensBoost);
+                    }                    
+                }
+                break;
+            case Structure.SMELTERY_BLOCK_ID:
+                if (!BoostCounted(EngineRouteBoosters.FactoryBoost))
+                {
+                    var pg = GameMaster.realMaster.colonyController.GetPowerGrid();
+                    if (pg != null)
+                    {
+                        int count = 0;
+                        foreach (var b in pg)
+                        {
+                            if (b.ID == Structure.SMELTERY_BLOCK_ID) count++;
+                        }
+                        if (count >= R_E_FACTORYCUBES_COUNT) CountRouteBonus(EngineRouteBoosters.FactoryBoost);
+                    }                    
+                }
+                break;
+            case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID:
+                CountRouteBonus(PipesRouteBoosters.QETBoost);
+                break;
         }
+        if (!BoostCounted(PipesRouteBoosters.FarmsBoost) && s is CoveredFarm) CoveredFarmsCheck();
+
+        byte mask = 255;
+        foreach (var b in routeBonusesMask)
+        {
+            mask &= b;
+        }
+        if ((mask & BUILDINGS_MASK) != 0) GameMaster.realMaster.eventTracker.buildingConstructionEvent -= BuildingConstructionCheck;
     }
     private void BuildingUpgradeCheck(Building b)
     {
@@ -150,7 +294,101 @@ public sealed class Knowledge
                     CountRouteBonus(ResearchRoute.Foundation, x);
                 }
                 break;
-
+        }
+        if (!BoostCounted(PipesRouteBoosters.FarmsBoost) && b is CoveredFarm) CoveredFarmsCheck();
+    }
+    private void CoveredFarmsCheck()
+    {
+        var pg = GameMaster.realMaster.colonyController.GetPowerGrid();
+        if (pg != null)
+        {
+            int count = 0;
+            foreach (var b in pg)
+            {
+                if (b is Farm) return;
+                else
+                {
+                    if (b is CoveredFarm) count++;
+                }
+            }
+            if (count >= 0) CountRouteBonus(PipesRouteBoosters.FarmsBoost);
+        }
+    }
+    private void BlockArrayCheck()
+    {
+        var gmc = GameMaster.realMaster.mainChunk;
+        var blocks = gmc?.blocks;
+        if (blocks != null)
+        {
+            byte unsubscribeVotes = 0;
+            if (!BoostCounted(PipesRouteBoosters.SizeBoost))
+            {
+                if (blocks.Count < R_P_ISLAND_SIZE_COND)
+                {
+                    CountRouteBonus(PipesRouteBoosters.SizeBoost);
+                }
+                else
+                {
+                    var csize = Chunk.chunkSize;
+                    byte xmin = csize, xmax = 0, ymin = xmin, ymax = xmax, zmin = xmin, zmax = xmax;
+                    ChunkPos cpos;
+                    foreach (var b in blocks)
+                    {
+                        cpos = b.Value.pos;
+                        if (cpos.x > xmax) xmax = cpos.x;
+                        else
+                        {
+                            if (cpos.x < xmin) xmin = cpos.x;
+                        }
+                        if (cpos.y > ymax) ymax = cpos.y;
+                        else
+                        {
+                            if (cpos.y < ymin) ymin = cpos.y;
+                        }
+                        if (cpos.z > zmax) zmax = cpos.z;
+                        else
+                        {
+                            if (cpos.z < zmin) zmin = cpos.z;
+                        }
+                    }
+                    int xsize = xmax - xmin, ysize = ymax - ymin, zsize = zmax - zmin;
+                    byte cond = 0;
+                    if (xsize <= R_P_ISLAND_SIZE_COND) cond++;
+                    if (ysize <= R_P_ISLAND_SIZE_COND) cond++;
+                    if (zsize <= R_P_ISLAND_SIZE_COND) cond++;
+                    if (cond >= 2)
+                    {
+                        CountRouteBonus(PipesRouteBoosters.SizeBoost);
+                    }
+                }
+            }
+            else unsubscribeVotes++;
+            if (!BoostCounted(CrystalRouteBoosters.GCubeBoost))
+            {
+                Block b;
+                int mid = ResourceType.GRAPHONIUM_ID;
+                foreach (var fb in blocks)
+                {
+                    b = fb.Value;
+                    if (b.IsCube() && b.GetMaterialID() == mid)
+                    {
+                        CountRouteBonus(CrystalRouteBoosters.GCubeBoost);
+                        break;
+                    }
+                }
+            }
+            else unsubscribeVotes++;
+            //
+            if (unsubscribeVotes == 2) gmc.ChunkUpdateEvent -= BlockArrayCheck;
+        }
+    }
+    private void CrystalsCheck(float f)
+    {
+        if (f >= R_C_MONEY_COND)
+        {
+            CountRouteBonus(CrystalRouteBoosters.MoneyBoost);
+            var c = GameMaster.realMaster.colonyController;
+            if (c != null) c.crystalsCountUpdateEvent -= CrystalsCheck;
         }
     }
 
@@ -159,9 +397,10 @@ public sealed class Knowledge
         dayNumber++;
         byte unsubscribeVotes = 0;        
         var gm = GameMaster.realMaster;
+        var colony = gm.colonyController;
         int count = 0;
 
-        #region cloud whale route
+        #region cloud whale route - 3 positions
         //grasslands
         if ( !BoostCounted(CloudWhaleRouteBoosters.GrasslandsBoost) && dayNumber >= R_CW_UPDATE_FREQUENCY)
         {
@@ -176,21 +415,6 @@ public sealed class Knowledge
                 if (count >= R_CW_GRASSLAND_COUNT_COND) CountRouteBonus(CloudWhaleRouteBoosters.GrasslandsBoost);
             }
             dayNumber = 0;
-        }
-        else unsubscribeVotes++;
-        // stream gens
-        if ( !BoostCounted(CloudWhaleRouteBoosters.StreamGensBoost))
-        {
-            var pg = gm.colonyController.GetPowerGrid();
-            if (pg != null)
-            {
-                count = 0;
-                foreach (var b in pg)
-                {
-                    if (b.ID == Structure.WIND_GENERATOR_1_ID) count++;
-                }
-                if (count >= R_CW_STREAMGENS_COUNT_COND) CountRouteBonus(CloudWhaleRouteBoosters.StreamGensBoost);
-            }
         }
         else unsubscribeVotes++;
         //crews
@@ -228,17 +452,29 @@ public sealed class Knowledge
         //
         #endregion
 
-        #region engineRoute
-        if (!BoostCounted(EngineRouteBoosters.EnergyBooster))
+        #region engineRoute - 2 positions       
+        if (!BoostCounted(EngineRouteBoosters.EnergyBoost))
         {
-            if (gm.colonyController.energyStored >= R_E_ENERGY_STORED_COND) CountRouteBonus(EngineRouteBoosters.EnergyBooster);
+            if (colony.energyStored >= R_E_ENERGY_STORED_COND) CountRouteBonus(EngineRouteBoosters.EnergyBoost);
+        }
+        else unsubscribeVotes++;
+        if (!BoostCounted(EngineRouteBoosters.GearsBoost))
+        {
+            if (colony.gears_coefficient >= R_E_GEARS_COND) CountRouteBonus(EngineRouteBoosters.GearsBoost);
         }
         else unsubscribeVotes++;
         #endregion
 
-        if (unsubscribeVotes == 5) GameMaster.realMaster.everydayUpdate -= EverydayUpdate;
+        #region pipes route - 2 positions
+        if (!BoostCounted(PipesRouteBoosters.FuelBoost))
+        {
+            if (colony.storage.standartResources[ResourceType.FUEL_ID] >= R_P_FUEL_CONDITION) CountRouteBonus(PipesRouteBoosters.FuelBoost);
+        }
+        #endregion
+
+        if (unsubscribeVotes == 7) GameMaster.realMaster.everydayUpdate -= EverydayUpdate;
     }
-    #region boost masks
+    
     private bool BoostCounted(CloudWhaleRouteBoosters type)
     {
         return (routeBonusesMask[(int)ResearchRoute.CloudWhale] & (1 << (byte)type)) != 0;
@@ -251,18 +487,58 @@ public sealed class Knowledge
     {
         return (routeBonusesMask[(int)ResearchRoute.Engine] & (1 << (byte)type)) != 0;
     }
+    private bool BoostCounted(PipesRouteBoosters type)
+    {
+        return (routeBonusesMask[(int)ResearchRoute.Pipes] & (1 << (byte)type)) != 0;
+    }
+    private bool BoostCounted(CrystalRouteBoosters type)
+    {
+        return (routeBonusesMask[(int)ResearchRoute.Crystal] & (1 << (byte)type)) != 0;
+    }
+    private bool BoostCounted(MonumentRouteBoosters type)
+    {
+        return (routeBonusesMask[(int)ResearchRoute.Monument] & (1 << (byte)type)) != 0;
+    }
+    private bool BoostCounted(BlossomRouteBoosters type)
+    {
+        return (routeBonusesMask[(int)ResearchRoute.Blossom] & (1 << (byte)type)) != 0;
+    }
+    private bool BoostCounted(PollenRouteBoosters type)
+    {
+        return (routeBonusesMask[(int)ResearchRoute.Pollen] & (1 << (byte)type)) != 0;
+    }
 
-    public bool CountRouteBonus(FoundationRouteBoosters type)
+    private bool CountRouteBonus(FoundationRouteBoosters type)
     {
         return CountRouteBonus(ResearchRoute.Foundation, (byte)type);
     }
-    public bool CountRouteBonus(CloudWhaleRouteBoosters type)
+    private bool CountRouteBonus(CloudWhaleRouteBoosters type)
     {
         return CountRouteBonus(ResearchRoute.CloudWhale, (byte)type);
     }
-    public bool CountRouteBonus(EngineRouteBoosters type)
+    private bool CountRouteBonus(EngineRouteBoosters type)
     {
         return CountRouteBonus(ResearchRoute.Engine, (byte)type);
+    }
+    private bool CountRouteBonus(PipesRouteBoosters type)
+    {
+        return CountRouteBonus(ResearchRoute.Pipes, (byte)type);
+    }
+    private bool CountRouteBonus(CrystalRouteBoosters type)
+    {
+        return CountRouteBonus(ResearchRoute.Crystal, (byte)type);
+    }
+    private bool CountRouteBonus(MonumentRouteBoosters type)
+    {
+        return CountRouteBonus(ResearchRoute.Monument, (byte)type);
+    }
+    private bool CountRouteBonus(BlossomRouteBoosters type)
+    {
+        return CountRouteBonus(ResearchRoute.Blossom, (byte)type);
+    }
+    public bool CountRouteBonus(PollenRouteBoosters type)
+    {
+        return CountRouteBonus(ResearchRoute.Pollen, (byte)type);
     }
     private bool CountRouteBonus(ResearchRoute rr, byte boosterIndex)
     {
@@ -286,21 +562,7 @@ public sealed class Knowledge
         }
         else return false;
     }
-    #endregion
-
-    public void ImmigrantsCheck(uint c)
-    {
-        if (c >= R_F_IMMIGRANTS_COUNT_COND)
-        {
-            var b = (byte)FoundationRouteBoosters.ImmigrantsBoost;
-            if (CountRouteBonus(ResearchRoute.Foundation, b))
-                GameMaster.realMaster.eventTracker?.StopTracking(ResearchRoute.Foundation, b);
-        }
-    }    
-
-    
-    
-    
+    #endregion   
 
     public static Knowledge GetCurrent()
     {

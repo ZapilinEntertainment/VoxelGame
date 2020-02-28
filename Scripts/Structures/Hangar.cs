@@ -137,7 +137,7 @@ public sealed class Hangar : WorkBuilding
                     );
                         break;
                     case 2:
-                        len = (Chunk.CHUNK_SIZE - pos.x - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.chunkSize - pos.x - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
                         new Vector3(pos.x + Block.QUAD_SIZE / 2f + len / 2f, pos.y, pos.z),
                         new Vector3(len, 1, 1),
@@ -145,7 +145,7 @@ public sealed class Hangar : WorkBuilding
                         );
                         break;
                     case 4:
-                        len = (Chunk.CHUNK_SIZE - pos.z - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.chunkSize - pos.z - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
                         new Vector3(pos.x, pos.y, pos.z - Block.QUAD_SIZE / 2f - len / 2f),
                         new Vector3(1, 1, len),
@@ -314,7 +314,7 @@ public sealed class Hangar : WorkBuilding
                 switch (modelRotation)
                 {
                     case 0:
-                        len = (Chunk.CHUNK_SIZE - pos.z - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.chunkSize - pos.z - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
                     new Vector3(pos.x, pos.y, pos.z + Block.QUAD_SIZE / 2f + len / 2f),
                     new Vector3(1, 1, len),
@@ -322,7 +322,7 @@ public sealed class Hangar : WorkBuilding
                     );
                         break;
                     case 2:
-                        len = (Chunk.CHUNK_SIZE - pos.x - 1) * Block.QUAD_SIZE;
+                        len = (Chunk.chunkSize - pos.x - 1) * Block.QUAD_SIZE;
                         PoolMaster.current.DrawZone(
                         new Vector3(pos.x + Block.QUAD_SIZE / 2f + len / 2f, pos.y, pos.z),
                         new Vector3(len, 1, 1),
@@ -416,7 +416,7 @@ public sealed class Hangar : WorkBuilding
                 );
                     break;
                 case 2:
-                    len = (Chunk.CHUNK_SIZE - pos.x - 1) * Block.QUAD_SIZE;
+                    len = (Chunk.chunkSize - pos.x - 1) * Block.QUAD_SIZE;
                     PoolMaster.current.DrawZone(
                     new Vector3(pos.x + Block.QUAD_SIZE / 2f + len / 2f, pos.y, pos.z),
                     new Vector3(len, 1, 1),
@@ -424,7 +424,7 @@ public sealed class Hangar : WorkBuilding
                     );
                     break;
                 case 4:
-                    len = (Chunk.CHUNK_SIZE - pos.z - 1) * Block.QUAD_SIZE;
+                    len = (Chunk.chunkSize - pos.z - 1) * Block.QUAD_SIZE;
                     PoolMaster.current.DrawZone(
                     new Vector3(pos.x, pos.y, pos.z - Block.QUAD_SIZE / 2f - len / 2f),
                     new Vector3(1, 1, len),

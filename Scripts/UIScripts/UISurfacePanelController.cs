@@ -301,7 +301,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 mode = SurfacePanelMode.SelectAction;
                 CheckGatherButton();
                 changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
-                columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.CHUNK_SIZE);
+                columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.chunkSize);
                 blockCreateButton.gameObject.SetActive(colony.hq.level > 5);                
                 break;
         }
@@ -556,7 +556,7 @@ public sealed class UISurfacePanelController : UIObserver {
             }
             savedHqLevel = hq.level;
 			blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
-			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && observingSurface.pos.y < Chunk.CHUNK_SIZE - 1);
+			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && observingSurface.pos.y < Chunk.chunkSize - 1);
             changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
 			UIController.current.closePanelButton.gameObject.SetActive(true);
 		}

@@ -104,7 +104,7 @@ public sealed class Observatory : WorkBuilding
         }
         else
         {
-            if (p.pos.y != Chunk.CHUNK_SIZE - 1)
+            if (p.pos.y != Chunk.chunkSize - 1)
             {
                 reason = Localization.GetRefusalReason(RefusalReason.UnacceptableHeight);
                 return false;
@@ -115,7 +115,7 @@ public sealed class Observatory : WorkBuilding
                 {
                     var blocks = p.myChunk.blocks;
                     ChunkPos pos = p.pos;
-                    int size = Chunk.CHUNK_SIZE;
+                    int size = Chunk.chunkSize;
 
                     int i = 0;
                     if (pos.y < size - 1)

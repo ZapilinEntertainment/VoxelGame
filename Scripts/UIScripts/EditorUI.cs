@@ -89,7 +89,7 @@ public sealed class EditorUI : MonoBehaviour
                         {
                             case Block.FWD_FACE_INDEX:
                                 {
-                                    if (b.pos.z < Chunk.CHUNK_SIZE - 1)
+                                    if (b.pos.z < Chunk.chunkSize - 1)
                                     {
                                         chunk.AddBlock(b.pos.OneBlockForward(), chosenMaterialId, true, true);
                                         action = true;
@@ -98,7 +98,7 @@ public sealed class EditorUI : MonoBehaviour
                                 }
                             case Block.RIGHT_FACE_INDEX:
                                 {
-                                    if (b.pos.x < Chunk.CHUNK_SIZE - 1)
+                                    if (b.pos.x < Chunk.chunkSize - 1)
                                     {
                                         chunk.AddBlock(b.pos.OneBlockRight(), chosenMaterialId, true, true);
                                         action = true;
@@ -125,7 +125,7 @@ public sealed class EditorUI : MonoBehaviour
                                 }
                             case Block.UP_FACE_INDEX:
                                 {
-                                    if (b.pos.y < Chunk.CHUNK_SIZE - 1)
+                                    if (b.pos.y < Chunk.chunkSize - 1)
                                     {
                                         chunk.AddBlock(b.pos.OneBlockHigher(), chosenMaterialId, true, true);
                                         action = true;

@@ -366,7 +366,7 @@ public sealed class BlockExtension : IPlanable
             }
         }
         var pos = myBlock.pos;
-        if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.CHUNK_SIZE - 1)
+        if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.chunkSize - 1)
             p = MeshMaster.GetRooftop(this, Random.value < 0.14f, !isNatural);
         else p = new Plane(this, Plane.defaultMeshType, i_materialID, faceIndex, 0);
         planes.Add(faceIndex, p);

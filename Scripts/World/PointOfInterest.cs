@@ -4,22 +4,21 @@ using System.Collections.Generic;
 
 public class PointOfInterest : MapPoint
 {
-    public enum WisemanSubtype : byte { Human, AncientEntity}
-    public enum SOSSubtype : byte { Ship, Colony}
-
     protected float richness, danger, mysteria, friendliness;
     protected ChallengeField[,] challengeArray;
 
     public readonly float difficulty;
+    public Path path { get; protected set; }
     public Expedition workingExpedition { get; protected set; }
     private const float ONE_STEP_CRYSTALS = 10f, ONE_STEP_XP = 10f;
 
     public PointOfInterest(int i_id) : base(i_id) {
         difficulty = RecalculateDifficulty();
     }
-    public PointOfInterest(float i_angle, float i_height, MapMarkerType mtype) : base(i_angle, i_height, mtype)
+    public PointOfInterest(float i_angle, float i_height, MapMarkerType mtype, Path i_path) : base(i_angle, i_height, mtype)
     {
         difficulty = RecalculateDifficulty();
+        path = i_path;
     }
 
     public void AssignExpedition(Expedition e)
@@ -213,8 +212,6 @@ public class PointOfInterest : MapPoint
     protected Artifact GetArtifact()
     {
         float a = mysteria * friendliness * 0.8f + 0.2f * Random.value;
-        var path = DeterminePath();     
-
         return new Artifact(
             stability * (0.9f + 0.2f * Random.value), 
             richness * (0.9f + 0.2f * Random.value),
@@ -241,7 +238,6 @@ public class PointOfInterest : MapPoint
         float maxDifficulty = ChallengeField.MAX_DIFFICULTY * difficulty;
         float v = Random.value, df;
 
-        var path = DeterminePath();
         var atests = new ChallengeType[6];
         switch (path)
         {
@@ -635,33 +631,28 @@ public class PointOfInterest : MapPoint
             challengeArray[1, 1] = ChallengeField.emptyField;
         }
     }
-    override public Path DeterminePath()
-    {
-        switch (subIndex)
-        {
-            default: return base.DeterminePath();
-        }
-    }
 
     #region save-load
     override public List<byte> Save()
     {
-        var data = base.Save();
+        var data = base.Save();        
         data.AddRange(System.BitConverter.GetBytes(richness)); // 0 - 3
         data.AddRange(System.BitConverter.GetBytes(danger)); // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
+        data.Add((byte)path);
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 16;
+        int LENGTH = 17;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         richness = System.BitConverter.ToSingle(data, 0);
         danger = System.BitConverter.ToSingle(data, 4);
         mysteria = System.BitConverter.ToSingle(data, 8);
-        friendliness = System.BitConverter.ToSingle(data, 12);     
+        friendliness = System.BitConverter.ToSingle(data, 12);
+        path = (Path)data[16];
     } 
     #endregion
 }

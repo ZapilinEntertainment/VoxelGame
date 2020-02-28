@@ -20,11 +20,10 @@ public sealed partial class Chunk : MonoBehaviour
     public bool needSurfacesUpdate = false;
     public byte prevBitmask = 63;
     public float lifePower = 0;
-    public static byte CHUNK_SIZE { get; private set; }
+    public static byte chunkSize { get; private set; }
     //private bool allGrasslandsCreated = false;
    
-    public delegate void ChunkUpdateHandler();
-    public event ChunkUpdateHandler ChunkUpdateEvent;
+    public event System.Action ChunkUpdateEvent;
 
     public Plane[] surfaces { get; private set; }
     private Nature nature;
@@ -35,11 +34,11 @@ public sealed partial class Chunk : MonoBehaviour
 
     static Chunk() 
     {
-        CHUNK_SIZE = 16;
+        chunkSize = 16;
     }
     public static void SetChunkSizeValue(byte x)
     {
-        CHUNK_SIZE = x;
+        chunkSize = x;
     }
 
     private void Prepare()
@@ -52,12 +51,12 @@ public sealed partial class Chunk : MonoBehaviour
         {
             RemakeRenderersHolders();
         }
-        lightMap = new byte[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-        for (int x = 0; x < CHUNK_SIZE; x++)
+        lightMap = new byte[chunkSize, chunkSize, chunkSize];
+        for (int x = 0; x < chunkSize; x++)
         {
-            for (int y = 0; y < CHUNK_SIZE; y++)
+            for (int y = 0; y < chunkSize; y++)
             {
-                for (int z = 0; z < CHUNK_SIZE; z++)
+                for (int z = 0; z < chunkSize; z++)
                 {
                     lightMap[x, y, z] = UP_LIGHT;
                 }
@@ -65,8 +64,8 @@ public sealed partial class Chunk : MonoBehaviour
         }
         LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
 
-        GameMaster.layerCutHeight = CHUNK_SIZE;
-        GameMaster.prevCutHeight = CHUNK_SIZE;
+        GameMaster.layerCutHeight = chunkSize;
+        GameMaster.prevCutHeight = chunkSize;
     }
     public void Awake()
     {
@@ -85,7 +84,7 @@ public sealed partial class Chunk : MonoBehaviour
             chunkDataUpdateRequired = false;
         }
         if (chunkRenderUpdateRequired)  RenderStatusUpdate();
-        if (PoolMaster.shadowCasting & shadowsUpdateRequired)      ShadowsUpdate();
+        if (PoolMaster.shadowCasting & shadowsUpdateRequired) ShadowsUpdate();
         if (needSurfacesUpdate) RecalculateSurfacesList();
     }  
 
@@ -104,7 +103,7 @@ public sealed partial class Chunk : MonoBehaviour
     public void CreateNewChunk(int[,,] newData)
     {
         int size = newData.GetLength(0);
-        CHUNK_SIZE = (byte)size;
+        chunkSize = (byte)size;
         if (blocks != null) ClearChunk();
         else blocks = new Dictionary<ChunkPos, Block>();
         Prepare();
@@ -137,7 +136,7 @@ public sealed partial class Chunk : MonoBehaviour
     {
         if (blocks != null)
         {
-            Block[,,] blockArray = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+            Block[,,] blockArray = new Block[chunkSize, chunkSize, chunkSize];
             Block b;
             foreach (var fb in blocks)
             {
@@ -148,11 +147,11 @@ public sealed partial class Chunk : MonoBehaviour
             bool transparency = true;
             Block prevBlock = null;
             //left to right
-            for (int z = 0; z < CHUNK_SIZE; z++)
+            for (int z = 0; z < chunkSize; z++)
             {
-                for (int y = 0; y < CHUNK_SIZE; y++)
+                for (int y = 0; y < chunkSize; y++)
                 {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    for (int x = 0; x < chunkSize; x++)
                     {
                         b = blockArray[x, y, z];
                         if (b == null)
@@ -196,11 +195,11 @@ public sealed partial class Chunk : MonoBehaviour
                 }
             }
             //back to fwd            
-            for (int x = 0; x < CHUNK_SIZE; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
-                for (int y = 0; y < CHUNK_SIZE; y++)
+                for (int y = 0; y < chunkSize; y++)
                 {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    for (int z = 0; z < chunkSize; z++)
                     {
                         b = blockArray[x, y, z];
                         if (b == null)
@@ -246,11 +245,11 @@ public sealed partial class Chunk : MonoBehaviour
                 prevBlock = null;
             }
             //down to up            
-            for (int x = 0; x < CHUNK_SIZE; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
-                for (int z = 0; z < CHUNK_SIZE; z++)
+                for (int z = 0; z < chunkSize; z++)
                 {
-                    for (int y = 0; y < CHUNK_SIZE; y++)
+                    for (int y = 0; y < chunkSize; y++)
                     {
                         b = blockArray[x, y, z];
                         if (b == null)
@@ -331,7 +330,7 @@ public sealed partial class Chunk : MonoBehaviour
     public Block AddBlock(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
+        if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return null;
         //
         Block b = GetBlock(f_pos);
         if (b != null)
@@ -360,7 +359,7 @@ public sealed partial class Chunk : MonoBehaviour
     public Block AddBlock(ChunkPos i_pos, IPlanable ms, bool i_natural)
     {
         int x = i_pos.x, y = i_pos.y, z = i_pos.z;
-        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return null;
+        if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return null;
         var b = GetBlock(i_pos);        
         if (b != null)
         {
@@ -525,7 +524,7 @@ public sealed partial class Chunk : MonoBehaviour
     #region taking surfaces
     public Plane GetHighestSurfacePlane(int x, int z)
     {
-        if (surfaces == null || x < 0 || z < 0 || x >= CHUNK_SIZE || z >= CHUNK_SIZE) return null;
+        if (surfaces == null || x < 0 || z < 0 || x >= chunkSize || z >= chunkSize) return null;
         Plane fp = null;
         int maxY = -1;
         ChunkPos cpos;
@@ -557,7 +556,7 @@ public sealed partial class Chunk : MonoBehaviour
         if (surfaces == null) return null;
         else
         {
-            int nindex = -1; float minSqr = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
+            int nindex = -1; float minSqr = chunkSize * chunkSize * chunkSize;
             float a, b, c, m;
             Plane p = null;
             ChunkPos cpos;
@@ -703,7 +702,7 @@ public sealed partial class Chunk : MonoBehaviour
     public void CreateBlocker(ChunkPos f_pos, Structure main_structure, bool forced)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (x >= CHUNK_SIZE | y >= CHUNK_SIZE | z >= CHUNK_SIZE) return;
+        if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return;
         //
         Block b = GetBlock(x, y, z);
         if (b != null)
@@ -757,16 +756,16 @@ public sealed partial class Chunk : MonoBehaviour
     public bool BlockShipCorridorIfPossible(int xpos, int ypos, bool xyAxis, int width, Structure sender, ref List<Block> dependentBlocksList)
     {
         int xStart = xpos; int xEnd = xStart + width;
-        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
+        if (xStart < 0) xStart = 0; if (xEnd >= chunkSize) xEnd = chunkSize;
         int yStart = ypos; int yEnd = yStart + width;
-        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
+        if (yStart < 0) yStart = 0; if (yEnd >= chunkSize) yEnd = chunkSize;
         if (xyAxis)
         {
             for (int x = xStart; x < xEnd; x++)
             {
                 for (int y = yStart; y < yEnd; y++)
                 {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    for (int z = 0; z < chunkSize; z++)
                     {
                         if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                         //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x,y,z));
@@ -780,7 +779,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 for (int y = yStart; y < yEnd; y++)
                 {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    for (int x = 0; x < chunkSize; x++)
                     {
                         if (blocks.ContainsKey(new ChunkPos(x, y, z))) return false;
                         //if (blocks[x, y, z] != null) DeleteBlock(new ChunkPos(x, y, z));
@@ -796,7 +795,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 for (int y = yStart; y < yEnd; y++)
                 {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
+                    for (int z = 0; z < chunkSize; z++)
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
                         bk = new Block(this, cpos, sender);
@@ -812,7 +811,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 for (int y = yStart; y < yEnd; y++)
                 {
-                    for (int x = 0; x < CHUNK_SIZE; x++)
+                    for (int x = 0; x < chunkSize; x++)
                     {
                         ChunkPos cpos = new ChunkPos(x, y, z);
                        
@@ -832,11 +831,11 @@ public sealed partial class Chunk : MonoBehaviour
     public bool BlockShipCorridorIfPossible(Vector3Int startPoint, byte modelRotation, int width, Structure sender, ref List<Block> dependentBlocksList)
     {
         int xStart = startPoint.x, xEnd = startPoint.x + width;
-        if (xStart < 0) xStart = 0; if (xEnd >= CHUNK_SIZE) xEnd = CHUNK_SIZE;
+        if (xStart < 0) xStart = 0; if (xEnd >= chunkSize) xEnd = chunkSize;
         int yStart = startPoint.y, yEnd = startPoint.y + width;
-        if (yStart < 0) yStart = 0; if (yEnd >= CHUNK_SIZE) yEnd = CHUNK_SIZE;
+        if (yStart < 0) yStart = 0; if (yEnd >= chunkSize) yEnd = chunkSize;
         int zStart = startPoint.z, zEnd = startPoint.z + width;
-        if (zStart < 0) xStart = 0; if (zEnd >= CHUNK_SIZE) zEnd = CHUNK_SIZE;
+        if (zStart < 0) xStart = 0; if (zEnd >= chunkSize) zEnd = chunkSize;
         switch (modelRotation)
         {
             default: return false;
@@ -847,7 +846,7 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         for (int y = yStart; y < yEnd; y++)
                         {
-                            for (int z = zStart; z < CHUNK_SIZE; z++)
+                            for (int z = zStart; z < chunkSize; z++)
                             {
                                 if (blocks.ContainsKey(new ChunkPos(x,y,z))) return false;
                             }
@@ -856,7 +855,7 @@ public sealed partial class Chunk : MonoBehaviour
                 }
                 else
                 {
-                    for (int z = zStart; z < CHUNK_SIZE; z++)
+                    for (int z = zStart; z < chunkSize; z++)
                     {
                         if (blocks.ContainsKey(new ChunkPos(startPoint.x, startPoint.y, z))) return false;
                     }
@@ -865,7 +864,7 @@ public sealed partial class Chunk : MonoBehaviour
             case 2: // right
                 if (width != 1)
                 {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    for (int x = xStart; x < chunkSize; x++)
                     {
                         for (int y = yStart; y < yEnd; y++)
                         {
@@ -878,7 +877,7 @@ public sealed partial class Chunk : MonoBehaviour
                 }
                 else
                 {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    for (int x = xStart; x < chunkSize; x++)
                     {
                         if (blocks.ContainsKey(new ChunkPos(x, startPoint.y, startPoint.z))) return false;
                     }
@@ -940,7 +939,7 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         for (int y = yStart; y < yEnd; y++)
                         {
-                            for (int z = zStart; z < CHUNK_SIZE; z++)
+                            for (int z = zStart; z < chunkSize; z++)
                             {
                                 var cpos = new ChunkPos(x, y, z);
                                 bk = new Block(this, cpos, sender);
@@ -952,7 +951,7 @@ public sealed partial class Chunk : MonoBehaviour
                 }
                 else
                 {
-                    for (int z = zStart; z < CHUNK_SIZE; z++)
+                    for (int z = zStart; z < chunkSize; z++)
                     {
                         var cpos = new ChunkPos(xStart, yStart, z);
                         bk = new Block(this, cpos, sender);
@@ -964,7 +963,7 @@ public sealed partial class Chunk : MonoBehaviour
             case 2: // right
                 if (width != 1)
                 {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    for (int x = xStart; x < chunkSize; x++)
                     {
                         for (int y = yStart; y < yEnd; y++)
                         {
@@ -980,7 +979,7 @@ public sealed partial class Chunk : MonoBehaviour
                 }
                 else
                 {
-                    for (int x = xStart; x < CHUNK_SIZE; x++)
+                    for (int x = xStart; x < chunkSize; x++)
                     {
                         var cpos = new ChunkPos(x, yStart, zStart);
                         bk = new Block(this, cpos, sender);
@@ -1070,14 +1069,14 @@ public sealed partial class Chunk : MonoBehaviour
     #region save-load system
     public void SaveChunkData(System.IO.FileStream fs)
     {
-        fs.WriteByte(CHUNK_SIZE);
+        fs.WriteByte(chunkSize);
 
     }
 
     public void LoadChunkData(System.IO.FileStream fs)
     {
         if (blocks != null) ClearChunk();   
-        CHUNK_SIZE = (byte)fs.ReadByte();
+        chunkSize = (byte)fs.ReadByte();
         Prepare();
 
         var data = new byte[4];

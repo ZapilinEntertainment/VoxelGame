@@ -54,7 +54,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
         }
         else
         {
-            if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.CHUNK_SIZE - 1)
+            if (faceIndex == Block.UP_FACE_INDEX && pos.y == Chunk.chunkSize - 1)
             {
                 p = MeshMaster.GetRooftop(this, Random.value < 0.1f, true);
             }

@@ -104,11 +104,11 @@ public class Plane
         {
             switch (faceIndex)
             {
-                case Block.FWD_FACE_INDEX: return pos.z == Chunk.CHUNK_SIZE - 1;
-                case Block.RIGHT_FACE_INDEX: return pos.x == Chunk.CHUNK_SIZE - 1;
+                case Block.FWD_FACE_INDEX: return pos.z == Chunk.chunkSize - 1;
+                case Block.RIGHT_FACE_INDEX: return pos.x == Chunk.chunkSize - 1;
                 case Block.BACK_FACE_INDEX: return pos.z == 0;
                 case Block.LEFT_FACE_INDEX: return pos.z == 0;
-                case Block.UP_FACE_INDEX: return pos.y == Chunk.CHUNK_SIZE - 1;
+                case Block.UP_FACE_INDEX: return pos.y == Chunk.chunkSize - 1;
                 case Block.DOWN_FACE_INDEX: return pos.y == 0;
                 default:
                     return false;

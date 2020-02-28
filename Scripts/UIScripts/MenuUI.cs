@@ -225,21 +225,21 @@ public sealed class MenuUI : MonoBehaviour
             x *= -1;
             editorSizeInputField.text = x.ToString();
         }
-        if (x != Chunk.CHUNK_SIZE) Chunk.SetChunkSizeValue((byte)x);
+        if (x != Chunk.chunkSize) Chunk.SetChunkSizeValue((byte)x);
     }
     public void Editor_SizePlusButton()
     {
-        if (Chunk.CHUNK_SIZE < 99)
+        if (Chunk.chunkSize < 99)
         {
-            Chunk.SetChunkSizeValue((byte)(Chunk.CHUNK_SIZE + 1));
-            editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
+            Chunk.SetChunkSizeValue((byte)(Chunk.chunkSize + 1));
+            editorSizeInputField.text = Chunk.chunkSize.ToString();
         }
     }
     public void Editor_SizeMinusButton()
     {
-        if (Chunk.CHUNK_SIZE > Chunk.MIN_CHUNK_SIZE) {
-            Chunk.SetChunkSizeValue((byte)(Chunk.CHUNK_SIZE - 1));
-            editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
+        if (Chunk.chunkSize > Chunk.MIN_CHUNK_SIZE) {
+            Chunk.SetChunkSizeValue((byte)(Chunk.chunkSize - 1));
+            editorSizeInputField.text = Chunk.chunkSize.ToString();
         }
     }
     public void Editor_Start()
@@ -346,7 +346,7 @@ public sealed class MenuUI : MonoBehaviour
                 break;
             case MenuSection.Editor:
                 editorButton.overrideSprite = overridingSprite;
-                editorSizeInputField.text = Chunk.CHUNK_SIZE.ToString();
+                editorSizeInputField.text = Chunk.chunkSize.ToString();
                 editorSettingPanel.SetActive(true);
                 break;
             case MenuSection.Highscores:

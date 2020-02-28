@@ -54,7 +54,7 @@ public sealed class GameMaster : MonoBehaviour
     public static float sellPriceCoefficient = 0.75f;
     public static byte layerCutHeight = 16, prevCutHeight = 16;
 
-    public static Vector3 sceneCenter { get { return Vector3.one * Chunk.CHUNK_SIZE / 2f; } } // SCENE CENTER
+    public static Vector3 sceneCenter { get { return Vector3.one * Chunk.chunkSize / 2f; } } // SCENE CENTER
     public static GameStartSettings gameStartSettings = GameStartSettings.Empty;    
     public static GeologyModule geologyModule;
     public static Audiomaster audiomaster;
@@ -224,7 +224,7 @@ public sealed class GameMaster : MonoBehaviour
                 FollowingCamera.main.ResetTouchRightBorder();
                 FollowingCamera.main.CameraRotationBlock(false);
                 warProximity = 0.01f;
-                layerCutHeight = Chunk.CHUNK_SIZE; prevCutHeight = layerCutHeight;
+                layerCutHeight = Chunk.chunkSize; prevCutHeight = layerCutHeight;
                 switch (startGameWith)
                 {
                     case GameStart.Zeppelin:
@@ -303,7 +303,7 @@ public sealed class GameMaster : MonoBehaviour
         {
             gameObject.AddComponent<PoolMaster>().Load();
             mainChunk = new GameObject("chunk").AddComponent<Chunk>();
-            int size = Chunk.CHUNK_SIZE;
+            int size = Chunk.chunkSize;
             int[,,] blocksArray = new int[size, size, size];
             size /= 2;
             blocksArray[size, size, size] = ResourceType.STONE_ID;

@@ -47,6 +47,6 @@ public abstract class GameConstants {
         return ((SHIP_ARRIVING_TIME / (gm.tradeVesselsTrafficCoefficient)) / (gm.colonyController.docksLevel + 1) / 2f);
     }
 
-    public static float GetUpperBorder() { return Chunk.CHUNK_SIZE * 2; }
-    public static float GetBottomBorder() { return Chunk.CHUNK_SIZE * (-1); }
+    public static float GetUpperBorder() { return Chunk.chunkSize * 2; }
+    public static float GetBottomBorder() { return Chunk.chunkSize * (-1); }
 }

@@ -21,7 +21,7 @@ public sealed class Zeppelin : MonoBehaviour {
 
     void Start() {
         float x = Random.value * 360;
-        float cs = Chunk.CHUNK_SIZE / 2;
+        float cs = Chunk.chunkSize / 2;
         Vector3 rpos = Quaternion.AngleAxis(x , Vector3.up ) * Vector3.forward * cs * 1.5f * Block.QUAD_SIZE;
         
         rpos.y = cs;

@@ -25,7 +25,7 @@ public class WindGenerator : Building {
             head = transform.GetChild(0).GetChild(0);
             screw = head.transform.GetChild(0);
         }
-        float hf = Chunk.CHUNK_SIZE / 2f;
+        float hf = Chunk.chunkSize / 2f;
 		height_coefficient = (basement.pos.y - hf) / hf;
         if (height_coefficient < 0) height_coefficient /= 4f;
 		WindUpdate(GameMaster.realMaster.environmentMaster.windVector);

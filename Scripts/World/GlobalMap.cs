@@ -470,7 +470,6 @@ public sealed class GlobalMap : MonoBehaviour
                     {
                         GameMaster.realMaster.environmentMaster.SetEnvironment(Environment.defaultEnvironment);
                     }
-                    Knowledge.GetCurrent()?.CountRouteBonus(Knowledge.EngineRouteBoosters.CityMoveBooster);
                 }
             }
         }

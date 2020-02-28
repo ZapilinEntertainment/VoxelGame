@@ -54,7 +54,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             case ChunkGenerationMode.Peak:
                 int resolution = 15;
                 GameObject g = Constructor.CreatePeakBasis(resolution, ResourceType.STONE_ID);
-                float cs = Chunk.CHUNK_SIZE * Block.QUAD_SIZE;
+                float cs = Chunk.chunkSize * Block.QUAD_SIZE;
                 g.transform.localScale = Vector3.one * cs / 2f;
                 g.transform.position = new Vector3(cs / 2f - 0.5f * Block.QUAD_SIZE , g.transform.localScale.y / 2f - 0.5f * Block.QUAD_SIZE, cs / 2f - 0.5f * Block.QUAD_SIZE);
                 break;
@@ -271,7 +271,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 effectsTimer -= t;
                 if (effectsTimer < 0)
                 {
-                    float f = Chunk.CHUNK_SIZE;
+                    float f = Chunk.chunkSize;
                     var center = GameMaster.sceneCenter;
                     var pos = Random.onUnitSphere * f + center;
                     dir = center - pos;

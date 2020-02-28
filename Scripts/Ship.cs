@@ -67,7 +67,7 @@ public sealed class Ship : MonoBehaviour {
                 }
                 if (reverseDirection)
                 {
-                    pos = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f * Block.QUAD_SIZE + width / 2f);
+                    pos = new Vector3(Chunk.chunkSize * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z + 0.5f * Block.QUAD_SIZE + width / 2f);
                     fwd = Vector3.left;
                 }
                 xAxisMoving = true;
@@ -94,7 +94,7 @@ public sealed class Ship : MonoBehaviour {
                 }
                 if (reverseDirection)
                 {
-                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + width / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x + 0.5f * Block.QUAD_SIZE + width / 2f, d.transform.position.y, Chunk.chunkSize * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;
@@ -121,7 +121,7 @@ public sealed class Ship : MonoBehaviour {
                 }
                 if (reverseDirection)
                 {
-                    pos = new Vector3(Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - width / 2f);
+                    pos = new Vector3(Chunk.chunkSize * Block.QUAD_SIZE + DISTANCE_TO_ISLAND, d.transform.position.y, d.transform.position.z - 0.5f * Block.QUAD_SIZE - width / 2f);
                     fwd = Vector3.left;
                 }
                 xAxisMoving = true;
@@ -149,7 +149,7 @@ public sealed class Ship : MonoBehaviour {
                 }
                 if (reverseDirection)
                 {
-                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - width / 2f, d.transform.position.y, Chunk.CHUNK_SIZE * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
+                    transform.position = new Vector3(d.transform.position.x - 0.5f * Block.QUAD_SIZE - width / 2f, d.transform.position.y, Chunk.chunkSize * Block.QUAD_SIZE + DISTANCE_TO_ISLAND);
                     transform.forward = Vector3.back;
                 }
                 xAxisMoving = false;
@@ -217,7 +217,7 @@ public sealed class Ship : MonoBehaviour {
                 if (dpointSet) transform.forward = Vector3.RotateTowards(transform.forward, exitDirection, acceleration / 4f * t, 1);
                 else
                 {
-                    if ((GameMaster.sceneCenter - transform.position).magnitude > Chunk.CHUNK_SIZE * Block.QUAD_SIZE * 1.5f / 2f)
+                    if ((GameMaster.sceneCenter - transform.position).magnitude > Chunk.chunkSize * Block.QUAD_SIZE * 1.5f / 2f)
                     {
                         exitDirection = Quaternion.AngleAxis((0.5f - Random.value) * 180, Vector3.up) * transform.forward;
                         exitDirection += Vector3.up * (0.5f - Random.value) / 10f;
@@ -233,7 +233,7 @@ public sealed class Ship : MonoBehaviour {
 		
 		if (speed != 0) {
 			transform.Translate(Vector3.forward * speed * GameMaster.gameSpeed * Time.deltaTime, Space.Self);
-			if (Vector3.Distance(transform.position, GameMaster.sceneCenter) > DISTANCE_TO_ISLAND * 2 + Chunk.CHUNK_SIZE * 1.5f * Block.QUAD_SIZE) PoolMaster.current.ReturnShipToPool(this);
+			if (Vector3.Distance(transform.position, GameMaster.sceneCenter) > DISTANCE_TO_ISLAND * 2 + Chunk.chunkSize * 1.5f * Block.QUAD_SIZE) PoolMaster.current.ReturnShipToPool(this);
 		}
 	}
 
@@ -241,7 +241,7 @@ public sealed class Ship : MonoBehaviour {
 		docked = false;
 		unloaded = true;
         destination = null;
-        if ((GameMaster.sceneCenter - transform.position).magnitude > Chunk.CHUNK_SIZE * Block.QUAD_SIZE * 1.5f / 2f)
+        if ((GameMaster.sceneCenter - transform.position).magnitude > Chunk.chunkSize * Block.QUAD_SIZE * 1.5f / 2f)
         {
             exitDirection = Quaternion.AngleAxis((0.5f - Random.value) * 180, Vector3.up) * transform.forward;
             exitDirection += Vector3.up * (0.5f - Random.value) / 10f;

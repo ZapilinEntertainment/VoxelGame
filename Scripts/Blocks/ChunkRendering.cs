@@ -185,7 +185,7 @@ public sealed partial class Chunk : MonoBehaviour {
     public byte GetVisibilityMask(ChunkPos cpos) { return GetVisibilityMask(cpos.x, cpos.y, cpos.z); }
     public byte GetVisibilityMask(int x, int y, int z)
     {
-        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE) return 255;
+        if (x < 0 || x >= chunkSize || y < 0 || y >= chunkSize || z < 0 || z >= chunkSize) return 255;
         if (y > GameMaster.layerCutHeight) return 0;
         else
         {
@@ -577,8 +577,8 @@ public sealed partial class Chunk : MonoBehaviour {
         }
         else lr.enabled = true;
         float qh = Block.QUAD_SIZE / 2f;
-        float s = CHUNK_SIZE * Block.QUAD_SIZE - qh;
-        float h = CHUNK_SIZE / 2f * Block.QUAD_SIZE - qh;
+        float s = chunkSize * Block.QUAD_SIZE - qh;
+        float h = chunkSize / 2f * Block.QUAD_SIZE - qh;
         gameObject.GetComponent<LineRenderer>().SetPositions(new Vector3[4] {
             new Vector3( -qh, h, -qh),
             new Vector3( -qh, h, s),
@@ -654,7 +654,7 @@ public sealed partial class Chunk : MonoBehaviour {
     {
         Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
         Vector3 v = Vector3.one * (-1);
-        float size = CHUNK_SIZE * Block.QUAD_SIZE;
+        float size = chunkSize * Block.QUAD_SIZE;
         if (cpos.x > 0) { if (cpos.x > size) v.x = 1; else v.x = 0; }
         if (cpos.y > 0) { if (cpos.y > size) v.y = 1; else v.y = 0; }
         if (cpos.z > 0) { if (cpos.z > size) v.z = 1; else v.z = 0; }
@@ -719,7 +719,7 @@ public sealed partial class Chunk : MonoBehaviour {
             if (y < 0) return BOTTOM_LIGHT;
             else
             {
-                byte sz = CHUNK_SIZE;
+                byte sz = chunkSize;
                 sz--;
                 if (x < 0 || z < 0 || x > sz || y > sz || z > sz) return UP_LIGHT;
                 else return lightMap[x, y, z];
@@ -733,11 +733,11 @@ public sealed partial class Chunk : MonoBehaviour {
         if (!PoolMaster.useIlluminationSystem) return;
         byte UP_LIGHT = 255, DOWN_LIGHT = 128;
         int x = 0, y = 0, z = 0;
-        for (x = 0; x < CHUNK_SIZE; x++)
+        for (x = 0; x < chunkSize; x++)
         {
-            for (z = 0; z < CHUNK_SIZE; z++)
+            for (z = 0; z < chunkSize; z++)
             {
-                for (y = 0; y < CHUNK_SIZE; y++)
+                for (y = 0; y < chunkSize; y++)
                 {
                     lightMap[x, y, z] = 0;
                 }
@@ -746,11 +746,11 @@ public sealed partial class Chunk : MonoBehaviour {
         // проход снизу
         Block b = null;
         x = 0; y = 0; z = 0;
-        for (x = 0; x < CHUNK_SIZE; x++)
+        for (x = 0; x < chunkSize; x++)
         {
-            for (z = 0; z < CHUNK_SIZE; z++)
+            for (z = 0; z < chunkSize; z++)
             {
-                for (y = 0; y < CHUNK_SIZE; y++)
+                for (y = 0; y < chunkSize; y++)
                 {
                     b = GetBlock(x, y, z);
                     if (b == null || b.IsFaceTransparent(Block.DOWN_FACE_INDEX)) lightMap[x, y, z] = DOWN_LIGHT;
@@ -760,11 +760,11 @@ public sealed partial class Chunk : MonoBehaviour {
         }
         // проход сверху
         x = 0; y = 0; z = 0;
-        for (x = 0; x < CHUNK_SIZE; x++)
+        for (x = 0; x < chunkSize; x++)
         {
-            for (z = 0; z < CHUNK_SIZE; z++)
+            for (z = 0; z < chunkSize; z++)
             {
-                for (y = CHUNK_SIZE - 1; y >= 0; y--)
+                for (y = chunkSize - 1; y >= 0; y--)
                 {
                     b = GetBlock(x, y, z);
                     if (b == null || b.IsFaceTransparent(Block.UP_FACE_INDEX)) lightMap[x, y, z] = UP_LIGHT;
@@ -774,12 +774,12 @@ public sealed partial class Chunk : MonoBehaviour {
         }
         //проход спереди
         byte decreasedVal;
-        for (x = 0; x < CHUNK_SIZE; x++)
+        for (x = 0; x < chunkSize; x++)
         {
-            for (y = 0; y < CHUNK_SIZE; y++)
+            for (y = 0; y < chunkSize; y++)
             {
-                decreasedVal = (byte)(lightMap[x, y, CHUNK_SIZE - 1] * LIGHT_DECREASE_PER_BLOCK);
-                for (z = CHUNK_SIZE - 2; z >= 0; z--)
+                decreasedVal = (byte)(lightMap[x, y, chunkSize - 1] * LIGHT_DECREASE_PER_BLOCK);
+                for (z = chunkSize - 2; z >= 0; z--)
                 {
                     if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
                     decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
@@ -787,12 +787,12 @@ public sealed partial class Chunk : MonoBehaviour {
             }
         }
         //проход сзади
-        for (x = 0; x < CHUNK_SIZE; x++)
+        for (x = 0; x < chunkSize; x++)
         {
-            for (y = 0; y < CHUNK_SIZE; y++)
+            for (y = 0; y < chunkSize; y++)
             {
                 decreasedVal = (byte)(lightMap[x, y, 0] * LIGHT_DECREASE_PER_BLOCK);
-                for (z = 1; z < CHUNK_SIZE; z++)
+                for (z = 1; z < chunkSize; z++)
                 {
                     if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
                     decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
@@ -800,12 +800,12 @@ public sealed partial class Chunk : MonoBehaviour {
             }
         }
         //проход справа
-        for (z = 0; z < CHUNK_SIZE; z++)
+        for (z = 0; z < chunkSize; z++)
         {
-            for (y = 0; y < CHUNK_SIZE; y++)
+            for (y = 0; y < chunkSize; y++)
             {
-                decreasedVal = (byte)(lightMap[CHUNK_SIZE - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                for (x = CHUNK_SIZE - 2; x >= 0; x--)
+                decreasedVal = (byte)(lightMap[chunkSize - 1, y, z] * LIGHT_DECREASE_PER_BLOCK);
+                for (x = chunkSize - 2; x >= 0; x--)
                 {
                     b = GetBlock(x, y, z);
                     if (b == null || b.IsFaceTransparent(Block.RIGHT_FACE_INDEX))
@@ -817,12 +817,12 @@ public sealed partial class Chunk : MonoBehaviour {
             }
         }
         //проход слева
-        for (z = 0; z < CHUNK_SIZE; z++)
+        for (z = 0; z < chunkSize; z++)
         {
-            for (y = 0; y < CHUNK_SIZE; y++)
+            for (y = 0; y < chunkSize; y++)
             {
                 decreasedVal = (byte)(lightMap[0, y, z] * LIGHT_DECREASE_PER_BLOCK);
-                for (x = 1; x < CHUNK_SIZE; x++)
+                for (x = 1; x < chunkSize; x++)
                 {
                     if (lightMap[x, y, z] < decreasedVal) lightMap[x, y, z] = decreasedVal;
                     decreasedVal = (byte)(lightMap[x, y, z] * LIGHT_DECREASE_PER_BLOCK);
@@ -840,12 +840,12 @@ public sealed partial class Chunk : MonoBehaviour {
                 {
                     case 0:
                         a = brd.pos.z + 1;
-                        if (a >= CHUNK_SIZE) lightToCompare = UP_LIGHT;
+                        if (a >= chunkSize) lightToCompare = UP_LIGHT;
                         else lightToCompare = lightMap[brd.pos.x, brd.pos.y, a];
                         break;
                     case 1:
                         a = brd.pos.x + 1;
-                        if (a >= CHUNK_SIZE) lightToCompare = UP_LIGHT;
+                        if (a >= chunkSize) lightToCompare = UP_LIGHT;
                         else lightToCompare = lightMap[a, brd.pos.y, brd.pos.z];
                         break;
                     case 2:
@@ -860,7 +860,7 @@ public sealed partial class Chunk : MonoBehaviour {
                         break;
                     case 4:
                         a = brd.pos.y + 1;
-                        if (a >= CHUNK_SIZE) lightToCompare = UP_LIGHT;
+                        if (a >= chunkSize) lightToCompare = UP_LIGHT;
                         else lightToCompare = lightMap[brd.pos.x, a, brd.pos.z];
                         break;
                     case 5:
