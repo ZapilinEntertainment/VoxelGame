@@ -68,17 +68,7 @@ public class House : Building {
         if (connectedToPowerGrid & recalculateAfter) colony.RecalculatePowerGrid();
         colony.RecalculateHousing();
 		ChangeRenderersView(x);
-	}
-
-    override public bool CheckSpecialBuildingCondition(Plane p, ref string reason)
-    {
-        if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
-        {
-            reason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
-            return false;
-        }
-        else return true;
-    }
+	}  
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

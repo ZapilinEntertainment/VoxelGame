@@ -129,7 +129,7 @@ public class Farm : WorkBuilding
         }
     }
 
-    override public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
+    new public static bool CheckSpecialBuildingConditions(Plane p, ref string refusalReason)
     {
         if (!Nature.MaterialIsLifeSupporting(p.materialID))
         {

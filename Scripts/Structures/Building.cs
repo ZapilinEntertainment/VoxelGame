@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Building : Structure
-{    
+{
     public bool canBePowerSwitched { get; protected set; }
     public bool isActive { get; protected set; }
     public bool isEnergySupplied { get; protected set; } //управляется только ColonyController'ом
@@ -15,94 +15,106 @@ public class Building : Structure
     public int upgradedIndex { get { return _upgradedIndex; } private set { _upgradedIndex = value; } }
     private byte _level = 1;
     public byte level { get { return _level; } protected set { _level = value; } }
-    public bool specialBuildingConditions { get; protected set; }
 
     public static UIBuildingObserver buildingObserver;
-    public static List<Building> GetApplicableBuildingsList(byte i_level)
+    public static int[] GetApplicableBuildingsList(byte i_level)
     {
-        //относительно ужасное решение
-        // хотя создаются всего лишь экземпляры классов, без моделей и привязок
-        List<Building> blist = new List<Building>();
         switch (i_level)
         {
             case 1:
-                blist.Add(GetStructureByID(WIND_GENERATOR_1_ID) as Building);
-                blist.Add(GetStructureByID(PSYCHOKINECTIC_GEN_ID) as Building);
-                blist.Add(GetStructureByID(STORAGE_1_ID) as Building);
-                blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
-                blist.Add(GetStructureByID(FARM_1_ID) as Building);
-                blist.Add(GetStructureByID(LUMBERMILL_1_ID) as Building);
-                blist.Add(GetStructureByID(SMELTERY_1_ID) as Building);
-                blist.Add(GetStructureByID(ENERGY_CAPACITOR_1_ID) as Building);
-                //blist.Add(GetStructureByID(MINE_ID) as Building);
-                blist.Add(GetStructureByID(DOCK_ID) as Building);
-                break;
+                return new int[] {
+                    WIND_GENERATOR_1_ID,
+                    PSYCHOKINECTIC_GEN_ID,
+                    STORAGE_1_ID,
+                    SETTLEMENT_CENTER_ID,
+                    FARM_1_ID,
+                    LUMBERMILL_1_ID,
+                    SMELTERY_1_ID,
+                    ENERGY_CAPACITOR_1_ID,
+                   // MINE_ID,
+                    DOCK_ID
+                };
             case 2:
-                blist.Add(GetStructureByID(STORAGE_2_ID) as Building);
-                //blist.Add(GetStructureByID(HOUSE_2_ID) as Building);
-                blist.Add(GetStructureByID(FARM_2_ID) as Building);
-                blist.Add(GetStructureByID(LUMBERMILL_2_ID) as Building);
-                blist.Add(GetStructureByID(SMELTERY_2_ID) as Building);
-                blist.Add(GetStructureByID(ENERGY_CAPACITOR_2_ID) as Building);
-                blist.Add(GetStructureByID(ORE_ENRICHER_2_ID) as Building);
-                blist.Add(GetStructureByID(BIOGENERATOR_2_ID) as Building);
-                blist.Add(GetStructureByID(MINERAL_POWERPLANT_2_ID) as Building);
-                blist.Add(GetStructureByID(HOSPITAL_2_ID) as Building);
-                blist.Add(GetStructureByID(WORKSHOP_ID) as Building);
-                break;
-            case 3:
-                if (Settlement.maxAchievedLevel >= 3) blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
-                blist.Add(GetStructureByID(FARM_3_ID) as Building);
-                blist.Add(GetStructureByID(LUMBERMILL_3_ID) as Building);
-                blist.Add(GetStructureByID(SMELTERY_3_ID) as Building);
-                blist.Add(GetStructureByID(PLASTICS_FACTORY_3_ID) as Building);
-                blist.Add(GetStructureByID(MINI_GRPH_REACTOR_3_ID) as Building);
-                blist.Add(GetStructureByID(ENERGY_CAPACITOR_2_ID) as Building);
-                blist.Add(GetStructureByID(XSTATION_3_ID) as Building);
-                blist.Add(GetStructureByID(GRPH_ENRICHER_3_ID) as Building);
-                break;
-            case 4:
-                blist.Add(GetStructureByID(FARM_4_ID) as Building);
-                blist.Add(GetStructureByID(LUMBERMILL_4_ID) as Building);
-                //blist.Add(GetStructureByID(SUPPLIES_FACTORY_4_ID) as Building);
-                blist.Add(GetStructureByID(GRPH_REACTOR_4_ID) as Building);
-                blist.Add(GetStructureByID(SHUTTLE_HANGAR_4_ID) as Building);
-                blist.Add(GetStructureByID(RECRUITING_CENTER_4_ID) as Building);
-                blist.Add(GetStructureByID(EXPEDITION_CORPUS_4_ID) as Building);
-                blist.Add(GetStructureByID(QUANTUM_TRANSMITTER_4_ID) as Building);
-                blist.Add(GetStructureByID(DOCK_ADDON_1_ID) as Building);
-                //blist.Add(GetStructureByID(ARTIFACTS_REPOSITORY_ID) as Building);
-                blist.Add(GetStructureByID(FUEL_FACILITY_ID) as Building);
-                break;
-            case 5:
-                blist.Add(GetStructureByID(FOUNDATION_BLOCK_5_ID) as Building);
-                blist.Add(GetStructureByID(STORAGE_BLOCK_ID) as Building);                
-                blist.Add(GetStructureByID(FARM_BLOCK_ID) as Building);
-                blist.Add(GetStructureByID(LUMBERMILL_BLOCK_ID) as Building);
-                blist.Add(GetStructureByID(SMELTERY_BLOCK_ID) as Building);
-                //blist.Add(GetStructureByID(SUPPLIES_FACTORY_5_ID) as Building);
-                blist.Add(GetStructureByID(QUANTUM_ENERGY_TRANSMITTER_5_ID) as Building);                
-                blist.Add(GetStructureByID(REACTOR_BLOCK_5_ID) as Building);
-                blist.Add(GetStructureByID(OBSERVATORY_ID) as Building);
-                blist.Add(GetStructureByID(MONUMENT_ID) as Building);
-                break;
-            case 6:
-                if (Settlement.maxAchievedLevel >= 6)
+                return new int[]
                 {
-                    blist.Add(GetStructureByID(SETTLEMENT_CENTER_ID) as Building);
-                    if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
-                        blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
+                    STORAGE_2_ID,
+                    //HOUSE_2_ID,
+                    FARM_2_ID,
+                    LUMBERMILL_2_ID,
+                    SMELTERY_2_ID,
+                    ENERGY_CAPACITOR_2_ID,
+                    ORE_ENRICHER_2_ID,
+                    BIOGENERATOR_2_ID,
+                    MINERAL_POWERPLANT_2_ID,
+                    HOSPITAL_2_ID,
+                    WORKSHOP_ID
+                };
+            case 3:
+                {
+                    var blist = new List<int>()
+                {
+                    FARM_3_ID,
+                    LUMBERMILL_3_ID,
+                    SMELTERY_3_ID,
+                    PLASTICS_FACTORY_3_ID,
+                    MINI_GRPH_REACTOR_3_ID,
+                    ENERGY_CAPACITOR_2_ID,
+                    XSTATION_3_ID,
+                    GRPH_ENRICHER_3_ID
+                };
+                    if (Settlement.maxAchievedLevel >= 3) blist.Insert(SETTLEMENT_CENTER_ID, 0);
+                    return blist.ToArray();
                 }
-                //blist.Add(GetStructureByID(CONNECT_TOWER_6_ID) as Building);
-                //blist.Add(GetStructureByID(HOTEL_BLOCK_6_ID) as Building);
-                blist.Add(GetStructureByID(HOUSING_MAST_6_ID) as Building);
-                blist.Add(GetStructureByID(HOUSE_BLOCK_ID) as Building);
-                blist.Add(GetStructureByID(DOCK_ADDON_2_ID) as Building);
-                //blist.Add(GetStructureByID(SWITCH_TOWER_ID) as Building);
-                blist.Add(GetStructureByID(SCIENCE_LAB_ID) as Building);
-                break;
+            case 4:
+                return new int[]
+                {
+                    FARM_4_ID,
+                    LUMBERMILL_4_ID,
+                    //SUPPLIES_FACTORY_4_ID,
+                    GRPH_REACTOR_4_ID,
+                    SHUTTLE_HANGAR_4_ID,
+                    RECRUITING_CENTER_4_ID,
+                    EXPEDITION_CORPUS_4_ID,
+                    QUANTUM_TRANSMITTER_4_ID,
+                    DOCK_ADDON_1_ID,
+                    //ARTIFACTS_REPOSITORY_ID,
+                    FUEL_FACILITY_ID
+                };
+            case 5:
+                return new int[]
+                {
+                    FOUNDATION_BLOCK_5_ID,
+                    STORAGE_BLOCK_ID,
+                    FARM_BLOCK_ID,
+                    LUMBERMILL_BLOCK_ID,
+                    SMELTERY_BLOCK_ID,
+                    //SUPPLIES_FACTORY_5_ID,
+                    QUANTUM_ENERGY_TRANSMITTER_5_ID,
+                    REACTOR_BLOCK_5_ID,
+                    OBSERVATORY_ID,
+                    MONUMENT_ID
+                };
+            case 6:
+                {
+                    var blist = new List<int>()
+                {
+                    //CONNECT_TOWER_6_ID,
+                    //HOTEL_BLOCK_6_ID,
+                    HOUSING_MAST_6_ID,
+                    DOCK_ADDON_2_ID,
+                    //SWITCH_TOWER_ID,
+                    SCIENCE_LAB_ID
+                };
+                    if (Settlement.maxAchievedLevel >= 6)
+                    {
+                        blist.Insert(SETTLEMENT_CENTER_ID, 0);
+                        if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
+                            blist.Insert(HOUSE_BLOCK_ID, 2);
+                    }
+                    return blist.ToArray();
+                }
+            default: return new int[0];
         }
-        return blist;
     }
 
     public const int BUILDING_SERIALIZER_LENGTH = 5;
@@ -144,7 +156,7 @@ public class Building : Structure
             case SUPPLIES_FACTORY_5_ID: return 80f;
 
             case FOUNDATION_BLOCK_5_ID:
-            case WIND_GENERATOR_1_ID:            
+            case WIND_GENERATOR_1_ID:
                 return 10f;
             case SCIENCE_LAB_ID:
             case XSTATION_3_ID: return 12f;
@@ -233,7 +245,7 @@ public class Building : Structure
             case FUEL_FACILITY_ID: return -20f;
 
             case OBSERVATORY_ID: return -50f;
-            case CONNECT_TOWER_6_ID: return -64f;            
+            case CONNECT_TOWER_6_ID: return -64f;
             case GRPH_ENRICHER_3_ID: return -70f;
 
 
@@ -251,12 +263,12 @@ public class Building : Structure
             default: return 0;
         }
     }
-
-    override public void Prepare() { PrepareBuilding(); }
-    virtual public bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
+    new public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
         return true;
     }
+
+    override public void Prepare() { PrepareBuilding(); }
 
     protected void ChangeUpgradedIndex(int x)
     {
@@ -274,7 +286,6 @@ public class Building : Structure
         isActive = false;
         isEnergySupplied = false;
         connectedToPowerGrid = false;
-        specialBuildingConditions = false;
 
         upgradedIndex = -1;
         canBePowerSwitched = false;
@@ -303,7 +314,7 @@ public class Building : Structure
                 break;
             case STORAGE_2_ID:
                 {
-                   // upgradedIndex = STORAGE_3_ID;
+                    // upgradedIndex = STORAGE_3_ID;
                     level = 2;
                 }
                 break;
@@ -355,14 +366,12 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_2_ID;
                     canBePowerSwitched = true;
-                    specialBuildingConditions = true;
                 }
                 break;
             case FARM_2_ID:
                 {
                     upgradedIndex = FARM_3_ID;
                     canBePowerSwitched = true;
-                    specialBuildingConditions = true;
                     level = 2;
                 }
                 break;
@@ -370,7 +379,6 @@ public class Building : Structure
                 {
                     upgradedIndex = FARM_4_ID;
                     canBePowerSwitched = true;
-                    specialBuildingConditions = true;
                     level = 3;
                 }
                 break;
@@ -391,21 +399,18 @@ public class Building : Structure
                 {
                     upgradedIndex = LUMBERMILL_2_ID;
                     canBePowerSwitched = true;
-                    specialBuildingConditions = true;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
                     upgradedIndex = LUMBERMILL_3_ID;
                     canBePowerSwitched = true;
-                    specialBuildingConditions = true;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
                     upgradedIndex = LUMBERMILL_4_ID;
                     canBePowerSwitched = true;
-                    specialBuildingConditions = true;
                     level = 3;
                 }
                 break;
@@ -576,7 +581,6 @@ public class Building : Structure
                 break;
             case CONNECT_TOWER_6_ID:
                 {
-                    specialBuildingConditions = true;
                     canBePowerSwitched = true;
                     level = 6;
                 }
@@ -589,7 +593,6 @@ public class Building : Structure
                 break;
             case HOUSING_MAST_6_ID:
                 {
-                    specialBuildingConditions = true;
                     level = 6;
                 }
                 break;
@@ -600,7 +603,6 @@ public class Building : Structure
                 break;
             case OBSERVATORY_ID:
                 {
-                    specialBuildingConditions = true;
                     canBePowerSwitched = true;
                     level = 5;
                     break;
@@ -754,7 +756,7 @@ public class Building : Structure
 
     #region save-load system
     override public List<byte> Save()
-    {        
+    {
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
         return data;
@@ -770,7 +772,7 @@ public class Building : Structure
     }
 
     override public void Load(System.IO.FileStream fs, Plane sblock)
-    {        
+    {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
         // dependence in Settlement PsychokineticGenerator  QuantumEnergyTransmitter Hotel

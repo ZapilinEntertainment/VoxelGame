@@ -17,85 +17,11 @@ public sealed class Observatory : WorkBuilding
     {
         alreadyBuilt = false;
     }
-
     public static float GetVisibilityCoefficient()
     {
         return 1f;
     }
-    override public void SetBasement(Plane b, PixelPosByte pos)
-    {
-        if (alreadyBuilt)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        if (b == null) return;
-        SetWorkbuildingData(b, pos);
-        if (!subscribedToUpdate)
-        {
-            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
-            subscribedToUpdate = true;
-        }
-        if (!GameMaster.loading)
-        {
-            List<ChunkPos> positionsList = new List<ChunkPos>();
-            int x = b.pos.x, z = b.pos.z, y = b.pos.y;
-            positionsList = new List<ChunkPos>()
-            {
-                new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
-                new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
-                new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
-            };
-            blockedBlocks = new List<Block>();
-            b.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
-        }
-        else
-        {
-            if (!subscribedToRestoreBlockersUpdate)
-            {
-                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
-                subscribedToRestoreBlockersUpdate = true;
-            }
-        }
-        UIController.current.AddFastButton(this);
-        alreadyBuilt = true;
-    }
-    public void RestoreBlockers()
-    {
-        List<ChunkPos> positionsList = new List<ChunkPos>();
-        int x = basement.pos.x, z = basement.pos.z, y = basement.pos.y;
-        positionsList = new List<ChunkPos>()
-            {
-                new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
-                new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
-                new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
-            };
-        blockedBlocks = new List<Block>();
-        basement.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
-        GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
-        subscribedToRestoreBlockersUpdate = false;
-    }
-
-    protected override void LabourResult()
-    {
-        workflow = 0;
-        // new object searched
-        float f = Random.value;
-        if (Random.value <= CHANCE_TO_FIND)
-        {
-            if (GameMaster.realMaster.globalMap.Search())
-            {
-                // visual effect
-            }
-        }
-    }
-    override public void RecalculateWorkspeed()
-    {
-        workSpeed = (colony.gears_coefficient + colony.health_coefficient + colony.happiness_coefficient - 2) * GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
-        gearsDamage = 0;
-    }
-
-    override public bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    new public static bool CheckSpecialBuildingConditions(Plane p, ref string reason)
     {
         if (alreadyBuilt)
         {
@@ -181,6 +107,79 @@ public sealed class Observatory : WorkBuilding
             }
         }
     }
+
+    override public void SetBasement(Plane b, PixelPosByte pos)
+    {
+        if (alreadyBuilt)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        if (b == null) return;
+        SetWorkbuildingData(b, pos);
+        if (!subscribedToUpdate)
+        {
+            GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
+            subscribedToUpdate = true;
+        }
+        if (!GameMaster.loading)
+        {
+            List<ChunkPos> positionsList = new List<ChunkPos>();
+            int x = b.pos.x, z = b.pos.z, y = b.pos.y;
+            positionsList = new List<ChunkPos>()
+            {
+                new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
+                new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
+                new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
+            };
+            blockedBlocks = new List<Block>();
+            b.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
+        }
+        else
+        {
+            if (!subscribedToRestoreBlockersUpdate)
+            {
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersUpdate = true;
+            }
+        }
+        UIController.current.AddFastButton(this);
+        alreadyBuilt = true;
+    }
+    public void RestoreBlockers()
+    {
+        List<ChunkPos> positionsList = new List<ChunkPos>();
+        int x = basement.pos.x, z = basement.pos.z, y = basement.pos.y;
+        positionsList = new List<ChunkPos>()
+            {
+                new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),
+                new ChunkPos(x - 1, y, z), new ChunkPos(x + 1, y,z),
+                new ChunkPos(x - 1, y, z+1), new ChunkPos(x, y, z+1), new ChunkPos(x + 1, y, z + 1)
+            };
+        blockedBlocks = new List<Block>();
+        basement.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
+        GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
+        subscribedToRestoreBlockersUpdate = false;
+    }
+
+    protected override void LabourResult()
+    {
+        workflow = 0;
+        // new object searched
+        float f = Random.value;
+        if (Random.value <= CHANCE_TO_FIND)
+        {
+            if (GameMaster.realMaster.globalMap.Search())
+            {
+                // visual effect
+            }
+        }
+    }
+    override public void RecalculateWorkspeed()
+    {
+        workSpeed = (colony.gears_coefficient + colony.health_coefficient + colony.happiness_coefficient - 2) * GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
+        gearsDamage = 0;
+    }   
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

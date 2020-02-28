@@ -30,6 +30,9 @@ public class Structure : MonoBehaviour
     // -resource cost
     // score calculator
     // get structure size
+    // get type by id
+    // special building conditions
+    // place in center
     public const int EMPTY_ID = -1, PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
     DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, ENERGY_CAPACITOR_2_ID = 43, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
@@ -81,130 +84,132 @@ public class Structure : MonoBehaviour
 
     public static Structure GetStructureByID(int i_id)
     {
-        Structure s;
+        GameObject s;
         switch (i_id)
         {
             case PLANT_ID: print("error : cannot create plant via GetStructureById"); return null;
             case DRYED_PLANT_ID:
-                s = new GameObject("dryed plant").AddComponent<Structure>(); break;
+                s = new GameObject("dryed plant"); break;
             case COLUMN_ID:
-                s = new GameObject("Column").AddComponent<Platform>(); break;
+                s = new GameObject("Column"); break;
             case RESOURCE_STICK_ID:
-                s = new GameObject("Scalable harvestable resource").AddComponent<ScalableHarvestableResource>(); break;
+                s = new GameObject("Scalable harvestable resource"); break;
             case MINE_ELEVATOR_ID:
-                s = new GameObject("Mine elevator").AddComponent<MineElevator>(); break;
+                s = new GameObject("Mine elevator"); break;
             case HEADQUARTERS_ID:
-                s = new GameObject("HQ").AddComponent<HeadQuarters>(); break;
+                s = new GameObject("HQ"); break;
             case TREE_OF_LIFE_ID:
             case LIFESTONE_ID:
-                s = new GameObject("Lifesource").AddComponent<LifeSource>(); break;
+                s = new GameObject("Lifesource"); break;
             case STORAGE_0_ID:
             case STORAGE_1_ID:
             case STORAGE_2_ID:
-                s = new GameObject("Storage").AddComponent<StorageHouse>(); break;
+                s = new GameObject("Storage"); break;
             case STORAGE_BLOCK_ID:
-                s = new GameObject("StorageBlock").AddComponent<StorageBlock>(); break;
+                s = new GameObject("StorageBlock"); break;
             case CONTAINER_ID:
                 //use HarvestableResource.ConstructContainer instead
-                s = new GameObject("Container").AddComponent<HarvestableResource>(); break;
+                s = new GameObject("Container"); break;
             case TENT_ID:
             case HOUSE_BLOCK_ID:
-                s = new GameObject("HouseBlock").AddComponent<HouseBlock>(); break;
+                s = new GameObject("HouseBlock"); break;
             case DOCK_ID:
             case DOCK_2_ID:
             case DOCK_3_ID:
-                s = new GameObject("Dock").AddComponent<Dock>(); break;
+                s = new GameObject("Dock"); break;
             case FARM_1_ID:
             case FARM_2_ID:
             case FARM_3_ID:
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
-                s = new GameObject("Farm").AddComponent<Farm>(); break;
+                s = new GameObject("Farm"); break;
             case LUMBERMILL_4_ID:
             case FARM_4_ID:
-                s = new GameObject("CoveredFarm").AddComponent<CoveredFarm>(); break;           
+                s = new GameObject("CoveredFarm"); break;           
             case LUMBERMILL_BLOCK_ID:
             case FARM_BLOCK_ID:
-                s = new GameObject("FarmBlock").AddComponent<FarmBlock>(); break;
+                s = new GameObject("FarmBlock"); break;
             case MINE_ID:
-                s = new GameObject("Mine").AddComponent<Mine>(); break;
+                s = new GameObject("Mine"); break;
             case SMELTERY_1_ID:
             case SMELTERY_2_ID:
             case SMELTERY_3_ID:            
             case ORE_ENRICHER_2_ID:
             case PLASTICS_FACTORY_3_ID:
             case FUEL_FACILITY_ID:
-                s = new GameObject("Factory").AddComponent<Factory>(); break;
+                s = new GameObject("Factory"); break;
             case SMELTERY_BLOCK_ID:
-                s = new GameObject("SmelteryBlock").AddComponent<SmelteryBlock>(); break;
+                s = new GameObject("SmelteryBlock"); break;
             case SUPPLIES_FACTORY_4_ID:
             case SUPPLIES_FACTORY_5_ID:
-                s = new GameObject().AddComponent<FoodFactory>(); break;
+                s = new GameObject("Supplies factory"); break;
             case WIND_GENERATOR_1_ID:
-                s = new GameObject().AddComponent<WindGenerator>(); break;
+                s = new GameObject("Stream generator"); break;
             case BIOGENERATOR_2_ID:
             case MINERAL_POWERPLANT_2_ID:
             case GRPH_REACTOR_4_ID:
-                s = new GameObject("Powerplant").AddComponent<Powerplant>(); break;
+                s = new GameObject("Powerplant"); break;
             case HOSPITAL_2_ID:
-                s = new GameObject("Hospital").AddComponent<Hospital>(); break;
+                s = new GameObject("Hospital"); break;
             case WORKSHOP_ID:
-                s = new GameObject("Rolling Shop").AddComponent<Workshop>(); break;
+                s = new GameObject("Rolling Shop"); break;
             case MINI_GRPH_REACTOR_3_ID:
             case ENERGY_CAPACITOR_1_ID:
             case ENERGY_CAPACITOR_2_ID:
-                s = new GameObject("Energy capacitor").AddComponent<Building>(); break;
+                s = new GameObject("Energy capacitor"); break;
             case GRPH_ENRICHER_3_ID:
-                s = new GameObject("Graphonium Enricher").AddComponent<Factory>(); break;
+                s = new GameObject("Graphonium Enricher"); break;
             case XSTATION_3_ID:
-                s = new GameObject("XStation").AddComponent<XStation>(); break; // AWAITING
-            case QUANTUM_ENERGY_TRANSMITTER_5_ID: s = new GameObject("Quantum energy transmitter").AddComponent<QuantumEnergyTransmitter>(); break;
+                s = new GameObject("XStation"); break; // AWAITING
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID:
+                s = new GameObject("Quantum energy transmitter"); break;
             case QUANTUM_TRANSMITTER_4_ID:
-                s = new GameObject("Quantum transmitter").AddComponent<QuantumTransmitter>(); break;
+                s = new GameObject("Quantum transmitter"); break;
             case SWITCH_TOWER_ID:
-                s = new GameObject("Switch tower").AddComponent<SwitchTower>(); break;
+                s = new GameObject("Switch tower"); break;
             case SHUTTLE_HANGAR_4_ID:
-                s = new GameObject("Shuttle hangar").AddComponent<Hangar>(); break;
+                s = new GameObject("Shuttle hangar"); break;
             case RECRUITING_CENTER_4_ID:
-                s = new GameObject("Recruiting center").AddComponent<RecruitingCenter>(); break;
+                s = new GameObject("Recruiting center"); break;
             case EXPEDITION_CORPUS_4_ID:
-                s = new GameObject("Expedition corpus").AddComponent<ExpeditionCorpus>(); break;
+                s = new GameObject("Expedition corpus"); break;
             case REACTOR_BLOCK_5_ID:
-                s = new GameObject("Reactor block").AddComponent<ReactorBlock>(); break;
+                s = new GameObject("Reactor block"); break;
             case FOUNDATION_BLOCK_5_ID:
-                s = new GameObject("Foundation block").AddComponent<FoundationBlock>(); break;
+                s = new GameObject("Foundation block"); break;
             case CONNECT_TOWER_6_ID:
-                s = new GameObject("Connect tower").AddComponent<ConnectTower>(); break;
+                s = new GameObject("Connect tower"); break;
             // case CONTROL_CENTER_6_ID:
             // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
             case HOTEL_BLOCK_6_ID:
-                s = new GameObject("Hotel block").AddComponent<Hotel>(); break; // AWAITING
+                s = new GameObject("Hotel block"); break; // AWAITING
             case HOUSING_MAST_6_ID:
-                s = new GameObject("Housing mast").AddComponent<House>(); break;
+                s = new GameObject("Housing mast"); break;
             case DOCK_ADDON_1_ID:
-                s = new GameObject("Dock Addon 1").AddComponent<DockAddon>(); break;
+                s = new GameObject("Dock Addon 1"); break;
             case DOCK_ADDON_2_ID:
-                s = new GameObject("Dock Addon 2").AddComponent<DockAddon>(); break;
+                s = new GameObject("Dock Addon 2"); break;
             case OBSERVATORY_ID:
-                s = new GameObject("Observatory").AddComponent<Observatory>(); break;
+                s = new GameObject("Observatory"); break;
             case ARTIFACTS_REPOSITORY_ID:
-                s = new GameObject("Artifacts repository").AddComponent<ArtifactsRepository>(); break;
+                s = new GameObject("Artifacts repository"); break;
             case MONUMENT_ID:
-                s = new GameObject("Monument").AddComponent<Monument>(); break;
+                s = new GameObject("Monument"); break;
             case SETTLEMENT_CENTER_ID:
-                s = new GameObject("Settlement center").AddComponent<Settlement>(); break;
+                s = new GameObject("Settlement center"); break;
             case SETTLEMENT_STRUCTURE_ID:
-                s = new GameObject("Settlement structure").AddComponent<SettlementStructure>(); break;
+                s = new GameObject("Settlement structure"); break;
             case PSYCHOKINECTIC_GEN_ID:
-                s = new GameObject("Psychocinetic gen").AddComponent<PsychokineticGenerator>(); break;
+                s = new GameObject("Psychocinetic gen"); break;
             case SCIENCE_LAB_ID:
-                s = new GameObject("Science Lab").AddComponent<ScienceLab>(); break;
+                s = new GameObject("Science Lab"); break;
             default: return null;
         }
-        s.ID = i_id;
-        s.Prepare();
-        return s;
+        Structure st = (Structure)s.AddComponent(GetTypeByID(i_id));
+        st.ID = i_id;
+        st.Prepare();
+        return st;
     }
     public static Rect GetTextureRect(int f_id)
     {
@@ -284,6 +289,149 @@ public class Structure : MonoBehaviour
             case PSYCHOKINECTIC_GEN_ID: return new Rect(5 * p, 2 * p, p, p);
         }
     }
+    public static System.Type GetTypeByID(int i_id)
+    {
+        switch (i_id)
+        {
+            case COLUMN_ID: return typeof(Platform);
+            case RESOURCE_STICK_ID: return typeof(ScalableHarvestableResource);
+            case MINE_ID:
+                return typeof(Mine);
+            case MINE_ELEVATOR_ID: return typeof(MineElevator);
+            case HEADQUARTERS_ID: return typeof(HeadQuarters);
+            case TREE_OF_LIFE_ID:
+            case LIFESTONE_ID: return typeof(LifeSource);
+            case STORAGE_0_ID:
+            case STORAGE_1_ID:
+            case STORAGE_2_ID:
+                return typeof(StorageHouse);
+            case STORAGE_BLOCK_ID:
+                return typeof(StorageBlock);
+            case CONTAINER_ID:
+                return typeof(HarvestableResource);
+            case TENT_ID:
+            case HOUSE_BLOCK_ID:
+                return typeof(HouseBlock);
+            case DOCK_ID:
+            case DOCK_2_ID:
+            case DOCK_3_ID:
+                return typeof(Dock);
+            case FARM_1_ID:
+            case FARM_2_ID:
+            case FARM_3_ID:
+            case LUMBERMILL_1_ID:
+            case LUMBERMILL_2_ID:
+            case LUMBERMILL_3_ID:
+                return typeof(Farm);
+            case LUMBERMILL_4_ID:
+            case FARM_4_ID:
+                return typeof(CoveredFarm);
+            case LUMBERMILL_BLOCK_ID:
+            case FARM_BLOCK_ID:
+                return typeof(FarmBlock);           
+            case SMELTERY_1_ID:
+            case SMELTERY_2_ID:
+            case SMELTERY_3_ID:
+            case ORE_ENRICHER_2_ID:
+            case PLASTICS_FACTORY_3_ID:
+            case FUEL_FACILITY_ID:
+            case GRPH_ENRICHER_3_ID:
+                return typeof(Factory);
+            case SMELTERY_BLOCK_ID:
+                return typeof(SmelteryBlock);
+            case SUPPLIES_FACTORY_4_ID:
+            case SUPPLIES_FACTORY_5_ID:
+                return typeof(FoodFactory);
+            case WIND_GENERATOR_1_ID:
+                return typeof(WindGenerator);
+            case BIOGENERATOR_2_ID:
+            case MINERAL_POWERPLANT_2_ID:
+            case GRPH_REACTOR_4_ID:
+                return typeof(Powerplant);
+            case HOSPITAL_2_ID:
+                return typeof(Hospital);
+            case WORKSHOP_ID:
+                return typeof(Workshop);
+            case MINI_GRPH_REACTOR_3_ID:
+            case ENERGY_CAPACITOR_1_ID:
+            case ENERGY_CAPACITOR_2_ID:
+                return typeof(Building);            
+            case XSTATION_3_ID:
+                return typeof(XStation);
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID:
+                return typeof(QuantumEnergyTransmitter);
+            case QUANTUM_TRANSMITTER_4_ID:
+                return typeof(QuantumTransmitter);
+            case SWITCH_TOWER_ID:
+                return typeof(SwitchTower);
+            case SHUTTLE_HANGAR_4_ID:
+                return typeof(Hangar);
+            case RECRUITING_CENTER_4_ID:
+                return typeof(RecruitingCenter);
+            case EXPEDITION_CORPUS_4_ID:
+                return typeof(ExpeditionCorpus);
+            case REACTOR_BLOCK_5_ID:
+                return typeof(ReactorBlock);
+            case FOUNDATION_BLOCK_5_ID:
+                return typeof(FoundationBlock);
+            case CONNECT_TOWER_6_ID:
+                return typeof(ConnectTower);
+            // case CONTROL_CENTER_6_ID:
+            // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
+            case HOTEL_BLOCK_6_ID:
+                return typeof(Hotel);
+            case HOUSING_MAST_6_ID:
+                return typeof(House);
+            case DOCK_ADDON_1_ID:
+            case DOCK_ADDON_2_ID:
+                return typeof(DockAddon);
+            case OBSERVATORY_ID:
+                return typeof(Observatory);
+            case ARTIFACTS_REPOSITORY_ID:
+                return typeof(ArtifactsRepository);
+            case MONUMENT_ID:
+                return typeof(Monument);
+            case SETTLEMENT_CENTER_ID:
+                return typeof(Settlement);
+            case SETTLEMENT_STRUCTURE_ID:
+                return typeof(SettlementStructure);
+            case PSYCHOKINECTIC_GEN_ID:
+                return typeof(PsychokineticGenerator);
+            case SCIENCE_LAB_ID:
+                return typeof(ScienceLab);
+            default: return typeof(Structure);
+        }
+    }
+    public static bool CheckSpecialBuildingConditions(int id, Plane p, ref string refusalReason)
+    {
+        switch (id)
+        {
+            case FARM_1_ID:
+            case FARM_2_ID:
+            case FARM_3_ID:
+            case LUMBERMILL_1_ID:
+            case LUMBERMILL_2_ID:
+            case LUMBERMILL_3_ID:
+                return Farm.CheckSpecialBuildingConditions(p, ref refusalReason);
+            case CONNECT_TOWER_6_ID:
+                return ConnectTower.CheckSpecialBuildingConditions(p, ref refusalReason);
+            case HOUSING_MAST_6_ID:
+                if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
+                {
+                    refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
+                    return false;
+                }
+                else return true;
+            case OBSERVATORY_ID:
+                return Observatory.CheckSpecialBuildingConditions(p, ref refusalReason);
+            default: return true;
+        }
+    }
+    public static bool CheckSpecialBuildingConditions(Plane p, ref string refusalReason)
+    {
+        return true;
+    }
+
 
     virtual protected void SetModel()
     {
@@ -385,7 +533,8 @@ public class Structure : MonoBehaviour
         hp = t;
         if (hp == 0) Annihilate(true, false, true);
     }
-    public bool IsDestroyed() { return destroyed; } 
+    public bool IsDestroyed() { return destroyed; }
+   
     virtual public void Prepare()
     {
         PrepareStructure();
@@ -405,7 +554,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 1;
                     isArtificial = false;
-                    placeInCenter = false;
                     rotate90only = false;
                 }
                 break;
@@ -413,7 +561,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 1;
                     isArtificial = false;
-                    placeInCenter = false;
                     rotate90only = false;
                 }
                 break;
@@ -421,7 +568,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = PlaneExtension.INNER_RESOLUTION;
                     isArtificial = false;
-                    placeInCenter = false;
                     rotate90only = true;
                 }
                 break;
@@ -429,7 +575,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 1000;
                     isArtificial = true;
-                    placeInCenter = true;
                     rotate90only = true;
                     indestructible = true;
                 }
@@ -438,7 +583,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 1000;
                     isArtificial = true;
-                    placeInCenter = true;
                     rotate90only = false;
                     indestructible = false;
                 }
@@ -447,7 +591,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = LifeSource.MAX_HP;
                     isArtificial = false;
-                    placeInCenter = true;
                     rotate90only = false;
                     indestructible = true;
                 }
@@ -456,7 +599,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 750;
                     isArtificial = true;
-                    placeInCenter = true;
                     rotate90only = true;
                     indestructible = true;
                 }
@@ -465,7 +607,6 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 4000;
                     isArtificial = true;
-                    placeInCenter = true;
                     rotate90only = true;
                 }
                 break;
@@ -473,14 +614,12 @@ public class Structure : MonoBehaviour
                 {
                     maxHp = 6000;
                     isArtificial = true;                    
-                    placeInCenter = true;
                     rotate90only = true;
                 }
                 break;
             case STORAGE_BLOCK_ID:
                 {
                     maxHp = 12000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -489,7 +628,6 @@ public class Structure : MonoBehaviour
             case CONTAINER_ID:
                 {
                     maxHp = 10;
-                    placeInCenter = false;
                     rotate90only = false;
                     isArtificial = false;
                     
@@ -498,7 +636,6 @@ public class Structure : MonoBehaviour
             case MINE_ELEVATOR_ID:
                 {
                     maxHp = 100;
-                    placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -507,7 +644,6 @@ public class Structure : MonoBehaviour
             case LIFESTONE_ID:
                 {
                     maxHp = LifeSource.MAX_HP;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = false;
                     
@@ -517,7 +653,6 @@ public class Structure : MonoBehaviour
             case TENT_ID:
                 {
                     maxHp = 5;
-                    placeInCenter = false;
                     rotate90only = false;
                     isArtificial = false;                    
                 }
@@ -525,7 +660,6 @@ public class Structure : MonoBehaviour
             case HOUSE_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -533,7 +667,6 @@ public class Structure : MonoBehaviour
             case DOCK_ID:
                 {
                     maxHp = 1200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -541,7 +674,6 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_1_ID:
                 {
                     maxHp = 1000;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -549,7 +681,6 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_2_ID:
                 {
                     maxHp = 2000;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -557,7 +688,6 @@ public class Structure : MonoBehaviour
             case FARM_1_ID:
                 {
                     maxHp = 500;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -565,7 +695,6 @@ public class Structure : MonoBehaviour
             case FARM_2_ID:
                 {
                     maxHp = 800;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -573,15 +702,13 @@ public class Structure : MonoBehaviour
             case FARM_3_ID:
                 {
                     maxHp = 1500;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
                 break;
             case FARM_4_ID:
                 {
-                    maxHp = 2000;                    
-                    placeInCenter = true;
+                    maxHp = 2000;          
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -589,8 +716,6 @@ public class Structure : MonoBehaviour
             case FARM_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -598,7 +723,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_1_ID:
                 {
                     maxHp = 500;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -606,7 +730,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_2_ID:
                 {
                     maxHp = 750;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -614,7 +737,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_3_ID:
                 {
                     maxHp = 1000;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -622,7 +744,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_4_ID:
                 {
                     maxHp = 1200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -630,7 +751,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -638,7 +758,6 @@ public class Structure : MonoBehaviour
             case MINE_ID:
                 {
                     maxHp = 500;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -646,7 +765,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_1_ID:
                 {
                     maxHp = 800;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -654,7 +772,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_2_ID:
                 {
                     maxHp = 1200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -662,7 +779,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_3_ID:
                 {
                     maxHp = 1800;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -670,7 +786,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -678,7 +793,6 @@ public class Structure : MonoBehaviour
             case WIND_GENERATOR_1_ID:
                 {
                     maxHp = 700;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -686,7 +800,6 @@ public class Structure : MonoBehaviour
             case BIOGENERATOR_2_ID:
                 {
                     maxHp = 1200;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -694,7 +807,6 @@ public class Structure : MonoBehaviour
             case HOSPITAL_2_ID:
                 {
                     maxHp = 1500;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -702,7 +814,6 @@ public class Structure : MonoBehaviour
             case MINERAL_POWERPLANT_2_ID:
                 {
                     maxHp = 1100;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -710,7 +821,6 @@ public class Structure : MonoBehaviour
             case ORE_ENRICHER_2_ID:
                 {
                     maxHp = 1500;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -718,7 +828,6 @@ public class Structure : MonoBehaviour
             case WORKSHOP_ID:
                 {
                     maxHp = 1200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -726,7 +835,6 @@ public class Structure : MonoBehaviour
             case MINI_GRPH_REACTOR_3_ID:
                 {
                     maxHp = 800;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -734,7 +842,6 @@ public class Structure : MonoBehaviour
             case FUEL_FACILITY_ID:
                 {
                     maxHp = 1250;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -742,7 +849,6 @@ public class Structure : MonoBehaviour
             case GRPH_REACTOR_4_ID:
                 {
                     maxHp = 2700;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -750,7 +856,6 @@ public class Structure : MonoBehaviour
             case PLASTICS_FACTORY_3_ID:
                 {
                     maxHp = 1600;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -758,7 +863,6 @@ public class Structure : MonoBehaviour
             case SUPPLIES_FACTORY_4_ID:
                 {
                     maxHp = 1500;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -766,7 +870,6 @@ public class Structure : MonoBehaviour
             case SUPPLIES_FACTORY_5_ID:
                 {
                     maxHp = 4000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -774,7 +877,6 @@ public class Structure : MonoBehaviour
             case GRPH_ENRICHER_3_ID:
                 {
                     maxHp = 1400;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -782,7 +884,6 @@ public class Structure : MonoBehaviour
             case XSTATION_3_ID:
                 {
                     maxHp = 1700;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -790,7 +891,6 @@ public class Structure : MonoBehaviour
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
                 {
                     maxHp = 2100;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -798,7 +898,6 @@ public class Structure : MonoBehaviour
             case COLUMN_ID:
                 {
                     maxHp = 2200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -806,7 +905,6 @@ public class Structure : MonoBehaviour
             case SWITCH_TOWER_ID:
                 {
                     maxHp = 250;
-                    placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -814,7 +912,6 @@ public class Structure : MonoBehaviour
             case SHUTTLE_HANGAR_4_ID:
                 {
                     maxHp = 1200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -822,7 +919,6 @@ public class Structure : MonoBehaviour
             case RECRUITING_CENTER_4_ID:
                 {
                     maxHp = 1600;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -830,7 +926,6 @@ public class Structure : MonoBehaviour
             case EXPEDITION_CORPUS_4_ID:
                 {
                     maxHp = 1800;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -838,7 +933,6 @@ public class Structure : MonoBehaviour
             case QUANTUM_TRANSMITTER_4_ID:
                 {
                     maxHp = 1100;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -846,7 +940,6 @@ public class Structure : MonoBehaviour
             case REACTOR_BLOCK_5_ID:
                 {
                     maxHp = 3700;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -854,7 +947,6 @@ public class Structure : MonoBehaviour
             case FOUNDATION_BLOCK_5_ID:
                 {
                     maxHp = 8000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -862,7 +954,6 @@ public class Structure : MonoBehaviour
             case CONNECT_TOWER_6_ID:
                 {
                     maxHp = 1700;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                 }
@@ -870,7 +961,6 @@ public class Structure : MonoBehaviour
             case HOTEL_BLOCK_6_ID:
                 {
                     maxHp = 2700;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -878,7 +968,6 @@ public class Structure : MonoBehaviour
             case HOUSING_MAST_6_ID:
                 {
                     maxHp = 5500;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -886,7 +975,6 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_1_ID:
                 {
                     maxHp = 2000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -894,7 +982,6 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_2_ID:
                 {
                     maxHp = 2200;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -903,7 +990,6 @@ public class Structure : MonoBehaviour
             case DOCK_2_ID:
                 {
                     maxHp = 2400;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -921,7 +1007,6 @@ public class Structure : MonoBehaviour
             case OBSERVATORY_ID:
                 {
                     maxHp = 5000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -939,7 +1024,6 @@ public class Structure : MonoBehaviour
             case MONUMENT_ID:
                 {
                     maxHp = 4000;
-                    placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -948,7 +1032,6 @@ public class Structure : MonoBehaviour
             case SETTLEMENT_STRUCTURE_ID:
                 {
                     maxHp = 100;
-                    placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
                     
@@ -957,7 +1040,6 @@ public class Structure : MonoBehaviour
             case PSYCHOKINECTIC_GEN_ID:
                 {
                     maxHp = 800;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;
                     
@@ -966,13 +1048,13 @@ public class Structure : MonoBehaviour
             case SCIENCE_LAB_ID:
                 {
                     maxHp = 1400;
-                    placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
                     break;
                 }
         }
         surfaceRect = new SurfaceRect(0, 0, GetStructureSize(ID));
+        placeInCenter = PlaceInCenter(ID);
         hp = maxHp;
     }   
     public static byte GetStructureSize(int ID)
@@ -1012,6 +1094,21 @@ public class Structure : MonoBehaviour
                 return SettlementStructure.CELLSIZE;
             default:
                 return PlaneExtension.INNER_RESOLUTION;
+        }
+    }
+    public static bool PlaceInCenter (int ID)
+    {
+        switch (ID)
+        {
+            case PLANT_ID:
+            case DRYED_PLANT_ID:
+            case RESOURCE_STICK_ID:     
+            case CONTAINER_ID:
+            case TENT_ID:
+            case SWITCH_TOWER_ID: 
+            case SETTLEMENT_STRUCTURE_ID:
+                return false;
+            default: return true;
         }
     }
 

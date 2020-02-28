@@ -9,7 +9,7 @@
         current = this;
     }
 
-    override public bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    new public static bool CheckSpecialBuildingConditions(Plane p, ref string reason)
     {
         if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
         {
