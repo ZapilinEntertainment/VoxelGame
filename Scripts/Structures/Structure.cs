@@ -29,7 +29,8 @@ public class Structure : MonoBehaviour
     // -building - get applicable buildings list
     // -resource cost
     // score calculator
-    public const int PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
+    // get structure size
+    public const int EMPTY_ID = -1, PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
     DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, ENERGY_CAPACITOR_2_ID = 43, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
@@ -403,7 +404,6 @@ public class Structure : MonoBehaviour
             case PLANT_ID:
                 {
                     maxHp = 1;
-                    surfaceRect = SurfaceRect.one;
                     isArtificial = false;
                     placeInCenter = false;
                     rotate90only = false;
@@ -412,7 +412,6 @@ public class Structure : MonoBehaviour
             case DRYED_PLANT_ID:
                 {
                     maxHp = 1;
-                    surfaceRect = SurfaceRect.one;
                     isArtificial = false;
                     placeInCenter = false;
                     rotate90only = false;
@@ -421,7 +420,6 @@ public class Structure : MonoBehaviour
             case RESOURCE_STICK_ID:
                 {
                     maxHp = PlaneExtension.INNER_RESOLUTION;
-                    surfaceRect = new SurfaceRect(0, 0, ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE);
                     isArtificial = false;
                     placeInCenter = false;
                     rotate90only = true;
@@ -430,7 +428,6 @@ public class Structure : MonoBehaviour
             case HEADQUARTERS_ID:
                 {
                     maxHp = 1000;
-                    surfaceRect = SurfaceRect.full;
                     isArtificial = true;
                     placeInCenter = true;
                     rotate90only = true;
@@ -440,7 +437,6 @@ public class Structure : MonoBehaviour
             case SETTLEMENT_CENTER_ID:
                 {
                     maxHp = 1000;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
                     isArtificial = true;
                     placeInCenter = true;
                     rotate90only = false;
@@ -450,7 +446,6 @@ public class Structure : MonoBehaviour
             case TREE_OF_LIFE_ID:
                 {
                     maxHp = LifeSource.MAX_HP;
-                    surfaceRect = SurfaceRect.full;
                     isArtificial = false;
                     placeInCenter = true;
                     rotate90only = false;
@@ -460,7 +455,6 @@ public class Structure : MonoBehaviour
             case STORAGE_0_ID:
                 {
                     maxHp = 750;
-                    surfaceRect = SurfaceRect.full;
                     isArtificial = true;
                     placeInCenter = true;
                     rotate90only = true;
@@ -470,7 +464,6 @@ public class Structure : MonoBehaviour
             case STORAGE_1_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
                     isArtificial = true;
                     placeInCenter = true;
                     rotate90only = true;
@@ -479,7 +472,6 @@ public class Structure : MonoBehaviour
             case STORAGE_2_ID:
                 {
                     maxHp = 6000;
-                    surfaceRect = SurfaceRect.full;
                     isArtificial = true;                    
                     placeInCenter = true;
                     rotate90only = true;
@@ -488,7 +480,6 @@ public class Structure : MonoBehaviour
             case STORAGE_BLOCK_ID:
                 {
                     maxHp = 12000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -498,7 +489,6 @@ public class Structure : MonoBehaviour
             case CONTAINER_ID:
                 {
                     maxHp = 10;
-                    surfaceRect = SurfaceRect.one;
                     placeInCenter = false;
                     rotate90only = false;
                     isArtificial = false;
@@ -508,7 +498,6 @@ public class Structure : MonoBehaviour
             case MINE_ELEVATOR_ID:
                 {
                     maxHp = 100;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
@@ -518,7 +507,6 @@ public class Structure : MonoBehaviour
             case LIFESTONE_ID:
                 {
                     maxHp = LifeSource.MAX_HP;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = false;
@@ -529,7 +517,6 @@ public class Structure : MonoBehaviour
             case TENT_ID:
                 {
                     maxHp = 5;
-                    surfaceRect = SurfaceRect.one;
                     placeInCenter = false;
                     rotate90only = false;
                     isArtificial = false;                    
@@ -538,7 +525,6 @@ public class Structure : MonoBehaviour
             case HOUSE_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -547,7 +533,6 @@ public class Structure : MonoBehaviour
             case DOCK_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -556,7 +541,6 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_1_ID:
                 {
                     maxHp = 1000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -565,7 +549,6 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_2_ID:
                 {
                     maxHp = 2000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -574,7 +557,6 @@ public class Structure : MonoBehaviour
             case FARM_1_ID:
                 {
                     maxHp = 500;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -583,7 +565,6 @@ public class Structure : MonoBehaviour
             case FARM_2_ID:
                 {
                     maxHp = 800;
-                    surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -592,7 +573,6 @@ public class Structure : MonoBehaviour
             case FARM_3_ID:
                 {
                     maxHp = 1500;
-                    surfaceRect = new SurfaceRect(0, 0, 8);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -600,8 +580,7 @@ public class Structure : MonoBehaviour
                 break;
             case FARM_4_ID:
                 {
-                    maxHp = 2000;
-                    surfaceRect = SurfaceRect.full;
+                    maxHp = 2000;                    
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -619,7 +598,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_1_ID:
                 {
                     maxHp = 500;
-                    surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -628,7 +606,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_2_ID:
                 {
                     maxHp = 750;
-                    surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -637,7 +614,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_3_ID:
                 {
                     maxHp = 1000;
-                    surfaceRect = new SurfaceRect(0, 0, 6);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -646,7 +622,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_4_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -655,7 +630,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -664,7 +638,6 @@ public class Structure : MonoBehaviour
             case MINE_ID:
                 {
                     maxHp = 500;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -673,7 +646,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_1_ID:
                 {
                     maxHp = 800;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -682,7 +654,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_2_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -691,7 +662,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_3_ID:
                 {
                     maxHp = 1800;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -700,7 +670,6 @@ public class Structure : MonoBehaviour
             case SMELTERY_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -709,7 +678,6 @@ public class Structure : MonoBehaviour
             case WIND_GENERATOR_1_ID:
                 {
                     maxHp = 700;
-                    surfaceRect =  new SurfaceRect(0,0,8);
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -718,7 +686,6 @@ public class Structure : MonoBehaviour
             case BIOGENERATOR_2_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = new SurfaceRect(0, 0, 10);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -727,7 +694,6 @@ public class Structure : MonoBehaviour
             case HOSPITAL_2_ID:
                 {
                     maxHp = 1500;
-                    surfaceRect = new SurfaceRect(0, 0, 10);
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -736,7 +702,6 @@ public class Structure : MonoBehaviour
             case MINERAL_POWERPLANT_2_ID:
                 {
                     maxHp = 1100;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -745,7 +710,6 @@ public class Structure : MonoBehaviour
             case ORE_ENRICHER_2_ID:
                 {
                     maxHp = 1500;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -754,7 +718,6 @@ public class Structure : MonoBehaviour
             case WORKSHOP_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -763,7 +726,6 @@ public class Structure : MonoBehaviour
             case MINI_GRPH_REACTOR_3_ID:
                 {
                     maxHp = 800;
-                    surfaceRect = new SurfaceRect(0,0,8);
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -772,7 +734,6 @@ public class Structure : MonoBehaviour
             case FUEL_FACILITY_ID:
                 {
                     maxHp = 1250;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -781,7 +742,6 @@ public class Structure : MonoBehaviour
             case GRPH_REACTOR_4_ID:
                 {
                     maxHp = 2700;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -790,7 +750,6 @@ public class Structure : MonoBehaviour
             case PLASTICS_FACTORY_3_ID:
                 {
                     maxHp = 1600;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -799,7 +758,6 @@ public class Structure : MonoBehaviour
             case SUPPLIES_FACTORY_4_ID:
                 {
                     maxHp = 1500;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -808,7 +766,6 @@ public class Structure : MonoBehaviour
             case SUPPLIES_FACTORY_5_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -817,7 +774,6 @@ public class Structure : MonoBehaviour
             case GRPH_ENRICHER_3_ID:
                 {
                     maxHp = 1400;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -826,7 +782,6 @@ public class Structure : MonoBehaviour
             case XSTATION_3_ID:
                 {
                     maxHp = 1700;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -835,7 +790,6 @@ public class Structure : MonoBehaviour
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
                 {
                     maxHp = 2100;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -844,7 +798,6 @@ public class Structure : MonoBehaviour
             case COLUMN_ID:
                 {
                     maxHp = 2200;
-                    surfaceRect = new SurfaceRect(0, 0, 2);
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -853,7 +806,6 @@ public class Structure : MonoBehaviour
             case SWITCH_TOWER_ID:
                 {
                     maxHp = 250;
-                    surfaceRect = new SurfaceRect(0, 0, 4);
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -862,7 +814,6 @@ public class Structure : MonoBehaviour
             case SHUTTLE_HANGAR_4_ID:
                 {
                     maxHp = 1200;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -871,7 +822,6 @@ public class Structure : MonoBehaviour
             case RECRUITING_CENTER_4_ID:
                 {
                     maxHp = 1600;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -880,7 +830,6 @@ public class Structure : MonoBehaviour
             case EXPEDITION_CORPUS_4_ID:
                 {
                     maxHp = 1800;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -889,7 +838,6 @@ public class Structure : MonoBehaviour
             case QUANTUM_TRANSMITTER_4_ID:
                 {
                     maxHp = 1100;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -898,7 +846,6 @@ public class Structure : MonoBehaviour
             case REACTOR_BLOCK_5_ID:
                 {
                     maxHp = 3700;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -907,7 +854,6 @@ public class Structure : MonoBehaviour
             case FOUNDATION_BLOCK_5_ID:
                 {
                     maxHp = 8000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -916,7 +862,6 @@ public class Structure : MonoBehaviour
             case CONNECT_TOWER_6_ID:
                 {
                     maxHp = 1700;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;                    
@@ -925,7 +870,6 @@ public class Structure : MonoBehaviour
             case HOTEL_BLOCK_6_ID:
                 {
                     maxHp = 2700;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -934,7 +878,6 @@ public class Structure : MonoBehaviour
             case HOUSING_MAST_6_ID:
                 {
                     maxHp = 5500;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -943,7 +886,6 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_1_ID:
                 {
                     maxHp = 2000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;                    
@@ -952,7 +894,6 @@ public class Structure : MonoBehaviour
             case DOCK_ADDON_2_ID:
                 {
                     maxHp = 2200;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -962,7 +903,6 @@ public class Structure : MonoBehaviour
             case DOCK_2_ID:
                 {
                     maxHp = 2400;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -972,7 +912,6 @@ public class Structure : MonoBehaviour
             case DOCK_3_ID:
                 {
                     maxHp = 5000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -982,7 +921,6 @@ public class Structure : MonoBehaviour
             case OBSERVATORY_ID:
                 {
                     maxHp = 5000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -992,7 +930,6 @@ public class Structure : MonoBehaviour
             case ARTIFACTS_REPOSITORY_ID:
                 {
                     maxHp = 1500;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -1002,7 +939,6 @@ public class Structure : MonoBehaviour
             case MONUMENT_ID:
                 {
                     maxHp = 4000;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = true;
                     isArtificial = true;
@@ -1012,7 +948,6 @@ public class Structure : MonoBehaviour
             case SETTLEMENT_STRUCTURE_ID:
                 {
                     maxHp = 100;
-                    surfaceRect = new SurfaceRect(0,0,SettlementStructure.CELLSIZE);
                     placeInCenter = false;
                     rotate90only = true;
                     isArtificial = true;
@@ -1022,7 +957,6 @@ public class Structure : MonoBehaviour
             case PSYCHOKINECTIC_GEN_ID:
                 {
                     maxHp = 800;
-                    surfaceRect = SurfaceRect.full;
                     placeInCenter = true;
                     rotate90only = false;
                     isArtificial = true;
@@ -1032,16 +966,54 @@ public class Structure : MonoBehaviour
             case SCIENCE_LAB_ID:
                 {
                     maxHp = 1400;
-                    surfaceRect = new SurfaceRect(0, 0, 12);
                     placeInCenter = true;
                     rotate90only = false;
-                    isArtificial = true;
-                    
+                    isArtificial = true;                    
                     break;
                 }
         }
+        surfaceRect = new SurfaceRect(0, 0, GetStructureSize(ID));
         hp = maxHp;
     }   
+    public static byte GetStructureSize(int ID)
+    {
+        switch (ID)
+        {
+            case PLANT_ID: 
+            case DRYED_PLANT_ID:
+            case CONTAINER_ID:
+            case TENT_ID:
+                return 1;
+            case RESOURCE_STICK_ID:
+                return ScalableHarvestableResource.RESOURCE_STICK_RECT_SIZE;           
+            case COLUMN_ID:
+                return 2;
+            case SETTLEMENT_CENTER_ID:
+            case MINE_ELEVATOR_ID:
+            case FARM_1_ID:
+            case MINE_ID:
+            case SWITCH_TOWER_ID:
+                return 4;
+            case FARM_2_ID:
+            case LUMBERMILL_1_ID:
+            case LUMBERMILL_2_ID:
+            case LUMBERMILL_3_ID:
+                return 6;
+            case FARM_3_ID:
+            case WIND_GENERATOR_1_ID:
+            case MINI_GRPH_REACTOR_3_ID:
+                return 8;
+            case BIOGENERATOR_2_ID:
+            case HOSPITAL_2_ID:
+                return 10;
+            case SCIENCE_LAB_ID:
+                return 12;
+            case SETTLEMENT_STRUCTURE_ID:
+                return SettlementStructure.CELLSIZE;
+            default:
+                return PlaneExtension.INNER_RESOLUTION;
+        }
+    }
 
     virtual public void SetBasement(Plane p, PixelPosByte pos)
     {

@@ -8,7 +8,7 @@ public sealed class Expedition
 
     public static List<Expedition> expeditionsList { get; private set; }
     public static byte listChangesMarker { get; private set; }
-    public static int expeditionsSucceed;
+    public static int expeditionsSucceed { get; private set; }
     private static UIExpeditionObserver _observer;
     public static int nextID { get; private set; } // в сохранение
 
@@ -23,7 +23,7 @@ public sealed class Expedition
     public Crew crew { get; private set; }
     public Artifact artifact { get; private set; }
 
-    private bool subscribedToUpdate = false;
+    private bool subscribedToUpdate = false, missionCompleted;
     private int shuttleID = Hangar.NO_SHUTTLE_VALUE, transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
     private FlyingExpedition mapMarker;
     private Vector2Int planPos = Vector2Int.zero;
@@ -167,6 +167,10 @@ public sealed class Expedition
     {
         mapMarker = null;
     }
+    public void CountMissionAsSuccess()
+    {
+        missionCompleted = true;
+    }
     
     private void LabourUpdate()
     {
@@ -260,7 +264,7 @@ public sealed class Expedition
     public void Dismiss() // экспедиция вернулась домой и распускается
     {
         //зависимость : Disappear()
-        if (stage == ExpeditionStage.Disappeared) return;
+        if (stage == ExpeditionStage.Disappeared | stage == ExpeditionStage.Dismissed) return;
         else
         {
             if (crew != null) crew.SetCurrentExpedition(null);
@@ -268,13 +272,19 @@ public sealed class Expedition
             Hangar.ReturnShuttle(shuttleID);
             if (destination != null) destination.DeassignExpedition(this);
             if (suppliesCount > 0) GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Supplies, suppliesCount);
-            //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
+            if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
             if (crystalsCollected > 0)
             {
                 GameMaster.realMaster.colonyController.AddEnergyCrystals(crystalsCollected);
                 crystalsCollected = 0;
             }
             stage = ExpeditionStage.Dismissed;
+            if (missionCompleted)
+            {
+                expeditionsSucceed++;
+                Knowledge.GetCurrent()?.ExpeditionsCheck(expeditionsSucceed);
+            }
+
             expeditionsList.Remove(this);
 
             if (subscribedToUpdate & !GameMaster.sceneClearing)
@@ -288,7 +298,7 @@ public sealed class Expedition
     public void Disappear() // INDEV
                             // экспедиция исчезает
     {
-        if (stage == ExpeditionStage.Dismissed) return;
+        if (stage == ExpeditionStage.Dismissed | stage == ExpeditionStage.Disappeared) return;
         else
         {
             if (crew != null) crew.Disappear();
@@ -296,8 +306,8 @@ public sealed class Expedition
             Hangar.ReturnShuttle(shuttleID);
             if (destination != null) destination.DeassignExpedition(this);
             //if (expeditionsList.Contains(this)) expeditionsList.Remove(this);
-            stage = ExpeditionStage.Dismissed;
-
+            stage = ExpeditionStage.Disappeared;
+           
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
@@ -334,11 +344,12 @@ public sealed class Expedition
             data.AddRange(System.BitConverter.GetBytes(mapMarker.height)); // (4-7)
         }
         else data.Add(falsebyte); //27
+        data.Add(missionCompleted ? truebyte : falsebyte); // 28
         return data;
     }
     public Expedition Load(System.IO.FileStream fs)
     {
-        int LENGTH = 28; // (id excluded)
+        int LENGTH = 29; // (id excluded)
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         hasConnection = data[0] == 1;
@@ -368,6 +379,7 @@ public sealed class Expedition
             gmap.AddPoint(mapMarker, true);
             //
         }
+        missionCompleted = data[28] == 1;
         return this;
     }
 

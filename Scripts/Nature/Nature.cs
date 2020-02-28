@@ -19,7 +19,8 @@ public sealed class Nature : MonoBehaviour
     private Dictionary<int, float> lifepowerAffectionList;
     private int nextLPowerAffectionID = 1;
 
-    private const float GRASSLAND_CREATE_COST = 100f, GRASSLAND_UPDATE_COST = 2f, GRASSLAND_CREATE_CHECK_TIME = 10f, GRASSLAND_UPDATE_TIME = 1f;
+    private const float GRASSLAND_CREATE_COST = 100f, GRASSLAND_UPDATE_COST = 2f, GRASSLAND_CREATE_CHECK_TIME = 10f, GRASSLAND_UPDATE_TIME = 1f,
+        MONUMENT_AFFECTION_CF = 10f;
 
    public static bool MaterialIsLifeSupporting(int materialID)
     {
@@ -121,7 +122,7 @@ public sealed class Nature : MonoBehaviour
                 {
                     foreach (var af in lifepowerAffectionList)
                     {
-                        lifepowerSurplus += af.Value;
+                        lifepowerSurplus += af.Value * MONUMENT_AFFECTION_CF;
                     }
                 }
                 needRecalculation = false;
@@ -281,13 +282,7 @@ public sealed class Nature : MonoBehaviour
                         {
                             p = candidates[Random.Range(0, candidates.Count)];
                             g = CreateGrassland(p);
-                            //#grassland starting
-                            if (g != null)
-                            {
-                                g.AddLifepower(cost / 4f);
-                                lifepower -= cost;
-                            }
-                            //
+                            if (g != null) SupportCreatedGrassland(g, cost);
                         }                        
                     }
                     else
@@ -306,13 +301,7 @@ public sealed class Nature : MonoBehaviour
                             {
                                 p = slist[ilist[Random.Range(0, ilist.Count)]];
                                 g = CreateGrassland(p);
-                                //#grassland starting
-                                if (g != null)
-                                {
-                                    g.AddLifepower(cost / 4f);
-                                    lifepower -= cost;
-                                }
-                                //
+                                if (g != null) SupportCreatedGrassland(g, cost);
                             }
                         }
                     }                    
@@ -345,6 +334,12 @@ public sealed class Nature : MonoBehaviour
             }
         }
     }
+    private void SupportCreatedGrassland(Grassland g, float cost)
+    {
+        g.AddLifepower(cost / 4f);
+        lifepower -= cost;
+        Knowledge.GetCurrent()?.GrasslandsCheck(grasslands);
+    }
 
     public void AddLifepower(float f)
     {
@@ -355,11 +350,15 @@ public sealed class Nature : MonoBehaviour
         if (lifesources == null)
         {
             lifesources = new List<LifeSource>() { ls };
+            Knowledge.GetCurrent().CountRouteBonus(Knowledge.MonumentRouteBoosters.LifesourceBoost);
             return;
         }
         else
         {
-            if (!lifesources.Contains(ls)) lifesources.Add(ls);
+            if (!lifesources.Contains(ls)) {
+                lifesources.Add(ls);
+                Knowledge.GetCurrent().CountRouteBonus(Knowledge.MonumentRouteBoosters.LifesourceBoost);
+            }
         }
     }
     public void RemoveLifesource(LifeSource ls)

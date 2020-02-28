@@ -1,7 +1,6 @@
 ﻿
 public class ArtifactsRepository : Building
 {
-
     override public UIObserver ShowOnGUI()
     {
         if (buildingObserver == null) buildingObserver = UIBuildingObserver.InitializeBuildingObserverScript();

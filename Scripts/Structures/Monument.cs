@@ -11,7 +11,8 @@ public sealed class Monument : Building
     private Transform ringSprite;
 
     private static UIMonumentObserver monumentObserver;
-    private const int ARTIFACTS_COUNT = 4;
+    private const int MAX_ARTIFACTS_COUNT = 4;
+    public const float MAX_AFFECTION_VALUE = 8f;
 
     public static void SetObserver(UIMonumentObserver mo)
     {
@@ -32,7 +33,7 @@ public sealed class Monument : Building
         }
         if (artifacts == null)
         {
-            artifacts = new Artifact[ARTIFACTS_COUNT];
+            artifacts = new Artifact[MAX_ARTIFACTS_COUNT];
         }
         else
         {
@@ -126,9 +127,12 @@ public sealed class Monument : Building
             }
             if (count != 0)
             {
-                affectionValue = af / count;
+                float m = count / (float)MAX_ARTIFACTS_COUNT;
+                affectionValue = af * (0.5f + m * m * 1.5f); // MAX_AFFECTION_VALUE = 8 (1 * 4 * 2)
+
                 ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionPath);
                 ringEnabled = true;
+                ringSprite.gameObject.SetActive(ringEnabled);
                 switch (affectionPath)
                 {
                     case Path.LifePath:
@@ -159,6 +163,14 @@ public sealed class Monument : Building
             }
             else ClearAffection();
         }
+        else
+        {
+            if (ringSprite != null)
+            {
+                ringEnabled = false;
+                ringSprite.gameObject.SetActive(ringEnabled);
+            }
+        }
     }
     private void ClearAffection()
     {
@@ -174,6 +186,10 @@ public sealed class Monument : Building
             affectionID = -1;
         }
         affectionPath = Path.NoPath;
+        affectionValue = 0f;
+        ringSprite.GetComponent<SpriteRenderer>().sprite = Artifact.GetAffectionSprite(affectionPath);        
+        ringEnabled =false;
+        ringSprite.gameObject.SetActive(ringEnabled);
         //
     }
 
@@ -282,7 +298,7 @@ public sealed class Monument : Building
     override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
-        artifacts = new Artifact[ARTIFACTS_COUNT];
+        artifacts = new Artifact[MAX_ARTIFACTS_COUNT];
         var data = new byte[16];
         fs.Read(data, 0, 16);
         int x = System.BitConverter.ToInt32(data, 0);

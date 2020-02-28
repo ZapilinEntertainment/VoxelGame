@@ -5,23 +5,27 @@ using UnityEngine.UI;
 
 public enum CostPanelMode : byte { Disabled, ColumnBuilding, SurfaceMaterialChanging, BlockBuilding }
 public enum SurfacePanelMode : byte {SelectAction, Build}
-enum BuildingCreateInfoMode : byte {Acceptable, Unacceptable_SideBlock, Unacceptable_Material}
+
 
 public sealed class UISurfacePanelController : UIObserver {
-	public Button buildButton, gatherButton, digButton, blockCreateButton, columnCreateButton, changeMaterialButton;
-    Plane observingSurface;
-    bool status_digOrdered = false, firstSet = true;
-    bool? status_gather = null;
-	byte savedHqLevel = 0;
-	Vector2[] showingResourcesCount;
-    int selectedBuildingButton = -1, lastStorageStatus = -1;
-    Vector2Int costPanel_selectedButton = new Vector2Int(-1,-1);
-	Structure chosenStructure = null;
-	public byte constructingLevel = 1;
-	SurfacePanelMode mode;
-    CostPanelMode costPanelMode;
-	BuildingCreateInfoMode buildingCreateMode;
-    Vector2Int constructingPlaneTouchPos;
+    private enum BuildingCreateInfoMode : byte { Acceptable, Unacceptable_SideBlock, Unacceptable_Material }
+
+    public Button buildButton, gatherButton, digButton, blockCreateButton, columnCreateButton, changeMaterialButton;
+    private Plane observingSurface;
+    private bool status_digOrdered = false, firstSet = true;
+    private bool? status_gather = null;
+    private byte savedHqLevel = 0;
+    private Vector2[] showingResourcesCount;
+
+    private int selectedBuildingButton = -1, lastStorageStatus = -1;
+    private Vector2Int costPanel_selectedButton = new Vector2Int(-1,-1);
+    private int selectedStructureID = Structure.EMPTY_ID;
+	private byte constructingLevel = 1;
+
+    private SurfacePanelMode mode;
+    private CostPanelMode costPanelMode;
+	private BuildingCreateInfoMode buildingCreateMode;
+    private Vector2Int constructingPlaneTouchPos;
     private Transform exampleBuildingsContainer;
 
 #pragma warning disable 0649
@@ -133,7 +137,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
             case SurfacePanelMode.Build:
                 {
-                    if (chosenStructure != null)
+                    if (selectedStructureID != Structure.EMPTY_ID)
                     {
                         switch (buildingCreateMode)
                         {
@@ -525,7 +529,7 @@ public sealed class UISurfacePanelController : UIObserver {
             if (selectedBuildingButton != -1) {
                 buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
 				selectedBuildingButton = -1;
-				chosenStructure = null;
+                selectedStructureID = Structure.EMPTY_ID;
 			}
             if (exampleBuildingsContainer != null) Destroy(exampleBuildingsContainer.gameObject);
             UIController.current.DropActiveWindow(ActiveWindowMode.BuildPanel);
@@ -619,7 +623,7 @@ public sealed class UISurfacePanelController : UIObserver {
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.FORCED_GetExtension().GetMapTexture());
         UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
-        if (chosenStructure != null) FollowingCamera.main.CameraRotationBlock(false);
+        if (selectedStructureID != Structure.EMPTY_ID) FollowingCamera.main.CameraRotationBlock(false);
     }
 
     public void ReturnButton()
@@ -634,14 +638,14 @@ public sealed class UISurfacePanelController : UIObserver {
         }
     }
 
-    public void SelectBuildingForConstruction (Structure building, int buttonIndex) {
-		chosenStructure = building;
+    public void SelectBuildingForConstruction (int i_structureID, int buttonIndex) {
+        selectedStructureID = i_structureID;
 		buildingButtonsContainer.GetChild(buttonIndex).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; 
 		if (selectedBuildingButton >= 0) buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
 		selectedBuildingButton = buttonIndex;
 
         infoPanel.SetActive(true);
-		nameField.text = Localization.GetStructureName(chosenStructure.ID);
+		nameField.text = Localization.GetStructureName(selectedStructureID);
         gridTextField.text = chosenStructure.surfaceRect.size.ToString() + " x " + chosenStructure.surfaceRect.size.ToString();
         Building b = chosenStructure as Building;
         if (b != null)

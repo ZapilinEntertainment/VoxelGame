@@ -4,7 +4,6 @@ using UnityEngine;
 
 public sealed class EventChecker
 {
-    private bool kn_immigrantsTracking = true;
     public System.Action<Structure> buildingConstructionEvent;
     public System.Action<Building> buildingUpgradeEvent;
 
@@ -15,26 +14,5 @@ public sealed class EventChecker
     public void BuildingConstructed(Structure s)
     {
         buildingConstructionEvent?.Invoke(s);
-    }
-
-    public void ImmigrantsCheck(uint count)
-    {
-        if (kn_immigrantsTracking)
-        {
-            Knowledge.GetCurrent()?.ImmigrantsCheck(count);
-        }
-    }
-
-    public void StopTracking(Knowledge.ResearchRoute route, byte boosterIndex)
-    {
-        switch (route)
-        {
-            case Knowledge.ResearchRoute.Foundation:
-                switch ((Knowledge.FoundationRouteBoosters)boosterIndex)
-                {
-                    case Knowledge.FoundationRouteBoosters.ImmigrantsBoost: kn_immigrantsTracking = false; break;
-                }
-                break;
-        }
-    }
+    }    
 }

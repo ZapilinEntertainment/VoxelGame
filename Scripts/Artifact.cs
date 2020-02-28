@@ -5,7 +5,7 @@ public sealed class Artifact {
     //dependency : PointOfInterest.GetArtifact
     // GetAffectionIconRect()
     // localization.GetAffectionTitle
-    public enum ArtifactStatus : byte { Exists, Researching, UsingInMonument, OnConservation}
+    public enum ArtifactStatus : byte { Uncontrollable, Researching, UsingInMonument, OnConservation}
 
     public bool destructed { get; private set; }
     public bool researched { get; private set; }
@@ -79,7 +79,7 @@ public sealed class Artifact {
         destructed = false;
         researched = false;
         name = Localization.NameArtifact(this);
-        status = ArtifactStatus.Exists;
+        status = ArtifactStatus.Uncontrollable;
         ID = nextID++;
         artifactsList.Add(this);        
 
@@ -100,16 +100,6 @@ public sealed class Artifact {
         }
         else return true;
     }  
-
-    /// <summary>
-    /// возвращает true, если не исчез
-    /// </summary>
-    /// <returns></returns>
-    public bool Event()  // INDEV
-    {
-        //switch type?
-        return true;
-    }
 
     public float GetAffectionValue()
     {

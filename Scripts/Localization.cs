@@ -828,7 +828,7 @@ public static class Localization
                         case Artifact.ArtifactStatus.Researching: return "Исследуется";
                         case Artifact.ArtifactStatus.UsingInMonument: return "Используется в монументе";
                         case Artifact.ArtifactStatus.OnConservation: return "Законсервирован";
-                        case Artifact.ArtifactStatus.Exists:
+                        case Artifact.ArtifactStatus.Uncontrollable:
                         default: return string.Empty;
                     }
                 }
@@ -840,7 +840,7 @@ public static class Localization
                         case Artifact.ArtifactStatus.Researching: return "Researching";
                         case Artifact.ArtifactStatus.UsingInMonument: return "Using in monument";
                         case Artifact.ArtifactStatus.OnConservation: return "On conservation";
-                        case Artifact.ArtifactStatus.Exists:
+                        case Artifact.ArtifactStatus.Uncontrollable:
                         default: return string.Empty;
                     }
                 }

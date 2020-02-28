@@ -44,7 +44,7 @@ public class UIArtifactPanel : MonoBehaviour {
                 affectionIcon.enabled = false;
             }
             mainIcon.texture = chosenArtifact.GetTexture();
-            if (chosenArtifact.status != Artifact.ArtifactStatus.Exists)
+            if (chosenArtifact.status != Artifact.ArtifactStatus.Uncontrollable)
             {
                 var ri = passButton.transform.GetChild(0).GetComponent<RawImage>();
                 switch (chosenArtifact.status)

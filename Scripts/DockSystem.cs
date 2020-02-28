@@ -226,7 +226,7 @@ public sealed class DockSystem
             {
                 GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
                 immigrantsArrived += (uint)newPeople;
-                GameMaster.realMaster.eventTracker?.ImmigrantsCheck(immigrantsArrived);
+                Knowledge.GetCurrent()?.ImmigrantsCheck(immigrantsArrived);
             }
             else
             {
