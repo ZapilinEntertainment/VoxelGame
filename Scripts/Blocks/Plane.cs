@@ -114,7 +114,7 @@ public class Plane
                     return false;
             }
         }
-    }
+    } // является ли крайней плоскостью чанка
 
     public Plane(IPlanable i_host, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
     {

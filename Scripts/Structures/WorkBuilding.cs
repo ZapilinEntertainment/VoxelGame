@@ -251,6 +251,7 @@ public abstract class WorkBuilding : Building
         //copy to science lab .cs
         // changed in PsychokineticGenerator
         //copy to FarmBlock
+        //copy to StabilityEnforcer.cs
     }
 
     protected void SetWorkbuildingData(Plane sb, PixelPosByte pos)

@@ -648,20 +648,36 @@ public class Building : Structure
             connectedToPowerGrid = true;
         }
     }
-    virtual public void SetActivationStatus(bool x, bool recalculateAfter)
+
+
+    public void SetActivationStatus(bool x, bool sendRecalculationRequest)
     {
-        isActive = x;
-        if (connectedToPowerGrid & recalculateAfter)
+        bool activityStateChanged = false;
+        if (isActive != x)
         {
-            GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+            activityStateChanged = (isActive & isEnergySupplied) != (x & isEnergySupplied);
+            isActive = x;
         }
-        ChangeRenderersView(x & isEnergySupplied);
+        if (connectedToPowerGrid & sendRecalculationRequest)
+        {
+            GameMaster.realMaster.colonyController.powerGridRecalculationNeeded = true;
+        }
+        if (activityStateChanged) SwitchActivityState();
     }
-    public virtual void SetEnergySupply(bool x, bool recalculateAfter)
+    public void SetEnergySupply(bool x, bool recalculateAfter)
     {
-        isEnergySupplied = x;
-        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-        ChangeRenderersView(x & isActive);
+        bool activityStateChanged = false;
+        if (isEnergySupplied != x)
+        {
+            activityStateChanged = (isActive & isEnergySupplied) != (isActive & x);
+            isEnergySupplied = x;
+        }
+        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.powerGridRecalculationNeeded = true;
+        if (activityStateChanged) SwitchActivityState();
+    }
+    virtual protected void SwitchActivityState()
+    {
+        ChangeRenderersView(isActive & isEnergySupplied);
     }
     virtual protected void ChangeRenderersView(bool setOnline)
     {

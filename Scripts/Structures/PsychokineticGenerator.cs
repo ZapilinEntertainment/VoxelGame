@@ -14,7 +14,7 @@ public sealed class PsychokineticGenerator : WorkBuilding
     override public void RecalculateWorkspeed()
     {
         energySurplus = workersCount * ENERGY_MULTIPLIER;
-        colony.powerGridChanged = true;
+        colony.powerGridRecalculationNeeded = true;
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

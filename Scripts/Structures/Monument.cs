@@ -198,15 +198,10 @@ public sealed class Monument : Building
         if (ringEnabled) ringSprite.Rotate(Vector3.forward, affectionValue * 3f * GameMaster.gameSpeed * Time.deltaTime);
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter)
+    protected override void SwitchActivityState()
     {
-        if (!GameMaster.loading && isActive != x & artifacts != null) ArtifactsStabilityTest();
-        base.SetActivationStatus(x, recalculateAfter);
-    }
-    override public void SetEnergySupply(bool x, bool recalculateAfter)
-    {
-        if (!GameMaster.loading && isEnergySupplied != x & artifacts != null) ArtifactsStabilityTest();
-        base.SetEnergySupply(x, recalculateAfter);
+        base.SwitchActivityState();
+        if (artifacts != null && ((isActive & isEnergySupplied) == false)) ArtifactsStabilityTest();
     }
 
     private void ArtifactsStabilityTest()

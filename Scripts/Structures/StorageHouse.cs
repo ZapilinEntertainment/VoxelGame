@@ -31,13 +31,8 @@ public class StorageHouse : Building {
 		SetBuildingData(b, pos);
         GameMaster.realMaster.colonyController.storage.AddWarehouse(this);
         //copy to StorageBlock.cs
+        isEnergySupplied = true;
 	}
-
-    override public void SetActivationStatus(bool x, bool recalculateAfter)
-    {
-        isActive = x;
-        ChangeRenderersView(x);
-    }
 
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

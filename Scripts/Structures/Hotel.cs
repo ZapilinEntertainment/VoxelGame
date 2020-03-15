@@ -57,25 +57,12 @@ public sealed class Hotel : Building
         }
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter)
+    protected override void SwitchActivityState()
     {
-        isActive = x;
-        if (connectedToPowerGrid & recalculateAfter)
-        {
-            GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-        }
-        Switch(isActive & isEnergySupplied);        
-    }
-    override public void SetEnergySupply(bool x, bool recalculateAfter)
-    {
-        isEnergySupplied = x;
-        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-        Switch(isActive & isEnergySupplied);
-    }
-    private void Switch(bool x)
-    {
+        base.SwitchActivityState();
+        bool x = isActive & isEnergySupplied;
         if (x == false)
-        {            
+        {
             if (subscribedToUpdate)
             {
                 var gm = GameMaster.realMaster;
@@ -94,9 +81,7 @@ public sealed class Hotel : Building
                 subscribedToUpdate = true;
             }
         }
-        ChangeRenderersView(x);
     }
-
     private void EverydayUpdate()
     {
         if (lodgersCount > 0)
@@ -114,7 +99,7 @@ public sealed class Hotel : Building
         }
     }
 
-    override public bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    new public static bool CheckSpecialBuildingCondition(Plane p, ref string reason)
     {
         if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
         {

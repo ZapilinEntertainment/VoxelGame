@@ -61,14 +61,11 @@ public class House : Building {
         }
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter) {
-		if (isActive == x) return;
-		isActive = x;
-        ColonyController colony = GameMaster.realMaster.colonyController;
-        if (connectedToPowerGrid & recalculateAfter) colony.RecalculatePowerGrid();
-        colony.RecalculateHousing();
-		ChangeRenderersView(x);
-	}  
+    protected override void SwitchActivityState()
+    {
+        base.SwitchActivityState();
+        GameMaster.realMaster.colonyController.housingRecalculationNeeded = true;
+    }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

@@ -11,7 +11,7 @@ public sealed class ColonyController : MonoBehaviour
     public string cityName { get; private set; }
     public Storage storage { get; private set; }
     public HeadQuarters hq { get; private set; }
-    public bool housingCountChanges = false, powerGridChanged = false; // hot
+    public bool housingRecalculationNeeded = false, powerGridRecalculationNeeded = false; // hot
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
     public float labourCoefficient
@@ -171,7 +171,7 @@ public sealed class ColonyController : MonoBehaviour
                             if (b == null)
                             {
                                 powerGrid.RemoveAt(i);
-                                powerGridChanged = true;
+                                powerGridRecalculationNeeded = true;
                             }
                             else
                             {
@@ -179,18 +179,18 @@ public sealed class ColonyController : MonoBehaviour
                                 {
                                     energySurplus -= b.energySurplus;
                                     b.SetEnergySupply(false, false);
-                                    powerGridChanged = true;
+                                    powerGridRecalculationNeeded = true;
                                 }
                             }
                             i--;
                         }
                     }
                 }
-                if (powerGridChanged) RecalculatePowerGrid();
+                if (powerGridRecalculationNeeded) RecalculatePowerGrid();
             }
 
             //housing
-            if (housingCountChanges) RecalculateHousing();
+            if (housingRecalculationNeeded) RecalculateHousing();
 
             //   STARVATION PROBLEM
             float foodSupplyHappiness = 0f;
@@ -412,7 +412,7 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
         houses.Add(h);
-        housingCountChanges = true;
+        housingRecalculationNeeded = true;
     }
     public void DeleteHousing(House h)
     {
@@ -420,10 +420,10 @@ public sealed class ColonyController : MonoBehaviour
         if (houses.Contains(h))
         {
             houses.Remove(h);
-            housingCountChanges = true;
+            housingRecalculationNeeded = true;
         }
     }
-    public void RecalculateHousing()
+    private void RecalculateHousing()
     {
         totalLivespace = 0;
         housingLevel = 0;
@@ -505,7 +505,7 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
         else housingLevel = 0;
-        housingCountChanges = false;
+        housingRecalculationNeeded = false;
     }
 
     public void AddHospital(Hospital h)
@@ -573,7 +573,7 @@ public sealed class ColonyController : MonoBehaviour
         }
         powerGrid.Add(b);
         b.SetEnergySupply(true, false);
-        powerGridChanged = true;
+        powerGridRecalculationNeeded = true;
     }
     public void DisconnectFromPowerGrid(Building b)
     {
@@ -586,13 +586,13 @@ public sealed class ColonyController : MonoBehaviour
             {
                 b.SetEnergySupply(false, false);
                 powerGrid.RemoveAt(i);
-                powerGridChanged = true;
+                powerGridRecalculationNeeded = true;
                 return;
             }
             else i++;
         }
     }
-    public void RecalculatePowerGrid()
+    private void RecalculatePowerGrid()
     {        
         energySurplus = 0; totalEnergyCapacity = 0;
         if (powerGrid.Count == 0) return;
@@ -651,7 +651,7 @@ public sealed class ColonyController : MonoBehaviour
             }
             buildingsWaitForReconnection = checklist.Count != 0;
         }
-        powerGridChanged = false;
+        powerGridRecalculationNeeded = false;
     }
     public List<Building> GetPowerGrid() { return powerGrid; }
     public void AddEnergy(float f)

@@ -3279,27 +3279,19 @@ public static class Localization
         }
 
     }
-    public static string GetMapPointDescription(MapMarkerType mmtype, byte subIndex)
+    public static string GetMapPointDescription(MapPoint mp)
     {
         switch (currentLanguage)
         {
             case Language.Russian:
                 {
-                    switch (mmtype)
+                    switch (mp.type)
                     {
                         case MapMarkerType.MyCity: return "Наш маленький кусочек реального мира.";
                         case MapMarkerType.Station: return "Одинокая станция, имеющая сообщение с внешним миром.";
                         case MapMarkerType.Wreck:
                             {
-                                switch (subIndex)
-                                {
-                                    case 3: return "Обломки корабля беженцев. Нет признаков жизни.";
-                                    case 2: return "Металлические остатки чего-то крупного разбросаны там повсюду.";
-                                    case 1: return "Что-то окрашенное болью и сожалением. Это разрушенный корабль из внешнего космоса.";
-                                    case 0:
-                                    default:
-                                        return "Нечто, разбитое вдребезги.";
-                                }
+                                return "Металлические остатки чего-то крупного парят повсюду.";
                             }
                         case MapMarkerType.FlyingExpedition: return "Челнок из нашей колонии."; // заменить
                         case MapMarkerType.Island: return "Необитаемый остров.";
@@ -3319,25 +3311,17 @@ public static class Localization
             case Language.English:
             default:
                 {
-                    switch (mmtype)
+                    switch (mp.type)
                     {
                         case MapMarkerType.MyCity: return "Our stable piece of dream-reality.";
                         case MapMarkerType.Station: return "Lonely station, which has connection with real space out there.";
                         case MapMarkerType.Wreck:
                             {
-                                switch (subIndex)
-                                {
-                                    case 3: return "Broken refugee's ship. No visible signs of life.";
-                                    case 2: return "Parts of something big and made from metal dropped everywhere there.";
-                                    case 1: return "It painted with pain and sorrow. Broken ship from outside.";
-                                    case 0:
-                                    default:
-                                        return "Something broken to pieces.";
-                                }
+                                return "Parts of something big and made from metal flying everywhere.";
                             }
                         case MapMarkerType.FlyingExpedition: return "Our colony's shuttle."; // заменить
                         case MapMarkerType.Island: return "An uninhabitated island.";
-                        case MapMarkerType.SOS: return "Maybe we should send someone?";
+                        case MapMarkerType.SOS: return "Should we send someone?";
                         case MapMarkerType.Portal: return "Temporary way to another world.";
                         case MapMarkerType.QuestMark: return "Your questmission here."; //заменить
                         case MapMarkerType.Colony: return "We are not alone here!";

@@ -57,20 +57,20 @@ public class WindGenerator : Building {
             rotateScrew = false;
             if ( rotateScrew ) {
 				energySurplus = 0;
-                GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+                GameMaster.realMaster.colonyController.powerGridRecalculationNeeded = true;
 			}
 			rotateHead = false;
 		}
 		else {
 			if (rotateScrew == false) {
 				rotateScrew = true;
-                GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-			}
+                GameMaster.realMaster.colonyController.powerGridRecalculationNeeded = true;
+            }
             float newSurplus = windDirection.magnitude * (STANDART_SURPLUS * (1 + height_coefficient));
             if (newSurplus != energySurplus)
             {
                 energySurplus = newSurplus;
-                GameMaster.realMaster.colonyController.RecalculatePowerGrid();
+                GameMaster.realMaster.colonyController.powerGridRecalculationNeeded = true;
             }
             else energySurplus = newSurplus;
             if (head.transform.forward != new Vector3(windDirection.x, 0, windDirection.y).normalized) rotateHead = true; else rotateHead = false;

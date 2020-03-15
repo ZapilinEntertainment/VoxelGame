@@ -274,6 +274,10 @@ public class MapPoint
         //name, surname, specname
         return Localization.GetMapPointTitle(type);
     }
+    virtual public string GetDescription()
+    {
+        return Localization.GetMapPointDescription(this);
+    }
 
     #region save-load
     public virtual List<byte> Save()

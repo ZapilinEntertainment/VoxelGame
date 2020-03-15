@@ -32,11 +32,10 @@ public class Hospital : WorkBuilding {
         colony.RecalculateHospitals();
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter) {
-		if (isActive == x) return;
-		isActive = x;
-		colony.RecalculateHospitals();
-        if (connectedToPowerGrid & recalculateAfter) colony.RecalculatePowerGrid();
+    protected override void SwitchActivityState()
+    {
+        base.SwitchActivityState();
+        colony.RecalculateHospitals();
     }
 
     override public void RecalculateWorkspeed()

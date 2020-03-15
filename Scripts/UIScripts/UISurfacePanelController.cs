@@ -690,7 +690,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		Text t = resourcesCostImage[0].transform.GetChild(0).GetComponent<Text>();
 	
             string reason = "UNACCEPTABLE!";
-        bool acceptable = Structure.CheckSpecialBuildingConditions(observingSurface, ref reason);
+        bool acceptable = Structure.CheckSpecialBuildingConditions(selectedStructureID, observingSurface, ref reason);
             if (!acceptable)
             {
                 t.text = reason;

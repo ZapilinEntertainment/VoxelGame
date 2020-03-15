@@ -39,17 +39,11 @@
         energySurplus = charge;
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter)
+    protected override void SwitchActivityState()
     {
-        isActive = x;
-        isEnergySupplied = true;
-        connectedToPowerGrid = true;
-        colony.accumulateEnergy = !x;
-        ChangeRenderersView(x);
-    }
-    override public void SetEnergySupply(bool x, bool recalculateAfter)
-    {
-        isEnergySupplied = true;
+        colony.accumulateEnergy = !isActive;
+        ChangeRenderersView(isActive);
+        isEnergySupplied = true; connectedToPowerGrid = true;
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

@@ -427,7 +427,7 @@ public class Structure : MonoBehaviour
             default: return true;
         }
     }
-    public static bool CheckSpecialBuildingConditions(Plane p, ref string refusalReason)
+    public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
         return true;
     }

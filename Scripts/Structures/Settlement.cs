@@ -93,8 +93,8 @@ public sealed class Settlement : House
         if (!loading) // wait for colony loading
         {
             var colony = GameMaster.realMaster.colonyController;
-            colony.RecalculatePowerGrid();
-            colony.RecalculateHousing();
+            colony.housingRecalculationNeeded = true;
+            colony.powerGridRecalculationNeeded = true;
         }
     }
 
@@ -147,11 +147,9 @@ public sealed class Settlement : House
         }
         //
     }
-    override public void SetEnergySupply(bool x, bool recalculateAfter)
+    protected override void SwitchActivityState()
     {
-        isEnergySupplied = x;
-        if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-        ChangeRenderersView(x & isActive);
+        base.SwitchActivityState();
         var slist = basement.GetStructuresList();
         foreach (var s in slist)
         {
@@ -913,8 +911,8 @@ public sealed class Settlement : House
             }
         }
         var colony = GameMaster.realMaster.colonyController;
-        colony.powerGridChanged = true;
-        colony.housingCountChanges = true;
+        colony.powerGridRecalculationNeeded = true;
+        colony.housingRecalculationNeeded = true;
     }
 
     public override UIObserver ShowOnGUI()

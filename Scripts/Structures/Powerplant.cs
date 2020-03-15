@@ -71,7 +71,7 @@ public class Powerplant : WorkBuilding
             if (tickTimer == 0 & energySurplus != 0)
             {
                 energySurplus = 0;
-                colony.RecalculatePowerGrid();
+                colony.powerGridRecalculationNeeded = true;
                 ChangeRenderersView(false);
             }
         }
@@ -83,7 +83,7 @@ public class Powerplant : WorkBuilding
             if (newEnergySurplus != energySurplus)
             {
                 energySurplus = newEnergySurplus;
-                colony.RecalculatePowerGrid();
+                colony.powerGridRecalculationNeeded = true;
                 ChangeRenderersView(energySurplus > 0f);
             }
         }

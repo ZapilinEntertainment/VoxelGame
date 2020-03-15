@@ -46,10 +46,11 @@ public sealed class XStation : WorkBuilding {
         }
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter)
+    protected override void SwitchActivityState()
     {
-        // #m1
-        if (x & isEnergySupplied)
+        base.SwitchActivityState();
+        bool x = isActive & isEnergySupplied;
+        if (x)
         {
             if (!indicatorPrepared) PrepareIndicator();
             cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
@@ -71,36 +72,6 @@ public sealed class XStation : WorkBuilding {
                 markerEnabled = false;
             }
         }
-        //
-        base.SetActivationStatus(x, recalculateAfter);
-    }
-    public override void SetEnergySupply(bool x, bool recalculateAfter)
-    {
-        // #m1 - mod
-        if (x & isActive)
-        {
-            if (!indicatorPrepared) PrepareIndicator();
-            cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
-            var s = GameMaster.realMaster.stability;
-            if (!markerEnabled)
-            {
-                if (s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER | showOnGUI)
-                {
-                    cityMarker.parent.gameObject.SetActive(true);
-                    markerEnabled = true;                   
-                }
-            }
-        }
-        else
-        {
-            if (indicatorPrepared & markerEnabled)
-            {
-                cityMarker.transform.parent.gameObject.SetActive(false);
-                markerEnabled = false;
-            }
-        }
-        //
-        base.SetEnergySupply(x, recalculateAfter);
     }
 
     public override UIObserver ShowOnGUI()

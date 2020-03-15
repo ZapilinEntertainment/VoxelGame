@@ -85,12 +85,11 @@ public sealed class QuantumTransmitter : Building {
         SetActivationStatus(false, true);
     }
 
-    override public void SetActivationStatus(bool x, bool recalculateAfter) {
-		isActive = x;
-		if (connectedToPowerGrid & recalculateAfter) GameMaster.realMaster.colonyController.RecalculatePowerGrid();
-		transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works",x);
-		ChangeRenderersView(x);
-	}	
+    protected override void SwitchActivityState()
+    {
+        base.SwitchActivityState();
+        transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works", isActive & isEnergySupplied);
+    }
 
     public int StartTransmission()
     {

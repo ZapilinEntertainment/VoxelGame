@@ -116,7 +116,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                         var poi = chosenPoint as PointOfInterest;
                         if (poi != null)
                         {
-                            var s = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex) +
+                            var s = chosenPoint.GetDescription() +
                                     "\n\n" + Localization.GetWord(LocalizedWord.Difficulty) + ": " + ((int)(poi.difficulty * 100f)).ToString() + '%';
                             if (poi.workingExpedition == null)
                             {
@@ -134,7 +134,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                         }
                         else
                         {
-                            pointDescription.text = Localization.GetMapPointDescription(chosenPoint.type, chosenPoint.subIndex);
+                            pointDescription.text = chosenPoint.GetDescription();
                             if (sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(false);
                         }
                         break;
