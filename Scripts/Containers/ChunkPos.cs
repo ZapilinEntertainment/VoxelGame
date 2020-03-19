@@ -47,6 +47,10 @@
 
     public static bool operator ==(ChunkPos lhs, ChunkPos rhs) { return lhs.Equals(rhs); }
     public static bool operator !=(ChunkPos lhs, ChunkPos rhs) { return !(lhs.Equals(rhs)); }
+    public static ChunkPos operator + (ChunkPos lhs, UnityEngine.Vector3 rhs) {
+        return new ChunkPos((int)(lhs.x + rhs.x), (int)(lhs.y + rhs.y), (int)(lhs.z + rhs.z));
+    }
+
     public override bool Equals(object obj)
     {
         // Check for null values and compare run-time types.

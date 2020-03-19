@@ -119,7 +119,6 @@ public class Building : Structure
 
     public const int BUILDING_SERIALIZER_LENGTH = 5;
 
-
     public static float GetEnergyCapacity(int id)
     {
         switch (id)
@@ -636,6 +635,7 @@ public class Building : Structure
     {
         if (b == null) return;
         SetBuildingData(b, pos);
+        //copy to Gardens.cs
     }
 
     protected void SetBuildingData(Plane b, PixelPosByte pos)

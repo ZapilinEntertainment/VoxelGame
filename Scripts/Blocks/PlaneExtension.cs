@@ -99,8 +99,9 @@ public sealed class PlaneExtension
                 }
                 fullfillStatus = FullfillStatus.Full;
             }
-        }        
+        }
     }
+
     public Texture2D GetMapTexture()
     {
         int cellRes = 4;

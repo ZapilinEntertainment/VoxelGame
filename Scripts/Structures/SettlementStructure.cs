@@ -41,6 +41,7 @@ public sealed class SettlementStructure : Structure
                 break;
             case Settlement.SettlementStructureType.Garden:
                 model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/parkPart"));
+                // also using by Gardens.cs
                 break;
             default:
                 model = GameObject.CreatePrimitive(PrimitiveType.Cube);

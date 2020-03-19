@@ -33,6 +33,7 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 // Monument.ArtifactStabilityTest
 // RecruitingCenter.GetHireCost
 //ScoreCalculator
+// StabilityEnforcer - LabourUpdate
 
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
 public enum GameMode: byte { Play, Editor, Menu, Cinematic }
@@ -407,6 +408,10 @@ public sealed class GameMaster : MonoBehaviour
         if (stabilityModifiers != null)
         {
             stabilityModifiers.Remove(id);
+            if (id == nextSModifiersID - 1)
+            {
+                nextSModifiersID = id;
+            }
         }        
     }
 

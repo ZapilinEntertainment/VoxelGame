@@ -481,6 +481,20 @@ public class Plane
                 return Vector3.up;
         }
     }
+    public ChunkPos GetBlockingPosition()
+    {
+        switch(faceIndex)
+        {
+            case Block.CEILING_FACE_INDEX:
+            case Block.SURFACE_FACE_INDEX:
+                return pos;
+            case Block.RIGHT_FACE_INDEX: return pos.OneBlockRight();
+            case Block.BACK_FACE_INDEX: return pos.OneBlockBack();
+            case Block.LEFT_FACE_INDEX: return pos.OneBlockLeft();
+            case Block.DOWN_FACE_INDEX: return pos.OneBlockDown();
+            default: return pos.OneBlockHigher();
+        }
+    }
     /// <summary>
     /// returns in 0 - 1 
     /// </summary>

@@ -39,7 +39,7 @@ public sealed class Monument : Building
         {
             RecalculateAffection();          
         }
-        if (!GameMaster.loading) b.myChunk.CreateBlocker(b.pos.OneBlockHigher(), this, false);
+        if (!GameMaster.loading) b.myChunk.CreateBlocker(b.GetBlockingPosition(), this, false);
         else
         {
             if (!subscribedToRestoreBlockersEvent)

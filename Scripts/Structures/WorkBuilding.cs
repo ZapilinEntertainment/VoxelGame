@@ -252,13 +252,13 @@ public abstract class WorkBuilding : Building
         // changed in PsychokineticGenerator
         //copy to FarmBlock
         //copy to StabilityEnforcer.cs
+        //copy to HangingTMast.cs
     }
-
     protected void SetWorkbuildingData(Plane sb, PixelPosByte pos)
     {
         SetBuildingData(sb, pos);
         // copy to PsychokineticGenerator.SetBasement()
-    }
+    }  
 
     virtual public void LabourUpdate()
     {
@@ -386,6 +386,7 @@ public abstract class WorkBuilding : Building
         //copy to science lab.cs
         //changed in PsychokineticGenerator
         //copy to farmblock
+        //copy to stability enforcer
     }
 
     #region save-load system
@@ -410,10 +411,6 @@ public abstract class WorkBuilding : Building
     override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
-        LoadWorkBuildingData(fs);
-    }
-    protected void LoadWorkBuildingData(System.IO.FileStream fs)
-    {
         var data = new byte[WORKBUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
         LoadWorkBuildingData(data, 0);

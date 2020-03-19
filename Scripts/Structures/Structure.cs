@@ -39,7 +39,7 @@ public class Structure : MonoBehaviour
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_2_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
-        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
+        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 37, STABILITY_ENFORCER_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
     HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_BLOCK_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
@@ -47,7 +47,7 @@ public class Structure : MonoBehaviour
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
          HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 37,39,40,44, 58, 59, 69
+    //free ids 39,40,44, 58, 59, 69
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
@@ -204,6 +204,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Psychocinetic gen"); break;
             case SCIENCE_LAB_ID:
                 s = new GameObject("Science Lab"); break;
+            case STABILITY_ENFORCER_ID:
+                s = new GameObject("Stability Enforcer");break;
             default: return null;
         }
         Structure st = (Structure)s.AddComponent(GetTypeByID(i_id));
@@ -414,7 +416,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_3_ID:
                 return Farm.CheckSpecialBuildingConditions(p, ref refusalReason);
             case CONNECT_TOWER_6_ID:
-                return ConnectTower.CheckSpecialBuildingConditions(p, ref refusalReason);
             case HOUSING_MAST_6_ID:
                 if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                 {
@@ -435,8 +436,7 @@ public class Structure : MonoBehaviour
 
     virtual protected void SetModel()
     {
-        //switch skin index
-        // copy to StorageBlock
+        //switch skin index        
         GameObject model;
         Quaternion prevRot = Quaternion.identity;
         if (transform.childCount != 0)
@@ -512,6 +512,8 @@ public class Structure : MonoBehaviour
         model.transform.localRotation = prevRot;
         model.transform.localPosition = Vector3.zero;
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+        // copy to StorageBlock
+        //copy to Gardens.cs
     }
     virtual public void SetModelRotation(int r)
     {

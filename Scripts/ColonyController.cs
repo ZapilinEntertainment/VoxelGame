@@ -197,7 +197,7 @@ public sealed class ColonyController : MonoBehaviour
             {
                 if (starvation)
                 {
-                    if (citizenCount == 1f)
+                    if (citizenCount == 1)
                     {
                         citizenCount = 0;
                         PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
@@ -339,6 +339,17 @@ public sealed class ColonyController : MonoBehaviour
     {
         citizenCount += x;
         freeWorkers += x;
+    }
+    public void RemoveCitizens(int x)
+    {
+        if (citizenCount >= x)
+        {
+            citizenCount -= x;
+        }
+        else
+        {
+            citizenCount = 0;
+        }
     }
     private IEnumerator DeportateWorkingCitizen() // чтобы не тормозить апдейт
     {
