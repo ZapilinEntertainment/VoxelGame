@@ -5,21 +5,27 @@ using UnityEngine;
 public sealed class EnvironmentMaster : MonoBehaviour {
     [SerializeField] private Vector2 newWindVector;
 
-    public bool positionChanged = false; // может быть отмечена другими скриптами
-    public float environmentalConditions { get; private set; } // 0 is hell, 1 is very favourable
-    public Vector2 windVector { get; private set; }
-    public Light sun;
+    public bool positionChanged = false; // hot
+
+    public float environmentalConditions { get { return currentEnvironment.conditions; } } 
+    public float lifepowerSupport { get { return currentEnvironment.lifepowerSupport; } }
+    public float envRichness { get { return currentEnvironment.richness; } }
+    public float envStability { get { return currentEnvironment.stability; } }
+
+    public Vector2 windVector { get; private set; }    
     public delegate void WindChangeHandler(Vector2 newVector);
     public event WindChangeHandler WindUpdateEvent;
+    public event System.Action<Environment> environmentChangingEvent;
 
     private bool prepared = false, showCelestialBodies = true;
     private int vegetationShaderWindPropertyID, lastDrawnMapActionHash;
     private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10;
-    private Environment currentEnvironment;
+    private Environment currentEnvironment = Environment.defaultEnvironment;
     private GlobalMap gmap;
     private Material skyboxMaterial;
     private List<Transform> decorations;
-    private Dictionary<MapPoint, Transform> celestialBodies;
+    private Light sun;
+    private Dictionary<MapPoint, Transform> celestialBodies;    
     
     private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6;
     private const int SKY_SPHERE_RADIUS = 9, CLOUD_LAYER_INDEX = 9;
@@ -33,6 +39,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
         sun = FindObjectOfType<Light>();
+        if (sun == null)
+        {
+            sun = new GameObject("sun").AddComponent<Light>();
+            sun.type = LightType.Directional;
+        }
         decorations = new List<Transform>();
 
         skyboxMaterial = RenderSettings.skybox;
@@ -68,24 +79,42 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         currentEnvironment = e;       
         prevSkyboxSaturation = 1f;
         //# setting environment
-        environmentalConditions = currentEnvironment.conditions;
-
-        var ls = currentEnvironment.lightSettings;
-        sun.color = ls.sunColor;
-        sun.transform.forward = ls.sunDirection;
-        float s = 0.75f;
-        sun.intensity = ls.maxIntensity * s;
-
-        var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
-        var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
-        var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
-        RenderSettings.ambientGroundColor = bottomColor;
+        var s = currentEnvironment.lightIntensityMultiplier;
+        sun.intensity = s;
+        var skyColor = Color.Lerp(Color.black, currentEnvironment.skyColor, s);
+        var horColor = Color.Lerp(Color.cyan, currentEnvironment.horizonColor, s);
+        var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, s);
+        RenderSettings.ambientSkyColor = skyColor;
         RenderSettings.ambientEquatorColor = horColor;
         RenderSettings.ambientGroundColor = bottomColor;
         skyboxMaterial.SetColor("_BottomColor", bottomColor);
         skyboxMaterial.SetColor("_HorizonColor", horColor);
         //
-        environmentEventTimer = currentEnvironment.GetInnerEventTime();
+        //environmentEventTimer = currentEnvironment.GetInnerEventTime();
+        environmentChangingEvent?.Invoke(currentEnvironment);
+    }
+    public void RefreshEnvironment()
+    {
+        var rs = gmap.GetCurrentSector();
+        currentEnvironment = rs.environment;
+        //# setting environment
+        float s = rs.GetVisualSaturationValue();
+        float li = currentEnvironment.lightIntensityMultiplier * s;
+        sun.intensity = li;
+        Color scolor = sun.color * li * 1.1f;
+        PoolMaster.billboardMaterial.SetColor("_MainColor", scolor);
+        PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
+
+        var skyColor = Color.Lerp(Color.black, currentEnvironment.skyColor , s);
+        var horColor = Color.Lerp(Color.cyan, currentEnvironment.horizonColor, s);
+        var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, s);
+        RenderSettings.ambientSkyColor = bottomColor;
+        RenderSettings.ambientEquatorColor = horColor;
+        RenderSettings.ambientGroundColor = bottomColor;
+        skyboxMaterial.SetColor("_BottomColor", bottomColor);
+        skyboxMaterial.SetColor("_HorizonColor", horColor);
+        //
+        prevSkyboxSaturation = s;
     }
 
     public void AddDecoration(float size, GameObject dec)
@@ -155,34 +184,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         mpoint.y = 0.2f;
         g.transform.position = mpoint * SKY_SPHERE_RADIUS;
     }
-    public void RefreshEnvironment()
-    {
-        var rs = gmap.GetCurrentSector();
-        currentEnvironment = rs.environment;
-        //# setting environment
-        environmentalConditions = currentEnvironment.conditions;
-
-        var ls = currentEnvironment.lightSettings;
-        sun.color = ls.sunColor;
-        sun.transform.forward = ls.sunDirection;
-        float s = rs.GetVisualSaturationValue();
-        float li = ls.maxIntensity * s;
-        sun.intensity = li;
-        Color scolor = sun.color * li * 1.1f;
-        PoolMaster.billboardMaterial.SetColor("_MainColor", scolor);
-        PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
-
-        var skyColor = Color.Lerp(Color.black, ls.sunColor, s);
-        var horColor = Color.Lerp(Color.cyan, ls.horizonColor, s);
-        var bottomColor = Color.Lerp(Color.white, ls.bottomColor, s);
-        RenderSettings.ambientGroundColor = bottomColor;
-        RenderSettings.ambientEquatorColor = horColor;
-        RenderSettings.ambientGroundColor = bottomColor;
-        skyboxMaterial.SetColor("_BottomColor", bottomColor);
-        skyboxMaterial.SetColor("_HorizonColor", horColor);
-        //
-        prevSkyboxSaturation = s;
-    }
+   
 
     private void LateUpdate()
     {
@@ -220,8 +222,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 environmentEventTimer -= t;
                 if (environmentEventTimer <= 0)
                 {
-                    currentEnvironment.InnerEvent();
-                    environmentEventTimer = currentEnvironment.GetInnerEventTime();
+                    //currentEnvironment.InnerEvent();
+                   // environmentEventTimer = currentEnvironment.GetInnerEventTime();
                 }
             }
             //}
@@ -359,7 +361,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         skyboxMaterial = RenderSettings.skybox;
         gmap = GameMaster.realMaster.globalMap;
         SetEnvironment(gmap.GetCurrentEnvironment());
-        environmentalConditions = System.BitConverter.ToSingle(data, 16);
         RecalculateCelestialDecorations();
 
         prepared = true;

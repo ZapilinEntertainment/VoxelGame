@@ -21,7 +21,7 @@ public sealed class Observatory : WorkBuilding
     {
         return 1f;
     }
-    new public static bool CheckSpecialBuildingConditions(Plane p, ref string reason)
+    new public static bool CheckSpecialBuildingCondition(Plane p, ref string reason)
     {
         if (alreadyBuilt)
         {
@@ -30,7 +30,7 @@ public sealed class Observatory : WorkBuilding
         }
         else
         {
-            if (p.pos.y != Chunk.chunkSize - 1)
+            if (p.pos.y != Chunk.chunkSize - 2)
             {
                 reason = Localization.GetRefusalReason(RefusalReason.UnacceptableHeight);
                 return false;
@@ -41,6 +41,7 @@ public sealed class Observatory : WorkBuilding
                 {
                     var blocks = p.myChunk.blocks;
                     ChunkPos pos = p.pos;
+                    if (p.faceIndex != Block.SURFACE_FACE_INDEX) pos = pos.OneBlockHigher();
                     int size = Chunk.chunkSize;
 
                     int i = 0;
@@ -51,13 +52,13 @@ public sealed class Observatory : WorkBuilding
                             for (; i < pos.y - 1; i++)
                             {
                                 ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                                if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                                if (blocks.ContainsKey(cpos) && blocks[cpos].IsCube()) goto CHECK_FAILED;
                             }
                         }
                         for (i = pos.y + 1; i < size; i++)
                         {
                             ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                            if (blocks.ContainsKey(cpos)) goto CHECK_FAILED;
+                            if (blocks.ContainsKey(cpos) && blocks[cpos].IsCube()) goto CHECK_FAILED;
                         }
                         i = 0;
                     }
@@ -125,7 +126,7 @@ public sealed class Observatory : WorkBuilding
         if (!GameMaster.loading)
         {
             List<ChunkPos> positionsList = new List<ChunkPos>();
-            int x = b.pos.x, z = b.pos.z, y = b.pos.y;
+            int x = b.pos.x, z = b.pos.z, y = b.pos.y + 1;
             positionsList = new List<ChunkPos>()
             {
                 new ChunkPos(x - 1, y, z -1), new ChunkPos(x, y,z - 1), new ChunkPos(x + 1, y, z - 1),

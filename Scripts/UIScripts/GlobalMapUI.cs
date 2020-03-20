@@ -237,7 +237,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 sector.transform.localRotation = Quaternion.Euler(Vector3.back * i * sectorDegree);
                 if (sectorsData[k] != null)
                 {
-                    ri.color = sectorsData[k].environment.lightSettings.sunColor;
+                    ri.color = sectorsData[k].environment.GetMapColor();
                 }
                 sectorsImages[k] = ri;
                 k++;
@@ -325,7 +325,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 if (sectorsData[i] != null)
                 {
                     var mp = sectorsData[i].centralPoint;
-                    if (mp.type != MapMarkerType.Star) sectorsImages[i].color = sectorsData[i].environment.lightSettings.sunColor;
+                    if (mp.type != MapMarkerType.Star) sectorsImages[i].color = sectorsData[i].environment.GetMapColor();
                     else sectorsImages[i].color = (mp as SunPoint).color;
                 }
                 else

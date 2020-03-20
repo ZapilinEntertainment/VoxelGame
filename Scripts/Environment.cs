@@ -1,455 +1,400 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public struct Environment
+public sealed class Environment
 {
-    public enum EnvironmentPreset : byte // dependency : ringSector.Save
+    public enum EnvironmentPreset : byte
     {
-        Default, WhiteSpace, BlackSpace, IceSpace, FireSpace, WaterSpace, LightStorm,
-        DarkCanyon, EndlessFields, UnderrealmCaverns, OceanWorld, DiedWorld, ForestWorld, DesertWorld,
-        DreamRealm, AncientRuins, ModernRuins, SoulRuins, Custom
+        Default, Ocean, Meadows, WhiteSpace, // normal
+        Space, Ice, Desert, Fire, // dead
+        Ruins, Crystal, Forest, Pollen, // ascended
+        Pipe // special
+            // edge -> center
     }
-    // # зависимость:
-    // GetSuitableEnvironment
-    // GetSuitablePoint
-    // LightSettings.GetPresetLightSettings
-    public struct LightSettings
-    {
-        public Vector3 sunDirection;
-        public float maxIntensity;
-        public Color sunColor, bottomColor, horizonColor;
-
-        public LightSettings(Vector3 sunDir, float i_maxIntensity, Color i_sunColor, Color i_bottomColor, Color i_horizonColor)
-        {
-            sunDirection = sunDir;
-            maxIntensity = i_maxIntensity;
-            sunColor = i_sunColor;
-            bottomColor = i_bottomColor;
-            horizonColor = i_horizonColor;
-        }
-
-        public static LightSettings GetPresetLightSettings(EnvironmentPreset ep)
-        {
-            Vector2 v = Random.insideUnitCircle;
-            switch (ep)
-            {
-                case EnvironmentPreset.DarkCanyon:
-                    {
-                        v *= 5f;
-                        return new LightSettings(
-                            new Vector3(v.y, -1f, v.x), 0.75f,
-                            new Color(0.88f, 0.19f, 0.67f), new Color(0.6f, 0f, 0.68f), new Color(0.28f, 0.07f, 0.31f)
-                            );
-                    }
-                case EnvironmentPreset.EndlessFields:
-                    {
-                        v *= 2f;
-                        return new LightSettings(
-                           new Vector3(v.x, -1f, v.y), 1.3f,
-                           new Color(1f, 0.94f, 0.71f), new Color(0.88f, 0.82f, 0.54f), new Color(2f, 0.84f, 0f)
-                           );
-                    }
-                case EnvironmentPreset.UnderrealmCaverns:
-                    {
-                        v *= 5f;
-                        return new LightSettings(
-                           new Vector3(v.x, -0.1f, v.y), 0.8f,
-                           new Color(0.58f, 1f, 0.75f), new Color(0f, 0.65f, 0.4f), new Color(0.22f, 0.46f, 0.29f)
-                           );
-                    }
-                case EnvironmentPreset.OceanWorld:
-                    {
-                        v *= 3f;
-                        return new LightSettings(
-                           new Vector3(v.x, -1f, v.y), 1.1f,
-                           new Color(0.61f, 0.99f, 0.94f), new Color(0f, 0.62f, 1f), new Color(0f, 0f, 0.65f)
-                           );
-                    }
-                case EnvironmentPreset.DiedWorld:
-                    {
-                        return new LightSettings(
-                           Vector3.down, 0.75f,
-                           Color.white, Color.white * 0.74f, new Color(1f, 0.61f, 0.57f)
-                           );
-                    }
-                case EnvironmentPreset.ForestWorld:
-                    {
-                        v *= 5f;
-                        return new LightSettings(
-                           new Vector3(v.x, -1f, v.y), 0.75f,
-                           new Color(1f, 0.96f, 0.74f), new Color(0.57f, 0.84f, 0.57f), new Color(0.07f, 0.43f, 0.07f)
-                           );
-                    }
-                case EnvironmentPreset.DesertWorld:
-                    {
-                        v *= 3f;
-                        return new LightSettings(
-                           new Vector3(v.x, -0.5f, v.y), 1.2f,
-                           new Color(1f, 0.74f, 0.65f), new Color(1f, 0.95f, 0.74f), new Color(0.51f, 0.48f, 0.09f)
-                           );
-                    }
-                case EnvironmentPreset.DreamRealm:
-                    {
-                        v *= 2;
-                        return new LightSettings(
-                       new Vector3(v.x, -1f, v.y), 1f,
-                       new Color(1f, 0.67f, 0.9f), new Color(0.67f, 1f, 0.97f), new Color(0.61f, 0.19f, 0.52f)
-                       );
-                    }
-                case EnvironmentPreset.AncientRuins:
-                    {
-                        v *= 1.5f;
-                        return new LightSettings(
-                       new Vector3(v.x, -0.5f, v.y), 1f,
-                       new Color(0.6f, 0.6f, 0.2f), new Color(0.82f, 0.83f, 0.17f), new Color(0.25f, 0.25f, 0.15f)
-                       );
-                    }
-                case EnvironmentPreset.ModernRuins:
-                    {
-                        v *= 2f;
-                        return new LightSettings(
-                       new Vector3(v.x, -0.9f + Random.value * 0.2f, v.y), 1.1f,
-                       new Color(0.71f, 0.98f, 1f), new Color(0.92f, 0.94f, 0.6f), new Color(0.43f, 0.54f, 0.54f)
-                       );
-                    }
-                case EnvironmentPreset.SoulRuins:
-                    {
-                        return new LightSettings(
-                       new Vector3(v.x, -1f, v.y), 1f,
-                       new Color(0.27f, 0.83f, 0.85f), new Color(0.73f, 0.83f, 0.83f), new Color(0.04f, 0.91f, 0.95f)
-                       );
-                    }
-                case EnvironmentPreset.LightStorm:
-                    return new LightSettings(new Vector3(2f, -0.5f, 2f), 1.2f, new Color(1f, 0.99f, 0.86f), new Color(0.58f, 0.58f, 0.52f), new Color(0.96f, 0.79f, 0.4f));
-                case EnvironmentPreset.WaterSpace:
-                    return new LightSettings(Vector3.down, 0.5f, new Color(0.18f, 0.65f, 1f), new Color(0f, 0f, 0.4f), new Color(0.06f, 0.75f, 0.98f));
-                case EnvironmentPreset.FireSpace:
-                    return new LightSettings(Vector3.down, 1.5f, new Color(0.93f, 0.26f, 0.11f), new Color(0.31f, 0.07f, 0.05f), Color.yellow);
-                case EnvironmentPreset.IceSpace:
-                    return new LightSettings(new Vector3(1f, -1f, 1f), 0.85f, new Color(0.588f, 0.853f, 0.952f), Color.blue, Color.white);
-                case EnvironmentPreset.BlackSpace:
-                    return new LightSettings(new Vector3(1f, -0.3f, 1f), 0.85f, Color.white, Color.black, Color.black);
-                case EnvironmentPreset.WhiteSpace:
-                    return new LightSettings(Vector3.down, 1.3f, Color.white, Color.white, Color.white);
-                case EnvironmentPreset.Default:
-                default:
-                    return new LightSettings(new Vector3(1f, -0.3f, 1f).normalized, 1f,
-            Color.white, Color.white, Color.cyan * 0.5f);
-            }
-        }
-    }
-
-    public enum SkySphereType : byte
-    {
-        Stars, Clouds, Ice, Fire, OceanSurface, LightStorm, RainySky, RealSky, Hangar, Cavern
-    }
-    public enum BeltType : byte
-    {
-        NoBelt, Light, CavernExit, Caverns, Ruins, Mechanisms, StoneWalls
-    }
-    public enum LowSphereType : byte
-    {
-        Stars, Clouds, Ice, Fire, Ocean, GlowingClouds, Abyss, Canyons, Fields, Forest, Desert, Ruins
-    }
-    public enum DecorationsPack : byte
-    {
-        NoDecorations, PeaksUp, PeaksDown, CyclopeBuildings, AncientRuins, ModernRuins, Mechanisms, Trees, Gardens
-    }
-    public enum Weather : byte
-    {
-        NoWeather, Rain, Snow, Rays, Ashes, Foliage, Pollen
-    }
+    //dependecies:
+    // PickEnvironmentPreset
+    // PickMainPointType
 
     public static readonly Environment defaultEnvironment;
-
     public readonly EnvironmentPreset presetType;
-    public readonly float conditions; // 0 is hell, 1 is very favourable
-    public LightSettings lightSettings;
+    public float conditions { get; private set; }
+    public readonly float richness, lifepowerSupport, stability, lightIntensityMultiplier;
+    public readonly Color bottomColor, skyColor, horizonColor;
+    private const float DEFAULT_CONDITIONS = 0.75f, DEFAULT_RICHNESS = 0.2f, DEFAULT_LP_SUPPORT = 0.5f, DEFAULT_STABILITY = 0.5f;
+    private static Dictionary<EnvironmentPreset, Environment> elist;
 
     static Environment()
     {
         defaultEnvironment = new Environment(EnvironmentPreset.Default);
-    }   
-    public static Environment GetSuitableEnvironment(float ascension)
+    } 
+    public static Environment GetEnvironment(EnvironmentPreset ep)
     {
-        int x;
-        EnvironmentPreset presetType = EnvironmentPreset.Default;
-        if (ascension < 0.3f) // low
+        if (elist != null)
         {
-            x = Random.Range(0, 6); 
-            switch (x)
+            if (elist.ContainsKey(ep)) return elist[ep];
+            else
             {
-                case 0:
-                    {
-                        presetType = EnvironmentPreset.BlackSpace;
-                        break;
-                    }
-                case 1:
-                    {
-                        presetType = EnvironmentPreset.IceSpace;
-                        break;
-                    }
-                case 2:
-                    {
-                        presetType = EnvironmentPreset.FireSpace;
-                        break;
-                    }
-                case 3:
-                    {
-                        presetType = EnvironmentPreset.DarkCanyon;
-                        break;
-                    }
-                case 4:
-                    {
-                        presetType = EnvironmentPreset.DiedWorld;
-                        break;
-                    }
-                case 5:
-                    {
-                        presetType = EnvironmentPreset.AncientRuins;
-                        break;
-                    }
+                var e = new Environment(ep);
+                elist.Add(ep, e);
+                return e;
             }
         }
         else
         {
-            if (ascension > 0.7f) // high
-            {
-                x = Random.Range(0, 5);
-                switch (x)
-                {
-                    case 0:
-                        {
-                            presetType = EnvironmentPreset.WhiteSpace;
-                            break;
-                        }
-                    case 1:
-                        {
-                            presetType = EnvironmentPreset.EndlessFields;
-                            break;
-                        }
-                    case 2:
-                        {
-                            presetType = EnvironmentPreset.DesertWorld;
-                            break;
-                        }
-                    case 3:
-                        {
-                            presetType = EnvironmentPreset.DreamRealm;
-                            break;
-                        }
-                    case 4:
-                        {
-                            presetType = EnvironmentPreset.SoulRuins;
-                            break;
-                        }
-                }
-            }
-            else // normal
-            {
-                x = Random.Range(0, 7);
-                switch (x)
-                {
-                    case 0:
-                        {
-                            presetType = EnvironmentPreset.Default;
-                            break;
-                        }
-                    case 1:
-                        {
-                            presetType = EnvironmentPreset.WaterSpace;
-                            break;
-                        }
-                    case 2:
-                        {
-                            presetType = EnvironmentPreset.LightStorm;
-                            break;
-                        }
-                    case 3:
-                        {
-                            presetType = EnvironmentPreset.UnderrealmCaverns;
-                            break;
-                        }
-                    case 4:
-                        {
-                            presetType = EnvironmentPreset.OceanWorld;
-                            break;
-                        }
-                    case 5:
-                        {
-                            presetType = EnvironmentPreset.ForestWorld;
-                            break;
-                        }
-                    case 6:
-                        {
-                            presetType = EnvironmentPreset.ModernRuins;
-                            break;
-                        }
-                }
-            }
+            var e = new Environment(ep);
+            elist = new Dictionary<EnvironmentPreset, Environment>();
+            elist.Add(ep, e);
+            return e;
         }
-        return new Environment(presetType, LightSettings.GetPresetLightSettings(presetType));
-    }  
-
-    public Environment(EnvironmentPreset ep)
+    }
+    public static Environment GetEnvironment(float ascension, float height)
     {
-        switch (ep)
+        return GetEnvironment(PickEnvironmentPreset(ascension, height));
+    }
+    private Environment(EnvironmentPreset ep)
+    {
+        presetType = ep;
+        switch(ep)
         {
-            case EnvironmentPreset.Default:
-            default:
-                presetType = EnvironmentPreset.Default;
-                lightSettings = LightSettings.GetPresetLightSettings(ep);
-                conditions = 1;
+            case EnvironmentPreset.Desert:
+                conditions = 0.3f;
+                lifepowerSupport = 0.1f;
+                lightIntensityMultiplier = 1.1f;
+                stability = 0.4f;
+                skyColor = new Color(1f, 0.74f, 0.65f);
+                bottomColor = new Color(1f, 0.95f, 0.74f);
+                horizonColor = new Color(0.51f, 0.48f, 0.09f);
                 break;
-        }
-    }
-    public Environment(EnvironmentPreset ep, LightSettings ls)
-    {
-        switch (ep)
-        {
-            case EnvironmentPreset.Default:
-            default:
-                presetType = EnvironmentPreset.Default;
-                lightSettings = ls;
-                conditions = 1;
-                break;
-        }
-    }
-
-    public float GetInnerEventTime()
-    {
-        if (presetType != EnvironmentPreset.Default)
-        {
-            return 20f;
-        }
-        else return 0;
-    }
-    public void InnerEvent()
-    {
-        switch (presetType)
-        {
-            case EnvironmentPreset.ModernRuins:
-                int size = 3;
-                var g = Constructor.GetModernRuinPart(size);
-                GameMaster.realMaster.environmentMaster.AddDecoration(size, g);
-                break;
-        }        
-    }
-   
-    public MapMarkerType GetSuitablePointType(float ascension)
-    {
-        var availableTypes = MapPoint.GetAvailablePointsType(ascension);
-        int x = Random.Range(0, availableTypes.Count);
-        var mp = MapPoint.CreatePointOfType(0, 0, availableTypes[x]);
-        List<MapMarkerType> envtypes = new List<MapMarkerType>() {MapMarkerType.Star};
-        //full:
-        //envtypes = new MapMarkerType[]
-        //        {
-       //             MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
-       //             MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
-        //        };
-        switch (presetType)
-        {
             case EnvironmentPreset.WhiteSpace:
-                envtypes = new List<MapMarkerType>() { MapMarkerType.Island, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder };
+                conditions = 1f;
+                lifepowerSupport = 0.01f;
+                lightIntensityMultiplier = 1.5f;
+                stability = 0f;
+                skyColor = Color.white;
+                bottomColor = skyColor;
+                horizonColor = skyColor;
                 break;
-            case EnvironmentPreset.BlackSpace:
-                envtypes = new List<MapMarkerType>() { MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.SOS, MapMarkerType.Portal, MapMarkerType.Wonder, MapMarkerType.Resources };
+            case EnvironmentPreset.Pipe:
+                conditions = DEFAULT_CONDITIONS;
+                lifepowerSupport = DEFAULT_LP_SUPPORT / 2f;
+                stability = 0.98f;
+                lightIntensityMultiplier = 0.25f;
+                skyColor = new Color(0.58f, 1f, 0.75f);
+                bottomColor = new Color(0f, 0.65f, 0.4f);
+                horizonColor = new Color(0.22f, 0.46f, 0.29f);
                 break;
-            case EnvironmentPreset.IceSpace:
-            case EnvironmentPreset.FireSpace:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.SOS, MapMarkerType.Portal,
-                    MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
-                };
+            case EnvironmentPreset.Ice:
+                conditions = 0.25f;
+                lifepowerSupport = 0.2f;
+                stability = 0.55f;
+                lightIntensityMultiplier = 0.7f;
+                skyColor = new Color(0.588f, 0.853f, 0.952f);
+                bottomColor = Color.blue;
+                horizonColor = Color.white;
                 break;
-            case EnvironmentPreset.WaterSpace:
-                envtypes = new List<MapMarkerType>()
-               {
-                    MapMarkerType.Station, MapMarkerType.Wreck, 
-                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Wonder
-               };
-               break;
-            case EnvironmentPreset.LightStorm:
-               envtypes = new List<MapMarkerType>()
-               {
-                    MapMarkerType.Wreck, MapMarkerType.SOS,
-                    MapMarkerType.Star, MapMarkerType.Wonder, MapMarkerType.Resources
-               };
-               break;
-            case EnvironmentPreset.DarkCanyon:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
-                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Resources
-                };
+            case EnvironmentPreset.Pollen:
+                conditions = 0.4f;
+                lifepowerSupport = 0.6f;
+                stability = 0.3f;
+                lightIntensityMultiplier = 0.8f;
+                skyColor = new Color(1f, 0.99f, 0.86f);
+                bottomColor = new Color(0.58f, 0.58f, 0.52f);
+                horizonColor = new Color(0.96f, 0.79f, 0.4f);
                 break;
-            case EnvironmentPreset.EndlessFields:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Island, MapMarkerType.Portal, MapMarkerType.Colony,
-                    MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder
-                };
+            case EnvironmentPreset.Forest:
+                conditions = 0.89f;
+                lifepowerSupport = 0.8f;
+                stability = DEFAULT_STABILITY;
+                lightIntensityMultiplier = 1f;
+                skyColor = new Color(1f, 0.96f, 0.74f);
+                bottomColor = new Color(0.57f, 0.84f, 0.57f);
+                horizonColor = new Color(0.07f, 0.43f, 0.07f);
                 break;
-            case EnvironmentPreset.UnderrealmCaverns:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
-                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
-                };
+            case EnvironmentPreset.Ruins:
+                conditions = 0.4f;
+                lifepowerSupport = 0.3f;
+                stability = 0.6f;
+                lightIntensityMultiplier = 0.9f;
+                skyColor = new Color(0.6f, 0.6f, 0.2f);
+                bottomColor = new Color(0.82f, 0.83f, 0.17f);
+                horizonColor = new Color(0.25f, 0.25f, 0.15f);
                 break;
-            case EnvironmentPreset.OceanWorld:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
-                    MapMarkerType.Portal, MapMarkerType.Colony, MapMarkerType.Wonder
-                };
+            case EnvironmentPreset.Crystal:
+                conditions = 0.5f;
+                lifepowerSupport = 0.1f;
+                stability = 0.85f;
+                lightIntensityMultiplier = 0.85f;
+                skyColor = new Color(0.27f, 0.83f, 0.85f);
+                bottomColor = new Color(0.73f, 0.83f, 0.83f);
+                horizonColor = new Color(0.04f, 0.91f, 0.95f);
                 break;
-            case EnvironmentPreset.DiedWorld:
-            case EnvironmentPreset.DesertWorld:
-            case EnvironmentPreset.SoulRuins:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Station, MapMarkerType.Wreck, MapMarkerType.Island,
-                    MapMarkerType.Star, MapMarkerType.Wiseman, 
-                };
+            case EnvironmentPreset.Meadows:
+                conditions = DEFAULT_CONDITIONS * 1.1f;
+                lifepowerSupport = DEFAULT_LP_SUPPORT * 1.2f;
+                stability = DEFAULT_STABILITY;
+                lightIntensityMultiplier = 1f;
+                skyColor = new Color(1f, 0.94f, 0.71f);
+                bottomColor = new Color(0.88f, 0.82f, 0.54f);
+                horizonColor = new Color(2f, 0.84f, 0f);
                 break;
-            case EnvironmentPreset.ForestWorld:
-                envtypes = new List<MapMarkerType>()
-                {
-                    MapMarkerType.Wreck, MapMarkerType.Island, MapMarkerType.SOS,
-                    MapMarkerType.Resources
-                };
+            case EnvironmentPreset.Space:
+                conditions = 0f;
+                lifepowerSupport = 0f;
+                stability = 0.1f;
+                lightIntensityMultiplier = 1f;
+                skyColor = Color.white;
+                bottomColor = Color.black;
+                horizonColor = Color.cyan * 0.25f;
                 break;
-            case EnvironmentPreset.DreamRealm:
-               envtypes = new List<MapMarkerType>()
-               {
-                    MapMarkerType.Island,
-                    MapMarkerType.Colony, MapMarkerType.Star, MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
-               };
+            case EnvironmentPreset.Fire:
+                conditions = 0.2f;
+                lifepowerSupport = 0.1f;
+                stability = 0.33f;
+                lightIntensityMultiplier = 1.1f;
+                skyColor = new Color(0.93f, 0.26f, 0.11f);
+                bottomColor = new Color(0.31f, 0.07f, 0.05f);
+                horizonColor = Color.yellow;
                 break;
-            case EnvironmentPreset.AncientRuins:
-            case EnvironmentPreset.ModernRuins:
-                envtypes = new List<MapMarkerType>()
-               {
-                    MapMarkerType.Station, MapMarkerType.SOS,
-                    MapMarkerType.Wiseman, MapMarkerType.Wonder, MapMarkerType.Resources
-               };
+            case EnvironmentPreset.Ocean:
+                conditions = DEFAULT_CONDITIONS * 0.9f;
+                lifepowerSupport = DEFAULT_LP_SUPPORT * 0.75f;
+                stability = 0.8f;
+                lightIntensityMultiplier = 0.5f;
+                skyColor = new Color(0.61f, 0.99f, 0.94f);
+                bottomColor = new Color(0f, 0.62f, 1f);
+                horizonColor = new Color(0f, 0f, 0.65f);
+                break;
+            default:
+                presetType = EnvironmentPreset.Default;
+                conditions = DEFAULT_CONDITIONS;
+                lifepowerSupport = DEFAULT_LP_SUPPORT;
+                stability = DEFAULT_STABILITY;
+                lightIntensityMultiplier = 1f;
+                bottomColor = Color.white;
+                skyColor = Color.white;
+                horizonColor = Color.cyan * 0.5f;
                 break;
         }
-        int i = 0;
-        while (i < envtypes.Count)
+    }    
+    public static EnvironmentPreset PickEnvironmentPreset(float ascension, float height)
+    {
+        float outerVar = (height - 0.7f) / 0.3f; if (outerVar < 0f) outerVar = 0f;
+        float svar = 1f - Mathf.Abs(height - 0.6f) / 0.4f; if (svar < 0f) svar = 0f;
+        float svar2 = 1f - Mathf.Abs(height - 0.4f) / 0.4f; if (svar2 < 0f) svar2 = 0f;
+        float innerVar = 1f - height / 0.3f; if (innerVar < 0f) innerVar = 0f;
+        float x = Random.value;
+        if (x < 0.1f) x /= 0.1f;
+        else
         {
-            if (!availableTypes.Contains(envtypes[i])) {
-                envtypes.RemoveAt(i);
-                continue;
-            }
-            else
+            if (x > 0.9f) x = (x - 0.9f) / 0.1f;
+        }        
+
+        var list = new List<(EnvironmentPreset, float)>() // вероятность
+        {
+            (EnvironmentPreset.Default, 1f)        
+        };
+        float sum = 0f ,f;
+        if (svar != 0f)
+        {
+            f = svar * x;
+            list.Add((EnvironmentPreset.Ocean, f));
+            sum += f;
+        }
+        if (svar2 != 0f)
+        {
+            f = svar2 * x;
+            list.Add((EnvironmentPreset.Meadows, f));
+            sum += f;
+        }
+        if (innerVar != 0f)
+        {
+            f = innerVar * x;
+            list.Add((EnvironmentPreset.WhiteSpace, f));
+            sum += f;
+        }
+        float avar;
+        if (ascension < 0.5f)
+        {
+            avar = 1f - ascension / 0.5f;
+            if (outerVar != 0f)
             {
+                f = outerVar * avar * (1 - x);
+                list.Add((EnvironmentPreset.Space, f));
+                sum += f;
+            }
+            if (svar != 0f)
+            {
+                f = svar * avar * (1 - x);
+                list.Add((EnvironmentPreset.Ice, f));
+                sum += f;
+            }
+            if (svar2 != 0f)
+            {
+                f = svar2 * avar * (1 - x);
+                list.Add((EnvironmentPreset.Desert, f));
+                sum += f;
+            }
+            if (innerVar != 0f)
+            {
+                f = innerVar * avar * (1 - x);
+                list.Add((EnvironmentPreset.Fire, f));
+                sum += f;
+            }
+        }
+        else
+        {
+            avar = (ascension - 0.5f) / 0.5f;
+            if (outerVar != 0f)
+            {
+                f = outerVar * avar * (1 - x);
+                list.Add((EnvironmentPreset.Ruins, f));
+                sum += f;
+            }
+            if (svar != 0f)
+            {
+                f = svar * avar * (1 - x);
+                list.Add((EnvironmentPreset.Crystal, f));
+                sum += f;
+            }
+            if (svar2 != 0f)
+            {
+                f = svar2 * avar * (1 - x);
+                list.Add((EnvironmentPreset.Forest,f ));
+                sum += f;
+            }
+            if (innerVar != 0f)
+            {
+                f = innerVar * avar * (1 - x);
+                list.Add((EnvironmentPreset.Pollen, f));
+                sum += f;
+            }
+        }
+        //
+        if (list.Count == 1) return list[0].Item1;
+        x = Random.value * sum;
+        int i;
+        if (x > 0.5f)
+        {
+            i = list.Count - 1;
+            do
+            {
+                if (x >= list[i].Item2)
+                {
+                    return list[i].Item1;
+                }
+                i--;
+            }
+            while (i >= 0);
+        }
+        else
+        {
+            i = 1;
+            do
+            {
+                if (x < list[i].Item2)
+                {
+                    return list[i - 1].Item1;
+                }
                 i++;
             }
+            while (i < list.Count);
         }
-        return envtypes[Random.Range(0, envtypes.Count)];
+        return EnvironmentPreset.Default;
     }
-}
+    public MapMarkerType PickMainPointType()
+    {           
+        MapMarkerType[] list = new MapMarkerType[4];
+        switch (presetType)
+        {           
+            case EnvironmentPreset.Ocean:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.SOS;
+                list[2] = MapMarkerType.Island;               
+                list[3] = MapMarkerType.Wonder;
+                break;
+            case EnvironmentPreset.Meadows:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Wreck;                
+                list[2] = MapMarkerType.Station;
+                list[3] = MapMarkerType.Colony;
+                break;
+            case EnvironmentPreset.WhiteSpace:
+                list[0] = MapMarkerType.Star;
+                list[1] = MapMarkerType.Wiseman;
+                list[2] = MapMarkerType.Wonder;
+                list[3] = MapMarkerType.Portal;
+                break;
+            case EnvironmentPreset.Space:
+            case EnvironmentPreset.Ice:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Wreck;
+                list[2] = MapMarkerType.SOS;
+                list[3] = MapMarkerType.Station;
+                break;
+            case EnvironmentPreset.Desert:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Wreck;
+                list[2] = MapMarkerType.SOS;
+                list[3] = MapMarkerType.Island;
+                break;
+            case EnvironmentPreset.Fire:
+                list[0] = MapMarkerType.Star;
+                list[1] = MapMarkerType.Wreck;
+                list[2] = MapMarkerType.SOS;
+                list[3] = MapMarkerType.Portal;
+                break;
+            case EnvironmentPreset.Ruins:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Wreck;
+                list[2] = MapMarkerType.Wiseman;
+                list[3] = MapMarkerType.Colony;
+                break;
+            case EnvironmentPreset.Crystal:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Wiseman;
+                list[2] = MapMarkerType.Island;
+                list[3] = MapMarkerType.Portal;
+                break;
+            case EnvironmentPreset.Forest:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Island;
+                list[2] = MapMarkerType.Colony;
+                list[3] = MapMarkerType.Wonder;
+                break;
+            case EnvironmentPreset.Pollen:
+                list[0] = MapMarkerType.SOS;
+                list[1] = MapMarkerType.Wreck;
+                list[2] = MapMarkerType.Island;
+                list[3] = MapMarkerType.Portal;
+                break;
+            case EnvironmentPreset.Pipe:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Wreck;
+                list[2] = MapMarkerType.Star;
+                list[3] = MapMarkerType.Island;
+                break;
+            default:
+                list[0] = MapMarkerType.Resources;
+                list[1] = MapMarkerType.Island;
+                list[2] = MapMarkerType.Station;
+                list[3] = MapMarkerType.Wonder;
+                break;
+        }
+        float x = Random.value;
+        if (x > 0.3f)
+        {
+            if (x > 0.6f) return list[0];
+            else return list[1];
+        }
+        else
+        {
+            if (x < 0.1f) return list[3];
+            else return list[2];
+        }
+    }
+
+    public Color GetMapColor()
+    {
+        return Color.Lerp(skyColor, Color.white, 0.6f);
+    }
+}    

@@ -8,7 +8,7 @@ public sealed class Nature : MonoBehaviour
     private Chunk myChunk;
     private GameMaster gm;
     public bool needRecalculation = false;
-    public float environmentalConditions { get; private set; }
+    public float lifepowerSupport { get; private set; }
     private bool prepared = false, sideGrasslandsSupport = false, ceilGrasslandsSupport = false;
     private float lifepower, lifepowerSurplus, grasslandCreateTimer, grasslandsUpdateTimer;
     private int lastUpdateIndex = 0;
@@ -42,12 +42,17 @@ public sealed class Nature : MonoBehaviour
     {
         myChunk = c;
         env = GameMaster.realMaster.environmentMaster;
-        environmentalConditions = env.environmentalConditions;
+        lifepowerSupport = env.lifepowerSupport;
+        env.environmentChangingEvent += EnvironmentSetting;
         prepared = true;
         treeTypes = new List<PlantType>() { PlantType.OakTree };
         lifepower = 100f;
         lifepowerSurplus = 2f;
         gm = GameMaster.realMaster;
+    }
+    private void EnvironmentSetting(Environment e)
+    {
+        lifepowerSupport = e.lifepowerSupport;
     }
     public void FirstSet(float lpower)
     {
@@ -80,7 +85,7 @@ public sealed class Nature : MonoBehaviour
                     }
                     else
                     {
-                        if (Random.value < environmentalConditions)
+                        if (Random.value < lifepowerSupport)
                         {
                             g = p.FORCED_GetExtension().InitializeGrassland();
                             g.AddLifepower(lifepiece);

@@ -424,7 +424,7 @@ public class Structure : MonoBehaviour
                 }
                 else return true;
             case OBSERVATORY_ID:
-                return Observatory.CheckSpecialBuildingConditions(p, ref refusalReason);
+                return Observatory.CheckSpecialBuildingCondition(p, ref refusalReason);
             default: return true;
         }
     }

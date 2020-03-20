@@ -502,6 +502,13 @@ public sealed class UISurfacePanelController : UIObserver {
                         s.SetBasement(observingSurface, new PixelPosByte(7, 7));
                         PoolMaster.current.BuildSplash(s.transform.position);
                         SetCostPanelMode(CostPanelMode.Disabled);
+
+                        Plane p;
+                        if ((s as IPlanable).TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminate)
+                        {
+                            UIController.current.Select(p);
+                        }
+                        else ReturnButton();
                         // }
                         //   else
                         //  {

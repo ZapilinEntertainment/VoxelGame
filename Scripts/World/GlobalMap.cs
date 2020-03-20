@@ -17,7 +17,7 @@ public sealed class GlobalMap : MonoBehaviour
     public GameObject observer { get; private set; }
     public System.Action<MapPoint> pointsExploringEvent;
 
-    public const byte RINGS_COUNT = 5;
+    public const byte RINGS_COUNT = 5; // dependence : Environment.GetEnvironment
     private const byte MAX_OBJECTS_COUNT = 50;
     private const float MAX_RINGS_ROTATION_SPEED = 1;
     private float[] rotationSpeed;
@@ -64,9 +64,8 @@ public sealed class GlobalMap : MonoBehaviour
         int startSectorIndex = Random.Range(min, min + sectorsCount);
 
         Vector2 startPos = GetSectorPosition(startSectorIndex);
-        var ls = Environment.LightSettings.GetPresetLightSettings(Environment.EnvironmentPreset.Default);
-        var sunPoint = new SunPoint(startPos.x, startPos.y,  ls.sunColor);        
-        RingSector startSector = new RingSector(sunPoint, new Environment(Environment.EnvironmentPreset.Default, ls ));
+        var sunPoint = new SunPoint(startPos.x, startPos.y,  Color.white);        
+        RingSector startSector = new RingSector(sunPoint, Environment.defaultEnvironment);
         startSector.SetFertility(false);
         mapSectors[startSectorIndex] = startSector;
         Vector2 dir = Quaternion.AngleAxis(Random.value * 360, Vector3.forward) * Vector2.up;
@@ -171,16 +170,16 @@ public sealed class GlobalMap : MonoBehaviour
                 pos.y,
                 availableTypes[x]
                 );
-            mapSectors[i] = new RingSector(centralPoint, Environment.GetSuitableEnvironment(ascension));
+            mapSectors[i] = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
             AddPoint(centralPoint, true);
         }
         else
         {
-            var e = Environment.GetSuitableEnvironment(ascension);
+            var e = Environment.GetEnvironment(ascension, pos.y);
             SunPoint sunpoint = new SunPoint(
                 pos.x,
                 pos.y,
-                e.lightSettings.sunColor
+                e.horizonColor
                 );
             mapSectors[i] = new RingSector(sunpoint, e);
             AddPoint(sunpoint, true);
@@ -603,7 +602,7 @@ public sealed class GlobalMap : MonoBehaviour
         pos.y,
         MapMarkerType.Island
         );
-        mapSectors[x] = new RingSector(centralPoint, Environment.GetSuitableEnvironment(ascension));
+        mapSectors[x] = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
         AddPoint(centralPoint, true);
     }
 

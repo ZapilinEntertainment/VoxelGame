@@ -24,8 +24,7 @@ public sealed class RingSector
         lastFreeID++;
         centralPoint = sun_point;
         centralPoint.SetStability(1f);
-        var ls = Environment.defaultEnvironment.lightSettings;
-        environment = new Environment(environmentPresetType);
+        environment = Environment.GetEnvironment(environmentPresetType);
         sun_point.SetStability(1f);
         innerPointsIDs = new Dictionary<byte, int>();
         destroyed = false;
@@ -47,7 +46,7 @@ public sealed class RingSector
         ID = i_ID;
         centralPoint = i_centralPoint;
         centralPoint.SetStability(1f);
-        environment = new Environment(e_preset);
+        environment = Environment.GetEnvironment(e_preset);
         innerPointsIDs = new Dictionary<byte, int>();
         destroyed = false;
     }
@@ -135,7 +134,7 @@ public sealed class RingSector
             MapPoint mp;
             if (Random.value < visibility)
             {
-                mp = MapPoint.CreatePointOfType(pos.x, pos.y, environment.GetSuitablePointType(ascension));
+                mp = MapPoint.CreatePointOfType(pos.x, pos.y, environment.PickMainPointType() );
             }
             else
             {

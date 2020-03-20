@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedition, Island, SOS, Portal, QuestMark, Colony, Star, Wiseman, Wonder, Resources }
+public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedition, Island, SOS, Portal,
+    QuestMark, Colony, Star, Wiseman, Wonder, Resources }
 
 // ЗАВИСИМОСТИ :
 // конструктор MapPoint
@@ -10,7 +11,7 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedi
 // константы максимального количества подвидов
 //  функция загрузки LoadPoints()
 // GlobalMap.CreateNewSector
-// Environment.GetSuitablePointType
+// Environment.GetMainPointType
 // PointOfInterest.TakeTreasure, GetArtifact, GenerateChallengesArray
 // ScienceLab.PointExplored
 //Knowledge -point check

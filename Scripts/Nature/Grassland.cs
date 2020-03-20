@@ -107,7 +107,7 @@ public sealed class Grassland
             {
                 var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT)];
                 var p = Plant.GetNewPlant(nature.GetPlantType(pcat));                
-                lifepower -= CREATE_COST_VAL * nature.environmentalConditions;
+                lifepower -= CREATE_COST_VAL * nature.lifepowerSupport;
                 p?.SetBasement(plane);  //перерасчет вызовет сама plane             
             }
             else
@@ -163,7 +163,7 @@ public sealed class Grassland
                     {
                         var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT)];
                         var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
-                        f -= CREATE_COST_VAL * nature.environmentalConditions;
+                        f -= CREATE_COST_VAL * nature.lifepowerSupport;
                         p?.SetBasement(plane);
                     }
                     else
