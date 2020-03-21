@@ -130,7 +130,8 @@ sealed public class UIController : MonoBehaviour
             {
                 if (rpanel_textfield_userStructureID == Structure.XSTATION_3_ID)
                 {
-                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.realMaster.stability * 100)).ToString() + '%';
+                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = 
+                        Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.stability * 100)).ToString() + '%';
                 }
             }
         }
@@ -263,7 +264,7 @@ sealed public class UIController : MonoBehaviour
                 {
                     if (hospitalPanel.activeSelf)
                     {
-                        int nhm = (int)Hospital.birthrateMode;
+                        int nhm = (int)colony.birthrateMode;
                         if (nhm != hospitalPanel_savedMode)
                         {
                             var t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
@@ -1405,7 +1406,7 @@ sealed public class UIController : MonoBehaviour
 
     public void ActivateHospitalPanel()
     {
-        int hm = (int)Hospital.birthrateMode;
+        int hm = (int)colony.birthrateMode;
         Transform t = null;
         if (hm != hospitalPanel_savedMode)
         {
@@ -1423,10 +1424,10 @@ sealed public class UIController : MonoBehaviour
     }
     public void Hospital_SetBirthrateMode(int i)
     {
-        int hm = (int)Hospital.birthrateMode;
+        int hm = (int)colony.birthrateMode;
         if (i != hm)
         {
-            Hospital.SetBirthrateMode((BirthrateMode)i);
+            colony.SetBirthrateMode((BirthrateMode)i);
             Transform t = null;
             if (i != hospitalPanel_savedMode)
             {
@@ -1496,8 +1497,8 @@ sealed public class UIController : MonoBehaviour
         Transform t = hospitalPanel.transform;
         t.GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.BirthrateMode) + " :";
         t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Normal);
-        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", Hospital.improvedCoefficient * 100f) + "%)";
-        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", Hospital.loweredCoefficient * 100f) + "%)";
+        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", ColonyController.IMPROVED_BIRTHRATE_COEFFICIENT * 100f) + "%)";
+        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", ColonyController.LOWERED_BIRTHRATE_COEFFICIENT * 100f) + "%)";
 
         menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
         t = menuPanel.transform;

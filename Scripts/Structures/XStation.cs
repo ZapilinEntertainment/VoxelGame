@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 
 public sealed class XStation : WorkBuilding {
+
+    private static bool indicatorPrepared = false, markerEnabled = false;
     public static XStation current { get; private set; }
     private static RectTransform cityMarker;
-    private static bool indicatorPrepared = false, markerEnabled = false;
+    private static EnvironmentMaster envMaster;
+
     private  float INDICATOR_EDGE_POSITION;
     private const float VISIBLE_LOW_BORDER = 0.2f, VISIBLE_UP_BORDER = 0.8f;
 
@@ -22,7 +25,8 @@ public sealed class XStation : WorkBuilding {
         {
             indicatorPrepared = false;
             markerEnabled = false;
-        }   
+        }
+        envMaster = GameMaster.realMaster.environmentMaster;
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)
@@ -53,10 +57,10 @@ public sealed class XStation : WorkBuilding {
         if (x)
         {
             if (!indicatorPrepared) PrepareIndicator();
-            cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
+            cityMarker.anchoredPosition = Vector3.right * (envMaster.islandStability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
             if (!markerEnabled)
             {
-                var s = GameMaster.realMaster.stability;
+                var s = envMaster.islandStability;
                 if (s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER | showOnGUI)
                 {
                     cityMarker.parent.gameObject.SetActive(true);
@@ -90,7 +94,7 @@ public sealed class XStation : WorkBuilding {
         showOnGUI = false;
         if (markerEnabled)
         {
-            var s = GameMaster.realMaster.stability;
+            var s = envMaster.islandStability;
             if (s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER)
             {
                 cityMarker.parent.gameObject.SetActive(false);
@@ -115,11 +119,11 @@ public sealed class XStation : WorkBuilding {
     }
     private void Update()
     {
-        var s = GameMaster.realMaster.stability;
+        var s = envMaster.islandStability;
         bool show = isEnergySupplied & isActive & indicatorPrepared & ( showOnGUI | s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER );
         if (show)
         {
-            cityMarker.anchoredPosition = Vector3.right * (GameMaster.realMaster.stability - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
+            cityMarker.anchoredPosition = Vector3.right * (s - 0.5f) * INDICATOR_EDGE_POSITION * 2f;
             if (!markerEnabled)
             {
                 cityMarker.parent.gameObject.SetActive(true);

@@ -19,7 +19,7 @@ public sealed class StabilityEnforcer : WorkBuilding
             if (f != 0f)
             {
                 if (!subscribedToUpdate) Subscribe();
-                if (affectionID == -1) affectionID = GameMaster.realMaster.AddStabilityModifier(AFFECTION_VALUE * f);
+                if (affectionID == -1) affectionID = GameMaster.realMaster.environmentMaster.AddStabilityModifier(AFFECTION_VALUE * f);
             }
         }
         else
@@ -27,7 +27,7 @@ public sealed class StabilityEnforcer : WorkBuilding
             if (subscribedToUpdate) Unsubscribe();
             if (affectionID != -1)
             {
-                GameMaster.realMaster.RemoveStabilityModifier(affectionID);
+                GameMaster.realMaster.environmentMaster.RemoveStabilityModifier(affectionID);
                 affectionID = -1;
             }
         }
@@ -48,10 +48,10 @@ public sealed class StabilityEnforcer : WorkBuilding
         if (workersCount > 0)
         {
             float f = workersCount; f /= maxWorkers;
-            if (affectionID == -1) affectionID = GameMaster.realMaster.AddStabilityModifier(AFFECTION_VALUE * f);
+            if (affectionID == -1) affectionID = GameMaster.realMaster.environmentMaster.AddStabilityModifier(AFFECTION_VALUE * f);
             else
             {
-                GameMaster.realMaster.ChangeStabilityModifierValue(affectionID, AFFECTION_VALUE * f);
+                GameMaster.realMaster.environmentMaster.ChangeStabilityModifierValue(affectionID, AFFECTION_VALUE * f);
             }
             if (!subscribedToUpdate) Subscribe();
             if (!isActive) SetActivationStatus(true, true);
@@ -60,7 +60,7 @@ public sealed class StabilityEnforcer : WorkBuilding
         {
             if (affectionID != -1)
             {
-                GameMaster.realMaster.RemoveStabilityModifier(affectionID);
+                GameMaster.realMaster.environmentMaster.RemoveStabilityModifier(affectionID);
                 affectionID = -1;
             }
             if (subscribedToUpdate) Unsubscribe();
@@ -74,7 +74,7 @@ public sealed class StabilityEnforcer : WorkBuilding
         var gm = GameMaster.realMaster;
         if ((byte)gm.difficulty > (byte)Difficulty.Easy)
         {
-            var st = gm.stability;
+            var st = GameMaster.stability;
             if (st < STABILITY_BORDER)
             {
                 float stabilityDelta = STABILITY_BORDER - st;
@@ -107,7 +107,7 @@ public sealed class StabilityEnforcer : WorkBuilding
         if (subscribedToUpdate) Unsubscribe();
         if (affectionID != -1)
         {
-            GameMaster.realMaster.RemoveStabilityModifier(affectionID);
+            GameMaster.realMaster.environmentMaster.RemoveStabilityModifier(affectionID);
             affectionID = -1;
         }
         Destroy(gameObject);

@@ -1,20 +1,6 @@
-﻿public enum BirthrateMode : byte { Normal, Improved, Lowered }
-public class Hospital : WorkBuilding {
-	public float coverage {get;private set;}
-	public static float hospital_birthrate_coefficient { get; private set; }
-	public static  BirthrateMode birthrateMode{get; private set;} // сохраняется в colony controller
-
-	public const float loweredCoefficient = 0.5f, improvedCoefficient = 1.5f;
+﻿public class Hospital : WorkBuilding {
+	public float coverage {get;private set;}	
     const int STANDART_COVERAGE = 1000;
-
-    static Hospital()
-    {
-        AddToResetList(typeof(Hospital));
-        hospital_birthrate_coefficient = 1f;
-    }
-	public static void ResetStaticData() {
-		SetBirthrateMode(0);
-	}
 
 	public override void SetBasement(Plane b, PixelPosByte pos) {		
 		if (b == null) return;
@@ -44,11 +30,7 @@ public class Hospital : WorkBuilding {
         coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
         if (prevCoverage != coverage) colony.RecalculateHospitals();
         gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 20f;
-    }
-    public static void SetBirthrateMode(BirthrateMode bm)
-    {
-        birthrateMode = bm;
-    }
+    }    
 
     public override UIObserver ShowOnGUI()
     {
@@ -67,6 +49,5 @@ public class Hospital : WorkBuilding {
         PrepareWorkbuildingForDestruction(clearFromSurface , returnResources, leaveRuins);
         colony.DeleteHospital(this);
         Destroy(gameObject);
-        //copy to expedition corpus.cs
     }
 }

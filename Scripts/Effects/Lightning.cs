@@ -135,7 +135,7 @@ public sealed class Lightning : MonoBehaviour
         akeys[1].time = 0.01f;
         akeys[1].alpha = 1f;
         akeys[2].alpha = 0f;
-        ckeys[0].color = Color.Lerp(Color.red, Color.cyan, GameMaster.realMaster.stability);
+        ckeys[0].color = Color.Lerp(Color.red, Color.cyan, GameMaster.stability);
         g.SetKeys(ckeys, akeys);
         lr.colorGradient = g;
         lr.enabled = true;
@@ -165,7 +165,7 @@ public sealed class Lightning : MonoBehaviour
                         ckeys = g.colorKeys;                        
                         if (akeys[1].time < 1)
                         {
-                            speeds[i] += fallspeed * Time.deltaTime * (1.5f - GameMaster.realMaster.stability);
+                            speeds[i] += fallspeed * Time.deltaTime * (1.5f - GameMaster.stability);
                             speed = speeds[i];
                             float f = akeys[1].time + speed * Time.deltaTime;
                             akeys[1].time = f;

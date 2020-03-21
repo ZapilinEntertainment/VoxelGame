@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+public enum BirthrateMode : byte { Disabled, Normal, Improved, Lowered }
 public sealed class ColonyController : MonoBehaviour
 {
     public Action<float> crystalsCountUpdateEvent, happinessUpdateEvent;
@@ -39,6 +40,7 @@ public sealed class ColonyController : MonoBehaviour
         }
     }
     private float _energyCrystalCount;
+    public BirthrateMode birthrateMode { get; private set; }
     public List<Building> powerGrid { get; private set; }
     public List<Dock> docks { get; private set; }
     public List<House> houses { get; private set; }
@@ -70,13 +72,14 @@ public sealed class ColonyController : MonoBehaviour
     private List<Hospital> hospitals;
     private bool starvation = false;
     private sbyte recalculationTick = 0;
-    private float birthrateCoefficient,peopleSurplus = 0f, 
-        tickTimer,
+    private float birthSpeed,peopleSurplus = 0f, 
+        tickTimer, birthrateCoefficient = 0f,
         targetHappiness, targetHealth,
         happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, showingHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false;    
 
     public const byte MAX_HOUSING_LEVEL = 5;
+    public const float LOWERED_BIRTHRATE_COEFFICIENT = 0.5f, IMPROVED_BIRTHRATE_COEFFICIENT = 1.5f;
     private const sbyte RECALCULATION_TICKS_COUNT = 5;
     private const float
         START_ENERGY_CRYSTALS_COUNT = 100,
@@ -93,7 +96,7 @@ public sealed class ColonyController : MonoBehaviour
             gears_coefficient = 2;
             health_coefficient = 1;
             hospitals_coefficient = 0;
-            birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
+            birthSpeed = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
             energyCrystalsCount = START_ENERGY_CRYSTALS_COUNT;
 
@@ -297,9 +300,9 @@ public sealed class ColonyController : MonoBehaviour
 
             //  BIRTHRATE
             {
-                if (birthrateCoefficient != 0 & !starvation)
+                if (birthSpeed != 0 & !starvation)
                 {
-                    realBirthrate = birthrateCoefficient * Hospital.hospital_birthrate_coefficient * health_coefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * TICK_TIME;
+                    realBirthrate = birthSpeed *  birthrateCoefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * TICK_TIME;
                     if (peopleSurplus > 1)
                     {
                         int newborns = (int)peopleSurplus;
@@ -550,7 +553,14 @@ public sealed class ColonyController : MonoBehaviour
     public void RecalculateHospitals()
     {
         hospitals_coefficient = 0;
-        if (hospitals.Count == 0) return;
+        if (hospitals.Count == 0) {
+            if (birthrateMode != BirthrateMode.Disabled) SetBirthrateMode(BirthrateMode.Disabled);
+            return;
+        }
+        else
+        {
+            if (birthrateMode == BirthrateMode.Disabled) SetBirthrateMode(BirthrateMode.Normal);
+        }
         int i = 0;
         float hospitalsCoverage = 0;
         while (i < hospitals.Count)
@@ -802,7 +812,7 @@ public sealed class ColonyController : MonoBehaviour
             if (hq == null)
             {
                 happiness_coefficient = GameConstants.START_HAPPINESS;
-                birthrateCoefficient = GameConstants.START_BIRTHRATE_COEFFICIENT;
+                birthSpeed = GameConstants.START_BIRTHRATE_COEFFICIENT;
             }
             hq = new_hq;
         }
@@ -834,6 +844,18 @@ public sealed class ColonyController : MonoBehaviour
         return Path.LifePath;
     }
 
+    public void SetBirthrateMode(BirthrateMode bm)
+    {
+        birthrateMode = bm;
+        switch (bm)
+        {
+            case BirthrateMode.Improved: birthrateCoefficient = IMPROVED_BIRTHRATE_COEFFICIENT; break;
+            case BirthrateMode.Lowered: birthrateCoefficient = LOWERED_BIRTHRATE_COEFFICIENT; break;
+            case BirthrateMode.Normal: birthrateCoefficient = 1f; break;
+            default: birthrateCoefficient = 0f; break;
+        }
+    }
+
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {
@@ -842,7 +864,7 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(gears_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(health_coefficient), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 6 x 4
         //worksites saveing
@@ -873,8 +895,8 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(citizenCount), 0, 4);
         fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
         fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(birthrateCoefficient), 0, 4); // 5 x 4
-        fs.WriteByte((byte)Hospital.birthrateMode); // + 1
+        fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4); // 5 x 4
+        fs.WriteByte((byte)birthrateMode); // + 1
 
         if (happinessAffects != null && happinessAffects.Count > 0) // + 1
         {
@@ -903,7 +925,7 @@ public sealed class ColonyController : MonoBehaviour
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
         happiness_coefficient = System.BitConverter.ToSingle(data, 4);
         health_coefficient = System.BitConverter.ToSingle(data, 8);
-        birthrateCoefficient = System.BitConverter.ToSingle(data, 12);
+        birthSpeed = System.BitConverter.ToSingle(data, 12);
         energyStored = System.BitConverter.ToSingle(data, 16);
         energyCrystalsCount = System.BitConverter.ToSingle(data, 20);
         //
@@ -921,11 +943,11 @@ public sealed class ColonyController : MonoBehaviour
         citizenCount = System.BitConverter.ToInt32(data, 4);
         peopleSurplus = System.BitConverter.ToSingle(data, 8);
         realBirthrate = System.BitConverter.ToSingle(data, 12);
-        birthrateCoefficient = System.BitConverter.ToSingle(data, 16);
+        birthSpeed = System.BitConverter.ToSingle(data, 16);
         RecalculatePowerGrid();
         RecalculateHousing();
         if (hospitals != null) RecalculateHospitals();
-        Hospital.SetBirthrateMode((BirthrateMode)data[20]);
+        SetBirthrateMode((BirthrateMode)data[20]);
         if (powerGrid.Count > 0)
         {
             WorkBuilding wb = null;

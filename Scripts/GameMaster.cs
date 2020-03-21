@@ -55,6 +55,17 @@ public sealed class GameMaster : MonoBehaviour
     public static float sellPriceCoefficient = 0.75f;
     public static byte layerCutHeight = 16, prevCutHeight = 16;
 
+    public static float stability {
+        get {
+            if (realMaster != null)
+            {
+                var em = realMaster.environmentMaster;
+                if (em != null) return em.islandStability;
+            }
+            return 0.5f;
+        }
+    }
+
     public static Vector3 sceneCenter { get { return Vector3.one * Chunk.chunkSize / 2f; } } // SCENE CENTER
     public static GameStartSettings gameStartSettings = GameStartSettings.Empty;    
     public static GeologyModule geologyModule;
@@ -79,15 +90,11 @@ public sealed class GameMaster : MonoBehaviour
     public float upgradeDiscount { get; private set; }
     public float upgradeCostIncrease { get; private set; }
     public float warProximity { get; private set; } // 0 is far, 1 is nearby  
-    public float gearsDegradeSpeed { get; private set; }
-
-    public float stability { get; private set; }
-    private Dictionary<int, float> stabilityModifiers;
-    private int nextSModifiersID;
+    public float gearsDegradeSpeed { get; private set; }  
 
     public Difficulty difficulty { get; private set; }
     //data
-    private float timeGone, target_stability = 0.5f;
+    private float timeGone;
     public byte day { get; private set; }
     public byte month { get; private set; }
     public uint year { get; private set; }
@@ -97,7 +104,6 @@ public sealed class GameMaster : MonoBehaviour
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
     private float labourTimer = 0;
     private bool gameStarted = false;
-    private bool? realSpaceConsuming = null; // true - real space consuming, false - last sector consuming
     // FOR TESTING
     [SerializeField] private GameMode _gameMode;
     public bool weNeedNoResources { get; private set; }
@@ -323,7 +329,6 @@ public sealed class GameMaster : MonoBehaviour
         gameSpeed = 1;
         pauseRequests = 0;        
         if (savename == null || savename == string.Empty) savename = "autosave";
-        stability = 0.5f;
         if (gameMode != GameMode.Editor)
         {
             lifeGrowCoefficient = 1;
@@ -385,35 +390,8 @@ public sealed class GameMaster : MonoBehaviour
     public void SetColonyController(ColonyController c)
     {
         colonyController = c;
-    }
-    public int AddStabilityModifier(float val)
-    {
-        if (stabilityModifiers == null) stabilityModifiers = new Dictionary<int, float>();
-        int id = nextSModifiersID++;
-        stabilityModifiers.Add(id, val);
-        return id;
-    }
-    public void ChangeStabilityModifierValue(int id, float val)
-    {
-        if (stabilityModifiers != null && stabilityModifiers.Count > 0)
-        {
-            if (stabilityModifiers.Remove(id))
-            {
-                if (val != 0) stabilityModifiers.Add(id, val);
-            }
-        }
-    }
-    public void RemoveStabilityModifier(int id)
-    {
-        if (stabilityModifiers != null)
-        {
-            stabilityModifiers.Remove(id);
-            if (id == nextSModifiersID - 1)
-            {
-                nextSModifiersID = id;
-            }
-        }        
-    }
+        environmentMaster.LinkColonyController(c);
+    }  
 
     #region updates
     private void Update()
@@ -437,68 +415,7 @@ public sealed class GameMaster : MonoBehaviour
             Knowledge.GetCurrent().OpenResearchTab();
             UIController.current.gameObject.SetActive(false);
         }
-        //eo testzone       
-        if (gameMode != GameMode.Editor)
-        {
-            float hc = 1f, gc = 0f;
-            if (colonyController != null)
-            {
-                hc = colonyController.happiness_coefficient;
-                if (colonyController.storage != null)
-                {
-                    gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
-                    gc *= 0.5f;
-                    gc = 1f - gc;
-                    // + блоки?
-                }
-            }
-
-            float structureStabilizersEffect = 1f;
-            if (stabilityModifiers != null && stabilityModifiers.Count > 0)
-            {
-                structureStabilizersEffect = 1f;
-                foreach (var sm in stabilityModifiers)
-                {
-                    structureStabilizersEffect *= (1f + sm.Value);
-                }
-            }
-            target_stability = 
-                0.25f * hc + 
-                0.25f * gc + 
-                0.25f * (1f - Mathf.Abs(globalMap.ascension - 0.5f)) + 
-                0.25f * structureStabilizersEffect;
-            if (stability != target_stability)
-            {
-                stability = Mathf.MoveTowards(stability, target_stability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
-            }
-
-            if (false)
-            {
-                if (stability <= GameConstants.RSPACE_CONSUMING_VAL)
-                {
-                    if (realSpaceConsuming != true)
-                    {
-                        realSpaceConsuming = true;
-                        var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-                        if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                        cce.Set(true);
-                    }
-                }
-                else
-                {
-                    if (stability >= GameConstants.LSECTOR_CONSUMING_VAL)
-                    {
-                        if (realSpaceConsuming != false)
-                        {
-                            realSpaceConsuming = false;
-                            var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-                            if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                            cce.Set(false);
-                        }
-                    }
-                }
-            }
-        }
+        //eo testzone         
     }
 
     private void FixedUpdate()
@@ -716,28 +633,9 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(year), 0, 4);
         fs.Write(System.BitConverter.GetBytes(timeGone), 0, 4);
         fs.Write(System.BitConverter.GetBytes(gearsDegradeSpeed), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(stability), 0, 4);
-        // 61
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
-        // 69
-        if (realSpaceConsuming == null) fs.WriteByte(0);
-        else
-        {
-            if (realSpaceConsuming == true)
-            {
-                fs.WriteByte(1);
-            }
-            else
-            {
-                fs.WriteByte(2);
-            }
-            var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-            float x = 0f;
-            if (cce != null) x = cce.GetTimerValue();
-            fs.Write(System.BitConverter.GetBytes(x),0,4);
-        }
-        //70 (+4) end
+        //65 (+4) end
         #endregion
 
         DockSystem.SaveDockSystem(fs);
@@ -788,7 +686,6 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController = gameObject.AddComponent<ColonyController>();
                 colonyController.Prepare();
             }
-            stabilityModifiers = null;
             //UI.current.Reset();
 
 
@@ -799,7 +696,7 @@ public sealed class GameMaster : MonoBehaviour
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
             //start writing
-            data = new byte[70]; 
+            data = new byte[65]; 
             fs.Read(data, 0, data.Length);
             gameSpeed = System.BitConverter.ToSingle(data, 0);
             lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
@@ -821,31 +718,8 @@ public sealed class GameMaster : MonoBehaviour
             year = System.BitConverter.ToUInt32(data, 45);
             timeGone = System.BitConverter.ToSingle(data, 49);
             gearsDegradeSpeed = System.BitConverter.ToSingle(data, 53);
-            stability = System.BitConverter.ToSingle(data, 57);
-
-            labourTimer = System.BitConverter.ToSingle(data, 61);
-            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 65));
-
-            int x = data[69];
-            float consumingTimerValue = 0f;
-            if (x != 0)
-            {
-                data = new byte[4];
-                fs.Read(data, 0, 4);
-                consumingTimerValue = System.BitConverter.ToSingle(data, 0);
-                if (x == 1)
-                {
-                    realSpaceConsuming = true;
-                }
-                else
-                {
-                    if (x == 2)
-                    {
-                        realSpaceConsuming = false;
-                    }
-                }
-            }
-            else realSpaceConsuming = null;
+            labourTimer = System.BitConverter.ToSingle(data, 57);
+            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 61));
             #endregion
 
             DockSystem.LoadDockSystem(fs);
@@ -923,13 +797,6 @@ public sealed class GameMaster : MonoBehaviour
             fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();
-            var cce = mainChunk.GetComponent<ChunkConsumingEffect>();
-            if (realSpaceConsuming != null)
-            {
-                if (cce == null) cce = mainChunk.gameObject.AddComponent<ChunkConsumingEffect>();
-                cce.Set(realSpaceConsuming == true);
-            }
-
             loading = false;
             savename = fullname;
             SetPause(false);

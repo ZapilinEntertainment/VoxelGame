@@ -154,9 +154,9 @@ public sealed class Monument : Building
                         }
                     case Path.TechPath:
                         {
-                            var gm = GameMaster.realMaster;
-                            if (affectionID != -1) affectionID = gm.AddStabilityModifier(affectionValue);
-                            else gm.ChangeStabilityModifierValue(affectionID, affectionValue);
+                            var em = GameMaster.realMaster.environmentMaster;
+                            if (affectionID != -1) affectionID = em.AddStabilityModifier(affectionValue);
+                            else em.ChangeStabilityModifierValue(affectionID, affectionValue);
                             break;
                         }
                 }
@@ -180,7 +180,7 @@ public sealed class Monument : Building
             switch (affectionPath)
             {
                 case Path.LifePath: GameMaster.realMaster.mainChunk.GetNature()?.RemoveLifepowerAffection(affectionID); break;
-                case Path.TechPath: GameMaster.realMaster.RemoveStabilityModifier(affectionID); break;
+                case Path.TechPath: GameMaster.realMaster.environmentMaster?.RemoveStabilityModifier(affectionID); break;
                 case Path.SecretPath: GameMaster.realMaster.globalMap.RemoveWorldAffection(affectionID); break;
             }
             affectionID = -1;

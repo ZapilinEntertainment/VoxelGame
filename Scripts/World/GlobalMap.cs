@@ -10,10 +10,12 @@ public sealed class GlobalMap : MonoBehaviour
     public int actionsHash { get; private set; }
     public MapPoint cityPoint { get; private set; }
     public Vector3 cityFlyDirection { get; private set; }
+    public Vector3 cityLookVector { get; private set; }
     public List<MapPoint> mapPoints { get; private set; }
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
 
     private bool prepared = false, mapInterfaceActive = false;
+    private EnvironmentMaster envMaster;
     public GameObject observer { get; private set; }
     public System.Action<MapPoint> pointsExploringEvent;
 
@@ -80,6 +82,10 @@ public sealed class GlobalMap : MonoBehaviour
         actionsHash = 0;
         prepared = true;
         //зависимость : Load()
+    }
+    public void LinkEnvironmentMaster(EnvironmentMaster em)
+    {
+        envMaster = em;
     }
 
     public bool AddPoint(MapPoint mp, bool forced)
@@ -155,7 +161,7 @@ public sealed class GlobalMap : MonoBehaviour
         }
     }
 
-    private void CreateNewSector(int i)
+    private RingSector CreateNewSector(int i)
     {
         var availableTypes = MapPoint.GetAvailablePointsType(ascension);
 
@@ -163,6 +169,7 @@ public sealed class GlobalMap : MonoBehaviour
         int x = Random.Range(0, availableTypes.Count);
         var inpos = GetSectorPosition(i);
         byte ring = DefineRing(pos.y);
+        RingSector rs;
         if (availableTypes[x] != MapMarkerType.Star)
         {            
             MapPoint centralPoint = MapPoint.CreatePointOfType(
@@ -170,7 +177,7 @@ public sealed class GlobalMap : MonoBehaviour
                 pos.y,
                 availableTypes[x]
                 );
-            mapSectors[i] = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
+            rs = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
             AddPoint(centralPoint, true);
         }
         else
@@ -181,10 +188,12 @@ public sealed class GlobalMap : MonoBehaviour
                 pos.y,
                 e.horizonColor
                 );
-            mapSectors[i] = new RingSector(sunpoint, e);
+            rs = new RingSector(sunpoint, e);
             AddPoint(sunpoint, true);
         }
+        mapSectors[i] = rs;
         actionsHash++;
+        return rs;
     }
     private void AddNewSector(byte index, MapMarkerType mtype, Environment e)
     {
@@ -288,6 +297,30 @@ public sealed class GlobalMap : MonoBehaviour
         {
             worldAffectionsList[id] = newVal;
         }
+    }
+
+    public void ChangeCityPointHeight(float delta)
+    {
+        cityPoint.height += delta; // no checks needed
+        CityPositionChanged();
+    }
+    private void CityPositionChanged()
+    {
+        var sIndex = DefineSectorIndex(cityPoint.angle, cityPoint.ringIndex);
+        int currentSectorIndex = GetCurrentSectorIndex();
+        if (sIndex != currentSectorIndex)
+        {
+            if (mapSectors[currentSectorIndex] != null)
+            {
+                envMaster.RefreshEnvironment();
+            }
+            else
+            {
+                var rs = CreateNewSector(sIndex);
+                envMaster.SetEnvironment(rs.environment);
+            }
+        }
+        else envMaster.positionChanged = true;
     }
 
     /// <summary>
@@ -408,70 +441,9 @@ public sealed class GlobalMap : MonoBehaviour
                 i++;
             }
         }
+        //
+        cityLookVector = Quaternion.AngleAxis(cityPoint.angle, Vector3.up) * Vector3.forward;
         cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);
-                
-
-        //test
-        if (false)
-        {
-            bool motion = false;
-            float angle = cityPoint.angle;
-            if (Input.GetKey("l"))
-            {
-                angle += 4 * Time.deltaTime;
-                if (angle > 360f) angle = 360f - angle;
-                else { if (angle < 0) angle += 360f; }
-                motion = true;
-            }
-            else
-            {
-                if (Input.GetKey("j"))
-                {
-                    angle -= 4 * Time.deltaTime;
-                    if (angle > 360f) angle = 360f - angle;
-                    else { if (angle < 0) angle += 360f; }
-                    motion = true;
-                }
-            }
-            float height = cityPoint.height;
-            if (Input.GetKey("i"))
-            {
-                height += 0.03f * Time.deltaTime;
-                if (height > 1) height = 1;
-                else { if (height < 0) height = 0; }
-                motion = true;
-            }
-            else
-            {
-                if (Input.GetKey("k"))
-                {
-                    height -= 0.03f * Time.deltaTime;
-                    if (height > 1) height = 1;
-                    else { if (height < 0) height = 0; }
-                    motion = true;
-                }
-            }
-
-            if (motion)
-            {
-                cityPoint.angle = angle;
-                cityPoint.height = height;
-                GameMaster.realMaster.environmentMaster.positionChanged = true;
-                var sIndex = DefineSectorIndex(angle, cityPoint.ringIndex);
-                int currentSectorIndex = GetCurrentSectorIndex();
-                if (sIndex != currentSectorIndex)
-                {
-                    if (mapSectors[currentSectorIndex] != null)
-                    {
-                        GameMaster.realMaster.environmentMaster.RefreshEnvironment();
-                    }
-                    else
-                    {
-                        GameMaster.realMaster.environmentMaster.SetEnvironment(Environment.defaultEnvironment);
-                    }
-                }
-            }
-        }
     }
 
     //=============  
@@ -526,7 +498,15 @@ public sealed class GlobalMap : MonoBehaviour
 
     public RingSector GetCurrentSector()
     {
-        return mapSectors[GetCurrentSectorIndex()];
+        int x = GetCurrentSectorIndex();
+        var ms = mapSectors[x];
+        if (ms != null) return ms;
+        else
+        {
+            ms = CreateNewSector(x);
+            mapSectors[x] = ms;
+            return ms;
+        }
     }
     public int GetCurrentSectorIndex()
     {

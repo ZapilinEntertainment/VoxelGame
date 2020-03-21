@@ -11,6 +11,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public float lifepowerSupport { get { return currentEnvironment.lifepowerSupport; } }
     public float envRichness { get { return currentEnvironment.richness; } }
     public float envStability { get { return currentEnvironment.stability; } }
+    public float islandStability { get; private set; }
 
     public Vector2 windVector { get; private set; }    
     public delegate void WindChangeHandler(Vector2 newVector);
@@ -19,15 +20,25 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     private bool prepared = false, showCelestialBodies = true;
     private int vegetationShaderWindPropertyID, lastDrawnMapActionHash;
-    private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10;
+    private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10,
+        targetStability = DEFAULT_ISLAND_STABILITY;
+    private ColonyController colonyController;
     private Environment currentEnvironment = Environment.defaultEnvironment;
+    private GameMaster gm;
     private GlobalMap gmap;
     private Material skyboxMaterial;
     private List<Transform> decorations;
     private Light sun;
-    private Dictionary<MapPoint, Transform> celestialBodies;    
+    private Transform sunTransform;
+    private Dictionary<MapPoint, Transform> celestialBodies;
     
-    private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6;
+    private Dictionary<int, float> stabilityModifiers;
+    private int nextSModifiersID;
+
+    private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6, BASIC_SUN_INTENSITY = 0.5f, 
+        DEFAULT_ISLAND_STABILITY = 0.5f, CITY_CHANGE_HEIGHT_STEP = 0.01f, POPULATION_STABILITY_EFFECT_1 = 0.1f, 
+        POPULATION_STABILITY_EFFECT_2 = 0.25f, POPULATION_STABILITY_EFFECT_3 = 0.5f;
+    private const int POPULATION_CONDITION_1 = 2500, POPULATION_CONDITION_2 = 10000, POPULATION_CONDITION_3 = 25000;
     private const int SKY_SPHERE_RADIUS = 9, CLOUD_LAYER_INDEX = 9;
 
     public void Prepare()
@@ -44,12 +55,13 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             sun = new GameObject("sun").AddComponent<Light>();
             sun.type = LightType.Directional;
         }
+        sunTransform = sun.transform;
         decorations = new List<Transform>();
 
         skyboxMaterial = RenderSettings.skybox;
-        var rm = GameMaster.realMaster;
-        gmap = rm.globalMap;
-        if (rm.gameMode != GameMode.Editor)
+        gm = GameMaster.realMaster;
+        gmap = gm.globalMap;        
+        if (gm.gameMode != GameMode.Editor)
         {
             RefreshEnvironment();
             RecalculateCelestialDecorations();
@@ -57,8 +69,15 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         else
         {
             SetEnvironment(Environment.defaultEnvironment);
-        }
+        }       
+        islandStability = DEFAULT_ISLAND_STABILITY;
+        gmap.LinkEnvironmentMaster(this);
     }
+    public void LinkColonyController(ColonyController cc)
+    {
+        colonyController = cc;
+    }
+
     public void PrepareIslandBasis(ChunkGenerationMode cmode)
     { // его придётся сохранять!
         switch (cmode) {
@@ -78,43 +97,39 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     {
         currentEnvironment = e;       
         prevSkyboxSaturation = 1f;
-        //# setting environment
-        var s = currentEnvironment.lightIntensityMultiplier;
-        sun.intensity = s;
-        var skyColor = Color.Lerp(Color.black, currentEnvironment.skyColor, s);
-        var horColor = Color.Lerp(Color.cyan, currentEnvironment.horizonColor, s);
-        var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, s);
-        RenderSettings.ambientSkyColor = skyColor;
-        RenderSettings.ambientEquatorColor = horColor;
-        RenderSettings.ambientGroundColor = bottomColor;
-        skyboxMaterial.SetColor("_BottomColor", bottomColor);
-        skyboxMaterial.SetColor("_HorizonColor", horColor);
-        //
-        //environmentEventTimer = currentEnvironment.GetInnerEventTime();
+        SetLightParameters(BASIC_SUN_INTENSITY * e.lightIntensityMultiplier, 1f);
         environmentChangingEvent?.Invoke(currentEnvironment);
+        positionChanged = false;
     }
     public void RefreshEnvironment()
     {
         var rs = gmap.GetCurrentSector();
-        currentEnvironment = rs.environment;
-        //# setting environment
+        if (currentEnvironment != rs.environment)
+        {
+            currentEnvironment = rs.environment;
+            environmentChangingEvent(currentEnvironment);
+        }
         float s = rs.GetVisualSaturationValue();
-        float li = currentEnvironment.lightIntensityMultiplier * s;
-        sun.intensity = li;
-        Color scolor = sun.color * li * 1.1f;
+        float li = BASIC_SUN_INTENSITY * currentEnvironment.lightIntensityMultiplier * s;
+        SetLightParameters(li, s);
+        prevSkyboxSaturation = s;
+        positionChanged = false;
+    }
+    private void SetLightParameters(float sunIntesity, float ambientColorSaturation)
+    {        
+        sun.intensity = sunIntesity;
+        Color scolor = sun.color * (sunIntesity > 0.5f ? sunIntesity * 1.1f : sunIntesity * 1.5f);
         PoolMaster.billboardMaterial.SetColor("_MainColor", scolor);
         PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
 
-        var skyColor = Color.Lerp(Color.black, currentEnvironment.skyColor , s);
-        var horColor = Color.Lerp(Color.cyan, currentEnvironment.horizonColor, s);
-        var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, s);
+        var skyColor = Color.Lerp(Color.black, currentEnvironment.skyColor, ambientColorSaturation);
+        var horColor = Color.Lerp(Color.cyan, currentEnvironment.horizonColor, ambientColorSaturation);
+        var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, ambientColorSaturation);
         RenderSettings.ambientSkyColor = bottomColor;
         RenderSettings.ambientEquatorColor = horColor;
         RenderSettings.ambientGroundColor = bottomColor;
         skyboxMaterial.SetColor("_BottomColor", bottomColor);
         skyboxMaterial.SetColor("_HorizonColor", horColor);
-        //
-        prevSkyboxSaturation = s;
     }
 
     public void AddDecoration(float size, GameObject dec)
@@ -184,7 +199,35 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         mpoint.y = 0.2f;
         g.transform.position = mpoint * SKY_SPHERE_RADIUS;
     }
-   
+
+    public int AddStabilityModifier(float val)
+    {
+        if (stabilityModifiers == null) stabilityModifiers = new Dictionary<int, float>();
+        int id = nextSModifiersID++;
+        stabilityModifiers.Add(id, val);
+        return id;
+    }
+    public void ChangeStabilityModifierValue(int id, float val)
+    {
+        if (stabilityModifiers != null && stabilityModifiers.Count > 0)
+        {
+            if (stabilityModifiers.Remove(id))
+            {
+                if (val != 0) stabilityModifiers.Add(id, val);
+            }
+        }
+    }
+    public void RemoveStabilityModifier(int id)
+    {
+        if (stabilityModifiers != null)
+        {
+            stabilityModifiers.Remove(id);
+            if (id == nextSModifiersID - 1)
+            {
+                nextSModifiersID = id;
+            }
+        }
+    }
 
     private void LateUpdate()
     {
@@ -209,11 +252,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         if (GameMaster.realMaster.gameMode != GameMode.Editor & !GameMaster.loading)
         {
             // меняем краски, если город начинает двигаться внутри сектора
-            if (positionChanged)
-            {
-                RefreshEnvironment();
-                positionChanged = false;
-            }
+            if (positionChanged)  RefreshEnvironment();
 
             //if (currentEnvironment.presetType != Environment.EnvironmentPresets.Default)
             //{
@@ -306,6 +345,59 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                     effectsTimer = 1f;
                 }
             }
+
+            //sunlight changing
+            var clv = gmap.cityLookVector;
+            var rightVector = Vector3.Cross(clv, Vector3.down);
+            sunTransform.forward = Quaternion.AngleAxis(15f + gmap.ascension * 75f ,rightVector) * clv;
+
+            #region stability
+            float hc = 1f, gc = 0f;
+            if (colonyController != null)
+            {
+                hc = colonyController.happiness_coefficient;
+                if (colonyController.storage != null)
+                {
+                    gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
+                    gc *= 0.5f;
+                    gc = 1f - gc;
+                    // + блоки?
+                }
+            }
+
+            float structureStabilizersEffect = 1f;
+            if (stabilityModifiers != null && stabilityModifiers.Count > 0)
+            {
+                structureStabilizersEffect = 1f;
+                foreach (var sm in stabilityModifiers)
+                {
+                    structureStabilizersEffect *= (1f + sm.Value);
+                }
+            }
+            targetStability =
+                envStability +
+                0.25f * hc +
+                0.25f * gc +
+                0.25f * (1f - Mathf.Abs(gmap.ascension - 0.5f)) +
+                0.25f * structureStabilizersEffect;
+            if (islandStability != targetStability)
+            {
+                islandStability = Mathf.MoveTowards(islandStability, targetStability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
+            }
+
+            float k = islandStability / envStability;
+            if (k >= 2f) gmap.ChangeCityPointHeight(CITY_CHANGE_HEIGHT_STEP * t);
+            else
+            {
+                if ( k <= 0.5f)
+            }
+            if (islandStability != envStability)
+            {
+                
+                
+                else gmap.ChangeCityPointHeight(CITY_CHANGE_HEIGHT_STEP * t * (-1f));
+            }
+                #endregion
         }
     }
 

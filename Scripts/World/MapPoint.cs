@@ -21,15 +21,32 @@ public class MapPoint
     public MapMarkerType type { get; protected set; }
     public bool destroyed { get; protected set; }
     public byte ringIndex { get; private set; }
-    public float angle;
+    public float angle // in degrees
+    {
+        get { return _angle; }
+        set
+        {
+            if (value > 360f) _angle = 360f;
+            else
+            {
+                if (value < 0f) _angle = 0f;
+                else _angle = value;
+            }
+        }
+    }
     public float height {
         get { return _height; }
         set {
-            _height = value;
+            if (value > 1f) _height = 1f;
+            else
+            {
+                if (value < 0f) height = 0f;
+                else _height = value;
+            }
             ringIndex = GameMaster.realMaster.globalMap.DefineRing(height);
         }
     }
-    private float _height;
+    private float _height, _angle;
     protected byte name, surname, specname;
 
     public float stability { get; protected set; }    
