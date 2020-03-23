@@ -63,7 +63,7 @@ public sealed class Environment
                 stability = 0.4f;
                 skyColor = new Color(1f, 0.74f, 0.65f);
                 bottomColor = new Color(1f, 0.95f, 0.74f);
-                horizonColor = new Color(0.51f, 0.48f, 0.09f);
+                horizonColor = Color.white;
                 break;
             case EnvironmentPreset.WhiteSpace:
                 conditions = 1f;

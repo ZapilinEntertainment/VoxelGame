@@ -62,6 +62,10 @@ sealed public class Corn : Plant {
     {
         return stage == MAX_STAGE;
     }
+    public override int GetPlantComplexity()
+    {
+        return stage;
+    }
     override public float GetLifepowerSurplus()
     {
         return LIFEPOWER_SURPLUS;

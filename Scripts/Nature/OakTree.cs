@@ -592,6 +592,11 @@ public sealed class OakTree : Plant
     {
         return PER_LEVEL_LIFEPOWER_SURPLUS * stage;
     }
+    public override int GetPlantComplexity()
+    {
+        return stage * stage * 10;
+    }
+
     override public void Harvest(bool replenish)
     {
         if (destroyed) return;

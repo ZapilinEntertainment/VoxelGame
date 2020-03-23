@@ -6,7 +6,7 @@ public class Farm : WorkBuilding
 {
     private int lastPlantIndex;
     public PlantType cropType;
-    private const float ACTION_LIFEPOWER_COST = 10f;
+    private const float ACTION_LIFEPOWER_COST = 1f;
 
     override public void Prepare()
     {
@@ -67,6 +67,7 @@ public class Farm : WorkBuilding
         int i = 0;
         float totalCost = 0;
         int actionsPoints = (int)(workflow / workflowToProcess);
+        workflow -= actionsPoints * workflowToProcess;
 
         if (basement.fulfillStatus != FullfillStatus.Full)
         {
@@ -85,7 +86,7 @@ public class Farm : WorkBuilding
         {
             var allplants = basement.GetPlants();
             var indexes = new List<int>();
-            int count = allplants.Length;            
+            int count = allplants.Length, complexity;            
             indexes.Capacity = count;
             for (i = 0; i < count; i++)
             {
@@ -93,24 +94,25 @@ public class Farm : WorkBuilding
             }
             Plant p;
             while (actionsPoints > 0 & indexes.Count > 0)
-            {
+            {               
                 if (lastPlantIndex >= count) lastPlantIndex = 0;
                 p = allplants[indexes[lastPlantIndex]];
+                complexity = p.GetPlantComplexity();
                 if (p.type == cropType)
                 {
                     if (!p.IsFullGrown() & p.type == cropType)
                     {
                         p.UpdatePlant();
-                        totalCost += ACTION_LIFEPOWER_COST;
+                        totalCost += ACTION_LIFEPOWER_COST * complexity;
                         lastPlantIndex++;
-                        actionsPoints -= 4;
+                        actionsPoints -= 10 * complexity;
                     }
                     else
                     {
+                        actionsPoints -= complexity;
                         p.Harvest(true);
                         indexes.RemoveAt(lastPlantIndex);
-                        count--;
-                        actionsPoints--;
+                        count--;                        
                     }
                 }
                 else
@@ -118,10 +120,12 @@ public class Farm : WorkBuilding
                     p.Harvest(false);
                     indexes.RemoveAt(lastPlantIndex);
                     count--;
-                    actionsPoints -= 2;
+                    actionsPoints -= complexity;
                 }
             }
         }
+        if (actionsPoints > 0) workflow += actionsPoints * workflowToProcess;
+        else workflow -= actionsPoints * (-1) * workflowToProcess;
         if (totalCost > 0) {
             var gl = basement.GetGrassland();
             if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
@@ -129,7 +133,7 @@ public class Farm : WorkBuilding
         }
     }
 
-    new public static bool CheckSpecialBuildingConditions(Plane p, ref string refusalReason)
+    new public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
         if (!Nature.MaterialIsLifeSupporting(p.materialID))
         {

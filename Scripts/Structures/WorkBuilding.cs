@@ -46,10 +46,20 @@ public abstract class WorkBuilding : Building
                 }
                 break;
             case FARM_1_ID:
+                {
+                    workflowToProcess = 10f;
+                    maxWorkers = 100;
+                }
+                break;
             case FARM_2_ID:
+                {
+                    workflowToProcess = 9f;
+                    maxWorkers = 100;
+                }
+                break;
             case FARM_3_ID:
                 {
-                    workflowToProcess = 1200f;
+                    workflowToProcess = 8f;
                     maxWorkers = 100;
                 }
                 break;
@@ -67,19 +77,19 @@ public abstract class WorkBuilding : Building
                 break;
             case LUMBERMILL_1_ID:
                 {
-                    workflowToProcess = 50;
+                    workflowToProcess = 100;
                     maxWorkers = 80;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
-                    workflowToProcess = 45;
+                    workflowToProcess = 90;
                     maxWorkers = 80;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
-                    workflowToProcess = 40;
+                    workflowToProcess = 80;
                     maxWorkers = 80;
                 }
                 break;

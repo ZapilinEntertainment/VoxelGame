@@ -227,8 +227,7 @@ public sealed class ColonyController : MonoBehaviour
             }
 
             //
-            float x = GameConstants.HQ_MAX_LEVEL;
-            float lvlCf = 1 - (hq.level - x / 2) / x;
+            float lvlCf =GetLevelCf();
             //
             //HEALTHCARE
             float healthcareHappiness = HEALTHCARE_MIN_HAPPINESS * lvlCf;
@@ -854,6 +853,17 @@ public sealed class ColonyController : MonoBehaviour
             case BirthrateMode.Normal: birthrateCoefficient = 1f; break;
             default: birthrateCoefficient = 0f; break;
         }
+    }
+
+    public float GetLevelCf()
+    {
+        return 1 - (hq.level - GameConstants.HQ_MAX_LEVEL / 2) / GameConstants.HQ_MAX_LEVEL;
+        // 1 - 1.33
+        // 2 - 1.17
+        // 3 - 1
+        // 4 - 0.83
+        // 5 - 0.66
+        // 6 - 0.5
     }
 
     #region save-load system

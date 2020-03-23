@@ -4,7 +4,19 @@ using UnityEngine;
 
 public sealed class GlobalMap : MonoBehaviour
 {
-    public float ascension { get; private set; }
+    public float ascension {
+        get { return _ascension; }
+        set
+        {
+            if (value > 1f) _ascension = 1f;
+            else
+            {
+                if (value < 0f) _ascension = 0f;
+                else _ascension = value;
+            }
+        }
+    }
+    private float _ascension;
     public float[] ringsRotation { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }

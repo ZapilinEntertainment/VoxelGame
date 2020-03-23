@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public enum PlantCategory : byte { Flower, Bush, Tree} // dependency : grassland, nature
 public enum PlantType : byte { Abstract,OakTree, Corn}
 public abstract class Plant : Structure {
-    protected byte stage;
+    public byte stage { get; protected set; }
     public PlantType type { get; protected set; }
 
     public static Plant GetNewPlant(PlantType ptype)
@@ -66,6 +66,10 @@ public abstract class Plant : Structure {
     public static PlantType GetPlantType()
     {
         return PlantType.Abstract;
+    }
+    virtual public int GetPlantComplexity()
+    {
+        return 1;
     }
     //
 

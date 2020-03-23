@@ -72,12 +72,12 @@ public sealed class RingSector
         float angleX = angleDelta / (gmap.sectorsDegrees[ring] / 2f);
         float heightY = (cp.height - centralPoint.height) / ((gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) / 2f);
         Vector2 lookDist = new Vector2(angleX, heightY);
-
+       
         float d = lookDist.magnitude;
         if (d > 1f) return 0f;
         else
         {
-            if (d < 0.5f) return Mathf.Sin((d + 1) * 90 * Mathf.Deg2Rad);
+            if (d > 0.5f) return Mathf.Sin(d * Mathf.PI);
             else return 1f;
         }
     }

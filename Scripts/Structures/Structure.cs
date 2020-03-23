@@ -414,7 +414,7 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
-                return Farm.CheckSpecialBuildingConditions(p, ref refusalReason);
+                return Farm.CheckSpecialBuildingCondition(p, ref refusalReason);
             case CONNECT_TOWER_6_ID:
             case HOUSING_MAST_6_ID:
                 if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
