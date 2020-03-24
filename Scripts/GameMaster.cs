@@ -106,6 +106,7 @@ public sealed class GameMaster : MonoBehaviour
     private bool gameStarted = false;
     // FOR TESTING
     [SerializeField] private GameMode _gameMode;
+    [SerializeField] public bool testMode = false;
     public bool weNeedNoResources { get; private set; }
     public bool generateChunk = true;
     public byte test_size = 100;
@@ -252,11 +253,18 @@ public sealed class GameMaster : MonoBehaviour
                         int xpos = sb.pos.x;
                         int zpos = sb.pos.z;
 
-                        //testzone
-                        Structure s = HeadQuarters.GetHQ(6);
-                         weNeedNoResources = true;
-
-                        //eo testzone                    
+                        Structure s;
+                        if (testMode)
+                        {
+                            s = HeadQuarters.GetHQ(6);
+                            weNeedNoResources = true;
+                        }
+                        else
+                        {
+                            weNeedNoResources = false;
+                            s = HeadQuarters.GetHQ(1);
+                        }
+                        
                         Plane b = mainChunk.GetHighestSurfacePlane(xpos, zpos);
                         s.SetBasement(b, PixelPosByte.zero);
 
@@ -398,24 +406,23 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading) return;
 
-        //testzone
-        //if (false)
+        if (testMode)
         {
-            //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
+            {
+                if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
 
-            if (Input.GetKeyDown("o")) TestMethod();
-        }
-
-        if (Input.GetKeyDown("m"))
-        {
-            if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
-        }
-        if (Input.GetKeyDown("p"))
-        {
-            Knowledge.GetCurrent().OpenResearchTab();
-            UIController.current.gameObject.SetActive(false);
-        }
-        //eo testzone         
+                if (Input.GetKeyDown("o")) TestMethod();
+            }
+            if (Input.GetKeyDown("m"))
+            {
+                if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
+            }
+            if (Input.GetKeyDown("p"))
+            {
+                Knowledge.GetCurrent().OpenResearchTab();
+                UIController.current.gameObject.SetActive(false);
+            }
+        }   
     }
 
     private void FixedUpdate()

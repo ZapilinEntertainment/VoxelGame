@@ -339,6 +339,20 @@ public class Plane
                 return chunk.GetLightValue(cpos);
         }
     }
+    public static byte GetFaceCounter(byte faceIndex)
+    {
+        switch (faceIndex)
+        {
+            case Block.RIGHT_FACE_INDEX: return Block.LEFT_FACE_INDEX;
+            case Block.BACK_FACE_INDEX: return Block.FWD_FACE_INDEX;
+            case Block.LEFT_FACE_INDEX: return Block.RIGHT_FACE_INDEX;
+            case Block.UP_FACE_INDEX: return Block.DOWN_FACE_INDEX;
+            case Block.DOWN_FACE_INDEX: return Block.UP_FACE_INDEX;
+            case Block.SURFACE_FACE_INDEX: return Block.CEILING_FACE_INDEX;
+            case Block.CEILING_FACE_INDEX: return Block.SURFACE_FACE_INDEX;
+            default: return Block.BACK_FACE_INDEX;
+        }
+    }
 
     public ChunkPos GetChunkPosition() { return host.GetBlock().pos; }
     public Vector3 GetCenterPosition()

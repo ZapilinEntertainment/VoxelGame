@@ -17,7 +17,7 @@ public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, Peak, Terr
 public sealed partial class Chunk : MonoBehaviour
 {  
     public Dictionary<ChunkPos, Block > blocks;
-    public bool needSurfacesUpdate = false;
+    public bool needSurfacesUpdate = false; // hot
     public byte prevBitmask = 63;
     public float lifePower = 0;
     public static byte chunkSize { get; private set; }
@@ -85,7 +85,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         if (chunkRenderUpdateRequired)  RenderStatusUpdate();
         if (PoolMaster.shadowCasting & shadowsUpdateRequired) ShadowsUpdate();
-        if (needSurfacesUpdate) RecalculateSurfacesList();
+        if (needSurfacesUpdate | Input.GetKeyDown("k")) RecalculateSurfacesList();
     }  
 
     public Nature GetNature()
@@ -244,7 +244,7 @@ public sealed partial class Chunk : MonoBehaviour
                 transparency = true;
                 prevBlock = null;
             }
-            //down to up            
+            //down to up                  
             for (int x = 0; x < chunkSize; x++)
             {
                 for (int z = 0; z < chunkSize; z++)
@@ -310,16 +310,28 @@ public sealed partial class Chunk : MonoBehaviour
                     if (p.isQuad) plist.Add(p);
                 }
             }
-            int count = plist.Count;
-            if (count == 0) surfaces = null;
+            
+            if (plist.Count == 0) surfaces = null;
             else
             {
-                surfaces = new Plane[count];
-                for (int i = 0; i < count; i++)
+                int i = 0;
+                Block b;
+                Plane p2;
+                while (i < plist.Count)
                 {
-                    surfaces[i] = plist[i];
+                    p = plist[i];
+                    b = GetBlock(p.pos.OneBlockHigher());
+                    if (b != null && (b.TryGetPlane(Block.DOWN_FACE_INDEX, out p2) || b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p2)))
+                    {
+                        if (p2.isSurface)
+                        {
+                            plist.RemoveAt(i);
+                            continue;
+                        }
+                    }
+                    i++;
                 }
-                plist = null;
+                if (plist.Count > 0) surfaces = plist.ToArray();
             }
         }
         else surfaces = null;
@@ -340,8 +352,10 @@ public sealed partial class Chunk : MonoBehaviour
         }
         else
         {
+            bool planesCheck = false;
             b = new Block(this, f_pos, i_materialID, i_naturalGeneration);
-            if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
+            if (blocks == null)  blocks = new Dictionary<ChunkPos, Block>();                
+            else planesCheck = true;
             blocks.Add(f_pos, b);
             if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
 
@@ -349,10 +363,12 @@ public sealed partial class Chunk : MonoBehaviour
             shadowsUpdateRequired = true;
 
             RecalculateVisibilityAtPoint(f_pos, b.GetAffectionMask());
+            if (planesCheck) PlanesCheck(b, i_naturalGeneration);
 
             if (b.ContainSurface()) needSurfacesUpdate = true;
 
             chunkRenderUpdateRequired = true;
+            shadowsUpdateRequired = true;
             return b;
         }      
     }
@@ -360,22 +376,124 @@ public sealed partial class Chunk : MonoBehaviour
     {
         int x = i_pos.x, y = i_pos.y, z = i_pos.z;
         if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return null;
-        var b = GetBlock(i_pos);        
+        var b = GetBlock(i_pos);
+        bool planesCheck = false;
         if (b != null)
         {
             if (b.ContainSurface()) needSurfacesUpdate = true;
             b.RebuildBlock(ms, i_natural);
+            planesCheck = true;
         }
         else
         {
             b = new Block(this, i_pos, ms);
+            if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
+            else planesCheck = true;
             blocks.Add(i_pos, b);
         }
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
+        if (planesCheck) PlanesCheck(b, i_natural);
         if (b.ContainSurface()) needSurfacesUpdate = true;
         chunkRenderUpdateRequired = true;
         shadowsUpdateRequired = true;
         return b;
+    }
+    private void PlanesCheck(Block b, bool i_naturalGeneration)
+    {
+        Block b2;
+        Plane p, p2;
+        if (blocks.TryGetValue(b.pos.OneBlockForward(), out b2))
+        {
+            if (b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && b2.TryGetPlane(Block.BACK_FACE_INDEX, out p2))
+            {
+                if (p.isSurface && p2.isSurface)
+                {
+                    p.Annihilate(!i_naturalGeneration);
+                    p2.Annihilate(!i_naturalGeneration);
+                }
+            }
+        }
+        if (blocks.TryGetValue(b.pos.OneBlockRight(), out b2))
+        {
+            if (b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && b2.TryGetPlane(Block.LEFT_FACE_INDEX, out p2))
+            {
+                if (p.isSurface && p2.isSurface)
+                {
+                    p.Annihilate(!i_naturalGeneration);
+                    p2.Annihilate(!i_naturalGeneration);
+                }
+            }
+        }
+        if (blocks.TryGetValue(b.pos.OneBlockBack(), out b2))
+        {
+            if (b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && b2.TryGetPlane(Block.FWD_FACE_INDEX, out p2))
+            {
+                if (p.isSurface && p2.isSurface)
+                {
+                    p.Annihilate(!i_naturalGeneration);
+                    p2.Annihilate(!i_naturalGeneration);
+                }
+            }
+        }
+        if (blocks.TryGetValue(b.pos.OneBlockLeft(), out b2))
+        {
+            if (b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && b2.TryGetPlane(Block.RIGHT_FACE_INDEX, out p2))
+            {
+                if (p.isSurface && p2.isSurface)
+                {
+                    p.Annihilate(!i_naturalGeneration);
+                    p2.Annihilate(!i_naturalGeneration);
+                }
+            }
+        }
+        if (blocks.TryGetValue(b.pos.OneBlockHigher(), out b2))
+        {
+            if (b2.TryGetPlane(Block.DOWN_FACE_INDEX, out p2))
+            {
+                if (b.TryGetPlane(Block.UP_FACE_INDEX, out p))
+                {
+                    if (p.isSurface && p2.isSurface)
+                    {
+                        p.Annihilate(!i_naturalGeneration);
+                        p2.Annihilate(!i_naturalGeneration);
+                    }
+                }
+                else
+                {
+                    if (b.TryGetPlane(Block.CEILING_FACE_INDEX, out p))
+                    {
+                        if (p.isSurface && p2.isSurface)
+                        {
+                            p2.Annihilate(!i_naturalGeneration);
+                        }
+                    }
+                }
+            }
+        }
+        if (blocks.TryGetValue(b.pos.OneBlockDown(), out b2))
+        {
+            if (b2.TryGetPlane(Block.UP_FACE_INDEX, out p2))
+            {
+                if (b.TryGetPlane(Block.DOWN_FACE_INDEX, out p))
+                {
+                    if (p.isSurface && p2.isSurface)
+                    {
+                        p.Annihilate(!i_naturalGeneration);
+                        p2.Annihilate(!i_naturalGeneration);
+                    }
+                }
+                else
+                {
+                    if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p))
+                    {
+                        if (p.isSurface && p2.isSurface)
+                        {
+                            p2.Annihilate(!i_naturalGeneration);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public Block GetBlock(ChunkPos cpos) {

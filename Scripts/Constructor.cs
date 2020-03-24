@@ -119,11 +119,11 @@ public abstract class Constructor
         /*
         dat = new int[size, size, size];
         var ac = PoolMaster.MATERIAL_WHITE_METAL_ID;
-        for (int x = 0; x < size; x++)
+        for (int x = 0; x < 8; x++)
         {
-            for (int z = 0; z < size; z++)
+            for (int z = 0; z < 8; z++)
             {
-                for (int y = 0; y < 3; y++)
+                for (int y = 0; y < 8; y++)
                 {
                     dat[x, y, z] = ac;
                 }

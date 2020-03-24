@@ -34,9 +34,7 @@ public sealed class BlockExtension : IPlanable
         fossilsVolume = isNatural ? MAX_VOLUME : 0f;
         volume = MAX_VOLUME;
         //
-        existingPlanesMask = 
-            (1 << Block.FWD_FACE_INDEX) + (1 << Block.RIGHT_FACE_INDEX) + (1 << Block.BACK_FACE_INDEX) + 
-            (1 << Block.LEFT_FACE_INDEX) + (1 << Block.UP_FACE_INDEX) + ( 1 << Block.DOWN_FACE_INDEX);
+        existingPlanesMask = Block.CUBE_MASK;
     }   
     public BlockExtension(Block i_myBlock, BlockMaterialsList bml, bool i_natural, bool redrawCall) : this(i_myBlock,bml.mainMaterial, i_natural)  {
         int nomat = PoolMaster.NO_MATERIAL_ID;
@@ -201,7 +199,6 @@ public sealed class BlockExtension : IPlanable
             }
         }
     }
-
     public bool ContainsStructures()
     {
         if (planes == null) return false;
@@ -268,7 +265,8 @@ public sealed class BlockExtension : IPlanable
             return mask;
         }
     }
-    //returns false if transparent or wont be instantiated
+
+    //returns true if plane exists and opaque
     public bool InitializePlane(byte faceIndex)
     {
         if ((existingPlanesMask & (1 << faceIndex)) == 0) return false;
@@ -277,13 +275,12 @@ public sealed class BlockExtension : IPlanable
             if (planes != null && planes.ContainsKey(faceIndex))
             {
                 if (!planes[faceIndex].isVisible) planes[faceIndex].SetVisibility(true);
-                return MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
+                return !MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
             }
             else
             {
-                if (planes == null) planes = new Dictionary<byte, Plane>();
                 var p =CreatePlane(faceIndex, materialID, false);
-                return MeshMaster.IsMeshTransparent(p.meshType);
+                return !MeshMaster.IsMeshTransparent(p.meshType);
             }
         }
     }
@@ -292,6 +289,7 @@ public sealed class BlockExtension : IPlanable
         if (existingPlanesMask == 0) return null;
         else
         {
+            vismask = 255;
             var data = new List<BlockpartVisualizeInfo>();
             var cpos = myBlock.pos;
             var chunk = myBlock.myChunk;
@@ -308,14 +306,14 @@ public sealed class BlockExtension : IPlanable
                             var bvi = planes[i].GetVisualInfo(chunk, cpos);
                             if (bvi != null) data.Add(bvi);
                         }
-                        else
-                        {
-                            var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
-                            if (p != null) data.Add(p); else Debug.LogError("plane not created correctly");
-                        }
+                        //{
+                        //    var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
+                        //    if (p != null) data.Add(p); else Debug.LogError("plane not created correctly");
+                        //}
                     }
                 }
-                return data;
+                if (data.Count != 0) return data;
+                else return null;
             }
             else return null;
         }
@@ -325,7 +323,8 @@ public sealed class BlockExtension : IPlanable
         if ((existingPlanesMask & (1 << faceIndex)) != 0)
         {
             if (planes != null && planes.ContainsKey(faceIndex)) return planes[faceIndex].GetVisualInfo(myBlock.myChunk, myBlock.pos);
-            else return CreatePlane(faceIndex, false)?.GetVisualInfo(myBlock.myChunk, myBlock.pos);
+            //else return CreatePlane(faceIndex, false)?.GetVisualInfo(myBlock.myChunk, myBlock.pos);
+            else return null;
         }
         else return null;
     }
