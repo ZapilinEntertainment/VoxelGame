@@ -758,19 +758,6 @@ public sealed class ColonyController : MonoBehaviour
             else return null;
         }
     }
-    public void ReplaceWorksiteFromList(Plane p, Worksite w, bool sendStopMessage)
-    {
-        if (worksites == null || !worksites.ContainsKey(p))
-        {
-            AddWorksiteToList(w);
-            return;
-        }
-        else
-        {
-            if (worksites[p] != null && sendStopMessage) worksites[p].StopWork(false);
-            worksites[p] = w;
-        }
-    }
     public void RemoveWorksite(Worksite w)
     {
         if (worksites != null && worksites.ContainsValue(w))

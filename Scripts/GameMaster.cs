@@ -485,7 +485,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.metal_E, 50);
                 colonyController.storage.AddResource(ResourceType.metal_N, 1);
                 colonyController.storage.AddResource(ResourceType.Plastics, 200);
-                colonyController.storage.AddResource(ResourceType.Food, 1000);                
+                colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * 1.5f * DAYS_IN_MONTH);
                 break;
             case Difficulty.Easy:
                 colonyController.AddCitizens(70);
@@ -493,7 +493,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.metal_M, 60);
                 colonyController.storage.AddResource(ResourceType.metal_E, 30);
                 colonyController.storage.AddResource(ResourceType.Plastics, 150);
-                colonyController.storage.AddResource(ResourceType.Food, 700);
+                colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH);
                 break;
             case Difficulty.Normal:
                 colonyController.AddCitizens(50);
@@ -501,7 +501,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.metal_M, 50);
                 colonyController.storage.AddResource(ResourceType.metal_E, 20);
                 colonyController.storage.AddResource(ResourceType.Plastics, 100);
-                colonyController.storage.AddResource(ResourceType.Food, 500);
+                colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH * 0.75f);
                 break;
             case Difficulty.Hard:
                 colonyController.AddCitizens(40);
@@ -509,17 +509,17 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.metal_M, 20);
                 colonyController.storage.AddResource(ResourceType.metal_E, 2);
                 colonyController.storage.AddResource(ResourceType.Plastics, 10);
-                colonyController.storage.AddResource(ResourceType.Food, 700);
+                colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH * 0.55f);
                 break;
             case Difficulty.Torture:
                 colonyController.AddCitizens(30);
                 colonyController.storage.AddResource(ResourceType.metal_K, 40);
                 colonyController.storage.AddResource(ResourceType.metal_M, 20);
                 colonyController.storage.AddResource(ResourceType.metal_E, 10);
-                colonyController.storage.AddResource(ResourceType.Food, 750);
+                colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH * 0.45f);
                 break;
         }
-        colonyController.storage.AddResources(ResourcesCost.GetCost(Structure.SETTLEMENT_CENTER_ID));
+        colonyController.storage.AddResources(ResourcesCost.GetCost(Structure.SETTLEMENT_CENTER_ID));        
     }
     public float GetDifficultyCoefficient()
     {

@@ -26,12 +26,13 @@ public class CleanSite : Worksite {
 		if (strlist == null) {
             if (diggingMission)
             {
-                colony.ReplaceWorksiteFromList(workplace, this, false);
+                colony.RemoveWorksite(this);
                 DigSite ds = new DigSite(workplace, true, 0);
                 TransferWorkers(this, ds);
                 if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
+                StopWork(false);
             }
-            StopWork(true);
+            else StopWork(true);
             return;
 		}		
         else

@@ -797,7 +797,16 @@ public sealed partial class Chunk : MonoBehaviour
         RemoveBlockVisualisers(b.pos);
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(pos);
 
-        if (affectionMask != 0) RecalculateVisibilityAtPoint(pos, affectionMask);
+        if (affectionMask != 0)
+        {
+            if ((affectionMask & (1 << Block.FWD_FACE_INDEX)) != 0) GetBlock(pos.OneBlockForward())?.InitializePlane(Block.BACK_FACE_INDEX);
+            if ((affectionMask & (1 << Block.RIGHT_FACE_INDEX)) != 0) GetBlock(pos.OneBlockRight())?.InitializePlane(Block.LEFT_FACE_INDEX);
+            if ((affectionMask & (1 << Block.BACK_FACE_INDEX)) != 0) GetBlock(pos.OneBlockBack())?.InitializePlane(Block.FWD_FACE_INDEX);
+            if ((affectionMask & (1 << Block.UP_FACE_INDEX)) != 0) GetBlock(pos.OneBlockHigher())?.InitializePlane(Block.DOWN_FACE_INDEX);
+            if ((affectionMask & (1 << Block.LEFT_FACE_INDEX)) != 0) GetBlock(pos.OneBlockLeft())?.InitializePlane(Block.RIGHT_FACE_INDEX);
+            if ((affectionMask & (1 << Block.DOWN_FACE_INDEX)) != 0) GetBlock(pos.OneBlockDown())?.InitializePlane(Block.UP_FACE_INDEX);
+            RecalculateVisibilityAtPoint(pos, affectionMask);
+        }
         shadowsUpdateRequired = true;
         chunkDataUpdateRequired = true;
         // chunkRenderUpdateRequired = true; < в свитче

@@ -4,6 +4,7 @@ public class Plane
 {
     public bool isVisible { get; protected set; }
     public bool haveWorksite { get; protected set; }
+    public bool destroyed { get; private set; }
     public int materialID { get; protected set; }
     public byte faceIndex { get; protected set; }
     public MeshType meshType { get; protected set; }
@@ -544,22 +545,27 @@ public class Plane
 
     virtual public void Annihilate(bool compensateStructures)
     {
-        if (extension != null) extension.Annihilate(compensateStructures);
-        else
+        if (!destroyed)
         {
-            if (mainStructure != null)
+            destroyed = true;
+            if (extension != null) extension.Annihilate(compensateStructures);
+            else
             {
-                mainStructure.ClearBasementLink(this);
-                mainStructure.SectionDeleted(host.GetBlock().pos);
+                if (mainStructure != null)
+                {
+                    mainStructure.ClearBasementLink(this);
+                    mainStructure.SectionDeleted(host.GetBlock().pos);
+                }
             }
-        }
-        if (!GameMaster.sceneClearing) {
-            if (haveWorksite)
+            if (!GameMaster.sceneClearing)
             {
-                GameMaster.realMaster.colonyController.RemoveWorksite(this);
-                haveWorksite = false;
+                if (haveWorksite)
+                {
+                    GameMaster.realMaster.colonyController.RemoveWorksite(this);
+                    haveWorksite = false;
+                }
+                if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) host.GetBlock().myChunk.needSurfacesUpdate = true;
             }
-            if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) host.GetBlock().myChunk.needSurfacesUpdate = true;
         }
     }
 

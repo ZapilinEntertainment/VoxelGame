@@ -85,7 +85,7 @@ public abstract class Worksite
     {
         int x = source.workersCount;
         source.workersCount = 0;
-        source.workSpeed = 0;
+        source.workSpeed = 0f;
         int sum = destination.workersCount + x;
         int maxWorkers = destination.GetMaxWorkers();
         if (sum > maxWorkers)

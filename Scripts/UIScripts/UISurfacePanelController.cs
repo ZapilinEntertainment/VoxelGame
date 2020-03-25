@@ -79,7 +79,7 @@ public sealed class UISurfacePanelController : UIObserver {
     }
 
     public void SetObservingSurface(Plane sb) {
-		if (sb == null) {
+		if (sb == null || sb.destroyed) {
 			SelfShutOff();
 			return;
 		}
@@ -96,7 +96,7 @@ public sealed class UISurfacePanelController : UIObserver {
     override public void StatusUpdate()
     {
         if (!isObserving) return;
-        if (observingSurface == null)
+        if (observingSurface == null || observingSurface.destroyed)
         {
             SelfShutOff();
             return;
@@ -169,7 +169,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		ChangeMode( SurfacePanelMode.Build );
 	}
 	public void GatherButton() {
-		if (observingSurface == null) {
+		if (observingSurface == null || observingSurface.destroyed) {
 			SelfShutOff();
 			return;
 		}
@@ -193,14 +193,15 @@ public sealed class UISurfacePanelController : UIObserver {
 		}
 	}
 	public void DigButton() {
-		if (observingSurface == null) {
+		if (observingSurface == null || observingSurface.destroyed) {
 			SelfShutOff();
 			return;
 		}
 		else {
+            bool newCleanSite = false;
             if (observingSurface.isSurface)
             {
-                bool newCleanSite = true;
+                newCleanSite = observingSurface.fulfillStatus != FullfillStatus.Empty;
                 if (observingSurface.haveWorksite)
                 {
                     var w = colony.GetWorksite(observingSurface);
@@ -213,19 +214,19 @@ public sealed class UISurfacePanelController : UIObserver {
                         }
                     }
                 }
-                if (newCleanSite)
-                {
-                    var cs = new CleanSite(observingSurface, true);
-                    UIController.current.ShowWorksite(cs);
-                }
+                
+            }
+            if (newCleanSite)
+            {
+                var cs = new CleanSite(observingSurface, true);
+                UIController.current.ShowWorksite(cs);
             }
             else
             {
                 var ds = new DigSite(observingSurface, true);
                 UIController.current.ShowWorksite(ds);
             }
-            
-			StatusUpdate();
+            StatusUpdate();
 		}
 	}
 
@@ -658,7 +659,7 @@ public sealed class UISurfacePanelController : UIObserver {
         var btype = typeof(Building);
         if (stype == btype || stype.IsSubclassOf(btype))
         {
-            var energySurplus = Building.GetEnergyCapacity(selectedStructureID);
+            var energySurplus = Building.GetEnergySurplus(selectedStructureID);
             if (energySurplus != 0)
             {
                 energyIcon.SetActive(true);
@@ -760,7 +761,7 @@ public sealed class UISurfacePanelController : UIObserver {
     // end build request
     public void CreateSelectedBuilding(byte x, byte z, bool checkForIntersections)
     {
-        if (observingSurface == null) {
+        if (observingSurface == null || observingSurface.destroyed) {
             SelfShutOff();
             return;
         }
