@@ -15,6 +15,7 @@ public sealed class UISurfacePanelController : UIObserver {
     private bool status_digOrdered = false, firstSet = true;
     private bool? status_gather = null;
     private byte savedHqLevel = 0;
+    private int[] applicableBuildingsList;
     private Vector2[] showingResourcesCount;
 
     private int selectedBuildingButton = -1, lastStorageStatus = -1;
@@ -273,6 +274,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 {
                     int i = 0;
                     hq = colony.hq;
+                    //applicableBuildingsList = Building.GetApplicableBuildingsList(hq.level)
                     buildingsLevelToggles[0].transform.parent.gameObject.SetActive(true);
                     while (i < buildingsLevelToggles.Length)
                     {
@@ -859,24 +861,31 @@ public sealed class UISurfacePanelController : UIObserver {
 	void RewriteBuildingButtons () {
         // поправка на материал
         // поправка на side-only
-		var abuildings = Building.GetApplicableBuildingsList(constructingLevel);
-		for (int n = 0; n < buildingButtonsContainer.childCount; n++) {
-            GameObject g = buildingButtonsContainer.GetChild(n).gameObject;
-            if (n < abuildings.Length) {
-				g.SetActive(true);
-				RawImage rimage = buildingButtonsContainer.GetChild(n).GetChild(0).GetComponent<RawImage>();
-                rimage.uvRect = Structure.GetTextureRect(abuildings[n]);
-                Button b = g.GetComponent<Button>();
-				b.onClick.RemoveAllListeners();
-				int bid = n;
-				b.onClick.AddListener(() => {
-					this.SelectBuildingForConstruction(abuildings[bid], bid);
-				});
-			}
-			else {
-				g.SetActive(false);
-			}
-		}
+		var abuildings = Building.GetApplicableBuildingsList(constructingLevel, observingSurface.faceIndex);
+        if (abuildings != null)
+        {
+            for (int n = 0; n < buildingButtonsContainer.childCount; n++)
+            {
+                GameObject g = buildingButtonsContainer.GetChild(n).gameObject;
+                if (n < abuildings.Length)
+                {
+                    g.SetActive(true);
+                    RawImage rimage = buildingButtonsContainer.GetChild(n).GetChild(0).GetComponent<RawImage>();
+                    rimage.uvRect = Structure.GetTextureRect(abuildings[n]);
+                    Button b = g.GetComponent<Button>();
+                    b.onClick.RemoveAllListeners();
+                    int bid = n;
+                    b.onClick.AddListener(() =>
+                    {
+                        this.SelectBuildingForConstruction(abuildings[bid], bid);
+                    });
+                }
+                else
+                {
+                    g.SetActive(false);
+                }
+            }
+        }
 	}
     #endregion
 

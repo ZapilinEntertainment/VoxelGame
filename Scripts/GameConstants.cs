@@ -7,7 +7,6 @@ public abstract class GameConstants {
     public const int CELESTIAL_LAYER = 9;
     public const float START_HAPPINESS = 0.5f, LOW_HAPPINESS = 0.2f, HIGH_HAPPINESS = 0.9f,
         HAPPINESS_CHANGE_SPEED = 0.001f, 
-        HEALTH_CHANGE_SPEED = 0.001f,
         CAM_LOOK_SPEED = 10,
         START_BIRTHRATE_COEFFICIENT = 0.001f, 
         HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000,

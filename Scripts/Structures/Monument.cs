@@ -39,7 +39,7 @@ public sealed class Monument : Building
         {
             RecalculateAffection();          
         }
-        if (!GameMaster.loading) b.myChunk.CreateBlocker(b.GetBlockingPosition(), this, false);
+        if (!GameMaster.loading) b.myChunk.CreateBlocker(b.GetBlockingPosition(), this, false, false);
         else
         {
             if (!subscribedToRestoreBlockersEvent)
@@ -53,7 +53,7 @@ public sealed class Monument : Building
     {
         if (subscribedToRestoreBlockersEvent)
         {
-            basement.myChunk.CreateBlocker(basement.pos.OneBlockHigher(), this, false);
+            basement.myChunk.CreateBlocker(basement.pos.OneBlockHigher(), this, false, false);
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersEvent = false;
         }

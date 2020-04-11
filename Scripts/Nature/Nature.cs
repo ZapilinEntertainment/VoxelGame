@@ -405,7 +405,8 @@ public sealed class Nature : MonoBehaviour
 
     public Grassland CreateGrassland(Plane p)
     {
-        return new Grassland(p, this);
+        if (p.fulfillStatus != FullfillStatus.Full) return new Grassland(p, this);
+        else return null; 
     }
     public void AddGrassland(Grassland g)
     {

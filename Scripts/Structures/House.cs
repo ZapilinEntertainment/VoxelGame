@@ -46,8 +46,8 @@ public class House : Building {
         {
             var c = basement.myChunk;
             var bpos = basement.pos.OneBlockHigher();
-            c.CreateBlocker(bpos, this, false);
-            c.CreateBlocker(bpos.OneBlockHigher(), this, false);
+            c.CreateBlocker(bpos, this, false, false);
+            c.CreateBlocker(bpos.OneBlockHigher(), this, false, false);
         }
         else UnityEngine.Debug.LogError("house cannot set blockers - no basement set");
     }

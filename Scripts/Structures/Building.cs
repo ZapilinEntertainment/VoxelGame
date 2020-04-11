@@ -17,12 +17,14 @@ public class Building : Structure
     public byte level { get { return _level; } protected set { _level = value; } }
 
     public static UIBuildingObserver buildingObserver;
-    public static int[] GetApplicableBuildingsList(byte i_level)
+    public static int[] GetApplicableBuildingsList(byte i_level, byte face)
     {
-        switch (i_level)
+        if (face == Block.UP_FACE_INDEX | face == Block.SURFACE_FACE_INDEX)
         {
-            case 1:
-                return new int[] {
+            switch (i_level)
+            {
+                case 1:
+                    return new int[] {
                     WIND_GENERATOR_1_ID,
                     PSYCHOKINECTIC_GEN_ID,
                     STORAGE_1_ID,
@@ -34,9 +36,9 @@ public class Building : Structure
                    // MINE_ID,
                     DOCK_ID
                 };
-            case 2:
-                return new int[]
-                {
+                case 2:
+                    return new int[]
+                    {
                     STORAGE_2_ID,
                     //HOUSE_2_ID,
                     FARM_2_ID,
@@ -48,10 +50,10 @@ public class Building : Structure
                     MINERAL_POWERPLANT_2_ID,
                     HOSPITAL_2_ID,
                     WORKSHOP_ID
-                };
-            case 3:
-                {
-                    var blist = new List<int>()
+                    };
+                case 3:
+                    {
+                        var blist = new List<int>()
                 {
                     FARM_3_ID,
                     LUMBERMILL_3_ID,
@@ -62,12 +64,12 @@ public class Building : Structure
                     XSTATION_3_ID,
                     GRPH_ENRICHER_3_ID
                 };
-                    if (Settlement.maxAchievedLevel >= 3) blist.Insert(SETTLEMENT_CENTER_ID, 0);
-                    return blist.ToArray();
-                }
-            case 4:
-                return new int[]
-                {
+                        if (Settlement.maxAchievedLevel >= 3) blist.Insert(SETTLEMENT_CENTER_ID, 0);
+                        return blist.ToArray();
+                    }
+                case 4:
+                    return new int[]
+                    {
                     FARM_4_ID,
                     LUMBERMILL_4_ID,
                     //SUPPLIES_FACTORY_4_ID,
@@ -79,10 +81,10 @@ public class Building : Structure
                     DOCK_ADDON_1_ID,
                     //ARTIFACTS_REPOSITORY_ID,
                     FUEL_FACILITY_ID
-                };
-            case 5:
-                return new int[]
-                {
+                    };
+                case 5:
+                    return new int[]
+                    {
                     FOUNDATION_BLOCK_5_ID,
                     STORAGE_BLOCK_ID,
                     FARM_BLOCK_ID,
@@ -93,10 +95,10 @@ public class Building : Structure
                     REACTOR_BLOCK_5_ID,
                     OBSERVATORY_ID,
                     MONUMENT_ID
-                };
-            case 6:
-                {
-                    var blist = new List<int>()
+                    };
+                case 6:
+                    {
+                        var blist = new List<int>()
                 {
                     //CONNECT_TOWER_6_ID,
                     //HOTEL_BLOCK_6_ID,
@@ -105,15 +107,20 @@ public class Building : Structure
                     //SWITCH_TOWER_ID,
                     SCIENCE_LAB_ID
                 };
-                    if (Settlement.maxAchievedLevel >= 6)
-                    {
-                        blist.Insert(SETTLEMENT_CENTER_ID, 0);
-                        if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
-                            blist.Insert(HOUSE_BLOCK_ID, 2);
+                        if (Settlement.maxAchievedLevel >= 6)
+                        {
+                            blist.Insert(SETTLEMENT_CENTER_ID, 0);
+                            if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
+                                blist.Insert(HOUSE_BLOCK_ID, 2);
+                        }
+                        return blist.ToArray();
                     }
-                    return blist.ToArray();
-                }
-            default: return new int[0];
+                default: return new int[0];
+            }
+        }
+        else
+        {
+            return null;
         }
     }
 
@@ -376,7 +383,7 @@ public class Building : Structure
                 break;
             case FARM_3_ID:
                 {
-                    upgradedIndex = FARM_4_ID;
+                    upgradedIndex = -1;
                     canBePowerSwitched = true;
                     level = 3;
                 }

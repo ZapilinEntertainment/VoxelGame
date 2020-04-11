@@ -288,21 +288,10 @@ public sealed class Hangar : WorkBuilding
                 case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(new Vector3Int(basement.pos.x - 1, basement.pos.y + 1, basement.pos.z), 6, 1, this, ref dependentBlocksList); break;
             }
         }
-        if (correctLocation)
+        if (!subscribedToChunkUpdate)
         {
-            if (subscribedToChunkUpdate)
-            {
-                basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
-                subscribedToChunkUpdate = false;
-            }
-        }
-        else
-        {
-            if (!subscribedToChunkUpdate)
-            {
-                basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
-                subscribedToChunkUpdate = true;
-            }
+            basement.myChunk.ChunkUpdateEvent += ChunkUpdated;
+            subscribedToChunkUpdate = true;
         }
         if (showOnGUI)
         {

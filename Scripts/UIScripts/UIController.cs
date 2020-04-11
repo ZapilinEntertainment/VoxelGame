@@ -23,8 +23,8 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, rollingShopPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
-    [SerializeField] private Text gearsText, happinessText, birthrateText, hospitalText, housingText, healthText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
+    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
+    [SerializeField] private Text gearsText, happinessText, birthrateText, hospitalText, housingText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] private Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] private Transform storagePanelContent;
     [SerializeField] private RawImage progressPanelIcon;
@@ -53,7 +53,7 @@ sealed public class UIController : MonoBehaviour
     private const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;
     public int interceptingConstructPlaneID = -1;
 
-    private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf, showingHealthCf,
+    private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf,
     updateTimer, moneyFlySpeed = 0;
     private byte showingStorageOccupancy, selectedFaceIndex = 10;
     private float saved_energySurplus, statusUpdateTimer = 0, powerFailureTimer = 0;
@@ -75,7 +75,7 @@ sealed public class UIController : MonoBehaviour
 
     public static UIController current;
 
-    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 4, RPANEL_TEXTFIELD_INDEX = 8;
+    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
 
     public static void SetActivity(bool x)
     {
@@ -171,18 +171,19 @@ sealed public class UIController : MonoBehaviour
                     }
 
                     int housingPercent = 0;
-                    if (colony.totalLivespace > 0) housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);
+                    float hpc = colony.totalLivespace;
+                    if (colony.citizenCount != 0)
+                    {
+                        hpc /= colony.citizenCount; hpc *= 100f;
+                    }
+                    else hpc = 1f;
+                    if (colony.totalLivespace > 0) housingPercent = (int)hpc;
                     housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" +  housingPercent.ToString() + "%)";
 
                     if (showingHospitalCf != colony.hospitals_coefficient)
                     {
                         showingHospitalCf = colony.hospitals_coefficient;
                         hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
-                    }
-                    if (showingHealthCf != colony.health_coefficient)
-                    {
-                        showingHealthCf = colony.health_coefficient;
-                        healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
                     }
                 }
                 else
@@ -546,10 +547,6 @@ sealed public class UIController : MonoBehaviour
     {
 
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
-        else
-        {
-            if (rollingShopPanel.activeSelf) DeactivateWorkshopPanel();
-        }
 
         //отключение предыдущего observer
         if (workingObserver != null)
@@ -711,6 +708,7 @@ sealed public class UIController : MonoBehaviour
             if (currentActiveWindowMode == ActiveWindowMode.GameMenu)
             {
                 GameMaster.SetPause(true);
+                UISurfacePanelController.current?.ShutOff();
                 if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
                 if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
                 if (leftPanel.activeSelf) leftPanel.SetActive(false);                
@@ -825,7 +823,6 @@ sealed public class UIController : MonoBehaviour
             showingHappinessCf = colony.happiness_coefficient;
             showingBirthrate = colony.realBirthrate;
             showingHospitalCf = colony.hospitals_coefficient;
-            showingHealthCf = colony.health_coefficient;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
             happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
             birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
@@ -833,7 +830,6 @@ sealed public class UIController : MonoBehaviour
             if (colony.totalLivespace > 0) housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);
             housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + housingPercent.ToString() + "%)";
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
-            healthText.text = string.Format("{0:0.##}", showingHealthCf * 100) + '%';
         }
         else
         {
@@ -1362,48 +1358,6 @@ sealed public class UIController : MonoBehaviour
         }
     }
 
-    public void ActivateWorkshopPanel()
-    {
-        UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
-        if (wbo != null && wbo.gameObject.activeSelf)
-        {
-            Workshop rs = wbo.observingWorkbuilding as Workshop;
-            if (rs != null)
-            {
-                Dropdown d = rollingShopPanel.transform.GetChild(0).GetComponent<Dropdown>();
-                d.value = (int)rs.mode;
-                rollingShopPanel.SetActive(true);
-            }
-        }
-        rollingShopPanel.SetActive(true);
-    }
-    public void DeactivateWorkshopPanel()
-    {
-        rollingShopPanel.SetActive(false);
-    }
-    public void Workshop_SetActivity(int input)
-    {
-        UIWorkbuildingObserver wbo = WorkBuilding.workbuildingObserver;
-        if (wbo == null | !wbo.gameObject.activeSelf)
-        {
-            DeactivateWorkshopPanel();
-            return;
-        }
-        else
-        {
-            Workshop rs = wbo.observingWorkbuilding as Workshop;
-            if (rs == null)
-            {
-                DeactivateWorkshopPanel();
-                return;
-            }
-            else
-            {
-                rs.SetMode((byte)input);
-            }
-        }
-    }
-
     public void ActivateHospitalPanel()
     {
         int hm = (int)colony.birthrateMode;
@@ -1516,10 +1470,6 @@ sealed public class UIController : MonoBehaviour
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.MakeSurface);
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 3).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.AddPlatform);
 
-        Dropdown d = rollingShopPanel.transform.GetChild(0).GetComponent<Dropdown>();
-        d.options = new List<Dropdown.OptionData>();
-        d.options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoActivity)));
-        d.options.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.ImproveGears)));
         localized = true;
 
         landingButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Land_verb);

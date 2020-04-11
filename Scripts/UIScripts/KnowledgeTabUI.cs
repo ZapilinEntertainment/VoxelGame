@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public sealed class KnowledgeTabUI : MonoBehaviour
 {
     [SerializeField] private GameObject zeroButton;
-    [SerializeField] private Image unsufficientLabel, unsufficientLight;
+    [SerializeField] private Image unsufficientLabel, unsufficientLight, puzzleParts;
     [SerializeField] private Transform holder, infoPanel;
     private Knowledge knowledge;
     private GameObject[] buttons;
@@ -22,8 +22,26 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     private Transform blackpartsPanel { get { return infoPanel.GetChild(6); } }
     private Transform whitepartsPanel { get { return infoPanel.GetChild(7); } }
 
+    private static Dictionary<int, Texture> combinedPuzzleParts;
+
     private readonly Color unsufficientColor = new Color(0.67f, 0.06f, 0.06f, 1f), unvisibleColor = new Color(0f, 0f, 0f, 0f);
     private const float DISAPPEAR_SPEED = 1.5f;
+
+    public static Texture GetPuzzlePart(int pinmask)
+    {
+        Texture tx;
+        if (combinedPuzzleParts == null) combinedPuzzleParts = new Dictionary<int, Texture>();
+        else {
+            if (combinedPuzzleParts.TryGetValue(pinmask, out tx)) return tx;         
+        }
+        int upPin = pinmask / 1000, rightPin = (pinmask / 100) % 10,
+        downPin = (pinmask / 10) % 10, leftPin = pinmask % 10;
+
+        int sz = Mathf.NextPowerOfTwo(Screen.height / 4);
+        tx = new Texture2D(sz, sz);
+
+        return null;
+    }
 
     public void Prepare(Knowledge kn)
     {

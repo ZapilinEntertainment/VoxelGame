@@ -130,6 +130,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         skyboxMaterial.SetColor("_BottomColor", bottomColor);
         skyboxMaterial.SetColor("_HorizonColor", horColor);
         prevSkyboxSaturation = ambientColorSaturation;
+        Debug.Log("light recalc");
     }
 
     public void AddDecoration(float size, GameObject dec)
@@ -353,78 +354,81 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             var rightVector = Vector3.Cross(clv, Vector3.down);
             sunTransform.forward = Quaternion.AngleAxis(15f + ascension * 75f ,rightVector) * clv;
 
-            #region stability
-            float hc = 1f, gc = 0f;
+            #region stability            
             if (colonyController != null)
             {
+                float hc = 1f, gc = 0f;
                 hc = colonyController.happiness_coefficient;
                 if (colonyController.storage != null)
                 {
                     gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
-                    
+
                     // + блоки?
                 }
-            }
-            float pc = 0f;
-            int pop = colonyController.citizenCount;
-            if (pop > POPULATION_CONDITION_1) {
-                if (pop >= POPULATION_CONDITION_3) pc = POPULATION_STABILITY_EFFECT_3;
-                else
+                float pc = 0f;
+                int pop = colonyController.citizenCount;
+                if (pop > POPULATION_CONDITION_1)
                 {
-                    if (pop > POPULATION_CONDITION_2) pc = POPULATION_STABILITY_EFFECT_2;
-                    else pc = POPULATION_STABILITY_EFFECT_1;
-                }
-            }
-
-            float structureStabilizersEffect = 1f;
-            if (stabilityModifiers != null && stabilityModifiers.Count > 0)
-            {
-                structureStabilizersEffect = 1f;
-                foreach (var sm in stabilityModifiers)
-                {
-                    structureStabilizersEffect *= (1f + sm.Value);
-                }
-            }
-            targetStability =
-                (
-                0.5f * hc // happiness
-                - gc // graphonium reserves
-                + pc // population
-                + (1f - ascension) * structureStabilizersEffect
-                )
-                *
-                envStability;
-            if (targetStability > 1f) targetStability = 1f;
-            else
-            {
-                if (targetStability < 0f) targetStability = 0f;
-            }
-            if (islandStability != targetStability)
-            {
-                islandStability = Mathf.MoveTowards(islandStability, targetStability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
-            }
-            if (islandStability < 1f)
-            {
-                float lcf = colonyController.GetLevelCf();
-                float step = lcf > 1f ? 0 :  CITY_CHANGE_HEIGHT_STEP * (1f - islandStability) * t * (1f - lcf);
-                if (ascension < 0.5f)
-                {
-                    if (gmap.cityPoint.height != 1f)
+                    if (pop >= POPULATION_CONDITION_3) pc = POPULATION_STABILITY_EFFECT_3;
+                    else
                     {
-                        gmap.ChangeCityPointHeight(step);
-                        positionChanged = true;
+                        if (pop > POPULATION_CONDITION_2) pc = POPULATION_STABILITY_EFFECT_2;
+                        else pc = POPULATION_STABILITY_EFFECT_1;
                     }
                 }
+
+                float structureStabilizersEffect = 1f;
+                if (stabilityModifiers != null && stabilityModifiers.Count > 0)
+                {
+                    structureStabilizersEffect = 1f;
+                    foreach (var sm in stabilityModifiers)
+                    {
+                        structureStabilizersEffect *= (1f + sm.Value);
+                    }
+                }
+                targetStability =
+                    (
+                    0.5f * hc // happiness
+                    - gc // graphonium reserves
+                    + pc // population
+                    + (1f - ascension) * structureStabilizersEffect
+                    )
+                    *
+                    envStability;
+                if (targetStability > 1f) targetStability = 1f;
                 else
                 {
-                    if (gmap.cityPoint.height != 0f)
+                    if (targetStability < 0f) targetStability = 0f;
+                }
+                if (islandStability != targetStability)
+                {
+                    islandStability = Mathf.MoveTowards(islandStability, targetStability, GameConstants.STABILITY_CHANGE_SPEED * Time.deltaTime);
+                }
+                if (islandStability < 1f)
+                {
+                    float lcf = colonyController.GetLevelCf();
+                    float step = lcf > 1f ? 0f : CITY_CHANGE_HEIGHT_STEP * (1f - islandStability) * t * (1f - lcf);
+                    if (step != 0f)
                     {
-                        gmap.ChangeCityPointHeight(-step);
-                        positionChanged = true;
+                        if (ascension < 0.5f)
+                        {
+                            if (gmap.cityPoint.height != 1f)
+                            {
+                                gmap.ChangeCityPointHeight(step);
+                                positionChanged = true;
+                            }
+                        }
+                        else
+                        {
+                            if (gmap.cityPoint.height != 0f)
+                            {
+                                gmap.ChangeCityPointHeight(-step);
+                                positionChanged = true;
+                            }
+                        }
                     }
                 }
             }
-
             // обновление освещения при движении города
             if (positionChanged) RefreshEnvironment();
             #endregion
@@ -454,7 +458,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
     }
 
-
+    #region save-load
     public void Save( System.IO.FileStream fs)
     {
         fs.Write(System.BitConverter.GetBytes(newWindVector.x),0,4); // 0 - 3
@@ -487,4 +491,5 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         prepared = true;
     }
+    #endregion
 }

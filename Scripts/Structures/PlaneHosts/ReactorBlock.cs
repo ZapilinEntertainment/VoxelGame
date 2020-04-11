@@ -214,7 +214,12 @@ public class ReactorBlock : Powerplant, IPlanable
         if (!HavePlane(faceIndex)) { result = null; return false; }
         else
         {
-            return planes.TryGetValue(faceIndex, out result);
+            if (planes != null) return planes.TryGetValue(faceIndex, out result);
+            else
+            {
+                result = null;
+                return false;
+            }
         }
     }
     public Plane FORCED_GetPlane(byte faceIndex)

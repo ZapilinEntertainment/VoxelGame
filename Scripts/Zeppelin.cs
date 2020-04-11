@@ -183,9 +183,9 @@ public sealed class Zeppelin : MonoBehaviour {
                     }
                     DRAW_LINE:
                     Vector3[] positions = new Vector3[4];
-                    Vector3 lpos = landingSurface.pos.ToWorldSpace();
+                    Vector3 lpos = landingSurface.GetCenterPosition();
                     float q = Block.QUAD_SIZE;
-                    float h = lpos.y - 0.5f * q;
+                    float h = lpos.y + 0.01f;
                     if (landingByZAxis == false)
                     {
                         positions[0] = new Vector3( lpos.x - 1.5f * q, h, lpos.z + 0.5f * q );

@@ -80,8 +80,8 @@ public sealed class HeadQuarters : Building
         {
             var chunk = basement.myChunk;
             var cpos = basement.GetBlockingPosition();
-            chunk.CreateBlocker(cpos, this, false);
-            if (level == 6) chunk.CreateBlocker(cpos + basement.GetLookVector(), this, false);
+            chunk.CreateBlocker(cpos, this, false,false);
+            if (level == 6) chunk.CreateBlocker(cpos + basement.GetLookVector(), this, false, false);
         }
         else Debug.LogError("HQ cannot set blockers - no basement set");
     }

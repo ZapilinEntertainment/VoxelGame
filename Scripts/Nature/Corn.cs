@@ -10,7 +10,7 @@ sealed public class Corn : Plant {
     public const byte HARVESTABLE_STAGE = 3;
 
     private const byte MAX_STAGE = 3;
-    private const int GATHER = 2;
+    private const int GATHER = 3;
     private const float LIFEPOWER_SURPLUS = 0.1f;
 
     override public void Prepare()

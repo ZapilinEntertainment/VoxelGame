@@ -19,13 +19,12 @@ public sealed class ColonyController : MonoBehaviour
     {
         get
         {
-            float f = gears_coefficient * 0.4f + health_coefficient * 0.3f + happiness_coefficient * 0.3f;
+            float f = gears_coefficient * 0.5f + happiness_coefficient * 0.5f;
             if (f <= 0.01f) f = 0.01f;
             return f;
         }
     }
     public float happiness_coefficient { get; private set; }
-    public float health_coefficient { get; private set; }
     public bool accumulateEnergy = true, buildingsWaitForReconnection = false;    
 
     public float energyStored { get; private set; }
@@ -74,7 +73,7 @@ public sealed class ColonyController : MonoBehaviour
     private sbyte recalculationTick = 0;
     private float birthSpeed,peopleSurplus = 0f, 
         tickTimer, birthrateCoefficient = 0f,
-        targetHappiness, targetHealth,
+        targetHappiness,
         happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, showingHappiness;
     private bool thisIsFirstSet = true, ignoreHousingRequest = false;    
 
@@ -84,6 +83,7 @@ public sealed class ColonyController : MonoBehaviour
     private const float
         START_ENERGY_CRYSTALS_COUNT = 100,
         TICK_TIME = 1f,
+        MIN_HAPPINESS = 0.3f,
         FOOD_SUPPLY_MIN_HAPPINESS = 0.2f,
         HOUSING_MIN_HAPPINESS = 0.15f,
         HEALTHCARE_MIN_HAPPINESS = 0.14f;
@@ -94,7 +94,6 @@ public sealed class ColonyController : MonoBehaviour
         if (thisIsFirstSet)
         {
             gears_coefficient = 2;
-            health_coefficient = 1;
             hospitals_coefficient = 0;
             birthSpeed = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
@@ -231,24 +230,21 @@ public sealed class ColonyController : MonoBehaviour
             //
             //HEALTHCARE
             float healthcareHappiness = HEALTHCARE_MIN_HAPPINESS * lvlCf;
-            targetHealth = gm.environmentMaster.environmentalConditions * 0.5f;
             if (hospitals_coefficient > 0)
             {
-                if (hospitals_coefficient > targetHealth) targetHealth = hospitals_coefficient;
                 healthcareHappiness += hospitals_coefficient * (1 - healthcareHappiness);                
                 if (hospitals_coefficient > 1f)
                 {
                     happinessIncreaseMultiplier++;
-                    targetHealth = 1f;
                 }
             }
             else
             {                
                 if (lvlCf >= 1f) happinessDecreaseMultiplier++;
             }
-            if (health_coefficient != targetHealth) health_coefficient = Mathf.MoveTowards(health_coefficient, targetHealth, GameConstants.HEALTH_CHANGE_SPEED);
 
             // HOUSING
+            byte level = hq.level;
             float housingHappiness = HOUSING_MIN_HAPPINESS * lvlCf;
             if (housingLevel < 1)
             {
@@ -256,13 +252,12 @@ public sealed class ColonyController : MonoBehaviour
             }
             else
             {
-                byte l = hq.level;
-                if (l > MAX_HOUSING_LEVEL) l = MAX_HOUSING_LEVEL;
-                float supply = housingLevel / l;
+                if (level > MAX_HOUSING_LEVEL) level = MAX_HOUSING_LEVEL;
+                float supply = housingLevel / level;
                 housingHappiness += (1 - housingHappiness) * supply;
             }
             // HAPPINESS CALCULATION
-            targetHappiness = 1;
+            targetHappiness = 1f;
             if (happinessModifiers != null)
             {
                 foreach (var key in happinessModifiers)
@@ -286,9 +281,19 @@ public sealed class ColonyController : MonoBehaviour
                 }
                 if (happinessAffects.Count == 0) happinessAffects = null;
             }
-            if (targetHappiness > foodSupplyHappiness) targetHappiness = foodSupplyHappiness;
-            if (targetHappiness > healthcareHappiness) targetHappiness = healthcareHappiness;
-            if (targetHappiness > housingHappiness) targetHappiness = housingHappiness;
+            switch (level)
+            {
+                case 0:
+                case 1:
+                    if (starvation) targetHappiness *= MIN_HAPPINESS;
+                    else targetHappiness *= (MIN_HAPPINESS + (1f - MIN_HAPPINESS) * housingHappiness);
+                    break;
+                default:
+                    if (targetHappiness > foodSupplyHappiness) targetHappiness = foodSupplyHappiness;
+                    if (targetHappiness > healthcareHappiness) targetHappiness = healthcareHappiness;
+                    if (targetHappiness > housingHappiness) targetHappiness = housingHappiness;
+                    break;
+            }            
             if (happiness_coefficient != targetHappiness)
             {
                 if (happiness_coefficient > targetHappiness) happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessDecreaseMultiplier);
@@ -552,7 +557,8 @@ public sealed class ColonyController : MonoBehaviour
     public void RecalculateHospitals()
     {
         hospitals_coefficient = 0;
-        if (hospitals.Count == 0) {
+        bool noHospitals = hospitals == null;
+        if (noHospitals || hospitals.Count == 0) {
             if (birthrateMode != BirthrateMode.Disabled) SetBirthrateMode(BirthrateMode.Disabled);
             return;
         }
@@ -560,6 +566,7 @@ public sealed class ColonyController : MonoBehaviour
         {
             if (birthrateMode == BirthrateMode.Disabled) SetBirthrateMode(BirthrateMode.Normal);
         }
+        if (noHospitals) return;
         int i = 0;
         float hospitalsCoverage = 0;
         while (i < hospitals.Count)
@@ -860,10 +867,9 @@ public sealed class ColonyController : MonoBehaviour
         
         fs.Write(System.BitConverter.GetBytes(gears_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(health_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 6 x 4
+        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 5 x 4
         //worksites saveing
         int count = 0;
         if (worksites != null)
@@ -917,16 +923,15 @@ public sealed class ColonyController : MonoBehaviour
         if (storage == null) storage = gameObject.AddComponent<Storage>();
         storage.Load(fs);
        
-        var data = new byte[25];        
-        fs.Read(data, 0, 24);
+        var data = new byte[21];        
+        fs.Read(data, 0, 20);
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
         happiness_coefficient = System.BitConverter.ToSingle(data, 4);
-        health_coefficient = System.BitConverter.ToSingle(data, 8);
-        birthSpeed = System.BitConverter.ToSingle(data, 12);
-        energyStored = System.BitConverter.ToSingle(data, 16);
-        energyCrystalsCount = System.BitConverter.ToSingle(data, 20);
+        birthSpeed = System.BitConverter.ToSingle(data, 8);
+        energyStored = System.BitConverter.ToSingle(data, 12);
+        energyCrystalsCount = System.BitConverter.ToSingle(data, 16);
         //
-        if (data[25] != 0)
+        if (data[20] != 0)
         {
             data = new byte[4];
             fs.Read(data, 0, data.Length);

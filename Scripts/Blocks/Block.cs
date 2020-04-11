@@ -12,7 +12,8 @@ public sealed class Block {
     public bool destroyed { get; private set; }
     public Chunk myChunk { get; private set; }
     
-    public Structure mainStructure; private bool mainStructureIsABlocker; // распологается ли структура в этом блоке, или прост облокирует его?
+    public Structure mainStructure { get; private set; }
+    private bool mainStructureIsABlocker; // распологается ли структура в этом блоке, или просто блокирует его?
     private GameObject blockingMarker;
     private BlockExtension extension;
     public bool haveExtension { get { return extension != null; } }
@@ -31,6 +32,7 @@ public sealed class Block {
         return pos.x + pos.y * 3 + pos.z * 5;
     }
 
+    #region constructors
     public Block(Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml, float i_volume_pc, bool i_natural, bool redrawCall) : this(f_chunk, f_chunkPos)
     {
         extension = new BlockExtension(this, bml, i_volume_pc, i_natural, redrawCall);
@@ -43,12 +45,22 @@ public sealed class Block {
     {        
         extension = new BlockExtension(this, f_materialID, f_natural);
     }
-	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure) : this(f_chunk, f_chunkPos) {
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos, Structure f_mainStructure, bool useMarker) : this(f_chunk, f_chunkPos) {
         mainStructure = f_mainStructure;
         mainStructureIsABlocker = true;
-        AddBlockingMarker();
+        if (useMarker) AddBlockingMarker();
     }
     public Block (Chunk i_chunk, ChunkPos i_pos, IPlanable i_mainStructure) : this(i_chunk, i_pos)
+    {
+        BuildBlock(i_mainStructure);
+    }
+	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
+        destroyed = false;
+        myChunk = f_chunk;
+        pos = f_chunkPos;
+	}
+
+    private void BuildBlock(IPlanable i_mainStructure)
     {
         if (i_mainStructure.IsStructure())
         {
@@ -60,12 +72,7 @@ public sealed class Block {
             extension = (BlockExtension)i_mainStructure;
         }
     }
-
-	public Block (Chunk f_chunk, ChunkPos f_chunkPos) {
-        destroyed = false;
-        myChunk = f_chunk;
-        pos = f_chunkPos;
-	}    
+    #endregion
 
     private IPlanable GetPlanesHost()
     {
@@ -88,6 +95,10 @@ public sealed class Block {
         sr.sprite = PoolMaster.GetStarSprite(true);
         sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
         blockingMarker.transform.localPosition = pos.ToWorldSpace();
+    }
+    public bool IsBlocker()
+    {
+        return (mainStructure != null && mainStructureIsABlocker);
     }
     public void ReplaceBlocker(Structure ms)
     {
@@ -203,20 +214,6 @@ public sealed class Block {
     {
         if (extension == null) extension = new BlockExtension(this, bml, i_natural, redrawCall);
         else extension.Rebuild(bml, i_natural, compensateStructures,redrawCall);
-    }
-    public void RebuildBlock(IPlanable ms, bool i_natural)
-    {
-        if (!ms.IsStructure())
-        { // extension
-            extension?.Annihilate(!i_natural);
-            extension = (BlockExtension)ms;
-        }
-        else
-        {
-            extension?.Annihilate(!i_natural);
-            mainStructure = (Structure)ms;
-            mainStructureIsABlocker = false;
-        }
     }
 
     public void EnvironmentalStrike(byte i_faceIndex, Vector3 hitpoint, byte radius, float damage)

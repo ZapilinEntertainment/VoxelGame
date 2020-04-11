@@ -162,7 +162,12 @@ public class FoundationBlock : Building, IPlanable
         else
         {
             //Debug.Log(faceIndex.ToString() + ' ' + planes.ContainsKey(faceIndex).ToString() + ' ' + planes.Count.ToString());
-            return planes.TryGetValue(faceIndex, out result);
+             if (planes != null) return planes.TryGetValue(faceIndex, out result);
+             else
+            {
+                result = null;
+                return false;
+            }
         }
     }
     public Plane FORCED_GetPlane(byte faceIndex)

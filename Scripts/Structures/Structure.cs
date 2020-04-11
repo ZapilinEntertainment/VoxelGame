@@ -445,6 +445,7 @@ public class Structure : MonoBehaviour
             prevRot = p.localRotation;
             Destroy(p.gameObject);
         }
+        else prevRot = Quaternion.Euler(0f, 45f * modelRotation, 0f);
         switch (ID)
         {
             default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
@@ -676,14 +677,14 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_1_ID:
                 {
                     maxHp = 1000;
-                    rotate90only = false;
+                    rotate90only = true;
                     isArtificial = true;                    
                 }
                 break;
             case ENERGY_CAPACITOR_2_ID:
                 {
                     maxHp = 2000;
-                    rotate90only = false;
+                    rotate90only = true;
                     isArtificial = true;                    
                 }
                 break;

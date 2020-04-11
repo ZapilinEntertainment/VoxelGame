@@ -178,7 +178,7 @@ public sealed class Observatory : WorkBuilding
     }
     override public void RecalculateWorkspeed()
     {
-        workSpeed = (colony.gears_coefficient + colony.health_coefficient + colony.happiness_coefficient - 2) * GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
+        workSpeed = (colony.gears_coefficient + colony.happiness_coefficient - 1f) * GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
         gearsDamage = 0;
     }   
 

@@ -38,7 +38,7 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
 public enum GameMode: byte { Play, Editor, Menu, Cinematic }
 public enum GameEndingType : byte { Default, ColonyLost, TransportHubVictory, ConsumedByReal, ConsumedByLastSector}
-
+//dependence - localization
 /// -----------------------------------------------------------------------------
 
 public sealed class GameMaster : MonoBehaviour
@@ -406,22 +406,20 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading) return;
 
+        if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
+        if (Input.GetKeyDown("p"))
+        {
+            Knowledge.GetCurrent().OpenResearchTab();
+            UIController.current.gameObject.SetActive(false);
+        }
         if (testMode)
         {
-            {
-                if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
-
-                if (Input.GetKeyDown("o")) TestMethod();
-            }
+            if (Input.GetKeyDown("o")) TestMethod();
             if (Input.GetKeyDown("m"))
             {
                 if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
             }
-            if (Input.GetKeyDown("p"))
-            {
-                Knowledge.GetCurrent().OpenResearchTab();
-                UIController.current.gameObject.SetActive(false);
-            }
+            
         }   
     }
 

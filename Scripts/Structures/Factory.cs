@@ -316,6 +316,7 @@ public class Factory : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
+        //throw new System.Exception("factory destroyed");
         Destroy(gameObject);
     }
 }

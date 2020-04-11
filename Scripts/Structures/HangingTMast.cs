@@ -29,8 +29,8 @@ public class HangingTMast : WorkBuilding
         {
             var chunk = basement.myChunk;
             var cpos = basement.GetBlockingPosition();
-            if (cpos != basement.pos) chunk.CreateBlocker(cpos, this, false);
-            chunk.CreateBlocker(cpos + basement.GetLookVector(), this, false);
+            if (cpos != basement.pos) chunk.CreateBlocker(cpos, this, false, false);
+            chunk.CreateBlocker(cpos + basement.GetLookVector(), this, false, false);
         }
         else Debug.LogError("HangingTMast cannot set blockers - no basement set");
     }

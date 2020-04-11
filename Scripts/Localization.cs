@@ -13,7 +13,7 @@ public enum LocalizedPhrase : ushort
 {
     AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot,ConnectionOK, ConnectionLost, ConvertToBlock, CrewFoundArtifact,CrystalsCollected, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather,SuppliesLeft, UnoccupiedTransmitters, RequiredSurface,
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
-    ImproveGears, NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
+     NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts
 }
@@ -2510,7 +2510,6 @@ public static class Localization
                         case LocalizedPhrase.TicketsLeft: return "Запросов";
                         case LocalizedPhrase.ColonistsArrived: return "Прибыли колонисты";
                         case LocalizedPhrase.BirthrateMode: return "Режим появления";
-                        case LocalizedPhrase.ImproveGears: return "Улучшать оборудование";
                         case LocalizedPhrase.NoActivity: return "Ничего не делать";
                         case LocalizedPhrase.CrewSlots: return "Ячейки команд";
                         case LocalizedPhrase.NoFreeSlots: return "Нет свободных ячеек";
@@ -2602,7 +2601,6 @@ public static class Localization
                         case LocalizedPhrase.TicketsLeft: return "Tickets left";
                         case LocalizedPhrase.ColonistsArrived: return "Colonists arrived";
                         case LocalizedPhrase.BirthrateMode: return "Spawnrate mode";
-                        case LocalizedPhrase.ImproveGears: return "Improve gears";
                         case LocalizedPhrase.NoActivity: return "No activity";
                         case LocalizedPhrase.CrewSlots: return "Crew slots";
                         case LocalizedPhrase.NoFreeSlots: return "No free slots";
@@ -2753,6 +2751,26 @@ public static class Localization
                 }
         }
     }
+    public static string GetBuyMsg(ResourceType rtype, float count, float price)
+    {
+        switch(currentLanguage)
+        {
+            case Language.Russian:
+                return "Купили \"" + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
+            default:
+                return "Bought " + string.Format("{0:0.##}", count) + " of " + GetResourceName(rtype.ID) + " have bougth for a " + string.Format("{0:0.##}", price);
+        }
+    }
+    public static string GetSellMsg(ResourceType rtype, float count, float price)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian:
+                return "Продали \"" + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
+            default:
+                return "Sold " + string.Format("{0:0.##}", count) + " of " + GetResourceName(rtype.ID) + " for a " + string.Format("{0:0.##}", price);
+        }
+    }
 
     public static string GetEndingTitle(GameEndingType endType)
     {
@@ -2762,9 +2780,9 @@ public static class Localization
                 {
                     switch (endType)
                     {
-                        case GameEndingType.ColonyLost: return "И никого не осталось";
+                        case GameEndingType.ColonyLost: return "И никого не стало.";
                         case GameEndingType.TransportHubVictory: return "Вы установили прочную связь между вашей колонией и другими Ограниченными Мирами. Благодаря вам, будущее колонии в безопасности. Теперь вы свободны.";
-                        case GameEndingType.ConsumedByLastSector: return "Ваш остров пропал в Последнем Секторе. Теперь, он в безопасности.";
+                        case GameEndingType.ConsumedByLastSector: return "Ваш остров пропал в Последнем Секторе. Теперь он в безопасности.";
                         case GameEndingType.ConsumedByReal: return "Ваш остров был выброшен обратно в реальный космос и теперь потерян навсегда.";
                         case GameEndingType.Default:
                         default:
@@ -2776,7 +2794,7 @@ public static class Localization
                 {
                     switch (endType)
                     {
-                        case GameEndingType.ColonyLost: return "All citizens gone.";
+                        case GameEndingType.ColonyLost: return "And then there were none."; 
                         case GameEndingType.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You are free now.";
                         case GameEndingType.ConsumedByLastSector: return "Your island has been consumed by the Last Sector. It is in safe now.";
                         case GameEndingType.ConsumedByReal: return "Your island has been pushed back to real space and now it is lost forever.";
