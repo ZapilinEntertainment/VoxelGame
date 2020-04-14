@@ -253,7 +253,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.ID == Structure.FARM_4_ID | b.ID == Structure.FARM_BLOCK_ID)
+                                    if (b.ID == Structure.COVERED_FARM | b.ID == Structure.FARM_BLOCK_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -270,7 +270,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.ID == Structure.LUMBERMILL_4_ID | b.ID == Structure.LUMBERMILL_BLOCK_ID)
+                                    if (b.ID == Structure.COVERED_LUMBERMILL | b.ID == Structure.LUMBERMILL_BLOCK_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -700,12 +700,12 @@ public class Quest
                         case ProgressQuestID.Progress_CoveredFarm:
                             iconRect = new Rect(0, 0, 1, 1);
                             icon = UIController.current.buildingsIcons;
-                            iconRect = Structure.GetTextureRect(Structure.FARM_4_ID);
+                            iconRect = Structure.GetTextureRect(Structure.COVERED_FARM);
                             break;
                         case ProgressQuestID.Progress_CoveredLumbermill:
                             iconRect = new Rect(0, 0, 1, 1);
                             icon = UIController.current.buildingsIcons;
-                            iconRect = Structure.GetTextureRect(Structure.LUMBERMILL_4_ID);
+                            iconRect = Structure.GetTextureRect(Structure.COVERED_LUMBERMILL);
                             break;
                         case ProgressQuestID.Progress_Reactor:
                             iconRect = new Rect(0, 0, 1, 1);

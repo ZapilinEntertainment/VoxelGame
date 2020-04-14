@@ -15,6 +15,7 @@ public class GatherSite : Worksite
         actionLabel = Localization.GetActionLabel(LocalizationActionLabels.GatherInProgress);
         colony.SendWorkers(START_WORKERS_COUNT, this);
         destructionTimer = 10;
+        gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.33f;
     }
 
     override public void WorkUpdate()
@@ -25,8 +26,9 @@ public class GatherSite : Worksite
         }
         if (workersCount > 0)
         {
+            workSpeed = colony.workspeed * workersCount * GameConstants.GATHERING_SPEED;
             workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
             if (workflow >= 1f)
             {
                 int i = 0;
@@ -72,15 +74,9 @@ public class GatherSite : Worksite
                 }
             }
         }
-
+        else workSpeed = 0f;
         destructionTimer -= GameMaster.LABOUR_TICK;
         if (destructionTimer <= 0) StopWork(true);
-    }
-
-    protected override void RecalculateWorkspeed()
-    {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.GATHERING_SPEED;
-        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
     
 

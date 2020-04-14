@@ -40,8 +40,8 @@ public class Structure : MonoBehaviour
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
         SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 37, STABILITY_ENFORCER_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
-    HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, FARM_4_ID = 47, FARM_BLOCK_ID = 48,
-    LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, LUMBERMILL_4_ID = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
+    HOUSE_BLOCK_ID = 42,  FARM_2_ID = 45, FARM_3_ID = 46, COVERED_FARM = 47, FARM_BLOCK_ID = 48,
+    LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, COVERED_LUMBERMILL = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
@@ -124,8 +124,8 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
                 s = new GameObject("Farm"); break;
-            case LUMBERMILL_4_ID:
-            case FARM_4_ID:
+            case COVERED_LUMBERMILL:
+            case COVERED_FARM:
                 s = new GameObject("CoveredFarm"); break;           
             case LUMBERMILL_BLOCK_ID:
             case FARM_BLOCK_ID:
@@ -240,12 +240,12 @@ public class Structure : MonoBehaviour
             case ENERGY_CAPACITOR_1_ID: return new Rect(p, 6 * p, p, p);
             case FARM_2_ID:
             case FARM_3_ID:
-            case FARM_4_ID:
+            case COVERED_FARM:
             case FARM_BLOCK_ID:
             case FARM_1_ID: return new Rect(2 * p, 6 * p, p, p);
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
-            case LUMBERMILL_4_ID:
+            case COVERED_LUMBERMILL:
             case LUMBERMILL_BLOCK_ID:
             case LUMBERMILL_1_ID: return new Rect(3 * p, 6 * p, p, p);
             case SMELTERY_2_ID:
@@ -325,8 +325,8 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
                 return typeof(Farm);
-            case LUMBERMILL_4_ID:
-            case FARM_4_ID:
+            case COVERED_LUMBERMILL:
+            case COVERED_FARM:
                 return typeof(CoveredFarm);
             case LUMBERMILL_BLOCK_ID:
             case FARM_BLOCK_ID:
@@ -467,11 +467,11 @@ public class Structure : MonoBehaviour
             case FARM_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_1")); break;
             case FARM_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_2")); break;
             case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
-            case FARM_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;            
+            case COVERED_FARM: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;            
             case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
             case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
             case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
-            case LUMBERMILL_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;           
+            case COVERED_LUMBERMILL: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;           
             case MINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Mine_level_1")); break;
             case SMELTERY_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_1")); break;
             case SMELTERY_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_2")); break;
@@ -491,7 +491,6 @@ public class Structure : MonoBehaviour
             case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
             case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;           
-            case COLUMN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Column")); break;
             case SWITCH_TOWER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/switchTower")); break;
             case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
             case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
@@ -515,6 +514,7 @@ public class Structure : MonoBehaviour
         if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
         // copy to StorageBlock
         //copy to Gardens.cs
+        //dependency at Platform.cs
     }
     virtual public void SetModelRotation(int r)
     {
@@ -709,7 +709,7 @@ public class Structure : MonoBehaviour
                     isArtificial = true;                    
                 }
                 break;
-            case FARM_4_ID:
+            case COVERED_FARM:
                 {
                     maxHp = 2000;          
                     rotate90only = true;
@@ -744,7 +744,7 @@ public class Structure : MonoBehaviour
                     isArtificial = true;                    
                 }
                 break;
-            case LUMBERMILL_4_ID:
+            case COVERED_LUMBERMILL:
                 {
                     maxHp = 1200;
                     rotate90only = true;
@@ -1138,13 +1138,13 @@ public class Structure : MonoBehaviour
         }
     }
     protected void SetStructureData(Plane p, PixelPosByte pos)
-    {
-        // dependency - SettlementStructure.setBasement()
+    {        
         if (!placeInCenter) surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
         else surfaceRect = new SurfaceRect((byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
         if (transform.childCount == 0) SetModel();
         basement = p;
         basement.AddStructure(this);
+        // dependency - SettlementStructure.cs, Platform.cs
     }
 
     /// <summary>

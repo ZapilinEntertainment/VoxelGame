@@ -163,6 +163,21 @@ public sealed class Observatory : WorkBuilding
         subscribedToRestoreBlockersUpdate = false;
     }
 
+    override public void LabourUpdate()
+    {
+        if (!isActive | !isEnergySupplied) return;
+        if (workersCount > 0)
+        {
+            workSpeed = GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
+            workflow += workSpeed;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
+            if (workflow >= workflowToProcess)
+            {
+                LabourResult();
+            }
+        }
+        else workSpeed = 0f;
+    }
     protected override void LabourResult()
     {
         workflow = 0;
@@ -176,11 +191,6 @@ public sealed class Observatory : WorkBuilding
             }
         }
     }
-    override public void RecalculateWorkspeed()
-    {
-        workSpeed = (colony.gears_coefficient + colony.happiness_coefficient - 1f) * GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
-        gearsDamage = 0;
-    }   
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

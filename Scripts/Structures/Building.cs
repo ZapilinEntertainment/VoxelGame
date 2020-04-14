@@ -70,8 +70,8 @@ public class Building : Structure
                 case 4:
                     return new int[]
                     {
-                    FARM_4_ID,
-                    LUMBERMILL_4_ID,
+                    COVERED_FARM,
+                    COVERED_LUMBERMILL,
                     //SUPPLIES_FACTORY_4_ID,
                     GRPH_REACTOR_4_ID,
                     SHUTTLE_HANGAR_4_ID,
@@ -144,13 +144,13 @@ public class Building : Structure
             case FARM_1_ID: return 10f;
             case FARM_2_ID: return 20f;
             case FARM_3_ID: return 40f;
-            case FARM_4_ID: return 120f;
+            case COVERED_FARM: return 120f;
             case FARM_BLOCK_ID: return 300f;
 
             case LUMBERMILL_1_ID: return 10f;
             case LUMBERMILL_2_ID: return 40f;
             case LUMBERMILL_3_ID: return 80f;
-            case LUMBERMILL_4_ID: return 80f;
+            case COVERED_LUMBERMILL: return 80f;
             case LUMBERMILL_BLOCK_ID: return 160f;
 
             case SMELTERY_1_ID: return 40f;
@@ -217,14 +217,14 @@ public class Building : Structure
             case FARM_1_ID: return -1f;
             case FARM_2_ID: return -4f;
             case FARM_3_ID: return -20f;
-            case FARM_4_ID: return -40f;
-            case FARM_BLOCK_ID: return -100f;
+            case COVERED_FARM: return -80f;
+            case FARM_BLOCK_ID: return -200f;
 
             case LUMBERMILL_1_ID: return -2f;
             case LUMBERMILL_2_ID: return -4f;
             case LUMBERMILL_3_ID: return -20f;
-            case LUMBERMILL_4_ID: return -20f;
-            case LUMBERMILL_BLOCK_ID: return -80f;
+            case COVERED_LUMBERMILL: return -80f;
+            case LUMBERMILL_BLOCK_ID: return -200f;
 
             case SUPPLIES_FACTORY_4_ID: return -25f;
             case SUPPLIES_FACTORY_5_ID: return -40f;
@@ -388,7 +388,7 @@ public class Building : Structure
                     level = 3;
                 }
                 break;
-            case FARM_4_ID:
+            case COVERED_FARM:
                 {
                     upgradedIndex = FARM_BLOCK_ID;
                     canBePowerSwitched = true;
@@ -415,12 +415,12 @@ public class Building : Structure
                 break;
             case LUMBERMILL_3_ID:
                 {
-                    upgradedIndex = LUMBERMILL_4_ID;
+                    upgradedIndex = COVERED_LUMBERMILL;
                     canBePowerSwitched = true;
                     level = 3;
                 }
                 break;
-            case LUMBERMILL_4_ID:
+            case COVERED_LUMBERMILL:
                 {
                     upgradedIndex = LUMBERMILL_BLOCK_ID;
                     canBePowerSwitched = true;
@@ -637,13 +637,13 @@ public class Building : Structure
                 }
         }
     }
-
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
         SetBuildingData(b, pos);
         //copy to Gardens.cs
     }
+    virtual public void Recalculation() { }
 
     protected void SetBuildingData(Plane b, PixelPosByte pos)
     {

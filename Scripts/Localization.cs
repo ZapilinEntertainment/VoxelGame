@@ -78,13 +78,13 @@ public static class Localization
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Ферма";
-                    case Structure.FARM_4_ID: return "Ферма закрытого типа ";
+                    case Structure.COVERED_FARM: return "Ферма закрытого типа ";
                     case Structure.FARM_BLOCK_ID: return "Блок фермы";
                     case Structure.HEADQUARTERS_ID: return "Администрация";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Лесопилка";
-                    case Structure.LUMBERMILL_4_ID: return "Лесопилка закрытого типа";
+                    case Structure.COVERED_LUMBERMILL: return "Лесопилка закрытого типа";
                     case Structure.LUMBERMILL_BLOCK_ID: return "Блок лесопилки";
                     case Structure.MINE_ID: return "Шахта";
                     case Structure.SMELTERY_1_ID:
@@ -150,13 +150,13 @@ public static class Localization
                     case Structure.FARM_1_ID: return "Farm (lvl 1)";
                     case Structure.FARM_2_ID: return "Farm (lvl 2)";
                     case Structure.FARM_3_ID: return "Farm (lvl 3)";
-                    case Structure.FARM_4_ID: return "Covered farm ";
+                    case Structure.COVERED_FARM: return "Covered farm ";
                     case Structure.FARM_BLOCK_ID: return "Farm Block ";
                     case Structure.HEADQUARTERS_ID: return "HeadQuarters";
                     case Structure.LUMBERMILL_1_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_2_ID: return "Lumbermill";
                     case Structure.LUMBERMILL_3_ID: return "Lumbermill";
-                    case Structure.LUMBERMILL_4_ID: return "Covered lumbermill";
+                    case Structure.COVERED_LUMBERMILL: return "Covered lumbermill";
                     case Structure.LUMBERMILL_BLOCK_ID: return "Lumbermill Block";
                     case Structure.MINE_ID: return "Mine Entrance";
                     case Structure.SMELTERY_1_ID: return "Smeltery";
@@ -239,13 +239,13 @@ public static class Localization
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Специально подготовленная площадка для выращивания еды. Потребляет жизненную энергию острова. Может быть построена только на грунте.";
-                    case Structure.FARM_4_ID:
+                    case Structure.COVERED_FARM:
                     case Structure.FARM_BLOCK_ID: return "Постоянно производит некоторое количество еды. Не потребляет жизненную энергию острова.";
                     case Structure.HEADQUARTERS_ID: return "Главное здание колонии. Производит немного энергии и имеет несколько жилых помещений.";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Выращивает и рубит деревья. Потребляет жизненную энергию острова.";
-                    case Structure.LUMBERMILL_4_ID:
+                    case Structure.COVERED_LUMBERMILL:
                     case Structure.LUMBERMILL_BLOCK_ID: return "Постоянно производит некоторое количество древесины. Не потребляет жизненную энергию острова.";
                     case Structure.MINE_ID: return "Добыча полезных ископаемых закрытым методом.";
                     case Structure.SMELTERY_1_ID:
@@ -321,13 +321,13 @@ public static class Localization
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "A field prepared for growing up food. Consumes island lifepower. Must be located on dirt.";
-                    case Structure.FARM_4_ID:
+                    case Structure.COVERED_FARM:
                     case Structure.FARM_BLOCK_ID: return "Constantly produces food. Doesn't consume lifepower.";
                     case Structure.HEADQUARTERS_ID: return "Colony's main building. Produces small amount of energy and has a small living space.";
                     case Structure.LUMBERMILL_1_ID:
                     case Structure.LUMBERMILL_2_ID:
                     case Structure.LUMBERMILL_3_ID: return "Grows and cuts trees. Consumes island lifepower.";
-                    case Structure.LUMBERMILL_4_ID:
+                    case Structure.COVERED_LUMBERMILL:
                     case Structure.LUMBERMILL_BLOCK_ID: return "Constantly produces wood. Doesn't consume lifepower.";
                     case Structure.MINE_ID: return "Extracts fossils in closed way.";
                     case Structure.SMELTERY_1_ID:
@@ -3026,12 +3026,12 @@ public static class Localization
                                 case ProgressQuestID.Progress_CoveredFarm:
                                     q.name = "Поле под колпаком";
                                     q.description = "Замените обычную ферму крытой. Так вы стабилизируете производство пищи и снизите потребление жизненной энергии острова.";
-                                    q.steps[0] = GetStructureName(Structure.FARM_4_ID) + " построена";
+                                    q.steps[0] = GetStructureName(Structure.COVERED_FARM) + " построена";
                                     break;
                                 case ProgressQuestID.Progress_CoveredLumbermill:
                                     q.name = "Лес под крышей";
                                     q.description = "Замените обычную лесопилку крытой - это стабилизирует поток древесины и снизит расход жизненной силы острова.";
-                                    q.steps[0] = GetStructureName(Structure.LUMBERMILL_4_ID) + " построена";
+                                    q.steps[0] = GetStructureName(Structure.COVERED_LUMBERMILL) + " построена";
                                     break;
                                 case ProgressQuestID.Progress_Reactor:
                                     q.name = "Источник энергии";
@@ -3171,12 +3171,12 @@ public static class Localization
                                 case ProgressQuestID.Progress_CoveredFarm:
                                     q.name = "Covered field";
                                     q.description = "Replace your old farm with new covered one";
-                                    q.steps[0] = "Build " + GetStructureName(Structure.FARM_4_ID); ;
+                                    q.steps[0] = "Build " + GetStructureName(Structure.COVERED_FARM); ;
                                     break;
                                 case ProgressQuestID.Progress_CoveredLumbermill:
                                     q.name = "Covered forest";
                                     q.description = "Replace your old lumbermills with new covered one";
-                                    q.steps[0] = "Build " + GetStructureName(Structure.LUMBERMILL_4_ID); ;
+                                    q.steps[0] = "Build " + GetStructureName(Structure.COVERED_LUMBERMILL); ;
                                     break;
                                 case ProgressQuestID.Progress_Reactor:
                                     q.name = "Power well";

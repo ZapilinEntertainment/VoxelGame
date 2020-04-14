@@ -29,7 +29,8 @@ public class BlockBuildingSite : Worksite
             case Block.SURFACE_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.5f; break;
             case Block.CEILING_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.5f; break;
         }
-        colony.SendWorkers(START_WORKERS_COUNT, this);             
+        colony.SendWorkers(START_WORKERS_COUNT, this);
+        gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
     }
 
     override public void WorkUpdate()
@@ -40,14 +41,16 @@ public class BlockBuildingSite : Worksite
         }
         if (workersCount > 0)
         {
+            workSpeed = colony.workspeed * workersCount * GameConstants.BLOCK_BUILDING_SPEED;
             workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
             if (workflow >= 20)
             {
                 LabourResult();
-                workflow-= 20;
+                workflow -= 20;
             }
         }
+        else workSpeed = 0f;
     }
 
     void LabourResult()
@@ -187,12 +190,6 @@ public class BlockBuildingSite : Worksite
                 else { if (showOnGUI) actionLabel = Localization.GetAnnouncementString(GameAnnouncements.NotEnoughResources); }
             }
         }
-    }
-
-    protected override void RecalculateWorkspeed()
-    {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.BLOCK_BUILDING_SPEED;
-        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
     }
 
     #region save-load system

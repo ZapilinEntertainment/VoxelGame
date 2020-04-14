@@ -7,14 +7,13 @@ public abstract class WorkBuilding : Building
     public static UIWorkbuildingObserver workbuildingObserver;
 
     public float workflow { get; protected set; }
-    public float workSpeed { get; protected set; }
     public float workflowToProcess { get; protected set; }
     public int maxWorkers { get; protected set; }
     public int workersCount { get; protected set; }
-    protected float gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
+    protected float workSpeed, gearsDamage;
     protected ColonyController colony;
 
-    public const int WORKBUILDING_SERIALIZER_LENGTH = 16;
+    public const int WORKBUILDING_SERIALIZER_LENGTH = 8;
 
     override public void Prepare()
     {
@@ -25,90 +24,105 @@ public abstract class WorkBuilding : Building
         PrepareBuilding();
         workersCount = 0;
         workflow = 0;
+        gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT;
         switch (ID)
         {
             case DOCK_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 40;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.2f;
                 }
                 break;
             case DOCK_2_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 80;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.15f;
                 }
                 break;
             case DOCK_3_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 120;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
                 }
                 break;
             case FARM_1_ID:
                 {
                     workflowToProcess = 10f;
                     maxWorkers = 100;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.8f;
                 }
                 break;
             case FARM_2_ID:
                 {
-                    workflowToProcess = 6f;
+                    workflowToProcess = 8f;
                     maxWorkers = 100;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
                 }
                 break;
             case FARM_3_ID:
                 {
-                    workflowToProcess = 3f;
+                    workflowToProcess = 5f;
                     maxWorkers = 100;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
                 }
                 break;
-            case FARM_4_ID:
+            case COVERED_FARM:
                 {
                     workflowToProcess = 50f;
                     maxWorkers = 100;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
                 }
                 break;
             case FARM_BLOCK_ID:
                 {
                     workflowToProcess = 25;
                     maxWorkers = 300;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
                 }
                 break;
             case LUMBERMILL_1_ID:
                 {
                     workflowToProcess = 100;
                     maxWorkers = 80;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
                     workflowToProcess = 90;
                     maxWorkers = 80;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
                     workflowToProcess = 80;
                     maxWorkers = 80;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.45f;
                 }
                 break;
-            case LUMBERMILL_4_ID:
+            case COVERED_LUMBERMILL:
                 {
                     workflowToProcess = 75;
                     maxWorkers = 140;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.1f;
                 }
                 break;
             case LUMBERMILL_BLOCK_ID:
                 {
                     workflowToProcess = 70;
                     maxWorkers = 280;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.2f;
                 }
                 break;
             case MINE_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 60;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.75f;
                 }
                 break;
             case SMELTERY_1_ID:
@@ -133,84 +147,98 @@ public abstract class WorkBuilding : Building
                 {
                     workflowToProcess = 1;
                     maxWorkers = 400;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.95f;
                 }
                 break;
             case BIOGENERATOR_2_ID:
                 {
                     workflowToProcess = 40;
                     maxWorkers = 20;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.2f;
                 }
                 break;
             case HOSPITAL_2_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 50;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.45f;
                 }
                 break;
             case MINERAL_POWERPLANT_2_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 60;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.3f;
                 }
                 break;
             case ORE_ENRICHER_2_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 80;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 2f;
                 }
                 break;
             case WORKSHOP_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 80;
+                    gearsDamage = 0f;
                 }
                 break;
             case FUEL_FACILITY_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 100;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.68f;
                 }
                 break;
             case GRPH_REACTOR_4_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 80;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 120;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.4f;
                 }
                 break;
             case PLASTICS_FACTORY_3_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 150;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.8f;
                 }
                 break;
             case SUPPLIES_FACTORY_4_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 140;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
                 }
                 break;
             case SUPPLIES_FACTORY_5_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 250;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
                 }
                 break;
             case GRPH_ENRICHER_3_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 60;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.4f;
                 }
                 break;
             case XSTATION_3_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 40;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
                 }
                 break;
             case SHUTTLE_HANGAR_4_ID:
@@ -223,24 +251,28 @@ public abstract class WorkBuilding : Building
                 {
                     workflowToProcess = RecruitingCenter.FIND_WORKFLOW;
                     maxWorkers = 40;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
                 }
                 break;
             case EXPEDITION_CORPUS_4_ID:
                 {
                     workflowToProcess = 1;
                     maxWorkers = 60;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
                 }
                 break;
             case OBSERVATORY_ID:
                 {
                     workflowToProcess = Observatory.SEARCH_WORKFLOW;
                     maxWorkers = 50;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.12f;
                 }
                 break;
             case PSYCHOKINECTIC_GEN_ID:
             case SCIENCE_LAB_ID:
                 {
                     maxWorkers = 40;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.14f;
                     break;
                 }
         }
@@ -271,17 +303,21 @@ public abstract class WorkBuilding : Building
     }  
 
     virtual public void LabourUpdate()
-    {
+    {        
         if (!isActive | !isEnergySupplied) return;
         if (workersCount > 0)
         {
+            workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED;
+            gearsDamage = workSpeed * GameConstants.GEARS_DAMAGE_COEFFICIENT;
             workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
             if (workflow >= workflowToProcess)
             {
                 LabourResult();
             }
         }
+        else workSpeed = 0f;
+        // changecopy to coveredfarm.cs
     }
 
     protected virtual void LabourResult()
@@ -309,11 +345,9 @@ public abstract class WorkBuilding : Building
                 workersCount += x;
                 x = 0;
             }
-            RecalculateWorkspeed();
             return x;
         }
     }
-
     public void FreeWorkers()
     {
         FreeWorkers(workersCount);
@@ -324,12 +358,11 @@ public abstract class WorkBuilding : Building
         if (x > workersCount) x = workersCount;
         workersCount -= x;
         colony.AddWorkers(x);
-        RecalculateWorkspeed();
     }
-    virtual public void RecalculateWorkspeed()
+
+    virtual public float GetWorkSpeed()
     {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.FACTORY_SPEED;
-        gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
+        return workSpeed;
     }
 
     public override UIObserver ShowOnGUI()
@@ -411,10 +444,8 @@ public abstract class WorkBuilding : Building
     {
         var data = new List<byte>();
         data.AddRange(System.BitConverter.GetBytes(workflow));
-        data.AddRange(System.BitConverter.GetBytes(workSpeed));
-        data.AddRange(System.BitConverter.GetBytes(workflowToProcess));
         data.AddRange(System.BitConverter.GetBytes(workersCount));
-        //SERIALIZER_LENGTH = 16;
+        //SERIALIZER_LENGTH = 8;
         return data;
     }
 
@@ -428,9 +459,7 @@ public abstract class WorkBuilding : Building
     protected void LoadWorkBuildingData(byte[] data, int startIndex)
     {
         workflow = System.BitConverter.ToSingle(data, startIndex);
-        workSpeed = System.BitConverter.ToSingle(data, startIndex + 4);
-        workflowToProcess = System.BitConverter.ToSingle(data, startIndex + 8);
-        workersCount = System.BitConverter.ToInt32(data, startIndex + 12);
+        workersCount = System.BitConverter.ToInt32(data, startIndex + 4);
     }
     #endregion
 }

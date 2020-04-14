@@ -22,18 +22,12 @@ public class Mine : WorkBuilding {
 		//workObject = bb as CubeBlock;
 		
 	}
-
 	override public void LabourUpdate() {
-		
+        workSpeed = colony.workspeed * workersCount * GameConstants.MINING_SPEED;
     }
 
 override protected void LabourResult() {
 
-	}
-
-override public void RecalculateWorkspeed() {
-		workSpeed = colony.labourCoefficient * workersCount * GameConstants.MINING_SPEED;
-        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 
     void UpgradeMine(byte f_level)

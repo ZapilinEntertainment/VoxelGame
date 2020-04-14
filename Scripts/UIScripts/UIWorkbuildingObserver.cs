@@ -39,7 +39,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 
 		showingWorkersCount = wb.workersCount;
 		showingWorkersMaxCount = wb.maxWorkers;
-		showingWorkspeed = wb.workSpeed;
+		showingWorkspeed = wb.GetWorkSpeed();
 
         ignoreWorkersSlider = true;// иначе будет вызывать ивент
         slider.minValue = 0; 
@@ -68,7 +68,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 
         showingWorkersCount = ws.workersCount;
         showingWorkersMaxCount = ws.GetMaxWorkers();
-        showingWorkspeed = ws.workSpeed;
+        showingWorkspeed = ws.GetWorkSpeed();
 
         ignoreWorkersSlider = true;// иначе будет вызывать ивент
         slider.value = showingWorkersCount; 
@@ -112,16 +112,13 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 }
                 if (workspeedStringEnabled)
                 {
-                    if (showingWorkspeed != observingWorkbuilding.workSpeed)
-                    {
-                        showingWorkspeed = observingWorkbuilding.workSpeed;
+                        showingWorkspeed = observingWorkbuilding.GetWorkSpeed();
                         if (showingWorkspeed == 0) workSpeedField.enabled = false;
                         else
                         {
                             workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
                             workSpeedField.enabled = true;
                         }
-                    }
                 }
             }
         }
@@ -149,9 +146,9 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                     slider.maxValue = showingWorkersMaxCount;
                     ignoreWorkersSlider = false;
                 }
-                if (workspeedStringEnabled && showingWorkspeed != observingWorksite.workSpeed)
+                if (workspeedStringEnabled )
                 {
-                    showingWorkspeed = observingWorksite.workSpeed;
+                    showingWorkspeed = observingWorksite.GetWorkSpeed();
                     if (showingWorkspeed == 0) workSpeedField.enabled = false;
                     else
                     {

@@ -15,16 +15,8 @@ public sealed class ColonyController : MonoBehaviour
     public bool housingRecalculationNeeded = false, powerGridRecalculationNeeded = false; // hot
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
-    public float labourCoefficient
-    {
-        get
-        {
-            float f = gears_coefficient * 0.5f + happiness_coefficient * 0.5f;
-            if (f <= 0.01f) f = 0.01f;
-            return f;
-        }
-    }
     public float happiness_coefficient { get; private set; }
+    public float workspeed { get; private set; }
     public bool accumulateEnergy = true, buildingsWaitForReconnection = false;    
 
     public float energyStored { get; private set; }
@@ -93,8 +85,8 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (thisIsFirstSet)
         {
-            gears_coefficient = 2;
-            hospitals_coefficient = 0;
+            gears_coefficient = 2f;
+            hospitals_coefficient = 0f;
             birthSpeed = GameConstants.START_BIRTHRATE_COEFFICIENT;
             docksLevel = 0;
             energyCrystalsCount = START_ENERGY_CRYSTALS_COUNT;
@@ -316,7 +308,9 @@ public sealed class ColonyController : MonoBehaviour
                 }
                 peopleSurplus += realBirthrate;
             }
-        }      
+        }
+
+        workspeed = (0.5f + happiness_coefficient * 0.7f) * gears_coefficient;
     }
     public void EverydayUpdate()
     {
@@ -339,6 +333,7 @@ public sealed class ColonyController : MonoBehaviour
             }
             else starvation = false;
         }
+        RecalculateHospitals();
     }
     #endregion
 
@@ -556,7 +551,7 @@ public sealed class ColonyController : MonoBehaviour
     }
     public void RecalculateHospitals()
     {
-        hospitals_coefficient = 0;
+        hospitals_coefficient = 0f;
         bool noHospitals = hospitals == null;
         if (noHospitals || hospitals.Count == 0) {
             if (birthrateMode != BirthrateMode.Disabled) SetBirthrateMode(BirthrateMode.Disabled);
@@ -568,7 +563,7 @@ public sealed class ColonyController : MonoBehaviour
         }
         if (noHospitals) return;
         int i = 0;
-        float hospitalsCoverage = 0;
+        float hospitalsCoverage = 0f;
         while (i < hospitals.Count)
         {
             if (hospitals[i].isActive) hospitalsCoverage += hospitals[i].coverage;
@@ -956,7 +951,7 @@ public sealed class ColonyController : MonoBehaviour
             foreach (Building b in powerGrid)
             {
                 wb = b as WorkBuilding;
-                if (wb != null) wb.RecalculateWorkspeed();
+                if (wb != null) wb.Recalculation();
             }
         }
 

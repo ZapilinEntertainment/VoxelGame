@@ -26,10 +26,10 @@ public class MapPoint
         get { return _angle; }
         set
         {
-            if (value > 360f) _angle = 360f;
+            if (value > 360f) _angle = value % 360f;
             else
             {
-                if (value < 0f) _angle = 0f;
+                if (value < 0f) _angle = 360f - Mathf.Abs(value % 360f) ;
                 else _angle = value;
             }
         }

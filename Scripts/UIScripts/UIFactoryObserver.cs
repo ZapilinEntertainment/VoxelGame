@@ -68,7 +68,7 @@ public sealed class UIFactoryObserver : UIObserver
                     if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
                     else
                     {
-                        float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                        float x = observingFactory.GetWorkSpeed() / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
                         workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
                     }
                 }
@@ -123,7 +123,7 @@ public sealed class UIFactoryObserver : UIObserver
                     if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
                     else
                     {
-                        float z = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                        float z = observingFactory.GetWorkSpeed() / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
                         workflowString.text = string.Format("{0:0.##}", z) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
                     }
                 }
@@ -201,7 +201,7 @@ public sealed class UIFactoryObserver : UIObserver
                         if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
                         else
                         {
-                            float x = observingFactory.workSpeed / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
+                            float x = observingFactory.GetWorkSpeed() / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * observingFactory.recipe.outputValue;
                             workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
                         }
                     }

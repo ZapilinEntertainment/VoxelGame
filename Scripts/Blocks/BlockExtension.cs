@@ -427,6 +427,6 @@ public sealed class BlockExtension : IPlanable
     /// </summary>
     public void Annihilate(bool compensateStructures)
     {
-        if (planes == null) foreach (var px in planes) px.Value.Annihilate(compensateStructures);
+        if (planes != null) foreach (var px in planes) px.Value.Annihilate(compensateStructures);
     }
 }

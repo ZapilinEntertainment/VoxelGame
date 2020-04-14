@@ -7,10 +7,45 @@ public class Platform : Structure, IPlanable
     private Block myBlock;
     private Plane upperPlane;
 
+    override protected void SetModel() { }
+    override public void SetModelRotation(int r)
+    {
+        modelRotation = 0;
+    }
+
     override public void SetBasement(Plane p, PixelPosByte pos)
     {
         if (p == null) return;
-        SetStructureData(p, pos);
+        //
+        if (!placeInCenter) surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
+        else surfaceRect = new SurfaceRect((byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
+        basement = p;
+        if (transform.childCount == 0)
+        {
+            GameObject model;
+            var fi = basement.faceIndex;
+            if (fi == Block.SURFACE_FACE_INDEX || fi == Block.UP_FACE_INDEX || fi == Block.CEILING_FACE_INDEX || fi == Block.DOWN_FACE_INDEX)
+            {
+                model = Instantiate(Resources.Load<GameObject>("Structures/Column"));
+                surfaceRect = new SurfaceRect(0, 0, 4);
+            }
+            else
+            {
+                model = Instantiate(Resources.Load<GameObject>("Structures/ColumnEdge"));
+                switch (fi)
+                {
+                    case Block.FWD_FACE_INDEX: model.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); break;
+                    case Block.RIGHT_FACE_INDEX: model.transform.localRotation = Quaternion.Euler(0f, -90f, 0f); break;
+                    case Block.LEFT_FACE_INDEX: model.transform.localRotation = Quaternion.Euler(0f, 90f, 0f); break;
+                }
+                surfaceRect = SurfaceRect.full;
+            }
+            model.transform.parent = transform;
+            model.transform.localPosition = Vector3.zero;
+            if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+        }        
+        basement.AddStructure(this);
+        //
         IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
     }
 

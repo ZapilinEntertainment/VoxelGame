@@ -295,19 +295,22 @@ public sealed class PlaneExtension
             myPlane.NullifyExtensionLink(this);
             return;
         }
-        if (structures.Count > 0)
-        {
-            for (int i = 0; i < structures.Count; i++)
-            {
-                structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
-            }
-            structures.Clear();
-            grassland?.Annihilate(false, false);
-        }
-        if (check) RecalculateSurface();
         else
         {
-            if (deleteExtensionLink) myPlane.NullifyExtensionLink(this);
+            if (structures.Count > 0)
+            {
+                for (int i = 0; i < structures.Count; i++)
+                {
+                    structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
+                }                
+                structures.Clear();
+                grassland?.Annihilate(false, false);
+            }
+            if (check) RecalculateSurface();
+            else
+            {
+                if (deleteExtensionLink) myPlane.NullifyExtensionLink(this);
+            }
         }
     }
     /// <summary>

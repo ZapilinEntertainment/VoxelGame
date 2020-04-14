@@ -10,7 +10,6 @@ public abstract class Worksite
 
     public Plane workplace { get; protected set; }
     public int workersCount { get; protected set; }
-    public float workSpeed { get; protected set; }
     public WorksiteSign sign;
     public string actionLabel { get; protected set; }
     public bool showOnGUI = false, destroyed = false;
@@ -18,7 +17,7 @@ public abstract class Worksite
     public const string WORKSITE_SIGN_COLLIDER_TAG = "WorksiteSign";
 
     protected bool subscribedToUpdate = false;
-    protected float workflow, gearsDamage;
+    protected float workflow, gearsDamage, workSpeed;
     protected ColonyController colony;
 
     public override bool Equals(object obj)
@@ -49,7 +48,7 @@ public abstract class Worksite
     public virtual void WorkUpdate()
     {
     }
-
+    public virtual float GetWorkSpeed() { return 0f; }
     /// <summary>
     /// returns excess workers
     /// </summary>
@@ -69,7 +68,6 @@ public abstract class Worksite
                 workersCount += x;
                 x = 0;
             }
-            RecalculateWorkspeed();
             return x;
         }
     }
@@ -79,13 +77,11 @@ public abstract class Worksite
         if (x > workersCount) x = workersCount;
         workersCount -= x;
         colony.AddWorkers(x);
-        RecalculateWorkspeed();
     }
     public static void TransferWorkers(Worksite source, Worksite destination)
     {
         int x = source.workersCount;
         source.workersCount = 0;
-        source.workSpeed = 0f;
         int sum = destination.workersCount + x;
         int maxWorkers = destination.GetMaxWorkers();
         if (sum > maxWorkers)
@@ -94,9 +90,7 @@ public abstract class Worksite
             sum = maxWorkers;
         }
         destination.workersCount = sum;
-        destination.RecalculateWorkspeed();
     }
-    protected abstract void RecalculateWorkspeed();
 
     public UIObserver ShowOnGUI()
     {
@@ -144,7 +138,6 @@ public abstract class Worksite
     {
         fs.Write(System.BitConverter.GetBytes(workersCount), 0,4);
         fs.Write(System.BitConverter.GetBytes(workflow),0,4);
-        fs.Write(System.BitConverter.GetBytes(workSpeed),0,4);
     }
 
 
@@ -154,11 +147,10 @@ public abstract class Worksite
     }
     protected void LoadWorksiteData(System.IO.FileStream fs)
     {
-        byte[] data = new byte[12];
-        fs.Read(data, 0, 12);
+        byte[] data = new byte[8];
+        fs.Read(data, 0, 8);
         workersCount = System.BitConverter.ToInt32(data, 0);
         workflow = System.BitConverter.ToSingle(data, 4);
-        workSpeed = System.BitConverter.ToSingle(data, 8);
     }
 
     public static void StaticLoad(System.IO.FileStream fs, int count)

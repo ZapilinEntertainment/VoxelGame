@@ -43,7 +43,19 @@ public sealed class StabilityEnforcer : WorkBuilding
         subscribedToUpdate = false;
     }
 
-    override public void RecalculateWorkspeed()
+    override public int AddWorkers(int x)
+    {
+        var w = base.AddWorkers(x);
+        RecalculateAffection();
+        return w;
+    }
+
+    override public void FreeWorkers(int x)
+    {
+        base.FreeWorkers(x);
+        RecalculateAffection();
+    }
+    private void RecalculateAffection()
     {
         if (workersCount > 0)
         {

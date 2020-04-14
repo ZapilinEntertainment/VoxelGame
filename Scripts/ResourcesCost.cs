@@ -155,7 +155,7 @@
                 new ResourceContainer(ResourceType.Plastics, 20), new ResourceContainer(ResourceType.metal_K, 13), new ResourceContainer(ResourceType.metal_M, 20)
             };
                 break;
-            case Structure.FARM_4_ID:
+            case Structure.COVERED_FARM:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_K, 60), new ResourceContainer(ResourceType.metal_E, 20),
                 new ResourceContainer(ResourceType.Concrete, 280)
@@ -182,7 +182,7 @@
                 new ResourceContainer(ResourceType.Plastics, 20), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 8)
             };
                 break;
-            case Structure.LUMBERMILL_4_ID:
+            case Structure.COVERED_LUMBERMILL:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 80), new ResourceContainer(ResourceType.metal_K, 16), new ResourceContainer(ResourceType.metal_E, 8)
             };

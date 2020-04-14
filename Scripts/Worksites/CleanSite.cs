@@ -15,6 +15,7 @@ public class CleanSite : Worksite {
 
         diggingMission = f_diggingMission;
         if (workersCount < START_WORKERS_COUNT) colony.SendWorkers(START_WORKERS_COUNT, this);
+        gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.25f;
     }
 
     override public void WorkUpdate () {
@@ -37,8 +38,9 @@ public class CleanSite : Worksite {
 		}		
         else
         {
+            workSpeed = colony.workspeed * workersCount * GameConstants.CLEARING_SPEED;
             workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
             Structure s = strlist[0];
             float workGained = 0;
             if (s.ID == Structure.PLANT_ID)
@@ -63,11 +65,6 @@ public class CleanSite : Worksite {
             workflow -= workGained;
             actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" +Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) +" :" + strlist.Count.ToString()  +  ")";
         }		
-	}
-
-	protected override void RecalculateWorkspeed() {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.CLEARING_SPEED;
-        gearsDamage = GameConstants.WORKSITES_GEARS_DAMAGE_COEFFICIENT * workSpeed;
 	}
 
     #region save-load mission

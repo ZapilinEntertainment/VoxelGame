@@ -11,10 +11,21 @@ public sealed class PsychokineticGenerator : WorkBuilding
         if (hmodifier_id == -1) hmodifier_id = colony.AddHappinessModifier(HAPPINESS_MODIFIER);
     }
 
-    override public void RecalculateWorkspeed()
+    private void RecalculateSurplus()
     {
         energySurplus = workersCount * ENERGY_MULTIPLIER;
         colony.powerGridRecalculationNeeded = true;
+    }
+    override public int AddWorkers(int x)
+    {
+        var w = base.AddWorkers(x);
+        RecalculateSurplus();
+        return w;
+    }
+    override public void FreeWorkers(int x)
+    {
+        base.FreeWorkers(x);
+        RecalculateSurplus();
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
@@ -41,7 +52,7 @@ public sealed class PsychokineticGenerator : WorkBuilding
         var data = new byte[4];
         fs.Read(data, 0, 4);
         workersCount = System.BitConverter.ToInt32(data, 0);
-        RecalculateWorkspeed();
+        RecalculateSurplus();
     }
     #endregion
 }

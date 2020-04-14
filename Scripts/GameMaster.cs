@@ -107,6 +107,7 @@ public sealed class GameMaster : MonoBehaviour
     // FOR TESTING
     [SerializeField] private GameMode _gameMode;
     [SerializeField] public bool testMode = false;
+    [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
     public bool generateChunk = true;
     public byte test_size = 100;
@@ -420,7 +421,8 @@ public sealed class GameMaster : MonoBehaviour
                 if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
             }
             
-        }   
+        }
+        gameSpeed = _gameSpeed;
     }
 
     private void FixedUpdate()

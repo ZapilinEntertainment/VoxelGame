@@ -80,7 +80,7 @@
         // базируются на предыдущих
         structuresCost[Structure.LIFESTONE_ID] = structuresCost[Structure.TREE_OF_LIFE_ID];
         structuresCost[Structure.PLASTICS_FACTORY_3_ID] = structuresCost[Structure.FUEL_FACILITY_ID];
-        structuresCost[Structure.SUPPLIES_FACTORY_4_ID] = structuresCost[Structure.FARM_4_ID];
+        structuresCost[Structure.SUPPLIES_FACTORY_4_ID] = structuresCost[Structure.COVERED_FARM];
         structuresCost[Structure.SUPPLIES_FACTORY_5_ID] = structuresCost[Structure.SUPPLIES_FACTORY_4_ID] * 4;
         structuresCost[Structure.GRPH_ENRICHER_3_ID] = structuresCost[Structure.WORKSHOP_ID] * 4;
         structuresCost[Structure.STORAGE_2_ID] = structuresCost[Structure.STORAGE_1_ID] * 2;
@@ -93,12 +93,12 @@
         
         structuresCost[Structure.FARM_2_ID] = structuresCost[Structure.FARM_1_ID] * 2;
         structuresCost[Structure.FARM_3_ID] = structuresCost[Structure.FARM_2_ID] * 2;
-        structuresCost[Structure.FARM_4_ID] = structuresCost[Structure.FARM_3_ID] * 2;
-        structuresCost[Structure.FARM_BLOCK_ID] = structuresCost[Structure.FARM_4_ID] * 4;
+        structuresCost[Structure.COVERED_FARM] = structuresCost[Structure.FARM_3_ID] * 2;
+        structuresCost[Structure.FARM_BLOCK_ID] = structuresCost[Structure.COVERED_FARM] * 4;
         structuresCost[Structure.LUMBERMILL_1_ID] = structuresCost[Structure.FARM_1_ID] * 0.85;
         structuresCost[Structure.LUMBERMILL_2_ID] = structuresCost[Structure.LUMBERMILL_1_ID] * 2;
         structuresCost[Structure.LUMBERMILL_3_ID] = structuresCost[Structure.LUMBERMILL_2_ID] * 2;
-        structuresCost[Structure.LUMBERMILL_4_ID] = structuresCost[Structure.LUMBERMILL_3_ID] * 2;
+        structuresCost[Structure.COVERED_LUMBERMILL] = structuresCost[Structure.LUMBERMILL_3_ID] * 2;
         structuresCost[Structure.LUMBERMILL_BLOCK_ID] = structuresCost[Structure.LUMBERMILL_BLOCK_ID] * 4;
         structuresCost[Structure.SMELTERY_2_ID] = structuresCost[Structure.SMELTERY_1_ID] * 2;
         structuresCost[Structure.SMELTERY_3_ID] = structuresCost[Structure.SMELTERY_2_ID] * 2;

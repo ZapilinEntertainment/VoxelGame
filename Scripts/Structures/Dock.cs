@@ -102,7 +102,11 @@ public sealed class Dock : WorkBuilding {
         }
     }
 
-	override public void LabourUpdate () {
+    public override float GetWorkSpeed()
+    {
+        return shipArrivingTimer;
+    }
+    override public void LabourUpdate () {
 		if ( !isEnergySupplied ) return;
 		if ( maintainingShip ) {
 			if (loadingTimer > 0) {
@@ -432,18 +436,13 @@ public sealed class Dock : WorkBuilding {
         colony.gears_coefficient -= gearsDamage * volume;
         availableVolume -= volume;
         return volume;
-    }
+    }  
 
-   
 
-    override public void RecalculateWorkspeed()
+    override public void FreeWorkers(int x)
     {
-        workSpeed = (float)workersCount / (float)maxWorkers;
-        if (workSpeed == 0)
-        {
-            if (maintainingShip & loadingShip != null) loadingShip.Undock();
-        }
-        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT / 10f * workSpeed;
+        base.FreeWorkers(x);
+        if (workersCount == 0 && maintainingShip && loadingShip != null) loadingShip.Undock();
     }
 
     public override UIObserver ShowOnGUI()

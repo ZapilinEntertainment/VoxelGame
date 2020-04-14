@@ -9,27 +9,35 @@ public class CoveredFarm : WorkBuilding {
         PrepareWorkbuilding();
         switch (ID)
         {
-            case FARM_4_ID:
+            case COVERED_FARM:
             case FARM_BLOCK_ID:
                 outputResource = ResourceType.Food;
                 break;
-            case LUMBERMILL_4_ID:
+            case COVERED_LUMBERMILL:
             case LUMBERMILL_BLOCK_ID:
                 outputResource = ResourceType.Lumber;
                 break;
         }		
 		s = colony.storage;
 	}
-
-	override protected void LabourResult() {
+    override public void LabourUpdate()
+    {
+        if (!isActive | !isEnergySupplied) return;
+        if (workersCount > 0)
+        {
+            workSpeed = colony.workspeed * workersCount * GameConstants.HYDROPONICS_SPEED;
+            workflow += workSpeed;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
+            if (workflow >= workflowToProcess)
+            {
+                LabourResult();
+            }
+        }
+        else workSpeed = 0f;
+    }
+    override protected void LabourResult() {
         int iterations = (int)(workflow / workflowToProcess);
 		s.AddResource( new ResourceContainer (outputResource, output_value * iterations) );
 		workflow -= iterations * workflowToProcess;
-	}
-
-	override public void RecalculateWorkspeed() {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.HYDROPONICS_SPEED;
-        if (workSpeed < MIN_SPEED && workersCount > 0) workSpeed = MIN_SPEED;
-        gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
 	}
 }

@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HangingTMast : WorkBuilding
+public sealed class HangingTMast : WorkBuilding
 {
     private bool subscribedToRestoreBlockersEvent = false;
     private int lifepowerAffectionID = -1;
+    private float lifepowerSurplus;
     private const float LIFEPOWER_PER_UNIT = 1f;
 
     override public void SetBasement(Plane b, PixelPosByte pos)
@@ -44,7 +45,7 @@ public class HangingTMast : WorkBuilding
         }
     }
 
-    override public void RecalculateWorkspeed()
+    private void RecalculateLifepowerSurplus()
     {
         if (workersCount == 0)
         {
@@ -56,22 +57,41 @@ public class HangingTMast : WorkBuilding
         }
         else
         {
-            float newWorkspeed = 0f;
+            float newLPSurplus = 0f;
             if (workersCount < maxWorkers / 2)
             {
-                newWorkspeed = workersCount * LIFEPOWER_PER_UNIT;
+                newLPSurplus = workersCount * LIFEPOWER_PER_UNIT;
             }
             else
             {
                 int d = workersCount - maxWorkers/2;
-                newWorkspeed = maxWorkers / 2 * LIFEPOWER_PER_UNIT + d * LIFEPOWER_PER_UNIT * 1.1f;
+                newLPSurplus = maxWorkers / 2 * LIFEPOWER_PER_UNIT + d * LIFEPOWER_PER_UNIT * 1.1f;
             }
-            if (newWorkspeed != workSpeed)
+            if (newLPSurplus != lifepowerSurplus)
             {
                 if (lifepowerAffectionID == -1)
-                    lifepowerAffectionID = basement.myChunk.GetNature().AddLifepowerAffection(newWorkspeed);
-                else basement.myChunk.GetNature().ChangeLifepowerAffection(lifepowerAffectionID, newWorkspeed);
+                    lifepowerAffectionID = basement.myChunk.GetNature().AddLifepowerAffection(newLPSurplus);
+                else basement.myChunk.GetNature().ChangeLifepowerAffection(lifepowerAffectionID, newLPSurplus);
             }
         }
     }
+    public override float GetWorkSpeed()
+    {
+        return lifepowerSurplus;
+    }
+
+    override public int AddWorkers(int x)
+    {
+        var w = base.AddWorkers(x);
+        RecalculateLifepowerSurplus();
+        return w;
+    }
+    override public void FreeWorkers(int x)
+    {
+        base.FreeWorkers(x);
+        RecalculateLifepowerSurplus();
+    }
+
+    #region save-load
+    #endregion
 }

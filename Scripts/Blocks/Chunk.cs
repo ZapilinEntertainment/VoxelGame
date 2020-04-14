@@ -1195,7 +1195,33 @@ public sealed partial class Chunk : MonoBehaviour
     public void SaveChunkData(System.IO.FileStream fs)
     {
         fs.WriteByte(chunkSize);
-
+        if (blocks != null)
+        {
+            fs.WriteByte(1);
+            var blist = new List<Block>();
+            Block b = null;
+            foreach (var fb in blocks)
+            {
+                b = fb.Value;
+                if (b != null) blist.Add(b);
+            }
+            int count = blist.Count;
+            fs.Write(System.BitConverter.GetBytes(count),0,4);
+            if (blist.Count > 0)
+            {
+                foreach (var bx in blist) bx.Save(fs);
+            }
+        }
+        else
+        {
+            fs.WriteByte(0);
+        }
+        if (nature != null)
+        {
+            fs.WriteByte(1);
+            nature.Save(fs);
+        }
+        else fs.WriteByte(0);
     }
 
     public void LoadChunkData(System.IO.FileStream fs)

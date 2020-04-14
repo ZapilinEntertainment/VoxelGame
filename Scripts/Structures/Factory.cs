@@ -75,6 +75,7 @@ public class Factory : WorkBuilding
             {
                 if (isEnergySupplied)
                 {
+                    workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED * level * level;
                     if (productionMode == FactoryProductionMode.Limit)
                     {
                         if (!workPaused)
@@ -89,7 +90,7 @@ public class Factory : WorkBuilding
                             {
                                 workPaused = false;
                                 workflow += workSpeed;
-                                colony.gears_coefficient -= gearsDamage;
+                                colony.gears_coefficient -= gearsDamage * workSpeed;
                                 if (workflow >= workflowToProcess) LabourResult();
                             }
                         }
@@ -97,7 +98,7 @@ public class Factory : WorkBuilding
                     else
                     {
                         workflow += workSpeed;
-                        colony.gears_coefficient -= gearsDamage;
+                        colony.gears_coefficient -= gearsDamage * workSpeed;
                         if (workflow >= workflowToProcess) LabourResult();
                     }
                 }
@@ -235,12 +236,6 @@ public class Factory : WorkBuilding
         if (isActive) upgraded.SetActivationStatus(true, true);
         if (returnToUI) upgraded.ShowOnGUI();
         GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
-    }
-
-    override public void RecalculateWorkspeed()
-    {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.FACTORY_SPEED * level * 1.5f;
-        gearsDamage = workSpeed * GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT;
     }
 
 

@@ -32,11 +32,13 @@ public class FoodFactory : WorkBuilding {
         {
             if (isActive & isEnergySupplied)
             {
+                workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED;
                 workflow += workSpeed;
-                colony.gears_coefficient -= gearsDamage;
+                colony.gears_coefficient -= gearsDamage * workSpeed;
             }
             if (workflow >= workflowToProcess) LabourResult();
         }
+        else workSpeed = 0f;
     }
 
     override protected void LabourResult()

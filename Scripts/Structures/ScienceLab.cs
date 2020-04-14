@@ -19,13 +19,15 @@ public sealed class ScienceLab : WorkBuilding
         if (!isActive | !isEnergySupplied) return;
         if (workersCount > 0)
         {
+            workSpeed = colony.workspeed * workersCount * GameConstants.RESEARCH_SPEED;
             workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
             if (workflow >= workflowToProcess)
             {
                 LabourResult();
             }
         }
+        else workSpeed = 0f;
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

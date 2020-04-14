@@ -21,8 +21,19 @@ public sealed class Nature : MonoBehaviour
 
     private const float GRASSLAND_CREATE_COST = 100f, GRASSLAND_UPDATE_COST = 2f, GRASSLAND_CREATE_CHECK_TIME = 10f, GRASSLAND_UPDATE_TIME = 1f,
         MONUMENT_AFFECTION_CF = 10f;
+    #region save-load
+    public void Save(System.IO.FileStream fs)
+    {
 
-   public static bool MaterialIsLifeSupporting(int materialID)
+    }
+    public void Load(System.IO.FileStream fs)
+    {
+        
+    }
+    #endregion
+
+
+    public static bool MaterialIsLifeSupporting(int materialID)
     {
         switch (materialID)
         {

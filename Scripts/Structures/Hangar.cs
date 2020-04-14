@@ -353,13 +353,15 @@ public sealed class Hangar : WorkBuilding
         {
             if (status == HangarStatus.ConstructingShuttle)
             {
+                workSpeed = colony.workspeed * workersCount * GameConstants.MACHINE_CONSTRUCTING_SPEED;
                 workflow += workSpeed;
-                colony.gears_coefficient -= gearsDamage;
+                colony.gears_coefficient -= gearsDamage * workSpeed;
                 if (workflow >= workflowToProcess)
                 {
                     LabourResult();
                 }
             }
+            else workSpeed = 0f;
         }
     }
 
@@ -375,12 +377,6 @@ public sealed class Hangar : WorkBuilding
             hangarObserver.PrepareHangarWindow();
         }
         GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleConstructed));
-    }
-
-    override public void RecalculateWorkspeed()
-    {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.MACHINE_CONSTRUCTING_SPEED;
-        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 2f;
     }
 
     public override UIObserver ShowOnGUI()

@@ -5,17 +5,12 @@
 	public override void SetBasement(Plane b, PixelPosByte pos) {		
 		if (b == null) return;
         SetWorkbuildingData(b, pos);
-        coverage = 0;
+        RecalculateCoverage();
 		colony.AddHospital(this);
 	}
-
-    override public void FreeWorkers(int x)
+    public override float GetWorkSpeed()
     {
-        if (x > workersCount) x = workersCount;
-        workersCount -= x;
-        colony.AddWorkers(x);
-        RecalculateWorkspeed();
-        colony.RecalculateHospitals();
+        return coverage;
     }
 
     protected override void SwitchActivityState()
@@ -23,14 +18,23 @@
         base.SwitchActivityState();
         colony.RecalculateHospitals();
     }
-
-    override public void RecalculateWorkspeed()
+    private void RecalculateCoverage()
     {
         float prevCoverage = coverage;
         coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
         if (prevCoverage != coverage) colony.RecalculateHospitals();
-        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed / 20f;
-    }    
+    }
+    override public int AddWorkers(int x)
+    {
+        var w = base.AddWorkers(x);
+        RecalculateCoverage();
+        return w;
+    }
+    override public void FreeWorkers(int x)
+    {
+        base.FreeWorkers(x);
+        RecalculateCoverage();
+    }
 
     public override UIObserver ShowOnGUI()
     {

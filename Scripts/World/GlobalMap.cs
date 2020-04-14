@@ -378,18 +378,21 @@ public sealed class GlobalMap : MonoBehaviour
         if (!prepared) return;
 
         float t = Time.deltaTime * GameMaster.gameSpeed;
-        float f = 0;
+        float f = 0 ,a;
+        float[] thisCycleRotations = new float[RINGS_COUNT];
         for (int i = 0; i < RINGS_COUNT; i++)
         {
+            a = rotationSpeed[i] * t;
+            thisCycleRotations[i] = a;
             f = ringsRotation[i];
-            f -= rotationSpeed[i] * t;
-            if (f > 360f)
+            f -= thisCycleRotations[i];            
+            if (f > 360)
             {
-                f %= 360;
+                f = f % 360f;
             }
             else
             {
-                if (f < 0) f += 360;
+                if (f < 0) f = 360f - Mathf.Abs(f % 360f);
             }
             ringsRotation[i] = f;
         }
@@ -412,7 +415,7 @@ public sealed class GlobalMap : MonoBehaviour
             while (i < mapPoints.Count)
             {
                 MapPoint mp = mapPoints[i];
-                mp.angle += rotationSpeed[mp.ringIndex] * t;
+                mp.angle += thisCycleRotations[mp.ringIndex];
                 if (mp.type == MapMarkerType.FlyingExpedition)
                 {
                     FlyingExpedition fe = (mp as FlyingExpedition);
@@ -455,7 +458,7 @@ public sealed class GlobalMap : MonoBehaviour
         }
         //
         cityLookVector = Quaternion.AngleAxis(cityPoint.angle, Vector3.up) * Vector3.forward;
-        cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);
+        cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);        
     }
 
     //=============  
@@ -596,6 +599,11 @@ public sealed class GlobalMap : MonoBehaviour
         );
         mapSectors[x] = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
         AddPoint(centralPoint, true);
+    }
+
+    private void OnGUI()
+    {
+        GUILayout.Label( (cityPoint.angle - GetCurrentSectorCenter().x).ToString());
     }
 
     #region save-load system

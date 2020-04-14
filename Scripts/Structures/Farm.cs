@@ -16,14 +16,14 @@ public class Farm : WorkBuilding
             case FARM_1_ID:
             case FARM_2_ID:
             case FARM_3_ID:
-            case FARM_4_ID:
+            case COVERED_FARM:
             case FARM_BLOCK_ID:
                 cropType = PlantType.Corn;
                 break;
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
             case LUMBERMILL_3_ID:
-            case LUMBERMILL_4_ID:
+            case COVERED_LUMBERMILL:
             case LUMBERMILL_BLOCK_ID:
                 cropType = PlantType.OakTree;
                 break;
@@ -45,17 +45,13 @@ public class Farm : WorkBuilding
         gl.SetCultivatingStatus(true);
     }
 
-    override public void RecalculateWorkspeed()
-    {
-        workSpeed = colony.labourCoefficient * workersCount * GameConstants.OPEN_FARM_SPEED;
-        gearsDamage = GameConstants.FACTORY_GEARS_DAMAGE_COEFFICIENT * workSpeed;
-    }
     override public void LabourUpdate()
     {
         if (isActive & isEnergySupplied)
         {
+            workSpeed = colony.workspeed * workersCount * GameConstants.OPEN_FARM_SPEED;
             workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage;
+            colony.gears_coefficient -= gearsDamage * workSpeed;
             if (workflow >= workflowToProcess)
             {
                 LabourResult();
