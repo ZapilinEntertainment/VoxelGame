@@ -20,6 +20,13 @@ public sealed class Grassland
     public byte faceIndex { get { if (plane != null) return plane.faceIndex; else return Block.UP_FACE_INDEX; } }
     public ChunkPos pos { get { if (plane != null) return plane.pos; else return ChunkPos.zer0; } }
 
+    #region save-load
+    public void Save(System.IO.FileStream fs)
+    {
+
+    }
+    #endregion 
+
     public Grassland(Plane p, Nature n)
     {
         plane = p;

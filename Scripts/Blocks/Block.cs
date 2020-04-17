@@ -32,6 +32,30 @@ public sealed class Block {
         return pos.x + pos.y * 3 + pos.z * 5;
     }
 
+    #region save-load
+    public void Save(System.IO.FileStream fs)
+    {
+        if (destroyed) return;
+        fs.WriteByte(pos.x);
+        fs.WriteByte(pos.y);
+        fs.WriteByte(pos.z);
+        if (extension != null) {
+            fs.WriteByte(1);
+            extension.Save(fs);
+        }
+        else fs.WriteByte(0);
+    }
+    public static Block Load(System.IO.FileStream fs, Chunk c)
+    {
+        var b = new Block(c, new ChunkPos(fs.ReadByte(), fs.ReadByte(), fs.ReadByte()));
+        if (fs.ReadByte() == 1)
+        {
+            b.extension = BlockExtension.Load(fs, b);
+        }
+        return b;
+    }
+    #endregion
+
     #region constructors
     public Block(Chunk f_chunk, ChunkPos f_chunkPos, BlockMaterialsList bml, float i_volume_pc, bool i_natural, bool redrawCall) : this(f_chunk, f_chunkPos)
     {
@@ -255,15 +279,4 @@ public sealed class Block {
             mainStructure = null;
         }
     }
-
-    #region save-load
-    public void Save(System.IO.FileStream fs) 
-    {
-        SaveBlockData(fs);
-    }
-    private void SaveBlockData(System.IO.FileStream fs)
-    {
-        
-    }
-    #endregion
 }

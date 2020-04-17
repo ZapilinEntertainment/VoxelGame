@@ -1195,27 +1195,24 @@ public sealed partial class Chunk : MonoBehaviour
     public void SaveChunkData(System.IO.FileStream fs)
     {
         fs.WriteByte(chunkSize);
+        int count = 0;
         if (blocks != null)
         {
-            fs.WriteByte(1);
             var blist = new List<Block>();
             Block b = null;
             foreach (var fb in blocks)
             {
                 b = fb.Value;
-                if (b != null) blist.Add(b);
+                if (b != null && !b.destroyed) blist.Add(b);
             }
-            int count = blist.Count;
+            count = blist.Count;
             fs.Write(System.BitConverter.GetBytes(count),0,4);
             if (blist.Count > 0)
             {
                 foreach (var bx in blist) bx.Save(fs);
             }
         }
-        else
-        {
-            fs.WriteByte(0);
-        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         if (nature != null)
         {
             fs.WriteByte(1);
@@ -1240,7 +1237,23 @@ public sealed partial class Chunk : MonoBehaviour
             GameMaster.LoadingFail();
             return;
         }
-        
+        else
+        {
+            blocks = new Dictionary<ChunkPos, Block>();
+            Block b;
+            for (int i = 0; i < blocksCount; i++)
+            {
+                b = Block.Load(fs, this);
+                if (b != null) {
+                    blocks.Add(b.pos, b);
+                }
+            }
+        }
+        //
+        if (fs.ReadByte() == 1)
+        {
+            if (nature == null) nature = GetNature();
+        }
         
         if (borderDrawn) DrawBorder();
         if (PoolMaster.shadowCasting) ShadowsUpdate();

@@ -24,6 +24,65 @@ public sealed class BlockExtension : IPlanable
     {
         return myBlock.GetHashCode() + materialID + existingPlanesMask;
     }
+    #region save-load
+    public void Save(System.IO.FileStream fs)
+    {
+        fs.Write(System.BitConverter.GetBytes(materialID), 0, 4); // 0 -3
+        fs.WriteByte(isNatural ? (byte)1 : (byte)0); // 4
+        fs.WriteByte(existingPlanesMask);    // 5    
+        fs.Write(System.BitConverter.GetBytes(fossilsVolume), 0, 4); // 6 - 9
+        fs.Write(System.BitConverter.GetBytes(volume), 0, 4); // 10 - 13
+        byte count = 0; // 14
+        if (planes != null)
+        {
+            Plane p;
+            var plist = new List<Plane>();
+            foreach (var fp in planes)
+            {
+                p = fp.Value;
+                if (p != null && !p.destroyed)
+                {
+                    plist.Add(p);
+                }
+            }
+            count = (byte)plist.Count;
+            fs.WriteByte(count);
+            if (count > 0)
+            {                
+                foreach (var px in plist) px.Save(fs);
+            }
+        }
+        else fs.WriteByte(count);
+    }
+    public static BlockExtension Load(System.IO.FileStream fs, Block b)
+    {
+        var data = new byte[15];
+        fs.Read(data, 0, data.Length);
+        int materialID = System.BitConverter.ToInt32(data, 0);
+        bool isNatural = data[4] == 1;
+        var be = new BlockExtension(b, materialID, isNatural);
+        be.existingPlanesMask = data[5];
+        be.fossilsVolume = System.BitConverter.ToSingle(data, 6);
+        be.volume = System.BitConverter.ToSingle(data, 10);
+
+        byte count = data[14];
+        if (count > 0)
+        {
+            var pls = new Dictionary<byte, Plane>();
+            Plane p;
+            for (byte i = 0; i < count; i++)
+            {
+                p = Plane.Load(fs, be);
+                if (p != null)
+                {
+                    pls.Add(p.faceIndex, p);
+                }
+            }
+        }
+        return be;
+    }
+    #endregion
+
 
     public BlockExtension(Block i_myBlock,  int i_materialID, bool i_natural)
     {

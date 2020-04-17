@@ -27,6 +27,55 @@ public sealed class PlaneExtension
         return myPlane.GetHashCode() + map.GetHashCode() + artificialStructuresCount;
     }
 
+    #region save-load system
+    public void Save(System.IO.FileStream fs)
+    {
+        //base.Save(fs);
+        int structuresCount = 0;
+        var data = new List<byte>();
+        if (structures != null)
+        {
+            int i = 0;
+            while (i < structures.Count)
+            {
+                if (structures[i] == null) structures.RemoveAt(i);
+                else
+                {
+                    var sdata = structures[i].Save();
+                    if (sdata != null && sdata.Count > 0)
+                    {
+                        data.AddRange(sdata);
+                    }
+                    i++;
+                }
+            }
+            structuresCount = structures.Count;
+        }
+        fs.Write(System.BitConverter.GetBytes(structuresCount), 0, 4);
+        if (structuresCount > 0)
+        {
+            var dataArray = data.ToArray();
+            fs.Write(dataArray, 0, dataArray.Length);
+        }
+    }
+
+    public static PlaneExtension Load(System.IO.FileStream fs, Plane p)
+    {
+        var pe = new PlaneExtension(p, null);
+        var data = new byte[4];
+        fs.Read(data, 0, data.Length);
+        int structuresCount = System.BitConverter.ToInt32(data, 0);
+        if (structuresCount > INNER_RESOLUTION * INNER_RESOLUTION | structuresCount < 0)
+        {
+            Debug.Log("surface block load error - incorrect structures count");
+            GameMaster.LoadingFail();
+            return null;
+        }
+        if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, p);
+        return pe;
+    }
+    #endregion
+
     public PlaneExtension(Plane i_myPlane, Structure i_mainStructure)
     {        
         ResetMap();
@@ -716,56 +765,6 @@ public sealed class PlaneExtension
     {
         if (grassland != null) grassland.Annihilate(false, false);
         ClearSurface(false, compensateStructures, true);
-    }
-
-    #region save-load system
-    public void Save(System.IO.FileStream fs)
-    {
-        //base.Save(fs);
-
-
-        int structuresCount = structures.Count;
-        var data = new List<byte>();
-        if (structuresCount > 0)
-        {
-            structuresCount = 0;
-            int i = 0;
-            while (i < structures.Count)
-            {
-                if (structures[i] == null) structures.RemoveAt(i);
-                else
-                {
-                    var sdata = structures[i].Save();
-                    if (sdata != null && sdata.Count > 0)
-                    {
-                        data.AddRange(sdata);
-                        structuresCount++;
-                    }
-                    i++;
-                }
-            }
-        }
-        fs.Write(System.BitConverter.GetBytes(structuresCount), 0, 4);
-        if (structuresCount > 0)
-        {
-            var dataArray = data.ToArray();
-            fs.Write(dataArray, 0, dataArray.Length);
-        }
-    }
-
-    public void Load(System.IO.FileStream fs)
-    {
-        var data = new byte[4];
-        fs.Read(data, 0, 4);
-        int structuresCount = System.BitConverter.ToInt32(data, 0);
-        if (structuresCount > INNER_RESOLUTION * INNER_RESOLUTION | structuresCount < 0)
-        {
-            Debug.Log("surface block load error - incorrect structures count");
-            GameMaster.LoadingFail();
-            return;
-        }
-        if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, myPlane);
-    }
-    #endregion
+    } 
 }
 

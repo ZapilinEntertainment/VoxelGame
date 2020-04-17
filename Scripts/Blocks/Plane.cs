@@ -60,6 +60,37 @@ public class Plane
         return host.GetHashCode() + faceIndex + materialID + (int)meshType;
     }
 
+    #region save-load system
+    virtual public void Save(System.IO.FileStream fs)
+    {
+        //сохранить meshrotation, если это крыша, или если grassland
+        if (destroyed) return;        
+        fs.WriteByte((byte)meshType); // 0        
+        fs.Write(System.BitConverter.GetBytes(materialID),0,4); // 1 - 4
+        fs.WriteByte(faceIndex); // 5
+        fs.WriteByte(meshRotation); // 6
+        
+        if (extension != null)
+        {
+            fs.WriteByte(1); // 7
+            extension.Save(fs);
+        }
+        else fs.WriteByte(0);
+    }
+    public static Plane Load(System.IO.FileStream fs, IPlanable host)
+    {
+        var data = new byte[8];
+        fs.Read(data, 0, data.Length);
+        int materialID = System.BitConverter.ToInt32(data, 1);
+        var p = new Plane(host, (MeshType)data[0], materialID, data[5], data[6]);
+        if (data[7] == 1)
+        {
+            p.extension = PlaneExtension.Load(fs, p);
+        }
+        return p;
+    }
+    #endregion
+
     public bool isClean //может быть удалена и восстановлена
     {
         get
@@ -567,16 +598,5 @@ public class Plane
                 if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) host.GetBlock().myChunk.needSurfacesUpdate = true;
             }
         }
-    }
-
-    #region save-load system
-    public void Save(System.IO.FileStream fs)
-    {
-        //сохранить meshrotation, если это крыша, или если grassland
-    }
-    public void Load(System.IO.FileStream fs)
-    {
-
-    }
-    #endregion
+    } 
 }

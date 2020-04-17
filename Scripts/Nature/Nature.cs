@@ -24,9 +24,90 @@ public sealed class Nature : MonoBehaviour
     #region save-load
     public void Save(System.IO.FileStream fs)
     {
-
+        fs.Write(System.BitConverter.GetBytes(lifepower),0,4);
+        fs.Write(System.BitConverter.GetBytes(grasslandCreateTimer), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(grasslandsUpdateTimer), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(lastUpdateIndex), 0, 4);
+        int count = 0;
+        if (grasslands != null)
+        {
+            var glist = new List<Grassland>();
+            foreach (var g in grasslands)
+            {
+                if (g != null) glist.Add(g);
+            }
+            count = glist.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            if (count > 0)
+            {
+                foreach (var g in glist)
+                {
+                    g.Save(fs);
+                }
+            }
+        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        //
+        count = 0;
+        if (flowerTypes != null)
+        {
+            count = flowerTypes.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            if (count > 0)
+            {
+                foreach (var t in flowerTypes) fs.WriteByte((byte)t);
+            }
+        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        //
+        count = 0;
+        if (bushTypes != null)
+        {
+            count = bushTypes.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            if (count > 0)
+            {
+                foreach (var t in bushTypes) fs.WriteByte((byte)t);
+            }
+        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        //
+        count = 0;
+        if (treeTypes != null)
+        {
+            count = treeTypes.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            if (count > 0)
+            {
+                foreach (var t in treeTypes) fs.WriteByte((byte)t);
+            }
+        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        //
+        count = 0;
+        if (islandFlora != null)
+        {
+            count = islandFlora.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            if (count > 0)
+            {
+                foreach (var t in islandFlora) fs.WriteByte((byte)t);
+            }
+        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        //
+        count = 0;
+        if (lifepowerAffectionList != null && lifepowerAffectionList.Count > 0)
+        {
+            foreach (var x in lifepowerAffectionList)
+            {
+                fs.Write(System.BitConverter.GetBytes(x.Key), 0, 4);
+                fs.Write(System.BitConverter.GetBytes(x.Value), 0, 4);
+            }
+        }
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.FileStream fs, Chunk c)
     {
         
     }
