@@ -212,7 +212,10 @@ public sealed class BlockExtension : IPlanable
     }
     public bool TryGetPlane(byte faceIndex, out Plane result)
     {
-        if (!HavePlane(faceIndex)) { result = null; return false; }
+        if (!HavePlane(faceIndex)) {
+            result = null; 
+            return false;
+        }
         else
         {
             if (planes != null && planes.ContainsKey(faceIndex))

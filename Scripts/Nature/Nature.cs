@@ -24,11 +24,11 @@ public sealed class Nature : MonoBehaviour
     #region save-load
     public void Save(System.IO.FileStream fs)
     {
-        fs.Write(System.BitConverter.GetBytes(lifepower),0,4);
-        fs.Write(System.BitConverter.GetBytes(grasslandCreateTimer), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(grasslandsUpdateTimer), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(lastUpdateIndex), 0, 4);
-        int count = 0;
+        fs.Write(System.BitConverter.GetBytes(lifepower),0,4); // 0 -3
+        fs.Write(System.BitConverter.GetBytes(grasslandCreateTimer), 0, 4); // 4 - 7
+        fs.Write(System.BitConverter.GetBytes(grasslandsUpdateTimer), 0, 4); // 8 - 11
+        fs.Write(System.BitConverter.GetBytes(lastUpdateIndex), 0, 4); //12 - 15
+        byte count = 0; // 16
         if (grasslands != null)
         {
             var glist = new List<Grassland>();
@@ -36,8 +36,8 @@ public sealed class Nature : MonoBehaviour
             {
                 if (g != null) glist.Add(g);
             }
-            count = glist.Count;
-            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            count = (byte)glist.Count;
+            fs.WriteByte(count);
             if (count > 0)
             {
                 foreach (var g in glist)
@@ -46,70 +46,147 @@ public sealed class Nature : MonoBehaviour
                 }
             }
         }
-        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        else fs.WriteByte(count);
         //
         count = 0;
         if (flowerTypes != null)
         {
-            count = flowerTypes.Count;
-            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            count = (byte)flowerTypes.Count;
+            fs.WriteByte(count);
             if (count > 0)
             {
                 foreach (var t in flowerTypes) fs.WriteByte((byte)t);
             }
         }
-        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        else fs.WriteByte(count);
         //
         count = 0;
         if (bushTypes != null)
         {
-            count = bushTypes.Count;
-            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            count = (byte)bushTypes.Count;
+            fs.WriteByte(count);
             if (count > 0)
             {
                 foreach (var t in bushTypes) fs.WriteByte((byte)t);
             }
         }
-        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        else fs.WriteByte(count);
         //
         count = 0;
         if (treeTypes != null)
         {
-            count = treeTypes.Count;
-            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            count = (byte)treeTypes.Count;
+            fs.WriteByte(count);
             if (count > 0)
             {
                 foreach (var t in treeTypes) fs.WriteByte((byte)t);
             }
         }
-        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        else fs.WriteByte(count);
         //
         count = 0;
         if (islandFlora != null)
         {
-            count = islandFlora.Count;
-            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            count = (byte)islandFlora.Count;
+            fs.WriteByte(count);
             if (count > 0)
             {
                 foreach (var t in islandFlora) fs.WriteByte((byte)t);
             }
         }
-        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        else fs.WriteByte(count);
         //
         count = 0;
-        if (lifepowerAffectionList != null && lifepowerAffectionList.Count > 0)
+        if (lifepowerAffectionList != null)
         {
-            foreach (var x in lifepowerAffectionList)
+            count = (byte)lifepowerAffectionList.Count;
+            fs.WriteByte(count);
+            if (count > 0)
             {
-                fs.Write(System.BitConverter.GetBytes(x.Key), 0, 4);
-                fs.Write(System.BitConverter.GetBytes(x.Value), 0, 4);
+                foreach (var x in lifepowerAffectionList)
+                {
+                    fs.Write(System.BitConverter.GetBytes(x.Key), 0, 4);
+                    fs.Write(System.BitConverter.GetBytes(x.Value), 0, 4);
+                }
             }
         }
-        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+        else fs.WriteByte(count);
     }
     public void Load(System.IO.FileStream fs, Chunk c)
     {
-        
+        var data = new byte[17];
+        fs.Read(data, 0, data.Length);
+        lifepower = System.BitConverter.ToSingle(data, 0);
+        grasslandCreateTimer = System.BitConverter.ToSingle(data, 4);
+        grasslandsUpdateTimer = System.BitConverter.ToSingle(data, 8);
+        lastUpdateIndex = System.BitConverter.ToInt32(data, 12);
+        //
+        int count = data[16], i;
+        grasslands = null;
+        if (count != 0)
+        {
+            grasslands = new List<Grassland>();
+            Grassland g;
+            for(i = 0; i< count; i++)
+            {
+                g = Grassland.Load(fs, this, myChunk);
+                if (g != null) grasslands.Add(g);
+            }
+        }
+        //
+        count = fs.ReadByte();
+        flowerTypes = new List<PlantType>();
+        if (count != 0)
+        {
+            for (i = 0; i < count; i++)
+            {
+                flowerTypes.Add((PlantType)fs.ReadByte());
+            }
+        }
+        //
+        count = fs.ReadByte();
+        bushTypes = new List<PlantType>();
+        if (count != 0)
+        {
+            for (i = 0; i < count; i++)
+            {
+                bushTypes.Add((PlantType)fs.ReadByte());
+            }
+        }
+        //
+        count = fs.ReadByte();
+        treeTypes = new List<PlantType>();
+        if (count != 0)
+        {
+            for (i = 0; i < count; i++)
+            {
+                treeTypes.Add((PlantType)fs.ReadByte());
+            }
+        }
+        //
+        count = fs.ReadByte();
+        islandFlora = new List<PlantType>();
+        if (count != 0)
+        {
+            for (i = 0; i < count; i++)
+            {
+                islandFlora.Add((PlantType)fs.ReadByte());
+            }
+        }
+        //
+        count = fs.ReadByte();
+        lifepowerAffectionList = new Dictionary<int, float>();
+        if (count != 0)
+        {
+            data = new byte[8 * count];
+            fs.Read(data,0, data.Length);
+            int id = 0;
+            for (i =0; i< count; i++)
+            {
+                id = i * 8;
+                lifepowerAffectionList.Add(System.BitConverter.ToInt32(data, id), System.BitConverter.ToSingle(data, id + 4));
+            }
+        }
     }
     #endregion
 
@@ -198,6 +275,7 @@ public sealed class Nature : MonoBehaviour
 
     private void Update()
     {
+        if (GameMaster.loading) return;
         if (!prepared) {
             Prepare(GameMaster.realMaster.mainChunk);
             return;

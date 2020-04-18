@@ -1249,14 +1249,19 @@ public sealed partial class Chunk : MonoBehaviour
                 }
             }
         }
+        PreparePlanes();
+        RecalculateSurfacesList();
         //
         if (fs.ReadByte() == 1)
         {
             if (nature == null) nature = GetNature();
+            nature.Load(fs, this);
         }
         
-        if (borderDrawn) DrawBorder();
-        if (PoolMaster.shadowCasting) ShadowsUpdate();
+        if (borderDrawn) DrawBorder();       
+        
+        RenderDataFullRecalculation();
+        FollowingCamera.main.WeNeedUpdate();
     }
     #endregion
 

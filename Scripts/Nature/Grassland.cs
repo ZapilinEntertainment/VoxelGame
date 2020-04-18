@@ -23,7 +23,41 @@ public sealed class Grassland
     #region save-load
     public void Save(System.IO.FileStream fs)
     {
-
+        var ppos = plane.pos;
+        fs.WriteByte(ppos.x); // 0
+        fs.WriteByte(ppos.y); // 1
+        fs.WriteByte(ppos.z); //2
+        fs.WriteByte(plane.faceIndex); //3 
+        //
+        fs.WriteByte((byte)categoriesCatalog[0]); // 4
+        fs.WriteByte((byte)categoriesCatalog[1]); //5
+        fs.WriteByte((byte)categoriesCatalog[2]); // 6
+        fs.WriteByte(level); //7
+        fs.WriteByte(cultivating ? (byte)1 : (byte)0); //8
+        fs.Write(System.BitConverter.GetBytes(lifepower),0,4); // 9-12
+    }
+    public static Grassland Load(System.IO.FileStream fs, Nature n, Chunk c)
+    {
+        var data = new byte[13];
+        fs.Read(data, 0, data.Length);
+        var b = c.GetBlock(data[0], data[1], data[2]);
+        if (b != null)
+        {
+            Plane p;
+            if (b.TryGetPlane(data[3], out p))
+            {
+                var g = new Grassland(p, n);
+                g.categoriesCatalog[0] = (PlantCategory)data[4];
+                g.categoriesCatalog[1] = (PlantCategory)data[5];
+                g.categoriesCatalog[2] = (PlantCategory)data[6];
+                g.cultivating = data[8] == 1;
+                g.lifepower = System.BitConverter.ToSingle(data, 9);
+                g.SetLevel(data[7]);
+                return g;
+            }
+            else return null;
+        }
+        else return null;
     }
     #endregion 
 

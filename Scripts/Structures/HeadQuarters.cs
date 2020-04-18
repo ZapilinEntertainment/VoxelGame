@@ -260,7 +260,7 @@ public sealed class HeadQuarters : Building
 
     override public void Load(System.IO.FileStream fs, Plane sb)
     {
-        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH + 1];
         fs.Read(data, 0, data.Length);
 
         //load structure data
@@ -271,7 +271,7 @@ public sealed class HeadQuarters : Building
         // load building data
         energySurplus = System.BitConverter.ToSingle(data, STRUCTURE_SERIALIZER_LENGTH + 1);        
         //
-        level = (byte)fs.ReadByte();
+        level = data[STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH];
         // >>
         SetBasement(sb, new PixelPosByte(data[0], data[1]));
         hp = System.BitConverter.ToSingle(data, 4);

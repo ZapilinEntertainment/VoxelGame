@@ -33,8 +33,7 @@ public class Farm : WorkBuilding
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetWorkbuildingData(b, pos);
-        b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
+        SetWorkbuildingData(b, pos);        
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
@@ -43,6 +42,7 @@ public class Farm : WorkBuilding
         var gl = basement.GetGrassland();
         if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
         gl.SetCultivatingStatus(true);
+        b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
     }
 
     override public void LabourUpdate()

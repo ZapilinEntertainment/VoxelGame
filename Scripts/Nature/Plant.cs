@@ -7,6 +7,31 @@ public abstract class Plant : Structure {
     public byte stage { get; protected set; }
     public PlantType type { get; protected set; }
 
+    #region save-load system
+    override public List<byte> Save()
+    {
+        List<byte> data = SaveStructureData();
+        data.AddRange(SerializePlant());
+        return data;
+    }
+
+
+    public static void LoadPlant(System.IO.FileStream fs, Plane sblock)
+    {
+        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
+        fs.Read(data, 0, data.Length);
+        int plantSerializerIndex = STRUCTURE_SERIALIZER_LENGTH;
+        Plant p = GetNewPlant((PlantType)data[plantSerializerIndex]);
+        p.LoadStructureData(data, sblock);
+        p.SetStage(data[plantSerializerIndex + 1]);
+    }
+
+    protected List<byte> SerializePlant()
+    {
+        return new List<byte>() { (byte)type, stage };
+    }
+    #endregion
+
     public static Plant GetNewPlant(PlantType ptype)
     {
         Plant p;
@@ -104,30 +129,5 @@ public abstract class Plant : Structure {
         PreparePlantForDestruction(clearFromSurface, sendMessageToGrassland);
         basement = null;
         Destroy(gameObject);
-    }
-    #region save-load system
-    override public List<byte> Save()
-    {
-        List<byte> data = SaveStructureData();
-        data.AddRange(SerializePlant());
-        return data;
-    }
-
-  
-    public static void LoadPlant(System.IO.FileStream fs, Plane sblock)
-    {
-        var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
-        fs.Read(data, 0, data.Length);
-        int plantSerializerIndex = STRUCTURE_SERIALIZER_LENGTH;
-        int plantId = System.BitConverter.ToInt32(data, plantSerializerIndex);
-        Plant p = GetNewPlant((PlantType)data[plantSerializerIndex]);
-        p.LoadStructureData(data, sblock);
-        p.SetStage(data[plantSerializerIndex + 1]);
-    }
-
-    protected List<byte> SerializePlant()
-    {
-        return new List<byte>() { (byte)type, stage}; 
-    }
-    #endregion
+    }   
 }

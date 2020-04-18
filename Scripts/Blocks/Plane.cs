@@ -69,13 +69,22 @@ public class Plane
         fs.Write(System.BitConverter.GetBytes(materialID),0,4); // 1 - 4
         fs.WriteByte(faceIndex); // 5
         fs.WriteByte(meshRotation); // 6
-        
+
         if (extension != null)
         {
             fs.WriteByte(1); // 7
             extension.Save(fs);
         }
-        else fs.WriteByte(0);
+        else
+        {
+            if (mainStructure != null)
+            {
+                fs.WriteByte(2);
+                var data = mainStructure.Save().ToArray();
+                fs.Write(data, 0, data.Length);
+            }
+            else fs.WriteByte(0);
+        }
     }
     public static Plane Load(System.IO.FileStream fs, IPlanable host)
     {
@@ -86,6 +95,13 @@ public class Plane
         if (data[7] == 1)
         {
             p.extension = PlaneExtension.Load(fs, p);
+        }
+        else
+        {
+            if (data[7] == 2)
+            {
+                Structure.LoadStructures(1, fs, p);
+            }
         }
         return p;
     }

@@ -864,8 +864,8 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 5 x 4
-        //worksites saveing
+        fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 5 x 4, 0 - 19
+        //worksites saving
         int count = 0;
         if (worksites != null)
         {            
@@ -877,7 +877,6 @@ public sealed class ColonyController : MonoBehaviour
             count = worksites.Count;
             if (count > 0)
             {
-                fs.WriteByte(1);
                 fs.Write(System.BitConverter.GetBytes(count), 0, 4);
                 keys = worksites.Keys;
                 foreach (var k in keys) // т.к. могут сами удаляться при сохранении, если нет workplace
@@ -885,9 +884,9 @@ public sealed class ColonyController : MonoBehaviour
                     worksites[k].Save(fs);
                 }
             }
-            else fs.WriteByte(0);
+            else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         }
-        else fs.WriteByte(0);
+        else fs.Write(System.BitConverter.GetBytes(count),0,4); // 20 - 23
         // eo worksites saving
         fs.Write(System.BitConverter.GetBytes(freeWorkers), 0, 4);
         fs.Write(System.BitConverter.GetBytes(citizenCount), 0, 4);
@@ -918,24 +917,22 @@ public sealed class ColonyController : MonoBehaviour
         if (storage == null) storage = gameObject.AddComponent<Storage>();
         storage.Load(fs);
        
-        var data = new byte[21];        
-        fs.Read(data, 0, 20);
+        var data = new byte[24];        
+        fs.Read(data, 0, data.Length);
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
         happiness_coefficient = System.BitConverter.ToSingle(data, 4);
         birthSpeed = System.BitConverter.ToSingle(data, 8);
         energyStored = System.BitConverter.ToSingle(data, 12);
         energyCrystalsCount = System.BitConverter.ToSingle(data, 16);
         //
-        if (data[20] != 0)
+        int count = System.BitConverter.ToInt32(data, 20);
+        if (count != 0)
         {
-            data = new byte[4];
-            fs.Read(data, 0, data.Length);
-            int count = System.BitConverter.ToInt32(data, 0);
             Worksite.StaticLoad(fs, count);
         }
         //
         data = new byte[22]; // 20 + 1 + 1- name length
-        fs.Read(data, 0, 25);
+        fs.Read(data, 0, data.Length);
         freeWorkers = System.BitConverter.ToInt32(data, 0);
         citizenCount = System.BitConverter.ToInt32(data, 4);
         peopleSurplus = System.BitConverter.ToSingle(data, 8);
@@ -957,7 +954,7 @@ public sealed class ColonyController : MonoBehaviour
 
         if (data[21] == 1)
         {
-            int count = fs.ReadByte();
+            count = fs.ReadByte();
             data = new byte[8];
             happinessAffects = new List<(float volume, float timer)>();
             for (int i = 0; i < count; i++)

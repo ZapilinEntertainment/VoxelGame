@@ -1298,6 +1298,7 @@ public class Structure : MonoBehaviour
                 Plant.LoadPlant(fs, p);
                 debug_prevID = PLANT_ID;
             }
+            //Debug.Log(debug_prevID);
         }
     }
 
