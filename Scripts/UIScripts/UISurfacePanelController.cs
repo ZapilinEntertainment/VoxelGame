@@ -894,9 +894,13 @@ public sealed class UISurfacePanelController : UIObserver {
 	/// </summary>
 	override public void ShutOff()
     {
-        isObserving = false;
-        if (constructionPlane.activeSelf) constructionPlane.SetActive(false);
-        gameObject.SetActive(false);
+        if (!GameMaster.loading)
+        {
+            isObserving = false;
+            if (constructionPlane != null) constructionPlane.SetActive(false);
+            if (gameObject == null) Object.Destroy(this);
+            else gameObject.SetActive(false);
+        }
     }
     /// <summary>
     /// Call from inheritors
@@ -924,5 +928,16 @@ public sealed class UISurfacePanelController : UIObserver {
 
         innerBuildButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build);
         returnButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Return);
+    }
+
+    new private void OnDestroy()
+    {
+        if (GameMaster.sceneClearing) return;
+        if (subscribedToUpdate)
+        {
+            UIController uc = UIController.current;
+            if (uc != null) uc.statusUpdateEvent -= StatusUpdate;
+        }
+        if (current == this) current = null;
     }
 }

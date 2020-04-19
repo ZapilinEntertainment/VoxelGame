@@ -48,5 +48,6 @@ public abstract class UIObserver : MonoBehaviour {
             UIController uc = UIController.current;
             if (uc != null) uc.statusUpdateEvent -= StatusUpdate;
         }
+        //dependency - UISurfacePanelController
     }
 }

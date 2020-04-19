@@ -78,13 +78,13 @@ public class Plane
         else
         {
             if (mainStructure != null)
-            {
+            {                
                 fs.WriteByte(2);
                 var data = mainStructure.Save().ToArray();
                 fs.Write(data, 0, data.Length);
             }
             else fs.WriteByte(0);
-        }
+        }        
     }
     public static Plane Load(System.IO.FileStream fs, IPlanable host)
     {
@@ -94,7 +94,7 @@ public class Plane
         var p = new Plane(host, (MeshType)data[0], materialID, data[5], data[6]);
         if (data[7] == 1)
         {
-            p.extension = PlaneExtension.Load(fs, p);
+            PlaneExtension.Load(fs, p);
         }
         else
         {
@@ -198,7 +198,6 @@ public class Plane
         if (s.surfaceRect != SurfaceRect.full)
         {
             FORCED_GetExtension().AddStructure(s);
-            mainStructure = null;
             return;
         }
         else

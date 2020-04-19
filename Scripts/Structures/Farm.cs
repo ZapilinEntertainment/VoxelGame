@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class Farm : WorkBuilding
@@ -154,4 +155,20 @@ public class Farm : WorkBuilding
         }
         Destroy(gameObject);
     }
+
+    #region save-load
+    public override List<byte> Save()
+    {
+        var data =  base.Save();
+        data.AddRange(System.BitConverter.GetBytes(lastPlantIndex));
+        return data;
+    }
+    public override void Load(FileStream fs, Plane sblock)
+    {
+        base.Load(fs, sblock);
+        var data = new byte[4];
+        fs.Read(data, 0, data.Length);
+        lastPlantIndex = System.BitConverter.ToInt32(data, 0);
+    }
+    #endregion
 }

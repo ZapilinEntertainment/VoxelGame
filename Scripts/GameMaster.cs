@@ -422,6 +422,16 @@ public sealed class GameMaster : MonoBehaviour
             }
             
         }
+        if (Input.GetKeyDown("x")) {
+            var plist = mainChunk.surfaces;
+            int count = 0;
+            foreach (var fp in plist)
+            {
+                if (fp.extension != null) count++;
+            }
+            Debug.Log(count);
+        }
+        if (Input.GetKeyDown("z")) Debug.Log(mainChunk.DEBUG_GetStructuresCount());
         gameSpeed = _gameSpeed;
     }
 

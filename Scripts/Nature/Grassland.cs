@@ -52,12 +52,20 @@ public sealed class Grassland
                 g.categoriesCatalog[2] = (PlantCategory)data[6];
                 g.cultivating = data[8] == 1;
                 g.lifepower = System.BitConverter.ToSingle(data, 9);
-                g.SetLevel(data[7]);
+                g.SetLevel(data[7]);               
                 return g;
             }
-            else return null;
+            else
+            {
+                Debug.Log("grassland load error: no plane found");
+                return null;
+            }
         }
-        else return null;
+        else
+        {
+            Debug.Log("grassland load error: no block");
+            return null;
+        }
     }
     #endregion 
 

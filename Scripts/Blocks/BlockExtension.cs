@@ -40,7 +40,7 @@ public sealed class BlockExtension : IPlanable
             foreach (var fp in planes)
             {
                 p = fp.Value;
-                if (p != null && !p.destroyed)
+                if (p != null && !p.destroyed && !p.isClean)
                 {
                     plist.Add(p);
                 }
@@ -48,8 +48,11 @@ public sealed class BlockExtension : IPlanable
             count = (byte)plist.Count;
             fs.WriteByte(count);
             if (count > 0)
-            {                
-                foreach (var px in plist) px.Save(fs);
+            {
+                foreach (var px in plist)
+                {
+                    px.Save(fs);
+                }
             }
         }
         else fs.WriteByte(count);
@@ -78,7 +81,10 @@ public sealed class BlockExtension : IPlanable
                     pls.Add(p.faceIndex, p);
                 }
             }
+            if (pls.Count > 0) be.planes = pls;
+            else be.planes = null;
         }
+        else be.planes = null;
         return be;
     }
     #endregion

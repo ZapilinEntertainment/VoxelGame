@@ -46,7 +46,7 @@ public sealed class PlaneExtension
                     {
                         data.AddRange(sdata);
                     }
-                    i++;
+                    i++;                    
                 }
             }
             structuresCount = structures.Count;
@@ -60,18 +60,24 @@ public sealed class PlaneExtension
     }
 
     public static PlaneExtension Load(System.IO.FileStream fs, Plane p)
-    {
+    {        
         var pe = new PlaneExtension(p, null);
         var data = new byte[4];
         fs.Read(data, 0, data.Length);
         int structuresCount = System.BitConverter.ToInt32(data, 0);
-        if (structuresCount > INNER_RESOLUTION * INNER_RESOLUTION | structuresCount < 0)
+        if (structuresCount > INNER_RESOLUTION * INNER_RESOLUTION || structuresCount < 0)
         {
             Debug.Log("surface block load error - incorrect structures count");
             GameMaster.LoadingFail();
             return null;
         }
-        if (structuresCount > 0) Structure.LoadStructures(structuresCount, fs, p);
+        else
+        {
+            if (structuresCount > 0)
+            {
+                Structure.LoadStructures(structuresCount, fs, p);
+            }
+        }
         return pe;
     }
     #endregion

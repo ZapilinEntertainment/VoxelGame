@@ -277,8 +277,5 @@ public sealed class HeadQuarters : Building
         hp = System.BitConverter.ToSingle(data, 4);
         maxHp = System.BitConverter.ToSingle(data, 8);
     }
-
-
-
     #endregion
 }

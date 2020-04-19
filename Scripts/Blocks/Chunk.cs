@@ -85,7 +85,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         if (chunkRenderUpdateRequired)  RenderStatusUpdate();
         if (PoolMaster.shadowCasting & shadowsUpdateRequired) ShadowsUpdate();
-        if (needSurfacesUpdate | Input.GetKeyDown("k")) RecalculateSurfacesList();
+        if (needSurfacesUpdate) RecalculateSurfacesList();
     }  
 
     public Nature GetNature()
@@ -635,6 +635,21 @@ public sealed partial class Chunk : MonoBehaviour
             }
         }
         return new ChunkRaycastHit(b, face);
+    }
+    public int DEBUG_GetStructuresCount()
+    {
+        if (blocks == null || blocks.Count == 0) return 0;
+        List<Structure> str = null;
+        int x = 0;
+        foreach (var b in blocks)
+        {
+            if (b.Value.TryGetStructuresList(ref str))
+            {
+                x += str.Count;
+                str = null;
+            }
+        }
+        return x;
     }
 
     #region taking surfaces

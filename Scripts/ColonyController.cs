@@ -104,7 +104,9 @@ public sealed class ColonyController : MonoBehaviour
         docks.Clear();
         houses.Clear();
         if (hospitals != null) hospitals.Clear();
+        worksites = null;
         happinessModifiers = null;
+        happinessAffects = null;
     }
 
     public void Prepare()

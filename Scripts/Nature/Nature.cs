@@ -114,6 +114,10 @@ public sealed class Nature : MonoBehaviour
     }
     public void Load(System.IO.FileStream fs, Chunk c)
     {
+        env = GameMaster.realMaster.environmentMaster;
+        lifepowerSupport = env.lifepowerSupport;
+        myChunk = c;
+        //
         var data = new byte[17];
         fs.Read(data, 0, data.Length);
         lifepower = System.BitConverter.ToSingle(data, 0);
@@ -132,6 +136,7 @@ public sealed class Nature : MonoBehaviour
                 g = Grassland.Load(fs, this, myChunk);
                 if (g != null) grasslands.Add(g);
             }
+            if (grasslands.Count == 0) grasslands = null;
         }
         //
         count = fs.ReadByte();
@@ -630,6 +635,19 @@ public sealed class Nature : MonoBehaviour
             case PlantCategory.Tree: return treeTypes[Random.Range(0, treeTypes.Count)];
             case PlantCategory.Bush: return bushTypes[Random.Range(0, bushTypes.Count)];
             default: return flowerTypes[Random.Range(0, flowerTypes.Count )];
+        }
+    }
+    public int DEBUG_GetPlantsCount()
+    {
+        if (grasslands == null || grasslands.Count == 0) return 0;
+        else
+        {
+            int x = 0;
+            foreach (var g in grasslands)
+            {
+                x += g.plane.GetStructuresList()?.Count ?? 0;
+            }
+            return x;
         }
     }
 }

@@ -12,7 +12,7 @@ public abstract class Plant : Structure {
     {
         List<byte> data = SaveStructureData();
         data.AddRange(SerializePlant());
-        return data;
+        return data;        
     }
 
 
@@ -39,7 +39,9 @@ public abstract class Plant : Structure {
         {
             default: return null;
             case PlantType.Corn: p = new GameObject("Corn").AddComponent<Corn>(); break;
-            case PlantType.OakTree: p = new GameObject("Oak Tree").AddComponent<OakTree>(); break;
+            case PlantType.OakTree:
+                p = new GameObject("Oak Tree").AddComponent<OakTree>();
+                break;
         }
         p.ID = PLANT_ID;
         p.Prepare();
