@@ -77,7 +77,7 @@ public class Structure : MonoBehaviour
                 {
                     func.Invoke(null, null);
                 }
-                else print(t.ToString());
+                else Debug.Log("type " + t.ToString() + " not reset successful");
             }
         }
     }

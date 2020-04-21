@@ -28,7 +28,7 @@ public sealed class Nature : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(grasslandCreateTimer), 0, 4); // 4 - 7
         fs.Write(System.BitConverter.GetBytes(grasslandsUpdateTimer), 0, 4); // 8 - 11
         fs.Write(System.BitConverter.GetBytes(lastUpdateIndex), 0, 4); //12 - 15
-        byte count = 0; // 16
+        int count = 0; // 16 - 19
         if (grasslands != null)
         {
             var glist = new List<Grassland>();
@@ -36,8 +36,8 @@ public sealed class Nature : MonoBehaviour
             {
                 if (g != null) glist.Add(g);
             }
-            count = (byte)glist.Count;
-            fs.WriteByte(count);
+            count = glist.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0 ,4);
             if (count > 0)
             {
                 foreach (var g in glist)
@@ -46,62 +46,62 @@ public sealed class Nature : MonoBehaviour
                 }
             }
         }
-        else fs.WriteByte(count);
+        else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         //
-        count = 0;
+        byte ct = 0;
         if (flowerTypes != null)
         {
-            count = (byte)flowerTypes.Count;
-            fs.WriteByte(count);
-            if (count > 0)
+            ct = (byte)flowerTypes.Count;
+            fs.WriteByte(ct);
+            if (ct > 0)
             {
                 foreach (var t in flowerTypes) fs.WriteByte((byte)t);
             }
         }
-        else fs.WriteByte(count);
+        else fs.WriteByte(ct);
         //
-        count = 0;
+        ct = 0;
         if (bushTypes != null)
         {
-            count = (byte)bushTypes.Count;
-            fs.WriteByte(count);
-            if (count > 0)
+            ct = (byte)bushTypes.Count;
+            fs.WriteByte(ct);
+            if (ct > 0)
             {
                 foreach (var t in bushTypes) fs.WriteByte((byte)t);
             }
         }
-        else fs.WriteByte(count);
+        else fs.WriteByte(ct);
         //
-        count = 0;
+        ct = 0;
         if (treeTypes != null)
         {
-            count = (byte)treeTypes.Count;
-            fs.WriteByte(count);
-            if (count > 0)
+            ct = (byte)treeTypes.Count;
+            fs.WriteByte(ct);
+            if (ct > 0)
             {
                 foreach (var t in treeTypes) fs.WriteByte((byte)t);
             }
         }
-        else fs.WriteByte(count);
+        else fs.WriteByte(ct);
         //
-        count = 0;
+        ct = 0;
         if (islandFlora != null)
         {
-            count = (byte)islandFlora.Count;
-            fs.WriteByte(count);
-            if (count > 0)
+            ct = (byte)islandFlora.Count;
+            fs.WriteByte(ct);
+            if (ct > 0)
             {
                 foreach (var t in islandFlora) fs.WriteByte((byte)t);
             }
         }
-        else fs.WriteByte(count);
+        else fs.WriteByte(ct);
         //
-        count = 0;
+        ct = 0;
         if (lifepowerAffectionList != null)
         {
-            count = (byte)lifepowerAffectionList.Count;
-            fs.WriteByte(count);
-            if (count > 0)
+            ct = (byte)lifepowerAffectionList.Count;
+            fs.WriteByte(ct);
+            if (ct > 0)
             {
                 foreach (var x in lifepowerAffectionList)
                 {
@@ -110,7 +110,7 @@ public sealed class Nature : MonoBehaviour
                 }
             }
         }
-        else fs.WriteByte(count);
+        else fs.WriteByte(ct);
     }
     public void Load(System.IO.FileStream fs, Chunk c)
     {
@@ -118,14 +118,14 @@ public sealed class Nature : MonoBehaviour
         lifepowerSupport = env.lifepowerSupport;
         myChunk = c;
         //
-        var data = new byte[17];
+        var data = new byte[20];
         fs.Read(data, 0, data.Length);
         lifepower = System.BitConverter.ToSingle(data, 0);
         grasslandCreateTimer = System.BitConverter.ToSingle(data, 4);
         grasslandsUpdateTimer = System.BitConverter.ToSingle(data, 8);
         lastUpdateIndex = System.BitConverter.ToInt32(data, 12);
         //
-        int count = data[16], i;
+        int count = System.BitConverter.ToInt32(data, 16), i;
         grasslands = null;
         if (count != 0)
         {
@@ -262,8 +262,11 @@ public sealed class Nature : MonoBehaviour
                         if (Random.value < lifepowerSupport)
                         {
                             g = p.FORCED_GetExtension().InitializeGrassland();
-                            g.AddLifepower(lifepiece);
-                            lpower -= lifepiece;
+                            if (g != null)
+                            {
+                                g.AddLifepower(lifepiece);
+                                lpower -= lifepiece;
+                            }
                         }
                         else
                         {

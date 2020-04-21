@@ -601,11 +601,6 @@ public sealed class GlobalMap : MonoBehaviour
         AddPoint(centralPoint, true);
     }
 
-    private void OnGUI()
-    {
-        GUILayout.Label( (cityPoint.angle - GetCurrentSectorCenter().x).ToString());
-    }
-
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {

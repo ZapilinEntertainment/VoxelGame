@@ -116,6 +116,7 @@ public sealed class XStation : WorkBuilding {
         indicatorPrepared = true;
         cityMarker.parent.gameObject.SetActive(false);
         markerEnabled = false;
+        envMaster = GameMaster.realMaster.environmentMaster;
     }
     private void Update()
     {

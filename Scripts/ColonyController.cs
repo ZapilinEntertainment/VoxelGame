@@ -516,7 +516,8 @@ public sealed class ColonyController : MonoBehaviour
                         }
                     }
                 }
-                housingLevel = housingVolumes[5] / fcount * 5 + housingVolumes[4] / fcount * 4 + housingVolumes[3] / fcount * 3 + housingVolumes[2] / fcount * 2 + housingVolumes[1] / fcount;
+                if (fcount != 0f) housingLevel = housingVolumes[5] / fcount * 5 + housingVolumes[4] / fcount * 4 + housingVolumes[3] / fcount * 3 + housingVolumes[2] / fcount * 2 + housingVolumes[1] / fcount;
+                else housingLevel = 0;
             }
         }
         else housingLevel = 0;
@@ -916,9 +917,9 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
         fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4); // 5 x 4
-        fs.WriteByte((byte)birthrateMode); // + 1
+        fs.WriteByte((byte)birthrateMode); // 20
 
-        if (happinessAffects != null && happinessAffects.Count > 0) // + 1
+        if (happinessAffects != null && happinessAffects.Count > 0) // 21
         {
             fs.WriteByte(1);
             fs.WriteByte((byte)happinessAffects.Count);

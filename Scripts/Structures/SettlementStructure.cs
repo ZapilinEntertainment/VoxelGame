@@ -57,15 +57,18 @@ public sealed class SettlementStructure : Structure
         if (b == null) return;
         basement = b;
         surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
-        float f = Random.value;
-        if (f > 0.5f)
+        if (!GameMaster.loading)
         {
-            if (f > 0.75f) modelRotation = 6;
-            else modelRotation = 4;
-        }
-        else
-        {
-            if (f < 0.25f) modelRotation = 2;
+            float f = Random.value;
+            if (f > 0.5f)
+            {
+                if (f > 0.75f) modelRotation = 6;
+                else modelRotation = 4;
+            }
+            else
+            {
+                if (f < 0.25f) modelRotation = 2;
+            }
         }
         if (transform.childCount == 0) SetModel();
         basement.AddStructure(this);

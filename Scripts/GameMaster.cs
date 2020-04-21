@@ -423,6 +423,9 @@ public sealed class GameMaster : MonoBehaviour
             
         }
         if (Input.GetKeyDown("x")) {
+            var n = mainChunk.GetNature();
+            n.FirstSet(10000f);
+            /*
             var plist = mainChunk.surfaces;
             int count = 0;
             foreach (var fp in plist)
@@ -430,8 +433,9 @@ public sealed class GameMaster : MonoBehaviour
                 if (fp.extension != null) count++;
             }
             Debug.Log(count);
+            */
         }
-        if (Input.GetKeyDown("z")) Debug.Log(mainChunk.DEBUG_GetStructuresCount());
+        //if (Input.GetKeyDown("z")) Debug.Log(mainChunk.DEBUG_GetStructuresCount());
         gameSpeed = _gameSpeed;
     }
 

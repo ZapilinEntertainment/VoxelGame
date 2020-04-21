@@ -1051,7 +1051,6 @@ public sealed class Settlement : House
 
         SetActivationStatus(data[16] == 1, false);
         SetLevel(data[17]);
-
         SetBasement(sblock, ppos);
     }
     #endregion

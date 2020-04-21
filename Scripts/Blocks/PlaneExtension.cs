@@ -264,7 +264,6 @@ public sealed class PlaneExtension
             AddCellStructure(s);
             return;
         }
-        Structure savedBasementForNow = null;
         if (fullfillStatus != FullfillStatus.Empty)
         {
             SurfaceRect sr = s.surfaceRect;
@@ -289,11 +288,8 @@ public sealed class PlaneExtension
             }
         }
         SetStructureTransform(s);
-        if (savedBasementForNow != null)
-        {
-            savedBasementForNow.Annihilate(false, true, false);
-        }
-        RecalculateSurface();
+        //if (!GameMaster.loading)
+            RecalculateSurface();
     }
     /// <summary>
     /// Do not use directly, use "Set Basement" instead
