@@ -12,7 +12,8 @@ public abstract class Worksite
     public int workersCount { get; protected set; }
     public WorksiteSign sign;
     public string actionLabel { get; protected set; }
-    public bool showOnGUI = false, destroyed = false;
+    public bool showOnGUI = false;
+    public bool destroyed { get; protected set; }
     public float gui_ypos = 0;
     public const string WORKSITE_SIGN_COLLIDER_TAG = "WorksiteSign";
 
@@ -39,6 +40,7 @@ public abstract class Worksite
         colony = GameMaster.realMaster.colonyController;
         workplace = i_workplace;
         colony.AddWorksiteToList(this);
+        destroyed = false;
 
         GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
         subscribedToUpdate = true;

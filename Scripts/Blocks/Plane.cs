@@ -53,7 +53,7 @@ public class Plane
             return false;
 
         Plane p = (Plane)obj;
-        return faceIndex == p.faceIndex && host == p.host && materialID == p.materialID && meshType == p.meshType;
+        return faceIndex == p.faceIndex && pos == p.pos && materialID == p.materialID && meshType == p.meshType && destroyed == p.destroyed;
     }
     public override int GetHashCode()
     {

@@ -35,7 +35,7 @@ public sealed class ColonyController : MonoBehaviour
     public List<Building> powerGrid { get; private set; }
     public List<Dock> docks { get; private set; }
     public List<House> houses { get; private set; }
-    private Dictionary<Plane, Worksite> worksites;
+    private Dictionary<(ChunkPos pos, byte face), Worksite> worksites;
     public byte docksLevel { get; private set; }
     public float housingLevel { get; private set; }
     public float foodMonthConsumption
@@ -739,17 +739,18 @@ public sealed class ColonyController : MonoBehaviour
         else
         {
             var p = w.workplace;
-            if (worksites == null) worksites = new Dictionary<Plane, Worksite>();
+            var pos = (p.pos, p.faceIndex);
+            if (worksites == null) worksites = new Dictionary<(ChunkPos, byte), Worksite>();
             else
             {
-                if (worksites.ContainsKey(p))
+                if (worksites.ContainsKey(pos))
                 {
-                    if (worksites[p] != null) worksites[p].StopWork(false);
-                    worksites[p] = w;
+                    if (worksites[pos] != null) worksites[pos].StopWork(false);
+                    worksites[pos] = w;
                     return;
                 }
             }
-            worksites.Add(p, w);
+            worksites.Add(pos, w);
             p.SetWorksitePresence(true);
         }
     }
@@ -758,13 +759,14 @@ public sealed class ColonyController : MonoBehaviour
         if (worksites == null) return null;
         else
         {
-            if (worksites.ContainsKey(p)) return worksites[p];
+            var key = (p.pos, p.faceIndex);
+            if (worksites.ContainsKey(key)) return worksites[key];
             else return null;
         }
     }
     public void RemoveWorksite(Worksite w)
     {
-        if (worksites != null && worksites.ContainsValue(w))
+        if (worksites != null)
         {
             foreach (var pw in worksites)
             {
@@ -772,7 +774,7 @@ public sealed class ColonyController : MonoBehaviour
                 {
                     var p = pw.Key;
                     worksites.Remove(p);
-                    p.SetWorksitePresence(false);
+                    w.workplace?.SetWorksitePresence(false);
                     if (worksites.Count == 0) worksites = null;
                     return;
                 }
@@ -781,11 +783,13 @@ public sealed class ColonyController : MonoBehaviour
     }
     public void RemoveWorksite(Plane p)
     {
-        if (worksites != null && worksites.ContainsKey(p))
+        var key = (p.pos, p.faceIndex);
+        if (worksites != null && worksites.ContainsKey(key))
         {
-            var w = worksites[p];
+            var w = worksites[key];
             if (w != null) w.StopWork(false);
-            worksites.Remove(p);
+            worksites.Remove(key);
+            if (worksites.Count == 0) worksites = null;
         }
     }
     #endregion
@@ -870,23 +874,40 @@ public sealed class ColonyController : MonoBehaviour
         //worksites saving
         int count = 0;
         if (worksites != null)
-        {            
+        {
             var keys = worksites.Keys;
-            foreach (var k in keys)
+            Worksite w = null;
+            Plane p = null;
+            Block b;
+            var chunk = GameMaster.realMaster.mainChunk;
+            bool correctData = false;
+            foreach (var fp in keys) // потому что через foreach нельзя менять список
             {
-                if (k == null | worksites[k] == null) worksites.Remove(k);
+                correctData = false;
+                b = chunk.GetBlock(fp.pos);
+                if (b != null && b.TryGetPlane(fp.face, out p)) {
+                    if (!p.destroyed)
+                    {
+                        w = worksites[fp];
+                        if (w == null || w.destroyed)
+                        {
+                            worksites.Remove(fp);
+                        }
+                        correctData = true;
+                    }
+                }
+                if (!correctData) worksites.Remove(fp);
             }
+
             count = worksites.Count;
+            fs.Write(System.BitConverter.GetBytes(count), 0, 4);
             if (count > 0)
             {
-                fs.Write(System.BitConverter.GetBytes(count), 0, 4);
-                keys = worksites.Keys;
-                foreach (var k in keys) // т.к. могут сами удаляться при сохранении, если нет workplace
+                foreach (var fw in worksites)
                 { 
-                    worksites[k].Save(fs);
+                    fw.Value.Save(fs);
                 }
-            }
-            else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
+            }            
         }
         else fs.Write(System.BitConverter.GetBytes(count),0,4); // 20 - 23
         // eo worksites saving
