@@ -800,7 +800,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     (s as Settlement).SetLevel(constructingLevel);
                 }
                 s.SetBasement(observingSurface, new PixelPosByte(x, z));
-                if (s.ID != Structure.DOCK_ID & s.ID != Structure.SHUTTLE_HANGAR_4_ID) s.SetModelRotation(rt);
+                if (!(s is Dock) & !(s is Hangar)) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
                 GameMaster.realMaster.eventTracker?.BuildingConstructed(s);
                 if (observingSurface.fulfillStatus != FullfillStatus.Empty)
@@ -809,7 +809,8 @@ public sealed class UISurfacePanelController : UIObserver {
                     {
                         PrepareConstructionPlane();
                     }
-                    if (strSize == res | Structure.PlaceInCenter(selectedStructureID)) {
+                    /*
+                    if (strSize == res | Structure.PlaceInCenter(selectedStructureID)) {                        
                         if (s is IPlanable)
                         {
                             var ip = s as IPlanable;
@@ -823,8 +824,10 @@ public sealed class UISurfacePanelController : UIObserver {
                             }
                             else ReturnButton();
                         }
-                        else ReturnButton();
+                        else   ReturnButton();                        
                     }
+                    */
+                    ReturnButton();
                 }
                 else ReturnButton();
             }

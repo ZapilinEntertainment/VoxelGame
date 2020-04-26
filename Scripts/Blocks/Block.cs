@@ -100,7 +100,7 @@ public sealed class Block {
 
     private IPlanable GetPlanesHost()
     {
-        if (extension != null) return (IPlanable)extension;
+        if (extension != null) return extension;
         else
         {
             if (mainStructure != null && !mainStructureIsABlocker) return (IPlanable)mainStructure;

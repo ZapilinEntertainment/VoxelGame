@@ -32,7 +32,11 @@ public sealed class BlockExtension : IPlanable
         fs.WriteByte(existingPlanesMask);    // 5    
         fs.Write(System.BitConverter.GetBytes(fossilsVolume), 0, 4); // 6 - 9
         fs.Write(System.BitConverter.GetBytes(volume), 0, 4); // 10 - 13
-        byte count = 0; // 14
+        SavePlanesData(fs);
+    }
+    public void SavePlanesData(System.IO.FileStream fs)
+    {
+        byte count = 0; 
         if (planes != null)
         {
             Plane p;
@@ -59,7 +63,7 @@ public sealed class BlockExtension : IPlanable
     }
     public static BlockExtension Load(System.IO.FileStream fs, Block b)
     {
-        var data = new byte[15];
+        var data = new byte[14];
         fs.Read(data, 0, data.Length);
         int materialID = System.BitConverter.ToInt32(data, 0);
         bool isNatural = data[4] == 1;
@@ -67,25 +71,28 @@ public sealed class BlockExtension : IPlanable
         be.existingPlanesMask = data[5];
         be.fossilsVolume = System.BitConverter.ToSingle(data, 6);
         be.volume = System.BitConverter.ToSingle(data, 10);
-
-        byte count = data[14];
+        be.LoadPlanesData(fs);        
+        return be;
+    }
+    public void LoadPlanesData(System.IO.FileStream fs)
+    {
+        int count = fs.ReadByte();
         if (count > 0)
         {
             var pls = new Dictionary<byte, Plane>();
             Plane p;
             for (byte i = 0; i < count; i++)
             {
-                p = Plane.Load(fs, be);
+                p = Plane.Load(fs, this);
                 if (p != null)
                 {
                     pls.Add(p.faceIndex, p);
                 }
             }
-            if (pls.Count > 0) be.planes = pls;
-            else be.planes = null;
+            if (pls.Count > 0) planes = pls;
+            else planes = null;
         }
-        else be.planes = null;
-        return be;
+        else planes = null;
     }
     #endregion
 
@@ -198,6 +205,7 @@ public sealed class BlockExtension : IPlanable
     }
 
     #region interface
+    public bool IsIPlanable() { return true; }
     public bool IsStructure() { return false; }
     public bool IsFaceTransparent(byte faceIndex)
     {

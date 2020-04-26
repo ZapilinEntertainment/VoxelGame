@@ -16,9 +16,7 @@ public class Platform : Structure, IPlanable
     override public void SetBasement(Plane p, PixelPosByte pos)
     {
         if (p == null) return;
-        //
-        if (!placeInCenter) surfaceRect = new SurfaceRect(pos.x, pos.y, surfaceRect.size);
-        else surfaceRect = new SurfaceRect((byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
+        //        
         basement = p;
         if (transform.childCount == 0)
         {
@@ -28,6 +26,7 @@ public class Platform : Structure, IPlanable
             {
                 model = Instantiate(Resources.Load<GameObject>("Structures/Column"));
                 surfaceRect = new SurfaceRect(0, 0, 4);
+                surfaceRect = new SurfaceRect((byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), (byte)(PlaneExtension.INNER_RESOLUTION / 2 - surfaceRect.size / 2), surfaceRect.size);
             }
             else
             {
@@ -43,10 +42,11 @@ public class Platform : Structure, IPlanable
             model.transform.parent = transform;
             model.transform.localPosition = Vector3.zero;
             if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
-        }        
+        }
+        placeInCenter = true;
         basement.AddStructure(this);
         //
-        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
+        if (!GameMaster.loading) IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, true);
     }
 
     private Plane PrepareUpperPlane()
@@ -73,6 +73,7 @@ public class Platform : Structure, IPlanable
         basement = null;
         Destroy(gameObject);
     }
+    override public bool IsIPlanable() { return true; }
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)
     {
@@ -183,6 +184,27 @@ public class Platform : Structure, IPlanable
     public void Damage(float f, byte faceIndex)
     {
         ApplyDamage(f);
+    }
+    #endregion
+
+    #region save-load
+    public void SavePlanesData(System.IO.FileStream fs)
+    {
+        if (upperPlane != null)
+        {
+            fs.WriteByte(1);
+            upperPlane.Save(fs);
+        }
+        else fs.WriteByte(0);
+    }
+    public void LoadPlanesData(System.IO.FileStream fs)
+    {
+        var b = fs.ReadByte();
+        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, false);
+        if (b == 1)
+        {
+            upperPlane = Plane.Load(fs, this);
+        }
     }
     #endregion
 }

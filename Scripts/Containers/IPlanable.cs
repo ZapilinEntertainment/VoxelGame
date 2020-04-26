@@ -6,6 +6,7 @@ public interface IPlanable
     Plane FORCED_GetPlane(byte faceIndex);
     Block GetBlock();
 
+    bool IsIPlanable();
     bool IsStructure();
     bool IsFaceTransparent(byte faceIndex);
     bool HavePlane(byte faceIndex);
@@ -23,13 +24,15 @@ public interface IPlanable
     void Damage(float f, byte faceIndex);
     void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins);
 
+    void SavePlanesData(System.IO.FileStream fs);
+    void LoadPlanesData(System.IO.FileStream fs);
     List<BlockpartVisualizeInfo> GetVisualizeInfo(byte visualMask);
     BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex);
 }
 
 public static class IPlanableSupportClass
 {
-    public static void AddBlockRepresentation(IPlanable s, Plane basement, ref Block myBlock)
+    public static void AddBlockRepresentation(IPlanable s, Plane basement, ref Block myBlock, bool checkPlanes)
     {
         var chunk = basement.myChunk;
         ChunkPos cpos = basement.pos;
@@ -42,12 +45,15 @@ public static class IPlanableSupportClass
             case Block.UP_FACE_INDEX: cpos = cpos.OneBlockHigher(); break;
             case Block.DOWN_FACE_INDEX: cpos = cpos.OneBlockDown(); break;
         }
-        myBlock = chunk.AddBlock(cpos, s, false);
+        myBlock = chunk.AddBlock(cpos, s, false, checkPlanes);
         if (myBlock == null)
         {
             s.Delete(true, true, false);
             return;
         }
-        else chunk.RecalculateVisibilityAtPoint(myBlock.pos, s.GetAffectionMask());
-    }
+        else
+        {
+            chunk.RecalculateVisibilityAtPoint(myBlock.pos, s.GetAffectionMask());
+        }
+    }    
 }

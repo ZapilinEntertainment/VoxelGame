@@ -13,24 +13,46 @@ public class BlockBuildingSite : Worksite
         rtype = i_type;
         actionLabel = Localization.GetStructureName(Structure.RESOURCE_STICK_ID);
         sign = new GameObject("Block Building Site sign").AddComponent<WorksiteSign>();
-        BoxCollider bc = sign.gameObject.AddComponent<BoxCollider>();
-        bc.size = new Vector3(Block.QUAD_SIZE, 0.5f, Block.QUAD_SIZE);
-        bc.center = new Vector3(0, -0.75f, 0);
+        BoxCollider bc = sign.gameObject.AddComponent<BoxCollider>();     
         bc.tag = WORKSITE_SIGN_COLLIDER_TAG;
         sign.worksite = this;
         switch (p.faceIndex)
         {
-            case Block.FWD_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE * 0.5f; break;
-            case Block.RIGHT_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE * 0.5f; break;
-            case Block.BACK_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.back * Block.QUAD_SIZE * 0.5f; break;
-            case Block.LEFT_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.left * Block.QUAD_SIZE * 0.5f; break;
-            case Block.UP_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.5f; break;
-            case Block.DOWN_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.5f; break;
-            case Block.SURFACE_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.5f; break;
-            case Block.CEILING_FACE_INDEX: sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.5f; break;
+            case Block.FWD_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.forward * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(1f,1f,0.5f) * Block.QUAD_SIZE;
+                break;
+            case Block.RIGHT_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.right * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(0.5f, 1f, 1f) * Block.QUAD_SIZE;
+                break;
+            case Block.BACK_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.back * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(1f, 1f, 0.5f) * Block.QUAD_SIZE;
+                break;
+            case Block.LEFT_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.left * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(0.5f, 1f, 0.5f) * Block.QUAD_SIZE;
+                break;
+            case Block.UP_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(1f, 0.5f, 1f) * Block.QUAD_SIZE;
+                break;
+            case Block.DOWN_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(1f, 0.5f, 1f) * Block.QUAD_SIZE;
+                break;
+            case Block.SURFACE_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(1f, 0.5f, 1f) * Block.QUAD_SIZE;
+                break;
+            case Block.CEILING_FACE_INDEX:
+                sign.transform.position = workplace.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE * 0.75f;
+                bc.size = new Vector3(1f, 0.5f, 1f) * Block.QUAD_SIZE;
+                break;
         }
         colony.SendWorkers(START_WORKERS_COUNT, this);
-        gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
+        gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.2f;
     }
 
     override public void WorkUpdate()

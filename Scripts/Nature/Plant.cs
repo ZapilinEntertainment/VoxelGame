@@ -16,7 +16,7 @@ public abstract class Plant : Structure {
     }
 
 
-    public static void LoadPlant(System.IO.FileStream fs, Plane sblock)
+    public static Plant LoadPlant(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 2];
         fs.Read(data, 0, data.Length);
@@ -24,6 +24,7 @@ public abstract class Plant : Structure {
         Plant p = GetNewPlant((PlantType)data[plantSerializerIndex]);
         p.LoadStructureData(data, sblock);
         p.SetStage(data[plantSerializerIndex + 1]);
+        return p;
     }
 
     protected List<byte> SerializePlant()

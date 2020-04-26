@@ -317,6 +317,7 @@ public sealed partial class Chunk : MonoBehaviour {
     }
     public void RefreshBlockVisualising(Block b)
     {
+        if (GameMaster.loading) return;
         var correctData = b.GetVisualizeInfo(GetVisibilityMask(b.pos));      
         var pos = b.pos;        
 

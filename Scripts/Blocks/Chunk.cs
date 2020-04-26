@@ -372,12 +372,11 @@ public sealed partial class Chunk : MonoBehaviour
             return b;
         }      
     }
-    public Block AddBlock(ChunkPos i_pos, IPlanable ms, bool i_natural)
+    public Block AddBlock(ChunkPos i_pos, IPlanable ms, bool i_natural, bool planesCheck)
     {
         int x = i_pos.x, y = i_pos.y, z = i_pos.z;
         if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return null;
         var b = GetBlock(i_pos);
-        bool planesCheck = false;
         if (b != null)
         {
             if (b.ContainSurface()) needSurfacesUpdate = true;
@@ -385,8 +384,11 @@ public sealed partial class Chunk : MonoBehaviour
             planesCheck = true;
         }
         b = new Block(this, i_pos, ms);
-        if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
-        else planesCheck = true;
+        if (blocks == null)
+        {
+            blocks = new Dictionary<ChunkPos, Block>();
+            planesCheck = false;
+        }
         blocks.Add(i_pos, b);
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
         if (planesCheck) PlanesCheck(b, i_natural);
@@ -1218,7 +1220,7 @@ public sealed partial class Chunk : MonoBehaviour
             foreach (var fb in blocks)
             {
                 b = fb.Value;
-                if (b != null && !b.destroyed) blist.Add(b);
+                if (b != null && !b.destroyed && b.haveExtension) blist.Add(b);
             }
             count = blist.Count;
             fs.Write(System.BitConverter.GetBytes(count),0,4);

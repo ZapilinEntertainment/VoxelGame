@@ -13,7 +13,7 @@ public sealed class HouseBlock : House, IPlanable
         SetBuildingData(p, pos);
         GameMaster.realMaster.colonyController.AddHousing(this);
 
-        IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock);
+        if (!GameMaster.loading) IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, true);
     }
 
     #region individual functions
@@ -195,6 +195,7 @@ public sealed class HouseBlock : House, IPlanable
     #endregion
 
     #region interface 
+    override public bool IsIPlanable() { return true; }
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)
     {
@@ -360,6 +361,35 @@ public sealed class HouseBlock : House, IPlanable
     public void Damage(float f, byte faceIndex)
     {
         ApplyDamage(f);
+    }
+    #endregion
+
+    #region save-load
+    public void SavePlanesData(System.IO.FileStream fs)
+    {
+        if (planes != null && planes.Count > 0)
+        {
+            fs.WriteByte((byte)planes.Count);
+            foreach (var p in planes)
+            {
+                p.Value.Save(fs);
+            }
+        }
+        else fs.WriteByte(0);
+    }
+    public void LoadPlanesData(System.IO.FileStream fs)
+    {
+        var count = fs.ReadByte();
+        if (count > 0)
+        {
+            IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, false);
+            planes = new Dictionary<byte, Plane>();
+            for (int i = 0; i < count; i++)
+            {
+                var p = Plane.Load(fs, this);
+                planes.Add(p.faceIndex, p);
+            }
+        }
     }
     #endregion
 }

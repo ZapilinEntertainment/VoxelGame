@@ -6,7 +6,7 @@ public class Structure : MonoBehaviour
     protected Plane basement;
     public SurfaceRect surfaceRect { get; protected set; }
     public bool isArtificial { get; protected set; } // fixed in ID - используется при проверках на снос
-    public bool placeInCenter { get; private set; } // fixed in ID 
+    public bool placeInCenter { get; protected set; } // fixed in ID 
     public bool indestructible { get; protected set; }  // fixed in ID
     public float hp { get; protected set; }
     public float maxHp { get; protected set; } // fixed in ID
@@ -537,6 +537,7 @@ public class Structure : MonoBehaviour
         if (hp == 0) Annihilate(true, false, true);
     }
     public bool IsDestroyed() { return destroyed; }
+    virtual public bool IsIPlanable() { return false; }
    
     virtual public void Prepare()
     {
@@ -1263,43 +1264,52 @@ public class Structure : MonoBehaviour
 
     #region save-load system
     public static void LoadStructures(int count, System.IO.FileStream fs, Plane p)
-    {
-        var data = new byte[4];
+    {        
         for (int i = 0; i < count; i++)
         {
-            fs.Read(data, 0, 4);
-            int id = System.BitConverter.ToInt32(data, 0);
-            int debug_prevID = -1;
-            if (id != PLANT_ID)
+            LoadStructure(fs, p);
+        }
+    }
+    public static Structure LoadStructure(System.IO.FileStream fs, Plane p)
+    {
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        int id = System.BitConverter.ToInt32(data, 0);
+        int debug_prevID = -1;
+        Structure s;
+        if (id != PLANT_ID)
+        {
+            if (id != CONTAINER_ID)
             {
-                if (id != CONTAINER_ID)
+                s = GetStructureByID(id);
+                if (s != null)
                 {
-                    var s = GetStructureByID(id);
-                    if (s != null)
-                    {
-                        s.Load(fs, p);
-                        debug_prevID = id;
-                    }
-                    else
-                    {
-                        print("error, desu: structure at position " + i.ToString() + ", id " + id.ToString() + " data corrupted");
-                        GameMaster.LoadingFail();
-                        return;
-                    }
+                    s.Load(fs, p);
+                    debug_prevID = id;
                 }
                 else
                 {
-                    HarvestableResource.LoadContainer(fs, p);
-                    debug_prevID = CONTAINER_ID;
+                    print("error, desu: structure id " + id.ToString() + " data corrupted");
+                    GameMaster.LoadingFail();
                 }
             }
             else
             {
-                Plant.LoadPlant(fs, p);
-                debug_prevID = PLANT_ID;
+                s = HarvestableResource.LoadContainer(fs, p);
+                debug_prevID = CONTAINER_ID;
             }
-            //Debug.Log(debug_prevID);
         }
+        else
+        {
+            s = Plant.LoadPlant(fs, p);
+            debug_prevID = PLANT_ID;
+        }
+        //Debug.Log(debug_prevID);
+        if (s is IPlanable)
+        {
+            (s as IPlanable).LoadPlanesData(fs);
+        }
+        return s;
     }
 
     public virtual List<byte> Save()

@@ -45,6 +45,7 @@ public class Plane
 
     public static readonly MeshType defaultMeshType = MeshType.Quad;
     private static UISurfacePanelController observer;
+    protected const byte BASIC_PLANE_CODE = 0, MULTIMATERIAL_PLANE_CODE = 1;
 
     public override bool Equals(object obj)
     {
@@ -62,46 +63,55 @@ public class Plane
 
     #region save-load system
     virtual public void Save(System.IO.FileStream fs)
+    {        
+        if (destroyed) return;
+        fs.WriteByte(BASIC_PLANE_CODE);
+        SaveData(fs);
+    }
+    protected void SaveData(System.IO.FileStream fs)
     {
+        // 0 - идентификатор
         //сохранить meshrotation, если это крыша, или если grassland
-        if (destroyed) return;        
-        fs.WriteByte((byte)meshType); // 0        
-        fs.Write(System.BitConverter.GetBytes(materialID),0,4); // 1 - 4
-        fs.WriteByte(faceIndex); // 5
-        fs.WriteByte(meshRotation); // 6
+        fs.WriteByte((byte)meshType); // 1        
+        fs.Write(System.BitConverter.GetBytes(materialID), 0, 4); // 2 - 5
+        fs.WriteByte(faceIndex); // 6
+        fs.WriteByte(meshRotation); // 7
 
         if (extension != null)
         {
-            fs.WriteByte(1); // 7
+            fs.WriteByte(1); // 8
             extension.Save(fs);
         }
         else
         {
             if (mainStructure != null)
-            {                
-                fs.WriteByte(2);
+            {
                 var data = mainStructure.Save().ToArray();
+                fs.WriteByte(2);
                 fs.Write(data, 0, data.Length);
+                if (mainStructure.IsIPlanable())
+                {
+                    (mainStructure as IPlanable).SavePlanesData(fs);
+                }
             }
             else fs.WriteByte(0);
-        }        
+        }
     }
     public static Plane Load(System.IO.FileStream fs, IPlanable host)
     {
-        var data = new byte[8];
+        var data = new byte[9];
         fs.Read(data, 0, data.Length);
-        int materialID = System.BitConverter.ToInt32(data, 1);
-        var p = new Plane(host, (MeshType)data[0], materialID, data[5], data[6]);
-        if (data[7] == 1)
-        {
-            PlaneExtension.Load(fs, p);
-        }
+        int materialID = System.BitConverter.ToInt32(data, 2);
+        Plane p;
+        if (data[0] == BASIC_PLANE_CODE) p = new Plane(host, (MeshType)data[1], materialID, data[6], data[7]);
         else
         {
-            if (data[7] == 2)
-            {
-                Structure.LoadStructures(1, fs, p);
-            }
+            p = new MultimaterialPlane(host, (MeshType)data[1], data[6], data[7]);
+        }
+        switch (data[8])
+        {
+            case 1: PlaneExtension.Load(fs, p); break;
+            case 2: Structure.LoadStructure(fs, p); break;
         }
         return p;
     }

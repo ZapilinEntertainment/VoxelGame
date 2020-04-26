@@ -6,7 +6,16 @@ public class MultimaterialPlane : Plane
 {
     private bool isActive = true;
     private GameObject model;
-    new public bool isQuad { get { return false; } }    
+    new public bool isQuad { get { return false; } }
+
+    #region save-load system
+    override public void Save(System.IO.FileStream fs)
+    {
+        if (destroyed) return;
+        fs.WriteByte(MULTIMATERIAL_PLANE_CODE);
+        SaveData(fs);
+    }
+    #endregion
 
     public MultimaterialPlane(IPlanable i_host, MeshType i_meshType, byte i_faceIndex,byte modelRotation) : 
         base (i_host, i_meshType, PoolMaster.MATERIAL_MULTIMATERIAL_ID, i_faceIndex, modelRotation)

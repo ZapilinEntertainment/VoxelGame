@@ -336,7 +336,7 @@ public class HarvestableResource : Structure
         maxHp = System.BitConverter.ToSingle(data, 812);
     }
 
-    public static void LoadContainer(System.IO.FileStream fs, Plane sblock)
+    public static HarvestableResource LoadContainer(System.IO.FileStream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + CONTAINER_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);
@@ -351,6 +351,7 @@ public class HarvestableResource : Structure
         hr.SetBasement(sblock, new PixelPosByte(data[0], data[1]));
         hr.hp = System.BitConverter.ToSingle(data,4);
         hr.maxHp = System.BitConverter.ToSingle(data, 8);
+        return hr;
     }
 
 

@@ -33,19 +33,26 @@ public sealed class PlaneExtension
         //base.Save(fs);
         int structuresCount = 0;
         var data = new List<byte>();
+        Structure delayed = null; // может быть только одна такая структура
         if (structures != null)
         {
             int i = 0;
+            Structure s;            
             while (i < structures.Count)
             {
-                if (structures[i] == null) structures.RemoveAt(i);
+                s = structures[i];
+                if (s == null) structures.RemoveAt(i);
                 else
                 {
-                    var sdata = structures[i].Save();
-                    if (sdata != null && sdata.Count > 0)
+                    if (!s.IsIPlanable())
                     {
-                        data.AddRange(sdata);
+                        var sdata = s.Save();
+                        if (sdata != null && sdata.Count > 0)
+                        {
+                            data.AddRange(sdata);
+                        }
                     }
+                    else delayed = s;
                     i++;                    
                 }
             }
@@ -54,8 +61,18 @@ public sealed class PlaneExtension
         fs.Write(System.BitConverter.GetBytes(structuresCount), 0, 4);
         if (structuresCount > 0)
         {
-            var dataArray = data.ToArray();
-            fs.Write(dataArray, 0, dataArray.Length);
+            byte[] dataArray;
+            if (data.Count > 0)
+            {
+                dataArray = data.ToArray();
+                fs.Write(dataArray, 0, dataArray.Length);
+            }
+            if (delayed != null)
+            {
+                dataArray = delayed.Save().ToArray();
+                fs.Write(dataArray, 0, dataArray.Length);
+                (delayed as IPlanable).SavePlanesData(fs);
+            }
         }
     }
 
