@@ -38,20 +38,23 @@ public sealed class Dock : WorkBuilding {
         {
             if (r < 0) r += 8;
         }
-        if (r == modelRotation) return;
-        else shipArrivingTimer = GameConstants.GetShipArrivingTimer();
-        modelRotation = (byte)r;
-        if (basement != null)
+        if (!GameMaster.loading)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetEulerRotationForQuad());
-            transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
+            if (r != modelRotation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+        }
+        modelRotation = (byte)r;
+        var model = transform.childCount > 0 ? transform.GetChild(0) : null;
+        if (basement != null && model != null)
+        {
+            model.transform.localRotation = Quaternion.Euler(0f, 45f * modelRotation, 0f);
             CheckPositionCorrectness();
         }
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;
-        if (!GameMaster.loading)
+        var loading = GameMaster.loading;
+        if (!loading)
         {            
             Chunk c = b.myChunk;
             if (c.GetBlock(b.pos.OneBlockForward()) != null)
@@ -65,19 +68,19 @@ public sealed class Dock : WorkBuilding {
                         if (c.GetBlock(b.pos.OneBlockLeft()) == null) modelRotation = 6;
                     }
                 }
-            }
+            }            
         }
         SetWorkbuildingData(b, pos);	
-		basement.ChangeMaterial(ResourceType.CONCRETE_ID, true);
-		colony.AddDock(this);		
+        colony.AddDock(this);		
         if (!subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }        
         dependentBlocksList = new List<Block>();        
-        if (!GameMaster.loading)
+        if (!loading)
         {
+            basement.ChangeMaterial(ResourceType.CONCRETE_ID, true);
             CheckPositionCorrectness();
             if (correctLocation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
         }
@@ -89,6 +92,7 @@ public sealed class Dock : WorkBuilding {
                 subscribedToRestoreBlockersEvent = true;
             }
         }
+        SetModelRotation(modelRotation);
         CheckAddons();
     }
     public void RestoreBlockers()
@@ -178,6 +182,7 @@ public sealed class Dock : WorkBuilding {
 
     public void CheckPositionCorrectness()
     {
+        if (GameMaster.loading) return;
         // #checkPositionCorrectness - Dock
         if (dependentBlocksList != null)
         {
@@ -556,6 +561,7 @@ public sealed class Dock : WorkBuilding {
         LoadStructureData(data, sblock);
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
         LoadWorkBuildingData(data, STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
+        SetModelRotation(modelRotation);
         // load dock data
         correctLocation = fs.ReadByte() == 1;
         maintainingShip = fs.ReadByte() == 1;
@@ -564,7 +570,7 @@ public sealed class Dock : WorkBuilding {
             loadingShip = Ship.Load(fs, this);
         }
         data = new byte[8];
-        fs.Read(data, 0, 8);
+        fs.Read(data, 0, 8);        
         loadingTimer = System.BitConverter.ToSingle(data, 0);
         shipArrivingTimer = System.BitConverter.ToSingle(data, 4);
     }

@@ -42,7 +42,7 @@ public class Farm : WorkBuilding
         }
         var gl = basement.GetGrassland();
         if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
-        gl.SetCultivatingStatus(true);
+        gl?.SetCultivatingStatus(true);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
     }
 
@@ -169,6 +169,9 @@ public class Farm : WorkBuilding
         var data = new byte[4];
         fs.Read(data, 0, data.Length);
         lastPlantIndex = System.BitConverter.ToInt32(data, 0);
+        var gl = basement.GetGrassland();
+        if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
+        gl?.SetCultivatingStatus(true);
     }
     #endregion
 }

@@ -254,6 +254,10 @@ public class Plane
         if (materialID == newId) return;
         materialID = newId;
         if (materialID != host.GetBlock().GetMaterialID()) dirty = true;
+        if (haveGrassland && !Nature.MaterialIsLifeSupporting(materialID))
+        {
+            extension?.RemoveGrassland();
+        }
         if (redrawCall & isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
     }
     public void SetWorksitePresence(bool x)
@@ -288,6 +292,7 @@ public class Plane
                         meshType = MeshType.ExcavatedPlane025;
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
+                        if (haveGrassland) extension?.RemoveGrassland();
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
@@ -301,6 +306,7 @@ public class Plane
                         meshType = MeshType.ExcavatedPlane075;
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
+                        if (haveGrassland) extension?.RemoveGrassland();
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
@@ -311,6 +317,7 @@ public class Plane
                         meshType = MeshType.ExcavatedPlane05;
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
+                        if (haveGrassland) extension?.RemoveGrassland();
                         if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }

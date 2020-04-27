@@ -417,6 +417,7 @@ public class Structure : MonoBehaviour
                 return Farm.CheckSpecialBuildingCondition(p, ref refusalReason);
             case CONNECT_TOWER_6_ID:
             case HOUSING_MAST_6_ID:
+            case SCIENCE_LAB_ID:
                 if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                 {
                     refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
@@ -525,10 +526,10 @@ public class Structure : MonoBehaviour
         }
         modelRotation = (byte)r;
 
-        if (basement != null)
+        var model = transform.childCount > 0 ? transform.GetChild(0) : null;
+        if (basement != null && model != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetEulerRotationForQuad());
-            transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
+            model.transform.localRotation = Quaternion.Euler(0f, 45f * modelRotation, 0f);
         }
     }
     public void SetHP(float t)
@@ -1333,7 +1334,7 @@ public class Structure : MonoBehaviour
     protected void LoadStructureData(byte[] data, Plane p)
     {        
         Prepare();
-        modelRotation = data[2];
+        SetModelRotation(data[2]);
         indestructible = (data[3] == 1);
         skinIndex = System.BitConverter.ToUInt32(data, 4);
         SetBasement(p, new PixelPosByte(data[0], data[1]));

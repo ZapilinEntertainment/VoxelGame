@@ -1,12 +1,17 @@
-﻿public class Hospital : WorkBuilding {
+﻿using System.IO;
+
+public class Hospital : WorkBuilding {
 	public float coverage {get;private set;}	
     const int STANDART_COVERAGE = 1000;
 
 	public override void SetBasement(Plane b, PixelPosByte pos) {		
 		if (b == null) return;
-        SetWorkbuildingData(b, pos);
-        RecalculateCoverage();
-		colony.AddHospital(this);
+        SetWorkbuildingData(b, pos);        
+        if (!GameMaster.loading)
+        {
+            RecalculateCoverage();
+            colony.AddHospital(this);
+        }
 	}
     public override float GetWorkSpeed()
     {
@@ -16,7 +21,7 @@
     protected override void SwitchActivityState()
     {
         base.SwitchActivityState();
-        colony.RecalculateHospitals();
+        if (!GameMaster.loading) colony.RecalculateHospitals();
     }
     private void RecalculateCoverage()
     {
@@ -54,4 +59,13 @@
         colony.DeleteHospital(this);
         Destroy(gameObject);
     }
+
+    #region save-load
+    public override void Load(FileStream fs, Plane sblock)
+    {
+        base.Load(fs, sblock);
+        RecalculateCoverage();
+        colony.AddHospital(this);
+    }
+    #endregion
 }

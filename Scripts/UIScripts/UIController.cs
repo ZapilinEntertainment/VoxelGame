@@ -265,7 +265,12 @@ sealed public class UIController : MonoBehaviour
                 {
                     if (hospitalPanel.activeSelf)
                     {
-                        int nhm = (int)colony.birthrateMode;
+                        int nhm = 0;
+                        if (colony.birthrateMode == BirthrateMode.Improved) nhm = 1;
+                        else
+                        {
+                            if (colony.birthrateMode == BirthrateMode.Lowered) nhm = 2;
+                        }
                         if (nhm != hospitalPanel_savedMode)
                         {
                             var t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
@@ -1360,14 +1365,20 @@ sealed public class UIController : MonoBehaviour
 
     public void ActivateHospitalPanel()
     {
-        int hm = (int)colony.birthrateMode;
         Transform t = null;
-        if (hm != hospitalPanel_savedMode)
+        int x = 0;
+        if (colony.birthrateMode == BirthrateMode.Improved) x = 1;
+        else
+        {
+            if (colony.birthrateMode == BirthrateMode.Lowered) x = 2;
+        }
+        
+        if (x != hospitalPanel_savedMode)
         {
             t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
             if (t != null) t.GetComponent<Image>().overrideSprite = null;
         }
-        hospitalPanel_savedMode = hm;
+        hospitalPanel_savedMode = x;
         t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
         if (t != null) t.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
         hospitalPanel.SetActive(true);
@@ -1378,20 +1389,27 @@ sealed public class UIController : MonoBehaviour
     }
     public void Hospital_SetBirthrateMode(int i)
     {
-        int hm = (int)colony.birthrateMode;
-        if (i != hm)
+        switch (i)
         {
-            colony.SetBirthrateMode((BirthrateMode)i);
-            Transform t = null;
-            if (i != hospitalPanel_savedMode)
-            {
-                t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
-                if (t != null) t.GetComponent<Image>().overrideSprite = null;
-            }
-            hospitalPanel_savedMode = i;
-            t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
-            if (t != null) t.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+            case 0: 
+                colony.SetBirthrateMode(BirthrateMode.Normal);
+                break;
+            case 1:
+                colony.SetBirthrateMode(BirthrateMode.Improved);
+                break;
+            case 2:
+                colony.SetBirthrateMode(BirthrateMode.Lowered);
+                break;
         }
+        Transform t = null;
+        if (i != hospitalPanel_savedMode)
+        {            
+            t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+            if (t != null) t.GetComponent<Image>().overrideSprite = null;                     
+        }
+        hospitalPanel_savedMode = i;
+        t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
+        if (t != null) t.GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
     }
 
     public void ActivateTradePanel()

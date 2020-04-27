@@ -109,10 +109,10 @@ public sealed class Hangar : WorkBuilding
         }
         if (r == modelRotation) return;
         modelRotation = (byte)r;
-        if (basement != null)
+        var model = transform.childCount > 0 ? transform.GetChild(0) : null;
+        if (basement != null && model != null)
         {
-            transform.localRotation = Quaternion.Euler(basement.GetEulerRotationForQuad());
-            transform.Rotate(Vector3.up * modelRotation * 45f, Space.Self);
+            model.transform.localRotation = Quaternion.Euler(0f, 45f * modelRotation, 0f);
             CheckPositionCorrectness();
         }
     }
@@ -487,7 +487,7 @@ public sealed class Hangar : WorkBuilding
         fs.Read(data, 0, data.Length);
         LoadStructureData(data, sblock);
         LoadBuildingData(data, STRUCTURE_SERIALIZER_LENGTH);
-
+        SetModelRotation(modelRotation);
         var hdata = new byte[6];
         fs.Read(hdata, 0, hdata.Length);
         correctLocation = hdata[0] == 1;

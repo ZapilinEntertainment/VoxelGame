@@ -964,8 +964,8 @@ public sealed class ColonyController : MonoBehaviour
         birthSpeed = System.BitConverter.ToSingle(data, 16);
         RecalculatePowerGrid();
         RecalculateHousing();
-        if (hospitals != null) RecalculateHospitals();
-        SetBirthrateMode((BirthrateMode)data[20]);
+        RecalculateHospitals();
+        SetBirthrateMode((BirthrateMode)data[20]);        
         if (powerGrid.Count > 0)
         {
             WorkBuilding wb = null;
@@ -1005,6 +1005,11 @@ public sealed class ColonyController : MonoBehaviour
             var chars = new char[d.GetCharCount(data, 0, bytesCount)];
             d.GetChars(data, 0, bytesCount, chars, 0, true);
             cityName = new string(chars);
+        }
+
+        if (docks.Count > 0)
+        {
+            foreach (var d in docks) d.CheckPositionCorrectness();
         }
     }
     #endregion

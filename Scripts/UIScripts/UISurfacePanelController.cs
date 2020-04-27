@@ -800,7 +800,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     (s as Settlement).SetLevel(constructingLevel);
                 }
                 s.SetBasement(observingSurface, new PixelPosByte(x, z));
-                if (!(s is Dock) & !(s is Hangar)) s.SetModelRotation(rt);
+                //if (!(s is Dock) & !(s is Hangar)) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
                 GameMaster.realMaster.eventTracker?.BuildingConstructed(s);
                 if (observingSurface.fulfillStatus != FullfillStatus.Empty)

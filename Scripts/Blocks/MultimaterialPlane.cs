@@ -63,7 +63,14 @@ public class MultimaterialPlane : Plane
         {
             isVisible = x;
             mainStructure?.SetVisibility(isVisible);
-            model.SetActive(x);
+            if (model == null )
+            {
+                if (x) PrepareModel();
+            }
+            else
+            {
+                if (!x) model.SetActive(false);
+            }
         }
     }
     override public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
