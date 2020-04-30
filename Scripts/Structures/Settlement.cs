@@ -213,8 +213,6 @@ public sealed class Settlement : House
         int prevHousing = housing;
         float prevEnergySurplus = energySurplus;
         housing = 0;
-        gardensCf = 0f;
-        shopsCf = 0f;
         pointsFilled = 0;
         energySurplus = GetEnergySurplus(ID);
         float onePartEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
@@ -286,7 +284,10 @@ public sealed class Settlement : House
         //        
         int citizensCount = colony.citizenCount;
         float neededShopsCf = citizensCount * SHOPS_DEMAND_CF, neededGardensCf = citizensCount * GARDENS_DEMAND_CF;
-        bool needHousing = colony.totalLivespace <= citizensCount, needGardens = neededGardensCf > gardensCf, needShops = neededShopsCf > shopsCf;
+        bool upSurface = basement.faceIndex == Block.SURFACE_FACE_INDEX | basement.faceIndex == Block.UP_FACE_INDEX;
+        bool needHousing = colony.totalLivespace <= citizensCount, 
+            needGardens = (neededGardensCf > gardensCf) & upSurface , 
+            needShops = neededShopsCf > shopsCf & upSurface;
         if (needHousing | needGardens | needShops | forced)
         {                          
             var emptyPositions = new List<PixelPosByte>();

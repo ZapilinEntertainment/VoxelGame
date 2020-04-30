@@ -44,7 +44,6 @@ public class Building : Structure
                     FARM_2_ID,
                     LUMBERMILL_2_ID,
                     SMELTERY_2_ID,
-                    ENERGY_CAPACITOR_2_ID,
                     ORE_ENRICHER_2_ID,
                     BIOGENERATOR_2_ID,
                     MINERAL_POWERPLANT_2_ID,
@@ -64,7 +63,7 @@ public class Building : Structure
                     XSTATION_3_ID,
                     GRPH_ENRICHER_3_ID
                 };
-                        if (Settlement.maxAchievedLevel >= 3) blist.Insert(SETTLEMENT_CENTER_ID, 0);
+                        if (Settlement.maxAchievedLevel >= 3) blist.Insert(0,SETTLEMENT_CENTER_ID);
                         return blist.ToArray();
                     }
                 case 4:
@@ -83,7 +82,8 @@ public class Building : Structure
                     FUEL_FACILITY_ID
                     };
                 case 5:
-                    return new int[]
+                    {
+                        var blist = new List<int>
                     {
                     FOUNDATION_BLOCK_5_ID,
                     STORAGE_BLOCK_ID,
@@ -96,6 +96,12 @@ public class Building : Structure
                     OBSERVATORY_ID,
                     MONUMENT_ID
                     };
+                        if (Settlement.maxAchievedLevel >= 5)
+                        {
+                            blist.Insert(0, SETTLEMENT_CENTER_ID);
+                        }
+                        return blist.ToArray();
+                    }
                 case 6:
                     {
                         var blist = new List<int>()
@@ -108,10 +114,9 @@ public class Building : Structure
                     SCIENCE_LAB_ID
                 };
                         if (Settlement.maxAchievedLevel >= 6)
-                        {
-                            blist.Insert(SETTLEMENT_CENTER_ID, 0);
+                        {                            
                             if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
-                                blist.Insert(HOUSE_BLOCK_ID, 2);
+                                blist.Insert(2, HOUSE_BLOCK_ID);
                         }
                         return blist.ToArray();
                     }
@@ -120,7 +125,56 @@ public class Building : Structure
         }
         else
         {
-            return null;
+            List<int>blist;
+            switch(i_level)
+            {
+                case 1:
+                    blist = new List<int> {
+                    STORAGE_1_ID,
+                    SMELTERY_1_ID,
+                    ENERGY_CAPACITOR_1_ID,
+                };
+                    break;
+                case 2:
+                    blist = new List<int>
+                    {
+                    STORAGE_2_ID,
+                    SMELTERY_2_ID,
+                    ENERGY_CAPACITOR_2_ID,
+                    };
+                    break;
+                case 3:
+                    {
+                        blist = new List<int>
+                {
+                    SMELTERY_3_ID,
+                    MINI_GRPH_REACTOR_3_ID,
+                };
+                    }
+                    break;
+                case 4:
+                    blist = new List<int>
+                    {
+                         COVERED_FARM,
+                    COVERED_LUMBERMILL,
+                    FUEL_FACILITY_ID
+                    };
+                    break;
+                case 5:
+                    blist = new List<int>
+                    {
+                    FOUNDATION_BLOCK_5_ID,
+                    STORAGE_BLOCK_ID,
+                    FARM_BLOCK_ID,
+                    LUMBERMILL_BLOCK_ID,
+                    SMELTERY_BLOCK_ID,
+                    REACTOR_BLOCK_5_ID,
+                    };
+                    break;
+                default: blist = new List<int>(); break;
+            }
+            if ( (face == Block.DOWN_FACE_INDEX | face == Block.CEILING_FACE_INDEX) && i_level <= Settlement.maxAchievedLevel) blist.Add(SETTLEMENT_CENTER_ID);
+            return blist.ToArray();
         }
     }
 
@@ -415,7 +469,6 @@ public class Building : Structure
                 break;
             case LUMBERMILL_3_ID:
                 {
-                    upgradedIndex = COVERED_LUMBERMILL;
                     canBePowerSwitched = true;
                     level = 3;
                 }

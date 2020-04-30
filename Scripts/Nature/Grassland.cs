@@ -142,7 +142,7 @@ public sealed class Grassland
                 lifepower -= luv;
                 if (lifepower <= BOOST_VALUE) return;
             }
-            bool creating = true;
+            bool creating = plane.fulfillStatus != FullfillStatus.Full;
             if (plants != null)
             {
                 if (plants.Length >= GetMaxPlantsCount()) creating = false;
@@ -150,6 +150,10 @@ public sealed class Grassland
                 {
                     if (Random.value > 0.5f) creating = false;
                 }
+            }
+            else
+            {
+                if (!creating) return;
             }
             //
             if (creating)

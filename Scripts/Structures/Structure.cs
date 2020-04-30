@@ -206,7 +206,9 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Science Lab"); break;
             case STABILITY_ENFORCER_ID:
                 s = new GameObject("Stability Enforcer");break;
-            default: return null;
+            default:
+                throw new System.Exception("structure with ID " + i_id.ToString() + "not found");
+                return null;
         }
         Structure st = (Structure)s.AddComponent(GetTypeByID(i_id));
         st.ID = i_id;

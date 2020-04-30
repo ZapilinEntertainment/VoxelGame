@@ -297,7 +297,7 @@ public sealed class PlaneExtension
                     {
                         if (structures[i].surfaceRect.Intersect(sr))
                         {
-                            structures[i].Annihilate(false, true, false);
+                            structures[i].Annihilate(false, true, !s.isArtificial);
                         }
                     }
                     i++;
@@ -305,8 +305,7 @@ public sealed class PlaneExtension
             }
         }
         SetStructureTransform(s);
-        //if (!GameMaster.loading)
-            RecalculateSurface();
+        RecalculateSurface();
     }
     /// <summary>
     /// Do not use directly, use "Set Basement" instead

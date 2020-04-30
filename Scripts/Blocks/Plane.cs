@@ -480,12 +480,12 @@ public class Plane
                 zdir = Vector3.up * q;
                 break;
             case Block.DOWN_FACE_INDEX:
-                blockCenter += new Vector3(-0.5f, -0.5f, -0.5f) * q;
+                blockCenter += new Vector3(-0.5f, -0.5f, 0.5f) * q;
                 xdir = Vector3.right * q;
                 zdir = Vector3.back * q;
                 break;
             case Block.CEILING_FACE_INDEX:
-                blockCenter += new Vector3(-0.5f, +0.5f, -0.5f) * q;
+                blockCenter += new Vector3(-0.5f, +0.5f, 0.5f) * q;
                 xdir = Vector3.right * q;
                 zdir = Vector3.back * q;
                 break;

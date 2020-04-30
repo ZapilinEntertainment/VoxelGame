@@ -15,7 +15,6 @@ public sealed class UISurfacePanelController : UIObserver {
     private bool status_digOrdered = false, firstSet = true;
     private bool? status_gather = null;
     private byte savedHqLevel = 0;
-    private int[] applicableBuildingsList;
     private Vector2[] showingResourcesCount;
 
     private int selectedBuildingButton = -1, lastStorageStatus = -1;
@@ -273,8 +272,7 @@ public sealed class UISurfacePanelController : UIObserver {
             case SurfacePanelMode.Build:
                 {
                     int i = 0;
-                    hq = colony.hq;
-                    //applicableBuildingsList = Building.GetApplicableBuildingsList(hq.level)
+                    hq = colony.hq;                   
                     buildingsLevelToggles[0].transform.parent.gameObject.SetActive(true);
                     while (i < buildingsLevelToggles.Length)
                     {

@@ -975,6 +975,7 @@ public sealed class ColonyController : MonoBehaviour
                 if (wb != null) wb.Recalculation();
             }
         }
+        RecalculatePowerGrid();
 
         if (data[21] == 1)
         {
