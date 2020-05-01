@@ -247,7 +247,7 @@
                 break;
             case Structure.MINI_GRPH_REACTOR_3_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.metal_K, 15), new ResourceContainer(ResourceType.metal_M, 5), new ResourceContainer(ResourceType.Graphonium, 4)
+                new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_M, 50), new ResourceContainer(ResourceType.metal_E, 25), new ResourceContainer(ResourceType.Graphonium, 4)
             };
                 break;
             case Structure.GRPH_REACTOR_4_ID:

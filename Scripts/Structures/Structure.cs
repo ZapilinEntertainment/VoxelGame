@@ -420,6 +420,7 @@ public class Structure : MonoBehaviour
             case CONNECT_TOWER_6_ID:
             case HOUSING_MAST_6_ID:
             case SCIENCE_LAB_ID:
+            case GRPH_REACTOR_4_ID:
                 if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                 {
                     refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);

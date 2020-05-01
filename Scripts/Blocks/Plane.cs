@@ -39,7 +39,7 @@ public class Plane
         }
     }
 
-    protected IPlanable host;
+    public IPlanable host { get; protected set; }
     public Chunk myChunk { get { return host.GetBlock().myChunk; } }
     public ChunkPos pos { get { return host.GetBlock().pos; } }
 

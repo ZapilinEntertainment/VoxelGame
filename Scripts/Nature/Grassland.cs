@@ -324,9 +324,12 @@ public sealed class Grassland
         if (plantsDestruction)
         {
             var plist = plane.GetPlants();
-            for (int i = 0; i < plist.Length; i++)
+            if (plist != null)
             {
-                plist[i].Annihilate(true, false, false);
+                for (int i = 0; i < plist.Length; i++)
+                {
+                    plist[i].Annihilate(true, false, false);
+                }
             }
         }
         nature.RemoveGrassland(this);

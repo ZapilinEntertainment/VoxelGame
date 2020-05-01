@@ -125,6 +125,7 @@ public class Building : Structure
         }
         else
         {
+            bool bottom = face == Block.DOWN_FACE_INDEX | face == Block.CEILING_FACE_INDEX;
             List<int>blist;
             switch(i_level)
             {
@@ -171,9 +172,16 @@ public class Building : Structure
                     REACTOR_BLOCK_5_ID,
                     };
                     break;
+                case 6:
+                    blist = new List<int>
+                    {
+                        HOUSE_BLOCK_ID
+                    };
+                    if (bottom) blist.Add(HOUSING_MAST_6_ID);
+                    break;
                 default: blist = new List<int>(); break;
             }
-            if ( (face == Block.DOWN_FACE_INDEX | face == Block.CEILING_FACE_INDEX) && i_level <= Settlement.maxAchievedLevel) blist.Add(SETTLEMENT_CENTER_ID);
+            if ( bottom && i_level <= Settlement.maxAchievedLevel) blist.Add(SETTLEMENT_CENTER_ID);
             return blist.ToArray();
         }
     }

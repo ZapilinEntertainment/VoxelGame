@@ -108,19 +108,20 @@ public sealed class UISurfacePanelController : UIObserver {
                     hq = colony.hq;
                     CheckGatherButton();
 
-                    bool check = false;
-                    if (observingSurface.haveWorksite)
-                    {
-                        var w = colony.GetWorksite(observingSurface);
-                        if (w != null)
-                        {
-                            var cs = w as CleanSite;
-                            check = (cs != null && cs.diggingMission);
-                        }
+                    if (observingSurface.host.IsStructure()) {
+                        digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Delete);
                     }
-                    if (check != status_digOrdered)
+                    else
                     {
-                        status_digOrdered = check;
+                        if (observingSurface.haveWorksite)
+                        {
+                            var w = colony.GetWorksite(observingSurface);
+                            if (w != null)
+                            {
+                                var cs = w as CleanSite;
+                                status_digOrdered = (cs != null && cs.diggingMission);
+                            }
+                        }
                         digButton.transform.GetChild(0).GetComponent<Text>().text = status_digOrdered ? Localization.GetPhrase(LocalizedPhrase.StopDig) : Localization.GetWord(LocalizedWord.Dig);
                     }
 
@@ -198,35 +199,44 @@ public sealed class UISurfacePanelController : UIObserver {
 			return;
 		}
 		else {
-            bool newCleanSite = false;
-            if (observingSurface.isSurface)
-            {
-                newCleanSite = observingSurface.fulfillStatus != FullfillStatus.Empty;
-                if (observingSurface.haveWorksite)
-                {
-                    var w = colony.GetWorksite(observingSurface);
-                    if (w != null && w is CleanSite)
-                    {
-                        if ((w as CleanSite).diggingMission)
-                        {
-                            w.StopWork(true);
-                            newCleanSite = false;
-                        }
-                    }
-                }
-                
-            }
-            if (newCleanSite)
-            {
-                var cs = new CleanSite(observingSurface, true);
-                UIController.current.ShowWorksite(cs);
+            if (observingSurface.host.IsStructure()) {
+                //IPlanable
+                ((observingSurface.host) as Structure).Annihilate(true, true, false);
+                SelfShutOff();                
+                return;
             }
             else
             {
-                var ds = new DigSite(observingSurface, true);
-                UIController.current.ShowWorksite(ds);
-            }
-            StatusUpdate();
+                bool newCleanSite = false;
+                if (observingSurface.isSurface)
+                {
+                    newCleanSite = observingSurface.fulfillStatus != FullfillStatus.Empty;
+                    if (observingSurface.haveWorksite)
+                    {
+                        var w = colony.GetWorksite(observingSurface);
+                        if (w != null && w is CleanSite)
+                        {
+                            if ((w as CleanSite).diggingMission)
+                            {
+                                w.StopWork(true);
+                                newCleanSite = false;
+                            }
+                        }
+                    }
+
+                }
+                if (newCleanSite)
+                {
+                    var cs = new CleanSite(observingSurface, true);
+                    UIController.current.ShowWorksite(cs);
+                }
+                else
+                {
+                    var ds = new DigSite(observingSurface, true);
+                    UIController.current.ShowWorksite(ds);
+                }
+                StatusUpdate();
+            }            
 		}
 	}
 
@@ -552,17 +562,23 @@ public sealed class UISurfacePanelController : UIObserver {
         gatherButton.gameObject.SetActive(working);
 		if (working) {
             CheckGatherButton();
-            CleanSite cs = colony.GetWorksite(observingSurface) as CleanSite;
-            if (cs != null && cs.diggingMission)
-            {
-
-                status_digOrdered = true;
-                digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopDig);
+            if (observingSurface.host.IsStructure()) {
+                digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Delete);
             }
             else
             {
-                status_digOrdered = false;
-                digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
+                CleanSite cs = colony.GetWorksite(observingSurface) as CleanSite;
+                if (cs != null && cs.diggingMission)
+                {
+
+                    status_digOrdered = true;
+                    digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopDig);
+                }
+                else
+                {
+                    status_digOrdered = false;
+                    digButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
+                }
             }
             savedHqLevel = hq.level;
 			blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
@@ -897,6 +913,7 @@ public sealed class UISurfacePanelController : UIObserver {
     {
         if (!GameMaster.loading)
         {
+            observingSurface = null;
             isObserving = false;
             if (constructionPlane != null) constructionPlane.SetActive(false);
             if (gameObject == null) Object.Destroy(this);
@@ -908,9 +925,11 @@ public sealed class UISurfacePanelController : UIObserver {
     /// </summary>
     override public void SelfShutOff()
     {
+        observingSurface = null;
         isObserving = false;
         if (constructionPlane.activeSelf) constructionPlane.SetActive(false);
         gameObject.SetActive(false);
+        UIController.current.SelectedObjectLost();
     }
 
     void LocalizeButtonTitles()

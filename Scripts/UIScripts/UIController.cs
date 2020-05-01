@@ -559,7 +559,7 @@ sealed public class UIController : MonoBehaviour
             workingObserver.ShutOff();
             workingObserver = null;
         }
-        bool disableCubeMenuButtons = true, changeFrameColor = true;
+        bool changeFrameColor = true;
         if (newChosenType == ChosenObjectType.None)
         {
             rightPanel.SetActive(false);
@@ -638,14 +638,6 @@ sealed public class UIController : MonoBehaviour
                 workingObserver = chosenWorksite.ShowOnGUI();
                 FollowingCamera.main.SetLookPoint(chosenWorksite.sign.transform.position);
                 break;
-        }
-        if (disableCubeMenuButtons)
-        {
-            Transform t = rightPanel.transform;
-            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).gameObject.SetActive(false);
-            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 1).gameObject.SetActive(false);
-            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 2).gameObject.SetActive(false);
-            t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 3).gameObject.SetActive(false);
         }
         if (changeFrameColor)
         {
