@@ -71,7 +71,7 @@ public class Building : Structure
                     {
                     COVERED_FARM,
                     COVERED_LUMBERMILL,
-                    //SUPPLIES_FACTORY_4_ID,
+                    SUPPLIES_FACTORY_4_ID,
                     GRPH_REACTOR_4_ID,
                     SHUTTLE_HANGAR_4_ID,
                     RECRUITING_CENTER_4_ID,
@@ -579,7 +579,6 @@ public class Building : Structure
                 break;
             case SUPPLIES_FACTORY_4_ID:
                 {
-                    upgradedIndex = SUPPLIES_FACTORY_5_ID;
                     canBePowerSwitched = true;
                     level = 4;
                 }
@@ -704,8 +703,6 @@ public class Building : Structure
         SetBuildingData(b, pos);
         //copy to Gardens.cs
     }
-    virtual public void Recalculation() { }
-
     protected void SetBuildingData(Plane b, PixelPosByte pos)
     {
         SetStructureData(b, pos);

@@ -91,7 +91,6 @@ public class Quest
                     {
                         case ProgressQuestID.Progress_HousesToMax:
                             reward = 250;
-
                             break;
                         case ProgressQuestID.Progress_2Docks: reward = 500; break;
                         case ProgressQuestID.Progress_2Storages: reward = 200; break;
@@ -110,8 +109,8 @@ public class Quest
                         case ProgressQuestID.Progress_FoodStocks: reward = 120; break;
                         case ProgressQuestID.Progress_FirstExpedition:
                             defaultSettings = false;
-                            stepsCount = 4;
-                            reward = 400;
+                            stepsCount = 6;
+                            reward = 4000;
                             break;
                         case ProgressQuestID.Progress_Tier5: reward = 960; break;
                         case ProgressQuestID.Progress_FactoryComplex:
@@ -299,42 +298,76 @@ public class Quest
                     case ProgressQuestID.Progress_FirstExpedition:
                         {
                             byte completeness = 0;
-                            if (Crew.crewsList.Count > 0)
+                            int count = Crew.crewsList.Count;
+                            if (count > 0)
                             {
                                 completeness++;
                                 stepsFinished[0] = true;
-                                stepsAddInfo[0] = Crew.crewsList.Count.ToString() + "/1";
+                                stepsAddInfo[0] = count.ToString() + "/1";
                             }
                             else
                             {
                                 stepsFinished[0] = false;
                                 stepsAddInfo[0] = "0/1";
                             }
-
-
-                            if (Expedition.expeditionsList.Count > 0)
+                            // shuttles
+                            count = Hangar.GetTotalShuttlesCount();
+                            if (count > 0)
+                            {
+                                completeness++;
+                                stepsFinished[1] = true;
+                                stepsAddInfo[1] = count.ToString() + "/1";
+                            }
+                            else { 
+                                stepsFinished[1] = false;
+                                stepsAddInfo[1] = "0/1";
+                             }
+                            //observatory
+                            if (Observatory.alreadyBuilt)
                             {
                                 completeness++;
                                 stepsFinished[2] = true;
-                                stepsAddInfo[2] = Expedition.expeditionsList.Count.ToString() + "/1";
+                            }
+                            else stepsFinished[2] = false;
+                            //transmitter\
+                            count = QuantumTransmitter.transmittersList.Count;
+                            if (count > 0)
+                            {
+                                completeness++;
+                                stepsFinished[3] = true;
+                                stepsAddInfo[1] = count.ToString() + "/1";
                             }
                             else
                             {
-                                stepsFinished[2] = false;
-                                stepsAddInfo[2] = "0/1";
+                                stepsFinished[3] = false;
+                                stepsAddInfo[1] = "0/1";
                             }
+                            // expeditions
+                            count = Expedition.expeditionsList.Count;
+                            if (count > 0)
+                            {
+                                completeness++;
+                                stepsFinished[4] = true;
+                                stepsAddInfo[4] = count.ToString() + "/1";
+                            }
+                            else
+                            {
+                                stepsFinished[4] = false;
+                                stepsAddInfo[4] = "0/1";
+                            }
+                            // expeditions completed
                             if (Expedition.expeditionsSucceed >= 1)
                             {
                                 completeness++;
-                                stepsAddInfo[3] = Expedition.expeditionsSucceed.ToString() + "/1";
-                                stepsFinished[3] = true;
+                                stepsAddInfo[5] = Expedition.expeditionsSucceed.ToString() + "/1";
+                                stepsFinished[5] = true;
                             }
                             else
                             {
-                                stepsAddInfo[3] = "0/1";
-                                stepsFinished[3] = false;
+                                stepsAddInfo[5] = "0/1";
+                                stepsFinished[5] = false;
                             }
-                            if (completeness == 4) MakeQuestCompleted();
+                            if (completeness == 6) MakeQuestCompleted();
                         }
                         break;
                     case ProgressQuestID.Progress_Tier5:

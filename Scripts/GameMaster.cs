@@ -80,7 +80,7 @@ public sealed class GameMaster : MonoBehaviour
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
 
-    public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate;
+    public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate, afterloadRecalculationEvent;
     public GameStart startGameWith = GameStart.Zeppelin;
 
     public float lifeGrowCoefficient { get; private set; }
@@ -423,7 +423,8 @@ public sealed class GameMaster : MonoBehaviour
             
         }
         if (Input.GetKeyDown("x")) {
-            mainChunk.RenderDataFullRecalculation();
+            //
+            //mainChunk.RenderDataFullRecalculation();
             //
             //var n = mainChunk.GetNature();
             //n.FirstSet(10000f);
@@ -822,7 +823,14 @@ public sealed class GameMaster : MonoBehaviour
             FollowingCamera.main.WeNeedUpdate();
             loading = false;
             savename = fullname;
+
+            if (afterloadRecalculationEvent != null)
+            {
+                afterloadRecalculationEvent();
+                afterloadRecalculationEvent = null;
+            }            
             SetPause(false);
+            colonyController.FORCED_PowerGridRecalculation();
 
             return true;
         }

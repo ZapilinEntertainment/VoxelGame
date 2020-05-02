@@ -130,8 +130,7 @@ sealed public class UIController : MonoBehaviour
             {
                 if (rpanel_textfield_userStructureID == Structure.XSTATION_3_ID)
                 {
-                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = 
-                        Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.stability * 100)).ToString() + '%';
+                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = XStation.GetInfo();            
                 }
             }
         }
@@ -215,7 +214,7 @@ sealed public class UIController : MonoBehaviour
                                     Powerplant pp = uwb.observingWorkbuilding as Powerplant;
                                     RawImage ri = progressPanel.transform.GetChild(0).GetComponent<RawImage>();
                                     ri.texture = resourcesIcons;
-                                    ri.uvRect = ResourceType.GetResourceIconRect(pp.GetFuelResourseID());
+                                    ri.uvRect = ResourceType.GetResourceIconRect(pp.GetFuelResourceID());
                                     progressPanelFullfill.fillAmount = pp.fuelLeft;
                                     progressPanelText.text = string.Format("{0:0.###}", pp.fuelLeft * 100) + '%';
                                 }
@@ -1277,7 +1276,7 @@ sealed public class UIController : MonoBehaviour
                     {
                         Powerplant pp = uwb.observingWorkbuilding as Powerplant;
                         progressPanelIcon.texture = resourcesIcons;
-                        int resourceID = pp.GetFuelResourseID();
+                        int resourceID = pp.GetFuelResourceID();
                         progressPanelIcon.uvRect = ResourceType.GetResourceIconRect(resourceID);
                         Text resourceNameText = progressPanelIcon.transform.GetChild(0).GetComponent<Text>();
                         resourceNameText.text = Localization.GetResourceName(resourceID);

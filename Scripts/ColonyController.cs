@@ -121,14 +121,16 @@ public sealed class ColonyController : MonoBehaviour
     #region updating
     void Update()
     {
+
         if (showingHappiness != happiness_coefficient)
         {
             showingHappiness = Mathf.Lerp(showingHappiness, happiness_coefficient, Time.deltaTime);
             RenderSettings.skybox.SetFloat("_Saturation", showingHappiness * 0.25f + 0.75f);
         }
+        workspeed = (0.5f + happiness_coefficient * 0.7f) * gears_coefficient;
         if (GameMaster.gameSpeed == 0f | hq == null | GameMaster.loading) return;
         tickTimer -= Time.deltaTime * GameMaster.gameSpeed;
-        if (tickTimer <= 0f)
+        if (tickTimer <= 0f )
         {
             tickTimer = TICK_TIME;
             happinessIncreaseMultiplier = 1f;
@@ -312,7 +314,7 @@ public sealed class ColonyController : MonoBehaviour
             }
         }
 
-        workspeed = (0.5f + happiness_coefficient * 0.7f) * gears_coefficient;
+        
     }
     public void EverydayUpdate()
     {
@@ -678,6 +680,10 @@ public sealed class ColonyController : MonoBehaviour
         }
         powerGridRecalculationNeeded = false;
     }
+    public void FORCED_PowerGridRecalculation()
+    {
+        RecalculatePowerGrid();
+    }
     public List<Building> GetPowerGrid() { return powerGrid; }
     public void AddEnergy(float f)
     {
@@ -945,6 +951,8 @@ public sealed class ColonyController : MonoBehaviour
         fs.Read(data, 0, data.Length);
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
         happiness_coefficient = System.BitConverter.ToSingle(data, 4);
+        showingHappiness = happiness_coefficient;
+        RenderSettings.skybox.SetFloat("_Saturation", showingHappiness * 0.25f + 0.75f);
         birthSpeed = System.BitConverter.ToSingle(data, 8);
         energyStored = System.BitConverter.ToSingle(data, 12);
         energyCrystalsCount = System.BitConverter.ToSingle(data, 16);
@@ -962,20 +970,7 @@ public sealed class ColonyController : MonoBehaviour
         peopleSurplus = System.BitConverter.ToSingle(data, 8);
         realBirthrate = System.BitConverter.ToSingle(data, 12);
         birthSpeed = System.BitConverter.ToSingle(data, 16);
-        RecalculatePowerGrid();
-        RecalculateHousing();
-        RecalculateHospitals();
         SetBirthrateMode((BirthrateMode)data[20]);        
-        if (powerGrid.Count > 0)
-        {
-            WorkBuilding wb = null;
-            foreach (Building b in powerGrid)
-            {
-                wb = b as WorkBuilding;
-                if (wb != null) wb.Recalculation();
-            }
-        }
-        RecalculatePowerGrid();
 
         if (data[21] == 1)
         {

@@ -204,6 +204,7 @@ public sealed class BlockExtension : IPlanable
         myBlock.myChunk.RefreshBlockVisualising(myBlock);
     }
 
+    public bool TryToRebasement() { return false; }
     #region interface
     public bool IsIPlanable() { return true; }
     public bool IsStructure() { return false; }

@@ -137,6 +137,7 @@ public sealed class HouseBlock : House, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockHigher());
@@ -144,6 +145,7 @@ public sealed class HouseBlock : House, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.DOWN_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockForward());
@@ -151,6 +153,7 @@ public sealed class HouseBlock : House, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.BACK_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockRight());
@@ -158,6 +161,7 @@ public sealed class HouseBlock : House, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.LEFT_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockBack());
@@ -165,6 +169,7 @@ public sealed class HouseBlock : House, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.FWD_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockLeft());
@@ -172,6 +177,7 @@ public sealed class HouseBlock : House, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.RIGHT_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             return false;

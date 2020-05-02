@@ -141,8 +141,9 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             Block b = chunk.GetBlock(pos.OneBlockDown());
             if (b != null && b.HavePlane(Block.UP_FACE_INDEX))
             {
-                var p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
+                var p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);                
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockHigher());
@@ -150,6 +151,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.DOWN_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockForward());
@@ -157,6 +159,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.BACK_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockRight());
@@ -164,6 +167,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.LEFT_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockBack());
@@ -171,6 +175,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.FWD_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockLeft());
@@ -178,6 +183,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.RIGHT_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             return false;

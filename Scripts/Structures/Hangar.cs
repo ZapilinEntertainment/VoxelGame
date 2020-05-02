@@ -39,6 +39,19 @@ public sealed class Hangar : WorkBuilding
             return c;
         }
     }
+    public static int GetTotalShuttlesCount()
+    {
+        if (hangarsList.Count == 0) return 0;
+        else
+        {
+            int c = 0;
+            foreach (var h in hangarsList)
+            {
+                if (h.status == HangarStatus.ShuttleInside | h.status == HangarStatus.ShuttleOnMission) c++;
+            }
+            return c;
+        }
+    }
     public static int GetFreeShuttleID()
     {
         if (hangarsList.Count == 0) return NO_SHUTTLE_VALUE;

@@ -130,7 +130,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         skyboxMaterial.SetColor("_BottomColor", bottomColor);
         skyboxMaterial.SetColor("_HorizonColor", horColor);
         prevSkyboxSaturation = ambientColorSaturation;
-        Debug.Log("light recalc");
+        //Debug.Log("light recalc");
     }
 
     public void AddDecoration(float size, GameObject dec)

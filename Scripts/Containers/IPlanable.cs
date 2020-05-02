@@ -15,6 +15,7 @@ public interface IPlanable
     bool ContainSurface();
     bool ContainsStructures();
     bool TryGetStructuresList(ref List<Structure> result);
+    bool TryToRebasement();
     byte GetAffectionMask();
 
     //returns false if transparent or wont be instantiated

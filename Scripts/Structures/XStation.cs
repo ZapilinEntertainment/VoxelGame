@@ -142,6 +142,13 @@ public sealed class XStation : WorkBuilding {
 
     }
 
+    public static string GetInfo()
+    {
+       return Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.stability * 100)).ToString() + "%\n"
+
+            ;
+    }
+
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;

@@ -142,6 +142,7 @@ public class ReactorBlock : Powerplant, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockHigher());
@@ -149,6 +150,7 @@ public class ReactorBlock : Powerplant, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.DOWN_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockForward());
@@ -156,6 +158,7 @@ public class ReactorBlock : Powerplant, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.BACK_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockRight());
@@ -163,6 +166,7 @@ public class ReactorBlock : Powerplant, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.LEFT_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockBack());
@@ -170,6 +174,7 @@ public class ReactorBlock : Powerplant, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.FWD_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             b = chunk.GetBlock(pos.OneBlockLeft());
@@ -177,6 +182,7 @@ public class ReactorBlock : Powerplant, IPlanable
             {
                 var p = b.FORCED_GetPlane(Block.RIGHT_FACE_INDEX);
                 basement = p;
+                basement.AddStructure(this);
                 return true;
             }
             return false;

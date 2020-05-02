@@ -72,18 +72,17 @@ public class Powerplant : WorkBuilding
                 float fuelTaken = colony.storage.GetResources(fuel, fuelNeeds * (workersCount / (float)maxWorkers));
                 tickTimer = (int)(fuelBurnTime * (fuelTaken / fuelNeeds));
             }
-            if (tickTimer == 0 & energySurplus != 0)
+            if (tickTimer == 0 & energySurplus != 0f)
             {
-                energySurplus = 0;
+                energySurplus = 0f;
                 colony.powerGridRecalculationNeeded = true;
                 ChangeRenderersView(false);
             }
         }
         else
         {
-            tickTimer--;
-            float rel = workersCount / (float)maxWorkers;
-            float newEnergySurplus = rel * output;            
+            tickTimer--;            
+            float newEnergySurplus = GetEnergyOutput();            
             if (newEnergySurplus != energySurplus)
             {
                 energySurplus = newEnergySurplus;
@@ -92,6 +91,11 @@ public class Powerplant : WorkBuilding
             }
         }
         fuelLeft = tickTimer / fuelBurnTime;
+    }
+    private float GetEnergyOutput()
+    {
+        float rel = workersCount / (float)maxWorkers;
+        return rel * output;
     }
 
     /// <summary>
@@ -123,7 +127,7 @@ public class Powerplant : WorkBuilding
         colony.AddWorkers(x);
     }
 
-    public int GetFuelResourseID() { return fuel.ID; }
+    public int GetFuelResourceID() { return fuel.ID; }
 
     public override UIObserver ShowOnGUI()
     {
@@ -154,18 +158,21 @@ public class Powerplant : WorkBuilding
     {
         var data = SaveStructureData();
         data.AddRange(SaveBuildingData());
-        float saved_wtp = workflowToProcess; // подмена неиспользуемого поля
-        workflowToProcess = tickTimer;
-        data.AddRange(SaveWorkbuildingData());
-        workflowToProcess = saved_wtp;
+        data.AddRange(System.BitConverter.GetBytes(workersCount));
+        data.AddRange(System.BitConverter.GetBytes(tickTimer));
+        data.AddRange(System.BitConverter.GetBytes(fuelLeft));
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.FileStream fs, Plane p)
     {
-        base.Load(fs, sblock);
-        tickTimer = (int)workflowToProcess;
-        workflowToProcess = 1;
+        LoadStructureData(fs, p);
+        LoadBuildingData(fs);
+        var data = new byte[12];
+        fs.Read(data, 0, data.Length);
+        workersCount = System.BitConverter.ToInt32(data, 0);
+        tickTimer = System.BitConverter.ToInt32(data,4);
+        fuelLeft = System.BitConverter.ToSingle(data,8);
     }
     #endregion
 }

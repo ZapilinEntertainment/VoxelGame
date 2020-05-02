@@ -107,6 +107,7 @@ public class Platform : Structure, IPlanable
     }
     public Block GetBlock() { return myBlock; }
     public bool IsCube() { return false; }
+    public bool TryToRebasement() { return false; }
     public bool ContainSurface()
     {
         return upperPlane != null;

@@ -54,26 +54,26 @@ public sealed class Dock : WorkBuilding {
     override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;
         var loading = GameMaster.loading;
-        if (!loading)
-        {            
-            Chunk c = b.myChunk;
-            if (c.GetBlock(b.pos.OneBlockForward()) != null)
-            {
-                if (c.GetBlock(b.pos.OneBlockRight()) == null) modelRotation = 2;
-                else
-                {
-                    if (c.GetBlock(b.pos.OneBlockBack()) == null) modelRotation = 4;
-                    else
-                    {
-                        if (c.GetBlock(b.pos.OneBlockLeft()) == null) modelRotation = 6;
-                    }
-                }
-            }            
-        }
         SetWorkbuildingData(b, pos);	
         colony.AddDock(this);		
         if (!subscribedToUpdate)
         {
+            if (!loading)
+            {
+                Chunk c = b.myChunk;
+                if (c.GetBlock(b.pos.OneBlockForward()) != null)
+                {
+                    if (c.GetBlock(b.pos.OneBlockRight()) == null) modelRotation = 2;
+                    else
+                    {
+                        if (c.GetBlock(b.pos.OneBlockBack()) == null) modelRotation = 4;
+                        else
+                        {
+                            if (c.GetBlock(b.pos.OneBlockLeft()) == null) modelRotation = 6;
+                        }
+                    }
+                }
+            }
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }        

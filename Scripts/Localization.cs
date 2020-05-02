@@ -3014,7 +3014,7 @@ public static class Localization
                                     q.steps[0] = "Собрать 100 топлива ";
                                     break;
                                 case ProgressQuestID.Progress_XStation:
-                                    q.name = "Экспериментальный прогноз <в разработке>";
+                                    q.name = "Экспериментальный прогноз";
                                     q.description = "Последний Сектор непредсказуем. Организуйте свою метеорологическую службу, чтобы предвидеть надвигающиеся угрозы.";
                                     q.steps[0] = GetStructureName(Structure.XSTATION_3_ID) + " построена";
                                     break;
@@ -3039,12 +3039,14 @@ public static class Localization
                                     q.steps[0] = GetStructureName(Structure.GRPH_REACTOR_4_ID) + " построен";
                                     break;
                                 case ProgressQuestID.Progress_FirstExpedition:
-                                    q.name = "Храбрые исследователи <в разработке>";
+                                    q.name = "Храбрые исследователи";
                                     q.description = "Подготовьте и успешно завершите экспедицию в загадочный Последний Сектор. Для этого вам нужно набрать команду, произвести для неё челнок, и сформировать экспедицию в Экспедиционном корпусе.";
                                     q.steps[0] = "Команда подготовлена ";
                                     q.steps[1] = "Челнок собран ";
-                                    q.steps[2] = "Экспедиция запущена";
-                                    q.steps[3] = "Миссия завершена успешно";
+                                    q.steps[2] = "Обсерватория построена";
+                                    q.steps[3] = "Передатчик построен ";
+                                    q.steps[4] = "Экспедиция запущена ";
+                                    q.steps[5] = "Миссия завершена ";
                                     break;
                                 case ProgressQuestID.Progress_Tier5:
                                     q.name = "Технологический прогресс IV";
@@ -3159,7 +3161,7 @@ public static class Localization
                                     q.steps[0] = "Collect 100 fuel ";
                                     break;
                                 case ProgressQuestID.Progress_XStation:
-                                    q.name = "Experimental prognosis <in development>";
+                                    q.name = "Experimental prognosis";
                                     q.description = "The Last Sector is an unpredictable place. Organise your own meteorologist team to foresee threats";
                                     q.steps[0] = "Build " + GetStructureName(Structure.XSTATION_3_ID);
                                     break;
@@ -3184,12 +3186,14 @@ public static class Localization
                                     q.steps[0] = "Build " + GetStructureName(Structure.GRPH_REACTOR_4_ID); ;
                                     break;
                                 case ProgressQuestID.Progress_FirstExpedition:
-                                    q.name = "Brave explorers <in development>";
+                                    q.name = "Brave explorers";
                                     q.description = "Initialize and succeed your first expedition in the mysterious Last Sector. For that, you should assemble a team in the recruiting center, construct a shuttle for them and prepare the new expedition in the Expedition corpus.";
                                     q.steps[0] = "Crew assembled ";
-                                    q.steps[1] = "Shuttle constructed";
-                                    q.steps[2] = "Expedition launched";
-                                    q.steps[3] = "Expedition succeed";
+                                    q.steps[1] = "Shuttle constructed ";
+                                    q.steps[2] = "Observatory built ";
+                                    q.steps[3] = "Transmitter built ";
+                                    q.steps[4] = "Expedition launched ";
+                                    q.steps[5] = "Expedition succeed ";
                                     break;
                                 case ProgressQuestID.Progress_Tier5:
                                     q.name = "Technology progress IV";

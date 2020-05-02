@@ -85,28 +85,28 @@ public abstract class WorkBuilding : Building
                 break;
             case LUMBERMILL_1_ID:
                 {
-                    workflowToProcess = 100;
+                    workflowToProcess = 70;
                     maxWorkers = 80;
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
-                    workflowToProcess = 90;
+                    workflowToProcess = 60;
                     maxWorkers = 80;
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
-                    workflowToProcess = 80;
+                    workflowToProcess = 50;
                     maxWorkers = 80;
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.45f;
                 }
                 break;
             case COVERED_LUMBERMILL:
                 {
-                    workflowToProcess = 75;
+                    workflowToProcess = 100;
                     maxWorkers = 140;
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.1f;
                 }
