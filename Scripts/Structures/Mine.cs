@@ -29,6 +29,10 @@ public class Mine : WorkBuilding {
 override protected void LabourResult() {
 
 	}
+    public override bool ShowWorkspeed()
+    {
+        return true;
+    }
 
     void UpgradeMine(byte f_level)
     {

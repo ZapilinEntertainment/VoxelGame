@@ -22,4 +22,9 @@ public sealed class Workshop : WorkBuilding {
 
     override protected void LabourResult() {
 	}
+
+    public override bool ShowWorkspeed()
+    {
+        return true;
+    }
 }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum FactorySpecialization : byte { Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher }
+public enum FactorySpecialization : byte { Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher, SuppliesFactory }
 public enum FactoryProductionMode : byte { NoLimit, Limit, Iterations } // if changing, change UIFactoryObserver prefab also
 
 public class Factory : WorkBuilding
@@ -12,7 +12,7 @@ public class Factory : WorkBuilding
     public float outputResourcesBuffer { get; protected set; }
     public FactoryProductionMode productionMode { get; protected set; }
     public FactorySpecialization specialization { get; protected set; }
-    public Recipe recipe { get; private set; }
+    protected Recipe recipe;
 
     public const float BUFFER_LIMIT = 10;
     public const int FACTORY_SERIALIZER_LENGTH = 17;
@@ -44,8 +44,15 @@ public class Factory : WorkBuilding
             case GRPH_ENRICHER_3_ID:
                 specialization = FactorySpecialization.GraphoniumEnricher;
                 break;
+            case SUPPLIES_FACTORY_4_ID:
+            case SUPPLIES_FACTORY_5_ID:
+                specialization = FactorySpecialization.SuppliesFactory;
+                break;
+            default: specialization = FactorySpecialization.Unspecialized;
+                break;
         }
         inputResourcesBuffer = 0;
+        //changed copy to AdvancedFactory
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)
@@ -104,8 +111,8 @@ public class Factory : WorkBuilding
                 }
             }
         }
+        //changed copy to AdvancedFactory
     }
-
     override protected void LabourResult()
     {
         int iterations = (int)(workflow / workflowToProcess);
@@ -153,8 +160,13 @@ public class Factory : WorkBuilding
                 }
                 break;
         }
+        //changed copy to AdvancedFactory
     }
 
+    public Recipe GetRecipe()
+    {
+        return recipe;
+    }
     public void SetRecipe(Recipe r)
     {
         if (r == recipe) return;
@@ -255,6 +267,7 @@ public class Factory : WorkBuilding
         data.AddRange(System.BitConverter.GetBytes(productionModeValue));
         //SERIALIZER_LENGTH = 17;
         return data;
+        //changed copy to AdvancedFactory
     }
 
     override public void Load(System.IO.FileStream fs, Plane sblock)
@@ -275,20 +288,21 @@ public class Factory : WorkBuilding
         productionMode = (FactoryProductionMode)data[startIndex];
         productionModeValue = System.BitConverter.ToInt32(data, startIndex + 13);
         return startIndex + 17;
+        //change copy to AdvancedFactory
     }
     #endregion
 
-    public virtual Recipe[] GetFactoryRecipes()
+    public Recipe[] GetFactoryRecipes()
     {
         switch (specialization)
-        {
-            default:
-            case FactorySpecialization.Unspecialized: return new Recipe[0];
+        {            
             case FactorySpecialization.Smeltery: return Recipe.smelteryRecipes;
             case FactorySpecialization.OreRefiner: return Recipe.oreRefiningRecipes;
             case FactorySpecialization.FuelFacility: return Recipe.fuelFacilityRecipes;
             case FactorySpecialization.PlasticsFactory: return Recipe.plasticFactoryRecipes;
             case FactorySpecialization.GraphoniumEnricher: return Recipe.graphoniumEnricherRecipes;
+            case FactorySpecialization.SuppliesFactory: return AdvancedRecipe.supplyFactoryRecipes;
+            default: return new Recipe[1] { Recipe.NoRecipe};
         }
     }
 
@@ -305,6 +319,7 @@ public class Factory : WorkBuilding
     {
         if (destroyed) return;
         else destroyed = true;
+        SetRecipe(Recipe.NoRecipe);
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         if (subscribedToUpdate)
         {

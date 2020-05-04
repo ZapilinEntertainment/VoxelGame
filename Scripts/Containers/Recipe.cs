@@ -25,8 +25,26 @@ public class Recipe {
 	METAL_E_SMELTING_ID = 5, METAL_N_SMELTING_ID = 6, METAL_M_SMELTING_ID = 7, METAL_P_SMELTING_ID = 8, METAL_S_SMELTING_ID = 9,
 	METAL_K_REFINIG_ID = 10, METAL_E_REFINING_ID = 11, METAL_N_REFINING_ID = 12, METAL_M_REFINING_ID = 13, METAL_P_REFINING_ID = 14,
 	METAL_S_REFINING_ID = 15, MINERAL_F_REFINING_ID = 16, MINERAL_L_REFINING_ID = 17, FUEL_FROM_NMETAL_ID = 18, FUEL_FROM_NMETAL_ORE_ID = 19,
-	FUEL_FROM_MINERAL_F_ID = 20, GRAPHONIUM_FROM_NMETAL_ID = 21, GRAPHONIUM_FRON_NMETAL_ORE_ID = 22, FUEL_FROM_GRAPHONIUM = 23;
+	FUEL_FROM_MINERAL_F_ID = 20, GRAPHONIUM_FROM_NMETAL_ID = 21, GRAPHONIUM_FRON_NMETAL_ORE_ID = 22, FUEL_FROM_GRAPHONIUM = 23, FOOD_AND_METALP_TO_SUPPLIES_ID = 24;
     public const float RECIPE_LVL1_WORKLOAD = 10f, RECIPE_LVL2_WORKLOAD = 25f, RECIPE_LVL3_WORKLOAD = 100f;
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null ) return false;
+        if (this == NoRecipe && obj == AdvancedRecipe.NoRecipe) return true;
+        else
+        {
+            if (GetType() != obj.GetType()) return false;
+        }
+        var r = (Recipe)obj;
+        if (ID != r.ID || input != r.input || output != r.output || inputValue != r.inputValue || outputValue != r.outputValue || workflowToResult != r.workflowToResult)
+            return false;
+        else return true;
+    }
+    public override int GetHashCode()
+    {
+        return base.GetHashCode() + input.ID + ID + output.ID;
+    }
 
     static Recipe() {
 		NoRecipe = new Recipe(ResourceType.Nothing, ResourceType.Nothing,0, 0,0,  0);
@@ -84,8 +102,8 @@ public class Recipe {
         Graphonium_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Graphonium, GRAPHONIUM_FRON_NMETAL_ORE_ID, 11, 1, 11f * w3);
         graphoniumEnricherRecipes[0] = NoRecipe;
         graphoniumEnricherRecipes[1] = Graphonium_fromNmetal;
-        graphoniumEnricherRecipes[2] = Graphonium_fromNmetalOre;
-	}
+        graphoniumEnricherRecipes[2] = Graphonium_fromNmetalOre;               
+    }
 
 	public Recipe (ResourceType res_input, ResourceType res_output,int f_id, float val_input, float val_output,  float workflowNeeded) {
 		ID = f_id;
@@ -117,6 +135,7 @@ public class Recipe {
 		case FUEL_FROM_NMETAL_ORE_ID: return Fuel_fromNmetalOre;
 		case FUEL_FROM_MINERAL_F_ID: return Fuel_fromMineralF;
         case GRAPHONIUM_FROM_NMETAL_ID: return Graphonium_fromNmetal;
+        case FOOD_AND_METALP_TO_SUPPLIES_ID: return AdvancedRecipe.Food_and_MetalP_to_Supplies;
 		default: return NoRecipe;
 		}
 	}

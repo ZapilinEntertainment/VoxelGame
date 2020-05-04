@@ -156,6 +156,11 @@ public class Farm : WorkBuilding
         Destroy(gameObject);
     }
 
+    public override bool ShowWorkspeed()
+    {
+        return true;
+    }
+
     #region save-load
     public override List<byte> Save()
     {

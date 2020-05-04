@@ -345,7 +345,7 @@ public class Structure : MonoBehaviour
                 return typeof(SmelteryBlock);
             case SUPPLIES_FACTORY_4_ID:
             case SUPPLIES_FACTORY_5_ID:
-                return typeof(FoodFactory);
+                return typeof(AdvancedFactory);
             case WIND_GENERATOR_1_ID:
                 return typeof(WindGenerator);
             case BIOGENERATOR_2_ID:

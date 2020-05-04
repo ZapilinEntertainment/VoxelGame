@@ -364,6 +364,7 @@ public abstract class WorkBuilding : Building
     {
         return workSpeed;
     }
+    virtual public bool ShowWorkspeed() { return false; }
 
     public override UIObserver ShowOnGUI()
     {
