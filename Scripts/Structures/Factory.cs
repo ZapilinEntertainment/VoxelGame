@@ -167,7 +167,7 @@ public class Factory : WorkBuilding
     {
         return recipe;
     }
-    public void SetRecipe(Recipe r)
+    virtual protected void SetRecipe(Recipe r)
     {
         if (r == recipe) return;
         if (recipe != Recipe.NoRecipe)

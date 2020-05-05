@@ -153,10 +153,17 @@ public sealed class UIFactoryObserver : UIObserver
     private void RedrawRecipeData()
     {
         Recipe r;
+        RectTransform rt;
+        Vector2 v2;
         if (!advancedFactoryMode)
         {
             r = observingFactory.GetRecipe();            
-            inputIcon2.gameObject.SetActive(false);                 
+            inputIcon2.gameObject.SetActive(false);
+            rt = inputIcon.rectTransform;
+            v2 = rt.anchorMax; v2.x = 0.3f;
+            rt.anchorMax = v2;
+            v2 = rt.anchorMin; v2.x = 0.1f;
+            rt.anchorMin = v2;
         }
         else
         {
@@ -164,6 +171,18 @@ public sealed class UIFactoryObserver : UIObserver
             r = ar;
             inputIcon2.uvRect = ResourceType.GetResourceIconRect(ar.input2.ID);
             inputValueString2.text = ar.inputValue2.ToString();
+
+            rt = inputIcon.rectTransform;
+            v2 = rt.anchorMax; v2.x = 0.25f;
+            rt.anchorMax = v2;
+            v2 = rt.anchorMin; v2.x = 0.1f;
+            rt.anchorMin = v2;
+            rt = inputIcon2.rectTransform;
+            v2 = rt.anchorMax; v2.x = 0.4f;
+            rt.anchorMax = v2;
+            v2 = rt.anchorMin; v2.x = 0.25f;
+            rt.anchorMin = v2;
+
             inputIcon2.gameObject.SetActive(true);
         }
         inputIcon.uvRect = ResourceType.GetResourceIconRect(r.input.ID);

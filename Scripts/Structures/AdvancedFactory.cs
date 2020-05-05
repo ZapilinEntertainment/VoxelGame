@@ -134,7 +134,7 @@ public sealed class AdvancedFactory : Factory
     {
         return recipe;
     }
-    new public void SetRecipe(Recipe br)
+    override protected void SetRecipe(Recipe br)
     {
         AdvancedRecipe ar = br as AdvancedRecipe;
         if (ar == null)
