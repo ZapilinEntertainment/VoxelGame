@@ -70,7 +70,7 @@
             case ChallengeType.MonumentPts: return UIController.GetIconUVRect(Icons.MonumentRoute);
             case ChallengeType.BlossomPts: return UIController.GetIconUVRect(Icons.BlossomRoute);
             case ChallengeType.PollenPts: return UIController.GetIconUVRect(Icons.PollenRoute);
-            case ChallengeType.Random:
+            case ChallengeType.ExitTest: return UIController.GetIconUVRect(Icons.GreenArrow);
             default:
                 return UIController.GetIconUVRect(Icons.Unknown);
 
@@ -99,4 +99,36 @@
         var info = (ChallengeField)obj;
         return challengeType == info.challengeType & difficultyClass == info.difficultyClass & isHidden == info.isHidden & isPassed == info.isPassed;
     }
+
+    #region save-load
+    public byte[] Save()
+    {
+        return new byte[4]
+        {
+            (byte)challengeType,
+            difficultyClass,
+            isHidden ? (byte)1 : (byte)0,
+            isPassed ? (byte)1 : (byte)0
+        };
+    }
+    public static ChallengeField[,] Load(System.IO.FileStream fs, int size)
+    {
+        var cfa = new ChallengeField[size, size];
+        const int length = 4;
+        var data = new byte[length];
+        ChallengeField cf;
+        for (var i = 0; i < size; i++)
+        {
+            for (var j = 0;j < size; j++)
+            {
+                fs.Read(data, 0, length);
+                cf = new ChallengeField((ChallengeType)data[0], data[1]);
+                cf.isHidden = data[2] == 1;
+                cf.isPassed = data[3] == 1;
+                cfa[i, j] = cf;
+            }
+        }
+        return cfa;
+    }
+    #endregion
 }

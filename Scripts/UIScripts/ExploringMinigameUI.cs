@@ -7,7 +7,7 @@ public enum ChallengeType : byte
 {
     NoChallenge = 0, Impassable = 1, Random = 2, PersistenceTest, SurvivalSkillsTest, PerceptionTest, SecretKnowledgeTest,
     IntelligenceTest, TechSkillsTest, Treasure, QuestTest, CrystalFee, AscensionTest, PuzzlePart, FoundationPts, CloudWhalePts,
-    EnginePts, PipesPts, CrystalPts, MonumentPts, BlossomPts, PollenPts
+    EnginePts, PipesPts, CrystalPts, MonumentPts, BlossomPts, PollenPts, ExitTest
 }
 //dependency : ChallengeField.GetChallengeIconRect, Localization.GetChallengeLabel
 //ExploringMinigameUI : FieldAction(), Pass()
@@ -541,6 +541,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         useChallengePanel = true;
                         useRollSystem = true;
                         break;
+                    case ChallengeType.ExitTest:
+                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.ExitTest);
+                        useChallengePanel = true;
+                        useRollSystem = true;
+                        break;
                     case ChallengeType.CrystalFee:
                         useChallengePanel = true;
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.CrystalFee);
@@ -675,6 +680,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 case ChallengeType.PollenPts:
                     Knowledge.GetCurrent().AddResearchPoints(Knowledge.ResearchRoute.Pollen, cf.difficultyClass);
                     break;
+                case ChallengeType.ExitTest:
+                    if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.LocationSuccessExit);
+                    observingExpedition.CountMissionAsSuccess();
+                    StopMissionButton();
+                    return;
                 default:
                     if (!cf.isPassed)
                     {
@@ -743,7 +753,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             if (result >= cf.difficultyClass)
             {
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.SuccessfulRoll);
-                cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
+                if (cf.challengeType != ChallengeType.ExitTest) cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
                 observingCrew.RaiseAdaptability(0.5f);
                 observingCrew.AddExperience(5f);
                 passText.text = Localization.GetWord(LocalizedWord.Pass);
@@ -765,7 +775,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 rollButton.SetActive(true);
             }
 
-            observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty * cf.difficultyClass / result * 4f);
+            observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty * cf.difficultyClass / (0.5f + 0.5f *result) * 4f);
             passButton.SetActive(true);
             needInfoRefreshing = true;
         }

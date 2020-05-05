@@ -15,7 +15,7 @@ public class Factory : WorkBuilding
     protected Recipe recipe;
 
     public const float BUFFER_LIMIT = 10;
-    public const int FACTORY_SERIALIZER_LENGTH = 17;
+    virtual protected int FACTORY_SERIALIZER_LENGTH { get{return 17;} }//dependence: AdvancedFactory
 
     public static UIFactoryObserver factoryObserver;
 
@@ -258,7 +258,7 @@ public class Factory : WorkBuilding
         data.AddRange(SerializeFactory());
         return data;
     }
-    protected List<byte> SerializeFactory()
+    virtual protected List<byte> SerializeFactory()
     {
         var data = new List<byte>() { (byte)productionMode };
         data.AddRange(System.BitConverter.GetBytes(recipe.ID));
@@ -278,9 +278,10 @@ public class Factory : WorkBuilding
         fs.Read(data, 0, data.Length);
         LoadFactoryData(data, WORKBUILDING_SERIALIZER_LENGTH);
         LoadWorkBuildingData(data, 0);
+        //changed copy to AdvancedFactory
     }
 
-    protected int LoadFactoryData(byte[] data, int startIndex)
+    virtual protected int LoadFactoryData(byte[] data, int startIndex)
     {
         SetRecipe(Recipe.GetRecipeByNumber(System.BitConverter.ToInt32(data, startIndex + 1)));
         inputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 5);

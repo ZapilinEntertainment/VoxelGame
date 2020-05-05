@@ -6,7 +6,7 @@ public sealed class AdvancedFactory : Factory
 {
     public float inputResourcesBuffer2 { get; private set; }
     new private AdvancedRecipe recipe;
-    new public const int FACTORY_SERIALIZER_LENGTH = Factory.FACTORY_SERIALIZER_LENGTH + 4;
+    override protected int FACTORY_SERIALIZER_LENGTH { get { return 21; } }
 
     override public void Prepare()
     {
@@ -168,7 +168,7 @@ public sealed class AdvancedFactory : Factory
     }
 
     #region save-load system
-    new private List<byte> SerializeFactory()
+    override protected List<byte> SerializeFactory()
     {
         var data = new List<byte>() { (byte)productionMode };
         data.AddRange(System.BitConverter.GetBytes(recipe.ID));
@@ -180,7 +180,7 @@ public sealed class AdvancedFactory : Factory
         return data;
     }
 
-    new private int LoadFactoryData(byte[] data, int startIndex)
+    override protected int LoadFactoryData(byte[] data, int startIndex)
     {
         SetRecipe(Recipe.GetRecipeByNumber(System.BitConverter.ToInt32(data, startIndex + 1)));
         inputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 5);
@@ -188,7 +188,7 @@ public sealed class AdvancedFactory : Factory
         outputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 13);
         productionMode = (FactoryProductionMode)data[startIndex];
         productionModeValue = System.BitConverter.ToInt32(data, startIndex + 17);
-        return startIndex + 21;
+        return startIndex + FACTORY_SERIALIZER_LENGTH;
     }
     #endregion
 }

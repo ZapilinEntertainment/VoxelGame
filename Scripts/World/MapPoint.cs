@@ -125,6 +125,14 @@ public class MapPoint
                 return new MapPoint(i_angle, i_height, mtype);
         }
     }
+    public static float Distance(MapPoint A, MapPoint B)
+    {
+        if (A == null || B == null) return Mathf.Infinity;
+        else
+        {
+            return Mathf.Sqrt((A.angle - B.angle) * (A.angle - B.angle) + (A.height - B.height) * (A.height - B.height));
+        }
+    }
 
     protected MapPoint(int i_id) // для загрузки
     {

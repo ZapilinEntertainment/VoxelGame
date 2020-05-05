@@ -672,6 +672,7 @@ public sealed class GameMaster : MonoBehaviour
 
         QuestUI.current.Save(fs);        
         Expedition.SaveStaticData(fs);
+        Knowledge.GetCurrent().Save(fs);
         fs.Position = 0;
         double hashsum = GetHashSum(fs, false);
         fs.Write(System.BitConverter.GetBytes(hashsum),0,8);
@@ -818,6 +819,7 @@ public sealed class GameMaster : MonoBehaviour
                 goto FAIL;
             }
             Expedition.LoadStaticData(fs);
+            Knowledge.Load(fs);
             fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();

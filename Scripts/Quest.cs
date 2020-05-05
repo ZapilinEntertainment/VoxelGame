@@ -343,12 +343,11 @@ public class Quest
                                 stepsAddInfo[1] = "0/1";
                             }
                             // expeditions
-                            count = Expedition.expeditionsList.Count;
-                            if (count > 0)
+                            if (Expedition.expeditionsLaunched > 0)
                             {
                                 completeness++;
                                 stepsFinished[4] = true;
-                                stepsAddInfo[4] = count.ToString() + "/1";
+                                stepsAddInfo[4] = Expedition.expeditionsLaunched.ToString() + "/1";
                             }
                             else
                             {

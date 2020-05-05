@@ -77,7 +77,7 @@ public sealed class RecruitingCenter : WorkBuilding {
                         workersCount -= memCount;
                         workflow = 0;
                         finding = false;
-                        GameLogUI.MakeAnnouncement(Localization.AnnounceCrewReady(c.name));
+                        GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Ready, c));
                         hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
                         hireCost = ((int)(hireCost * 100)) / 100f;
                         if (showOnGUI) rcenterObserver.SelectCrew(c);

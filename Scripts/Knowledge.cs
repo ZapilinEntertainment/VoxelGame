@@ -27,8 +27,9 @@ public sealed class Knowledge
     private byte[] routeBonusesMask = new byte[ROUTES_COUNT]; // учет полученных бонусов
     private KnowledgeTabUI observer;
 
-    public const byte ROUTES_COUNT = 8, STEPS_COUNT = 7,
+    public const byte ROUTES_COUNT = 8, STEPS_COUNT = 7, PUZZLECOLORS_COUNT = 6,
        WHITECOLOR_CODE = 0, REDCOLOR_CODE = 1, GREENCOLOR_CODE = 2, BLUECOLOR_CODE = 3, CYANCOLOR_CODE = 4, BLACKCOLOR_CODE = 5, NOCOLOR_CODE = 6;
+    public const int PUZZLEPARTS_COUNT = 64, PUZZLE_PINS_COUNT = 112; // 7 * 8 + 8 * 7
 
     public static readonly Color[] colors = new Color[6]
     {
@@ -425,7 +426,7 @@ public sealed class Knowledge
             if (c != null) c.crystalsCountUpdateEvent -= CrystalsCheck;
         }
     }
-    public void ExpeditionsCheck(int successfulCount)
+    public void ExpeditionsCheck(uint successfulCount)
     {
         if (successfulCount == R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND) CountRouteBonus(MonumentRouteBoosters.ExpeditionsBoost);
     }
@@ -627,19 +628,28 @@ public sealed class Knowledge
 
     private Knowledge()
     {
-        puzzlePins = new bool[112]; // 7 * 8 + 8 * 7
+        puzzlePins = new bool[PUZZLE_PINS_COUNT]; // 7 * 8 + 8 * 7
         for (int i =0; i < puzzlePins.Length; i++)
         {
             puzzlePins[i] = Random.value > 0.55f ? true : false;
         }
+        SYSTEM_FillBasicData();
+    }    
+    private Knowledge(bool[] pinsArray)
+    {
+        puzzlePins = pinsArray;
+        SYSTEM_FillBasicData();
+    }
+    private void SYSTEM_FillBasicData()
+    {
         routePoints = new float[ROUTES_COUNT];
         completeness = 0f;
-        puzzlePartsCount = new byte[6];
-        colorCodesArray = new byte[64]; //filed with 0 - whitecolor
+        puzzlePartsCount = new byte[PUZZLECOLORS_COUNT];
+        colorCodesArray = new byte[PUZZLEPARTS_COUNT]; //filed with 0 - whitecolor
         foreach (byte b in blockedCells)
         {
             colorCodesArray[b] = BLACKCOLOR_CODE;
-        }     
+        }
     }
 
     public byte GenerateCellColor(byte route, byte step)
@@ -798,4 +808,66 @@ public sealed class Knowledge
         }
         return (255,255);
     }
+
+    #region save-load
+    public void Save(System.IO.FileStream fs)
+    {
+        const byte truebyte = 1, falsebyte = 0;
+        int i;
+        for (i = 0; i< PUZZLE_PINS_COUNT; i++)
+        {
+            fs.WriteByte(puzzlePins[i] ? truebyte : falsebyte); 
+        }
+        //
+        for (i = 0; i< ROUTES_COUNT; i++)
+        {
+            fs.Write(System.BitConverter.GetBytes(routePoints[i]),0,4);            
+        }
+        //
+        for (i = 0; i < PUZZLECOLORS_COUNT; i++)
+        {
+            fs.WriteByte(puzzlePartsCount[i]);
+        }
+        //
+        for (i = 0; i < PUZZLEPARTS_COUNT; i++)
+        {
+            fs.WriteByte(colorCodesArray[i]);
+        }
+        for (i = 0; i < ROUTES_COUNT; i++)
+        {
+            fs.WriteByte(routeBonusesMask[i]);
+        }
+    }
+    public static void Load(System.IO.FileStream fs)
+    {
+        int i;
+        var pins = new bool[PUZZLE_PINS_COUNT];
+        for (i = 0; i < PUZZLE_PINS_COUNT; i++)
+        {
+            pins[i] = fs.ReadByte() == 1;
+        }
+        current = new Knowledge(pins);
+        //
+        current.routePoints = new float[ROUTES_COUNT];
+        var data = new byte[4];
+        for (i = 0;i < ROUTES_COUNT; i++)
+        {
+            fs.Read(data, 0, 4);
+            current.routePoints[i] = System.BitConverter.ToSingle(data, 0);
+        }
+        //
+        var cca = new byte[PUZZLEPARTS_COUNT];
+        for (i = 0; i< PUZZLEPARTS_COUNT; i++)
+        {
+            cca[i] = (byte)fs.ReadByte();
+        }
+        current.colorCodesArray = cca;
+        //
+        current.routeBonusesMask = new byte[ROUTES_COUNT];
+        for (i = 0; i < ROUTES_COUNT; i++)
+        {
+            current.routeBonusesMask[i] = (byte)fs.ReadByte();
+        }
+    }
+    #endregion
 }

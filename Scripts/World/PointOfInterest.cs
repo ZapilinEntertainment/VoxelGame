@@ -620,7 +620,7 @@ public class PointOfInterest : MapPoint
 
         //check
         int sz = size - 1;
-        challengeArray[sz, sz].ChangeChallengeType(ChallengeType.QuestTest, 0);
+        challengeArray[sz, sz].ChangeChallengeType(ChallengeType.ExitTest, 0);
         challengeArray[0, 0] = ChallengeField.emptyField;
         if (challengeArray[sz - 1, sz].IsImpassable() && challengeArray[sz - 1, sz - 1].IsImpassable() && challengeArray[sz, sz - 1].IsImpassable())
         {
@@ -641,11 +641,25 @@ public class PointOfInterest : MapPoint
         data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
         data.Add((byte)path);
+        if (challengeArray != null)
+        {
+            data.Add(1);
+            byte size = (byte)challengeArray.GetLength(0);
+            data.Add(size);
+            for (byte i = 0; i < size; i++) // foreach не гарантирует точный порядок
+            {
+                for (byte j = 0; j < size; j++)
+                {
+                    data.AddRange(challengeArray[i, j].Save());
+                }
+            }
+        }
+        else data.Add(0);
         return data;
     }
     public void Load(System.IO.FileStream fs)
     {
-        int LENGTH = 17;
+        int LENGTH = 18;
         var data = new byte[LENGTH];
         fs.Read(data, 0, LENGTH);
         richness = System.BitConverter.ToSingle(data, 0);
@@ -653,6 +667,13 @@ public class PointOfInterest : MapPoint
         mysteria = System.BitConverter.ToSingle(data, 8);
         friendliness = System.BitConverter.ToSingle(data, 12);
         path = (Path)data[16];
+        if (data[17] == 1)
+        {
+            data = new byte[4];
+            fs.Read(data, 0, data.Length);
+            int size = System.BitConverter.ToInt32(data, 0);
+            challengeArray = ChallengeField.Load(fs, size);
+        }
     } 
     #endregion
 }

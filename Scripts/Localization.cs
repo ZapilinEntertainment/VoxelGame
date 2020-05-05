@@ -31,7 +31,7 @@ public enum LocalizedTutorialHint : byte { Landing }
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
 public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight}
 public enum ExpeditionComposingErrors : byte { ShuttleUnavailable, CrewUnavailable, NotEnoughFuel}
-public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted, CannotReachDestination }
+public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted, CannotReachDestination, Returned, Ready }
 
 public static class Localization
 {
@@ -662,16 +662,6 @@ public static class Localization
                 return "Quest \"" + name + "\" completed!";
         }
     }
-    public static string AnnounceCrewReady(string name)
-    {
-        switch (currentLanguage)
-        {
-            case Language.Russian:
-                return "команда \" " + name + "\" готова";
-            case Language.English:
-            default: return "crew \" " + name + "\" ready";
-        }
-    }
 
     public static string GetExpeditionName(Expedition e)
     {
@@ -794,27 +784,31 @@ public static class Localization
     {
         switch (currentLanguage)
         {
-            case Language.English:
-                {
-                    switch (ca)
-                    {
-                        case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" cannot complete mission and therefore return.";
-                        case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" leave us.";
-                        case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" completed their task";
-                        case LocalizedCrewAction.CannotReachDestination: return "Crew " + '"' + c.name + "\" cannot reach destination and therefore returning.";
-                        default: return '"' + c.name + "\" is da best.";
-                    }
-                }
+            
             case Language.Russian:
                 switch (ca)
                 {
+                    case LocalizedCrewAction.Ready: return "Команда " + c.name + "готова к приключениям!";
                     case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" не могут завершить миссию и возвращаются.";
                     case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" покинули нас.";
                     case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" завершили миссию";
                     case LocalizedCrewAction.CannotReachDestination: return "Команда " + '"' + c.name + "\" не может достичь цели и возвращается.";
+                    case LocalizedCrewAction.Returned: return "Команда " + c.name + " вернулась с задания!";
                     default: return '"' + c.name + "\" просто топчег.";
                 }
-            default: return '"' + c.name + "\"!111 0)0))).";
+            default:
+                {
+                    switch (ca)
+                    {
+                        case LocalizedCrewAction.Ready: return "Crew " + c.name + "is ready!";
+                        case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" cannot complete mission and therefore return.";
+                        case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" leave us.";
+                        case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" completed their task";
+                        case LocalizedCrewAction.CannotReachDestination: return "Crew " + '"' + c.name + "\" cannot reach destination and therefore returning.";
+                        case LocalizedCrewAction.Returned: return "Crew " + c.name + " has returned!";
+                        default: return '"' + c.name + "\" is da best.";
+                    }
+                }
         }
     }
     public static string GetArtifactStatus(Artifact.ArtifactStatus status)
@@ -2861,6 +2855,7 @@ public static class Localization
                     case ChallengeType.MonumentPts: return "Еще один шаг к созднаию Монумента";
                     case ChallengeType.BlossomPts: return "Еще шаг на пути к Цветению";
                     case ChallengeType.PollenPts: return "Еще на шаг ближе к Распылению";
+                    case ChallengeType.ExitTest: return "Выход из локации";
                     case  ChallengeType.NoChallenge:
                     default:
                         return "No challenge";
@@ -2891,6 +2886,7 @@ public static class Localization
                         case ChallengeType.MonumentPts: return "One step closer to Monument creation";
                         case ChallengeType.BlossomPts: return "One more step to Blossom start";
                         case ChallengeType.PollenPts: return "One more step to Pollen event";
+                        case ChallengeType.ExitTest: return "Exit location";
                         case  ChallengeType.NoChallenge:
                         default:
                             return "No challenge";

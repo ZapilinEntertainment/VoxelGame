@@ -36,7 +36,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     private List<int> crewsIDs;
 
     private readonly Color lightcyan = new Color(0.5f, 1f, 0.95f), halfred = new Color(1f,0f,0f,0.5f);
-    private const int FUEL_NEEDED = 200;
+    private const int FUEL_BASE_COST = 5;
 
     private void Awake()
     {
@@ -176,19 +176,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             }
             lastShuttlesListMarker = Hangar.listChangesMarkerValue;
             //fuel:
-            fuelLabel.text = Localization.GetPhrase(LocalizedPhrase.FuelNeeded) + FUEL_NEEDED.ToString();
-            c = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
-            if (c > FUEL_NEEDED)
-            {
-                fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);                
-                fuelLabel.color = whitecolor;
-            }
-            else
-            {
-                fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
-                fuelLabel.color = redcolor;
-                readyToStart = false;
-            }
+            if (FuelCheck() == false) readyToStart = false;
             if (preparingMode != true)
             {
                 shuttleLine.gameObject.SetActive(true);
@@ -331,6 +319,24 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         }        
         lastCrewListMarker = Crew.listChangesMarkerValue;
     }
+    private bool FuelCheck()
+    {
+        int fuelNeeded = (int)(MapPoint.Distance(GameMaster.realMaster.globalMap.cityPoint, selectedDestination) * FUEL_BASE_COST);
+        fuelLabel.text = Localization.GetPhrase(LocalizedPhrase.FuelNeeded) + fuelNeeded.ToString();
+        int c = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
+        if (c > fuelNeeded)
+        {
+            fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+            fuelLabel.color = Color.white;
+            return true;
+        }
+        else
+        {
+            fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+            fuelLabel.color = Color.red;
+            return false;
+        }
+    }
 
     public void StatusUpdate()
     {
@@ -345,9 +351,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             if (showingExpedition != null)
             {
                 crystalsStableValue.text = showingExpedition.crystalsCollected.ToString();
-                suppliesStableValue.text = showingExpedition.suppliesCount.ToString();
+                suppliesStableValue.text = showingExpedition.suppliesCount.ToString();                
             }
         }
+    }
+    private void Update()
+    {
+        if (fuelLabel.isActiveAndEnabled) FuelCheck();
     }
 
     public void OnCrewValueChanged(int i)
@@ -389,7 +399,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                 var res = storage.standartResources;
                 if (suppliesSlider.value <= res[ResourceType.SUPPLIES_ID] &&
                     crystalsSlider.value <= colony.energyCrystalsCount &&
-                    res[ResourceType.FUEL_ID] >= FUEL_NEEDED)
+                    res[ResourceType.FUEL_ID] >= FUEL_BASE_COST)
                 {
                     int shID = Hangar.GetFreeShuttleID();
                     if (shID != Hangar.NO_SHUTTLE_VALUE)
@@ -397,7 +407,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                         var t = QuantumTransmitter.GetFreeTransmitter();
                         if (t != null)
                         {
-                            if (storage.TryGetResources(ResourceType.Fuel, FUEL_NEEDED)) {
+                            if (storage.TryGetResources(ResourceType.Fuel, FUEL_BASE_COST)) {
                                 var e = new Expedition(selectedDestination, selectedCrew, shID, t, storage.GetResources(ResourceType.Supplies, suppliesSlider.value), colony.GetEnergyCrystals(crystalsSlider.value));
                                 if (workOnMainCanvas)
                                 {
